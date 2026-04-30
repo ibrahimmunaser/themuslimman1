@@ -55,7 +55,7 @@ export function TestimonialsSection() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="text-center mb-12">
           <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-            Built as a Complete 100+ Part Seerah System
+            What This System Helps You Do
           </h2>
           <p className="text-text-secondary max-w-2xl mx-auto">
             Not scattered lectures. Not random clips. A full structured journey designed for real learning.
@@ -80,42 +80,49 @@ export function TestimonialsSection() {
           </div>
         </div>
 
-        {/* Testimonials Grid */}
+        {/* Outcome-Focused Benefits (Not Fake Reviews) */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {testimonials.map((testimonial, index) => (
+          {[
+            {
+              icon: "📅",
+              title: "See the full timeline clearly",
+              desc: "Follow the Prophet's ﷺ life from birth to his final days in perfect chronological order.",
+            },
+            {
+              icon: "💡",
+              title: "Understand why events happened",
+              desc: "Get the context behind every major moment — not just what happened, but why it mattered.",
+            },
+            {
+              icon: "🧠",
+              title: "Remember key moments with visuals",
+              desc: "Use mindmaps, infographics, and timelines to retain what you learn and see connections.",
+            },
+            {
+              icon: "📖",
+              title: "Connect Seerah to Qur'an and Hadith",
+              desc: "See how the Prophet's ﷺ life connects to revelation and authentic traditions.",
+            },
+            {
+              icon: "👨‍👩‍👧‍👦",
+              title: "Study alone or with family",
+              desc: "Perfect for personal learning, family sessions, or teaching in study circles.",
+            },
+            {
+              icon: "🌱",
+              title: "Build long-term familiarity with the Prophet's ﷺ life",
+              desc: "Not a one-time watch — a system you can return to and deepen your understanding over time.",
+            },
+          ].map((item) => (
             <div
-              key={index}
-              className="p-6 rounded-xl border border-border bg-surface hover:border-gold/20 transition-all group"
+              key={item.title}
+              className="p-6 rounded-xl border border-border bg-surface hover:border-gold/20 transition-all"
             >
-              {/* Rating */}
-              <div className="flex items-center gap-0.5 mb-3">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-gold text-gold" />
-                ))}
-              </div>
-
-              {/* Quote Icon */}
-              <Quote className="w-8 h-8 text-gold/20 mb-3" />
-
-              {/* Content */}
-              <p className="text-sm text-text-secondary leading-relaxed mb-4">
-                "{testimonial.content}"
+              <div className="text-3xl mb-3">{item.icon}</div>
+              <h3 className="font-semibold text-text text-base mb-2">{item.title}</h3>
+              <p className="text-sm text-text-secondary leading-relaxed">
+                {item.desc}
               </p>
-
-              {/* Author */}
-              <div className="flex items-center gap-3 pt-4 border-t border-border">
-                <div className="w-10 h-10 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center">
-                  <span className="text-gold font-semibold text-sm">
-                    {testimonial.name.charAt(0)}
-                  </span>
-                </div>
-                <div>
-                  <div className="font-semibold text-text text-sm">
-                    {testimonial.name}
-                  </div>
-                  <div className="text-xs text-text-muted">{testimonial.role}</div>
-                </div>
-              </div>
             </div>
           ))}
         </div>

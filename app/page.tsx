@@ -158,7 +158,7 @@ export default async function LandingPage() {
                   <span className="text-4xl font-bold text-text">$49</span>
                 </div>
                 <p className="text-xs text-text-muted mt-2 italic">
-                  For someone who wants a quick overview.
+                  Starter is for people who want a limited preview, not the complete journey.
                 </p>
               </div>
 
@@ -187,6 +187,9 @@ export default async function LandingPage() {
                 >
                   Start with Starter
                 </Link>
+                <p className="text-xs text-center text-text-muted">
+                  You can upgrade to Complete later.
+                </p>
               </div>
             </div>
 
