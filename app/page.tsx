@@ -136,56 +136,99 @@ export default async function LandingPage() {
           PREVIEW BEFORE BUYING
       ============================================ */}
       <section className="py-16 border-t border-border">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-10">
             <p className="text-gold text-sm font-medium uppercase tracking-widest mb-3">
               See What You're Getting
             </p>
             <h2 className="text-3xl sm:text-4xl font-bold mb-3">
-              Preview the System Before You Buy
+              Preview Part 1 — Free, Right Here
             </h2>
             <p className="text-text-secondary max-w-xl mx-auto">
-              No surprises. Watch Part 1 for free and see exactly how the Complete Seerah Academy works.
+              No signup required. See exactly how the Complete Seerah Academy works before you buy.
             </p>
           </div>
 
-          <div className="rounded-2xl border border-gold/20 bg-surface p-6 md:p-8">
-            <div className="grid md:grid-cols-2 gap-8 items-center">
-              <div>
-                <h3 className="text-xl font-bold text-text mb-3">Part 1: Pre-Islamic Arabia</h3>
-                <p className="text-sm text-text-secondary leading-relaxed mb-4">
-                  Within the first lesson, you'll understand why Arabia's geography, tribes, trade routes, and surrounding empires mattered before revelation began.
-                </p>
-                <ul className="space-y-2 mb-6">
-                  {[
-                    "See the video lesson format",
-                    "Review the briefing document",
-                    "Explore the mindmap",
-                    "Check out the study guide",
-                  ].map((item) => (
-                    <li key={item} className="flex items-center gap-2 text-sm text-text-secondary">
-                      <CheckCircle2 className="w-4 h-4 text-gold flex-shrink-0" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  href="/preview/part-1"
-                  className={buttonClass("secondary", "lg")}
-                >
-                  <Video className="w-5 h-5" />
-                  Preview Part 1 Free
-                </Link>
-              </div>
-              <div className="aspect-video rounded-xl bg-ink border border-border flex items-center justify-center">
-                <div className="text-center">
-                  <div className="w-16 h-16 rounded-full bg-gold/20 border border-gold/30 flex items-center justify-center mx-auto mb-3">
-                    <Video className="w-8 h-8 text-gold" />
-                  </div>
-                  <p className="text-sm text-text-muted">Part 1 Preview</p>
+          {/* Part 1 Preview Content */}
+          <div className="rounded-2xl border border-gold/20 bg-surface overflow-hidden mb-6">
+            <div className="p-4 bg-surface-raised border-b border-border">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-text-muted uppercase tracking-wider">Free Preview</p>
+                  <h3 className="text-lg font-bold text-text">Part 1: Pre-Islamic Arabia</h3>
                 </div>
+                <Badge variant="gold" size="sm">Free</Badge>
               </div>
             </div>
+
+            {/* Video Player */}
+            <div className="aspect-video bg-ink border-b border-border flex items-center justify-center">
+              <div className="text-center">
+                <div className="w-20 h-20 rounded-full bg-gold/20 border-2 border-gold/30 flex items-center justify-center mx-auto mb-4 cursor-pointer hover:bg-gold/30 transition-all">
+                  <Video className="w-10 h-10 text-gold" />
+                </div>
+                <p className="text-text font-medium mb-1">Part 1: Pre-Islamic Arabia</p>
+                <p className="text-sm text-text-muted">Click to play full video</p>
+              </div>
+            </div>
+
+            {/* Tabs */}
+            <div className="flex border-b border-border overflow-x-auto">
+              {["Video", "Briefing", "Study Guide", "Mindmap"].map((tab, i) => (
+                <button
+                  key={tab}
+                  className={`px-4 py-3 text-sm font-medium transition-colors flex-shrink-0 ${
+                    i === 0
+                      ? "border-b-2 border-gold text-gold bg-gold/5"
+                      : "text-text-muted hover:text-text hover:bg-surface-raised"
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+
+            {/* Content Preview */}
+            <div className="p-6">
+              <h4 className="font-semibold text-text mb-3">What You'll Learn:</h4>
+              <ul className="space-y-2 mb-6">
+                {[
+                  "Why Arabia's geography mattered before Islam",
+                  "The tribal system and how it shaped society",
+                  "Trade routes and Arabia's economic role",
+                  "The surrounding empires: Byzantine and Persian influence",
+                  "Religious landscape: polytheism, Christianity, Judaism",
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-3 text-sm text-text-secondary">
+                    <CheckCircle2 className="w-5 h-5 text-gold flex-shrink-0 mt-0.5" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+
+              <div className="p-4 rounded-lg bg-gold-bg border border-gold/20">
+                <p className="text-sm text-text-secondary italic">
+                  <span className="font-semibold text-text">First Win Promise:</span> Within this first lesson, you'll understand why Arabia's geography, tribes, trade routes, and surrounding empires mattered before revelation began.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* What You Get in Every Part */}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { icon: <Video className="w-5 h-5" />, label: "Full Video Lesson" },
+              { icon: <FileText className="w-5 h-5" />, label: "Briefing Document" },
+              { icon: <BookOpen className="w-5 h-5" />, label: "Study Guide" },
+              { icon: <Map className="w-5 h-5" />, label: "Visual Mindmap" },
+            ].map((item) => (
+              <div key={item.label} className="flex items-center gap-3 p-4 rounded-xl border border-border bg-surface">
+                <div className="w-10 h-10 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center text-gold">
+                  {item.icon}
+                </div>
+                <span className="text-sm font-medium text-text">{item.label}</span>
+              </div>
+            ))}
           </div>
         </div>
       </section>
