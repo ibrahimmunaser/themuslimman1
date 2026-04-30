@@ -19,7 +19,7 @@ import {
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
 import { TestimonialsSection } from "@/components/landing/testimonials";
-import { Part1Preview } from "@/components/landing/part1-preview";
+import { Part1FullPreview } from "@/components/landing/part1-full-preview";
 import { buttonClass } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { getCurrentUser } from "@/lib/auth";
@@ -140,17 +140,17 @@ export default async function LandingPage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-10">
             <p className="text-gold text-sm font-medium uppercase tracking-widest mb-3">
-              See What You're Getting
+              Experience Part 1 For Free
             </p>
             <h2 className="text-3xl sm:text-4xl font-bold mb-3">
-              Preview Part 1 — Free, Right Here
+              The Complete Part 1 — Right Here, Right Now
             </h2>
-            <p className="text-text-secondary max-w-xl mx-auto">
-              No signup required. See exactly how the Complete Seerah Academy works before you buy.
+            <p className="text-text-secondary max-w-2xl mx-auto">
+              No signup. No trial. No limits. This is the exact same quality and format you'll get with all 100+ parts. Watch the video, read the briefing, explore the study guide, view the mindmap — everything.
             </p>
           </div>
 
-          <Part1Preview />
+          <Part1FullPreview />
         </div>
       </section>
 
