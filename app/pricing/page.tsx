@@ -2,11 +2,12 @@ import Link from "next/link";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
 import { buttonClass } from "@/components/ui/button";
-import { CheckCircle2, ArrowRight, Sparkles, Star } from "lucide-react";
+import { CheckCircle2, ArrowRight, Sparkles, Star, BookOpen, Brain, Users, Layers, Target } from "lucide-react";
 import { PLANS, formatPrice } from "@/lib/stripe-config";
 
 export const metadata = {
-  title: "Pricing — Seerah LMS",
+  title: "Pricing — Complete Seerah Academy",
+  description: "Understand the life of the Prophet ﷺ properly, completely, and step-by-step with our structured Seerah learning system.",
 };
 
 export default function PricingPage() {
@@ -14,68 +15,159 @@ export default function PricingPage() {
     <div className="flex flex-col min-h-screen bg-ink text-text">
       <Navbar />
 
-      <section className="relative pt-32 pb-16 overflow-hidden">
+      {/* Hero Section */}
+      <section className="relative pt-32 pb-20 overflow-hidden">
         <div className="absolute inset-0 geo-pattern opacity-20" />
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gold/10 border border-gold/30 text-gold text-sm font-medium mb-6">
             <Sparkles className="w-4 h-4" />
-            Launch Special Pricing
+            Early Access Pricing
           </div>
-          <h1 className="text-4xl sm:text-5xl font-bold text-text mb-4">Master the complete Seerah</h1>
-          <p className="text-lg text-text-secondary max-w-xl mx-auto">
-            One-time payment. Lifetime access. Start learning today.
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-text mb-5 leading-tight">
+            Understand the Life of the Prophet ﷺ —<br />
+            <span className="text-gradient-gold">Properly, Completely, and Step-by-Step</span>
+          </h1>
+          <p className="text-base sm:text-lg text-text-secondary max-w-2xl mx-auto leading-relaxed">
+            A complete Seerah learning system built to help you finally see the full journey, context, lessons, and legacy — without feeling lost.
           </p>
         </div>
       </section>
 
-      <section className="py-12 pb-24">
+      {/* What You'll Walk Away With */}
+      <section className="py-16 border-t border-border bg-surface/30">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            {/* Essentials Plan */}
-            <div className="rounded-2xl border border-border bg-surface relative overflow-hidden p-8">
-              <div className="mb-8">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl sm:text-3xl font-bold text-text mb-3">
+              What You'll Walk Away With
+            </h2>
+            <p className="text-text-secondary max-w-xl mx-auto">
+              More than just content — you'll gain real understanding and confidence.
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
+            {[
+              {
+                icon: <Target className="w-5 h-5" />,
+                title: "A clear timeline of the Prophet's ﷺ life",
+                desc: "Every event in order, so you can finally see the full picture from beginning to end.",
+              },
+              {
+                icon: <BookOpen className="w-5 h-5" />,
+                title: "Context behind every major event",
+                desc: "Understand why things happened, what led to them, and their lasting impact.",
+              },
+              {
+                icon: <Brain className="w-5 h-5" />,
+                title: "Lessons that connect Seerah to real life",
+                desc: "Not just history — practical wisdom you can apply to your own life today.",
+              },
+              {
+                icon: <Layers className="w-5 h-5" />,
+                title: "A structured system instead of scattered lectures",
+                desc: "No more hunting for content or losing your place — everything is organized for you.",
+              },
+              {
+                icon: <Users className="w-5 h-5" />,
+                title: "Confidence explaining Seerah to family or students",
+                desc: "Feel prepared to teach, share, and discuss the Prophet's ﷺ life with clarity.",
+              },
+              {
+                icon: <CheckCircle2 className="w-5 h-5" />,
+                title: "The complete story — nothing missing",
+                desc: "From pre-Islamic Arabia to the Prophet's ﷺ final days, with no gaps in between.",
+              },
+            ].map((item) => (
+              <div
+                key={item.title}
+                className="flex flex-col gap-3 p-5 rounded-xl border border-border bg-surface hover:border-gold/20 transition-colors"
+              >
+                <div className="w-10 h-10 rounded-lg bg-gold/10 border border-gold/15 flex items-center justify-center text-gold">
+                  {item.icon}
+                </div>
+                <div>
+                  <h3 className="font-semibold text-text text-sm mb-1.5">{item.title}</h3>
+                  <p className="text-xs text-text-secondary leading-relaxed">{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section className="py-16 border-t border-border">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-10">
+            <h2 className="text-2xl sm:text-3xl font-bold text-text mb-3">
+              Choose Your Plan
+            </h2>
+            <p className="text-text-secondary max-w-lg mx-auto">
+              One-time payment. Lifetime access. No subscriptions.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto mb-12">
+            {/* Starter Plan */}
+            <div className="rounded-2xl border border-border bg-surface relative overflow-hidden p-7 flex flex-col">
+              <div className="mb-6">
                 <p className="text-xs font-semibold uppercase tracking-widest text-text-muted mb-3">
                   {PLANS.essentials.name}
                 </p>
                 <p className="text-5xl font-bold text-text mb-2">{formatPrice(PLANS.essentials.price)}</p>
-                <p className="text-sm text-text-secondary">One-time payment · Lifetime access</p>
+                <p className="text-sm text-text-secondary mb-1">One-time payment · Lifetime access</p>
+                <p className="text-xs text-text-muted italic mt-3">
+                  For someone who wants a quick overview.
+                </p>
               </div>
 
-              <ul className="space-y-3 mb-8 min-h-[280px]">
+              <ul className="space-y-3 mb-6 flex-1">
                 {PLANS.essentials.features.map((feature) => (
                   <li key={feature} className="flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-gold flex-shrink-0 mt-0.5" />
-                    <span className="text-sm text-text">{feature}</span>
+                    <CheckCircle2 className="w-4 h-4 text-text-muted flex-shrink-0 mt-0.5" />
+                    <span className="text-sm text-text-secondary">{feature}</span>
                   </li>
                 ))}
               </ul>
 
-              <Link
-                href="/signup-checkout?plan=essentials"
-                className={buttonClass("outline", "lg", "w-full justify-center")}
-              >
-                Get Essentials
-                <ArrowRight className="w-4 h-4" />
-              </Link>
+              <div className="space-y-3">
+                <p className="text-xs text-gold text-center font-medium">
+                  You can upgrade to Complete later
+                </p>
+                <Link
+                  href="/signup-checkout?plan=essentials"
+                  className={buttonClass("outline", "lg", "w-full justify-center")}
+                >
+                  Start with Starter
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+
+              <p className="text-xs text-text-muted text-center mt-4 italic">
+                This is NOT the complete experience.
+              </p>
             </div>
 
             {/* Complete Plan */}
-            <div className="rounded-2xl border border-gold/40 bg-gradient-to-b from-gold/8 to-surface relative overflow-hidden p-8">
+            <div className="rounded-2xl border-2 border-gold bg-gradient-to-b from-gold/8 to-surface relative overflow-hidden p-7 flex flex-col gold-glow">
               <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/50 to-transparent" />
-              <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-gold text-ink text-xs font-bold flex items-center gap-1">
+              <div className="absolute -top-3 right-6 px-3 py-1 rounded-full bg-gold text-ink text-xs font-bold flex items-center gap-1 shadow-lg">
                 <Star className="w-3 h-3 fill-current" />
                 RECOMMENDED
               </div>
               
-              <div className="mb-8">
-                <p className="text-xs font-semibold uppercase tracking-widest text-text-muted mb-3">
+              <div className="mb-6">
+                <p className="text-xs font-semibold uppercase tracking-widest text-gold mb-3">
                   {PLANS.complete.name}
                 </p>
                 <p className="text-5xl font-bold text-text mb-2">{formatPrice(PLANS.complete.price)}</p>
-                <p className="text-sm text-gold font-medium">One-time payment · Lifetime access</p>
+                <p className="text-sm text-gold font-medium mb-1">One-time payment · Lifetime access</p>
+                <p className="text-xs text-text-secondary italic mt-3">
+                  For someone who wants the full Seerah journey.
+                </p>
               </div>
 
-              <ul className="space-y-3 mb-8 min-h-[280px]">
+              <ul className="space-y-3 mb-8 flex-1">
                 {PLANS.complete.features.map((feature) => (
                   <li key={feature} className="flex items-start gap-3">
                     <CheckCircle2 className="w-5 h-5 text-gold flex-shrink-0 mt-0.5" />
@@ -86,43 +178,122 @@ export default function PricingPage() {
 
               <Link
                 href="/signup-checkout?plan=complete"
-                className={buttonClass("primary", "lg", "w-full justify-center")}
+                className={buttonClass("primary", "lg", "w-full justify-center shadow-lg shadow-gold/20")}
               >
                 Get Complete Access
                 <ArrowRight className="w-4 h-4" />
               </Link>
+
+              <p className="text-xs text-text-muted text-center mt-4">
+                Most students choose Complete for the full experience
+              </p>
             </div>
           </div>
 
-          {/* FAQ section */}
-          <div className="mt-16 space-y-6 max-w-3xl mx-auto">
-            <h2 className="text-2xl font-bold text-text text-center mb-8">Frequently Asked Questions</h2>
-            
+          {/* Urgency Message */}
+          <div className="max-w-2xl mx-auto p-5 rounded-xl border border-gold/20 bg-gold-bg text-center">
+            <p className="text-sm text-text-secondary leading-relaxed">
+              <span className="font-semibold text-text">Early access pricing is temporary</span> while the platform is still expanding. Price may increase as more features and content are added.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Trust/Proof Section */}
+      <section className="py-16 border-t border-border bg-surface/30">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-10">
+            <h2 className="text-2xl sm:text-3xl font-bold text-text mb-3">
+              Built as a Complete Study System
+            </h2>
+            <p className="text-text-secondary max-w-xl mx-auto">
+              Not random content — a professionally structured curriculum designed for real learning.
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-3 gap-6">
+            {[
+              {
+                stat: "100+",
+                label: "Structured Seerah Parts",
+                desc: "The complete chronological journey",
+              },
+              {
+                stat: "8+",
+                label: "Asset Types Per Part",
+                desc: "Videos, summaries, slides, visuals, quizzes, study materials",
+              },
+              {
+                stat: "Lifetime",
+                label: "Access & Updates",
+                desc: "One payment — own it forever",
+              },
+            ].map((item) => (
+              <div
+                key={item.label}
+                className="p-6 rounded-xl border border-border bg-surface text-center"
+              >
+                <p className="text-4xl font-bold text-gold mb-2">{item.stat}</p>
+                <p className="font-semibold text-text text-sm mb-1">{item.label}</p>
+                <p className="text-xs text-text-muted">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-16 border-t border-border">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6">
+          <h2 className="text-2xl font-bold text-text text-center mb-10">Frequently Asked Questions</h2>
+          
+          <div className="space-y-4">
             <div className="bg-surface border border-border rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-text mb-2">What's the difference between plans?</h3>
+              <h3 className="text-base font-semibold text-text mb-2">Is this a subscription?</h3>
               <p className="text-text-secondary text-sm leading-relaxed">
-                Essentials includes 20-30 core parts covering the essential Seerah timeline. Complete includes all 100+ parts with the full chronological journey and additional study materials.
+                No. This is a one-time payment. Pay once, own it forever. No recurring charges, no hidden fees, no subscriptions.
               </p>
             </div>
 
             <div className="bg-surface border border-border rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-text mb-2">Is this a one-time payment?</h3>
+              <h3 className="text-base font-semibold text-text mb-2">Do I get lifetime access?</h3>
               <p className="text-text-secondary text-sm leading-relaxed">
-                Yes! Pay once, own forever. No subscriptions, no recurring charges, no hidden fees.
+                Yes! Once you purchase, you have lifetime access to all current content and all future updates at no extra cost.
               </p>
             </div>
 
             <div className="bg-surface border border-border rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-text mb-2">Can I upgrade later?</h3>
+              <h3 className="text-base font-semibold text-text mb-2">What is the difference between Starter and Complete?</h3>
               <p className="text-text-secondary text-sm leading-relaxed">
-                Yes, you can upgrade from Essentials to Complete at any time and only pay the difference.
+                <strong className="text-text">Starter</strong> gives you 20–30 core parts — good for a basic overview. <strong className="text-text">Complete</strong> includes all 100+ parts with the full Seerah journey, plus advanced study materials, quizzes, and deep dives. Most serious students choose Complete.
               </p>
             </div>
 
             <div className="bg-surface border border-border rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-text mb-2">Do I get all future updates?</h3>
+              <h3 className="text-base font-semibold text-text mb-2">Is this suitable for families?</h3>
               <p className="text-text-secondary text-sm leading-relaxed">
-                Yes! Your purchase includes all future content updates, improvements, and new features at no extra cost.
+                Absolutely. The content is structured for adults and older students. Many families use it together for family learning sessions or homeschooling.
+              </p>
+            </div>
+
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <h3 className="text-base font-semibold text-text mb-2">Can teachers use this?</h3>
+              <p className="text-text-secondary text-sm leading-relaxed">
+                Yes! Teachers use the videos, slides, study guides, and visuals to teach Seerah in classes, weekend schools, and study circles. The Complete plan is ideal for educators.
+              </p>
+            </div>
+
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <h3 className="text-base font-semibold text-text mb-2">Will more content be added?</h3>
+              <p className="text-text-secondary text-sm leading-relaxed">
+                Yes. During early access, we're continually improving and expanding the platform. All future content, features, and improvements are included at no extra cost when you purchase now.
+              </p>
+            </div>
+
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <h3 className="text-base font-semibold text-text mb-2">Can I upgrade later?</h3>
+              <p className="text-text-secondary text-sm leading-relaxed">
+                Yes! If you start with Starter, you can upgrade to Complete anytime and only pay the difference ($30).
               </p>
             </div>
           </div>

@@ -5,30 +5,28 @@
 export const PLANS = {
   essentials: {
     id: "essentials",
-    name: "Seerah Essentials",
+    name: "Seerah Starter",
     price: 4900, // $49.00 in cents
     features: [
-      "20–30 core parts",
-      "All asset types per part",
-      "The essential Seerah timeline",
-      "Video, audio, briefings",
-      "Mindmaps and infographics",
+      "20–30 core Seerah parts",
+      "Basic timeline and summaries",
+      "Selected videos and visuals",
+      "Good for a quick overview",
       "Lifetime access",
     ],
   },
   complete: {
     id: "complete",
-    name: "Complete Seerah System",
+    name: "Complete Seerah Academy",
     price: 7900, // $79.00 in cents
     features: [
-      "All 100+ parts — the complete Seerah",
-      "Every asset type per part",
-      "Full chronological journey",
-      "Video, audio, briefings",
-      "Mindmaps, infographics, slides",
-      "Study guides and reports",
-      "Source materials and deep dives",
-      "Lifetime access — no limits",
+      "All 100+ Seerah parts in order",
+      "Understand every major event with proper context",
+      "Videos, audio, slides, summaries, mindmaps, quizzes, and study guides",
+      "Qur'an and hadith connections where directly relevant",
+      "Built for serious students, families, and teachers",
+      "Lifetime access — no subscriptions",
+      "Future improvements included during early access",
     ],
     recommended: true,
   },
