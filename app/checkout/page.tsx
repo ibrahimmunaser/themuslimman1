@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
@@ -75,7 +75,7 @@ function CheckoutForm({ plan }: { plan: typeof PLANS[PlanId] }) {
   );
 }
 
-export default function CheckoutPage() {
+export function CheckoutPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const planId = (searchParams.get("plan") || "complete") as PlanId;
@@ -235,5 +235,20 @@ export default function CheckoutPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-ink text-text flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-sm text-text-secondary">Loading checkout...</p>
+        </div>
+      </div>
+    }>
+      <CheckoutPageContent />
+    </Suspense>
   );
 }
