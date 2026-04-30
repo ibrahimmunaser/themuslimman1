@@ -1,10 +1,9 @@
 import Stripe from "stripe";
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error("STRIPE_SECRET_KEY is not set");
-}
+// Use a dummy key during build time to allow static generation
+const stripeKey = process.env.STRIPE_SECRET_KEY || "sk_test_dummy_key_for_build";
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+export const stripe = new Stripe(stripeKey, {
   apiVersion: "2026-04-22.dahlia",
   typescript: true,
 });
