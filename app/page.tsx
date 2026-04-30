@@ -72,7 +72,7 @@ export default async function LandingPage() {
               href="/signup-checkout?plan=complete"
               className={buttonClass("primary", "xl", "shadow-2xl shadow-gold/20")}
             >
-              Get Complete Access
+              Own Complete Academy
               <ArrowRight className="w-5 h-5" />
             </Link>
             <Link
@@ -133,6 +133,64 @@ export default async function LandingPage() {
       </section>
 
       {/* ============================================
+          PREVIEW BEFORE BUYING
+      ============================================ */}
+      <section className="py-16 border-t border-border">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-10">
+            <p className="text-gold text-sm font-medium uppercase tracking-widest mb-3">
+              See What You're Getting
+            </p>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-3">
+              Preview the System Before You Buy
+            </h2>
+            <p className="text-text-secondary max-w-xl mx-auto">
+              No surprises. Watch Part 1 for free and see exactly how the Complete Seerah Academy works.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-gold/20 bg-surface p-6 md:p-8">
+            <div className="grid md:grid-cols-2 gap-8 items-center">
+              <div>
+                <h3 className="text-xl font-bold text-text mb-3">Part 1: Pre-Islamic Arabia</h3>
+                <p className="text-sm text-text-secondary leading-relaxed mb-4">
+                  Within the first lesson, you'll understand why Arabia's geography, tribes, trade routes, and surrounding empires mattered before revelation began.
+                </p>
+                <ul className="space-y-2 mb-6">
+                  {[
+                    "See the video lesson format",
+                    "Review the briefing document",
+                    "Explore the mindmap",
+                    "Check out the study guide",
+                  ].map((item) => (
+                    <li key={item} className="flex items-center gap-2 text-sm text-text-secondary">
+                      <CheckCircle2 className="w-4 h-4 text-gold flex-shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  href="/preview/part-1"
+                  className={buttonClass("secondary", "lg")}
+                >
+                  <Video className="w-5 h-5" />
+                  Preview Part 1 Free
+                </Link>
+              </div>
+              <div className="aspect-video rounded-xl bg-ink border border-border flex items-center justify-center">
+                <div className="text-center">
+                  <div className="w-16 h-16 rounded-full bg-gold/20 border border-gold/30 flex items-center justify-center mx-auto mb-3">
+                    <Video className="w-8 h-8 text-gold" />
+                  </div>
+                  <p className="text-sm text-text-muted">Part 1 Preview</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================
           PRICING (DIRECTLY AFTER HERO)
       ============================================ */}
       <section id="pricing" className="py-16 border-t border-border bg-surface/30">
@@ -145,7 +203,7 @@ export default async function LandingPage() {
               Choose Your Plan
             </h2>
             <p className="text-text-secondary max-w-lg mx-auto">
-              One-time payment. Lifetime access. No subscriptions.
+              One-time payment. Own it for life. No subscriptions.
             </p>
           </div>
 
@@ -154,10 +212,13 @@ export default async function LandingPage() {
             <div className="relative p-6 rounded-2xl border border-border bg-surface flex flex-col">
               <div className="mb-5">
                 <p className="text-text-muted text-sm font-medium mb-1">Seerah Starter</p>
-                <div className="flex items-baseline gap-2">
+                <div className="flex items-baseline gap-2 mb-1">
                   <span className="text-4xl font-bold text-text">$49</span>
                 </div>
-                <p className="text-xs text-text-muted mt-2 italic">
+                <p className="text-xs text-success font-medium mb-2">
+                  One dinner out costs more than this.
+                </p>
+                <p className="text-xs text-text-muted italic">
                   Starter is for people who want a limited preview, not the complete journey.
                 </p>
               </div>
@@ -201,24 +262,32 @@ export default async function LandingPage() {
               
               <div className="mb-5">
                 <p className="text-gold text-sm font-medium mb-1">Complete Seerah Academy</p>
-                <div className="flex items-baseline gap-2 mb-2">
+                <div className="flex items-baseline gap-2 mb-1">
                   <span className="text-4xl font-bold text-text">$79</span>
                   <span className="text-text-muted text-sm line-through">$199</span>
                 </div>
-                <p className="text-xs text-text-secondary italic mb-1">
+                <div className="space-y-1 mb-2">
+                  <p className="text-xs text-success font-medium">
+                    Less than $0.80 per Seerah part · Own it for life
+                  </p>
+                  <p className="text-xs text-gold">
+                    One textbook can cost more than this full system
+                  </p>
+                </div>
+                <p className="text-xs text-text-secondary italic">
                   For those who want to actually understand the Seerah — not just hear it.
                 </p>
               </div>
 
               <ul className="space-y-2.5 mb-7 flex-1">
                 {[
-                  "Full 100+ part structured Seerah journey",
+                  "Own the full 100+ part structured Seerah journey for life",
                   "Understand every major event with proper context",
                   "Step-by-step chronological clarity",
                   "Videos, audio, slides, summaries, mindmaps, quizzes, study guides",
+                  "Use for yourself, your children, or family study nights",
                   "Qur'an and hadith connections where directly relevant",
                   "Built as a complete learning system — not scattered lectures",
-                  "Lifetime access — no subscriptions",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-3 text-sm text-text">
                     <CheckCircle2 className="w-5 h-5 text-gold flex-shrink-0 mt-0.5" />
@@ -231,7 +300,7 @@ export default async function LandingPage() {
                 href="/signup-checkout?plan=complete"
                 className={buttonClass("primary", "lg", "w-full justify-center shadow-lg shadow-gold/20")}
               >
-                Get Complete Access
+                Own Complete Academy
                 <ArrowRight className="w-4 h-4" />
               </Link>
 
@@ -241,11 +310,38 @@ export default async function LandingPage() {
             </div>
           </div>
 
+          {/* Why Now - Urgency */}
+          <div className="mb-8 p-4 rounded-xl border border-gold/20 bg-gold-bg text-center">
+            <p className="text-sm text-text-secondary leading-relaxed">
+              <span className="font-semibold text-text">Early access pricing is temporary</span> because the platform is still expanding. As more lessons, quizzes, and features are added, the price may increase.
+            </p>
+          </div>
+
+          {/* Mini FAQ - Friction Killers */}
+          <div className="grid sm:grid-cols-2 gap-3 mb-8">
+            {[
+              { q: "Is this lifetime access?", a: "Yes." },
+              { q: "Is this a subscription?", a: "No." },
+              { q: "Can I upgrade later?", a: "Yes." },
+              { q: "Do I get instant access?", a: "Yes." },
+              { q: "Can I use it with my family?", a: "Yes." },
+              { q: "7-day refund guarantee?", a: "Yes." },
+            ].map((item) => (
+              <div key={item.q} className="flex items-center justify-between p-3 rounded-lg bg-surface border border-border">
+                <span className="text-sm text-text-secondary">{item.q}</span>
+                <span className="text-sm font-semibold text-gold">{item.a}</span>
+              </div>
+            ))}
+          </div>
+
           <div className="text-center">
-            <div className="inline-flex items-center gap-2 text-sm text-text-muted">
+            <div className="inline-flex items-center gap-2 text-sm text-text-muted mb-2">
               <Lock className="w-4 h-4" />
-              <span>Secure payment · Instant access · Lifetime ownership</span>
+              <span>Secure payment · Instant access · Own it for life</span>
             </div>
+            <p className="text-xs text-success">
+              7-day refund guarantee. If it's not what you expected, email us.
+            </p>
           </div>
         </div>
       </section>
@@ -302,6 +398,87 @@ export default async function LandingPage() {
           <div className="p-5 rounded-xl border border-gold/20 bg-gold-bg text-center">
             <p className="text-text-secondary leading-relaxed">
               The Seerah is the most important biography ever written — <span className="text-text font-medium">the life of the final Prophet ﷺ.</span> You deserve to know it completely, clearly, and in order.
+            </p>
+          </div>
+
+          {/* Loss Aversion */}
+          <div className="mt-6 p-5 rounded-xl border border-orange-500/20 bg-orange-500/5 text-center">
+            <p className="text-text-secondary leading-relaxed">
+              <span className="text-orange-400 font-medium">If you keep learning Seerah through scattered clips</span>, you'll keep remembering pieces but missing the full journey.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================
+          WHO THIS IS FOR / NOT FOR
+      ============================================ */}
+      <section className="py-16 border-t border-border bg-surface/30">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-3">
+              Is This Right For You?
+            </h2>
+            <p className="text-text-secondary max-w-xl mx-auto">
+              This system is built for serious learners. Not everyone will benefit equally.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* This is for you */}
+            <div className="p-6 rounded-2xl border border-success/30 bg-success/5">
+              <div className="flex items-center gap-2 mb-4">
+                <CircleCheck className="w-6 h-6 text-success" />
+                <h3 className="text-lg font-bold text-text">This is for you if:</h3>
+              </div>
+              <ul className="space-y-3">
+                {[
+                  "You want the Seerah in order",
+                  "You're tired of scattered lectures",
+                  "You want to teach your family",
+                  "You want visuals, quizzes, and summaries",
+                  "You prefer structured study over random clips",
+                  "You want to understand context, not just stories",
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-3 text-sm text-text-secondary">
+                    <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0 mt-0.5" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* This is NOT for you */}
+            <div className="p-6 rounded-2xl border border-orange-500/30 bg-orange-500/5">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-6 h-6 rounded-full bg-orange-500/20 border border-orange-500/30 flex items-center justify-center">
+                  <span className="text-orange-400 text-lg font-bold">✕</span>
+                </div>
+                <h3 className="text-lg font-bold text-text">This is NOT for you if:</h3>
+              </div>
+              <ul className="space-y-3">
+                {[
+                  "You only want entertainment",
+                  "You don't want structured study",
+                  "You want random short clips only",
+                  "You're not ready to commit to learning",
+                  "You prefer quick highlights over depth",
+                  "You're not interested in understanding context",
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-3 text-sm text-text-secondary">
+                    <div className="w-5 h-5 rounded-full bg-orange-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span className="text-orange-400 text-xs">✕</span>
+                    </div>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          <div className="mt-8 text-center p-5 rounded-xl border border-gold/20 bg-gold-bg">
+            <p className="text-text font-medium">
+              This system rewards serious learners who want to truly understand the Prophet's ﷺ life.
             </p>
           </div>
         </div>
@@ -480,7 +657,7 @@ export default async function LandingPage() {
             href="/signup-checkout?plan=complete"
             className={buttonClass("primary", "xl", "shadow-2xl shadow-gold/25")}
           >
-            Get Complete Access
+            Own Complete Academy
             <ArrowRight className="w-5 h-5" />
           </Link>
         </div>
@@ -650,7 +827,7 @@ export default async function LandingPage() {
             href="/signup-checkout?plan=complete"
             className={buttonClass("primary", "xl", "shadow-2xl shadow-gold/25 mx-auto")}
           >
-            Get Complete Access
+            Own Complete Academy
             <ArrowRight className="w-5 h-5" />
           </Link>
 
@@ -659,7 +836,7 @@ export default async function LandingPage() {
             <span>·</span>
             <span>Instant Access</span>
             <span>·</span>
-            <span>Lifetime Ownership</span>
+            <span>Own It Forever</span>
           </div>
         </div>
       </section>
