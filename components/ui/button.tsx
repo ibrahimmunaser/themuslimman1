@@ -1,3 +1,4 @@
+import { Slot } from "@radix-ui/react-slot";
 import { clsx } from "clsx";
 import type { ButtonHTMLAttributes } from "react";
 
@@ -34,19 +35,23 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "outline" | "ghost" | "danger";
   size?: "sm" | "md" | "lg" | "xl";
   loading?: boolean;
+  asChild?: boolean;
 }
 
 export function Button({
   variant = "primary",
   size = "md",
   loading = false,
+  asChild = false,
   className,
   children,
   disabled,
   ...props
 }: ButtonProps) {
+  const Comp = asChild ? Slot : "button";
+  
   return (
-    <button
+    <Comp
       className={buttonClass(variant, size, className)}
       disabled={disabled || loading}
       {...props}
@@ -73,6 +78,6 @@ export function Button({
         </svg>
       )}
       {children}
-    </button>
+    </Comp>
   );
 }
