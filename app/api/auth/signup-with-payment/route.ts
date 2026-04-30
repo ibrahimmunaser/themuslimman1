@@ -138,7 +138,7 @@ export async function POST(req: NextRequest) {
         fullName: fullName.trim(),
         username,
         email: email.toLowerCase(),
-        password: hashedPassword,
+        passwordHash: hashedPassword,
         emailVerified: false,
         verificationToken,
         verificationExpires,
