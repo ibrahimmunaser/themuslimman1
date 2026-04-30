@@ -51,40 +51,32 @@ const testimonials: Testimonial[] = [
 
 export function TestimonialsSection() {
   return (
-    <section className="section-pad border-t border-border bg-surface/30">
+    <section className="py-16 border-t border-border bg-surface/30">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="text-center mb-12">
-          <p className="text-gold text-sm font-medium uppercase tracking-widest mb-4">
-            Student Reviews
-          </p>
           <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-            Thousands Learning the Seerah Properly
+            Built as a Complete 100+ Part Seerah System
           </h2>
           <p className="text-text-secondary max-w-2xl mx-auto">
-            Join students from over 50 countries who are finally understanding the life of the Prophet ﷺ
-            from beginning to end.
+            Not scattered lectures. Not random clips. A full structured journey designed for real learning.
           </p>
         </div>
 
-        {/* Stats */}
+        {/* Product Truth (Not Fake Stats) */}
         <div className="flex flex-wrap items-center justify-center gap-8 mb-14">
           <div className="text-center">
-            <div className="text-3xl sm:text-4xl font-bold text-text mb-1">5,000+</div>
-            <div className="text-sm text-text-muted">Active Students</div>
+            <div className="text-3xl sm:text-4xl font-bold text-gold mb-1">100+</div>
+            <div className="text-sm text-text-muted">Structured Parts</div>
           </div>
           <div className="hidden sm:block w-px h-12 bg-border" />
           <div className="text-center">
-            <div className="flex items-center gap-1 mb-1 justify-center">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} className="w-5 h-5 fill-gold text-gold" />
-              ))}
-            </div>
-            <div className="text-sm text-text-muted">4.9/5.0 Average Rating</div>
+            <div className="text-3xl sm:text-4xl font-bold text-gold mb-1">8+</div>
+            <div className="text-sm text-text-muted">Asset Types Per Part</div>
           </div>
           <div className="hidden sm:block w-px h-12 bg-border" />
           <div className="text-center">
-            <div className="text-3xl sm:text-4xl font-bold text-text mb-1">97%</div>
-            <div className="text-sm text-text-muted">Completion Rate</div>
+            <div className="text-3xl sm:text-4xl font-bold text-gold mb-1">1</div>
+            <div className="text-sm text-text-muted">Complete System</div>
           </div>
         </div>
 
@@ -126,18 +118,6 @@ export function TestimonialsSection() {
               </div>
             </div>
           ))}
-        </div>
-
-        {/* Trust badges */}
-        <div className="mt-12 flex flex-wrap items-center justify-center gap-6 text-xs text-text-muted">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
-            <span>1,200+ Students Online Now</span>
-          </div>
-          <span className="hidden sm:inline">·</span>
-          <span>50+ Countries</span>
-          <span className="hidden sm:inline">·</span>
-          <span>Trusted Since 2025</span>
         </div>
       </div>
     </section>

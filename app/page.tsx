@@ -56,15 +56,15 @@ export default async function LandingPage() {
           </Badge>
 
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1] mb-6">
-            Most Muslims Never Truly
+            Most Muslims Only Know
             <br />
-            <span className="text-gradient-gold">Understand the Seerah.</span>
+            <span className="text-gradient-gold">Fragments of the Seerah.</span>
           </h1>
 
           <p className="text-lg sm:text-xl text-text-secondary max-w-2xl mx-auto mb-10 leading-relaxed">
-            Not because they don't care — but because it's always taught in fragments.
+            Now understand the full journey clearly.
             <br />
-            This is the first complete system that lets you follow the life of the Prophet ﷺ step-by-step, with full clarity.
+            This is the first complete system that lets you follow the life of the Prophet ﷺ step-by-step, with full context and clarity.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
@@ -133,64 +133,7 @@ export default async function LandingPage() {
       </section>
 
       {/* ============================================
-          THE PROBLEM
-      ============================================ */}
-      <section className="py-16 border-t border-border">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-3">
-              You know fragments of the Seerah.
-              <br />
-              <span className="text-text-secondary">Not the full picture.</span>
-            </h2>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-4 mb-8">
-            {[
-              {
-                icon: "🧩",
-                title: "Scattered Knowledge",
-                desc: "You know a story here, a name there — but the full timeline has never been clear.",
-              },
-              {
-                icon: "📂",
-                title: "Content Everywhere",
-                desc: "YouTube lectures, PDFs, WhatsApp clips. Nothing is organized.",
-              },
-              {
-                icon: "😶",
-                title: "No Clear Starting Point",
-                desc: "You want to learn properly, but you don't know where to begin.",
-              },
-              {
-                icon: "⏳",
-                title: "Starting Over, Again",
-                desc: "You've started before. Life interrupts. You lose your place and restart.",
-              },
-            ].map((item) => (
-              <div
-                key={item.title}
-                className="flex gap-4 p-5 rounded-xl border border-border bg-surface hover:border-gold/20 transition-colors"
-              >
-                <span className="text-2xl flex-shrink-0">{item.icon}</span>
-                <div>
-                  <h3 className="font-semibold text-text mb-1">{item.title}</h3>
-                  <p className="text-sm text-text-secondary leading-relaxed">{item.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="p-5 rounded-xl border border-gold/20 bg-gold-bg text-center">
-            <p className="text-text-secondary leading-relaxed">
-              The Seerah is the most important biography ever written — <span className="text-text font-medium">the life of the final Prophet ﷺ.</span> You deserve to know it completely, clearly, and in order.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* ============================================
-          PRICING (MOVED UP)
+          PRICING (DIRECTLY AFTER HERO)
       ============================================ */}
       <section id="pricing" className="py-16 border-t border-border bg-surface/30">
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
@@ -300,6 +243,63 @@ export default async function LandingPage() {
               <Lock className="w-4 h-4" />
               <span>Secure payment · Instant access · Lifetime ownership</span>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================
+          THE PROBLEM
+      ============================================ */}
+      <section className="py-16 border-t border-border">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-3">
+              You know fragments of the Seerah.
+              <br />
+              <span className="text-text-secondary">Not the full picture.</span>
+            </h2>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4 mb-8">
+            {[
+              {
+                icon: "🧩",
+                title: "Scattered Knowledge",
+                desc: "You know a story here, a name there — but the full timeline has never been clear.",
+              },
+              {
+                icon: "📂",
+                title: "Content Everywhere",
+                desc: "YouTube lectures, PDFs, WhatsApp clips. Nothing is organized.",
+              },
+              {
+                icon: "😶",
+                title: "No Clear Starting Point",
+                desc: "You want to learn properly, but you don't know where to begin.",
+              },
+              {
+                icon: "⏳",
+                title: "Starting Over, Again",
+                desc: "You've started before. Life interrupts. You lose your place and restart.",
+              },
+            ].map((item) => (
+              <div
+                key={item.title}
+                className="flex gap-4 p-5 rounded-xl border border-border bg-surface hover:border-gold/20 transition-colors"
+              >
+                <span className="text-2xl flex-shrink-0">{item.icon}</span>
+                <div>
+                  <h3 className="font-semibold text-text mb-1">{item.title}</h3>
+                  <p className="text-sm text-text-secondary leading-relaxed">{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="p-5 rounded-xl border border-gold/20 bg-gold-bg text-center">
+            <p className="text-text-secondary leading-relaxed">
+              The Seerah is the most important biography ever written — <span className="text-text font-medium">the life of the final Prophet ﷺ.</span> You deserve to know it completely, clearly, and in order.
+            </p>
           </div>
         </div>
       </section>
