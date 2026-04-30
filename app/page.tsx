@@ -545,7 +545,7 @@ export default async function LandingPage() {
               </ul>
 
               <Link
-                href="/get-started?plan=essentials"
+                href="/signup-checkout?plan=essentials"
                 className={buttonClass("secondary", "lg", "w-full justify-center")}
               >
                 Get Started
@@ -592,7 +592,7 @@ export default async function LandingPage() {
               </ul>
 
               <Link
-                href="/get-started?plan=complete"
+                href="/signup-checkout?plan=complete"
                 className={buttonClass("primary", "lg", "w-full justify-center")}
               >
                 Get Complete Access
@@ -681,7 +681,7 @@ export default async function LandingPage() {
           </p>
 
           <Link
-            href="/get-started"
+            href="/signup-checkout?plan=complete"
             className={buttonClass("primary", "xl", "shadow-2xl shadow-gold/25 mx-auto")}
           >
             Get Complete Access Now
