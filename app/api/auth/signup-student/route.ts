@@ -64,6 +64,7 @@ export async function POST(request: NextRequest) {
     // In development, auto-verify emails. In production, require verification.
     const isDevelopment = process.env.NODE_ENV !== "production";
     const verificationToken = isDevelopment ? null : generateToken();
+    const verificationExpires = isDevelopment ? null : new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
     // Create user and student profile in transaction
     const user = await prisma.$transaction(async (tx) => {
@@ -76,6 +77,7 @@ export async function POST(request: NextRequest) {
           role: "student",
           emailVerified: isDevelopment,
           verificationToken,
+          verificationExpires,
           student: {
             create: {
               isActive: true,
