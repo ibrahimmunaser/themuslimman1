@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff, ArrowRight, Mail, User, Check } from "lucide-react";
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { previewUsername } from "@/lib/username-generator";
 
-export default function NewStudentSignupPage() {
+function SignupPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const plan = searchParams.get("plan") || "complete";
@@ -264,5 +264,17 @@ export default function NewStudentSignupPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function NewStudentSignupPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-pulse text-text-secondary">Loading...</div>
+      </div>
+    }>
+      <SignupPageContent />
+    </Suspense>
   );
 }
