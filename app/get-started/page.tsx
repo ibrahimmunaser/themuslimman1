@@ -70,7 +70,7 @@ function GetStartedPageContent() {
             {/* CTA */}
             <div className="space-y-3">
               <Link
-                href={`/signup?plan=${plan}`}
+                href={`/signup-checkout?plan=${plan}`}
                 className={buttonClass("primary", "lg", "w-full justify-center")}
               >
                 Create Account & Start Learning
