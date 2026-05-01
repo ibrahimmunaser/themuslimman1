@@ -5,6 +5,14 @@ import { getCurrentUser } from "@/lib/auth";
 export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser();
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: "You must be logged in to make a purchase" },
+        { status: 401 }
+      );
+    }
+
     const { planId } = await request.json();
 
     if (!planId || !(planId in PLANS)) {
@@ -16,27 +24,21 @@ export async function POST(request: NextRequest) {
 
     const plan = PLANS[planId as PlanId];
 
-    // Create payment intent - works for both logged-in users and guest checkout
-    const paymentIntentData: any = {
+    // Create a payment intent
+    const paymentIntent = await stripe.paymentIntents.create({
       amount: plan.price,
       currency: "usd",
       automatic_payment_methods: {
         enabled: true,
       },
       metadata: {
+        userId: user.id,
         planId: plan.id,
         planName: plan.name,
       },
       description: `${plan.name} - TheMuslimMan Seerah Course`,
-    };
-
-    // Add user metadata if logged in
-    if (user) {
-      paymentIntentData.metadata.userId = user.id;
-      paymentIntentData.receipt_email = user.email;
-    }
-
-    const paymentIntent = await stripe.paymentIntents.create(paymentIntentData);
+      receipt_email: user.email,
+    });
 
     return NextResponse.json({
       clientSecret: paymentIntent.client_secret,
