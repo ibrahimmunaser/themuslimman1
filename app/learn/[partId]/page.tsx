@@ -118,9 +118,9 @@ export default async function LearnPartPage(props: Props) {
       infographicBento: infBento ? await getR2PublicUrl(infBento) : undefined,
       mindmap: hasMindmap ? await getR2AssetUrl(`part-${n}/mindmap/mindmap.html`) : undefined,
       slides: {
-        presented: slidesPresentedFiles.map((f: string) => getR2PublicUrl(f)),
-        detailed: slidesDetailedFiles.map((f: string) => getR2PublicUrl(f)),
-        facts: slidesFactsFiles.map((f: string) => getR2PublicUrl(f)),
+        presented: (await Promise.all(slidesPresentedFiles.map((f: string) => getR2PublicUrl(f)))).filter((url): url is string => url !== null),
+        detailed: (await Promise.all(slidesDetailedFiles.map((f: string) => getR2PublicUrl(f)))).filter((url): url is string => url !== null),
+        facts: (await Promise.all(slidesFactsFiles.map((f: string) => getR2PublicUrl(f)))).filter((url): url is string => url !== null),
       },
     },
     briefing: briefingText,
