@@ -1,13 +1,9 @@
-"use client";
-
 import Link from "next/link";
-import { useState } from "react";
-import { Menu, X } from "lucide-react";
-import { buttonClass } from "@/components/ui/button";
+import { Suspense } from "react";
+import { NavbarUserMenu } from "./navbar-user-menu";
+import { NavbarMobileMenu } from "./navbar-mobile-menu";
 
 export function Navbar() {
-  const [open, setOpen] = useState(false);
-
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
       <div className="border-b border-white/5 bg-ink/80 backdrop-blur-xl">
@@ -27,42 +23,16 @@ export function Navbar() {
             <Link href="#pricing" className="text-sm text-text-secondary hover:text-text transition-colors">
               Pricing
             </Link>
-            <Link href="/login" className="text-sm text-text-secondary hover:text-text transition-colors">
-              Login
-            </Link>
-            <Link href="#pricing" className={buttonClass("primary", "sm")}>
-              Get Started
-            </Link>
+            <Suspense fallback={
+              <div className="text-sm text-text-secondary">Loading...</div>
+            }>
+              <NavbarUserMenu />
+            </Suspense>
           </div>
 
-          {/* Mobile menu button */}
-          <button
-            onClick={() => setOpen(!open)}
-            className="md:hidden text-text-secondary hover:text-text transition-colors"
-            aria-label="Toggle menu"
-          >
-            {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
+          {/* Mobile menu */}
+          <NavbarMobileMenu />
         </nav>
-
-        {/* Mobile menu */}
-        {open && (
-          <div className="md:hidden border-t border-border px-4 py-4 flex flex-col gap-4 bg-ink">
-            <Link href="#pricing" onClick={() => setOpen(false)} className="text-sm text-text-secondary hover:text-text transition-colors">
-              Pricing
-            </Link>
-            <Link href="/login" onClick={() => setOpen(false)} className="text-sm text-text-secondary hover:text-text transition-colors">
-              Login
-            </Link>
-            <Link
-              href="#pricing"
-              onClick={() => setOpen(false)}
-              className={buttonClass("primary", "sm", "w-full justify-center")}
-            >
-              Get Started
-            </Link>
-          </div>
-        )}
       </div>
     </header>
   );
