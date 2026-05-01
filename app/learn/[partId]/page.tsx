@@ -40,7 +40,7 @@ export async function generateMetadata(props: Props) {
   
   return {
     title: `Part ${part.partNumber}: ${part.title}`,
-    description: part.shortDescription || part.longDescription || `Seerah Part ${part.partNumber}`,
+    description: part.description || `Seerah Part ${part.partNumber}`,
   };
 }
 
