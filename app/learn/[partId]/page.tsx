@@ -52,15 +52,36 @@ export default async function LearnPartPage(props: Props) {
   const partBase = getPartById(partId);
   if (!partBase) notFound();
 
-  // Check if user has paid
-  const dbUser = await prisma.user.findUnique({
-    where: { id: user.id },
-    select: { hasPaid: true },
+  // Check user's purchases
+  const purchases = await prisma.purchase.findMany({
+    where: {
+      userId: user.id,
+      status: "succeeded",
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
   });
 
-  if (!dbUser?.hasPaid) {
-    // Redirect to pricing if not paid
+  if (purchases.length === 0) {
     redirect("/pricing");
+  }
+
+  // Get the highest tier plan purchased
+  const hasCompletePlan = purchases.some(p => p.planId === "complete");
+  const hasEssentialsPlan = purchases.some(p => p.planId === "essentials");
+  const userPlan = hasCompletePlan ? "complete" : hasEssentialsPlan ? "essentials" : null;
+
+  if (!userPlan) {
+    redirect("/pricing");
+  }
+
+  // Check if user has access to this specific part
+  const hasAccess = userPlan === "complete" || (userPlan === "essentials" && partBase.includedInEssentials);
+
+  if (!hasAccess) {
+    // Redirect to learn page with message
+    redirect("/learn?upgrade=true");
   }
 
   const n = partBase.partNumber;
