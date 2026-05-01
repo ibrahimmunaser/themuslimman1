@@ -65,13 +65,9 @@ export default async function LearnPartPage(props: Props) {
 
   const n = partBase.partNumber;
   
-  // Get user's progress for this part
-  const progress = await prisma.studentProgress.findFirst({
-    where: {
-      studentProfileId: user.studentProfileId,
-      classCourseItemId: null, // Direct learn progress (not tied to a class)
-    },
-  });
+  // Get user's progress for this part (will be implemented later)
+  // TODO: Add direct progress tracking outside of class context
+  const progress = null;
 
   // Load assets from R2
   const [
