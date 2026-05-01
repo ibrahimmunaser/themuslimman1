@@ -67,8 +67,14 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
         amount: paymentIntent.amount,
         currency: paymentIntent.currency,
         stripePaymentIntentId: paymentIntent.id,
-        status: "completed",
+        status: "succeeded",
       },
+    });
+
+    // Also update user's hasPaid flag
+    await prisma.user.update({
+      where: { id: userId },
+      data: { hasPaid: true },
     });
 
     console.log(`Purchase recorded for user ${userId}: ${planName}`);
