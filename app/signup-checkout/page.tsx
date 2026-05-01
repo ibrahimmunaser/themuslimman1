@@ -58,7 +58,7 @@ function SignupCheckoutContent() {
 
     try {
       // Create account
-      const response = await fetch("/api/auth/signup", {
+      const response = await fetch("/api/auth/signup-student", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -76,7 +76,23 @@ function SignupCheckoutContent() {
         return;
       }
 
-      // Account created successfully, redirect to checkout to complete payment
+      // Account created successfully, now sign in
+      const loginResponse = await fetch("/api/auth/signin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: data.username,
+          password: form.password,
+        }),
+      });
+
+      if (!loginResponse.ok) {
+        // Account created but login failed - redirect to login page
+        router.push(`/login?redirect=/checkout?plan=${planId}`);
+        return;
+      }
+
+      // Successfully signed in, redirect to checkout
       router.push(`/checkout?plan=${planId}`);
     } catch (err) {
       setError("An error occurred. Please try again.");
