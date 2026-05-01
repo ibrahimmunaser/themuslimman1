@@ -156,7 +156,7 @@ export default async function LearnPartPage(props: Props) {
                 Part {part.partNumber}
               </span>
               <span className="text-xs text-text-muted uppercase tracking-wider hidden sm:inline">
-                {ERA_MAP[part.era as keyof typeof ERA_MAP] || part.era}
+                {ERA_MAP[part.era as keyof typeof ERA_MAP]?.label || part.era}
               </span>
             </div>
           </div>

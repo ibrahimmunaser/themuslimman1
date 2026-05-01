@@ -24,7 +24,7 @@ export default async function LearnIndexPage() {
 
   // Get all parts and group by era
   const partsByEra = PARTS.reduce((acc, part) => {
-    const era = ERA_MAP[part.era as keyof typeof ERA_MAP] || part.era;
+    const era = ERA_MAP[part.era as keyof typeof ERA_MAP]?.label || part.era;
     if (!acc[era]) acc[era] = [];
     acc[era].push(part);
     return acc;
