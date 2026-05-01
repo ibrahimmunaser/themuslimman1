@@ -24,6 +24,8 @@ function SignupCheckoutContent() {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showVerificationMessage, setShowVerificationMessage] = useState(false);
+  const [createdUsername, setCreatedUsername] = useState("");
 
   const usernamePreview = form.fullName.trim().length >= 2 
     ? previewUsername(form.fullName) 
@@ -76,24 +78,33 @@ function SignupCheckoutContent() {
         return;
       }
 
-      // Account created successfully, now sign in
-      const loginResponse = await fetch("/api/auth/signin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: data.username,
-          password: form.password,
-        }),
-      });
+      // Account created successfully
+      setCreatedUsername(data.username);
+      
+      // Check if account is auto-verified (development) or needs verification (production)
+      const isAutoVerified = data.message?.includes("auto-verified");
+      
+      if (isAutoVerified) {
+        // In development, auto-login and redirect to checkout
+        const loginResponse = await fetch("/api/auth/signin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: data.username,
+            password: form.password,
+          }),
+        });
 
-      if (!loginResponse.ok) {
-        // Account created but login failed - redirect to login page
-        router.push(`/login?redirect=/checkout?plan=${planId}`);
-        return;
+        if (loginResponse.ok) {
+          router.push(`/checkout?plan=${planId}`);
+        } else {
+          router.push(`/login?redirect=/checkout?plan=${planId}`);
+        }
+      } else {
+        // In production, show verification message
+        setShowVerificationMessage(true);
+        setLoading(false);
       }
-
-      // Successfully signed in, redirect to checkout
-      router.push(`/checkout?plan=${planId}`);
     } catch (err) {
       setError("An error occurred. Please try again.");
       setLoading(false);
@@ -103,6 +114,58 @@ function SignupCheckoutContent() {
   if (!plan) {
     router.push("/");
     return null;
+  }
+
+  // Verification message view
+  if (showVerificationMessage) {
+    return (
+      <div className="min-h-screen bg-ink text-text flex items-center justify-center px-4">
+        <div className="max-w-2xl w-full">
+          <div className="bg-surface border border-border rounded-2xl p-8 text-center">
+            <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-gold/10 border border-gold/30 flex items-center justify-center">
+              <Check className="w-8 h-8 text-gold" />
+            </div>
+            
+            <h1 className="text-2xl font-bold mb-3">Account Created Successfully!</h1>
+            
+            <div className="mb-6 p-4 rounded-lg bg-gold/5 border border-gold/20">
+              <p className="text-sm text-text-muted mb-2">Your username:</p>
+              <p className="text-xl font-mono text-gold font-bold">{createdUsername}</p>
+              <p className="text-xs text-text-muted mt-2">Save this! You'll need it to sign in.</p>
+            </div>
+
+            <div className="mb-6 p-5 rounded-lg bg-blue-500/5 border border-blue-500/20 text-left">
+              <p className="text-base text-text mb-3">
+                <strong className="text-gold">📧 Check your email</strong>
+              </p>
+              <p className="text-sm text-text-secondary mb-2">
+                We sent a verification link to:
+              </p>
+              <p className="text-sm text-gold font-medium mb-3">{form.email}</p>
+              <p className="text-sm text-text-secondary">
+                Click the link in the email to verify your account, then sign in to complete your purchase.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <Button
+                variant="primary"
+                size="lg"
+                className="w-full"
+                onClick={() => router.push(`/login?redirect=/checkout?plan=${planId}`)}
+              >
+                Go to Sign In
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+              
+              <p className="text-xs text-text-muted">
+                After verifying your email, sign in to continue to checkout and complete your purchase.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
