@@ -17,38 +17,151 @@ function CheckoutForm({ plan }: { plan: typeof PLANS[PlanId] }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
+  
+  // Account details state
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate account details
+    if (!fullName.trim()) {
+      setError("Please enter your full name");
+      return;
+    }
+    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError("Please enter a valid email address");
+      return;
+    }
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
 
     if (!stripe || !elements) return;
 
     setProcessing(true);
     setError(null);
 
-    const { error: submitError } = await elements.submit();
-    if (submitError) {
-      setError(submitError.message || "An error occurred");
-      setProcessing(false);
-      return;
-    }
+    try {
+      // Submit payment form
+      const { error: submitError } = await elements.submit();
+      if (submitError) {
+        setError(submitError.message || "An error occurred");
+        setProcessing(false);
+        return;
+      }
 
-    const { error: confirmError } = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: `${window.location.origin}/payment/success`,
-      },
-    });
+      // Confirm payment with account details
+      const { error: confirmError } = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          return_url: `${window.location.origin}/payment/success?email=${encodeURIComponent(email)}&name=${encodeURIComponent(fullName)}`,
+          receipt_email: email,
+        },
+      });
 
-    if (confirmError) {
-      setError(confirmError.message || "Payment failed");
+      if (confirmError) {
+        setError(confirmError.message || "Payment failed");
+        setProcessing(false);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
       setProcessing(false);
     }
   };
 
+  const username = fullName
+    .toLowerCase()
+    .replace(/\s+/g, '')
+    .replace(/[^a-z0-9]/g, '');
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <PaymentElement />
+      {/* Account Details Section */}
+      <div className="space-y-4">
+        <h3 className="text-base font-medium text-text">Account Details</h3>
+        
+        <div>
+          <label htmlFor="fullName" className="block text-sm font-medium text-text-secondary mb-2">
+            Full name
+          </label>
+          <input
+            type="text"
+            id="fullName"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            className="w-full px-4 py-2.5 bg-ink border border-border rounded-lg text-text placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent transition-all"
+            placeholder="John Doe"
+            required
+          />
+          {fullName && (
+            <p className="mt-1.5 text-xs text-text-muted">
+              Your username will be: <span className="text-gold font-medium">{username || "..."}</span>
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium text-text-secondary mb-2">
+            Email address
+          </label>
+          <input
+            type="email"
+            id="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full px-4 py-2.5 bg-ink border border-border rounded-lg text-text placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent transition-all"
+            placeholder="you@example.com"
+            required
+          />
+        </div>
+
+        <div>
+          <label htmlFor="password" className="block text-sm font-medium text-text-secondary mb-2">
+            Password
+          </label>
+          <input
+            type="password"
+            id="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full px-4 py-2.5 bg-ink border border-border rounded-lg text-text placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent transition-all"
+            placeholder="••••••••"
+            minLength={8}
+            required
+          />
+        </div>
+
+        <div>
+          <label htmlFor="confirmPassword" className="block text-sm font-medium text-text-secondary mb-2">
+            Confirm password
+          </label>
+          <input
+            type="password"
+            id="confirmPassword"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            className="w-full px-4 py-2.5 bg-ink border border-border rounded-lg text-text placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent transition-all"
+            placeholder="••••••••"
+            minLength={8}
+            required
+          />
+        </div>
+      </div>
+
+      {/* Payment Details Section */}
+      <div className="space-y-4 pt-4 border-t border-border">
+        <h3 className="text-base font-medium text-text">Payment Information</h3>
+        <PaymentElement />
+      </div>
 
       {error && (
         <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
@@ -65,11 +178,18 @@ function CheckoutForm({ plan }: { plan: typeof PLANS[PlanId] }) {
         className="w-full justify-center"
       >
         <Lock className="w-4 h-4" />
-        Pay {formatPrice(plan.price)}
+        Complete Purchase - {formatPrice(plan.price)}
       </Button>
 
       <p className="text-xs text-text-muted text-center">
         Secure payment powered by Stripe · Your information is encrypted
+      </p>
+      
+      <p className="text-sm text-text-secondary text-center">
+        Already have an account?{" "}
+        <Link href="/signin" className="text-gold hover:text-gold-light transition-colors">
+          Sign in
+        </Link>
       </p>
     </form>
   );
@@ -188,7 +308,7 @@ export function CheckoutPageContent() {
           {/* Payment Form */}
           <div className="lg:col-span-3">
             <div className="bg-surface border border-border rounded-2xl p-6 sm:p-8">
-              <h2 className="text-lg font-semibold mb-6">Payment Details</h2>
+              <h2 className="text-lg font-semibold mb-6">Create Account & Complete Payment</h2>
 
               {loading && (
                 <div className="py-12 text-center">
