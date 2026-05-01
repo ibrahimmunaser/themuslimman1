@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { buttonClass } from "@/components/ui/button";
-import { User, LogOut } from "lucide-react";
+import { NavbarUserButton } from "./navbar-user-button";
 
 export async function NavbarUserMenu() {
   const user = await getCurrentUser();
@@ -20,7 +20,7 @@ export async function NavbarUserMenu() {
     );
   }
 
-  // Logged in - show user menu
+  // Logged in - show user menu with dropdown
   const firstName = user.fullName.split(" ")[0];
 
   return (
@@ -28,13 +28,7 @@ export async function NavbarUserMenu() {
       <Link href="/learn" className="text-sm text-text-secondary hover:text-text transition-colors">
         My Learning
       </Link>
-      <Link 
-        href="/learn"
-        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-surface border border-border hover:border-gold/30 transition-all"
-      >
-        <User className="w-4 h-4 text-gold" />
-        <span className="text-sm text-text font-medium">Welcome, {firstName}</span>
-      </Link>
+      <NavbarUserButton firstName={firstName} />
     </>
   );
 }
