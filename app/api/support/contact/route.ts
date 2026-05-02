@@ -32,16 +32,16 @@ export async function POST(request: Request) {
     const emailResults = await Promise.allSettled([
       // 1. Send confirmation email to student
       resend.emails.send({
-        from: process.env.EMAIL_FROM || "The Muslim Man Academy <support@themuslimman.com>",
+        from: process.env.EMAIL_FROM || "The Muslim Man Academy <admin@themuslimman.com>",
         to: email,
-        replyTo: process.env.ADMIN_EMAIL || "support@themuslimman.com",
+        replyTo: process.env.ADMIN_EMAIL || "admin@themuslimman.com",
         ...getStudentConfirmationEmail({ name, subject, message }),
       }),
       
       // 2. Send notification email to admin
       resend.emails.send({
-        from: process.env.EMAIL_FROM || "The Muslim Man Academy <support@themuslimman.com>",
-        to: process.env.ADMIN_EMAIL || "support@themuslimman.com",
+        from: process.env.EMAIL_FROM || "The Muslim Man Academy <admin@themuslimman.com>",
+        to: process.env.ADMIN_EMAIL || "admin@themuslimman.com",
         replyTo: email,
         ...getAdminNotificationEmail({
           ticketId: ticket.id,

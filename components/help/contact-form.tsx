@@ -71,7 +71,7 @@ export function ContactForm() {
                 <p className="text-red-400 font-medium mb-1">Failed to send message</p>
                 <p className="text-sm text-text-secondary">{errorMessage}</p>
                 <p className="text-sm text-text-muted mt-2">
-                  Or email us directly at: <a href="mailto:support@themuslimman.com" className="text-gold hover:underline">support@themuslimman.com</a>
+                  Or email us directly at: <a href="mailto:admin@themuslimman.com" className="text-gold hover:underline">admin@themuslimman.com</a>
                 </p>
               </div>
             </div>

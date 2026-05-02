@@ -156,7 +156,7 @@ export async function POST(req: NextRequest) {
     });
 
     const sentFrom = new Sender(
-      "noreply@themuslimman.com",
+      "admin@themuslimman.com",
       "Seerah LMS"
     );
 
