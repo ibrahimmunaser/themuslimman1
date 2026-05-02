@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import { customAlphabet } from "nanoid";
 import { prisma } from "@/lib/db";
 import { generateUniqueUsername, validateFullName } from "@/lib/username-generator";
-import { Resend } from "resend";
+import { MailerSend, EmailParams, Sender, Recipient } from "mailersend";
 
 const generateToken = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 32);
 
@@ -97,24 +97,25 @@ export async function POST(request: NextRequest) {
       const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify-email?token=${verificationToken}`;
 
       try {
-        const resend = new Resend(process.env.RESEND_API_KEY);
+        const mailerSend = new MailerSend({
+          apiKey: process.env.MAILERSEND_API_KEY || "",
+        });
 
-        const { error: emailError } = await resend.emails.send({
-          from: process.env.EMAIL_FROM || "TheMuslimMan <noreply@themuslimman.com>",
-          to: email,
-          subject: "Welcome to Seerah LMS - Verify your email",
-          html: generateWelcomeEmail({
+        const sentFrom = new Sender("noreply@themuslimman.com", "TheMuslimMan");
+        const recipients = [new Recipient(email, fullName.trim())];
+
+        const emailParams = new EmailParams()
+          .setFrom(sentFrom)
+          .setTo(recipients)
+          .setSubject("Welcome to Seerah LMS - Verify your email")
+          .setHtml(generateWelcomeEmail({
             fullName: fullName.trim(),
             username,
             verificationUrl,
-          }),
-        });
+          }));
 
-        if (emailError) {
-          console.error("Failed to send verification email:", emailError);
-        } else {
-          console.log(`[EMAIL] Verification email sent to ${email}`);
-        }
+        await mailerSend.email.send(emailParams);
+        console.log(`[EMAIL] Verification email sent to ${email}`);
       } catch (emailError) {
         console.error("Failed to send verification email:", emailError);
       }
