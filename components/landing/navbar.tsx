@@ -25,7 +25,7 @@ export async function Navbar() {
               <span className="text-gold text-xs font-bold">T</span>
             </div>
             <span className="text-text font-semibold text-sm tracking-wide">
-              The Muslim Man Academy
+              TheMuslimMan
             </span>
           </Link>
 
