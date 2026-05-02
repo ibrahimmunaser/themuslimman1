@@ -34,7 +34,7 @@ export async function POST(request: Request) {
         const emailResults = await Promise.allSettled([
           // 1. Send confirmation email to student
           resend.emails.send({
-            from: process.env.EMAIL_FROM || "TheMuslimMan <support@themuslimman.com>",
+            from: process.env.EMAIL_FROM || "TheMuslimMan <noreply@themuslimman.com>",
             to: email,
             replyTo: process.env.ADMIN_EMAIL || "admin@themuslimman.com",
             ...getStudentConfirmationEmail({ name, subject, message }),
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
           
           // 2. Send notification email to admin
           resend.emails.send({
-            from: process.env.EMAIL_FROM || "TheMuslimMan <support@themuslimman.com>",
+            from: process.env.EMAIL_FROM || "TheMuslimMan <noreply@themuslimman.com>",
             to: process.env.ADMIN_EMAIL || "admin@themuslimman.com",
             replyTo: email,
             ...getAdminNotificationEmail({
