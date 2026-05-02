@@ -38,7 +38,7 @@ export function StudentHeader({ userFirstName, userPlan }: StudentHeaderProps) {
               <span className="text-amber-500 text-xs font-bold">T</span>
             </div>
             <span className="text-white font-semibold text-sm tracking-wide hidden sm:inline">
-              The Muslim Man Academy
+              TheMuslimMan
             </span>
           </Link>
 

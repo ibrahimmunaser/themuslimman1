@@ -6,7 +6,7 @@ export function getStudentConfirmationEmail(data: {
   message: string;
 }) {
   return {
-    subject: "We received your message — The Muslim Man Academy",
+    subject: "We received your message — TheMuslimMan",
     html: `
 <!DOCTYPE html>
 <html>
@@ -35,7 +35,7 @@ export function getStudentConfirmationEmail(data: {
     <div class="content">
       <p>As-salamu alaykum ${data.name},</p>
       
-      <p>Thank you for reaching out to The Muslim Man Academy. We've received your message and will respond within 24-48 hours on business days.</p>
+      <p>Thank you for reaching out to TheMuslimMan. We've received your message and will respond within 24-48 hours on business days.</p>
       
       <div class="ticket-box">
         <h3>Your Message:</h3>
@@ -48,10 +48,10 @@ export function getStudentConfirmationEmail(data: {
       
       <p style="margin-top: 24px;">If you have any urgent issues, please reply to this email directly.</p>
       
-      <p style="margin-top: 24px; margin-bottom: 0;">Barakallahu feek,<br><strong>The Muslim Man Academy Team</strong></p>
+      <p style="margin-top: 24px; margin-bottom: 0;">Barakallahu feek,<br><strong>TheMuslimMan Team</strong></p>
     </div>
     <div class="footer">
-      <p>© ${new Date().getFullYear()} The Muslim Man Academy. All rights reserved.</p>
+      <p>© ${new Date().getFullYear()} TheMuslimMan. All rights reserved.</p>
       <p style="margin-top: 8px;"><a href="https://themuslimman.com" style="color: #D4A574; text-decoration: none;">themuslimman.com</a></p>
     </div>
   </div>
@@ -60,7 +60,7 @@ export function getStudentConfirmationEmail(data: {
     `,
     text: `As-salamu alaykum ${data.name},
 
-Thank you for reaching out to The Muslim Man Academy. We've received your message and will respond within 24-48 hours on business days.
+Thank you for reaching out to TheMuslimMan. We've received your message and will respond within 24-48 hours on business days.
 
 Your Message:
 Subject: ${data.subject}
@@ -71,9 +71,9 @@ In the meantime, you might find answers in our Help Center at https://themuslimm
 If you have any urgent issues, please reply to this email directly.
 
 Barakallahu feek,
-The Muslim Man Academy Team
+TheMuslimMan Team
 
-© ${new Date().getFullYear()} The Muslim Man Academy. All rights reserved.
+© ${new Date().getFullYear()} TheMuslimMan. All rights reserved.
 themuslimman.com`,
   };
 }
