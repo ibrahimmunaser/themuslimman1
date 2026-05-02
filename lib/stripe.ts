@@ -4,7 +4,7 @@ import Stripe from "stripe";
 const stripeKey = process.env.STRIPE_SECRET_KEY || "sk_test_dummy_key_for_build";
 
 export const stripe = new Stripe(stripeKey, {
-  apiVersion: "2026-04-22.dahlia",
+  // Let stripe-node use its own pinned API version for type compatibility
   typescript: true,
 });
 
