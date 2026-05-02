@@ -12,6 +12,7 @@ export async function getAdminDashboardData() {
     quizStats,
     recentSignups,
     completionStats,
+    openSupportTickets,
   ] = await Promise.all([
     // Total students
     prisma.user.count({ where: { role: ROLES.STUDENT } }),
@@ -55,6 +56,9 @@ export async function getAdminDashboardData() {
       where: { status: "completed" },
       _count: true,
     }),
+    
+    // Open support tickets
+    prisma.supportTicket.count({ where: { status: "open" } }),
   ]);
 
   return {
@@ -66,5 +70,6 @@ export async function getAdminDashboardData() {
     quizStats,
     recentSignups,
     completionStats,
+    openSupportTickets,
   };
 }

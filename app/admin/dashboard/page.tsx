@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   Activity,
   Award,
+  MessageCircle,
 } from "lucide-react";
 import { requireAdmin } from "@/lib/auth";
 import { getAdminDashboardData } from "@/lib/queries/admin";
@@ -98,6 +99,18 @@ export default async function AdminDashboardPage() {
             >
               <GraduationCap className="w-4 h-4 text-gold" />
               Programs
+            </Link>
+            <Link
+              href="/admin/support"
+              className="flex items-center gap-2 p-3 rounded-xl border border-border bg-surface-raised hover:border-gold/30 transition-all text-sm text-text-secondary hover:text-text col-span-2"
+            >
+              <MessageCircle className="w-4 h-4 text-gold" />
+              <span>Support Tickets</span>
+              {data.openSupportTickets > 0 && (
+                <span className="ml-auto px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 text-xs font-semibold">
+                  {data.openSupportTickets}
+                </span>
+              )}
             </Link>
           </div>
         </div>

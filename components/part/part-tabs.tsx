@@ -73,13 +73,6 @@ const MODES: Mode[] = [
     ],
   },
   {
-    id: "study",       label: "Study",       hint: "Active review",   icon: GraduationCap,
-    subTabs: [
-      { id: "flashcards", label: "Flashcards", icon: Layers2 },
-      { id: "quiz",       label: "Quiz",       icon: HelpCircle },
-    ],
-  },
-  {
     id: "mindmap",     label: "Mindmap",     hint: "Visual map",      icon: Map,
     subTabs: [{ id: "mindmap",     label: "Mindmap",     icon: Map }],
   },
@@ -149,7 +142,7 @@ function InfographicPanel({ part }: { part: Part }) {
   return (
     <div className="space-y-4">
       {styles.length > 1 && (
-        <div className="flex gap-2 mb-4">
+        <div className="flex gap-2 mb-4 pl-4">
           {styles.map((s) => (
             <button
               key={s.id} onClick={() => setStyle(s.id)}
@@ -213,7 +206,7 @@ function SlidesPanel({ part }: { part: Part }) {
   return (
     <div>
       {available.length > 1 && (
-        <div className="flex gap-2 mb-4 flex-wrap">
+        <div className="flex gap-2 mb-4 flex-wrap pl-4">
           {available.map((t) => (
             <button
               key={t.key} onClick={() => setType(t.key)}
@@ -382,7 +375,7 @@ export function PartTabs({ part }: PartTabsProps) {
 
       {/* ── Sub-tab bar (only when mode has multiple content items) ────── */}
       {subTabs.length > 1 && (
-        <div className="flex gap-1.5 flex-wrap">
+        <div className="flex gap-1.5 flex-wrap pl-4">
           {subTabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = currentSubTab === tab.id;

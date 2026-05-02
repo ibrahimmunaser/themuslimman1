@@ -14,14 +14,23 @@ export function Navbar() {
               <span className="text-gold text-xs font-bold">T</span>
             </div>
             <span className="text-text font-semibold text-sm tracking-wide">
-              TheMuslimMan
+              The Muslim Man Academy
             </span>
           </Link>
 
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-6">
-            <Link href="#pricing" className="text-sm text-text-secondary hover:text-text transition-colors">
+            <Link href="/" className="text-sm text-text-secondary hover:text-text transition-colors">
+              Home
+            </Link>
+            <Link href="/learn" className="text-sm text-text-secondary hover:text-text transition-colors">
+              My Courses
+            </Link>
+            <Link href="/pricing" className="text-sm text-text-secondary hover:text-text transition-colors">
               Pricing
+            </Link>
+            <Link href="/help" className="text-sm text-text-secondary hover:text-text transition-colors">
+              Help
             </Link>
             <Suspense fallback={
               <div className="text-sm text-text-secondary">Loading...</div>
