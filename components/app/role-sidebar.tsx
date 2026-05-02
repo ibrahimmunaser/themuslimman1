@@ -7,7 +7,7 @@ import { LogOut, ChevronRight, X } from "lucide-react";
 import { logout } from "@/lib/auth";
 import type { SessionUser } from "@/lib/session";
 import { navForRole } from "@/lib/nav-items";
-import { roleLabel } from "@/lib/roles";
+import { roleLabel, roleHome } from "@/lib/roles";
 
 interface RoleSidebarProps {
   user: SessionUser;
@@ -28,7 +28,7 @@ export function RoleSidebar({ user, mobile, onClose }: RoleSidebarProps) {
     >
       <div className="h-16 px-4 flex items-center justify-between border-b border-border">
         <Link
-          href="/post-login"
+          href={roleHome(user.role)}
           className="flex items-center gap-2.5 group"
           {...(onClose ? { onClick: onClose } : {})}
         >
