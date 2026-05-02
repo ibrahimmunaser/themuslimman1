@@ -34,7 +34,7 @@ export async function Navbar() {
             <Link href="/" className="text-sm text-text-secondary hover:text-text transition-colors">
               Home
             </Link>
-            <Link href="/learn" className="text-sm text-text-secondary hover:text-text transition-colors">
+            <Link href="/courses" className="text-sm text-text-secondary hover:text-text transition-colors">
               My Courses
             </Link>
             <Link href="/pricing" className="text-sm text-text-secondary hover:text-text transition-colors">
