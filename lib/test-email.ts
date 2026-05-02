@@ -63,7 +63,7 @@ async function testEmailFlow() {
     const verificationUrl = `http://localhost:3000/verify-email?token=${user.verificationToken}`;
     
     const { data, error } = await resend.emails.send({
-      from: "The Muslim Man Academy <admin@themuslimman.com>",
+      from: "TheMuslimMan <admin@themuslimman.com>",
       to: [testEmail],
       subject: "Verify your email - Seerah LMS",
       html: `

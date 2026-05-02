@@ -66,8 +66,12 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("Support contact error:", error);
+    
+    // Provide more specific error message
+    const errorMessage = error instanceof Error ? error.message : "Failed to submit support request";
+    
     return NextResponse.json(
-      { error: "Failed to submit support request" },
+      { error: errorMessage },
       { status: 500 }
     );
   }
