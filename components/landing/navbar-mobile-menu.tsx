@@ -1,11 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useState, Suspense } from "react";
+import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { NavbarUserMenu } from "./navbar-user-menu";
 
-export function NavbarMobileMenu() {
+interface NavbarMobileMenuProps {
+  user: any;
+  firstName: string | null;
+}
+
+export function NavbarMobileMenu({ user, firstName }: NavbarMobileMenuProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -49,9 +54,7 @@ export function NavbarMobileMenu() {
             Help
           </Link>
           <div className="border-t border-border my-2" />
-          <Suspense fallback={<div className="text-sm text-text-secondary">Loading...</div>}>
-            <NavbarUserMenu />
-          </Suspense>
+          <NavbarUserMenu user={user} firstName={firstName} />
         </div>
       )}
     </>

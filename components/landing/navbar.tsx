@@ -1,9 +1,13 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { getCurrentUser } from "@/lib/auth";
 import { NavbarUserMenu } from "./navbar-user-menu";
 import { NavbarMobileMenu } from "./navbar-mobile-menu";
 
-export function Navbar() {
+export async function Navbar() {
+  const user = await getCurrentUser();
+  const firstName = user ? user.fullName.split(" ")[0] : null;
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
       <div className="border-b border-white/5 bg-ink/80 backdrop-blur-xl">
@@ -32,15 +36,11 @@ export function Navbar() {
             <Link href="/help" className="text-sm text-text-secondary hover:text-text transition-colors">
               Help
             </Link>
-            <Suspense fallback={
-              <div className="text-sm text-text-secondary">Loading...</div>
-            }>
-              <NavbarUserMenu />
-            </Suspense>
+            <NavbarUserMenu user={user} firstName={firstName} />
           </div>
 
           {/* Mobile menu */}
-          <NavbarMobileMenu />
+          <NavbarMobileMenu user={user} firstName={firstName} />
         </nav>
       </div>
     </header>

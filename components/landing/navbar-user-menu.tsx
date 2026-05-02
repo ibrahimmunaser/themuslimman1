@@ -1,11 +1,13 @@
 import Link from "next/link";
-import { getCurrentUser } from "@/lib/auth";
 import { buttonClass } from "@/components/ui/button";
 import { NavbarUserButton } from "./navbar-user-button";
 
-export async function NavbarUserMenu() {
-  const user = await getCurrentUser();
+interface NavbarUserMenuProps {
+  user: any;
+  firstName: string | null;
+}
 
+export function NavbarUserMenu({ user, firstName }: NavbarUserMenuProps) {
   if (!user) {
     // Not logged in - show Login button
     return (
@@ -21,14 +23,12 @@ export async function NavbarUserMenu() {
   }
 
   // Logged in - show user menu with dropdown
-  const firstName = user.fullName.split(" ")[0];
-
   return (
     <>
       <Link href="/learn" className="text-sm text-text-secondary hover:text-text transition-colors">
         My Learning
       </Link>
-      <NavbarUserButton firstName={firstName} />
+      <NavbarUserButton firstName={firstName!} />
     </>
   );
 }
