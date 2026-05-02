@@ -318,7 +318,7 @@ function SignupCheckoutContent() {
   );
 }
 
-export default function SignupCheckoutPage() {
+export default function SignupCheckoutClient() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-ink text-text flex items-center justify-center">
