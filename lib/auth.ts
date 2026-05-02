@@ -215,8 +215,11 @@ export async function requestPasswordReset(email: string): Promise<{ success: bo
 
   if (!user) {
     // Don't reveal if email exists
+    console.log(`[PASSWORD_RESET] Email not found: ${email}`);
     return { success: true };
   }
+  
+  console.log(`[PASSWORD_RESET] User found: ${user.email}, sending reset email...`);
 
   const resetToken = nanoid(32);
   const resetExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
@@ -235,7 +238,7 @@ export async function requestPasswordReset(email: string): Promise<{ success: bo
     const resend = new Resend(process.env.RESEND_API_KEY);
     const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${resetToken}`;
     
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from: process.env.EMAIL_FROM || "TheMuslimMan <noreply@themuslimman.com>",
       to: user.email,
       subject: "Reset Your Password - Seerah LMS",
@@ -285,8 +288,9 @@ export async function requestPasswordReset(email: string): Promise<{ success: bo
         </html>
       `,
     });
+    console.log(`[PASSWORD_RESET] Email sent successfully:`, result);
   } catch (emailError) {
-    console.error("Failed to send password reset email:", emailError);
+    console.error("[PASSWORD_RESET] Failed to send password reset email:", emailError);
     // Don't fail the request if email fails
   }
 
