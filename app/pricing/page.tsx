@@ -100,9 +100,9 @@ export default function PricingPage() {
             </div>
 
             {/* Complete Plan */}
-            <div className="rounded-2xl border-2 border-gold bg-gradient-to-b from-gold/8 to-surface relative overflow-hidden p-7 flex flex-col gold-glow">
+            <div className="rounded-2xl border-2 border-gold bg-gradient-to-b from-gold/8 to-surface relative p-7 flex flex-col gold-glow">
               <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/50 to-transparent" />
-              <div className="absolute -top-3 right-6 px-3 py-1 rounded-full bg-gold text-ink text-xs font-bold flex items-center gap-1 shadow-lg">
+              <div className="absolute -top-3 right-6 px-3 py-1 rounded-full bg-gold text-ink text-xs font-bold flex items-center gap-1 shadow-lg z-10">
                 <Star className="w-3 h-3 fill-current" />
                 {PLANS.complete.badge?.toUpperCase()}
               </div>
