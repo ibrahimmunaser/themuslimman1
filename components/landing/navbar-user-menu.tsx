@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { buttonClass } from "@/components/ui/button";
 import { NavbarUserButton } from "./navbar-user-button";

@@ -314,8 +314,8 @@ function ModeButton({
         <p className="text-[10px] mt-0.5 leading-none opacity-55 hidden sm:block">{mode.hint}</p>
       </div>
 
-      {/* "Start" indicator on Watch when idle */}
-      {mode.primary && isAvailable && !isActive && (
+      {/* "Start" indicator on Watch */}
+      {mode.primary && isAvailable && (
         <span className="ml-1 px-1.5 py-0.5 rounded text-[9px] bg-gold/10 text-gold/60 font-semibold uppercase tracking-wider flex-shrink-0">
           Start
         </span>

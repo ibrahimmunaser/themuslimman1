@@ -61,12 +61,16 @@ function PaymentSuccessPageContent() {
           <h1 className="text-2xl font-bold mb-2">Payment Verification Failed</h1>
           <p className="text-text-secondary mb-6">{error}</p>
           <div className="space-y-3">
-            <Button variant="primary" size="lg" className="w-full" asChild>
-              <Link href="/contact">Contact Support</Link>
-            </Button>
-            <Button variant="ghost" size="md" className="w-full" asChild>
-              <Link href="/">Back to Home</Link>
-            </Button>
+            <Link href="/contact" className="w-full">
+              <Button variant="primary" size="lg" className="w-full">
+                Contact Support
+              </Button>
+            </Link>
+            <Link href="/" className="w-full">
+              <Button variant="ghost" size="md" className="w-full">
+                Back to Home
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
@@ -116,15 +120,17 @@ function PaymentSuccessPageContent() {
           </div>
 
           <div className="pt-6 border-t border-border space-y-3">
-            <Button variant="primary" size="lg" className="w-full" asChild>
-              <Link href="/learn">
+            <Link href="/learn" className="w-full">
+              <Button variant="primary" size="lg" className="w-full gap-2">
                 Start Learning
                 <ArrowRight className="w-4 h-4" />
-              </Link>
-            </Button>
-            <Button variant="ghost" size="md" className="w-full" asChild>
-              <Link href="/learn/part-1">Start with Part 1</Link>
-            </Button>
+              </Button>
+            </Link>
+            <Link href="/learn/part-1" className="w-full">
+              <Button variant="ghost" size="md" className="w-full">
+                Start with Part 1
+              </Button>
+            </Link>
           </div>
         </div>
 

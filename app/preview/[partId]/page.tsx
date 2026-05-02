@@ -23,7 +23,8 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export async function generateMetadata(props: { params: Promise<{ partId: string }> }) {
-  const { partId } = await props.params;
+  const { partId: rawPartId } = await props.params;
+  const partId = rawPartId.match(/^\d+$/) ? `part-${rawPartId}` : rawPartId;
   const part = getPartById(partId);
   if (!part) return { title: "Preview Not Found" };
   return {
@@ -33,7 +34,10 @@ export async function generateMetadata(props: { params: Promise<{ partId: string
 }
 
 export default async function PreviewPartPage(props: { params: Promise<{ partId: string }> }) {
-  const { partId } = await props.params;
+  const { partId: rawPartId } = await props.params;
+
+  // Handle numeric IDs by converting to "part-N" format
+  const partId = rawPartId.match(/^\d+$/) ? `part-${rawPartId}` : rawPartId;
 
   const partBase = getPartById(partId);
   if (!partBase) notFound();
