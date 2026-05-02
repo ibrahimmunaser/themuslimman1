@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import SignupCheckoutClient from "./signup-checkout-client";
+import SignupCheckoutClient from "./page-client";
 
 export const dynamic = "force-dynamic";
 
