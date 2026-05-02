@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
         const resend = new Resend(process.env.RESEND_API_KEY);
 
         const { error: emailError } = await resend.emails.send({
-          from: process.env.EMAIL_FROM || "TheMuslimMan <admin@themuslimman.com>",
+          from: process.env.EMAIL_FROM || "TheMuslimMan <support@themuslimman.com>",
           to: email,
           subject: "Welcome to Seerah LMS - Verify your email",
           html: generateWelcomeEmail({

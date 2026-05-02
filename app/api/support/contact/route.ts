@@ -34,7 +34,7 @@ export async function POST(request: Request) {
         const emailResults = await Promise.allSettled([
           // 1. Send confirmation email to student
           resend.emails.send({
-            from: process.env.EMAIL_FROM || "TheMuslimMan <admin@themuslimman.com>",
+            from: process.env.EMAIL_FROM || "TheMuslimMan <support@themuslimman.com>",
             to: email,
             replyTo: process.env.ADMIN_EMAIL || "admin@themuslimman.com",
             ...getStudentConfirmationEmail({ name, subject, message }),
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
           
           // 2. Send notification email to admin
           resend.emails.send({
-            from: process.env.EMAIL_FROM || "TheMuslimMan <admin@themuslimman.com>",
+            from: process.env.EMAIL_FROM || "TheMuslimMan <support@themuslimman.com>",
             to: process.env.ADMIN_EMAIL || "admin@themuslimman.com",
             replyTo: email,
             ...getAdminNotificationEmail({
@@ -55,10 +55,13 @@ export async function POST(request: Request) {
           }),
         ]);
 
-        // Log email results
+        // Log email results with detailed info
         emailResults.forEach((result, index) => {
+          const emailType = index === 0 ? "Student confirmation" : "Admin notification";
           if (result.status === "rejected") {
-            console.error(`Email ${index + 1} failed:`, result.reason);
+            console.error(`${emailType} email failed:`, result.reason);
+          } else {
+            console.log(`${emailType} email sent successfully:`, result.value);
           }
         });
       } catch (emailError) {
