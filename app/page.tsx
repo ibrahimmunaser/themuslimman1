@@ -26,6 +26,9 @@ import { Badge } from "@/components/ui/badge";
 import { getCurrentUser } from "@/lib/auth";
 import { getStudentDashboardData } from "@/lib/queries/student";
 
+// Revalidate every 60 seconds to reduce database load
+export const revalidate = 60;
+
 export default async function LandingPage() {
   // Check if user is logged in and get their progress
   let user = null;
@@ -37,13 +40,17 @@ export default async function LandingPage() {
     if (user?.studentProfileId) {
       try {
         const dashboardData = await getStudentDashboardData(user.studentProfileId);
-        userProgress = dashboardData.recentProgress[0] || null; // Get most recent progress
+        userProgress = dashboardData.recentProgress[0] || null;
       } catch (error) {
+        // Silently fail - user experience not affected
         console.error("Failed to fetch user progress:", error);
+        userProgress = null;
       }
     }
   } catch (error) {
+    // Silently fail - landing page still works for logged-out users
     console.error("Failed to get current user:", error);
+    user = null;
   }
 
   return (
