@@ -132,8 +132,28 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error("Signup error:", error);
+    
+    // Provide more specific error messages based on the error type
+    if (error instanceof Error) {
+      // Database connection errors
+      if (error.message.includes("EMAXCONNSESSION") || error.message.includes("max clients")) {
+        return NextResponse.json(
+          { error: "Server is experiencing high traffic. Please try again in a moment." },
+          { status: 503 }
+        );
+      }
+      
+      // Unique constraint violations (duplicate email/username)
+      if (error.message.includes("Unique constraint")) {
+        return NextResponse.json(
+          { error: "An account with this email or username already exists." },
+          { status: 400 }
+        );
+      }
+    }
+    
     return NextResponse.json(
-      { error: "Something went wrong. Please try again." },
+      { error: "Unable to create account. Please try again or contact support if the issue persists." },
       { status: 500 }
     );
   }
