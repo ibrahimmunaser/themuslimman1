@@ -5,11 +5,17 @@ import { roleHome } from "@/lib/roles";
 export const dynamic = "force-dynamic";
 
 export default async function PostLoginPage() {
-  const user = await getCurrentUser();
+  try {
+    const user = await getCurrentUser();
 
-  if (!user) {
+    if (!user) {
+      redirect("/login");
+    }
+
+    redirect(roleHome(user.role));
+  } catch (error) {
+    console.error("Post-login error:", error);
+    // If database connection fails, redirect to login
     redirect("/login");
   }
-
-  redirect(roleHome(user.role));
 }
