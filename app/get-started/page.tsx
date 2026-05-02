@@ -1,16 +1,15 @@
-"use client";
-
 import Link from "next/link";
-import { Suspense } from "react";
 import { ArrowRight, BookOpen, Check } from "lucide-react";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
 import { buttonClass } from "@/components/ui/button";
-import { useSearchParams } from "next/navigation";
 
-function GetStartedPageContent() {
-  const searchParams = useSearchParams();
-  const plan = searchParams.get("plan") || "complete";
+interface GetStartedPageProps {
+  searchParams: { plan?: string };
+}
+
+export default function GetStartedPage({ searchParams }: GetStartedPageProps) {
+  const plan = searchParams.plan || "complete";
 
   return (
     <div className="flex flex-col min-h-screen bg-ink text-text">
@@ -103,13 +102,5 @@ function GetStartedPageContent() {
 
       <Footer />
     </div>
-  );
-}
-
-export default function GetStartedPage() {
-  return (
-    <Suspense>
-      <GetStartedPageContent />
-    </Suspense>
   );
 }
