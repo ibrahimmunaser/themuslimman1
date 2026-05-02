@@ -215,8 +215,7 @@ function SignupCheckoutContent() {
           <div className="lg:col-span-3">
             <div className="bg-surface border border-border rounded-2xl p-6 sm:p-8">
               <form onSubmit={handleSubmit} className="space-y-4">
-                <h2 className="text-lg font-semibold mb-6 flex items-center gap-2">
-                  <User className="w-5 h-5 text-gold" />
+                <h2 className="text-lg font-semibold mb-6">
                   Account Details
                 </h2>
 
