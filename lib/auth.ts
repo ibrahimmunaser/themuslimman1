@@ -116,20 +116,25 @@ export async function requireStudent(): Promise<SessionUser> {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Login — username only (no email login)
+// Login — accepts both username and email
 // ─────────────────────────────────────────────────────────────
 
 export async function login(
-  username: string,
+  usernameOrEmail: string,
   password: string
 ): Promise<{ success: boolean; error?: string; role?: Role }> {
+  // Check if input is an email (contains @) or username
+  const isEmail = usernameOrEmail.includes("@");
+  
   const user = await prisma.user.findUnique({
-    where: { username: username.toLowerCase() },
+    where: isEmail 
+      ? { email: usernameOrEmail.toLowerCase() }
+      : { username: usernameOrEmail.toLowerCase() },
     include: { student: true },
   });
 
   if (!user) {
-    return { success: false, error: "Invalid username or password" };
+    return { success: false, error: "Invalid credentials" };
   }
 
   if (!user.isActive) {

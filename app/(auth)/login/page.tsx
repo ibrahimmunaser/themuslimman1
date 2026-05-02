@@ -41,16 +41,16 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-text mb-2">Sign in to Seerah</h1>
           <p className="text-text-secondary text-sm">
-            Sign in with your username to continue learning
+            Use your email or username to continue learning
           </p>
         </div>
 
         <div className="bg-surface border border-border rounded-2xl p-6 sm:p-8">
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
-              label="Username"
+              label="Email or Username"
               type="text"
-              placeholder="your-username"
+              placeholder="you@example.com or username"
               value={form.username}
               onChange={(e) => setForm({ ...form, username: e.target.value })}
               required
