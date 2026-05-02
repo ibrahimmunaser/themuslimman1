@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import {
   CheckCircle2,
   Video,
@@ -157,7 +158,13 @@ export default async function LandingPage() {
             </p>
           </div>
 
-          <Part1FullPreview />
+          <Suspense fallback={
+            <div className="rounded-2xl border border-border bg-surface p-8 text-center">
+              <p className="text-text-secondary">Loading Part 1 preview...</p>
+            </div>
+          }>
+            <Part1FullPreview />
+          </Suspense>
         </div>
       </section>
 
