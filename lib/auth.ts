@@ -231,21 +231,15 @@ export async function requestPasswordReset(email: string): Promise<{ success: bo
 
   // Send password reset email
   try {
-    const { MailerSend, EmailParams, Sender, Recipient } = await import("mailersend");
-    const mailerSend = new MailerSend({
-      apiKey: process.env.MAILERSEND_API_KEY || "",
-    });
-    
+    const { Resend } = await import("resend");
+    const resend = new Resend(process.env.RESEND_API_KEY);
     const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${resetToken}`;
     
-    const sentFrom = new Sender("noreply@themuslimman.com", "TheMuslimMan");
-    const recipients = [new Recipient(user.email, user.fullName)];
-    
-    const emailParams = new EmailParams()
-      .setFrom(sentFrom)
-      .setTo(recipients)
-      .setSubject("Reset Your Password - Seerah LMS")
-      .setHtml(`
+    await resend.emails.send({
+      from: process.env.EMAIL_FROM || "TheMuslimMan <noreply@themuslimman.com>",
+      to: user.email,
+      subject: "Reset Your Password - Seerah LMS",
+      html: `
         <!DOCTYPE html>
         <html>
           <head>
@@ -289,9 +283,8 @@ export async function requestPasswordReset(email: string): Promise<{ success: bo
             </div>
           </body>
         </html>
-      `);
-    
-    await mailerSend.email.send(emailParams);
+      `,
+    });
   } catch (emailError) {
     console.error("Failed to send password reset email:", emailError);
     // Don't fail the request if email fails
