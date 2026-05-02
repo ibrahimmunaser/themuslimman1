@@ -45,8 +45,10 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error creating payment intent:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    console.error("Error details:", errorMessage);
     return NextResponse.json(
-      { error: "Failed to initialize payment" },
+      { error: `Failed to initialize payment: ${errorMessage}` },
       { status: 500 }
     );
   }
