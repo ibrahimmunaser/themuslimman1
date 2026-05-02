@@ -105,7 +105,6 @@ export async function POST(request: NextRequest) {
           subject: "Welcome to Seerah LMS - Verify your email",
           html: generateWelcomeEmail({
             fullName: fullName.trim(),
-            username,
             verificationUrl,
           }),
         });
@@ -124,7 +123,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      username,
       message: isDevelopment 
         ? "Account created and auto-verified! You can sign in now."
         : "Account created successfully. Please check your email to verify.",
@@ -164,7 +162,6 @@ export async function POST(request: NextRequest) {
  */
 function generateWelcomeEmail(data: {
   fullName: string;
-  username: string;
   verificationUrl: string;
 }): string {
   return `
@@ -188,14 +185,6 @@ function generateWelcomeEmail(data: {
           <p style="font-size: 16px; margin: 0 0 20px 0;">
             Your account has been created successfully! Before you can start learning, please verify your email address.
           </p>
-
-          <div style="background: #f8f9fa; border-left: 4px solid #f4c542; padding: 20px; margin: 30px 0; border-radius: 4px;">
-            <p style="margin: 0 0 10px 0; font-weight: 600; color: #666; font-size: 14px;">YOUR LOGIN USERNAME</p>
-            <p style="margin: 0; font-size: 24px; font-family: 'Courier New', monospace; color: #f4c542; font-weight: bold;">${data.username}</p>
-            <p style="margin: 10px 0 0 0; font-size: 13px; color: #666;">
-              <strong>Important:</strong> Use this username (not your email) to sign in.
-            </p>
-          </div>
 
           <div style="text-align: center; margin: 40px 0;">
             <a href="${data.verificationUrl}" style="display: inline-block; background: #f4c542; color: #1a1a1a; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: 600; font-size: 16px;">

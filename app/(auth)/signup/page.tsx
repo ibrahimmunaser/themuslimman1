@@ -3,10 +3,9 @@
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Eye, EyeOff, ArrowRight, Mail, User, Check } from "lucide-react";
+import { Eye, EyeOff, ArrowRight, Mail, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { previewUsername } from "@/lib/username-generator";
 
 function SignupPageContent() {
   const router = useRouter();
@@ -23,13 +22,7 @@ function SignupPageContent() {
     password: "",
     confirmPassword: "",
   });
-  const [generatedUsername, setGeneratedUsername] = useState("");
   const [sentToEmail, setSentToEmail] = useState("");
-
-  // Preview username as user types their name
-  const usernamePreview = form.fullName.trim().length >= 2 
-    ? previewUsername(form.fullName) 
-    : "";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -76,7 +69,6 @@ function SignupPageContent() {
       }
 
       // Success - show verification step
-      setGeneratedUsername(data.username);
       setSentToEmail(form.email);
       setStep("verification");
     } catch (err) {
@@ -102,26 +94,14 @@ function SignupPageContent() {
           </div>
 
           <div className="bg-surface border border-border rounded-2xl p-6 space-y-4">
-            <div className="p-4 rounded-lg bg-gold/5 border border-gold/20">
-              <p className="text-sm text-text mb-2">
-                <strong className="text-gold">Your username:</strong>
-              </p>
-              <p className="text-lg font-mono text-gold font-bold">
-                {generatedUsername}
-              </p>
-              <p className="text-xs text-text-muted mt-2">
-                Save this! You'll need it to sign in.
-              </p>
-            </div>
-
           <div className="space-y-3 text-sm text-text-secondary">
             <p className="flex items-start gap-2">
               <Mail className="w-4 h-4 mt-0.5 text-gold flex-shrink-0" />
               <span>Click the link in the email to verify your account</span>
             </p>
             <p className="flex items-start gap-2">
-              <User className="w-4 h-4 mt-0.5 text-gold flex-shrink-0" />
-              <span>After verification, you'll be redirected to complete your purchase</span>
+              <Mail className="w-4 h-4 mt-0.5 text-gold flex-shrink-0" />
+              <span>After verification, use your email to sign in and complete your purchase</span>
             </p>
           </div>
 
@@ -176,12 +156,6 @@ function SignupPageContent() {
                 required
                 autoComplete="name"
               />
-              {usernamePreview && (
-                <p className="text-xs text-text-muted mt-1.5 flex items-center gap-1.5">
-                  <User className="w-3 h-3" />
-                  Your username will be: <span className="text-gold font-mono">{usernamePreview}</span>
-                </p>
-              )}
             </div>
 
             {/* Email */}

@@ -116,20 +116,15 @@ export async function requireStudent(): Promise<SessionUser> {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Login — accepts both username and email
+// Login — email-based authentication
 // ─────────────────────────────────────────────────────────────
 
 export async function login(
-  usernameOrEmail: string,
+  email: string,
   password: string
 ): Promise<{ success: boolean; error?: string; role?: Role }> {
-  // Check if input is an email (contains @) or username
-  const isEmail = usernameOrEmail.includes("@");
-  
   const user = await prisma.user.findUnique({
-    where: isEmail 
-      ? { email: usernameOrEmail.toLowerCase() }
-      : { username: usernameOrEmail.toLowerCase() },
+    where: { email: email.toLowerCase() },
     include: { student: true },
   });
 

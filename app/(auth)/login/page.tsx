@@ -14,14 +14,14 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [form, setForm] = useState({ username: "", password: "" });
+  const [form, setForm] = useState({ email: "", password: "" });
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
-      const result = await login(form.username, form.password);
+      const result = await login(form.email, form.password);
       if (result.success && result.role) {
         router.push(roleHome(result.role));
         router.refresh();
@@ -41,20 +41,20 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-text mb-2">Sign in to Seerah</h1>
           <p className="text-text-secondary text-sm">
-            Use your email or username to continue learning
+            Use your email to continue learning
           </p>
         </div>
 
         <div className="bg-surface border border-border rounded-2xl p-6 sm:p-8">
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
-              label="Email or Username"
-              type="text"
-              placeholder="you@example.com or username"
-              value={form.username}
-              onChange={(e) => setForm({ ...form, username: e.target.value })}
+              label="Email address"
+              type="email"
+              placeholder="you@example.com"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
               required
-              autoComplete="username"
+              autoComplete="email"
               autoCapitalize="none"
               autoCorrect="off"
             />

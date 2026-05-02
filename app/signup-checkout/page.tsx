@@ -2,12 +2,11 @@
 
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Eye, EyeOff, ArrowRight, Check, User } from "lucide-react";
+import { Eye, EyeOff, ArrowRight, Check } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PLANS, formatPrice, type PlanId } from "@/lib/stripe-config";
-import { previewUsername } from "@/lib/username-generator";
 
 function SignupCheckoutContent() {
   const searchParams = useSearchParams();
@@ -25,11 +24,6 @@ function SignupCheckoutContent() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showVerificationMessage, setShowVerificationMessage] = useState(false);
-  const [createdUsername, setCreatedUsername] = useState("");
-
-  const usernamePreview = form.fullName.trim().length >= 2 
-    ? previewUsername(form.fullName) 
-    : "";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,9 +72,6 @@ function SignupCheckoutContent() {
         return;
       }
 
-      // Account created successfully
-      setCreatedUsername(data.username);
-      
       // Check if account is auto-verified (development) or needs verification (production)
       const isAutoVerified = data.message?.includes("auto-verified");
       
@@ -90,7 +81,7 @@ function SignupCheckoutContent() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            username: data.username,
+            email: form.email,
             password: form.password,
           }),
         });
@@ -127,12 +118,6 @@ function SignupCheckoutContent() {
             </div>
             
             <h1 className="text-2xl font-bold mb-3">Account Created Successfully!</h1>
-            
-            <div className="mb-6 p-4 rounded-lg bg-gold/5 border border-gold/20">
-              <p className="text-sm text-text-muted mb-2">Your username:</p>
-              <p className="text-xl font-mono text-gold font-bold">{createdUsername}</p>
-              <p className="text-xs text-text-muted mt-2">Save this! You'll need it to sign in.</p>
-            </div>
 
             <div className="mb-6 p-5 rounded-lg bg-blue-500/5 border border-blue-500/20 text-left">
               <p className="text-base text-text mb-3">
@@ -246,12 +231,6 @@ function SignupCheckoutContent() {
                     required
                     autoComplete="name"
                   />
-                  {usernamePreview && (
-                    <p className="text-xs text-text-muted mt-1.5 flex items-center gap-1.5">
-                      <User className="w-3 h-3" />
-                      Your username will be: <span className="text-gold font-mono">{usernamePreview}</span>
-                    </p>
-                  )}
                 </div>
 
                 {/* Email */}
