@@ -319,6 +319,7 @@ export async function resetPassword(
       passwordHash,
       passwordResetToken: null,
       passwordResetExpiry: null,
+      emailVerified: true, // Verify email since they clicked the reset link
     },
   });
 
