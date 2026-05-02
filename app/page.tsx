@@ -27,17 +27,24 @@ import { getStudentDashboardData } from "@/lib/queries/student";
 
 export default async function LandingPage() {
   // Check if user is logged in and get their progress
-  const user = await getCurrentUser();
+  let user = null;
   let userProgress = null;
 
-  if (user?.studentProfileId) {
-    try {
-      const dashboardData = await getStudentDashboardData(user.studentProfileId);
-      userProgress = dashboardData.recentProgress[0] || null; // Get most recent progress
-    } catch (error) {
-      console.error("Failed to fetch user progress:", error);
+  try {
+    user = await getCurrentUser();
+    
+    if (user?.studentProfileId) {
+      try {
+        const dashboardData = await getStudentDashboardData(user.studentProfileId);
+        userProgress = dashboardData.recentProgress[0] || null; // Get most recent progress
+      } catch (error) {
+        console.error("Failed to fetch user progress:", error);
+      }
     }
+  } catch (error) {
+    console.error("Failed to get current user:", error);
   }
+
   return (
     <div className="flex flex-col min-h-screen bg-ink text-text">
       <Navbar />

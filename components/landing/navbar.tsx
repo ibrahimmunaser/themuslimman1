@@ -5,8 +5,15 @@ import { NavbarUserMenu } from "./navbar-user-menu";
 import { NavbarMobileMenu } from "./navbar-mobile-menu";
 
 export async function Navbar() {
-  const user = await getCurrentUser();
-  const firstName = user ? user.fullName.split(" ")[0] : null;
+  let user = null;
+  let firstName = null;
+  
+  try {
+    user = await getCurrentUser();
+    firstName = user ? user.fullName.split(" ")[0] : null;
+  } catch (error) {
+    console.error("Navbar: Failed to get current user:", error);
+  }
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50">

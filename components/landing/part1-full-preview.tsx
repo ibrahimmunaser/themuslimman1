@@ -16,28 +16,29 @@ import { PartTabs } from "@/components/part/part-tabs";
 import { Badge } from "@/components/ui/badge";
 
 export async function Part1FullPreview() {
-  const partBase = getPartById("part-1");
-  if (!partBase) return null;
+  try {
+    const partBase = getPartById("part-1");
+    if (!partBase) return null;
 
-  const n = partBase.partNumber;
-  
-  // Fetch all Part 1 data
-  const [
-    slidesPresented,
-    slidesDetailed,
-    slidesFacts,
-    briefingText,
-    statementOfFactsText,
-    studyGuideText,
-    reportText,
-    hasMindmap,
-    quiz,
-    flashcards,
-    infConcise,
-    infStandard,
-    infBento,
-    assetUrls,
-  ] = await Promise.all([
+    const n = partBase.partNumber;
+    
+    // Fetch all Part 1 data
+    const [
+      slidesPresented,
+      slidesDetailed,
+      slidesFacts,
+      briefingText,
+      statementOfFactsText,
+      studyGuideText,
+      reportText,
+      hasMindmap,
+      quiz,
+      flashcards,
+      infConcise,
+      infStandard,
+      infBento,
+      assetUrls,
+    ] = await Promise.all([
     getSlideFiles(n, "presented"),
     getSlideFiles(n, "detailed"),
     getSlideFiles(n, "facts"),
@@ -130,4 +131,12 @@ export async function Part1FullPreview() {
       </div>
     </div>
   );
+  } catch (error) {
+    console.error("Failed to load Part 1 preview:", error);
+    return (
+      <div className="rounded-2xl border border-border bg-surface p-8 text-center">
+        <p className="text-text-secondary">Part 1 preview is temporarily unavailable. Please try again later.</p>
+      </div>
+    );
+  }
 }
