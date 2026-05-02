@@ -231,7 +231,7 @@ export async function requestPasswordReset(email: string): Promise<{ success: bo
     const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${resetToken}`;
     
     await resend.emails.send({
-      from: process.env.EMAIL_FROM || "The Muslim Man Academy <admin@themuslimman.com>",
+      from: process.env.EMAIL_FROM || "TheMuslimMan <admin@themuslimman.com>",
       to: user.email,
       subject: "Reset Your Password - Seerah LMS",
       html: `
