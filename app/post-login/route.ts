@@ -12,11 +12,11 @@ export async function GET(request: NextRequest) {
 
   if (!user) {
     // Clear the stale cookie so the middleware doesn't redirect /login → /post-login again
-    const response = NextResponse.redirect(new URL("/login", origin));
+    const response = NextResponse.redirect(new URL("/login", origin), 302);
     response.cookies.delete(SESSION_COOKIE);
     return response;
   }
 
   // Direct to user's home page based on role
-  return NextResponse.redirect(new URL(roleHome(user.role), origin));
+  return NextResponse.redirect(new URL(roleHome(user.role), origin), 302);
 }
