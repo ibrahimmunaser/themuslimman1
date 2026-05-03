@@ -35,13 +35,16 @@ export async function generateMetadata(props: { params: Promise<{ partId: string
 }
 
 export default async function PartPage(props: { params: Promise<{ partId: string }> }) {
-  await requireAuth();
+  const user = await requireAuth();
   const { partId } = await props.params;
 
   const partBase = getPartById(partId);
   if (!partBase) notFound();
 
   const n = partBase.partNumber;
+  
+  // Legacy route - default to complete plan for backward compatibility
+  const userPlan = "complete" as const;
   
   // Load assets from R2
   const [
@@ -217,7 +220,7 @@ export default async function PartPage(props: { params: Promise<{ partId: string
 
       {/* ── Learning modes + content ──────────────────────────────────────── */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <PartTabs part={part} />
+        <PartTabs part={part} userPlan={userPlan} />
       </div>
 
       {/* ── Continue learning ─────────────────────────────────────────────── */}
