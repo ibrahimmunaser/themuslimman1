@@ -30,12 +30,16 @@ export function getAudioFilename(partNum: number): string | null {
   const mp3 = path.join(SEERAH_ROOT, "Audio", `Part ${partNum}.mp3`);
   if (fs.existsSync(mp3)) return `Part ${partNum}.mp3`;
 
-  // Fallback to .wav files
-  const withSuffix = path.join(SEERAH_ROOT, "Audio", `Part ${partNum} (1).wav`);
-  if (fs.existsSync(withSuffix)) return `Part ${partNum} (1).wav`;
+  // Check for .mp3 with (1) suffix (Windows duplicate naming)
+  const mp3WithSuffix = path.join(SEERAH_ROOT, "Audio", `Part ${partNum} (1).mp3`);
+  if (fs.existsSync(mp3WithSuffix)) return `Part ${partNum} (1).mp3`;
 
-  const normal = path.join(SEERAH_ROOT, "Audio", `Part ${partNum}.wav`);
-  if (fs.existsSync(normal)) return `Part ${partNum}.wav`;
+  // Fallback to .wav files
+  const wavWithSuffix = path.join(SEERAH_ROOT, "Audio", `Part ${partNum} (1).wav`);
+  if (fs.existsSync(wavWithSuffix)) return `Part ${partNum} (1).wav`;
+
+  const wav = path.join(SEERAH_ROOT, "Audio", `Part ${partNum}.wav`);
+  if (fs.existsSync(wav)) return `Part ${partNum}.wav`;
 
   return null;
 }

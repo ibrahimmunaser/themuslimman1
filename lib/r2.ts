@@ -203,12 +203,16 @@ export async function r2GetAudioKey(partNum: number): Promise<string | null> {
   const mp3 = `audio/Part ${partNum}.mp3`;
   if (await r2FileExists(mp3)) return mp3;
   
-  // Fallback to .wav files (legacy format)
-  const withSuffix = `audio/Part ${partNum} (1).wav`;
-  if (await r2FileExists(withSuffix)) return withSuffix;
+  // Check for .mp3 with (1) suffix (Windows duplicate naming)
+  const mp3WithSuffix = `audio/Part ${partNum} (1).mp3`;
+  if (await r2FileExists(mp3WithSuffix)) return mp3WithSuffix;
   
-  const normal = `audio/Part ${partNum}.wav`;
-  if (await r2FileExists(normal)) return normal;
+  // Fallback to .wav files (legacy format)
+  const wavWithSuffix = `audio/Part ${partNum} (1).wav`;
+  if (await r2FileExists(wavWithSuffix)) return wavWithSuffix;
+  
+  const wav = `audio/Part ${partNum}.wav`;
+  if (await r2FileExists(wav)) return wav;
   
   return null;
 }
