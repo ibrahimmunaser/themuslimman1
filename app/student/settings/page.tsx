@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { requireStudent } from "@/lib/auth";
 import { StudentLayout } from "@/components/student/student-layout";
+import { ParentEmailSettings } from "@/components/student/parent-email-settings";
 import { prisma } from "@/lib/db";
 import { User, Mail, Lock, Bell, Shield } from "lucide-react";
 
