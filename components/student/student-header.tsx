@@ -73,7 +73,7 @@ export function StudentHeader({ userFirstName, userPlan }: StudentHeaderProps) {
             {/* Upgrade Button (Essentials only) */}
             {showUpgrade && (
               <Link
-                href="/pricing"
+                href="/upgrade"
                 className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black text-sm font-semibold rounded-lg transition-all shadow-lg shadow-amber-500/20"
               >
                 <Zap className="w-3.5 h-3.5" />
@@ -187,7 +187,7 @@ export function StudentHeader({ userFirstName, userPlan }: StudentHeaderProps) {
 
             {showUpgrade && (
               <Link
-                href="/pricing"
+                href="/upgrade"
                 className="block mx-4 my-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black text-sm font-semibold rounded-lg transition-all shadow-lg shadow-amber-500/20 text-center"
                 onClick={() => setMobileMenuOpen(false)}
               >
