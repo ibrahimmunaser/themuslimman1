@@ -119,16 +119,11 @@ function PaymentSuccessPageContent() {
             </div>
           </div>
 
-          <div className="pt-6 border-t border-border space-y-3">
-            <Link href="/learn" className="w-full">
+          <div className="pt-6 border-t border-border">
+            <Link href="/learn/part-1" className="w-full">
               <Button variant="primary" size="lg" className="w-full gap-2">
                 Start Learning
                 <ArrowRight className="w-4 h-4" />
-              </Button>
-            </Link>
-            <Link href="/learn/part-1" className="w-full">
-              <Button variant="ghost" size="md" className="w-full">
-                Start with Part 1
               </Button>
             </Link>
           </div>
