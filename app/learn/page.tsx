@@ -202,27 +202,33 @@ export default async function LearnIndexPage() {
                     <Video className="w-4 h-4 text-amber-500" />
                     <span>Watch the video</span>
                   </div>
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-amber-500" />
+                    <span>Read the briefing</span>
+                  </div>
+                  {userPlan === "essentials" && (
+                    <div className="flex items-center gap-2">
+                      <Headphones className="w-4 h-4 text-amber-500" />
+                      <span className="text-zinc-500">Optional: Listen on the Go</span>
+                    </div>
+                  )}
                   {userPlan === "complete" && (
                     <>
-                      <div className="flex items-center gap-2">
-                        <BookOpen className="w-4 h-4 text-amber-500" />
-                        <span>Read Briefing or Facts</span>
-                      </div>
                       <div className="flex items-center gap-2">
                         <Brain className="w-4 h-4 text-amber-500" />
                         <span>Review flashcards</span>
                       </div>
+                      <div className="flex items-center gap-2">
+                        <ClipboardCheck className="w-4 h-4 text-amber-500" />
+                        <span>Complete the quiz</span>
+                      </div>
                     </>
                   )}
-                  <div className="flex items-center gap-2">
-                    <ClipboardCheck className="w-4 h-4 text-amber-500" />
-                    <span>Complete the quiz</span>
-                  </div>
                 </div>
                 <div className="mt-4 pt-3 border-t border-zinc-800">
                   <div className="flex items-center gap-2 text-sm">
                     <Clock className="w-4 h-4 text-zinc-500" />
-                    <span className="text-zinc-400">Estimated: <span className="text-white font-medium">{userPlan === "essentials" ? "12" : "25"} min</span></span>
+                    <span className="text-zinc-400">Estimated: <span className="text-white font-medium">{userPlan === "essentials" ? "10" : "25"} min</span></span>
                   </div>
                 </div>
               </div>
@@ -245,23 +251,9 @@ export default async function LearnIndexPage() {
               <p className="text-sm text-zinc-400">
                 {completedCount} of {totalParts} lessons completed
               </p>
-              {userPlan === "essentials" && (
-                <div className="group relative">
-                  <Info className="w-4 h-4 text-zinc-500 hover:text-amber-500 cursor-help transition-colors" />
-                  <div className="absolute left-0 bottom-full mb-2 w-80 p-3 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
-                    <p className="text-xs text-zinc-300 leading-relaxed">
-                      In the Essentials plan, a lesson is completed when you <span className="text-white font-medium">watch the video and pass the quiz</span>. 
-                      The Complete Seerah program includes the full study system: videos, slides, infographics, readings, mind maps, flashcards, and quizzes.
-                    </p>
-                  </div>
-                </div>
-              )}
             </div>
             <p className="text-xs text-zinc-500 mt-2">
-              {userPlan === "essentials" 
-                ? "Essentials completion: Watch the lesson video and pass the quiz."
-                : "💡 Recommended: Complete lessons in order. Each part builds on the previous one."
-              }
+              💡 Recommended: Complete lessons in order. Each part builds on the previous one.
             </p>
           </div>
 
@@ -270,29 +262,29 @@ export default async function LearnIndexPage() {
             <div className="mt-6 bg-gradient-to-br from-amber-500/5 to-amber-600/10 border border-amber-500/20 rounded-xl p-5">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-amber-400 font-semibold mb-2">Upgrade to the Mastery System</p>
+                  <p className="text-amber-400 font-semibold mb-2">Unlock the Full Mastery System</p>
                   <p className="text-zinc-300 text-sm mb-2">
-                    <span className="text-white font-medium">You already have the Path.</span> Upgrade to Complete Seerah to unlock the full mastery system.
+                    <span className="text-white font-medium">You have the 100-part video path.</span> Upgrade to Complete Seerah to unlock depth — mastery tools for deeper learning.
                   </p>
                   <p className="text-zinc-400 text-xs mb-3">
-                    Mind maps, flashcards, briefings, facts, slides, infographics, and the full 100-part program — shortcuts for review, teaching, and remembering.
+                    Add slides, infographics, mind maps, flashcards, quizzes, reports, study guides, and statement of facts to every lesson.
                   </p>
                   <ul className="space-y-1 text-xs text-zinc-400">
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-amber-500" />
-                      Full 100-part Seerah program (44 additional lessons)
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-amber-500" />
-                      Mind maps, briefings & facts for quick review
-                    </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle2 className="w-3.5 h-3.5 text-amber-500" />
                       3 slide formats & 3 infographic formats for teaching
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle2 className="w-3.5 h-3.5 text-amber-500" />
+                      Mind maps for visual learning & connections
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-amber-500" />
                       Easy/Medium/Hard flashcards for retention
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-amber-500" />
+                      Quizzes, reports, study guides & statement of facts
                     </li>
                   </ul>
                   <p className="text-amber-400 text-sm font-semibold mt-3">
@@ -501,8 +493,12 @@ export default async function LearnIndexPage() {
                                     <span>Video</span>
                                   </div>
                                   <div className="flex items-center gap-1">
-                                    <ClipboardCheck className="w-3.5 h-3.5 text-amber-500/70" />
-                                    <span>Quiz</span>
+                                    <Headphones className="w-3.5 h-3.5 text-amber-500/70" />
+                                    <span>Listen</span>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <FileText className="w-3.5 h-3.5 text-amber-500/70" />
+                                    <span>Briefing</span>
                                   </div>
                                 </>
                               ) : (

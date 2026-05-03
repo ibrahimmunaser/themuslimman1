@@ -33,11 +33,11 @@ export default async function HelpPage() {
         },
         {
           q: "What's the difference between Essentials and Complete?",
-          a: "Essentials gives you the complete Seerah story through 75 narrative lessons with slides and quizzes. Complete includes all 100 parts with mind maps, flashcards, briefings, infographics, and expanded study materials.",
+          a: "Essentials gives you all 100 video lessons, Listen on the Go audio, and briefings for each part. Complete adds depth with slides, infographics, mind maps, flashcards, quizzes, reports, study guides, and statement of facts.",
         },
         {
           q: "How are lessons structured?",
-          a: "Each lesson includes a video lecture, slides, a quiz, and study materials. Complete users also get mind maps, flashcards, and comprehensive briefings.",
+          a: "Essentials lessons include a video, Listen on the Go audio, and a briefing. Complete users also get 3 slide formats, 3 infographic formats, mind maps, flashcards, quizzes, reports, study guides, and statement of facts.",
         },
       ],
     },
@@ -73,7 +73,7 @@ export default async function HelpPage() {
         },
         {
           q: "Do I need to complete lessons in order?",
-          a: "Yes, for Essentials lessons. Complete users can navigate more freely within the 100-part system.",
+          a: "Yes. Lessons unlock sequentially as you progress. This helps you build knowledge in the correct chronological order of the Seerah.",
         },
       ],
     },
@@ -83,7 +83,7 @@ export default async function HelpPage() {
       questions: [
         {
           q: "How do I earn a certificate?",
-          a: "Complete all required lessons and pass all quizzes with at least 70%. Your certificate will then be available in the Certificate section.",
+          a: "Complete all required lessons in your plan. Complete users must also pass all quizzes with at least 70%. Your certificate will then be available in the Certificate section.",
         },
         {
           q: "Is the certificate official?",

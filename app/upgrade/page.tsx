@@ -85,13 +85,13 @@ export default function UpgradePage() {
 
   const upgradePrice = PLANS.essentials.upgradePrice!;
   const newFeatures = [
-    "44 additional lessons (56 → 100 parts)",
     "3 slide formats (Presented, Detailed, Facts)",
     "3 infographic formats (Concise, Standard, Bento)",
     "Mind maps for visual learning",
     "Flashcards (Easy, Medium, Hard)",
-    "Briefings & Statement of Facts",
-    "Study guides for review",
+    "Quizzes for every lesson",
+    "Reports & Statement of Facts",
+    "Study guides for comprehensive review",
   ];
 
   useEffect(() => {
@@ -165,8 +165,8 @@ export default function UpgradePage() {
               <div className="space-y-4 mb-6">
                 <div className="p-4 rounded-lg bg-gold/5 border border-gold/20">
                   <p className="text-xs text-text-muted mb-1">Upgrading from</p>
-                  <p className="font-semibold text-text">Essentials (56 parts)</p>
-                  <p className="text-xs text-text-secondary mt-1">Video lessons & quizzes</p>
+                  <p className="font-semibold text-text">Essentials (100 parts)</p>
+                  <p className="text-xs text-text-secondary mt-1">Video lessons, Listen on the Go, and briefings</p>
                 </div>
 
                 <div className="flex items-center justify-center">
@@ -182,7 +182,7 @@ export default function UpgradePage() {
                 <div className="p-4 rounded-lg bg-gold/10 border-2 border-gold/30">
                   <p className="text-xs text-gold mb-1">Upgrading to</p>
                   <p className="font-bold text-text">Complete Seerah (100 parts)</p>
-                  <p className="text-xs text-text-secondary mt-1">Full mastery system</p>
+                  <p className="text-xs text-text-secondary mt-1">Full mastery system with slides, infographics, mind maps, flashcards, quizzes, reports, and study guides</p>
                 </div>
               </div>
 

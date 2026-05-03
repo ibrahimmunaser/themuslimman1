@@ -43,11 +43,11 @@ export default async function MyCoursesPage() {
       id: "seerah",
       title: userPlan === "complete" ? "Complete Seerah" : "Essentials Seerah",
       description: userPlan === "complete" 
-        ? "Master the life of the Prophet ﷺ through the complete 100-part study system with slides, mind maps, flashcards, and comprehensive review tools."
-        : "Understand the complete Seerah story from beginning to end through 75 guided Essentials lessons.",
+        ? "Master the life of the Prophet ﷺ through the complete 100-part study system with slides, mind maps, flashcards, quizzes, and comprehensive review tools."
+        : "Learn the life of the Prophet ﷺ through 100 video lessons with Listen on the Go audio and briefings for each part.",
       link: "/learn",
       planType: userPlan,
-      lessonCount: userPlan === "complete" ? 100 : 75,
+      lessonCount: 100,
       estimatedHours: userPlan === "complete" ? 40 : 30,
       isComplete: userPlan === "complete",
     },
@@ -116,12 +116,12 @@ export default async function MyCoursesPage() {
 
                 {/* Features (conditional based on plan) */}
                 <div className="mb-6 space-y-2">
-                  <div className="flex items-center gap-2.5 text-sm text-text-secondary">
-                    <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
-                    <span>Video lessons & quizzes</span>
-                  </div>
-                  {course.isComplete && (
+                  {course.isComplete ? (
                     <>
+                      <div className="flex items-center gap-2.5 text-sm text-text-secondary">
+                        <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
+                        <span>100 video lessons with audio</span>
+                      </div>
                       <div className="flex items-center gap-2.5 text-sm text-text-secondary">
                         <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
                         <span>3 slide & 3 infographic formats</span>
@@ -132,7 +132,22 @@ export default async function MyCoursesPage() {
                       </div>
                       <div className="flex items-center gap-2.5 text-sm text-text-secondary">
                         <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
-                        <span>Briefings & study guides</span>
+                        <span>Briefings, quizzes & study guides</span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-2.5 text-sm text-text-secondary">
+                        <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
+                        <span>100 video lessons</span>
+                      </div>
+                      <div className="flex items-center gap-2.5 text-sm text-text-secondary">
+                        <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
+                        <span>Listen on the Go audio</span>
+                      </div>
+                      <div className="flex items-center gap-2.5 text-sm text-text-secondary">
+                        <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
+                        <span>Briefings for each part</span>
                       </div>
                     </>
                   )}

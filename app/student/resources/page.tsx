@@ -28,16 +28,19 @@ export default async function ResourcesPage() {
   const userPlan = hasCompletePlan ? "complete" : "essentials";
 
   const essentialsResources = [
-    { icon: FileText, label: "Video Lessons", description: "Watch all guided video lessons", available: true },
-    { icon: Layers, label: "Slides", description: "Access slide decks for all parts", available: true },
-    { icon: Brain, label: "Quizzes", description: "Test your knowledge", available: true },
+    { icon: FileText, label: "Video Lessons", description: "Watch all 100 guided video lessons", available: true },
+    { icon: FileText, label: "Listen on the Go", description: "Audio version of every lesson", available: true },
+    { icon: FileText, label: "Briefings", description: "Read briefings for each part", available: true },
   ];
 
   const completeResources = [
-    { icon: FileText, label: "Briefings", description: "Read comprehensive briefings for each part", available: userPlan === "complete" },
+    { icon: Layers, label: "Slides", description: "3 formats: Presented, Detailed, Facts", available: userPlan === "complete" },
+    { icon: Image, label: "Infographics", description: "3 formats: Concise, Standard, Bento Grid", available: userPlan === "complete" },
     { icon: Map, label: "Mind Maps", description: "Visual maps connecting people and events", available: userPlan === "complete" },
     { icon: Brain, label: "Flashcards", description: "Easy, Medium, and Hard flashcard sets", available: userPlan === "complete" },
-    { icon: Image, label: "Infographics", description: "3 formats: Concise, Standard, Bento Grid", available: userPlan === "complete" },
+    { icon: Brain, label: "Quizzes", description: "Test your knowledge for each part", available: userPlan === "complete" },
+    { icon: FileText, label: "Reports", description: "Comprehensive reports for each lesson", available: userPlan === "complete" },
+    { icon: FileText, label: "Study Guides", description: "Detailed study guides for review", available: userPlan === "complete" },
     { icon: FileText, label: "Statement of Facts", description: "Quick reference facts for each part", available: userPlan === "complete" },
   ];
 
@@ -125,9 +128,9 @@ export default async function ResourcesPage() {
           {userPlan === "essentials" && (
             <div className="mt-8 p-6 rounded-xl bg-gradient-to-b from-gold/15 to-gold/5 border border-gold/30">
               <div className="max-w-2xl">
-                <h3 className="text-xl font-bold text-text mb-2">Unlock All Resources</h3>
+                <h3 className="text-xl font-bold text-text mb-2">Unlock the Full Mastery System</h3>
                 <p className="text-text-secondary mb-4">
-                  Upgrade to Complete Seerah for only $30 more and get access to mind maps, flashcards, briefings, infographics, and the full 100-part system.
+                  Upgrade to Complete Seerah for only $30 more and add slides, infographics, mind maps, flashcards, quizzes, reports, study guides, and statement of facts to every lesson.
                 </p>
                 <Link
                   href="/pricing"

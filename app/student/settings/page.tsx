@@ -87,40 +87,6 @@ export default async function SettingsPage() {
             </div>
           </div>
 
-          {/* Notifications */}
-          <div className="p-6 rounded-xl border border-border bg-surface mb-6">
-            <div className="flex items-center gap-3 mb-6">
-              <Bell className="w-5 h-5 text-gold" />
-              <h2 className="text-lg font-semibold text-text">Notifications</h2>
-            </div>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-text font-medium">Email Notifications</p>
-                  <p className="text-text-secondary text-sm">Receive updates about your progress</p>
-                </div>
-                <input
-                  type="checkbox"
-                  disabled
-                  className="w-5 h-5 rounded border-border cursor-not-allowed"
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-text font-medium">Course Reminders</p>
-                  <p className="text-text-secondary text-sm">Get reminded to continue learning</p>
-                </div>
-                <input
-                  type="checkbox"
-                  disabled
-                  className="w-5 h-5 rounded border-border cursor-not-allowed"
-                />
-              </div>
-              <p className="text-xs text-text-muted pt-2">
-                Notification preferences coming soon.
-              </p>
-            </div>
-          </div>
 
           {/* Account Plan */}
           <div className="p-6 rounded-xl border border-border bg-surface">
@@ -135,8 +101,8 @@ export default async function SettingsPage() {
                 </p>
                 <p className="text-text-secondary text-sm">
                   {userPlan === "complete" 
-                    ? "Full access to all 100 parts and premium resources"
-                    : "Access to 75 narrative lessons and core resources"}
+                    ? "Full access to all 100 parts and the complete mastery system"
+                    : "Access to all 100 video lessons, Listen on the Go, and briefings"}
                 </p>
               </div>
               {userPlan === "essentials" && (
