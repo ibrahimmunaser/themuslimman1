@@ -6,6 +6,9 @@ import { ERA_MAP } from "@/lib/types";
 import { ChevronRight, ChevronDown, Play, CheckCircle2, BookOpen, Lock, Clock, Video, Headphones, FileText, Brain, ClipboardCheck, Info } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { StudentLayout } from "@/components/student/student-layout";
+import { CourseDashboardTabs } from "@/components/course/course-dashboard-tabs";
+import { CourseResourcesContent } from "@/components/course/course-resources-content";
+import { CourseProgressContent } from "@/components/course/course-progress-content";
 
 export const metadata = { title: "Seerah Masterclass" };
 export const dynamic = "force-dynamic";
@@ -130,9 +133,9 @@ export default async function LearnIndexPage() {
   // Get user's first name for header
   const userFirstName = user.fullName.split(" ")[0];
 
-  return (
-    <StudentLayout userPlan={userPlan} userName={user.fullName}>
-      <div className="min-h-screen bg-[#0a0a0a] lg:pl-0">
+  // Lessons content
+  const lessonsContent = (
+    <div className="min-h-screen bg-[#0a0a0a] lg:pl-0">
 
       {/* Course Hero */}
       <div className="border-b border-zinc-800 bg-zinc-900/50">
@@ -544,6 +547,16 @@ export default async function LearnIndexPage() {
         </div>
       </div>
       </div>
+    </div>
+  );
+
+  return (
+    <StudentLayout userPlan={userPlan} userName={user.fullName}>
+      <CourseDashboardTabs
+        lessonsContent={lessonsContent}
+        resourcesContent={<CourseResourcesContent userPlan={userPlan} />}
+        progressContent={<CourseProgressContent userPlan={userPlan} />}
+      />
     </StudentLayout>
   );
 }

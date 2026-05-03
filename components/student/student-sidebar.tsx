@@ -37,10 +37,7 @@ interface MenuItem {
 }
 
 const MAIN_MENU: MenuItem[] = [
-  { id: "dashboard", label: "Dashboard", href: "/learn", icon: LayoutDashboard },
   { id: "my-courses", label: "My Courses", href: "/my-courses", icon: BookOpen },
-  { id: "resources", label: "Resources", href: "/student/resources", icon: FolderOpen },
-  { id: "progress", label: "Progress", href: "/student/progress", icon: TrendingUp },
   { id: "help", label: "Help", href: "/help", icon: HelpCircle },
 ];
 
@@ -82,7 +79,7 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
       {/* Logo/Brand */}
       {!collapsed && (
         <div className="p-4 border-b border-border">
-          <Link href="/learn" className="flex items-center gap-2">
+          <Link href="/my-courses" className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gold/10 border border-gold/30 flex items-center justify-center flex-shrink-0">
               <span className="text-gold font-bold text-sm">S</span>
             </div>

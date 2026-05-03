@@ -27,7 +27,7 @@ export default function LoginPage() {
         if (result.role === "student") {
           // For students, check purchase status
           if (result.hasPurchase) {
-            router.push("/learn"); // Has purchase - go to dashboard
+            router.push("/my-courses"); // Has purchase - go to my courses
           } else {
             router.push("/pricing"); // No purchase - go to pricing
           }
