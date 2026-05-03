@@ -232,15 +232,19 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
         />
       )}
 
-      {/* Desktop Sidebar */}
+      {/* Unified Sidebar - Desktop & Mobile */}
       <aside
         className={clsx(
-          "hidden lg:flex flex-col bg-surface border-r border-border transition-all duration-300",
-          collapsed ? "w-16" : "w-64"
+          "fixed top-0 left-0 bottom-0 z-40 bg-surface border-r border-border flex flex-col transition-all duration-300",
+          // Mobile: slide in/out
+          "lg:relative lg:translate-x-0",
+          mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+          // Desktop: collapsible width
+          collapsed ? "lg:w-16" : "w-64"
         )}
       >
         {collapsed ? (
-          <div className="flex flex-col items-center py-3">
+          <div className="hidden lg:flex flex-col items-center py-3">
             <button
               onClick={() => setCollapsed(false)}
               className="w-8 h-8 rounded-lg bg-surface-raised hover:bg-surface-high flex items-center justify-center text-text-muted hover:text-text transition-all"
@@ -250,16 +254,6 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
             </button>
           </div>
         ) : null}
-        <SidebarContent />
-      </aside>
-
-      {/* Mobile Sidebar */}
-      <aside
-        className={clsx(
-          "lg:hidden fixed top-0 left-0 bottom-0 z-40 w-64 bg-surface border-r border-border flex flex-col transition-transform duration-300",
-          mobileOpen ? "translate-x-0" : "-translate-x-full"
-        )}
-      >
         <SidebarContent />
       </aside>
     </>
