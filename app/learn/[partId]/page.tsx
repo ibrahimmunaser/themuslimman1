@@ -134,22 +134,27 @@ export default async function LearnPartPage(props: Props) {
     assets: {
       videoUrl: assetUrls.videoUrl ? await getR2AssetUrl(assetUrls.videoUrl) : undefined,
       audioUrl: assetUrls.audioUrl ? await getR2AssetUrl(assetUrls.audioUrl) : undefined,
+      briefingText,
+      statementOfFactsText,
+      studyGuideText,
+      reportText,
+      quiz: quizData,
+      flashcards,
       infographicConcise: infConcise ? await getR2PublicUrl(infConcise) : undefined,
       infographicStandard: infStandard ? await getR2PublicUrl(infStandard) : undefined,
       infographicBento: infBento ? await getR2PublicUrl(infBento) : undefined,
-      mindmap: hasMindmap ? await getR2AssetUrl(`part-${n}/mindmap/mindmap.html`) : undefined,
+      mindmapUrl: hasMindmap ? await getR2AssetUrl(`part-${n}/mindmap/mindmap.html`) : undefined,
+      infographics: {
+        concise: infConcise ? await getR2PublicUrl(infConcise) : undefined,
+        standard: infStandard ? await getR2PublicUrl(infStandard) : undefined,
+        bentoGrid: infBento ? await getR2PublicUrl(infBento) : undefined,
+      },
       slides: {
         presented: (await Promise.all(slidesPresentedFiles.map((f: string) => getR2PublicUrl(f)))).filter((url): url is string => url !== null),
         detailed: (await Promise.all(slidesDetailedFiles.map((f: string) => getR2PublicUrl(f)))).filter((url): url is string => url !== null),
         facts: (await Promise.all(slidesFactsFiles.map((f: string) => getR2PublicUrl(f)))).filter((url): url is string => url !== null),
       },
     },
-    briefing: briefingText,
-    statementOfFacts: statementOfFactsText,
-    studyGuide: studyGuideText,
-    report: reportText,
-    quiz: quizData,
-    flashcards,
   };
 
   const allParts = PARTS;
