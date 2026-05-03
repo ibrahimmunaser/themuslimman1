@@ -74,7 +74,6 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
     id: user.id,
     fullName: user.fullName,
     email: user.email,
-    username: user.username,
     role: user.role as Role,
     isActive: user.isActive,
     profileImage: user.profileImage,
@@ -142,7 +141,7 @@ export async function login(
 
   const valid = await bcrypt.compare(password, user.passwordHash);
   if (!valid) {
-    return { success: false, error: "Invalid username or password" };
+    return { success: false, error: "Invalid email or password" };
   }
 
   // In production, require email verification. In development, skip it.

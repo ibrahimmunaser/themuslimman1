@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 async function checkPurchases() {
   try {
     const user = await prisma.user.findUnique({
-      where: { username: 'imunaser1' },
+      where: { email: 'ibrahimmunaser3@gmail.com' },
       include: {
         purchases: true,
       },
@@ -17,8 +17,8 @@ async function checkPurchases() {
     }
 
     console.log('\n=== User Account Info ===');
-    console.log('Username:', user.username);
     console.log('Email:', user.email);
+    console.log('Full Name:', user.fullName);
     console.log('Has Paid (old flag):', user.hasPaid);
     console.log('\n=== Purchase Records ===');
     

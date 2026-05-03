@@ -3,7 +3,6 @@ import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { customAlphabet, nanoid } from "nanoid";
 import { prisma } from "@/lib/db";
-import { generateUniqueUsername, validateFullName } from "@/lib/username-generator";
 import { Resend } from "resend";
 import { cookies } from "next/headers";
 
@@ -37,15 +36,6 @@ export async function POST(request: NextRequest) {
 
     const { fullName, email, password } = parsed.data;
 
-    // Validate name
-    const nameValidation = validateFullName(fullName);
-    if (!nameValidation.valid) {
-      return NextResponse.json(
-        { error: nameValidation.error },
-        { status: 400 }
-      );
-    }
-
     // Check if email already exists
     const existingEmail = await prisma.user.findUnique({
       where: { email: email.toLowerCase() },
@@ -57,9 +47,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    // Generate unique username
-    const username = await generateUniqueUsername(fullName);
 
     // Hash password
     const passwordHash = await bcrypt.hash(password, 12);
@@ -75,7 +62,6 @@ export async function POST(request: NextRequest) {
         data: {
           fullName: fullName.trim(),
           email: email.toLowerCase(),
-          username,
           passwordHash,
           role: "student",
           emailVerified: isDevelopment,
@@ -142,7 +128,7 @@ export async function POST(request: NextRequest) {
         console.error("Failed to send verification email:", emailError);
       }
     } else {
-      console.log(`[DEV] Auto-verified user: ${username} (${email})`);
+      console.log(`[DEV] Auto-verified user: ${email}`);
     }
 
     return NextResponse.json({
@@ -167,10 +153,10 @@ export async function POST(request: NextRequest) {
         );
       }
       
-      // Unique constraint violations (duplicate email/username)
+      // Unique constraint violations (duplicate email)
       if (error.message.includes("Unique constraint")) {
         return NextResponse.json(
-          { error: "An account with this email or username already exists." },
+          { error: "An account with this email already exists." },
           { status: 400 }
         );
       }

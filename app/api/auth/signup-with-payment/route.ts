@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { stripe } from "@/lib/stripe";
-import { generateUniqueUsername, validateFullName } from "@/lib/username-generator";
 import { MailerSend, EmailParams, Sender, Recipient } from "mailersend";
 import bcrypt from "bcryptjs";
 import { nanoid } from "nanoid";
@@ -10,11 +9,9 @@ const generateToken = () => nanoid(32);
 
 function generateWelcomeEmail({
   fullName,
-  username,
   verificationUrl,
 }: {
   fullName: string;
-  username: string;
   verificationUrl: string;
 }) {
   return `
@@ -38,10 +35,6 @@ function generateWelcomeEmail({
               <p style="margin: 0 0 20px; color: #e0e0e0; font-size: 16px; line-height: 1.5;">
                 Thank you for your purchase! Your account has been created and you're ready to start learning the Seerah.
               </p>
-              <div style="background-color: #d4af37; background: linear-gradient(135deg, #d4af37 0%, #f4d03f 100%); padding: 20px; border-radius: 6px; margin: 30px 0;">
-                <p style="margin: 0 0 10px; color: #0a0a0a; font-size: 14px; font-weight: bold;">YOUR USERNAME</p>
-                <p style="margin: 0; color: #0a0a0a; font-size: 24px; font-family: 'Courier New', monospace; font-weight: bold;">${username}</p>
-              </div>
               <p style="margin: 0 0 30px; color: #a0a0a0; font-size: 14px; line-height: 1.5;">
                 Please verify your email address to complete your account setup:
               </p>
@@ -86,13 +79,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!validateFullName(fullName)) {
-      return NextResponse.json(
-        { error: "Please provide your first and last name" },
-        { status: 400 }
-      );
-    }
-
     if (password.length < 8) {
       return NextResponse.json(
         { error: "Password must be at least 8 characters" },
@@ -122,9 +108,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Generate unique username
-    const username = await generateUniqueUsername(fullName);
-
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -136,7 +119,6 @@ export async function POST(req: NextRequest) {
     const user = await prisma.user.create({
       data: {
         fullName: fullName.trim(),
-        username,
         email: email.toLowerCase(),
         passwordHash: hashedPassword,
         emailVerified: false,
@@ -168,7 +150,6 @@ export async function POST(req: NextRequest) {
       .setSubject("Welcome to Seerah LMS - Verify your email")
       .setHtml(generateWelcomeEmail({
         fullName: fullName.trim(),
-        username,
         verificationUrl,
       }));
 
@@ -178,7 +159,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      username,
       message: "Account created successfully",
     });
   } catch (error) {
