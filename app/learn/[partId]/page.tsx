@@ -129,6 +129,11 @@ export default async function LearnPartPage(props: Props) {
     facts: slidesFactsFiles,
   };
 
+  // Convert R2 URLs (which can be null) to undefined for type compatibility
+  const infographicConciseUrl = infConcise ? await getR2PublicUrl(infConcise) : null;
+  const infographicStandardUrl = infStandard ? await getR2PublicUrl(infStandard) : null;
+  const infographicBentoUrl = infBento ? await getR2PublicUrl(infBento) : null;
+
   const part = {
     ...partBase,
     assets: {
@@ -142,9 +147,9 @@ export default async function LearnPartPage(props: Props) {
       flashcards: flashcards || undefined,
       mindmapUrl: hasMindmap ? await getR2AssetUrl(`part-${n}/mindmap/mindmap.html`) : undefined,
       infographics: {
-        concise: infConcise ? await getR2PublicUrl(infConcise) : undefined,
-        standard: infStandard ? await getR2PublicUrl(infStandard) : undefined,
-        bentoGrid: infBento ? await getR2PublicUrl(infBento) : undefined,
+        concise: infographicConciseUrl || undefined,
+        standard: infographicStandardUrl || undefined,
+        bentoGrid: infographicBentoUrl || undefined,
       },
       slides: {
         presented: (await Promise.all(slidesPresentedFiles.map((f: string) => getR2PublicUrl(f)))).filter((url): url is string => url !== null),
