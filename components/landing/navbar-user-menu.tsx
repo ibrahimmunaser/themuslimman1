@@ -27,7 +27,7 @@ export function NavbarUserMenu({ user, firstName }: NavbarUserMenuProps) {
   // Logged in - show user menu with dropdown
   return (
     <>
-      <Link href="/courses" className="text-sm text-text-secondary hover:text-text transition-colors">
+      <Link href="/my-courses" className="text-sm text-text-secondary hover:text-text transition-colors">
         My Courses
       </Link>
       <NavbarUserButton firstName={firstName!} />

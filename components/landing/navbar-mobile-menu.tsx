@@ -33,7 +33,7 @@ export function NavbarMobileMenu({ user, firstName }: NavbarMobileMenuProps) {
             Home
           </Link>
           <Link 
-            href="/courses" 
+            href="/my-courses" 
             onClick={() => setOpen(false)} 
             className="text-sm text-text-secondary hover:text-text transition-colors"
           >

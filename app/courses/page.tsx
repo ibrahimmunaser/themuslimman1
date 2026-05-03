@@ -1,19 +1,11 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
-import { getCurrentUser } from "@/lib/auth";
-import { prisma } from "@/lib/db";
-import { StudentHeader } from "@/components/student/student-header";
-import { BookOpen, ChevronRight, Package, Clock, CheckCircle2 } from "lucide-react";
 
 export const metadata = { title: "My Courses" };
 
+// Redirect to new /my-courses page
 export default async function MyCoursesPage() {
-  // Check if user is logged in
-  const user = await getCurrentUser();
-  
-  if (!user) {
-    redirect("/login?redirect=/courses");
-  }
+  redirect("/my-courses");
+}
 
   // Get user's purchases
   const purchases = await prisma.purchase.findMany({
