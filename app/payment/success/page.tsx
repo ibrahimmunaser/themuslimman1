@@ -120,7 +120,7 @@ function PaymentSuccessPageContent() {
           </div>
 
           <div className="pt-6 border-t border-border">
-            <Link href="/learn/part-1" className="w-full">
+            <Link href="/learn" className="w-full">
               <Button variant="primary" size="lg" className="w-full gap-2">
                 Start Learning
                 <ArrowRight className="w-4 h-4" />
