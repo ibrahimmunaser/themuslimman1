@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { HeadObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { HeadObjectCommand, S3Client, ListObjectsV2Command } from "@aws-sdk/client-s3";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,6 +19,8 @@ export async function GET() {
     },
     r2Connection: null as any,
     videoCheck: null as any,
+    audioCheck: null as any,
+    audioFolderList: [] as any[],
   };
 
   if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY || !R2_BUCKET) {
@@ -39,25 +41,72 @@ export async function GET() {
   });
 
   try {
+    // Check video
     const videoKey = "videos/Part 1.mp4";
-    const command = new HeadObjectCommand({
+    const videoCommand = new HeadObjectCommand({
       Bucket: R2_BUCKET,
       Key: videoKey,
     });
-
-    const response = await r2Client.send(command);
+    const videoResponse = await r2Client.send(videoCommand);
 
     diagnostics.r2Connection = "SUCCESS";
     diagnostics.videoCheck = {
       key: videoKey,
       exists: true,
-      size: response.ContentLength,
-      contentType: response.ContentType,
+      size: videoResponse.ContentLength,
+      contentType: videoResponse.ContentType,
     };
+
+    // Check audio - try multiple naming patterns
+    const audioKeys = [
+      "audio/Part 1.mp3",
+      "audio/Part 1.wav",
+      "Audio/Part 1.mp3",
+      "Audio/Part 1.wav",
+    ];
+
+    for (const key of audioKeys) {
+      try {
+        const audioCommand = new HeadObjectCommand({
+          Bucket: R2_BUCKET,
+          Key: key,
+        });
+        const audioResponse = await r2Client.send(audioCommand);
+        diagnostics.audioCheck = {
+          key,
+          exists: true,
+          size: audioResponse.ContentLength,
+          contentType: audioResponse.ContentType,
+        };
+        break;
+      } catch {
+        // Try next key
+      }
+    }
+
+    if (!diagnostics.audioCheck) {
+      diagnostics.audioCheck = { exists: false, message: "No audio file found for Part 1" };
+    }
+
+    // List audio folder contents
+    try {
+      const listCommand = new ListObjectsV2Command({
+        Bucket: R2_BUCKET,
+        Prefix: "audio/",
+        MaxKeys: 10,
+      });
+      const listResponse = await r2Client.send(listCommand);
+      diagnostics.audioFolderList = (listResponse.Contents || []).map(item => ({
+        key: item.Key,
+        size: item.Size,
+      }));
+    } catch (listError: any) {
+      diagnostics.audioFolderList = [{ error: listError.message }];
+    }
 
     return NextResponse.json({
       success: true,
-      message: "R2 connection and video check successful",
+      message: "R2 connection successful",
       diagnostics,
     });
   } catch (error: any) {
