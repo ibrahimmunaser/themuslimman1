@@ -14,6 +14,10 @@ const SignupSchema = z.object({
   fullName: z.string().min(2, "Name must be at least 2 characters").max(100),
   email: z.string().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
+  courseFor: z.enum(["myself", "my_child", "my_family"]).default("myself"),
+  studentName: z.string().nullable().optional(),
+  parentEmail: z.string().email().nullable().optional().or(z.literal("")),
+  sendWeeklyReports: z.boolean().default(false),
 });
 
 /**
@@ -34,7 +38,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { fullName, email, password } = parsed.data;
+    const { fullName, email, password, courseFor, studentName, parentEmail, sendWeeklyReports } = parsed.data;
 
     // Check if email already exists
     const existingEmail = await prisma.user.findUnique({
@@ -67,6 +71,10 @@ export async function POST(request: NextRequest) {
           emailVerified: isDevelopment,
           verificationToken,
           verificationExpires,
+          courseFor: courseFor || "myself",
+          studentName: studentName?.trim() || null,
+          parentEmail: parentEmail?.trim() || null,
+          sendWeeklyReports: sendWeeklyReports || false,
           student: {
             create: {
               isActive: true,

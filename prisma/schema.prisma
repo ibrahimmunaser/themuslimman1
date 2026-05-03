@@ -24,30 +24,37 @@ datasource db {
 // ─────────────────────────────────────────────────────────────
 
 model User {
-  id                     String    @id @default(cuid())
-  fullName               String
-  email                  String    @unique
-  passwordHash           String?
-  role                   String    // "platform_admin" | "student"
-  emailVerified          Boolean   @default(false)
-  verificationToken      String?   @unique
-  verificationExpires    DateTime?
-  passwordResetToken     String?   @unique
-  passwordResetExpiry    DateTime?
-  lastLoginAt            DateTime?
-  isActive               Boolean   @default(true)
-  profileImage           String?
-  timezone               String    @default("UTC")
-  hasPaid                Boolean   @default(false)
-  stripePaymentIntentId  String?
-  createdAt              DateTime  @default(now())
-  updatedAt              DateTime  @updatedAt
+  id                    String    @id @default(cuid())
+  fullName              String
+  email                 String    @unique
+  passwordHash          String?
+  role                  String // "platform_admin" | "student"
+  emailVerified         Boolean   @default(false)
+  verificationToken     String?   @unique
+  verificationExpires   DateTime?
+  passwordResetToken    String?   @unique
+  passwordResetExpiry   DateTime?
+  lastLoginAt           DateTime?
+  isActive              Boolean   @default(true)
+  profileImage          String?
+  timezone              String    @default("UTC")
+  hasPaid               Boolean   @default(false)
+  stripePaymentIntentId String?
+  
+  // Parent Progress Report Fields
+  studentName       String?  // If course is for a child, this is the child's name
+  parentEmail       String?  // Parent/Guardian email for progress reports
+  sendWeeklyReports Boolean  @default(false) // Toggle for weekly progress emails
+  courseFor         String   @default("myself") // "myself" | "my_child" | "my_family"
+  
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
-  student       StudentProfile?
-  sessions      Session[]
-  activityLogs  ActivityLog[]
-  purchases     Purchase[]
-  partProgress  PartProgress[]
+  student      StudentProfile?
+  sessions     Session[]
+  activityLogs ActivityLog[]
+  purchases    Purchase[]
+  partProgress PartProgress[]
 
   @@index([role])
   @@index([email])
@@ -88,18 +95,18 @@ model StudentProfile {
 // ─────────────────────────────────────────────────────────────
 
 model SeerahPart {
-  id                   String  @id @default(cuid())
-  partNumber           Int     @unique
+  id                   String   @id @default(cuid())
+  partNumber           Int      @unique
   title                String
-  slug                 String  @unique
+  slug                 String   @unique
   subtitle             String?
   era                  String
   shortDescription     String?
   longDescription      String?
   orderIndex           Int
   durationMinutes      Int?
-  includedInEssentials Boolean @default(false)
-  isPublished          Boolean @default(true)
+  includedInEssentials Boolean  @default(false)
+  isPublished          Boolean  @default(true)
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 
@@ -186,16 +193,16 @@ model Class {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
-  enrollments   ClassEnrollment[]
-  classCourse   ClassCourse?
-  releaseRules  ReleaseRule[]
-  assignments   Assignment[]
-  progress      StudentProgress[]
-  quizzes       Quiz[]
-  quizAttempts  QuizAttempt[]
-  exams         Exam[]
-  examAttempts  ExamAttempt[]
-  activityLogs  ActivityLog[]
+  enrollments  ClassEnrollment[]
+  classCourse  ClassCourse?
+  releaseRules ReleaseRule[]
+  assignments  Assignment[]
+  progress     StudentProgress[]
+  quizzes      Quiz[]
+  quizAttempts QuizAttempt[]
+  exams        Exam[]
+  examAttempts ExamAttempt[]
+  activityLogs ActivityLog[]
 
   @@index([status])
   @@index([visibility])
@@ -227,8 +234,8 @@ model ClassCourse {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  class          Class              @relation(fields: [classId], references: [id], onDelete: Cascade)
-  courseTemplate CourseTemplate?    @relation(fields: [courseTemplateId], references: [id])
+  class          Class             @relation(fields: [classId], references: [id], onDelete: Cascade)
+  courseTemplate CourseTemplate?   @relation(fields: [courseTemplateId], references: [id])
   items          ClassCourseItem[]
 }
 
@@ -386,7 +393,7 @@ model QuizQuestion {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  quiz    Quiz           @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  quiz    Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
   options QuizOption[]
   answers QuizAnswer[]
 
@@ -421,9 +428,9 @@ model QuizAttempt {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  quiz    Quiz            @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  class   Class?          @relation(fields: [classId], references: [id])
-  student StudentProfile  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  quiz    Quiz           @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  class   Class?         @relation(fields: [classId], references: [id])
+  student StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
   answers QuizAnswer[]
 
   @@index([quizId])
@@ -465,7 +472,7 @@ model Exam {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  class     Class           @relation(fields: [classId], references: [id], onDelete: Cascade)
+  class     Class          @relation(fields: [classId], references: [id], onDelete: Cascade)
   partLinks ExamPartLink[]
   attempts  ExamAttempt[]
 
@@ -498,9 +505,9 @@ model ExamAttempt {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  exam    Exam            @relation(fields: [examId], references: [id], onDelete: Cascade)
-  class   Class           @relation(fields: [classId], references: [id])
-  student StudentProfile  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  exam    Exam           @relation(fields: [examId], references: [id], onDelete: Cascade)
+  class   Class          @relation(fields: [classId], references: [id])
+  student StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@index([examId])
   @@index([studentId])
@@ -534,16 +541,16 @@ model ActivityLog {
 // ─────────────────────────────────────────────────────────────
 
 model Purchase {
-  id                     String   @id @default(cuid())
-  userId                 String
-  planId                 String
-  planName               String
-  amount                 Int
-  currency               String   @default("usd")
-  status                 String   @default("pending")
-  stripePaymentIntentId  String   @unique
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
+  id                    String   @id @default(cuid())
+  userId                String
+  planId                String
+  planName              String
+  amount                Int
+  currency              String   @default("usd")
+  status                String   @default("pending")
+  stripePaymentIntentId String   @unique
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
