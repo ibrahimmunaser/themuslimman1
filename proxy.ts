@@ -17,7 +17,7 @@ const PROTECTED_PREFIXES = [
   "/conclusion",
 ];
 
-const AUTH_ROUTES = ["/login", "/signup"];
+const AUTH_ROUTES = ["/login", "/signup", "/forgot-password", "/reset-password"];
 const SESSION_COOKIE = "seerah_session";
 
 export function proxy(request: NextRequest) {
@@ -58,5 +58,7 @@ export const config = {
     "/conclusion/:path*",
     "/login",
     "/signup",
+    "/forgot-password",
+    "/reset-password",
   ],
 };
