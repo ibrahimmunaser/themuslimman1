@@ -25,8 +25,8 @@ seerah-media/
 │   ├── Part 2.mp4
 │   └── ...
 ├── audio/
-│   ├── Part 1.wav
-│   ├── Part 2.wav
+│   ├── Part 1.mp3
+│   ├── Part 2.mp3
 │   └── ...
 ├── mindmaps/
 │   ├── Part 1 - Mindmap.png

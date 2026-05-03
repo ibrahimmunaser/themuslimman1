@@ -199,7 +199,11 @@ export async function r2GetVideoKey(partNum: number): Promise<string | null> {
  * Get audio filename for a part number
  */
 export async function r2GetAudioKey(partNum: number): Promise<string | null> {
-  // Check for duplicate naming artifact first
+  // Check for .mp3 files first (production format)
+  const mp3 = `audio/Part ${partNum}.mp3`;
+  if (await r2FileExists(mp3)) return mp3;
+  
+  // Fallback to .wav files (legacy format)
   const withSuffix = `audio/Part ${partNum} (1).wav`;
   if (await r2FileExists(withSuffix)) return withSuffix;
   

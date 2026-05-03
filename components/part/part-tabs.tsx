@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import NextImage from "next/image";
 import { VideoPlayer } from "./video-player";
-import { AudioPlayer } from "./audio-player";
+import { ListenOnTheGo } from "./listen-on-the-go";
 import { TextViewer } from "./text-viewer";
 import { FactsViewer } from "./facts-viewer";
 import { MindmapViewer } from "./mindmap-viewer";
@@ -33,7 +33,7 @@ import type { Part } from "@/lib/types";
 type ModeId = "watch" | "read" | "study" | "slides" | "mindmap" | "infographic" | "flashcards" | "quiz";
 
 type SubTabId =
-  | "video" | "audio"
+  | "video"
   | "briefing" | "study-guide" | "facts" | "report"
   | "flashcards" | "quiz"
   | "slides" | "mindmap" | "infographic";
@@ -91,7 +91,6 @@ const MODES: Mode[] = [
 function subTabHasContent(id: SubTabId, part: Part): boolean {
   switch (id) {
     case "video":       return !!part.assets.videoUrl;
-    case "audio":       return !!part.assets.audioUrl;
     case "briefing":    return !!part.assets.briefingText;
     case "study-guide": return !!part.assets.studyGuideText;
     case "facts":       return !!part.assets.statementOfFactsText;
@@ -237,14 +236,19 @@ function SubTabContent({ id, part }: { id: SubTabId; part: Part }) {
   switch (id) {
     case "video":
       return (
-        <VideoPlayer
-          src={part.assets.videoUrl}
-          title={part.title}
-          poster={part.assets.slides?.presented[0]}
-        />
+        <div className="space-y-4">
+          <VideoPlayer
+            src={part.assets.videoUrl}
+            title={part.title}
+            poster={part.assets.slides?.presented[0]}
+          />
+          <ListenOnTheGo
+            audioUrl={part.assets.audioUrl}
+            title={part.title}
+            partNumber={part.partNumber}
+          />
+        </div>
       );
-    case "audio":
-      return <AudioPlayer src={part.assets.audioUrl} title={part.title} partNumber={part.partNumber} />;
     case "briefing":
       return wrap(part.assets.briefingText ? <TextViewer content={part.assets.briefingText} /> : <EmptyContent label="Briefing" />);
     case "study-guide":

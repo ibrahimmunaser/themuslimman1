@@ -23,9 +23,14 @@ export const SEERAH_ROOT =
 const USE_R2 = process.env.R2_BUCKET && process.env.R2_ACCESS_KEY_ID;
 
 // ─── Audio ───────────────────────────────────────────────────────────────────
-// Some files have a " (1)" suffix (Windows duplicate naming artifact)
+// Check for .mp3 (production format) first, then fall back to .wav (legacy)
 
 export function getAudioFilename(partNum: number): string | null {
+  // Check for .mp3 first (production format)
+  const mp3 = path.join(SEERAH_ROOT, "Audio", `Part ${partNum}.mp3`);
+  if (fs.existsSync(mp3)) return `Part ${partNum}.mp3`;
+
+  // Fallback to .wav files
   const withSuffix = path.join(SEERAH_ROOT, "Audio", `Part ${partNum} (1).wav`);
   if (fs.existsSync(withSuffix)) return `Part ${partNum} (1).wav`;
 
