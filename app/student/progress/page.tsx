@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { requireStudent } from "@/lib/auth";
 import { StudentLayout } from "@/components/student/student-layout";
 import { prisma } from "@/lib/db";
-import { TrendingUp, Target, Clock, Award } from "lucide-react";
+import { TrendingUp, Target, Clock, Award, FileText } from "lucide-react";
 
 export const metadata = { title: "Progress | Seerah Masterclass" };
 export const dynamic = "force-dynamic";
