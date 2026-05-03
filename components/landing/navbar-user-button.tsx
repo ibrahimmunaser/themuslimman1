@@ -44,13 +44,6 @@ export function NavbarUserButton({ firstName }: { firstName: string }) {
             >
               My Courses
             </Link>
-            <Link
-              href="/pricing"
-              onClick={() => setOpen(false)}
-              className="block px-4 py-3 text-sm text-text hover:bg-surface-raised transition-colors"
-            >
-              Upgrade Plan
-            </Link>
             <div className="border-t border-border" />
             <button
               onClick={handleSignOut}
