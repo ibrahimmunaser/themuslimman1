@@ -11,23 +11,23 @@ interface NavbarUserMenuProps {
 
 export function NavbarUserMenu({ user, firstName }: NavbarUserMenuProps) {
   if (!user) {
-    // Not logged in - show Login button
+    // Not logged in - show Login button (hidden on mobile)
     return (
       <>
-        <Link href="/login" className="text-sm text-text-secondary hover:text-text transition-colors">
+        <Link href="/login" className="hidden md:block text-sm text-text-secondary hover:text-text transition-colors">
           Login
         </Link>
-        <Link href="#pricing" className={buttonClass("primary", "sm")}>
+        <Link href="#pricing" className={`hidden md:inline-flex ${buttonClass("primary", "sm")}`}>
           Get Started
         </Link>
       </>
     );
   }
 
-  // Logged in - show user menu with dropdown
+  // Logged in - show user menu with dropdown (hidden on mobile)
   return (
     <>
-      <Link href="/my-courses" className="text-sm text-text-secondary hover:text-text transition-colors">
+      <Link href="/my-courses" className="hidden md:block text-sm text-text-secondary hover:text-text transition-colors">
         My Courses
       </Link>
       <NavbarUserButton firstName={firstName!} />

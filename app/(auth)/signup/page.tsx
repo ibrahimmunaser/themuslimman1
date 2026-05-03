@@ -192,16 +192,24 @@ function SignupPageContent() {
             </div>
 
             {/* Confirm Password */}
-            <Input
-              label="Confirm password"
-              type={showPassword ? "text" : "password"}
-              placeholder="Re-enter password"
-              value={form.confirmPassword || ""}
-              onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
-              required
-              autoComplete="new-password"
-              minLength={8}
-            />
+            <div>
+              <Input
+                label="Confirm password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Re-enter password"
+                value={form.confirmPassword || ""}
+                onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
+                required
+                autoComplete="new-password"
+                minLength={8}
+              />
+              {form.confirmPassword && form.password !== form.confirmPassword && (
+                <p className="text-xs text-red-400 mt-1.5">Passwords do not match</p>
+              )}
+              {form.confirmPassword && form.password === form.confirmPassword && form.password.length >= 8 && (
+                <p className="text-xs text-green-400 mt-1.5">Passwords match ✓</p>
+              )}
+            </div>
 
             {/* Error */}
             {error && (

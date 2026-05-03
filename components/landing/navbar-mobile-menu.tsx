@@ -32,13 +32,15 @@ export function NavbarMobileMenu({ user, firstName }: NavbarMobileMenuProps) {
           >
             Home
           </Link>
-          <Link 
-            href="/my-courses" 
-            onClick={() => setOpen(false)} 
-            className="text-sm text-text-secondary hover:text-text transition-colors"
-          >
-            My Courses
-          </Link>
+          {user && (
+            <Link 
+              href="/my-courses" 
+              onClick={() => setOpen(false)} 
+              className="text-sm text-text-secondary hover:text-text transition-colors"
+            >
+              My Courses
+            </Link>
+          )}
           <Link 
             href="/pricing" 
             onClick={() => setOpen(false)} 
@@ -54,7 +56,32 @@ export function NavbarMobileMenu({ user, firstName }: NavbarMobileMenuProps) {
             Help
           </Link>
           <div className="border-t border-border my-2" />
-          <NavbarUserMenu user={user} firstName={firstName} />
+          {user ? (
+            <Link 
+              href="/student/settings" 
+              onClick={() => setOpen(false)} 
+              className="text-sm text-text-secondary hover:text-text transition-colors"
+            >
+              Settings
+            </Link>
+          ) : (
+            <>
+              <Link 
+                href="/login" 
+                onClick={() => setOpen(false)} 
+                className="text-sm text-text-secondary hover:text-text transition-colors"
+              >
+                Login
+              </Link>
+              <Link 
+                href="#pricing" 
+                onClick={() => setOpen(false)} 
+                className="px-4 py-2 rounded-lg bg-gold text-ink text-sm font-semibold hover:bg-gold/90 transition-colors text-center"
+              >
+                Get Started
+              </Link>
+            </>
+          )}
         </div>
       )}
     </>
