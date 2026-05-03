@@ -13,6 +13,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if email is verified
+    if (!user.emailVerified) {
+      return NextResponse.json(
+        { error: "Please verify your email address before making a purchase", requiresVerification: true },
+        { status: 403 }
+      );
+    }
+
     const { planId } = await request.json();
 
     if (!planId || !(planId in PLANS)) {

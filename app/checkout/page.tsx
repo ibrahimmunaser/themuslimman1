@@ -84,6 +84,9 @@ export function CheckoutPageContent() {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [requiresVerification, setRequiresVerification] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
 
   useEffect(() => {
     async function createPaymentIntent() {
@@ -102,6 +105,13 @@ export function CheckoutPageContent() {
             router.push(`/signup-checkout?plan=${planId}`);
             return;
           }
+          if (response.status === 403 && data.requiresVerification) {
+            // Email not verified
+            setRequiresVerification(true);
+            setError(data.error);
+            setLoading(false);
+            return;
+          }
           throw new Error(data.error || "Failed to create payment intent");
         }
 
@@ -115,6 +125,29 @@ export function CheckoutPageContent() {
 
     createPaymentIntent();
   }, [planId, router]);
+
+  const handleResendVerification = async () => {
+    setResendLoading(true);
+    setResendSuccess(false);
+    
+    try {
+      const response = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setResendSuccess(true);
+      } else {
+        alert(data.error || "Failed to resend verification email");
+      }
+    } catch (err) {
+      alert("Something went wrong. Please try again.");
+    } finally {
+      setResendLoading(false);
+    }
+  };
 
   if (!plan) {
     router.push("/");
@@ -202,7 +235,43 @@ export function CheckoutPageContent() {
                 </div>
               )}
 
-              {error && !loading && (
+              {requiresVerification && !loading && (
+                <div className="py-8">
+                  <div className="p-6 rounded-xl bg-gold/10 border border-gold/30 text-center">
+                    <div className="w-16 h-16 rounded-full bg-gold/20 border-2 border-gold/40 flex items-center justify-center mx-auto mb-4">
+                      <Lock className="w-8 h-8 text-gold" />
+                    </div>
+                    <h3 className="text-xl font-bold text-text mb-2">Email Verification Required</h3>
+                    <p className="text-text-secondary mb-6">
+                      Please verify your email address before making a purchase. We sent a verification link to your email.
+                    </p>
+                    
+                    {resendSuccess ? (
+                      <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/30 mb-4">
+                        <p className="text-green-400 text-sm">
+                          ✓ Verification email sent! Check your inbox.
+                        </p>
+                      </div>
+                    ) : (
+                      <Button
+                        variant="primary"
+                        size="lg"
+                        onClick={handleResendVerification}
+                        loading={resendLoading}
+                        className="mx-auto"
+                      >
+                        Resend Verification Email
+                      </Button>
+                    )}
+
+                    <p className="text-xs text-text-muted mt-4">
+                      After verifying, refresh this page to continue
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {error && !loading && !requiresVerification && (
                 <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm mb-4">
                   {error}
                   <button
@@ -214,7 +283,7 @@ export function CheckoutPageContent() {
                 </div>
               )}
 
-              {clientSecret && !loading && (
+              {clientSecret && !loading && !requiresVerification && (
                 <Elements
                   stripe={stripePromise}
                   options={{
