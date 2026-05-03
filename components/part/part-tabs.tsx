@@ -27,8 +27,12 @@ import { QuizViewer } from "./quiz-viewer";
 import { FlashcardsViewer } from "./flashcards-viewer";
 import { ResponsiveImage } from "@/components/ui/responsive-image";
 import type { Part } from "@/lib/types";
+import Link from "next/link";
+import { Lock } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+
+type UserPlan = "essentials" | "complete";
 
 type ModeId = "watch" | "read" | "study" | "slides" | "mindmap" | "infographic" | "flashcards" | "quiz";
 
@@ -86,6 +90,34 @@ const MODES: Mode[] = [
   },
 ];
 
+// ─── Access Control ───────────────────────────────────────────────────────────
+
+/**
+ * Determines if a tab/subtab is accessible based on user's plan
+ * Essentials: Only Watch (video+audio) and Briefing
+ * Complete: Everything
+ */
+function isTabAccessible(id: SubTabId, userPlan: UserPlan): boolean {
+  if (userPlan === "complete") return true;
+  
+  // Essentials can ONLY access:
+  if (userPlan === "essentials") {
+    return id === "video" || id === "briefing";
+  }
+  
+  return false;
+}
+
+/**
+ * Determines if a mode is accessible (at least one subtab is accessible)
+ */
+function isModeAccessible(mode: Mode, userPlan: UserPlan): boolean {
+  if (userPlan === "complete") return true;
+  
+  // For essentials, check if mode has at least one accessible subtab
+  return mode.subTabs.some(tab => isTabAccessible(tab.id, userPlan));
+}
+
 // ─── Content availability ─────────────────────────────────────────────────────
 
 function subTabHasContent(id: SubTabId, part: Part): boolean {
@@ -122,6 +154,42 @@ function EmptyContent({ label }: { label: string }) {
     <div className="py-14 text-center">
       <p className="text-text-secondary text-sm font-medium">{label} coming soon</p>
       <p className="text-xs text-text-muted mt-1">This content will be available shortly</p>
+    </div>
+  );
+}
+
+function LockedContent({ featureName }: { featureName: string }) {
+  return (
+    <div className="py-20 text-center px-4">
+      <div className="max-w-md mx-auto">
+        <div className="w-16 h-16 mx-auto rounded-full bg-gold/10 border-2 border-gold/30 flex items-center justify-center mb-6">
+          <Lock className="w-8 h-8 text-gold/60" />
+        </div>
+        
+        <h3 className="text-lg font-bold text-text mb-2">
+          Unlock {featureName} with Complete Seerah
+        </h3>
+        
+        <p className="text-text-secondary text-sm mb-6 leading-relaxed">
+          {featureName} {featureName.toLowerCase().includes("quiz") || featureName.toLowerCase().includes("flashcard") || featureName.toLowerCase().includes("slide") ? "are" : "is"} not included in the Essentials plan. 
+          Upgrade to Complete Seerah for just <span className="text-gold font-semibold">$30 more</span> to unlock all study tools, teaching resources, and the full 100-part system.
+        </p>
+        
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Link
+            href="/upgrade"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gold hover:bg-gold-light text-ink font-semibold rounded-lg transition-all shadow-lg shadow-gold/20"
+          >
+            Upgrade Now for $30
+          </Link>
+          <Link
+            href="/pricing"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-surface border border-border hover:border-gold/30 text-text-secondary hover:text-text rounded-lg transition-all"
+          >
+            View Full Comparison
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
@@ -273,11 +341,13 @@ function ModeButton({
   mode,
   isActive,
   isAvailable,
+  isLocked,
   onClick,
 }: {
   mode: Mode;
   isActive: boolean;
   isAvailable: boolean;
+  isLocked: boolean;
   onClick: () => void;
 }) {
   const Icon = mode.icon;
@@ -285,7 +355,7 @@ function ModeButton({
   return (
     <button
       onClick={onClick}
-      disabled={!isAvailable}
+      disabled={!isAvailable && !isLocked}
       style={
         isActive
           ? { boxShadow: "0 0 0 1px rgba(200,169,110,0.30), 0 4px 20px rgba(200,169,110,0.07)" }
@@ -295,6 +365,8 @@ function ModeButton({
         "group relative flex items-center gap-3 px-4 py-3.5 rounded-xl border flex-shrink-0 transition-all duration-200 text-left min-w-0",
         isActive
           ? "border-gold/35 bg-gradient-to-b from-gold/10 to-gold/5 text-gold"
+          : isLocked
+          ? "border-border/50 bg-surface/80 text-text-muted/70 hover:border-gold/20 hover:bg-surface-raised/80 cursor-pointer"
           : isAvailable
           ? "border-border bg-surface text-text-muted hover:border-border-subtle hover:bg-surface-raised hover:text-text-secondary cursor-pointer"
           : "border-border/30 bg-surface/50 text-text-muted/25 cursor-not-allowed opacity-40 pointer-events-none"
@@ -303,25 +375,38 @@ function ModeButton({
       {/* Icon container */}
       <div
         className={clsx(
-          "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors",
+          "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors relative",
           isActive
             ? "bg-gold/15"
             : "bg-surface-raised group-hover:bg-surface-high"
         )}
       >
-        <Icon className="w-4 h-4" />
+        {isLocked ? (
+          <Lock className="w-4 h-4 text-gold/60" />
+        ) : (
+          <Icon className="w-4 h-4" />
+        )}
       </div>
 
       {/* Labels */}
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         <p className="text-[13px] font-semibold leading-none">{mode.label}</p>
-        <p className="text-[10px] mt-0.5 leading-none opacity-55 hidden sm:block">{mode.hint}</p>
+        <p className="text-[10px] mt-0.5 leading-none opacity-55 hidden sm:block">
+          {isLocked ? "Upgrade to unlock" : mode.hint}
+        </p>
       </div>
 
       {/* "Start" indicator on Watch */}
-      {mode.primary && isAvailable && (
+      {mode.primary && isAvailable && !isLocked && (
         <span className="ml-1 px-1.5 py-0.5 rounded text-[9px] bg-gold/10 text-gold/60 font-semibold uppercase tracking-wider flex-shrink-0">
           Start
+        </span>
+      )}
+
+      {/* Lock badge */}
+      {isLocked && (
+        <span className="ml-1 px-1.5 py-0.5 rounded text-[9px] bg-gold/10 text-gold/70 font-semibold uppercase tracking-wider flex-shrink-0">
+          Locked
         </span>
       )}
 
@@ -337,26 +422,38 @@ function ModeButton({
 
 interface PartTabsProps {
   part: Part;
+  userPlan: UserPlan;
 }
 
-export function PartTabs({ part }: PartTabsProps) {
+export function PartTabs({ part, userPlan }: PartTabsProps) {
+  // Show modes that have content, but keep locked modes visible
   const availableModes = MODES.filter((m) => getModeSubTabs(m, part).length > 0);
-  const defaultMode = availableModes[0] ?? MODES[0];
+  const defaultMode = availableModes.find(m => isModeAccessible(m, userPlan)) ?? availableModes[0] ?? MODES[0];
 
   const [activeMode, setActiveMode] = useState<ModeId>(defaultMode.id);
 
   const currentMode = MODES.find((m) => m.id === activeMode) ?? defaultMode;
-  const subTabs = getModeSubTabs(currentMode, part);
+  
+  // Filter subtabs based on content AND access control
+  const allSubTabsWithContent = getModeSubTabs(currentMode, part);
+  const accessibleSubTabs = allSubTabsWithContent.filter(tab => isTabAccessible(tab.id, userPlan));
+  const subTabs = accessibleSubTabs.length > 0 ? accessibleSubTabs : allSubTabsWithContent;
+  
   const [activeSubTab, setActiveSubTab] = useState<SubTabId>(subTabs[0]?.id ?? "video");
 
   const handleModeChange = (modeId: ModeId) => {
     setActiveMode(modeId);
     const newMode = MODES.find((m) => m.id === modeId)!;
-    const newSubTabs = getModeSubTabs(newMode, part);
+    const newSubTabsWithContent = getModeSubTabs(newMode, part);
+    const newAccessibleSubTabs = newSubTabsWithContent.filter(tab => isTabAccessible(tab.id, userPlan));
+    const newSubTabs = newAccessibleSubTabs.length > 0 ? newAccessibleSubTabs : newSubTabsWithContent;
     setActiveSubTab(newSubTabs[0]?.id ?? newMode.subTabs[0].id);
   };
 
   const currentSubTab = subTabs.find((t) => t.id === activeSubTab)?.id ?? subTabs[0]?.id;
+  
+  // Check if current tab is locked
+  const isCurrentTabLocked = currentSubTab ? !isTabAccessible(currentSubTab, userPlan) : false;
 
   return (
     <div className="space-y-4">
@@ -365,13 +462,17 @@ export function PartTabs({ part }: PartTabsProps) {
       <div className="flex flex-wrap gap-2">
         {MODES.map((mode) => {
           const available = getModeSubTabs(mode, part).length > 0;
+          const accessible = isModeAccessible(mode, userPlan);
+          const locked = available && !accessible;
+          
           return (
             <ModeButton
               key={mode.id}
               mode={mode}
               isActive={activeMode === mode.id}
-              isAvailable={available}
-              onClick={() => available && handleModeChange(mode.id)}
+              isAvailable={available && accessible}
+              isLocked={locked}
+              onClick={() => (available && accessible) ? handleModeChange(mode.id) : (locked ? handleModeChange(mode.id) : undefined)}
             />
           );
         })}
@@ -405,11 +506,15 @@ export function PartTabs({ part }: PartTabsProps) {
       {/* ── Content ─────────────────────────────────────────────────────── */}
       {currentSubTab && (
         <div>
-          <SubTabContent
-            key={`${activeMode}-${currentSubTab}`}
-            id={currentSubTab}
-            part={part}
-          />
+          {isCurrentTabLocked ? (
+            <LockedContent featureName={currentMode.label} />
+          ) : (
+            <SubTabContent
+              key={`${activeMode}-${currentSubTab}`}
+              id={currentSubTab}
+              part={part}
+            />
+          )}
         </div>
       )}
 

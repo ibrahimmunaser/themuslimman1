@@ -202,7 +202,7 @@ export default async function LearnPartPage(props: Props) {
 
       {/* Content */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <PartTabs part={part} />
+        <PartTabs part={part} userPlan={userPlan} />
 
         {/* Navigation */}
         <div className="mt-8 pt-6 border-t border-border flex items-center justify-between gap-4">
