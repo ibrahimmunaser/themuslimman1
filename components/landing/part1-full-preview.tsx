@@ -117,7 +117,7 @@ export async function Part1FullPreview() {
 
       {/* Full Part 1 Content */}
       <div className="bg-surface">
-        <PartTabs part={part} />
+        <PartTabs part={part} userPlan="essentials" />
       </div>
 
       {/* Call-to-Action */}
