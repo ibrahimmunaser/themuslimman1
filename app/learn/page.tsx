@@ -554,7 +554,14 @@ export default async function LearnIndexPage() {
       <CourseDashboardTabs
         lessonsContent={lessonsContent}
         resourcesContent={<CourseResourcesContent userPlan={userPlan} />}
-        progressContent={<CourseProgressContent userPlan={userPlan} />}
+        progressContent={
+          <CourseProgressContent 
+            userPlan={userPlan}
+            hasParentEmail={!!user.parentEmail}
+            parentEmail={user.parentEmail || undefined}
+            studentName={user.studentName || undefined}
+          />
+        }
       />
     </StudentLayout>
   );

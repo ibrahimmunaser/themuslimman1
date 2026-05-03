@@ -1,12 +1,33 @@
 import { TrendingUp, Target, Clock, Award, FileText } from "lucide-react";
+import { SendProgressReportButton } from "./send-progress-report-button";
 
 interface CourseProgressContentProps {
   userPlan: "essentials" | "complete";
+  hasParentEmail?: boolean;
+  parentEmail?: string;
+  studentName?: string;
 }
 
-export function CourseProgressContent({ userPlan }: CourseProgressContentProps) {
+export function CourseProgressContent({ 
+  userPlan, 
+  hasParentEmail = false,
+  parentEmail,
+  studentName,
+}: CourseProgressContentProps) {
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Send Progress Report Button */}
+      {hasParentEmail && (
+        <div className="mb-8">
+          <SendProgressReportButton
+            userPlan={userPlan}
+            hasParentEmail={hasParentEmail}
+            parentEmail={parentEmail}
+            studentName={studentName}
+          />
+        </div>
+      )}
+
       {/* Stats */}
       <div className="grid sm:grid-cols-4 gap-4 mb-8">
         {(userPlan === "essentials" ? [

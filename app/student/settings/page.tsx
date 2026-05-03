@@ -88,6 +88,58 @@ export default async function SettingsPage() {
           </div>
 
 
+          {/* Parent Progress Reports */}
+          {user.courseFor && (user.courseFor === "my_child" || user.courseFor === "my_family") && (
+            <div className="p-6 rounded-xl border border-border bg-surface mb-6">
+              <div className="flex items-center gap-3 mb-6">
+                <Mail className="w-5 h-5 text-gold" />
+                <h2 className="text-lg font-semibold text-text">Parent Progress Reports</h2>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-2">
+                    Student Name
+                  </label>
+                  <input
+                    type="text"
+                    value={user.studentName || ""}
+                    disabled
+                    className="w-full px-4 py-2 rounded-lg bg-surface-raised border border-border text-text-muted cursor-not-allowed"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-2">
+                    Parent / Guardian Email
+                  </label>
+                  <input
+                    type="email"
+                    value={user.parentEmail || ""}
+                    disabled
+                    className="w-full px-4 py-2 rounded-lg bg-surface-raised border border-border text-text-muted cursor-not-allowed"
+                  />
+                </div>
+                <div className="flex items-center justify-between p-4 rounded-lg bg-surface-raised">
+                  <div>
+                    <p className="text-text font-medium">Weekly Progress Reports</p>
+                    <p className="text-text-secondary text-sm">
+                      {user.sendWeeklyReports ? "Enabled - Reports sent every Sunday" : "Disabled"}
+                    </p>
+                  </div>
+                  <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                    user.sendWeeklyReports 
+                      ? "bg-green-500/10 text-green-400 border border-green-500/20"
+                      : "bg-zinc-800 text-zinc-400"
+                  }`}>
+                    {user.sendWeeklyReports ? "ON" : "OFF"}
+                  </div>
+                </div>
+                <p className="text-xs text-text-muted">
+                  To update these settings, please contact support.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Account Plan */}
           <div className="p-6 rounded-xl border border-border bg-surface">
             <div className="flex items-center gap-3 mb-6">
