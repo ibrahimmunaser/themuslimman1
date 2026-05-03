@@ -5,7 +5,7 @@ import { PARTS } from "@/lib/content";
 import { ERA_MAP } from "@/lib/types";
 import { ChevronRight, ChevronDown, Play, CheckCircle2, BookOpen, Lock, Clock, Video, Headphones, FileText, Brain, ClipboardCheck, Info } from "lucide-react";
 import { prisma } from "@/lib/db";
-import { StudentHeader } from "@/components/student/student-header";
+import { StudentLayout } from "@/components/student/student-layout";
 
 export const metadata = { title: "Seerah Masterclass" };
 export const dynamic = "force-dynamic";
@@ -131,9 +131,8 @@ export default async function LearnIndexPage() {
   const userFirstName = user.fullName.split(" ")[0];
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a]">
-      {/* Student Portal Header */}
-      <StudentHeader userFirstName={userFirstName} userPlan={userPlan} />
+    <StudentLayout userPlan={userPlan} userName={user.fullName}>
+      <div className="min-h-screen bg-[#0a0a0a] lg:pl-0">
 
       {/* Course Hero */}
       <div className="border-b border-zinc-800 bg-zinc-900/50">
@@ -548,7 +547,8 @@ export default async function LearnIndexPage() {
           })}
         </div>
       </div>
-    </div>
+      </div>
+    </StudentLayout>
   );
 }
 
