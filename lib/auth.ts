@@ -121,7 +121,7 @@ export async function requireStudent(): Promise<SessionUser> {
 export async function login(
   email: string,
   password: string
-): Promise<{ success: boolean; error?: string; role?: Role }> {
+): Promise<{ success: boolean; error?: string; role?: Role; hasPurchase?: boolean }> {
   const user = await prisma.user.findUnique({
     where: { email: email.toLowerCase() },
     include: { student: true },
@@ -156,7 +156,10 @@ export async function login(
     data: { lastLoginAt: new Date() },
   });
 
-  return { success: true, role: user.role as Role };
+  // Check if user has any successful purchases
+  const hasPurchase = await userHasPurchases(user.id);
+
+  return { success: true, role: user.role as Role, hasPurchase };
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -172,6 +175,20 @@ export async function logout(): Promise<void> {
   }
 
   await clearSessionCookie();
+}
+
+// ─────────────────────────────────────────────────────────────
+// Purchase checks
+// ─────────────────────────────────────────────────────────────
+
+export async function userHasPurchases(userId: string): Promise<boolean> {
+  const purchases = await prisma.purchase.findFirst({
+    where: {
+      userId,
+      status: "succeeded",
+    },
+  });
+  return !!purchases;
 }
 
 // ─────────────────────────────────────────────────────────────

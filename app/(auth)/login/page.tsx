@@ -23,7 +23,18 @@ export default function LoginPage() {
     try {
       const result = await login(form.email, form.password);
       if (result.success && result.role) {
-        router.push(roleHome(result.role));
+        // Check if user has purchase - redirect accordingly
+        if (result.role === "student") {
+          // For students, check purchase status
+          if (result.hasPurchase) {
+            router.push("/learn"); // Has purchase - go to dashboard
+          } else {
+            router.push("/pricing"); // No purchase - go to pricing
+          }
+        } else {
+          // For admins, use role-based home
+          router.push(roleHome(result.role));
+        }
         router.refresh();
       } else {
         setError(result.error || "Login failed. Please try again.");
