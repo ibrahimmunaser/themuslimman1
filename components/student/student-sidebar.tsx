@@ -39,7 +39,6 @@ interface MenuItem {
 const MAIN_MENU: MenuItem[] = [
   { id: "dashboard", label: "Dashboard", href: "/learn", icon: LayoutDashboard },
   { id: "my-courses", label: "My Courses", href: "/my-courses", icon: BookOpen },
-  { id: "lessons", label: "Lessons", href: "/learn", icon: GraduationCap },
   { id: "resources", label: "Resources", href: "/student/resources", icon: FolderOpen },
   { id: "progress", label: "Progress", href: "/student/progress", icon: TrendingUp },
   { id: "help", label: "Help", href: "/help", icon: HelpCircle },
