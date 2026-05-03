@@ -19,56 +19,64 @@ export async function POST() {
     // Get user's progress data
     const progressData = await prisma.partProgress.findMany({
       where: { userId: user.id },
-      include: {
-        quizAttempts: {
-          orderBy: { attemptedAt: "desc" },
-          take: 1,
-        },
-      },
+      orderBy: { partNumber: "asc" },
     });
 
-    const userPlan = user.hasPaid ? "complete" : "essentials";
-    const lessonsWatched = progressData.filter((p) => p.videoWatched).length;
-    const briefingsRead = progressData.filter((p) => p.briefingRead).length;
+    // Determine user plan
+    const purchases = await prisma.purchase.findFirst({
+      where: { userId: user.id, status: "succeeded" },
+    });
+    const userPlan = purchases ? "complete" : "essentials";
+    
     const totalLessons = 100;
-
-    // Calculate study time (approximate based on video watches and quiz attempts)
-    const studyTimeHours = Math.round(
-      (lessonsWatched * 0.5 + // 30 min per lesson
-        briefingsRead * 0.1 + // 5 min per briefing
-        progressData.filter((p) => p.quizCompleted).length * 0.15) // 10 min per quiz
-    );
+    const completedLessons = progressData.filter((p) => p.status === "completed").length;
+    const inProgressLessons = progressData.filter((p) => p.status === "in_progress").length;
+    
+    // Estimate study time based on progress (rough estimate: 30min per completed lesson)
+    const studyTimeHours = Math.round((completedLessons * 0.5) * 10) / 10; // rounded to 1 decimal
 
     // Find current and next lesson
-    const lastWatchedPart = progressData
-      .filter((p) => p.videoWatched)
-      .sort((a, b) => b.partNumber - a.partNumber)[0];
+    const lastAccessedPart = progressData
+      .filter((p) => p.lastAccessedAt)
+      .sort((a, b) => {
+        if (!a.lastAccessedAt || !b.lastAccessedAt) return 0;
+        return b.lastAccessedAt.getTime() - a.lastAccessedAt.getTime();
+      })[0];
     
-    const currentLessonNumber = lastWatchedPart ? lastWatchedPart.partNumber : 1;
+    const currentLessonNumber = lastAccessedPart ? lastAccessedPart.partNumber : 1;
     const nextLessonNumber = Math.min(currentLessonNumber + 1, totalLessons);
 
-    // Get quiz stats for Complete users
+    // Get quiz stats for Complete users (if they have a student profile)
     let quizScore: number | undefined;
     let quizAttempts = 0;
     let flashcardsReviewed = 0;
 
-    if (userPlan === "complete") {
+    if (userPlan === "complete" && user.studentProfileId) {
       const allQuizAttempts = await prisma.quizAttempt.findMany({
-        where: { userId: user.id },
+        where: { 
+          studentId: user.studentProfileId,
+          submittedAt: { not: null },
+        },
       });
 
       quizAttempts = allQuizAttempts.length;
       
       if (allQuizAttempts.length > 0) {
-        const avgScore =
-          allQuizAttempts.reduce((sum, attempt) => sum + attempt.score, 0) /
-          allQuizAttempts.length;
-        quizScore = Math.round(avgScore);
+        const validScores = allQuizAttempts.filter(a => a.score !== null);
+        if (validScores.length > 0) {
+          const avgScore =
+            validScores.reduce((sum, attempt) => sum + (attempt.score || 0), 0) /
+            validScores.length;
+          quizScore = Math.round(avgScore);
+        }
       }
 
       // Placeholder for flashcards (would need actual implementation)
       flashcardsReviewed = 0;
     }
+    
+    // For MVP, use completed lessons as proxy for briefings read
+    const briefingsRead = completedLessons;
 
     // Extract parent name from email (before @)
     const parentName = user.parentEmail.split("@")[0];
@@ -78,7 +86,7 @@ export async function POST() {
       studentName: user.studentName || user.fullName,
       parentName: parentName.charAt(0).toUpperCase() + parentName.slice(1),
       userPlan: userPlan as "essentials" | "complete",
-      lessonsWatched,
+      lessonsWatched: completedLessons,
       totalLessons,
       briefingsRead,
       studyTimeHours,
