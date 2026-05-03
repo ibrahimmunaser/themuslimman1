@@ -135,7 +135,7 @@ export default async function LearnIndexPage() {
 
   // Lessons content
   const lessonsContent = (
-    <div className="min-h-screen bg-[#0a0a0a] lg:pl-0">
+    <div className="min-h-screen bg-[#0a0a0a]">
 
       {/* Course Hero */}
       <div className="border-b border-zinc-800 bg-zinc-900/50">
@@ -545,7 +545,6 @@ export default async function LearnIndexPage() {
             );
           })}
         </div>
-      </div>
       </div>
     </div>
   );
