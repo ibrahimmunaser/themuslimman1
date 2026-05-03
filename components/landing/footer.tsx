@@ -30,8 +30,6 @@ export function Footer() {
             <h3 className="font-semibold text-text text-sm mb-4">Product</h3>
             <ul className="space-y-2.5">
               {[
-                { label: "Watch Part 1 Free", href: "/preview/part-1" },
-                { label: "Watch Part 2 Free", href: "/preview/part-2" },
                 { label: "What's Inside", href: "/#what-you-get" },
                 { label: "Pricing", href: "/#pricing" },
                 { label: "Get Started", href: "/get-started" },
