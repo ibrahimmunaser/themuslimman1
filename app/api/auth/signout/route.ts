@@ -2,14 +2,8 @@ import { NextResponse } from "next/server";
 import { logout } from "@/lib/auth";
 
 export async function POST() {
-  try {
-    await logout();
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("Logout error:", error);
-    return NextResponse.json(
-      { error: "Failed to log out" },
-      { status: 500 }
-    );
-  }
+  await logout();
+  return NextResponse.redirect(
+    new URL("/login", process.env.NEXT_PUBLIC_APP_URL || "https://themuslimman.com")
+  );
 }

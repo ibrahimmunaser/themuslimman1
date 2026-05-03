@@ -173,7 +173,6 @@ export async function logout(): Promise<void> {
   }
 
   await clearSessionCookie();
-  redirect("/login");
 }
 
 // ─────────────────────────────────────────────────────────────

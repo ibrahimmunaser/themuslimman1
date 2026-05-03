@@ -11,7 +11,7 @@ import {
   X,
   Star,
 } from "lucide-react";
-import { logout } from "@/lib/auth";
+import { signOut } from "@/lib/actions";
 import type { SessionUser } from "@/lib/session";
 import { roleLabel } from "@/lib/roles";
 
@@ -102,7 +102,7 @@ export function Sidebar({ user, mobile, onClose }: SidebarProps) {
       </nav>
 
       <div className="px-3 py-3 border-t border-border">
-        <form action={logout}>
+        <form action={signOut}>
           <button
             type="submit"
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-text-muted hover:text-red-400 hover:bg-red-500/5 transition-all"
