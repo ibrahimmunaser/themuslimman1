@@ -45,15 +45,22 @@ const MAIN_MENU: MenuItem[] = [
   { id: "help", label: "Help", href: "/help", icon: HelpCircle },
 ];
 
-const ACCOUNT_MENU: MenuItem[] = [
+const ACCOUNT_MENU_BASE: MenuItem[] = [
   { id: "settings", label: "Settings", href: "/student/settings", icon: User },
-  { id: "billing", label: "Billing / Upgrade", href: "/pricing", icon: CreditCard },
 ];
 
 export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  
+  // Dynamic billing/upgrade link based on user plan
+  const billingHref = userPlan === "essentials" ? "/upgrade" : "/pricing";
+  
+  const ACCOUNT_MENU: MenuItem[] = [
+    ...ACCOUNT_MENU_BASE,
+    { id: "billing", label: "Billing / Upgrade", href: billingHref, icon: CreditCard },
+  ];
 
   const isActive = (href: string) => {
     if (href === "/learn") {
