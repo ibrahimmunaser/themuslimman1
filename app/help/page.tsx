@@ -1,190 +1,191 @@
-import Link from "next/link";
-import { Navbar } from "@/components/landing/navbar";
-import { Footer } from "@/components/landing/footer";
-import { ContactForm } from "@/components/help/contact-form";
-import { 
-  HelpCircle,
-  BookOpen, Video, Download, RefreshCcw, CreditCard, Lock
-} from "lucide-react";
+import { redirect } from "next/navigation";
+import { getCurrentUser } from "@/lib/auth";
+import { StudentLayout } from "@/components/student/student-layout";
+import { prisma } from "@/lib/db";
+import { HelpCircle, BookOpen, CreditCard, Lock, Mail, MessageCircle } from "lucide-react";
 
-export default function HelpPage() {
+export const metadata = { title: "Help & FAQ | Seerah Masterclass" };
+export const dynamic = "force-dynamic";
+
+export default async function HelpPage() {
+  const user = await getCurrentUser();
+  
+  // If not logged in, redirect to login
+  if (!user) {
+    redirect("/login?redirect=/help");
+  }
+
+  const purchases = await prisma.purchase.findMany({
+    where: { userId: user.id, status: "succeeded" },
+  });
+
+  const hasCompletePlan = purchases.some(p => p.planId === "complete");
+  const userPlan = purchases.length > 0 ? (hasCompletePlan ? "complete" : "essentials") : "essentials";
+
+  const faqs = [
+    {
+      category: "Getting Started",
+      icon: BookOpen,
+      questions: [
+        {
+          q: "How do I access my course?",
+          a: "After purchasing, you can access your course from the Dashboard or My Courses page. Simply click on the course card to start learning.",
+        },
+        {
+          q: "What's the difference between Essentials and Complete?",
+          a: "Essentials gives you the complete Seerah story through 75 narrative lessons with slides and quizzes. Complete includes all 100 parts with mind maps, flashcards, briefings, infographics, and expanded study materials.",
+        },
+        {
+          q: "How are lessons structured?",
+          a: "Each lesson includes a video lecture, slides, a quiz, and study materials. Complete users also get mind maps, flashcards, and comprehensive briefings.",
+        },
+      ],
+    },
+    {
+      category: "Account & Billing",
+      icon: CreditCard,
+      questions: [
+        {
+          q: "Can I upgrade from Essentials to Complete?",
+          a: "Yes! You can upgrade anytime for just $30 (the price difference). Your progress will be preserved.",
+        },
+        {
+          q: "Is this a subscription or one-time payment?",
+          a: "It's a one-time payment with lifetime access. No recurring charges.",
+        },
+        {
+          q: "What's your refund policy?",
+          a: "We offer a 7-Day Clarity Guarantee. If the course isn't what you expected, email us within 7 days for a full refund.",
+        },
+      ],
+    },
+    {
+      category: "Course Access",
+      icon: Lock,
+      questions: [
+        {
+          q: "Why are some lessons locked?",
+          a: "Lessons unlock sequentially as you complete previous ones. This helps you build knowledge in the correct order and prevents overwhelm.",
+        },
+        {
+          q: "Can I access lessons on mobile?",
+          a: "Yes! The course is fully responsive and works on all devices including phones and tablets.",
+        },
+        {
+          q: "Do I need to complete lessons in order?",
+          a: "Yes, for Essentials lessons. Complete users can navigate more freely within the 100-part system.",
+        },
+      ],
+    },
+    {
+      category: "Certificate",
+      icon: BookOpen,
+      questions: [
+        {
+          q: "How do I earn a certificate?",
+          a: "Complete all required lessons and pass all quizzes with at least 70%. Your certificate will then be available in the Certificate section.",
+        },
+        {
+          q: "Is the certificate official?",
+          a: "Yes, it's an official certificate of completion from The Muslim Man showing you've completed the Seerah Masterclass.",
+        },
+      ],
+    },
+  ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-ink text-text">
-      <Navbar />
-
-      {/* Hero */}
-      <section className="relative pt-32 pb-16 overflow-hidden">
-        <div className="absolute inset-0 geo-pattern opacity-20" />
-        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-sm font-medium mb-6">
-            <HelpCircle className="w-4 h-4" />
-            Help Center
+    <StudentLayout userPlan={userPlan} userName={user.fullName}>
+      <div className="min-h-screen bg-[#0a0a0a]">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-text mb-2">Help & FAQ</h1>
+            <p className="text-text-secondary">
+              Find answers to common questions about your course
+            </p>
           </div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-text mb-5 leading-tight">
-            How Can We Help You?
-          </h1>
-          <p className="text-base sm:text-lg text-text-secondary max-w-2xl mx-auto leading-relaxed">
-            Find answers to common questions or reach out to us directly.
-          </p>
-        </div>
-      </section>
 
-      {/* Quick Help Topics */}
-      <section className="py-12 border-t border-border">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <h2 className="text-2xl font-bold text-text mb-8 text-center">
-            Common Questions
-          </h2>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Getting Started */}
-            <div className="bg-surface border border-border rounded-xl p-6 hover:border-gold/30 transition-colors">
-              <div className="w-12 h-12 rounded-lg bg-gold/10 border border-gold/30 flex items-center justify-center mb-4">
-                <BookOpen className="w-6 h-6 text-gold" />
+          {/* Contact Support */}
+          <div className="p-6 rounded-xl bg-gradient-to-b from-gold/15 to-gold/5 border border-gold/30 mb-8">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-lg bg-gold/20 border border-gold/30 flex items-center justify-center flex-shrink-0">
+                <Mail className="w-6 h-6 text-gold" />
               </div>
-              <h3 className="text-lg font-semibold text-text mb-3">Getting Started</h3>
-              <ul className="space-y-2 text-sm text-text-secondary">
-                <li>• How do I access my course?</li>
-                <li>• Where do I start learning?</li>
-                <li>• How is the course structured?</li>
-                <li>• Can I download materials?</li>
-              </ul>
-              <details className="mt-4 text-sm">
-                <summary className="text-gold cursor-pointer hover:text-gold-light">View answers</summary>
-                <div className="mt-3 space-y-3 text-text-secondary">
-                  <p><strong>Access:</strong> Log in at <Link href="/login" className="text-gold hover:underline">themuslimman.com/login</Link> and go to your dashboard.</p>
-                  <p><strong>Start:</strong> Begin with Part 1 in the Pre-Islamic Arabia chapter. Follow the sequential order.</p>
-                  <p><strong>Structure:</strong> 100 parts organized chronologically across 15+ chapters.</p>
-                  <p><strong>Downloads:</strong> PDF slides and materials are available in each lesson (Complete plan only).</p>
-                </div>
-              </details>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-text mb-2">Need More Help?</h3>
+                <p className="text-text-secondary mb-4">
+                  Can't find what you're looking for? Our support team is here to help.
+                </p>
+                <a
+                  href="mailto:support@themuslimman.com"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gold text-ink font-semibold hover:bg-gold/90 transition-colors"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  Contact Support
+                </a>
+              </div>
             </div>
+          </div>
 
-            {/* Technical Issues */}
-            <div className="bg-surface border border-border rounded-xl p-6 hover:border-gold/30 transition-colors">
-              <div className="w-12 h-12 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center mb-4">
-                <Video className="w-6 h-6 text-blue-400" />
-              </div>
-              <h3 className="text-lg font-semibold text-text mb-3">Technical Issues</h3>
-              <ul className="space-y-2 text-sm text-text-secondary">
-                <li>• Videos won't play</li>
-                <li>• Page loading issues</li>
-                <li>• Progress not saving</li>
-                <li>• Login problems</li>
-              </ul>
-              <details className="mt-4 text-sm">
-                <summary className="text-gold cursor-pointer hover:text-gold-light">View solutions</summary>
-                <div className="mt-3 space-y-3 text-text-secondary">
-                  <p><strong>Videos:</strong> Try refreshing the page, clearing your browser cache, or switching browsers (Chrome/Firefox recommended).</p>
-                  <p><strong>Loading:</strong> Check your internet connection. Try hard refresh (Ctrl+F5 on Windows, Cmd+Shift+R on Mac).</p>
-                  <p><strong>Progress:</strong> Make sure you're logged in. Progress saves automatically after completing activities.</p>
-                  <p><strong>Login:</strong> Reset your password using the "Forgot Password" link on the login page.</p>
+          {/* FAQ Categories */}
+          <div className="space-y-6">
+            {faqs.map((category) => {
+              const Icon = category.icon;
+              return (
+                <div key={category.category} className="p-6 rounded-xl border border-border bg-surface">
+                  <div className="flex items-center gap-3 mb-6">
+                    <Icon className="w-5 h-5 text-gold" />
+                    <h2 className="text-lg font-semibold text-text">{category.category}</h2>
+                  </div>
+                  <div className="space-y-6">
+                    {category.questions.map((item, idx) => (
+                      <div key={idx} className={idx > 0 ? "pt-6 border-t border-border" : ""}>
+                        <h3 className="text-text font-semibold mb-2">{item.q}</h3>
+                        <p className="text-text-secondary leading-relaxed">{item.a}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </details>
-            </div>
+              );
+            })}
+          </div>
 
-            {/* Account & Billing */}
-            <div className="bg-surface border border-border rounded-xl p-6 hover:border-gold/30 transition-colors">
-              <div className="w-12 h-12 rounded-lg bg-green-500/10 border border-green-500/30 flex items-center justify-center mb-4">
-                <CreditCard className="w-6 h-6 text-green-400" />
-              </div>
-              <h3 className="text-lg font-semibold text-text mb-3">Account & Billing</h3>
-              <ul className="space-y-2 text-sm text-text-secondary">
-                <li>• How do I upgrade my plan?</li>
-                <li>• Can I get a refund?</li>
-                <li>• How do I update my email?</li>
-                <li>• Is this a subscription?</li>
-              </ul>
-              <details className="mt-4 text-sm">
-                <summary className="text-gold cursor-pointer hover:text-gold-light">View answers</summary>
-                <div className="mt-3 space-y-3 text-text-secondary">
-                  <p><strong>Upgrade:</strong> Go to <Link href="/pricing" className="text-gold hover:underline">Pricing</Link> and select Complete Seerah. You'll only pay the $30 difference.</p>
-                  <p><strong>Refunds:</strong> We offer a 14-day money-back guarantee. Contact us below for a refund request.</p>
-                  <p><strong>Email:</strong> Go to your account settings or contact us to update your email.</p>
-                  <p><strong>Subscription:</strong> No! This is a one-time payment. Pay once, own it forever.</p>
-                </div>
-              </details>
-            </div>
-
-            {/* Course Content */}
-            <div className="bg-surface border border-border rounded-xl p-6 hover:border-gold/30 transition-colors">
-              <div className="w-12 h-12 rounded-lg bg-purple-500/10 border border-purple-500/30 flex items-center justify-center mb-4">
-                <Download className="w-6 h-6 text-purple-400" />
-              </div>
-              <h3 className="text-lg font-semibold text-text mb-3">Course Content</h3>
-              <ul className="space-y-2 text-sm text-text-secondary">
-                <li>• What's included in my plan?</li>
-                <li>• Can I access on mobile?</li>
-                <li>• Are transcripts available?</li>
-                <li>• Can I share my account?</li>
-              </ul>
-              <details className="mt-4 text-sm">
-                <summary className="text-gold cursor-pointer hover:text-gold-light">View answers</summary>
-                <div className="mt-3 space-y-3 text-text-secondary">
-                  <p><strong>Essentials:</strong> 56 core lessons with videos and quizzes.</p>
-                  <p><strong>Complete:</strong> All 100 parts + slides, briefings, mind maps, flashcards, infographics.</p>
-                  <p><strong>Mobile:</strong> Yes! Access on any device via web browser.</p>
-                  <p><strong>Transcripts:</strong> Written briefings are available for every lesson.</p>
-                  <p><strong>Sharing:</strong> Each account is for individual use. Family/group licenses available on request.</p>
-                </div>
-              </details>
-            </div>
-
-            {/* Progress & Completion */}
-            <div className="bg-surface border border-border rounded-xl p-6 hover:border-gold/30 transition-colors">
-              <div className="w-12 h-12 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mb-4">
-                <RefreshCcw className="w-6 h-6 text-amber-400" />
-              </div>
-              <h3 className="text-lg font-semibold text-text mb-3">Progress & Completion</h3>
-              <ul className="space-y-2 text-sm text-text-secondary">
-                <li>• How do I track my progress?</li>
-                <li>• Can I reset progress?</li>
-                <li>• What counts as completion?</li>
-                <li>• Do I get a certificate?</li>
-              </ul>
-              <details className="mt-4 text-sm">
-                <summary className="text-gold cursor-pointer hover:text-gold-light">View answers</summary>
-                <div className="mt-3 space-y-3 text-text-secondary">
-                  <p><strong>Tracking:</strong> Your dashboard shows overall progress and chapter-by-chapter completion.</p>
-                  <p><strong>Reset:</strong> Contact us if you need to reset your progress.</p>
-                  <p><strong>Essentials:</strong> Watch video + pass quiz = completed.</p>
-                  <p><strong>Complete:</strong> Multiple tiers (Completed, Mastered, Fully Studied) based on activities.</p>
-                  <p><strong>Certificate:</strong> Coming soon! We're working on official completion certificates.</p>
-                </div>
-              </details>
-            </div>
-
-            {/* Access & Permissions */}
-            <div className="bg-surface border border-border rounded-xl p-6 hover:border-gold/30 transition-colors">
-              <div className="w-12 h-12 rounded-lg bg-red-500/10 border border-red-500/30 flex items-center justify-center mb-4">
-                <Lock className="w-6 h-6 text-red-400" />
-              </div>
-              <h3 className="text-lg font-semibold text-text mb-3">Access & Permissions</h3>
-              <ul className="space-y-2 text-sm text-text-secondary">
-                <li>• Why are some lessons locked?</li>
-                <li>• How do I unlock more content?</li>
-                <li>• Can I skip ahead?</li>
-                <li>• Lifetime access details</li>
-              </ul>
-              <details className="mt-4 text-sm">
-                <summary className="text-gold cursor-pointer hover:text-gold-light">View answers</summary>
-                <div className="mt-3 space-y-3 text-text-secondary">
-                  <p><strong>Progress Lock:</strong> Some lessons unlock after completing the previous one (sequential learning).</p>
-                  <p><strong>Plan Lock:</strong> Content not in your plan requires upgrading to Complete Seerah.</p>
-                  <p><strong>Skip Ahead:</strong> Sequential unlocking ensures proper understanding. Contact us if you need special access.</p>
-                  <p><strong>Lifetime:</strong> Pay once, access forever. All future updates included at no extra cost.</p>
-                </div>
-              </details>
+          {/* Quick Links */}
+          <div className="mt-8 p-6 rounded-xl border border-border bg-surface">
+            <h2 className="text-lg font-semibold text-text mb-4">Quick Links</h2>
+            <div className="grid sm:grid-cols-2 gap-3">
+              <a
+                href="/learn"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-raised hover:bg-surface-high text-text-secondary hover:text-text transition-colors"
+              >
+                <BookOpen className="w-4 h-4" />
+                <span>Back to Dashboard</span>
+              </a>
+              <a
+                href="/student/progress"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-raised hover:bg-surface-high text-text-secondary hover:text-text transition-colors"
+              >
+                <HelpCircle className="w-4 h-4" />
+                <span>View Progress</span>
+              </a>
+              <a
+                href="/pricing"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-raised hover:bg-surface-high text-text-secondary hover:text-text transition-colors"
+              >
+                <CreditCard className="w-4 h-4" />
+                <span>Upgrade Plan</span>
+              </a>
+              <a
+                href="/student/settings"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-raised hover:bg-surface-high text-text-secondary hover:text-text transition-colors"
+              >
+                <Lock className="w-4 h-4" />
+                <span>Account Settings</span>
+              </a>
             </div>
           </div>
         </div>
-      </section>
-
-      {/* Contact Form */}
-      <ContactForm />
-
-      <Footer />
-    </div>
+      </div>
+    </StudentLayout>
   );
 }

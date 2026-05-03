@@ -2,10 +2,11 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { Navbar } from "@/components/landing/navbar";
+import { StudentLayout } from "@/components/student/student-layout";
 import { BookOpen, ChevronRight, Clock, CheckCircle2 } from "lucide-react";
 
 export const metadata = { title: "My Courses" };
+export const dynamic = "force-dynamic";
 
 export default async function MyCoursesPage() {
   // Check if user is logged in
@@ -53,11 +54,9 @@ export default async function MyCoursesPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-ink text-text">
-      <Navbar />
-      
-      <div className="pt-16">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
+    <StudentLayout userPlan={userPlan || "essentials"} userName={user.fullName}>
+      <div className="min-h-screen bg-[#0a0a0a]">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Page Header */}
           <div className="mb-10">
             <h1 className="text-3xl sm:text-4xl font-bold mb-3">
@@ -160,6 +159,6 @@ export default async function MyCoursesPage() {
           )}
         </div>
       </div>
-    </div>
+    </StudentLayout>
   );
 }

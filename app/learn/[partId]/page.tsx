@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { PartTabs } from "@/components/part/part-tabs";
 import { prisma } from "@/lib/db";
+import { StudentLayout } from "@/components/student/student-layout";
 
 export const dynamic = "force-dynamic";
 
@@ -165,7 +166,8 @@ export default async function LearnPartPage(props: Props) {
   const nextPart = currentIndex < allParts.length - 1 ? allParts[currentIndex + 1] : null;
 
   return (
-    <div className="min-h-screen bg-background">
+    <StudentLayout userPlan={userPlan} userName={user.fullName}>
+      <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="border-b border-border bg-surface sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -233,6 +235,7 @@ export default async function LearnPartPage(props: Props) {
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </StudentLayout>
   );
 }
