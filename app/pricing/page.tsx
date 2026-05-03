@@ -7,13 +7,32 @@ import {
   Layers, Target, Play, Clock, Zap, X
 } from "lucide-react";
 import { PLANS, formatPrice } from "@/lib/stripe-config";
+import { getCurrentUser } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 
 export const metadata = {
   title: "Pricing — Complete Seerah Academy",
   description: "Choose your path: follow the Seerah story with Essentials, or master it with Complete Seerah's full study system.",
 };
 
-export default function PricingPage() {
+export const dynamic = "force-dynamic";
+
+export default async function PricingPage() {
+  // Check user's current purchases
+  const user = await getCurrentUser();
+  let hasEssentials = false;
+  let hasComplete = false;
+
+  if (user) {
+    const purchases = await prisma.purchase.findMany({
+      where: {
+        userId: user.id,
+        status: "succeeded",
+      },
+    });
+    hasEssentials = purchases.some(p => p.planId === "essentials");
+    hasComplete = purchases.some(p => p.planId === "complete");
+  }
   return (
     <div className="flex flex-col min-h-screen bg-ink text-text">
       <Navbar />
@@ -82,16 +101,24 @@ export default function PricingPage() {
               </ul>
 
               <div className="space-y-3">
-                <p className="text-xs text-gold text-center font-medium">
-                  Upgrade to Complete later for just $30
-                </p>
-                <Link
-                  href="/signup-checkout?plan=essentials"
-                  className={buttonClass("outline", "lg", "w-full justify-center")}
-                >
-                  Start Essentials
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
+                {hasEssentials || hasComplete ? (
+                  <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20 text-center">
+                    <p className="text-sm text-green-400 font-medium">✓ You own this plan</p>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-xs text-gold text-center font-medium">
+                      Upgrade to Complete later for just $30
+                    </p>
+                    <Link
+                      href="/signup-checkout?plan=essentials"
+                      className={buttonClass("outline", "lg", "w-full justify-center")}
+                    >
+                      Start Essentials
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  </>
+                )}
               </div>
 
               <p className="text-xs text-text-muted text-center mt-4">
@@ -142,13 +169,27 @@ export default function PricingPage() {
                 ))}
               </ul>
 
-              <Link
-                href="/signup-checkout?plan=complete"
-                className={buttonClass("primary", "lg", "w-full justify-center shadow-lg shadow-gold/20")}
-              >
-                Unlock Complete Seerah
-                <ArrowRight className="w-4 h-4" />
-              </Link>
+              {hasComplete ? (
+                <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20 text-center">
+                  <p className="text-sm text-green-400 font-medium">✓ You own this plan</p>
+                </div>
+              ) : hasEssentials ? (
+                <Link
+                  href="/upgrade"
+                  className={buttonClass("primary", "lg", "w-full justify-center shadow-lg shadow-gold/20")}
+                >
+                  <Zap className="w-4 h-4" />
+                  Upgrade for {formatPrice(PLANS.essentials.upgradePrice!)}
+                </Link>
+              ) : (
+                <Link
+                  href="/signup-checkout?plan=complete"
+                  className={buttonClass("primary", "lg", "w-full justify-center shadow-lg shadow-gold/20")}
+                >
+                  Unlock Complete Seerah
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              )}
 
               <p className="text-xs text-text-muted text-center mt-4">
                 Recommended for parents, teachers, and serious students
