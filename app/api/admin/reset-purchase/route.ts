@@ -4,11 +4,8 @@ import { prisma } from "@/lib/db";
 // Temporary endpoint to reset test purchases
 export async function POST(request: NextRequest) {
   try {
-    const { email } = await request.json();
-
-    if (!email) {
-      return NextResponse.json({ error: "Email required" }, { status: 400 });
-    }
+    // Hardcode test email for simplicity
+    const email = "ibrahimmunaser2@gmail.com";
 
     // Find user by email
     const user = await prisma.user.findUnique({
