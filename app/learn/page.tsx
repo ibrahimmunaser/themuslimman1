@@ -8,6 +8,8 @@ import { prisma } from "@/lib/db";
 import { StudentHeader } from "@/components/student/student-header";
 
 export const metadata = { title: "Seerah Masterclass" };
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function LearnIndexPage() {
   const user = await requireStudent();
@@ -48,7 +50,17 @@ export default async function LearnIndexPage() {
 
   // Get current part details
   const currentPartData = PARTS.find(p => p.partNumber === currentPart);
-  const currentPartProgress = 60; // Mock - will be real later
+  
+  // Get actual progress for current part
+  const currentPartProgressRecord = await prisma.partProgress.findUnique({
+    where: {
+      userId_partNumber: {
+        userId: user.id,
+        partNumber: currentPart
+      }
+    }
+  });
+  const currentPartProgress = currentPartProgressRecord?.progressPercent || 0;
 
   // Calculate progress (include partial progress of current lesson)
   // Only count parts included in the user's plan
@@ -555,12 +567,29 @@ function getEraDescription(era: string): string {
   return descriptions[era] || "Journey through this important period";
 }
 
-// Mock progress function - will be replaced with real database queries
+// Get real progress from database
 async function getProgress(userId: string) {
-  // TODO: Replace with actual database query once PartProgress model is migrated
+  const partProgress = await prisma.partProgress.findMany({
+    where: { userId },
+    orderBy: { partNumber: 'asc' }
+  });
+
+  const completedParts = partProgress
+    .filter(p => p.status === 'completed')
+    .map(p => p.partNumber);
+  
+  const inProgressParts = partProgress
+    .filter(p => p.status === 'in_progress')
+    .map(p => p.partNumber);
+  
+  // Current part is the lowest in-progress part, or 1 if nothing started
+  const currentPart = inProgressParts.length > 0 
+    ? Math.min(...inProgressParts)
+    : (completedParts.length > 0 ? Math.max(...completedParts) + 1 : 1);
+
   return {
-    currentPart: 7,
-    completedParts: [1, 2, 3, 4, 5, 6],
-    inProgressParts: [7],
+    currentPart,
+    completedParts,
+    inProgressParts,
   };
 }
