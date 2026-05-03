@@ -10,4 +10,10 @@ export interface SessionUser {
   timezone: string;
   studentProfileId: string | null;
   emailVerified: boolean;
+  
+  // Parent Progress Report Fields
+  courseFor: string;
+  studentName: string | null;
+  parentEmail: string | null;
+  sendWeeklyReports: boolean;
 }

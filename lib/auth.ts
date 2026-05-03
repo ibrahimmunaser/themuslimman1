@@ -80,6 +80,10 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
     timezone: user.timezone,
     studentProfileId: user.student?.id ?? null,
     emailVerified: user.emailVerified,
+    courseFor: user.courseFor,
+    studentName: user.studentName,
+    parentEmail: user.parentEmail,
+    sendWeeklyReports: user.sendWeeklyReports,
   };
 }
 
