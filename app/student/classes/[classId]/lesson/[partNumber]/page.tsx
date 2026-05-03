@@ -64,6 +64,9 @@ export default async function StudentLessonPage({ params }: Props) {
 
   const n = partBase.partNumber;
   
+  // Class-based lessons: students get full access since teacher controls pacing
+  const userPlan = "complete" as const;
+  
   // Load assets from R2
   const [
     briefingText,
@@ -220,7 +223,7 @@ export default async function StudentLessonPage({ params }: Props) {
 
       {/* ── Content tabs ─────────────────────────────────────────────── */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <PartTabs part={part} />
+        <PartTabs part={part} userPlan={userPlan} />
       </div>
 
       {/* ── Quiz section ─────────────────────────────────────────────── */}
