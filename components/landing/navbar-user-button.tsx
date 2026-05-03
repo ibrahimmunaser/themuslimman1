@@ -2,32 +2,21 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { User, LogOut, ChevronDown } from "lucide-react";
 
 export function NavbarUserButton({ firstName }: { firstName: string }) {
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   async function handleSignOut() {
     setLoading(true);
     try {
-      const response = await fetch("/api/auth/signout", {
-        method: "POST",
-      });
-
-      if (response.ok) {
-        router.push("/");
-        router.refresh();
-      } else {
-        console.error("Failed to sign out");
-      }
-    } catch (error) {
-      console.error("Sign out error:", error);
-    } finally {
-      setLoading(false);
+      await fetch("/api/auth/signout", { method: "POST" });
+    } catch {
+      // Proceed with redirect even if fetch fails
     }
+    // Full navigation clears all Next.js client cache
+    window.location.href = "/login";
   }
 
   return (
