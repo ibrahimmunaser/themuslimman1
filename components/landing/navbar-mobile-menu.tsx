@@ -74,7 +74,7 @@ export function NavbarMobileMenu({ user, firstName }: NavbarMobileMenuProps) {
                 Login
               </Link>
               <Link 
-                href="#pricing" 
+                href="/signup" 
                 onClick={() => setOpen(false)} 
                 className="px-4 py-2 rounded-lg bg-gold text-ink text-sm font-semibold hover:bg-gold/90 transition-colors text-center"
               >
