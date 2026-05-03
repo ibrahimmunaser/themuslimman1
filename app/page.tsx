@@ -25,6 +25,7 @@ import { buttonClass } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { getCurrentUser } from "@/lib/auth";
 import { getStudentDashboardData } from "@/lib/queries/student";
+import { EmailVerificationBanner } from "@/components/auth/email-verification-banner";
 
 // Revalidate every 60 seconds to reduce database load
 export const revalidate = 60;
@@ -56,6 +57,11 @@ export default async function LandingPage() {
   return (
     <div className="flex flex-col min-h-screen bg-ink text-text">
       <Navbar />
+      
+      {/* Show verification banner if user is logged in but email not verified */}
+      {user && !user.emailVerified && (
+        <EmailVerificationBanner email={user.email} />
+      )}
 
       {/* ============================================
           HERO SECTION

@@ -34,7 +34,8 @@ function VerifyEmailContent() {
         if (response.ok && data.success) {
           setStatus("success");
           setMessage("Email verified successfully!");
-          setTimeout(() => router.push("/login"), 2000);
+          // Redirect to dashboard/account if logged in, otherwise to homepage
+          setTimeout(() => router.push("/learn"), 2000);
         } else {
           setStatus("error");
           setMessage(data.error || "Verification failed");
@@ -69,11 +70,11 @@ function VerifyEmailContent() {
           </div>
           <h1 className="text-2xl font-bold text-text mb-2">Email verified!</h1>
           <p className="text-text-secondary text-sm mb-6">
-            Your account is now active. Redirecting you to sign in...
+            Your account is now active. Redirecting you to your dashboard...
           </p>
-          <Link href="/login">
+          <Link href="/learn">
             <Button variant="primary" size="lg">
-              Go to Sign In
+              Go to Dashboard
             </Button>
           </Link>
         </>

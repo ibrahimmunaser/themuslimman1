@@ -68,9 +68,10 @@ function SignupPageContent() {
         return;
       }
 
-      // Success - show verification step
-      setSentToEmail(form.email);
-      setStep("verification");
+      // Success - redirect to homepage (user is now logged in)
+      // In development, they're auto-verified
+      // In production, they'll need to verify email before accessing courses
+      router.push("/");
     } catch (err) {
       setError("Something went wrong. Please try again.");
     } finally {

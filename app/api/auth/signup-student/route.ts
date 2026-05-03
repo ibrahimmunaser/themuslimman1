@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
-import { customAlphabet } from "nanoid";
+import { customAlphabet, nanoid } from "nanoid";
 import { prisma } from "@/lib/db";
 import { generateUniqueUsername, validateFullName } from "@/lib/username-generator";
 import { Resend } from "resend";
+import { cookies } from "next/headers";
 
 const generateToken = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 32);
+const COOKIE_NAME = "seerah_session";
+const COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 
 const SignupSchema = z.object({
   fullName: z.string().min(2, "Name must be at least 2 characters").max(100),
@@ -92,6 +95,27 @@ export async function POST(request: NextRequest) {
       return newUser;
     });
 
+    // Create session and set cookie (auto-login after signup)
+    const sessionToken = nanoid(48);
+    const sessionExpiresAt = new Date(Date.now() + COOKIE_MAX_AGE * 1000);
+    
+    await prisma.session.create({
+      data: {
+        userId: user.id,
+        token: sessionToken,
+        expiresAt: sessionExpiresAt,
+      },
+    });
+
+    const cookieStore = await cookies();
+    cookieStore.set(COOKIE_NAME, sessionToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      expires: sessionExpiresAt,
+      path: "/",
+    });
+
     // Send verification email (only in production)
     if (!isDevelopment && verificationToken) {
       const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify-email?token=${verificationToken}`;
@@ -126,6 +150,8 @@ export async function POST(request: NextRequest) {
       message: isDevelopment 
         ? "Account created and auto-verified! You can sign in now."
         : "Account created successfully. Please check your email to verify.",
+      emailVerified: isDevelopment,
+      requiresVerification: !isDevelopment,
     });
 
   } catch (error) {
