@@ -40,12 +40,14 @@ export default async function MyCoursesPage() {
   const courses = [
     {
       id: "seerah",
-      title: "Complete Seerah",
-      description: "Master the life of the Prophet ﷺ through structured lessons, video, slides, mind maps, summaries, flashcards, and quizzes.",
+      title: userPlan === "complete" ? "Complete Seerah" : "Essentials Seerah",
+      description: userPlan === "complete" 
+        ? "Master the life of the Prophet ﷺ through the complete 100-part study system with slides, mind maps, flashcards, and comprehensive review tools."
+        : "Understand the complete Seerah story from beginning to end through 75 guided Essentials lessons.",
       link: "/learn",
       planType: userPlan,
-      lessonCount: userPlan === "complete" ? 100 : 56,
-      estimatedHours: userPlan === "complete" ? 40 : 20,
+      lessonCount: userPlan === "complete" ? 100 : 75,
+      estimatedHours: userPlan === "complete" ? 40 : 30,
       isComplete: userPlan === "complete",
     },
   ];

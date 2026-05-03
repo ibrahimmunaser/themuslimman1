@@ -18,15 +18,15 @@ export const PLANS = {
   },
   essentials: {
     id: "essentials",
-    name: "Essentials",
-    subtitle: "The Path",
+    name: "Essentials Seerah",
+    subtitle: "The complete narrative path",
     price: 4900, // $49.00 in cents
     features: [
-      "56 core lessons",
+      "75 Essentials lessons",
+      "The complete Seerah story from beginning to end",
       "Video lessons",
       "Quizzes",
       "Progress tracking",
-      "Follow the Seerah story clearly from beginning to end",
       "Lifetime access",
     ],
     upgradePrice: 3000, // $30 to upgrade to Complete
@@ -34,20 +34,21 @@ export const PLANS = {
   complete: {
     id: "complete",
     name: "Complete Seerah",
-    subtitle: "The Mastery System",
+    subtitle: "The full mastery system",
     price: 7900, // $79.00 Founding Member Price
     regularPrice: 12900, // $129.00 regular price
     foundingMemberLimit: 500,
     features: [
-      "100-part full Seerah program",
-      "Video lessons",
+      "All 100 parts",
+      "Everything in Essentials Seerah",
+      "25 expanded lessons",
       "3 slide formats",
       "3 infographic formats",
-      "Briefing + Facts",
+      "Briefings + Statement of Facts",
       "Mind maps",
       "Easy / Medium / Hard flashcards",
       "Quizzes",
-      "Full study system for review and teaching",
+      "Teaching and review tools",
       "Lifetime access + all future updates",
     ],
     recommended: true,
