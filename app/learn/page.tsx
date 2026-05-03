@@ -557,7 +557,7 @@ export default async function LearnIndexPage() {
         progressContent={
           <CourseProgressContent 
             userPlan={userPlan}
-            hasParentEmail={!!user.parentEmail}
+            hasParentEmail={!!user.parentEmail && user.parentEmailVerified}
             parentEmail={user.parentEmail || undefined}
             studentName={user.studentName || undefined}
           />

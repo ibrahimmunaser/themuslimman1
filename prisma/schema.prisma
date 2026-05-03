@@ -42,10 +42,12 @@ model User {
   stripePaymentIntentId String?
   
   // Parent Progress Report Fields
-  studentName       String?  // If course is for a child, this is the child's name
-  parentEmail       String?  // Parent/Guardian email for progress reports
-  sendWeeklyReports Boolean  @default(false) // Toggle for weekly progress emails
-  courseFor         String   @default("myself") // "myself" | "my_child" | "my_family"
+  studentName             String?   // If course is for a child, this is the child's name
+  parentEmail             String?   // Parent/Guardian email for progress reports
+  parentEmailVerified     Boolean   @default(false) // Parent email verification status
+  parentVerificationToken String?   @unique // Token for parent email verification
+  sendWeeklyReports       Boolean   @default(false) // Toggle for weekly progress emails
+  courseFor               String    @default("myself") // "myself" | "my_child" | "my_family"
   
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt

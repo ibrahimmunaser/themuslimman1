@@ -15,5 +15,6 @@ export interface SessionUser {
   courseFor: string;
   studentName: string | null;
   parentEmail: string | null;
+  parentEmailVerified: boolean;
   sendWeeklyReports: boolean;
 }

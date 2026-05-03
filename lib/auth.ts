@@ -83,6 +83,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
     courseFor: user.courseFor,
     studentName: user.studentName,
     parentEmail: user.parentEmail,
+    parentEmailVerified: user.parentEmailVerified,
     sendWeeklyReports: user.sendWeeklyReports,
   };
 }

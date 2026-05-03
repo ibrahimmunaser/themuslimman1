@@ -21,10 +21,6 @@ function SignupPageContent() {
     email: "",
     password: "",
     confirmPassword: "",
-    courseFor: "myself" as "myself" | "my_child" | "my_family",
-    studentName: "",
-    parentEmail: "",
-    sendWeeklyReports: false,
   });
   const [sentToEmail, setSentToEmail] = useState("");
 
@@ -53,12 +49,6 @@ function SignupPageContent() {
       return;
     }
 
-    // Validate parent fields if course is for child/family
-    if ((form.courseFor === "my_child" || form.courseFor === "my_family") && !form.studentName.trim()) {
-      setError("Please enter the student's name");
-      return;
-    }
-
     setLoading(true);
     try {
       const response = await fetch("/api/auth/signup-student", {
@@ -68,10 +58,6 @@ function SignupPageContent() {
           fullName: form.fullName.trim(),
           email: form.email.trim().toLowerCase(),
           password: form.password,
-          courseFor: form.courseFor,
-          studentName: form.studentName.trim() || null,
-          parentEmail: form.parentEmail.trim() || null,
-          sendWeeklyReports: form.sendWeeklyReports,
         }),
       });
 
@@ -225,91 +211,6 @@ function SignupPageContent() {
                 <p className="text-xs text-green-400 mt-1.5">Passwords match ✓</p>
               )}
             </div>
-
-            {/* Who is this course for? */}
-            <div className="pt-4 border-t border-border">
-              <label className="block text-sm font-medium text-text mb-3">
-                Who is this course for?
-              </label>
-              <div className="space-y-2">
-                {[
-                  { value: "myself", label: "Myself", desc: "I'm learning the Seerah" },
-                  { value: "my_child", label: "My child", desc: "I'm enrolling my child" },
-                  { value: "my_family", label: "My family", desc: "For multiple family members" },
-                ].map((option) => (
-                  <label
-                    key={option.value}
-                    className={`flex items-start gap-3 p-3 rounded-lg border transition-all cursor-pointer ${
-                      form.courseFor === option.value
-                        ? "border-gold bg-gold/5"
-                        : "border-border hover:border-gold/30"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="courseFor"
-                      value={option.value}
-                      checked={form.courseFor === option.value}
-                      onChange={(e) => setForm({ ...form, courseFor: e.target.value as any })}
-                      className="mt-1"
-                    />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-text">{option.label}</p>
-                      <p className="text-xs text-text-secondary">{option.desc}</p>
-                    </div>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            {/* Parent/Guardian Info (shown if for child or family) */}
-            {(form.courseFor === "my_child" || form.courseFor === "my_family") && (
-              <div className="space-y-4 pt-2">
-                <div>
-                  <Input
-                    label="Student's name"
-                    type="text"
-                    placeholder="Child's full name"
-                    value={form.studentName || ""}
-                    onChange={(e) => setForm({ ...form, studentName: e.target.value })}
-                    required
-                  />
-                  <p className="text-xs text-text-muted mt-1.5">
-                    This will appear in progress reports
-                  </p>
-                </div>
-
-                <div>
-                  <Input
-                    label="Parent / Guardian email"
-                    type="email"
-                    placeholder="parent@example.com"
-                    value={form.parentEmail || ""}
-                    onChange={(e) => setForm({ ...form, parentEmail: e.target.value })}
-                  />
-                  <p className="text-xs text-text-muted mt-1.5">
-                    Optional: Receive weekly progress reports
-                  </p>
-                </div>
-
-                {form.parentEmail && (
-                  <label className="flex items-start gap-3 p-3 rounded-lg border border-border hover:border-gold/30 transition-all cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={form.sendWeeklyReports}
-                      onChange={(e) => setForm({ ...form, sendWeeklyReports: e.target.checked })}
-                      className="mt-1"
-                    />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-text">Send weekly progress reports</p>
-                      <p className="text-xs text-text-secondary">
-                        Get updates every week about {form.studentName || "your child"}'s progress
-                      </p>
-                    </div>
-                  </label>
-                )}
-              </div>
-            )}
 
             {/* Error */}
             {error && (
