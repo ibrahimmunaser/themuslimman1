@@ -52,11 +52,12 @@ model User {
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
-  student      StudentProfile?
-  sessions     Session[]
-  activityLogs ActivityLog[]
-  purchases    Purchase[]
-  partProgress PartProgress[]
+  student       StudentProfile?
+  sessions      Session[]
+  activityLogs  ActivityLog[]
+  purchases     Purchase[]
+  partProgress  PartProgress[]
+  studySessions StudySession[]
 
   @@index([role])
   @@index([email])
@@ -579,6 +580,24 @@ model PartProgress {
   @@unique([userId, partNumber])
   @@index([userId])
   @@index([status])
+}
+
+// Study time tracking for accurate progress reports
+model StudySession {
+  id             String   @id @default(cuid())
+  userId         String
+  partNumber     Int
+  secondsTracked Int      @default(0) // Total seconds of active study time
+  startedAt      DateTime @default(now())
+  lastUpdatedAt  DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([partNumber])
+  @@index([startedAt])
 }
 
 model SupportTicket {

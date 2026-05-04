@@ -27,6 +27,7 @@ import {
 import { PartTabs } from "@/components/part/part-tabs";
 import { prisma } from "@/lib/db";
 import { StudentLayout } from "@/components/student/student-layout";
+import { StudyTimeTracker } from "@/components/study-time-tracker";
 
 export const dynamic = "force-dynamic";
 
@@ -167,6 +168,9 @@ export default async function SeerahPartPage(props: Props) {
 
   return (
     <StudentLayout userPlan={userPlan} userName={user.fullName}>
+      {/* Track study time for this lesson */}
+      <StudyTimeTracker partNumber={partBase.partNumber} />
+      
       <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="border-b border-border bg-surface sticky top-0 z-10">

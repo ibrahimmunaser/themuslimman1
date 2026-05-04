@@ -42,13 +42,25 @@ export async function POST() {
     
     const weeklyLessons = weeklyProgress.filter((p) => p.status === "completed").length;
     const weeklyBriefings = weeklyLessons; // Use completed lessons as proxy for briefings
-    const weeklyStudyTime = Math.round((weeklyLessons * 0.5) * 10) / 10;
+    
+    // Get actual tracked study time
+    const allStudySessions = await prisma.studySession.findMany({
+      where: { userId: user.id },
+    });
+    
+    const weeklyStudySessions = allStudySessions.filter(
+      (s) => s.startedAt >= oneWeekAgo
+    );
+    
+    const totalStudySeconds = allStudySessions.reduce((sum, s) => sum + s.secondsTracked, 0);
+    const weeklyStudySeconds = weeklyStudySessions.reduce((sum, s) => sum + s.secondsTracked, 0);
+    
+    // Convert to hours (rounded to 1 decimal)
+    const studyTimeHours = Math.round((totalStudySeconds / 3600) * 10) / 10;
+    const weeklyStudyTime = Math.round((weeklyStudySeconds / 3600) * 10) / 10;
     
     // Check if there's any weekly activity
-    const hasWeeklyActivity = weeklyProgress.length > 0;
-    
-    // Estimate total study time based on progress (rough estimate: 30min per completed lesson)
-    const studyTimeHours = Math.round((completedLessons * 0.5) * 10) / 10; // rounded to 1 decimal
+    const hasWeeklyActivity = weeklyProgress.length > 0 || weeklyStudySeconds > 0;
 
     // Find current and next lesson
     const lastAccessedPart = progressData
@@ -103,13 +115,10 @@ export async function POST() {
     // For MVP, use completed lessons as proxy for briefings read
     const briefingsRead = completedLessons;
 
-    // Extract parent name from email (before @)
-    const parentName = user.parentEmail.split("@")[0];
-
     // Generate email
     const emailHtml = generateParentProgressReport({
       studentName: user.studentName || user.fullName,
-      parentName: parentName.charAt(0).toUpperCase() + parentName.slice(1),
+      parentName: "", // Don't try to extract name from email
       userPlan: userPlan as "essentials" | "complete",
       lessonsWatched: completedLessons,
       totalLessons,
