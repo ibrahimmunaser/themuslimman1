@@ -100,7 +100,8 @@ export async function GET(req: NextRequest) {
         },
         flashcards: {
           exists: !!flashcards,
-          count: flashcards?.length || 0,
+          counts: flashcards?.counts || {},
+          totalCards: flashcards ? (flashcards.easy?.length || 0) + (flashcards.medium?.length || 0) + (flashcards.full?.length || 0) : 0,
         },
         slides: {
           presented: {
