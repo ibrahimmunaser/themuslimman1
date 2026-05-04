@@ -131,32 +131,39 @@ export default async function SeerahPartPage(props: Props) {
     facts: slidesFactsFiles,
   };
 
-  // Convert R2 URLs (which can be null) to undefined for type compatibility
-  const infographicConciseUrl = infConcise ? await getR2PublicUrl(infConcise) : null;
-  const infographicStandardUrl = infStandard ? await getR2PublicUrl(infStandard) : null;
-  const infographicBentoUrl = infBento ? await getR2PublicUrl(infBento) : null;
-
   const part = {
     ...partBase,
     assets: {
-      videoUrl: assetUrls.videoUrl ? await getR2AssetUrl(assetUrls.videoUrl) : undefined,
-      audioUrl: assetUrls.audioUrl ? await getR2AssetUrl(assetUrls.audioUrl) : undefined,
+      videoUrl: assetUrls.videoUrl ? getR2AssetUrl(assetUrls.videoUrl) : undefined,
+      audioUrl: assetUrls.audioUrl ? getR2AssetUrl(assetUrls.audioUrl) : undefined,
       briefingText: briefingText || undefined,
       statementOfFactsText: statementOfFactsText || undefined,
       studyGuideText: studyGuideText || undefined,
       reportText: reportText || undefined,
       quiz: quizData || undefined,
       flashcards: flashcards || undefined,
-      mindmapUrl: hasMindmap ? await getR2AssetUrl(`part-${n}/mindmap/mindmap.html`) : undefined,
+      mindmapUrl: hasMindmap ? getR2AssetUrl(`part-${n}/mindmap/mindmap.html`) : undefined,
       infographics: {
-        concise: infographicConciseUrl || undefined,
-        standard: infographicStandardUrl || undefined,
-        bentoGrid: infographicBentoUrl || undefined,
+        concise: infConcise
+          ? (infConcise.includes("/") 
+              ? getR2PublicUrl(infConcise) ?? undefined
+              : `/seerah-media/Infographics/Concise/${infConcise}`)
+          : undefined,
+        standard: infStandard
+          ? (infStandard.includes("/") 
+              ? getR2PublicUrl(infStandard) ?? undefined
+              : `/seerah-media/Infographics/Standard/${infStandard}`)
+          : undefined,
+        bentoGrid: infBento
+          ? (infBento.includes("/") 
+              ? getR2PublicUrl(infBento) ?? undefined
+              : `/seerah-media/Infographics/Bento Grid/${infBento}`)
+          : undefined,
       },
       slides: {
-        presented: (await Promise.all(slidesPresentedFiles.map((f: string) => getR2PublicUrl(f)))).filter((url): url is string => url !== null),
-        detailed: (await Promise.all(slidesDetailedFiles.map((f: string) => getR2PublicUrl(f)))).filter((url): url is string => url !== null),
-        facts: (await Promise.all(slidesFactsFiles.map((f: string) => getR2PublicUrl(f)))).filter((url): url is string => url !== null),
+        presented: slidesPresentedFiles.map((f: string) => getR2PublicUrl(f)).filter((url): url is string => url !== null),
+        detailed: slidesDetailedFiles.map((f: string) => getR2PublicUrl(f)).filter((url): url is string => url !== null),
+        facts: slidesFactsFiles.map((f: string) => getR2PublicUrl(f)).filter((url): url is string => url !== null),
       },
     },
   };
