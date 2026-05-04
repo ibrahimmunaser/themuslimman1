@@ -1,4 +1,4 @@
-import { TrendingUp, Target, Clock, Award, FileText } from "lucide-react";
+import { TrendingUp, Target, Clock, Award, FileText, Mail } from "lucide-react";
 import { SendProgressReportButton } from "./send-progress-report-button";
 
 interface CourseProgressContentProps {
@@ -18,8 +18,8 @@ export function CourseProgressContent({
 }: CourseProgressContentProps) {
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Send Progress Report Button */}
-      {hasParentEmail && (
+      {/* Send Progress Report Button or Setup Message */}
+      {hasParentEmail ? (
         <SendProgressReportButton
           userPlan={userPlan}
           hasParentEmail={hasParentEmail}
@@ -27,6 +27,24 @@ export function CourseProgressContent({
           studentName={studentName}
           sendWeeklyReports={sendWeeklyReports}
         />
+      ) : (
+        <div className="p-6 rounded-xl border border-amber-500/20 bg-amber-500/5 mb-8">
+          <div className="flex items-start gap-3">
+            <FileText className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <h3 className="text-base font-semibold text-amber-400 mb-1">Parent Progress Reports</h3>
+              <p className="text-sm text-zinc-300 mb-3">
+                Want to keep a parent or guardian updated on your progress? Set up automated weekly reports or send them on-demand.
+              </p>
+              <a 
+                href="/student/settings"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-black font-semibold rounded-lg transition-colors text-sm"
+              >
+                Set Up Parent Reports
+              </a>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Stats */}
