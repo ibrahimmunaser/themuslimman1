@@ -80,6 +80,17 @@ export function generateParentProgressReport(data: ProgressReportData): string {
     ? `As-salamu alaykum ${data.parentName},` 
     : "As-salamu alaykum,";
   
+  // Calculate week date range
+  const today = new Date();
+  const weekStart = new Date(today);
+  weekStart.setDate(today.getDate() - 7);
+  
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+  
+  const weekDateRange = `${formatDate(weekStart)} - ${formatDate(today)}`;
+  
   // Progress display
   const progressDisplay = progressPercent === 0 
     ? "Just getting started" 
@@ -133,8 +144,11 @@ export function generateParentProgressReport(data: ProgressReportData): string {
 
       <!-- Weekly Grade -->
       <div style="background: linear-gradient(135deg, ${weeklyGrade.color}15 0%, ${weeklyGrade.color}05 100%); border: 2px solid ${weeklyGrade.color}; padding: 25px; margin: 0 0 30px 0; border-radius: 12px; text-align: center;">
-        <p style="margin: 0 0 15px 0; color: #666; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+        <p style="margin: 0 0 5px 0; color: #666; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
           This Week's Grade
+        </p>
+        <p style="margin: 0 0 20px 0; color: #999; font-size: 12px;">
+          ${weekDateRange}
         </p>
         <table cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 15px auto;">
           <tr>
