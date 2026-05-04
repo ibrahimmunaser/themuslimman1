@@ -2,7 +2,8 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { StudentLayout } from "@/components/student/student-layout";
 import { prisma } from "@/lib/db";
-import { HelpCircle, BookOpen, CreditCard, Lock, Mail, MessageCircle } from "lucide-react";
+import { HelpCircle, BookOpen, CreditCard, Lock } from "lucide-react";
+import { ContactSupportForm } from "@/components/help/contact-support-form";
 
 export const metadata = { title: "Help & FAQ | Seerah Masterclass" };
 export const dynamic = "force-dynamic";
@@ -105,26 +106,9 @@ export default async function HelpPage() {
             </p>
           </div>
 
-          {/* Contact Support */}
-          <div className="p-6 rounded-xl bg-gradient-to-b from-gold/15 to-gold/5 border border-gold/30 mb-8">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-lg bg-gold/20 border border-gold/30 flex items-center justify-center flex-shrink-0">
-                <Mail className="w-6 h-6 text-gold" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold text-text mb-2">Need More Help?</h3>
-                <p className="text-text-secondary mb-4">
-                  Can't find what you're looking for? Our support team is here to help.
-                </p>
-                <a
-                  href="mailto:support@themuslimman.com"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gold text-ink font-semibold hover:bg-gold/90 transition-colors"
-                >
-                  <MessageCircle className="w-4 h-4" />
-                  Contact Support
-                </a>
-              </div>
-            </div>
+          {/* Contact Support Form */}
+          <div className="mb-8">
+            <ContactSupportForm />
           </div>
 
           {/* FAQ Categories */}
