@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import Image from "next/image";
 import { ChevronLeft, ChevronRight, Layers, Maximize2, X } from "lucide-react";
 
 interface SlidesViewerProps {
@@ -55,8 +54,14 @@ export function SlidesViewer({ slides, title, type = "presented" }: SlidesViewer
     );
   }
 
-  const nextSlide = slides[current + 1];
-  const prevSlide = slides[current - 1];
+  // Preload next 3 and previous 2 slides for smooth navigation
+  const slidesToPreload = [
+    slides[current - 2],
+    slides[current - 1],
+    slides[current + 1],
+    slides[current + 2],
+    slides[current + 3],
+  ].filter(Boolean);
 
   return (
     <div
@@ -93,15 +98,12 @@ export function SlidesViewer({ slides, title, type = "presented" }: SlidesViewer
         {/* Current slide */}
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="relative w-full h-full">
-            <Image
+            <img
               key={slides[current]}
               src={slides[current]}
               alt={`Slide ${current + 1}`}
-              fill
-              className="object-contain"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 70vw"
-              priority
-              unoptimized
+              className="w-full h-full object-contain"
+              loading="eager"
             />
           </div>
         </div>
@@ -116,13 +118,12 @@ export function SlidesViewer({ slides, title, type = "presented" }: SlidesViewer
           </div>
         )}
 
-        {/* Preload next and previous slides for instant navigation */}
-        {nextSlide && (
-          <link rel="prefetch" as="image" href={nextSlide} />
-        )}
-        {prevSlide && (
-          <link rel="prefetch" as="image" href={prevSlide} />
-        )}
+        {/* Hidden img tags to preload nearby slides */}
+        <div className="sr-only" aria-hidden="true">
+          {slidesToPreload.map((slide, idx) => (
+            <img key={`preload-${idx}`} src={slide} alt="" />
+          ))}
+        </div>
 
         {/* Nav arrows — stop propagation so they don't trigger the enlarge click */}
         <button
@@ -155,14 +156,11 @@ export function SlidesViewer({ slides, title, type = "presented" }: SlidesViewer
               }`}
             >
               {Math.abs(i - current) <= 6 ? (
-                <Image
+                <img
                   src={slide}
                   alt={`Slide ${i + 1}`}
-                  fill
-                  className="object-cover"
-                  sizes="64px"
+                  className="w-full h-full object-cover"
                   loading="lazy"
-                  unoptimized
                 />
               ) : (
                 <div className="w-full h-full bg-surface-raised flex items-center justify-center">
