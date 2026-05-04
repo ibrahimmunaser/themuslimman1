@@ -469,18 +469,9 @@ export default async function LandingPage() {
       </section>
 
       {/* ============================================
-          SOCIAL PROOF
+          TESTIMONIALS
       ============================================ */}
-      <section className="py-16 border-t border-border bg-surface/30">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-            Built for serious learners.
-          </h2>
-          <p className="text-lg text-text-secondary max-w-2xl mx-auto leading-relaxed">
-            Built from a 100-part structured Seerah curriculum and designed for students, parents, teachers, and serious learners who want clarity, retention, and structure.
-          </p>
-        </div>
-      </section>
+      <TestimonialsSection />
 
       {/* ============================================
           FAQ
