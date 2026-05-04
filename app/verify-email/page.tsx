@@ -35,7 +35,7 @@ function VerifyEmailContent() {
           setStatus("success");
           setMessage("Email verified successfully!");
           // Redirect to dashboard/account if logged in, otherwise to homepage
-          setTimeout(() => router.push("/learn"), 2000);
+          setTimeout(() => router.push("/my-courses"), 2000);
         } else {
           setStatus("error");
           setMessage(data.error || "Verification failed");
@@ -72,7 +72,7 @@ function VerifyEmailContent() {
           <p className="text-text-secondary text-sm mb-6">
             Your account is now active. Redirecting you to your dashboard...
           </p>
-          <Link href="/learn">
+          <Link href="/my-courses">
             <Button variant="primary" size="lg">
               Go to Dashboard
             </Button>

@@ -155,7 +155,7 @@ export default async function HelpPage() {
             <h2 className="text-lg font-semibold text-text mb-4">Quick Links</h2>
             <div className="grid sm:grid-cols-2 gap-3">
               <a
-                href="/learn"
+                href="/seerah"
                 className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-raised hover:bg-surface-high text-text-secondary hover:text-text transition-colors"
               >
                 <BookOpen className="w-4 h-4" />

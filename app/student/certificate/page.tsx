@@ -46,7 +46,7 @@ export default async function CertificatePage() {
                 Complete all {requiredLessons} lessons and pass all quizzes to unlock your certificate of completion
               </p>
               <Link
-                href="/learn"
+                href="/seerah"
                 className="px-6 py-3 rounded-lg bg-gold text-ink font-semibold hover:bg-gold/90 transition-colors"
               >
                 Continue Learning

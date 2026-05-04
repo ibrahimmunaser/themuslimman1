@@ -45,7 +45,7 @@ export default async function MyCoursesPage() {
       description: userPlan === "complete" 
         ? "Master the life of the Prophet ﷺ through the complete 100-part study system with slides, mind maps, flashcards, quizzes, and comprehensive review tools."
         : "Learn the life of the Prophet ﷺ through 100 video lessons with Listen on the Go audio and briefings for each part.",
-      link: "/learn",
+      link: "/seerah",
       planType: userPlan,
       lessonCount: 100,
       estimatedHours: userPlan === "complete" ? 40 : 30,

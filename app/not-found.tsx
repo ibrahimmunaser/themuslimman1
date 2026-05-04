@@ -60,7 +60,7 @@ export default function NotFound() {
               My Courses
             </Link>
             <span className="text-border">•</span>
-            <Link href="/learn" className="text-text-secondary hover:text-gold transition-colors">
+            <Link href="/my-courses" className="text-text-secondary hover:text-gold transition-colors">
               Dashboard
             </Link>
             <span className="text-border">•</span>

@@ -71,7 +71,7 @@ function SignupPageContent() {
       // Success - redirect to student dashboard (user is now logged in)
       // In development, they're auto-verified
       // In production, they'll need to verify email before accessing courses
-      router.push("/learn");
+      router.push("/my-courses");
     } catch (err) {
       setError("Something went wrong. Please try again.");
     } finally {
