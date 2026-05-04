@@ -88,6 +88,8 @@ export default async function SeerahPartPage(props: Props) {
 
   const n = partBase.partNumber;
   
+  console.log(`[Part ${n}] Loading content for ${partId}`);
+  
   // Get user's progress for this part (will be implemented later)
   // TODO: Add direct progress tracking outside of class context
   const progress = null;
@@ -124,6 +126,25 @@ export default async function SeerahPartPage(props: Props) {
     mindmapExists(n),
     getPartAssetUrls(n),
   ]);
+
+  // Log asset URLs for debugging
+  console.log(`[Part ${n}] Asset URLs:`, {
+    video: assetUrls.videoUrl,
+    audio: assetUrls.audioUrl,
+    mindmap: assetUrls.mindmapUrl,
+    slideCounts: {
+      presented: slidesPresentedFiles.length,
+      detailed: slidesDetailedFiles.length,
+      facts: slidesFactsFiles.length,
+    },
+    infographics: { infConcise, infStandard, infBento },
+    textContent: {
+      briefing: !!briefingText,
+      facts: !!statementOfFactsText,
+      studyGuide: !!studyGuideText,
+      report: !!reportText,
+    },
+  });
 
   // Slides are already URLs from getSlideFiles - use them directly
   const slideFiles = {
