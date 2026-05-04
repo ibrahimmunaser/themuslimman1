@@ -125,6 +125,7 @@ export default async function SeerahPartPage(props: Props) {
     getPartAssetUrls(n),
   ]);
 
+  // Slides are already URLs from getSlideFiles - use them directly
   const slideFiles = {
     presented: slidesPresentedFiles,
     detailed: slidesDetailedFiles,
@@ -134,15 +135,15 @@ export default async function SeerahPartPage(props: Props) {
   const part = {
     ...partBase,
     assets: {
-      videoUrl: assetUrls.videoUrl ? getR2AssetUrl(assetUrls.videoUrl) : undefined,
-      audioUrl: assetUrls.audioUrl ? getR2AssetUrl(assetUrls.audioUrl) : undefined,
-      briefingText: briefingText || undefined,
-      statementOfFactsText: statementOfFactsText || undefined,
-      studyGuideText: studyGuideText || undefined,
-      reportText: reportText || undefined,
-      quiz: quizData || undefined,
-      flashcards: flashcards || undefined,
-      mindmapUrl: hasMindmap ? getR2AssetUrl(`part-${n}/mindmap/mindmap.html`) : undefined,
+      videoUrl: assetUrls.videoUrl ?? undefined,
+      audioUrl: assetUrls.audioUrl ?? undefined,
+      briefingText: briefingText ?? undefined,
+      statementOfFactsText: statementOfFactsText ?? undefined,
+      studyGuideText: studyGuideText ?? undefined,
+      reportText: reportText ?? undefined,
+      quiz: quizData ?? undefined,
+      flashcards: flashcards ?? undefined,
+      mindmapUrl: assetUrls.mindmapUrl ?? undefined,
       infographics: {
         concise: infConcise
           ? (infConcise.includes("/") 
@@ -160,11 +161,7 @@ export default async function SeerahPartPage(props: Props) {
               : `/seerah-media/Infographics/Bento Grid/${infBento}`)
           : undefined,
       },
-      slides: {
-        presented: slidesPresentedFiles.map((f: string) => getR2PublicUrl(f)).filter((url): url is string => url !== null),
-        detailed: slidesDetailedFiles.map((f: string) => getR2PublicUrl(f)).filter((url): url is string => url !== null),
-        facts: slidesFactsFiles.map((f: string) => getR2PublicUrl(f)).filter((url): url is string => url !== null),
-      },
+      slides: slideFiles,
     },
   };
 
