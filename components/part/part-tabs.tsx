@@ -211,6 +211,11 @@ function InfographicPanel({ part }: { part: Part }) {
 
   return (
     <div className="space-y-4">
+      {/* Preload all infographic types for instant switching */}
+      {inf?.concise && inf.concise !== currentSrc && <link rel="prefetch" as="image" href={inf.concise} />}
+      {inf?.standard && inf.standard !== currentSrc && <link rel="prefetch" as="image" href={inf.standard} />}
+      {inf?.bentoGrid && inf.bentoGrid !== currentSrc && <link rel="prefetch" as="image" href={inf.bentoGrid} />}
+      
       {styles.length > 1 && (
         <div className="flex gap-2 mb-4 pl-4">
           {styles.map((s) => (
@@ -233,12 +238,16 @@ function InfographicPanel({ part }: { part: Part }) {
             onClick={() => setLightboxOpen(true)}
             title="Click to enlarge"
           >
-            {/* Use responsive WebP-optimized image */}
-            <ResponsiveImage
+            {/* Direct image loading for faster switching */}
+            <NextImage
+              key={currentSrc}
               src={currentSrc}
               alt={altLabel}
+              width={1200}
+              height={675}
+              className="w-full h-auto rounded-lg"
               priority
-              onClick={() => setLightboxOpen(true)}
+              unoptimized
             />
             {/* Hover overlay */}
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-colors flex items-center justify-center pointer-events-none">
