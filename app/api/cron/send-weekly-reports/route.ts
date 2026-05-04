@@ -28,7 +28,11 @@ export async function GET(request: NextRequest) {
         fullName: true,
         studentName: true,
         parentEmail: true,
-        studentProfileId: true,
+        student: {
+          select: {
+            id: true,
+          },
+        },
       },
     });
 
@@ -79,10 +83,10 @@ export async function GET(request: NextRequest) {
         let quizScore: number | undefined;
         let quizAttempts = 0;
 
-        if (userPlan === "complete" && user.studentProfileId) {
+        if (userPlan === "complete" && user.student?.id) {
           const allQuizAttempts = await prisma.quizAttempt.findMany({
             where: {
-              studentId: user.studentProfileId,
+              studentId: user.student.id,
               submittedAt: { not: null },
             },
           });
