@@ -65,6 +65,21 @@ export async function GET(request: NextRequest) {
         const totalLessons = 100;
         const completedLessons = progressData.filter((p) => p.status === "completed").length;
 
+        // Calculate weekly activity (past 7 days)
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        
+        const weeklyProgress = progressData.filter(
+          (p) => p.updatedAt >= oneWeekAgo && (p.status === "completed" || p.status === "in_progress")
+        );
+        
+        const weeklyLessons = weeklyProgress.filter((p) => p.status === "completed").length;
+        const weeklyBriefings = weeklyLessons; // Use completed lessons as proxy for briefings
+        const weeklyStudyTime = Math.round((weeklyLessons * 0.5) * 10) / 10;
+        
+        // Check if there's any weekly activity
+        const hasWeeklyActivity = weeklyProgress.length > 0;
+
         // Estimate study time
         const studyTimeHours = Math.round((completedLessons * 0.5) * 10) / 10;
 
@@ -77,11 +92,15 @@ export async function GET(request: NextRequest) {
           })[0];
 
         const currentLessonNumber = lastAccessedPart ? lastAccessedPart.partNumber : 1;
+        const currentLessonData = progressData.find((p) => p.partNumber === currentLessonNumber);
+        const currentLessonStatus = currentLessonData?.status || "not_started";
         const nextLessonNumber = Math.min(currentLessonNumber + 1, totalLessons);
 
         // Get quiz stats for Complete users
         let quizScore: number | undefined;
         let quizAttempts = 0;
+        let weeklyQuizzes = 0;
+        let weeklyFlashcards = 0;
 
         if (userPlan === "complete" && user.student?.id) {
           const allQuizAttempts = await prisma.quizAttempt.findMany({
@@ -92,6 +111,11 @@ export async function GET(request: NextRequest) {
           });
 
           quizAttempts = allQuizAttempts.length;
+          
+          // Calculate weekly quizzes
+          weeklyQuizzes = allQuizAttempts.filter(
+            (q) => q.submittedAt && q.submittedAt >= oneWeekAgo
+          ).length;
 
           if (allQuizAttempts.length > 0) {
             const validScores = allQuizAttempts.filter((a) => a.score !== null);
@@ -121,11 +145,20 @@ export async function GET(request: NextRequest) {
           currentLesson: {
             number: currentLessonNumber,
             title: `Part ${currentLessonNumber}`,
+            status: currentLessonStatus as "not_started" | "in_progress" | "completed",
           },
           suggestedNextLesson: {
             number: nextLessonNumber,
             title: `Part ${nextLessonNumber}`,
           },
+          // Weekly activity data
+          weeklyLessons,
+          weeklyBriefings,
+          weeklyQuizzes,
+          weeklyFlashcards,
+          weeklyStudyTime,
+          hasWeeklyActivity,
+          // Complete-only stats
           quizScore,
           quizAttempts,
           flashcardsReviewed: 0,

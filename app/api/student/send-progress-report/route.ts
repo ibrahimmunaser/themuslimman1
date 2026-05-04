@@ -32,7 +32,22 @@ export async function POST() {
     const completedLessons = progressData.filter((p) => p.status === "completed").length;
     const inProgressLessons = progressData.filter((p) => p.status === "in_progress").length;
     
-    // Estimate study time based on progress (rough estimate: 30min per completed lesson)
+    // Calculate weekly activity (past 7 days)
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    
+    const weeklyProgress = progressData.filter(
+      (p) => p.updatedAt >= oneWeekAgo && (p.status === "completed" || p.status === "in_progress")
+    );
+    
+    const weeklyLessons = weeklyProgress.filter((p) => p.status === "completed").length;
+    const weeklyBriefings = weeklyLessons; // Use completed lessons as proxy for briefings
+    const weeklyStudyTime = Math.round((weeklyLessons * 0.5) * 10) / 10;
+    
+    // Check if there's any weekly activity
+    const hasWeeklyActivity = weeklyProgress.length > 0 || user.lastLoginAt && user.lastLoginAt >= oneWeekAgo;
+    
+    // Estimate total study time based on progress (rough estimate: 30min per completed lesson)
     const studyTimeHours = Math.round((completedLessons * 0.5) * 10) / 10; // rounded to 1 decimal
 
     // Find current and next lesson
@@ -44,12 +59,16 @@ export async function POST() {
       })[0];
     
     const currentLessonNumber = lastAccessedPart ? lastAccessedPart.partNumber : 1;
+    const currentLessonData = progressData.find((p) => p.partNumber === currentLessonNumber);
+    const currentLessonStatus = currentLessonData?.status || "not_started";
     const nextLessonNumber = Math.min(currentLessonNumber + 1, totalLessons);
 
     // Get quiz stats for Complete users (if they have a student profile)
     let quizScore: number | undefined;
     let quizAttempts = 0;
     let flashcardsReviewed = 0;
+    let weeklyQuizzes = 0;
+    let weeklyFlashcards = 0;
 
     if (userPlan === "complete" && user.studentProfileId) {
       const allQuizAttempts = await prisma.quizAttempt.findMany({
@@ -60,6 +79,11 @@ export async function POST() {
       });
 
       quizAttempts = allQuizAttempts.length;
+      
+      // Calculate weekly quizzes
+      weeklyQuizzes = allQuizAttempts.filter(
+        (q) => q.submittedAt && q.submittedAt >= oneWeekAgo
+      ).length;
       
       if (allQuizAttempts.length > 0) {
         const validScores = allQuizAttempts.filter(a => a.score !== null);
@@ -73,6 +97,7 @@ export async function POST() {
 
       // Placeholder for flashcards (would need actual implementation)
       flashcardsReviewed = 0;
+      weeklyFlashcards = 0;
     }
     
     // For MVP, use completed lessons as proxy for briefings read
@@ -93,11 +118,20 @@ export async function POST() {
       currentLesson: {
         number: currentLessonNumber,
         title: `Part ${currentLessonNumber}`,
+        status: currentLessonStatus as "not_started" | "in_progress" | "completed",
       },
       suggestedNextLesson: {
         number: nextLessonNumber,
         title: `Part ${nextLessonNumber}`,
       },
+      // Weekly activity data
+      weeklyLessons,
+      weeklyBriefings,
+      weeklyQuizzes,
+      weeklyFlashcards,
+      weeklyStudyTime,
+      hasWeeklyActivity,
+      // Complete-only stats
       quizScore,
       quizAttempts,
       flashcardsReviewed,
