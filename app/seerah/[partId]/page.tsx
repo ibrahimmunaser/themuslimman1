@@ -94,38 +94,52 @@ export default async function SeerahPartPage(props: Props) {
   // TODO: Add direct progress tracking outside of class context
   const progress = null;
 
-  // Load assets from R2
-  const [
-    briefingText,
-    statementOfFactsText,
-    studyGuideText,
-    reportText,
-    quizData,
-    flashcards,
-    slidesPresentedFiles,
-    slidesDetailedFiles,
-    slidesFactsFiles,
-    infConcise,
-    infStandard,
-    infBento,
-    hasMindmap,
-    assetUrls,
-  ] = await Promise.all([
-    readBriefing(n),
-    readStatementOfFacts(n),
-    readStudyGuide(n),
-    readReport(n),
-    readQuiz(n),
-    readFlashcards(n),
-    getSlideFiles(n, "presented"),
-    getSlideFiles(n, "detailed"),
-    getSlideFiles(n, "facts"),
-    getInfographicFilename(n, "Concise"),
-    getInfographicFilename(n, "Standard"),
-    getInfographicFilename(n, "Bento Grid"),
-    mindmapExists(n),
-    getPartAssetUrls(n),
-  ]);
+  // Load assets from R2 with error handling
+  let briefingText, statementOfFactsText, studyGuideText, reportText, quizData, flashcards;
+  let slidesPresentedFiles, slidesDetailedFiles, slidesFactsFiles;
+  let infConcise, infStandard, infBento, hasMindmap, assetUrls;
+
+  try {
+    [
+      briefingText,
+      statementOfFactsText,
+      studyGuideText,
+      reportText,
+      quizData,
+      flashcards,
+      slidesPresentedFiles,
+      slidesDetailedFiles,
+      slidesFactsFiles,
+      infConcise,
+      infStandard,
+      infBento,
+      hasMindmap,
+      assetUrls,
+    ] = await Promise.all([
+      readBriefing(n).catch(e => { console.error(`[Part ${n}] Briefing error:`, e); return null; }),
+      readStatementOfFacts(n).catch(e => { console.error(`[Part ${n}] Facts error:`, e); return null; }),
+      readStudyGuide(n).catch(e => { console.error(`[Part ${n}] Study guide error:`, e); return null; }),
+      readReport(n).catch(e => { console.error(`[Part ${n}] Report error:`, e); return null; }),
+      readQuiz(n).catch(e => { console.error(`[Part ${n}] Quiz error:`, e); return null; }),
+      readFlashcards(n).catch(e => { console.error(`[Part ${n}] Flashcards error:`, e); return null; }),
+      getSlideFiles(n, "presented").catch(e => { console.error(`[Part ${n}] Presented slides error:`, e); return []; }),
+      getSlideFiles(n, "detailed").catch(e => { console.error(`[Part ${n}] Detailed slides error:`, e); return []; }),
+      getSlideFiles(n, "facts").catch(e => { console.error(`[Part ${n}] Facts slides error:`, e); return []; }),
+      getInfographicFilename(n, "Concise").catch(e => { console.error(`[Part ${n}] Concise inf error:`, e); return null; }),
+      getInfographicFilename(n, "Standard").catch(e => { console.error(`[Part ${n}] Standard inf error:`, e); return null; }),
+      getInfographicFilename(n, "Bento Grid").catch(e => { console.error(`[Part ${n}] Bento inf error:`, e); return null; }),
+      mindmapExists(n).catch(e => { console.error(`[Part ${n}] Mindmap error:`, e); return false; }),
+      getPartAssetUrls(n).catch(e => { console.error(`[Part ${n}] Asset URLs error:`, e); return { videoUrl: undefined, audioUrl: undefined, mindmapUrl: undefined }; }),
+    ]);
+  } catch (error) {
+    console.error(`[Part ${n}] Fatal error loading assets:`, error);
+    // Set defaults to prevent crash
+    briefingText = statementOfFactsText = studyGuideText = reportText = quizData = flashcards = null;
+    slidesPresentedFiles = slidesDetailedFiles = slidesFactsFiles = [];
+    infConcise = infStandard = infBento = null;
+    hasMindmap = false;
+    assetUrls = { videoUrl: undefined, audioUrl: undefined, mindmapUrl: undefined };
+  }
 
   // Log asset URLs for debugging
   console.log(`[Part ${n}] Asset URLs:`, {
