@@ -7,6 +7,7 @@ import { ChevronRight, ChevronDown, Play, CheckCircle2, BookOpen, Lock, Clock, V
 import { prisma } from "@/lib/db";
 import { StudentLayout } from "@/components/student/student-layout";
 import { CourseDashboardTabs } from "@/components/course/course-dashboard-tabs";
+import { CourseHomeContent } from "@/components/course/course-home-content";
 import { CourseResourcesContent } from "@/components/course/course-resources-content";
 import { CourseProgressContent } from "@/components/course/course-progress-content";
 
@@ -552,6 +553,14 @@ export default async function LearnIndexPage() {
   return (
     <StudentLayout userPlan={userPlan} userName={user.fullName}>
       <CourseDashboardTabs
+        homeContent={
+          <CourseHomeContent 
+            userPlan={userPlan} 
+            completionPercentage={progressPercentage}
+            completedLessons={completedCount}
+            totalLessons={totalParts}
+          />
+        }
         lessonsContent={lessonsContent}
         resourcesContent={<CourseResourcesContent userPlan={userPlan} />}
         progressContent={

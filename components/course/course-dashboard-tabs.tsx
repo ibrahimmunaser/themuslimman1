@@ -1,16 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { BookOpen, FolderOpen, TrendingUp } from "lucide-react";
+import { Home, BookOpen, FolderOpen, TrendingUp } from "lucide-react";
 import { clsx } from "clsx";
 
 interface CourseDashboardTabsProps {
+  homeContent: React.ReactNode;
   lessonsContent: React.ReactNode;
   resourcesContent: React.ReactNode;
   progressContent: React.ReactNode;
 }
 
-type TabId = "lessons" | "resources" | "progress";
+type TabId = "home" | "lessons" | "resources" | "progress";
 
 interface Tab {
   id: TabId;
@@ -19,19 +20,22 @@ interface Tab {
 }
 
 const TABS: Tab[] = [
+  { id: "home", label: "Home", icon: Home },
   { id: "lessons", label: "Lessons", icon: BookOpen },
   { id: "resources", label: "Resources", icon: FolderOpen },
   { id: "progress", label: "Progress", icon: TrendingUp },
 ];
 
 export function CourseDashboardTabs({
+  homeContent,
   lessonsContent,
   resourcesContent,
   progressContent,
 }: CourseDashboardTabsProps) {
-  const [activeTab, setActiveTab] = useState<TabId>("lessons");
+  const [activeTab, setActiveTab] = useState<TabId>("home");
 
   const content = {
+    home: homeContent,
     lessons: lessonsContent,
     resources: resourcesContent,
     progress: progressContent,
