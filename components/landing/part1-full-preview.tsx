@@ -117,16 +117,16 @@ export async function Part1FullPreview() {
 
       {/* Full Part 1 Content */}
       <div className="bg-surface">
-        <PartTabs part={part} userPlan="essentials" />
+        <PartTabs part={part} userPlan="essentials" previewMode={true} />
       </div>
 
       {/* Call-to-Action */}
       <div className="p-6 border-t border-border bg-surface-raised text-center">
         <p className="text-sm text-text-secondary mb-3">
-          ✓ You just experienced Part 1 — the exact same format and quality as all 100+ parts
+          ✓ You just experienced the full Part 1 — the exact same format and quality as all 100 parts
         </p>
         <p className="text-xs text-gold font-medium">
-          Get instant access to the complete Seerah journey below
+          Want the full 100-part course? Choose your plan below.
         </p>
       </div>
     </div>

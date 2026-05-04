@@ -94,10 +94,12 @@ const MODES: Mode[] = [
 
 /**
  * Determines if a tab/subtab is accessible based on user's plan
+ * PreviewMode: All tabs unlocked (for homepage demo)
  * Essentials: Only Watch (video+audio) and Briefing
  * Complete: Everything
  */
-function isTabAccessible(id: SubTabId, userPlan: UserPlan): boolean {
+function isTabAccessible(id: SubTabId, userPlan: UserPlan, previewMode?: boolean): boolean {
+  if (previewMode) return true;
   if (userPlan === "complete") return true;
   
   // Essentials can ONLY access:
@@ -111,11 +113,12 @@ function isTabAccessible(id: SubTabId, userPlan: UserPlan): boolean {
 /**
  * Determines if a mode is accessible (at least one subtab is accessible)
  */
-function isModeAccessible(mode: Mode, userPlan: UserPlan): boolean {
+function isModeAccessible(mode: Mode, userPlan: UserPlan, previewMode?: boolean): boolean {
+  if (previewMode) return true;
   if (userPlan === "complete") return true;
   
   // For essentials, check if mode has at least one accessible subtab
-  return mode.subTabs.some(tab => isTabAccessible(tab.id, userPlan));
+  return mode.subTabs.some(tab => isTabAccessible(tab.id, userPlan, previewMode));
 }
 
 // ─── Content availability ─────────────────────────────────────────────────────
@@ -423,12 +426,13 @@ function ModeButton({
 interface PartTabsProps {
   part: Part;
   userPlan: UserPlan;
+  previewMode?: boolean;
 }
 
-export function PartTabs({ part, userPlan }: PartTabsProps) {
+export function PartTabs({ part, userPlan, previewMode = false }: PartTabsProps) {
   // Show modes that have content, but keep locked modes visible
   const availableModes = MODES.filter((m) => getModeSubTabs(m, part).length > 0);
-  const defaultMode = availableModes.find(m => isModeAccessible(m, userPlan)) ?? availableModes[0] ?? MODES[0];
+  const defaultMode = availableModes.find(m => isModeAccessible(m, userPlan, previewMode)) ?? availableModes[0] ?? MODES[0];
 
   const [activeMode, setActiveMode] = useState<ModeId>(defaultMode.id);
 
@@ -436,7 +440,7 @@ export function PartTabs({ part, userPlan }: PartTabsProps) {
   
   // Filter subtabs based on content AND access control
   const allSubTabsWithContent = getModeSubTabs(currentMode, part);
-  const accessibleSubTabs = allSubTabsWithContent.filter(tab => isTabAccessible(tab.id, userPlan));
+  const accessibleSubTabs = allSubTabsWithContent.filter(tab => isTabAccessible(tab.id, userPlan, previewMode));
   const subTabs = accessibleSubTabs.length > 0 ? accessibleSubTabs : allSubTabsWithContent;
   
   const [activeSubTab, setActiveSubTab] = useState<SubTabId>(subTabs[0]?.id ?? "video");
@@ -445,7 +449,7 @@ export function PartTabs({ part, userPlan }: PartTabsProps) {
     setActiveMode(modeId);
     const newMode = MODES.find((m) => m.id === modeId)!;
     const newSubTabsWithContent = getModeSubTabs(newMode, part);
-    const newAccessibleSubTabs = newSubTabsWithContent.filter(tab => isTabAccessible(tab.id, userPlan));
+    const newAccessibleSubTabs = newSubTabsWithContent.filter(tab => isTabAccessible(tab.id, userPlan, previewMode));
     const newSubTabs = newAccessibleSubTabs.length > 0 ? newAccessibleSubTabs : newSubTabsWithContent;
     setActiveSubTab(newSubTabs[0]?.id ?? newMode.subTabs[0].id);
   };
@@ -453,7 +457,7 @@ export function PartTabs({ part, userPlan }: PartTabsProps) {
   const currentSubTab = subTabs.find((t) => t.id === activeSubTab)?.id ?? subTabs[0]?.id;
   
   // Check if current tab is locked
-  const isCurrentTabLocked = currentSubTab ? !isTabAccessible(currentSubTab, userPlan) : false;
+  const isCurrentTabLocked = currentSubTab ? !isTabAccessible(currentSubTab, userPlan, previewMode) : false;
 
   return (
     <div className="space-y-4">
@@ -462,7 +466,7 @@ export function PartTabs({ part, userPlan }: PartTabsProps) {
       <div className="flex flex-wrap gap-2">
         {MODES.map((mode) => {
           const available = getModeSubTabs(mode, part).length > 0;
-          const accessible = isModeAccessible(mode, userPlan);
+          const accessible = isModeAccessible(mode, userPlan, previewMode);
           const locked = available && !accessible;
           
           return (

@@ -144,13 +144,40 @@ export default async function LandingPage() {
       </section>
 
       {/* ============================================
-          WHY THIS IS DIFFERENT
+          PREVIEW BEFORE BUYING
+      ============================================ */}
+      <section id="preview" className="py-16 border-t border-border">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-10">
+            <p className="text-gold text-sm font-medium uppercase tracking-widest mb-3">
+              Experience Part 1 For Free
+            </p>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-3">
+              The Complete Part 1 — Right Here, Right Now
+            </h2>
+            <p className="text-text-secondary max-w-2xl mx-auto">
+              No signup. No trial. No limits. This is the exact same quality and format you'll get with all 100 parts. Watch the video, read the briefing, explore the study guide, view the mindmap — everything.
+            </p>
+          </div>
+
+          <Suspense fallback={
+            <div className="rounded-2xl border border-border bg-surface p-8 text-center">
+              <p className="text-text-secondary">Loading Part 1 preview...</p>
+            </div>
+          }>
+            <Part1FullPreview />
+          </Suspense>
+        </div>
+      </section>
+
+      {/* ============================================
+          WHY SCATTERED VIDEOS DON'T WORK
       ============================================ */}
       <section className="py-16 border-t border-border bg-surface/30">
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-10">
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              Why this works better than scattered videos
+              Why scattered videos don't work
             </h2>
             <p className="text-lg text-text-secondary max-w-2xl mx-auto leading-relaxed">
               Most Seerah content gives you isolated stories. This course gives you the full timeline. You do not just learn what happened. You learn what came before, what came after, and why each event mattered.
@@ -160,17 +187,27 @@ export default async function LandingPage() {
       </section>
 
       {/* ============================================
-          ESSENTIALS IS NOT A DEMO
+          BOTH PLANS INCLUDE ALL 100 PARTS
       ============================================ */}
       <section className="py-16 border-t border-border">
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-6">
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              Both plans include all 100 parts.
+              You are not buying an incomplete Seerah.
             </h2>
             <p className="text-lg text-text-secondary max-w-2xl mx-auto leading-relaxed">
-              Essentials gives you the complete Seerah story in 100 video lessons. You can understand the life of the Prophet ﷺ from beginning to end with Essentials alone. Complete Seerah adds the full mastery system with slides, infographics, mind maps, flashcards, quizzes, study guides, and teaching tools.
+              Both plans include the full 100-part story. Complete adds the review, testing, and mastery tools.
             </p>
+            <div className="mt-8 grid sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
+              <div className="p-6 rounded-xl border border-border bg-surface text-center">
+                <h3 className="font-bold text-text mb-2">Essentials</h3>
+                <p className="text-sm text-text-secondary">Watch the full Seerah story.</p>
+              </div>
+              <div className="p-6 rounded-xl border-2 border-gold/30 bg-gold/5 text-center">
+                <h3 className="font-bold text-gold mb-2">Complete</h3>
+                <p className="text-sm text-text-secondary">Study, review, test, and master the full Seerah story.</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -192,9 +229,9 @@ export default async function LandingPage() {
               <h3 className="text-xl font-bold text-text mb-4">Choose Essentials if:</h3>
               <ul className="space-y-3">
                 {[
-                  "You want the complete story",
-                  "You want video lessons and quizzes",
-                  "You want a simple guided path",
+                  "You want the full 100-part Seerah story",
+                  "You prefer video and audio learning",
+                  "You want a simple, clear path",
                   "You are mainly learning for yourself",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-3 text-text-secondary">
@@ -210,11 +247,11 @@ export default async function LandingPage() {
               <h3 className="text-xl font-bold text-text mb-4">Choose Complete if:</h3>
               <ul className="space-y-3">
                 {[
-                  "You want to remember what you study",
-                  "You want mind maps and flashcards",
-                  "You want deeper context",
+                  "You want to master and remember what you study",
+                  "You want mind maps, flashcards, and quizzes",
+                  "You want deeper study guides and reports",
                   "You want to teach your family, children, students, or halaqah",
-                  "You want the full 100-part system",
+                  "You want parent accountability reports",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-3 text-text">
                     <CheckCircle2 className="w-5 h-5 text-gold flex-shrink-0 mt-0.5" />
@@ -224,33 +261,6 @@ export default async function LandingPage() {
               </ul>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* ============================================
-          PREVIEW BEFORE BUYING
-      ============================================ */}
-      <section id="preview" className="py-16 border-t border-border">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-10">
-            <p className="text-gold text-sm font-medium uppercase tracking-widest mb-3">
-              Experience Part 1 For Free
-            </p>
-            <h2 className="text-3xl sm:text-4xl font-bold mb-3">
-              The Complete Part 1 — Right Here, Right Now
-            </h2>
-            <p className="text-text-secondary max-w-2xl mx-auto">
-              No signup. No trial. No limits. This is the exact same quality and format you'll get with all 100+ parts. Watch the video, read the briefing, explore the study guide, view the mindmap — everything.
-            </p>
-          </div>
-
-          <Suspense fallback={
-            <div className="rounded-2xl border border-border bg-surface p-8 text-center">
-              <p className="text-text-secondary">Loading Part 1 preview...</p>
-            </div>
-          }>
-            <Part1FullPreview />
-          </Suspense>
         </div>
       </section>
 
@@ -362,7 +372,7 @@ export default async function LandingPage() {
       </section>
 
       {/* ============================================
-          FOUNDING MEMBER URGENCY
+          LIMITED EARLY ACCESS
       ============================================ */}
       <section className="py-16 border-t border-border">
         <div className="max-w-3xl mx-auto px-4 sm:px-6">
@@ -380,6 +390,62 @@ export default async function LandingPage() {
               Get Complete Seerah
               <ArrowRight className="w-5 h-5" />
             </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================
+          PARENT ACCOUNTABILITY
+      ============================================ */}
+      <section className="py-16 border-t border-border bg-surface/30">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+              For parents: know your child is actually learning
+            </h2>
+            <p className="text-lg text-text-secondary max-w-2xl mx-auto leading-relaxed">
+              Weekly parent progress reports help you see whether your child is watching, reading, and moving forward.
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-8 max-w-3xl mx-auto">
+            {/* Essentials Reports */}
+            <div className="p-6 rounded-xl border border-border bg-surface">
+              <h3 className="font-bold text-text mb-4">Essentials Reports Include:</h3>
+              <ul className="space-y-2.5">
+                {[
+                  "Lessons watched",
+                  "Briefings read",
+                  "Study time",
+                  "Current lesson",
+                  "Recommended next step",
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-3 text-sm text-text-secondary">
+                    <CheckCircle2 className="w-4 h-4 text-text-muted flex-shrink-0 mt-0.5" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Complete Reports */}
+            <div className="p-6 rounded-xl border-2 border-gold/30 bg-gold/5">
+              <h3 className="font-bold text-gold mb-4">Complete Reports Also Include:</h3>
+              <ul className="space-y-2.5">
+                {[
+                  "Quiz scores",
+                  "Flashcard activity",
+                  "Weak areas",
+                  "Strong areas",
+                  "Mastery progress",
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-3 text-sm text-text">
+                    <CheckCircle2 className="w-4 h-4 text-gold flex-shrink-0 mt-0.5" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </div>
       </section>
@@ -439,33 +505,36 @@ export default async function LandingPage() {
       </section>
 
       {/* ============================================
-          SHORTCUTS TO MASTERY
-      ============================================ */}
-      <section className="py-16 border-t border-border bg-surface/30">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              The extra resources are not extra work.
-            </h2>
-            <p className="text-lg text-text-secondary max-w-2xl mx-auto leading-relaxed">
-              They are shortcuts. Use the video to learn. Use the briefing to review. Use the mind map to connect events. Use the flashcards to remember names and details. Use the quiz to test yourself. Use the slides and infographics to teach others.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* ============================================
-          BUILT FOR MORE THAN PRIVATE STUDY
+          WHAT YOU GET IN COMPLETE
       ============================================ */}
       <section className="py-16 border-t border-border">
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-6">
+          <div className="text-center mb-10">
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              Built for more than private study
+              The extra tools are built to help students remember, not overwhelm them.
             </h2>
-            <p className="text-lg text-text-secondary max-w-2xl mx-auto leading-relaxed">
-              Use Complete Seerah to teach your children, prepare halaqah lessons, review before a class, explain major events clearly, and keep the timeline straight.
-            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
+            {[
+              { icon: "🗂️", title: "Flashcards for review", desc: "Quick recall practice for names, dates, and key events" },
+              { icon: "📝", title: "Quizzes for recall", desc: "Test your understanding and track mastery" },
+              { icon: "🗺️", title: "Mind maps for structure", desc: "See connections and the big picture" },
+              { icon: "📊", title: "Slides and infographics", desc: "Visual learning and teaching tools" },
+              { icon: "📧", title: "Parent reports", desc: "Weekly progress updates for accountability" },
+              { icon: "📖", title: "Study guides", desc: "Comprehensive review materials" },
+            ].map((item) => (
+              <div
+                key={item.title}
+                className="p-5 rounded-xl border border-border bg-surface hover:border-gold/20 transition-colors"
+              >
+                <div className="text-3xl mb-3">{item.icon}</div>
+                <h3 className="font-semibold text-text text-sm mb-2">{item.title}</h3>
+                <p className="text-xs text-text-secondary leading-relaxed">
+                  {item.desc}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
