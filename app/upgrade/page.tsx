@@ -85,13 +85,15 @@ export default function UpgradePage() {
 
   const upgradePrice = PLANS.essentials.upgradePrice!;
   const newFeatures = [
-    "3 slide formats (Presented, Detailed, Facts)",
-    "3 infographic formats (Concise, Standard, Bento)",
+    "Slides (3 formats per part)",
+    "Infographics (3 formats per part)",
     "Mind maps for visual learning",
     "Flashcards (Easy, Medium, Hard)",
-    "Quizzes for every lesson",
-    "Reports & Statement of Facts",
-    "Study guides for comprehensive review",
+    "Quizzes for mastery",
+    "Study guides & Reports",
+    "Statement of Facts",
+    "Certificate",
+    "Advanced parent reports",
   ];
 
   useEffect(() => {
