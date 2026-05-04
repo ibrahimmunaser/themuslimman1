@@ -56,6 +56,7 @@ export function SlidesViewer({ slides, title, type = "presented" }: SlidesViewer
   }
 
   const nextSlide = slides[current + 1];
+  const prevSlide = slides[current - 1];
 
   return (
     <div
@@ -100,7 +101,7 @@ export function SlidesViewer({ slides, title, type = "presented" }: SlidesViewer
               className="object-contain"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 70vw"
               priority
-              unoptimized={false}
+              unoptimized
             />
           </div>
         </div>
@@ -115,19 +116,12 @@ export function SlidesViewer({ slides, title, type = "presented" }: SlidesViewer
           </div>
         )}
 
-        {/* Invisible preload of next slide — tells browser to fetch it now */}
+        {/* Preload next and previous slides for instant navigation */}
         {nextSlide && (
-          <div className="sr-only" aria-hidden>
-            <Image
-              src={nextSlide}
-              alt=""
-              width={1}
-              height={1}
-              sizes="1px"
-              priority={false}
-              unoptimized={false}
-            />
-          </div>
+          <link rel="prefetch" as="image" href={nextSlide} />
+        )}
+        {prevSlide && (
+          <link rel="prefetch" as="image" href={prevSlide} />
         )}
 
         {/* Nav arrows — stop propagation so they don't trigger the enlarge click */}
@@ -168,6 +162,7 @@ export function SlidesViewer({ slides, title, type = "presented" }: SlidesViewer
                   className="object-cover"
                   sizes="64px"
                   loading="lazy"
+                  unoptimized
                 />
               ) : (
                 <div className="w-full h-full bg-surface-raised flex items-center justify-center">
