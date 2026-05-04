@@ -95,9 +95,20 @@ export default async function SeerahPartPage(props: Props) {
   const progress = null;
 
   // Load assets from R2 with error handling
-  let briefingText, statementOfFactsText, studyGuideText, reportText, quizData, flashcards;
-  let slidesPresentedFiles, slidesDetailedFiles, slidesFactsFiles;
-  let infConcise, infStandard, infBento, hasMindmap, assetUrls;
+  let briefingText: string | null;
+  let statementOfFactsText: string | null;
+  let studyGuideText: string | null;
+  let reportText: string | null;
+  let quizData: any;
+  let flashcards: any;
+  let slidesPresentedFiles: string[];
+  let slidesDetailedFiles: string[];
+  let slidesFactsFiles: string[];
+  let infConcise: string | null;
+  let infStandard: string | null;
+  let infBento: string | null;
+  let hasMindmap: boolean;
+  let assetUrls: { videoUrl?: string; audioUrl?: string; mindmapUrl?: string };
 
   try {
     [
