@@ -166,10 +166,10 @@ export default async function LandingPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-6">
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              Essentials is not a demo.
+              Both plans include all 100 parts.
             </h2>
             <p className="text-lg text-text-secondary max-w-2xl mx-auto leading-relaxed">
-              Essentials gives you the complete Seerah story in 75 guided lessons. You can understand the life of the Prophet ﷺ from beginning to end with Essentials alone. Complete Seerah is for students who want the full mastery system with expanded lessons, mind maps, flashcards, briefings, facts, slides, and infographics.
+              Essentials gives you the complete Seerah story in 100 video lessons. You can understand the life of the Prophet ﷺ from beginning to end with Essentials alone. Complete Seerah adds the full mastery system with slides, infographics, mind maps, flashcards, quizzes, study guides, and teaching tools.
             </p>
           </div>
         </div>
@@ -280,11 +280,11 @@ export default async function LandingPage() {
 
               <ul className="space-y-2.5 mb-6 flex-1">
                 {[
-                  "75 guided lessons",
-                  "Complete narrative path",
-                  "Video lessons",
-                  "Quizzes",
+                  "All 100 video lessons",
+                  "Listen on the Go",
+                  "Briefings",
                   "Progress tracking",
+                  "Parent progress reports",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-3 text-sm text-text">
                     <CheckCircle2 className="w-5 h-5 text-gold flex-shrink-0 mt-0.5" />
@@ -320,14 +320,16 @@ export default async function LandingPage() {
 
               <ul className="space-y-2.5 mb-7 flex-1">
                 {[
-                  "All 100 parts",
                   "Everything in Essentials",
-                  "25 expanded lessons",
+                  "Slides (3 formats)",
+                  "Infographics (3 formats)",
                   "Mind maps",
                   "Flashcards",
-                  "Briefings + Facts",
-                  "Slides + Infographics",
-                  "Teaching and review tools",
+                  "Quizzes",
+                  "Study guides & reports",
+                  "Statement of Facts",
+                  "Certificate",
+                  "Teaching tools",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-3 text-sm text-text">
                     <CheckCircle2 className="w-5 h-5 text-gold flex-shrink-0 mt-0.5" />
@@ -366,16 +368,16 @@ export default async function LandingPage() {
         <div className="max-w-3xl mx-auto px-4 sm:px-6">
           <div className="p-8 rounded-2xl border-2 border-gold/30 bg-gradient-to-b from-gold/10 to-surface text-center">
             <h2 className="text-2xl sm:text-3xl font-bold mb-4">
-              Founding Member Price
+              Limited Early Access
             </h2>
             <p className="text-text-secondary leading-relaxed mb-6 max-w-xl mx-auto">
-              Complete Seerah is currently available for $79 for the first 500 students. Regular price: $129. Founding Members get early access pricing while helping us improve the course experience before the full public release.
+              Complete Seerah is currently available for $79 during the early launch period. The regular price is planned to be $129 after launch. Get lifetime access now and help shape the course before the full public release.
             </p>
             <Link
               href="/signup-checkout?plan=complete"
               className={buttonClass("primary", "xl", "shadow-lg shadow-gold/25")}
             >
-              Become a Founding Member
+              Get Complete Seerah
               <ArrowRight className="w-5 h-5" />
             </Link>
           </div>
@@ -488,11 +490,11 @@ export default async function LandingPage() {
             {[
               {
                 q: "What is the difference between Essentials and Complete Seerah?",
-                a: "Essentials is a complete 75-lesson narrative path through the Seerah. Complete Seerah includes the full 100-part mastery system with expanded lessons, review tools, and teaching assets.",
+                a: "Both plans include all 100 Seerah parts. Essentials provides the core learning path with video lessons, Listen on the Go, and briefings. Complete Seerah adds the full mastery system: slides, infographics, mind maps, flashcards, quizzes, study guides, and teaching tools.",
               },
               {
                 q: "Is Essentials a complete course?",
-                a: "Yes. Essentials gives you the complete Seerah story in 75 guided lessons. You can understand the life of the Prophet ﷺ from beginning to end with Essentials alone.",
+                a: "Yes. Essentials gives you the complete Seerah story with all 100 video lessons. You can understand the life of the Prophet ﷺ from beginning to end with Essentials alone.",
               },
               {
                 q: "Can I upgrade later?",

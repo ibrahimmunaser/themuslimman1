@@ -43,7 +43,7 @@ export default async function PricingPage() {
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gold/10 border border-gold/30 text-gold text-sm font-medium mb-6">
             <Sparkles className="w-4 h-4" />
-            Founding Member Pricing Available
+            Early Launch Pricing
           </div>
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-text mb-5 leading-tight">
             Master the Life of the Prophet ﷺ —<br />
@@ -210,11 +210,21 @@ export default async function PricingPage() {
             </p>
           </div>
 
-          {/* Urgency Message */}
-          <div className="max-w-2xl mx-auto p-5 rounded-xl border border-gold/20 bg-gold-bg text-center">
-            <p className="text-sm text-text-secondary leading-relaxed">
-              <span className="font-semibold text-text">Founding Member pricing is limited</span> — only available for the first 500 students. After that, Complete Seerah returns to its regular price of $129.
+          {/* Early Access Banner */}
+          <div className="max-w-3xl mx-auto p-8 rounded-2xl border-2 border-gold/30 bg-gradient-to-b from-gold/10 to-surface text-center">
+            <h3 className="text-2xl font-bold text-text mb-4">
+              Limited Early Access
+            </h3>
+            <p className="text-text-secondary leading-relaxed mb-6">
+              Complete Seerah is currently available for $79 during the early launch period. The regular price is planned to be $129 after launch. Get lifetime access now and help shape the course before the full public release.
             </p>
+            <Link
+              href="/signup-checkout?plan=complete"
+              className={buttonClass("primary", "xl", "shadow-lg shadow-gold/25")}
+            >
+              Get Complete Seerah
+              <ArrowRight className="w-5 h-5" />
+            </Link>
           </div>
         </div>
       </section>
@@ -243,15 +253,21 @@ export default async function PricingPage() {
               </thead>
               <tbody>
                 {[
-                  { feature: "Primary Goal", essentials: "Follow the story", complete: "Master and explain the story" },
-                  { feature: "Lessons", essentials: "56 core lessons", complete: "100-part full program" },
-                  { feature: "Videos", essentials: <CheckCircle2 className="w-5 h-5 text-text-muted mx-auto" />, complete: <CheckCircle2 className="w-5 h-5 text-gold mx-auto" /> },
-                  { feature: "Quizzes", essentials: <CheckCircle2 className="w-5 h-5 text-text-muted mx-auto" />, complete: <CheckCircle2 className="w-5 h-5 text-gold mx-auto" /> },
+                  { feature: "Primary Goal", essentials: "Follow the story", complete: "Master and retain the story" },
+                  { feature: "Seerah Parts", essentials: "All 100 parts", complete: "All 100 parts" },
+                  { feature: "Video Lessons", essentials: <CheckCircle2 className="w-5 h-5 text-text-muted mx-auto" />, complete: <CheckCircle2 className="w-5 h-5 text-gold mx-auto" /> },
+                  { feature: "Listen on the Go", essentials: <CheckCircle2 className="w-5 h-5 text-text-muted mx-auto" />, complete: <CheckCircle2 className="w-5 h-5 text-gold mx-auto" /> },
+                  { feature: "Briefings", essentials: <CheckCircle2 className="w-5 h-5 text-text-muted mx-auto" />, complete: <CheckCircle2 className="w-5 h-5 text-gold mx-auto" /> },
                   { feature: "Progress Tracking", essentials: <CheckCircle2 className="w-5 h-5 text-text-muted mx-auto" />, complete: <CheckCircle2 className="w-5 h-5 text-gold mx-auto" /> },
-                  { feature: "Retention Tools", essentials: "Quizzes only", complete: "Mind maps, flashcards, briefings" },
-                  { feature: "Teaching Assets", essentials: <X className="w-5 h-5 text-red-500/50 mx-auto" />, complete: "Slides and infographics included" },
-                  { feature: "Best For", essentials: "Casual learners", complete: "Parents, teachers, serious students" },
-                  { feature: "Outcome", essentials: "Know the Seerah", complete: "Remember, review, and explain the Seerah" },
+                  { feature: "Parent Reports", essentials: <CheckCircle2 className="w-5 h-5 text-text-muted mx-auto" />, complete: "Advanced reports" },
+                  { feature: "Slides & Infographics", essentials: <X className="w-5 h-5 text-red-500/50 mx-auto" />, complete: "3 formats each" },
+                  { feature: "Mind Maps", essentials: <X className="w-5 h-5 text-red-500/50 mx-auto" />, complete: <CheckCircle2 className="w-5 h-5 text-gold mx-auto" /> },
+                  { feature: "Flashcards", essentials: <X className="w-5 h-5 text-red-500/50 mx-auto" />, complete: "Easy/Medium/Hard" },
+                  { feature: "Quizzes", essentials: <X className="w-5 h-5 text-red-500/50 mx-auto" />, complete: <CheckCircle2 className="w-5 h-5 text-gold mx-auto" /> },
+                  { feature: "Study Guides & Reports", essentials: <X className="w-5 h-5 text-red-500/50 mx-auto" />, complete: <CheckCircle2 className="w-5 h-5 text-gold mx-auto" /> },
+                  { feature: "Statement of Facts", essentials: <X className="w-5 h-5 text-red-500/50 mx-auto" />, complete: <CheckCircle2 className="w-5 h-5 text-gold mx-auto" /> },
+                  { feature: "Certificate", essentials: <X className="w-5 h-5 text-red-500/50 mx-auto" />, complete: <CheckCircle2 className="w-5 h-5 text-gold mx-auto" /> },
+                  { feature: "Best For", essentials: "Personal learning", complete: "Mastery, teaching, families" },
                 ].map((row, idx) => (
                   <tr key={row.feature} className={idx % 2 === 0 ? "bg-surface/30" : ""}>
                     <td className="p-4 text-sm text-text-secondary border-b border-border font-medium">
@@ -403,7 +419,7 @@ export default async function PricingPage() {
             <div className="bg-surface border border-border rounded-xl p-6">
               <h3 className="text-base font-semibold text-text mb-2">What is the difference between Essentials and Complete?</h3>
               <p className="text-text-secondary text-sm leading-relaxed">
-                <strong className="text-text">Essentials</strong> gives you 56 core lessons to follow the Seerah story — good for casual learners. <strong className="text-text">Complete</strong> includes all 100 parts PLUS the full mastery system: mind maps, flashcards, briefings, slides, and infographics. Complete is built for retention, review, and teaching.
+                Both plans include all 100 Seerah parts. <strong className="text-text">Essentials</strong> gives you the core learning path: video lessons, Listen on the Go, and briefings. <strong className="text-text">Complete</strong> adds the full mastery system: slides, infographics, mind maps, flashcards, quizzes, study guides, reports, and teaching tools. Complete is built for retention, review, and teaching.
               </p>
             </div>
 
