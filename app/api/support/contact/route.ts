@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     // Send email to admin
     await resend.emails.send({
       from: "Seerah Support <noreply@themuslimman.com>",
-      to: "support@themuslimman.com", // Admin email
+      to: "themuslimman77@gmail.com", // Admin email
       replyTo: user.email,
       subject: `Support Request: ${subject}`,
       html: `
