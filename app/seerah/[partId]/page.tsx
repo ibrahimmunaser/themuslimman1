@@ -108,7 +108,7 @@ export default async function SeerahPartPage(props: Props) {
   let infStandard: string | null;
   let infBento: string | null;
   let hasMindmap: boolean;
-  let assetUrls: { videoUrl?: string; audioUrl?: string; mindmapUrl?: string };
+  let assetUrls: { videoUrl?: string | null; audioUrl?: string | null; mindmapUrl?: string | null };
 
   try {
     [
