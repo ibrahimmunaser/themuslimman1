@@ -45,7 +45,7 @@ export async function POST() {
     const weeklyStudyTime = Math.round((weeklyLessons * 0.5) * 10) / 10;
     
     // Check if there's any weekly activity
-    const hasWeeklyActivity = weeklyProgress.length > 0 || user.lastLoginAt && user.lastLoginAt >= oneWeekAgo;
+    const hasWeeklyActivity = weeklyProgress.length > 0;
     
     // Estimate total study time based on progress (rough estimate: 30min per completed lesson)
     const studyTimeHours = Math.round((completedLessons * 0.5) * 10) / 10; // rounded to 1 decimal
