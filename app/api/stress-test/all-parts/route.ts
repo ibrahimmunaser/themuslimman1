@@ -99,17 +99,17 @@ async function testPart(partNum: number): Promise<AssetTestResult> {
     assets: {
       video: {
         exists: !!videoAudioMindmap.result?.videoUrl,
-        url: videoAudioMindmap.result?.videoUrl,
+        url: videoAudioMindmap.result?.videoUrl ?? undefined,
         time: videoAudioMindmap.time,
       },
       audio: {
         exists: !!videoAudioMindmap.result?.audioUrl,
-        url: videoAudioMindmap.result?.audioUrl,
+        url: videoAudioMindmap.result?.audioUrl ?? undefined,
         time: videoAudioMindmap.time,
       },
       mindmap: {
         exists: !!videoAudioMindmap.result?.mindmapUrl || mindmap.result,
-        url: videoAudioMindmap.result?.mindmapUrl,
+        url: videoAudioMindmap.result?.mindmapUrl ?? undefined,
         time: Math.max(videoAudioMindmap.time, mindmap.time),
       },
       briefing: {
