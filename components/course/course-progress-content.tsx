@@ -6,6 +6,7 @@ interface CourseProgressContentProps {
   hasParentEmail?: boolean;
   parentEmail?: string;
   studentName?: string;
+  sendWeeklyReports?: boolean;
 }
 
 export function CourseProgressContent({ 
@@ -13,19 +14,19 @@ export function CourseProgressContent({
   hasParentEmail = false,
   parentEmail,
   studentName,
+  sendWeeklyReports = false,
 }: CourseProgressContentProps) {
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Send Progress Report Button */}
       {hasParentEmail && (
-        <div className="mb-8">
-          <SendProgressReportButton
-            userPlan={userPlan}
-            hasParentEmail={hasParentEmail}
-            parentEmail={parentEmail}
-            studentName={studentName}
-          />
-        </div>
+        <SendProgressReportButton
+          userPlan={userPlan}
+          hasParentEmail={hasParentEmail}
+          parentEmail={parentEmail}
+          studentName={studentName}
+          sendWeeklyReports={sendWeeklyReports}
+        />
       )}
 
       {/* Stats */}

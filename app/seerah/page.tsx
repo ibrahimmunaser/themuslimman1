@@ -560,6 +560,7 @@ export default async function LearnIndexPage() {
             hasParentEmail={!!user.parentEmail && user.parentEmailVerified}
             parentEmail={user.parentEmail || undefined}
             studentName={user.studentName || undefined}
+            sendWeeklyReports={user.sendWeeklyReports}
           />
         }
       />
