@@ -49,7 +49,7 @@ export function NavbarMobileMenu({ user, firstName }: NavbarMobileMenuProps) {
             Pricing
           </Link>
           <Link 
-            href="/help" 
+            href={user ? "/help" : "/contact"} 
             onClick={() => setOpen(false)} 
             className="text-sm text-text-secondary hover:text-text transition-colors"
           >

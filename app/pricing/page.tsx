@@ -150,10 +150,10 @@ export default async function PricingPage() {
                   </p>
                 </div>
                 <p className="text-sm text-gold font-medium mb-1">
-                  Founding Member Price · Lifetime access
+                  Founding Access Price · Lifetime access
                 </p>
                 <p className="text-xs text-text-secondary italic">
-                  Available for the first {PLANS.complete.foundingMemberLimit} students
+                  Early launch pricing — increases to $129 after launch
                 </p>
                 <p className="text-xs text-text-muted italic mt-3">
                   Understand, remember, review, and explain the Seerah with confidence
@@ -216,7 +216,7 @@ export default async function PricingPage() {
               Limited Early Access
             </h3>
             <p className="text-text-secondary leading-relaxed mb-6">
-              Complete Seerah is currently available for $79 during the early launch period. The regular price is planned to be $129 after launch. Get lifetime access now and help shape the course before the full public release.
+              Complete Seerah is currently available for $79 during early access. The regular price is planned to increase to $129 after launch. Get lifetime access now at the founding price.
             </p>
             <Link
               href="/signup-checkout?plan=complete"
@@ -266,7 +266,6 @@ export default async function PricingPage() {
                   { feature: "Quizzes", essentials: <X className="w-5 h-5 text-red-500/50 mx-auto" />, complete: <CheckCircle2 className="w-5 h-5 text-gold mx-auto" /> },
                   { feature: "Study Guides & Reports", essentials: <X className="w-5 h-5 text-red-500/50 mx-auto" />, complete: <CheckCircle2 className="w-5 h-5 text-gold mx-auto" /> },
                   { feature: "Statement of Facts", essentials: <X className="w-5 h-5 text-red-500/50 mx-auto" />, complete: <CheckCircle2 className="w-5 h-5 text-gold mx-auto" /> },
-                  { feature: "Certificate", essentials: <X className="w-5 h-5 text-red-500/50 mx-auto" />, complete: <CheckCircle2 className="w-5 h-5 text-gold mx-auto" /> },
                   { feature: "Best For", essentials: "Personal learning", complete: "Mastery, teaching, families" },
                 ].map((row, idx) => (
                   <tr key={row.feature} className={idx % 2 === 0 ? "bg-surface/30" : ""}>
@@ -452,9 +451,9 @@ export default async function PricingPage() {
             </div>
 
             <div className="bg-surface border border-border rounded-xl p-6">
-              <h3 className="text-base font-semibold text-text mb-2">What is the Founding Member price?</h3>
+              <h3 className="text-base font-semibold text-text mb-2">What is the Founding Access price?</h3>
               <p className="text-text-secondary text-sm leading-relaxed">
-                The first 500 students get Complete Seerah for $79 (regular price: $129). This is a one-time opportunity to lock in the lower price forever.
+                During early launch, Complete Seerah is available for $79. The regular price is planned to increase to $129 after launch. Early access students lock in the lower price permanently.
               </p>
             </div>
           </div>

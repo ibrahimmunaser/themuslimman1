@@ -1,4 +1,4 @@
-import { BookOpen, Clock, Award, TrendingUp, Video, Headphones, FileText, Image as ImageIcon, Map, Layers2, HelpCircle, GraduationCap } from "lucide-react";
+import { BookOpen, Clock, Award, TrendingUp, Video, Headphones, FileText, Image as ImageIcon, Map, Layers2, HelpCircle } from "lucide-react";
 
 interface CourseHomeContentProps {
   userPlan: "essentials" | "complete";
@@ -76,8 +76,8 @@ export function CourseHomeContent({
         <h2 className="text-xl font-bold text-text mb-4">What You Get in This Course</h2>
         <div className="grid md:grid-cols-2 gap-4">
           
-          {/* Available for All */}
-          <div className="p-5 rounded-xl border border-border bg-surface">
+          {/* Video — available to all plans */}
+          <div className="p-5 rounded-xl border border-gold/30 bg-gradient-to-br from-gold/10 to-gold/5">
             <div className="flex items-center gap-2 mb-3">
               <Video className="w-5 h-5 text-gold" />
               <h3 className="font-semibold text-text">Video Lessons</h3>
@@ -87,7 +87,8 @@ export function CourseHomeContent({
             </p>
           </div>
 
-          <div className="p-5 rounded-xl border border-border bg-surface">
+          {/* Listen on the Go — available to all plans */}
+          <div className="p-5 rounded-xl border border-gold/30 bg-gradient-to-br from-gold/10 to-gold/5">
             <div className="flex items-center gap-2 mb-3">
               <Headphones className="w-5 h-5 text-gold" />
               <h3 className="font-semibold text-text">Listen on the Go</h3>
@@ -97,7 +98,8 @@ export function CourseHomeContent({
             </p>
           </div>
 
-          <div className="p-5 rounded-xl border border-border bg-surface">
+          {/* Briefings — available to all plans */}
+          <div className="p-5 rounded-xl border border-gold/30 bg-gradient-to-br from-gold/10 to-gold/5">
             <div className="flex items-center gap-2 mb-3">
               <FileText className="w-5 h-5 text-gold" />
               <h3 className="font-semibold text-text">Briefings</h3>
@@ -107,7 +109,7 @@ export function CourseHomeContent({
             </p>
           </div>
 
-          {/* Complete Only Features */}
+          {/* Complete-only features */}
           {userPlan === "complete" && (
             <>
               <div className="p-5 rounded-xl border border-gold/30 bg-gradient-to-br from-gold/10 to-gold/5">
@@ -160,15 +162,6 @@ export function CourseHomeContent({
                 </p>
               </div>
 
-              <div className="p-5 rounded-xl border border-gold/30 bg-gradient-to-br from-gold/10 to-gold/5">
-                <div className="flex items-center gap-2 mb-3">
-                  <GraduationCap className="w-5 h-5 text-gold" />
-                  <h3 className="font-semibold text-text">Certificate</h3>
-                </div>
-                <p className="text-sm text-text-secondary">
-                  Official certificate upon course completion
-                </p>
-              </div>
             </>
           )}
         </div>

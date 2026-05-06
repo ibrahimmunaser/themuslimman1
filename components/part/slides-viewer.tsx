@@ -2,6 +2,75 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { ChevronLeft, ChevronRight, Layers, Maximize2, X } from "lucide-react";
+import Image from "next/image";
+
+/** Derive the pre-generated WebP URL from an R2 PNG URL (or return null for local paths). */
+function webpVariant(url: string, suffix: "-thumb" | "-medium"): string | null {
+  if (!url.startsWith("http")) return null; // local dev path — skip
+  return url.replace(/\.png$/i, `${suffix}.webp`);
+}
+
+/** Main slide image: tries pre-generated WebP, falls back to next/image on error. */
+function SlideImg({ src, fallback, alt, priority }: { src: string; fallback: string; alt: string; priority?: boolean }) {
+  const [useFallback, setUseFallback] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  // Reset on src change
+  useEffect(() => {
+    setLoaded(false);
+    setUseFallback(false);
+  }, [src]);
+
+  if (useFallback) {
+    return (
+      <Image
+        src={fallback}
+        alt={alt}
+        fill
+        className="object-contain"
+        sizes="(max-width: 1280px) 100vw, 1280px"
+        quality={85}
+        priority={priority}
+      />
+    );
+  }
+  return (
+    <>
+      {!loaded && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
+        </div>
+      )}
+      <img
+        src={src}
+        alt={alt}
+        // eslint-disable-next-line react/no-unknown-property
+        fetchPriority={priority ? "high" : "auto"}
+        className={`max-w-full max-h-full object-contain transition-opacity duration-200 ${loaded ? "opacity-100" : "opacity-0"}`}
+        onLoad={() => setLoaded(true)}
+        onError={() => setUseFallback(true)}
+      />
+    </>
+  );
+}
+
+/** Thumbnail image: tries pre-generated WebP, falls back to next/image on error. */
+function ThumbImg({ src, fallback, alt }: { src: string; fallback: string; alt: string }) {
+  const [useFallback, setUseFallback] = useState(false);
+  if (useFallback) {
+    return (
+      <Image src={fallback} alt={alt} fill className="object-cover" sizes="64px" quality={50} />
+    );
+  }
+  return (
+    <img
+      src={src}
+      alt={alt}
+      className="w-full h-full object-cover"
+      onError={() => setUseFallback(true)}
+    />
+  );
+}
 
 interface SlidesViewerProps {
   slides: string[];
@@ -24,7 +93,7 @@ export function SlidesViewer({ slides, title, type = "presented" }: SlidesViewer
     const strip = stripRef.current;
     if (!strip) return;
     const thumb = strip.querySelectorAll("button")[current] as HTMLElement | undefined;
-    thumb?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+    thumb?.scrollIntoView({ behavior: "auto", block: "nearest", inline: "nearest" });
   }, [current]);
 
   useEffect(() => {
@@ -53,15 +122,6 @@ export function SlidesViewer({ slides, title, type = "presented" }: SlidesViewer
       </div>
     );
   }
-
-  // Preload next 3 and previous 2 slides for smooth navigation
-  const slidesToPreload = [
-    slides[current - 2],
-    slides[current - 1],
-    slides[current + 1],
-    slides[current + 2],
-    slides[current + 3],
-  ].filter(Boolean);
 
   return (
     <div
@@ -95,18 +155,38 @@ export function SlidesViewer({ slides, title, type = "presented" }: SlidesViewer
         onClick={!fullscreen ? () => setFullscreen(true) : undefined}
         title={!fullscreen ? "Click to enlarge" : undefined}
       >
-        {/* Current slide */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="relative w-full h-full">
-            <img
-              key={slides[current]}
-              src={slides[current]}
-              alt={`Slide ${current + 1}`}
-              className="w-full h-full object-contain"
-              loading="eager"
-            />
-          </div>
-        </div>
+        {/* Only render current ±2 slides */}
+        {slides.map((slide, idx) => {
+          const distance = Math.abs(idx - current);
+          if (distance > 2) return null;
+          const mediumUrl = webpVariant(slide, "-medium");
+          return (
+            <div
+              key={idx}
+              className="absolute inset-0 flex items-center justify-center transition-opacity duration-150"
+              style={{
+                opacity: idx === current ? 1 : 0,
+                pointerEvents: idx === current ? "auto" : "none",
+                zIndex: idx === current ? 1 : 0,
+              }}
+            >
+              {mediumUrl ? (
+                // Pre-generated WebP served directly from R2 CDN — near-instant
+                <SlideImg src={mediumUrl} fallback={slide} alt={`Slide ${idx + 1}`} priority={idx === current} />
+              ) : (
+                <Image
+                  src={slide}
+                  alt={`Slide ${idx + 1}`}
+                  fill
+                  className="object-contain"
+                  sizes="(max-width: 1280px) 100vw, 1280px"
+                  priority={idx === current}
+                  quality={85}
+                />
+              )}
+            </div>
+          );
+        })}
 
         {/* Click-to-enlarge hint overlay (only in non-fullscreen) */}
         {!fullscreen && (
@@ -117,13 +197,6 @@ export function SlidesViewer({ slides, title, type = "presented" }: SlidesViewer
             </div>
           </div>
         )}
-
-        {/* Hidden img tags to preload nearby slides */}
-        <div className="sr-only" aria-hidden="true">
-          {slidesToPreload.map((slide, idx) => (
-            <img key={`preload-${idx}`} src={slide} alt="" />
-          ))}
-        </div>
 
         {/* Nav arrows — stop propagation so they don't trigger the enlarge click */}
         <button
@@ -145,30 +218,33 @@ export function SlidesViewer({ slides, title, type = "presented" }: SlidesViewer
       {/* Thumbnail strip */}
       {slides.length > 1 && (
         <div ref={stripRef} className="pl-4 py-3 bg-ink/80 border-t border-border/50 flex gap-2 overflow-x-auto no-scrollbar flex-shrink-0">
-          {slides.map((slide, i) => (
-            <button
-              key={i}
-              onClick={() => setCurrent(i)}
-              className={`flex-shrink-0 w-16 h-10 rounded border overflow-hidden transition-all relative ${
-                i === current
-                  ? "border-gold ring-1 ring-gold/30"
-                  : "border-border/50 opacity-50 hover:opacity-100"
-              }`}
-            >
-              {Math.abs(i - current) <= 6 ? (
-                <img
-                  src={slide}
-                  alt={`Slide ${i + 1}`}
-                  className="w-full h-full object-cover"
-                  loading="lazy"
-                />
-              ) : (
-                <div className="w-full h-full bg-surface-raised flex items-center justify-center">
-                  <span className="text-[9px] text-text-muted">{i + 1}</span>
-                </div>
-              )}
-            </button>
-          ))}
+          {slides.map((slide, i) => {
+            const thumbUrl = webpVariant(slide, "-thumb");
+            return (
+              <button
+                key={i}
+                onClick={() => setCurrent(i)}
+                className={`flex-shrink-0 w-16 h-10 rounded border overflow-hidden transition-all relative ${
+                  i === current
+                    ? "border-gold ring-1 ring-gold/30"
+                    : "border-border/50 opacity-50 hover:opacity-100"
+                }`}
+              >
+                {thumbUrl ? (
+                  <ThumbImg src={thumbUrl} fallback={slide} alt={`Slide ${i + 1}`} />
+                ) : (
+                  <Image
+                    src={slide}
+                    alt={`Slide ${i + 1}`}
+                    fill
+                    className="object-cover"
+                    sizes="64px"
+                    quality={50}
+                  />
+                )}
+              </button>
+            );
+          })}
           <div className="flex-shrink-0 w-6" aria-hidden />
         </div>
       )}

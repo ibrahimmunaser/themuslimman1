@@ -35,9 +35,8 @@ export const PLANS = {
     id: "complete",
     name: "Complete Seerah",
     subtitle: "Full mastery system",
-    price: 7900, // $79.00 Founding Member Price
-    regularPrice: 12900, // $129.00 regular price
-    foundingMemberLimit: 500,
+    price: 7900, // $79.00 early access price
+    regularPrice: 12900, // $129.00 planned regular price
     features: [
       "Everything in Essentials",
       "All 100 parts with full resources",
@@ -49,7 +48,6 @@ export const PLANS = {
       "Study guides",
       "Reports and deep dives",
       "Statement of Facts",
-      "Certificate",
       "Teaching and review tools",
       "Advanced parent reports",
       "Lifetime access + all updates",

@@ -50,12 +50,9 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   
-  // Dynamic billing/upgrade link based on user plan
-  const billingHref = userPlan === "essentials" ? "/upgrade" : "/pricing";
-  
   const ACCOUNT_MENU: MenuItem[] = [
     ...ACCOUNT_MENU_BASE,
-    { id: "billing", label: "Billing / Upgrade", href: billingHref, icon: CreditCard },
+    { id: "billing", label: "Billing / Upgrade", href: "/billing", icon: CreditCard },
   ];
 
   const isActive = (href: string) => {

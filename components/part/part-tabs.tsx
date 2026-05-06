@@ -15,20 +15,21 @@ import {
   Layers,
   HelpCircle,
   Layers2,
+  Clock,
+  Lock,
 } from "lucide-react";
 import NextImage from "next/image";
-import { VideoPlayer } from "./video-player";
-import { ListenOnTheGo } from "./listen-on-the-go";
+import { LazyVideoPlayer } from "./lazy-video-player";
+import { LazyListenOnTheGo } from "./lazy-listen-on-the-go";
 import { TextViewer } from "./text-viewer";
 import { FactsViewer } from "./facts-viewer";
-import { MindmapViewer } from "./mindmap-viewer";
+import { LazyMindmapViewer } from "./lazy-mindmap-viewer";
 import { SlidesViewer } from "./slides-viewer";
 import { QuizViewer } from "./quiz-viewer";
 import { FlashcardsViewer } from "./flashcards-viewer";
 import { ResponsiveImage } from "@/components/ui/responsive-image";
 import type { Part } from "@/lib/types";
 import Link from "next/link";
-import { Lock } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -60,14 +61,6 @@ const MODES: Mode[] = [
     subTabs: [{ id: "video",       label: "Video",       icon: Video }],
   },
   {
-    id: "slides",      label: "Slides",      hint: "Slide decks",     icon: Layers,
-    subTabs: [{ id: "slides",      label: "Slides",      icon: Layers }],
-  },
-  {
-    id: "infographic", label: "Infographic", hint: "Visual summary",  icon: ImageIcon,
-    subTabs: [{ id: "infographic", label: "Infographic", icon: ImageIcon }],
-  },
-  {
     id: "read",        label: "Read",        hint: "Written content",  icon: BookOpen,
     subTabs: [
       { id: "briefing",    label: "Briefing",    icon: FileText },
@@ -75,6 +68,14 @@ const MODES: Mode[] = [
       { id: "facts",       label: "Facts",       icon: BarChart2 },
       { id: "report",      label: "Deep Dive",   icon: FileText },
     ],
+  },
+  {
+    id: "slides",      label: "Slides",      hint: "Slide decks",     icon: Layers,
+    subTabs: [{ id: "slides",      label: "Slides",      icon: Layers }],
+  },
+  {
+    id: "infographic", label: "Infographic", hint: "Visual summary",  icon: ImageIcon,
+    subTabs: [{ id: "infographic", label: "Infographic", icon: ImageIcon }],
   },
   {
     id: "mindmap",     label: "Mindmap",     hint: "Visual map",      icon: Map,
@@ -95,16 +96,16 @@ const MODES: Mode[] = [
 /**
  * Determines if a tab/subtab is accessible based on user's plan
  * PreviewMode: All tabs unlocked (for homepage demo)
- * Essentials: Only Watch (video+audio) and Briefing
+ * Essentials: Watch (video) + Read (briefing, study-guide, facts, report)
  * Complete: Everything
  */
 function isTabAccessible(id: SubTabId, userPlan: UserPlan, previewMode?: boolean): boolean {
   if (previewMode) return true;
   if (userPlan === "complete") return true;
   
-  // Essentials can ONLY access:
+  // Essentials: video and all read content
   if (userPlan === "essentials") {
-    return id === "video" || id === "briefing";
+    return id === "video" || id === "briefing" || id === "study-guide" || id === "facts" || id === "report";
   }
   
   return false;
@@ -125,7 +126,7 @@ function isModeAccessible(mode: Mode, userPlan: UserPlan, previewMode?: boolean)
 
 function subTabHasContent(id: SubTabId, part: Part): boolean {
   switch (id) {
-    case "video":       return !!part.assets.videoUrl;
+    case "video":       return part.assets.videoUrl !== undefined ? !!part.assets.videoUrl : true;
     case "briefing":    return !!part.assets.briefingText;
     case "study-guide": return !!part.assets.studyGuideText;
     case "facts":       return !!part.assets.statementOfFactsText;
@@ -137,7 +138,7 @@ function subTabHasContent(id: SubTabId, part: Part): boolean {
       part.assets.slides?.detailed.length ||
       part.assets.slides?.facts.length
     );
-    case "mindmap":     return !!part.assets.mindmapUrl;
+    case "mindmap":     return part.assets.mindmapUrl !== undefined ? !!part.assets.mindmapUrl : true;
     case "infographic": return !!(
       part.assets.infographics?.concise ||
       part.assets.infographics?.standard ||
@@ -197,9 +198,19 @@ function LockedContent({ featureName }: { featureName: string }) {
   );
 }
 
+/** Derive a pre-generated WebP URL from an R2 PNG URL. */
+function infographicWebp(url: string, suffix: "-medium" | "-large" | ""): string | null {
+  if (!url.startsWith("http")) return null;
+  return suffix === ""
+    ? url.replace(/\.png$/i, ".webp")
+    : url.replace(/\.png$/i, `${suffix}.webp`);
+}
+
 function InfographicPanel({ part }: { part: Part }) {
   const [style, setStyle] = useState<"concise" | "standard" | "bentoGrid">("standard");
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [useFallback, setUseFallback] = useState(false);
   const inf = part.assets.infographics;
   const styles = [
     { id: "concise"   as const, label: "Concise" },
@@ -207,20 +218,25 @@ function InfographicPanel({ part }: { part: Part }) {
     { id: "bentoGrid" as const, label: "Bento Grid" },
   ].filter((s) => inf?.[s.id]);
   const currentSrc = inf?.[style] ?? inf?.[styles[0]?.id];
+  const mediumSrc = currentSrc ? infographicWebp(currentSrc, "-medium") : null;
+  // Lightbox uses full-size WebP (same quality, ~95% smaller than PNG)
+  const lightboxSrc = currentSrc ? (infographicWebp(currentSrc, "") ?? currentSrc) : currentSrc;
   const altLabel = `Part ${part.partNumber} Infographic — ${style}`;
+
+  // Reset loading state when style changes
+  const handleStyleChange = (id: "concise" | "standard" | "bentoGrid") => {
+    setStyle(id);
+    setLoaded(false);
+    setUseFallback(false);
+  };
 
   return (
     <div className="space-y-4">
-      {/* Preload all infographic types for instant switching */}
-      {inf?.concise && inf.concise !== currentSrc && <link rel="prefetch" as="image" href={inf.concise} />}
-      {inf?.standard && inf.standard !== currentSrc && <link rel="prefetch" as="image" href={inf.standard} />}
-      {inf?.bentoGrid && inf.bentoGrid !== currentSrc && <link rel="prefetch" as="image" href={inf.bentoGrid} />}
-      
       {styles.length > 1 && (
         <div className="flex gap-2 mb-4 pl-4">
           {styles.map((s) => (
             <button
-              key={s.id} onClick={() => setStyle(s.id)}
+              key={s.id} onClick={() => handleStyleChange(s.id)}
               className={clsx(
                 "px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
                 style === s.id
@@ -234,21 +250,45 @@ function InfographicPanel({ part }: { part: Part }) {
       {currentSrc ? (
         <>
           <div
-            className="relative group rounded-xl border border-border/60 bg-surface overflow-hidden cursor-zoom-in"
+            className="relative group rounded-xl border border-border/60 bg-surface overflow-hidden cursor-zoom-in min-h-[200px]"
             onClick={() => setLightboxOpen(true)}
             title="Click to enlarge"
           >
-            {/* Direct image loading for faster switching */}
-            <NextImage
-              key={currentSrc}
-              src={currentSrc}
-              alt={altLabel}
-              width={1200}
-              height={675}
-              className="w-full h-auto rounded-lg"
-              priority
-              unoptimized
-            />
+            {/* Spinner while loading */}
+            {!loaded && (
+              <div className="absolute inset-0 flex items-center justify-center bg-surface">
+                <div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
+              </div>
+            )}
+
+            {useFallback || !mediumSrc ? (
+              /* Fallback: next/image on the raw URL */
+              <NextImage
+                key={currentSrc}
+                src={currentSrc}
+                alt={altLabel}
+                width={1200}
+                height={675}
+                className={`w-full h-auto rounded-lg transition-opacity duration-200 ${loaded ? "opacity-100" : "opacity-0"}`}
+                priority
+                unoptimized
+                onLoad={() => setLoaded(true)}
+              />
+            ) : (
+              /* Pre-generated medium WebP — direct from R2 CDN */
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={mediumSrc}
+                src={mediumSrc}
+                alt={altLabel}
+                // eslint-disable-next-line react/no-unknown-property
+                fetchPriority="high"
+                className={`w-full h-auto rounded-lg transition-opacity duration-200 ${loaded ? "opacity-100" : "opacity-0"}`}
+                onLoad={() => setLoaded(true)}
+                onError={() => { setUseFallback(true); setLoaded(false); }}
+              />
+            )}
+
             {/* Hover overlay */}
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-colors flex items-center justify-center pointer-events-none">
               <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/70 border border-white/15 text-white text-xs font-medium">
@@ -258,7 +298,7 @@ function InfographicPanel({ part }: { part: Part }) {
             </div>
           </div>
           <ImageLightbox
-            src={currentSrc}
+            src={lightboxSrc ?? currentSrc}
             alt={altLabel}
             isOpen={lightboxOpen}
             onClose={() => setLightboxOpen(false)}
@@ -317,34 +357,63 @@ function SubTabContent({ id, part }: { id: SubTabId; part: Part }) {
     case "video":
       return (
         <div className="space-y-4">
-          <VideoPlayer
-            src={part.assets.videoUrl}
+          <LazyVideoPlayer
+            partNumber={part.partNumber}
             title={part.title}
             poster={part.assets.slides?.presented[0]}
           />
-          <ListenOnTheGo
-            audioUrl={part.assets.audioUrl}
-            title={part.title}
+          <LazyListenOnTheGo
             partNumber={part.partNumber}
+            title={part.title}
           />
         </div>
       );
     case "briefing":
-      return wrap(part.assets.briefingText ? <TextViewer content={part.assets.briefingText} /> : <EmptyContent label="Briefing" />);
+      return wrap(part.assets.briefingText ? <TextViewer content={part.assets.briefingText} partNumber={part.partNumber} assetId="briefing" /> : <EmptyContent label="Briefing" />);
     case "study-guide":
-      return wrap(part.assets.studyGuideText ? <TextViewer content={part.assets.studyGuideText} /> : <EmptyContent label="Study Guide" />);
+      return wrap(part.assets.studyGuideText ? <TextViewer content={part.assets.studyGuideText} partNumber={part.partNumber} assetId="study_guide" /> : <EmptyContent label="Study Guide" />);
     case "facts":
       return wrap(part.assets.statementOfFactsText ? <FactsViewer content={part.assets.statementOfFactsText} /> : <EmptyContent label="Statement of Facts" />);
     case "report":
-      return wrap(part.assets.reportText ? <TextViewer content={part.assets.reportText} /> : <EmptyContent label="Deep Dive Report" />);
+      return wrap(part.assets.reportText ? <TextViewer content={part.assets.reportText} partNumber={part.partNumber} assetId="report" /> : <EmptyContent label="Deep Dive Report" />);
     case "flashcards":
       return wrap(part.assets.flashcards ? <FlashcardsViewer flashcards={part.assets.flashcards} /> : <EmptyContent label="Flashcards" />);
     case "quiz":
-      return wrap(part.assets.quiz ? <QuizViewer quiz={part.assets.quiz} /> : <EmptyContent label="Quiz" />);
+      return wrap(part.assets.quiz ? <QuizViewer quiz={part.assets.quiz} partNumber={part.partNumber} /> : <EmptyContent label="Quiz" />);
     case "slides":      return <SlidesPanel part={part} />;
-    case "mindmap":     return <MindmapViewer src={part.assets.mindmapUrl} title={`Part ${part.partNumber} — Mindmap`} />;
+    case "mindmap":     return <LazyMindmapViewer partNumber={part.partNumber} title={`Part ${part.partNumber} — Mindmap`} />;
     case "infographic": return <InfographicPanel part={part} />;
   }
+}
+
+
+// ─── Timeline button ──────────────────────────────────────────────────────────
+
+function TimelineButton({
+  partNumber,
+  era,
+}: {
+  partNumber: number;
+  era: string;
+}) {
+  return (
+    <Link
+      href={`/seerah/part-${partNumber}/timeline`}
+      className="group relative flex items-center gap-3 px-4 py-3.5 rounded-xl border flex-shrink-0 transition-all duration-200 text-left min-w-0 border-border bg-surface text-text-muted hover:border-gold/30 hover:bg-surface-raised hover:text-gold"
+    >
+      <div
+        className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors bg-surface-raised group-hover:bg-gold/10"
+      >
+        <Clock className="w-4 h-4" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-[13px] font-semibold leading-none">Timeline</p>
+        <p className="text-[10px] mt-0.5 leading-none opacity-55 hidden sm:block">
+          Where this fits
+        </p>
+      </div>
+    </Link>
+  );
 }
 
 // ─── Mode button ──────────────────────────────────────────────────────────────
@@ -489,6 +558,8 @@ export function PartTabs({ part, userPlan, previewMode = false }: PartTabsProps)
             />
           );
         })}
+        {/* Timeline — navigates to /seerah/part-[n]/timeline */}
+        <TimelineButton partNumber={part.partNumber} era={part.era} />
       </div>
 
       {/* ── Sub-tab bar (only when mode has multiple content items) ────── */}

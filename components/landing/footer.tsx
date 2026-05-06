@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CheckCircle2, Lock } from "lucide-react";
+import { Lock, CheckCircle2, ShieldCheck } from "lucide-react";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -17,11 +17,11 @@ export function Footer() {
               TheMuslimMan
             </Link>
             <p className="text-sm text-text-muted leading-relaxed mb-4">
-              Premium Islamic learning for the modern Muslim man. Clear, structured, and complete.
+              Structured Seerah learning for serious Muslim learners.
             </p>
             <div className="flex items-center gap-2 text-xs text-text-muted">
-              <CheckCircle2 className="w-3.5 h-3.5 text-success" />
-              <span>5,000+ Active Students</span>
+              <ShieldCheck className="w-3.5 h-3.5 text-text-muted" />
+              <span>Early Access Now Open</span>
             </div>
           </div>
 
@@ -30,9 +30,10 @@ export function Footer() {
             <h3 className="font-semibold text-text text-sm mb-4">Product</h3>
             <ul className="space-y-2.5">
               {[
-                { label: "What's Inside", href: "/#what-you-get" },
+                { label: "What's Inside", href: "/#preview" },
                 { label: "Pricing", href: "/#pricing" },
-                { label: "Get Started", href: "/get-started" },
+                { label: "Get Started", href: "/signup-checkout?plan=complete" },
+                { label: "Methodology", href: "/methodology" },
               ].map((link) => (
                 <li key={link.label}>
                   <Link
@@ -51,10 +52,10 @@ export function Footer() {
             <h3 className="font-semibold text-text text-sm mb-4">Support</h3>
             <ul className="space-y-2.5">
               {[
-                { label: "FAQ", href: "#" },
-                { label: "Contact Us", href: "#" },
-                { label: "Help Center", href: "#" },
-                { label: "System Requirements", href: "#" },
+                { label: "FAQ", href: "/#faq" },
+                { label: "Contact Us", href: "/contact" },
+                { label: "Help Center", href: "/contact" },
+                { label: "Refund Policy", href: "/refund" },
               ].map((link) => (
                 <li key={link.label}>
                   <Link
@@ -74,8 +75,8 @@ export function Footer() {
             <ul className="space-y-2.5">
               {[
                 { label: "Log In", href: "/login" },
-                { label: "Create Account", href: "/signup" },
-                { label: "Member Dashboard", href: "/dashboard" },
+                { label: "Create Account", href: "/signup-checkout?plan=complete" },
+                { label: "Member Dashboard", href: "/seerah" },
               ].map((link) => (
                 <li key={link.label}>
                   <Link
@@ -102,7 +103,7 @@ export function Footer() {
           </div>
           <div className="flex items-center gap-2 text-xs text-text-muted">
             <CheckCircle2 className="w-3.5 h-3.5 text-success" />
-            <span>30-Day Guarantee</span>
+            <span>7-Day Clarity Guarantee</span>
           </div>
           <div className="flex items-center gap-2 text-xs text-text-muted">
             <CheckCircle2 className="w-3.5 h-3.5 text-success" />
@@ -117,16 +118,22 @@ export function Footer() {
           </p>
           <div className="flex items-center gap-4">
             <Link
-              href="#"
+              href="/privacy"
               className="text-sm text-text-muted hover:text-text transition-colors"
             >
               Privacy
             </Link>
             <Link
-              href="#"
+              href="/terms"
               className="text-sm text-text-muted hover:text-text transition-colors"
             >
               Terms
+            </Link>
+            <Link
+              href="/refund"
+              className="text-sm text-text-muted hover:text-text transition-colors"
+            >
+              Refund Policy
             </Link>
             <a
               href="https://themuslimman.com"

@@ -321,10 +321,10 @@ export default async function LandingPage() {
                 <p className="text-gold text-sm font-medium mb-1">Complete Seerah</p>
                 <div className="flex items-baseline gap-2 mb-1">
                   <span className="text-4xl font-bold text-text">$79</span>
-                  <span className="text-text-muted text-sm">Founding Member Price</span>
+                  <span className="text-text-muted text-sm">Founding Access Price</span>
                 </div>
                 <p className="text-xs text-text-muted mb-3">
-                  Regular price $129 · Available for the first 500 students
+                  Regular price planned at $129 · Early launch pricing
                 </p>
               </div>
 
@@ -338,7 +338,6 @@ export default async function LandingPage() {
                   "Quizzes",
                   "Study guides & reports",
                   "Statement of Facts",
-                  "Certificate",
                   "Teaching tools",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-3 text-sm text-text">
@@ -381,7 +380,7 @@ export default async function LandingPage() {
               Limited Early Access
             </h2>
             <p className="text-text-secondary leading-relaxed mb-6 max-w-xl mx-auto">
-              Complete Seerah is currently available for $79 during the early launch period. The regular price is planned to be $129 after launch. Get lifetime access now and help shape the course before the full public release.
+              Complete Seerah is currently available for $79 during early access. The regular price is planned to increase to $129 after launch. Get lifetime access now at the founding price.
             </p>
             <Link
               href="/signup-checkout?plan=complete"
@@ -547,7 +546,7 @@ export default async function LandingPage() {
       {/* ============================================
           FAQ
       ============================================ */}
-      <section className="py-16 border-t border-border">
+      <section id="faq" className="py-16 border-t border-border">
         <div className="max-w-3xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-10">
             <h2 className="text-3xl sm:text-4xl font-bold mb-3">

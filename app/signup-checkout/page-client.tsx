@@ -299,6 +299,15 @@ function SignupCheckoutContent() {
                     Create Account & Continue
                     <ArrowRight className="w-4 h-4" />
                   </Button>
+
+                  <p className="text-xs text-text-muted text-center mt-3 leading-relaxed">
+                    By creating an account, you agree to our{" "}
+                    <Link href="/terms" className="underline hover:text-text-secondary transition-colors">Terms of Service</Link>
+                    {", "}
+                    <Link href="/privacy" className="underline hover:text-text-secondary transition-colors">Privacy Policy</Link>
+                    {", and "}
+                    <Link href="/refund" className="underline hover:text-text-secondary transition-colors">Refund Policy</Link>.
+                  </p>
                 </div>
 
                 <div className="mt-5 pt-4 border-t border-border text-center">

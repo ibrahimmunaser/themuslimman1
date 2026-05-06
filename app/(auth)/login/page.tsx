@@ -1,16 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, ShieldCheck, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { login } from "@/lib/auth";
 import { roleHome } from "@/lib/roles";
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnUrl = searchParams.get("redirect") || searchParams.get("from") || null;
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -23,17 +25,22 @@ export default function LoginPage() {
     try {
       const result = await login(form.email, form.password);
       if (result.success && result.role) {
-        // Check if user has purchase - redirect accordingly
-        if (result.role === "student") {
-          // For students, check purchase status
-          if (result.hasPurchase) {
-            router.push("/my-courses"); // Has purchase - go to my courses
-          } else {
-            router.push("/pricing"); // No purchase - go to pricing
-          }
+        // If there's a return URL, redirect there
+        if (returnUrl) {
+          router.push(returnUrl);
         } else {
-          // For admins, use role-based home
-          router.push(roleHome(result.role));
+          // Check if user has purchase - redirect accordingly
+          if (result.role === "student") {
+            // For students, check purchase status
+            if (result.hasPurchase) {
+              router.push("/my-courses"); // Has purchase - go to my courses
+            } else {
+              router.push("/pricing"); // No purchase - go to pricing
+            }
+          } else {
+            // For admins, use role-based home
+            router.push(roleHome(result.role));
+          }
         }
         router.refresh();
       } else {
@@ -132,5 +139,17 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
   );
 }

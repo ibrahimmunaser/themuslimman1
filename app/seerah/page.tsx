@@ -3,7 +3,7 @@ import Link from "next/link";
 import { requireStudent } from "@/lib/auth";
 import { PARTS } from "@/lib/content";
 import { ERA_MAP } from "@/lib/types";
-import { ChevronRight, ChevronDown, Play, CheckCircle2, BookOpen, Lock, Clock, Video, Headphones, FileText, Brain, ClipboardCheck, Info } from "lucide-react";
+import { ChevronRight, ChevronDown, Play, CheckCircle2, BookOpen, Lock, Clock, Video, FileText, Brain, ClipboardCheck } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { StudentLayout } from "@/components/student/student-layout";
 import { CourseDashboardTabs } from "@/components/course/course-dashboard-tabs";
@@ -43,11 +43,27 @@ export default async function LearnIndexPage() {
     redirect("/pricing");
   }
 
-  // Get progress (for now, mock data - will be real once DB is updated)
   const progress = await getProgress(user.id);
-  const currentPart = progress.currentPart || 1;
-  const completedParts = progress.completedParts || [];
-  const inProgressParts = progress.inProgressParts || [1];
+  const currentPart    = progress.currentPart    || 1;
+  const completedParts = progress.completedParts  || [];
+  const unlockedParts  = progress.unlockedParts   || [];
+  const inProgressParts = progress.inProgressParts || [];
+
+  // Per-part progress map for UI badges
+  const allPartProgress = await prisma.partProgress.findMany({
+    where: { userId: user.id },
+    select: {
+      partNumber:        true,
+      status:            true,
+      videoWatchPercent: true,
+      briefingOpened:    true,
+      quizPassed:        true,
+      quizBestScore:     true,
+    },
+  });
+  const progressMap = Object.fromEntries(
+    allPartProgress.map(p => [p.partNumber, p])
+  );
 
   // Show all parts (plan-locked parts are shown for upsell purposes)
   const accessibleParts = PARTS;
@@ -57,14 +73,10 @@ export default async function LearnIndexPage() {
   
   // Get actual progress for current part
   const currentPartProgressRecord = await prisma.partProgress.findUnique({
-    where: {
-      userId_partNumber: {
-        userId: user.id,
-        partNumber: currentPart
-      }
-    }
+    where: { userId_partNumber: { userId: user.id, partNumber: currentPart } },
+    select: { videoWatchPercent: true },
   });
-  const currentPartProgress = currentPartProgressRecord?.progressPercent || 0;
+  const currentPartProgress = currentPartProgressRecord?.videoWatchPercent || 0;
 
   // Calculate progress (include partial progress of current lesson)
   // Only count parts included in the user's plan
@@ -108,15 +120,25 @@ export default async function LearnIndexPage() {
 
     if (completedParts.includes(partNumber)) return "completed";
     if (inProgressParts.includes(partNumber)) return "in_progress";
-    
+
     // Not included in user's plan - plan locked
     if (!isIncludedInPlan) return "plan_locked";
-    
-    // Included in plan but need to complete previous lesson - progress locked
-    if (partNumber === currentPart + 1) return "next";
-    if (partNumber > currentPart + 1) return "progress_locked";
-    
-    return "available";
+
+    // Part 1 is always available
+    if (partNumber === 1) return "available";
+
+    // Included in plan — check if previous accessible part is unlocked
+    // Find the nearest previous part that is also in the user's plan
+    const prevAccessiblePart = PARTS
+      .filter(p => p.partNumber < partNumber && (userPlan === "complete" || p.includedInEssentials))
+      .at(-1);
+
+    if (!prevAccessiblePart) return "available"; // No predecessor → available
+
+    // Unlock gate: previous part needs video>=85% + briefing opened
+    if (unlockedParts.includes(prevAccessiblePart.partNumber)) return "available";
+
+    return "progress_locked";
   };
 
   // Get the previous required lesson number for progress locks
@@ -210,12 +232,6 @@ export default async function LearnIndexPage() {
                     <FileText className="w-4 h-4 text-amber-500" />
                     <span>Read the briefing</span>
                   </div>
-                  {userPlan === "essentials" && (
-                    <div className="flex items-center gap-2">
-                      <Headphones className="w-4 h-4 text-amber-500" />
-                      <span className="text-zinc-500">Optional: Listen on the Go</span>
-                    </div>
-                  )}
                   {userPlan === "complete" && (
                     <>
                       <div className="flex items-center gap-2">
@@ -268,10 +284,10 @@ export default async function LearnIndexPage() {
                 <div>
                   <p className="text-amber-400 font-semibold mb-2">Unlock the Full Mastery System</p>
                   <p className="text-zinc-300 text-sm mb-2">
-                    <span className="text-white font-medium">You have the 100-part video path.</span> Upgrade to Complete Seerah to unlock depth — mastery tools for deeper learning.
+                    <span className="text-white font-medium">You have all 100 video lessons.</span> Upgrade to Complete Seerah to unlock the full mastery toolkit for every lesson.
                   </p>
                   <p className="text-zinc-400 text-xs mb-3">
-                    Add slides, infographics, mind maps, flashcards, quizzes, reports, study guides, and statement of facts to every lesson.
+                    Unlock slides, infographics, mind maps, flashcards, quizzes, reports, study guides, and statement of facts for all 100 parts.
                   </p>
                   <ul className="space-y-1 text-xs text-zinc-400">
                     <li className="flex items-center gap-2">
@@ -389,8 +405,10 @@ export default async function LearnIndexPage() {
                     const isPlanLocked = status === "plan_locked";
                     const isCompleted = status === "completed";
                     const isInProgress = status === "in_progress";
-                    const isNext = status === "next";
                     const previousPart = isProgressLocked ? getPreviousRequiredPart(part.partNumber) : null;
+                    const pProgress = progressMap[part.partNumber];
+                    const dbStatus = pProgress?.status ?? "not_started";
+                    const isMastered = dbStatus === "mastered";
 
                     if (isProgressLocked || isPlanLocked) {
                       return (
@@ -423,7 +441,7 @@ export default async function LearnIndexPage() {
                             {/* Locked Message */}
                             {isProgressLocked ? (
                               <p className="text-xs text-zinc-500">
-                                🔒 {previousPart ? `Complete Part ${previousPart} to unlock` : "Complete the previous lesson to unlock"}
+                                🔒 {previousPart ? `Watch Part ${previousPart} (85%+) and read the briefing to unlock` : "Complete the previous lesson to unlock"}
                               </p>
                             ) : (
                               <div>
@@ -450,15 +468,17 @@ export default async function LearnIndexPage() {
                         <div className="flex items-center gap-4">
                           {/* Icon */}
                           <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                            isCompleted ? "bg-green-500/10 border border-green-500/20" :
-                            isInProgress ? "bg-amber-500/10 border border-amber-500/20" :
-                            isNext ? "bg-blue-500/10 border border-blue-500/20" :
+                            isMastered   ? "bg-yellow-500/15 border border-yellow-500/30" :
+                            isCompleted  ? "bg-green-500/10  border border-green-500/20"  :
+                            isInProgress ? "bg-amber-500/10  border border-amber-500/20"  :
                             "bg-zinc-800 border border-zinc-700"
                           }`}>
-                            {isCompleted ? (
+                            {isMastered ? (
+                              <span className="text-base">✦</span>
+                            ) : isCompleted ? (
                               <CheckCircle2 className="w-5 h-5 text-green-400" />
                             ) : (
-                              <Play className={`w-5 h-5 ${isInProgress || isNext ? "text-amber-500" : "text-zinc-500"}`} />
+                              <Play className={`w-5 h-5 ${isInProgress ? "text-amber-500" : "text-zinc-500"}`} />
                             )}
                           </div>
 
@@ -468,9 +488,14 @@ export default async function LearnIndexPage() {
                               <span className="text-xs font-medium text-amber-500">
                                 Part {part.partNumber}
                               </span>
-                              {isNext && (
-                                <span className="px-2 py-0.5 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-medium rounded">
-                                  Next
+                              {isMastered && (
+                                <span className="px-2 py-0.5 bg-yellow-500/10 border border-yellow-500/25 text-yellow-400 text-xs font-semibold rounded">
+                                  Mastered
+                                </span>
+                              )}
+                              {isCompleted && !isMastered && (
+                                <span className="px-2 py-0.5 bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium rounded">
+                                  Completed
                                 </span>
                               )}
                               {isInProgress && (
@@ -488,50 +513,28 @@ export default async function LearnIndexPage() {
                               </p>
                             )}
 
-                            {/* Assets */}
+                            {/* Progress indicators */}
                             <div className="flex items-center gap-3 text-xs text-zinc-400">
-                              {userPlan === "essentials" ? (
-                                <>
-                                  <div className="flex items-center gap-1">
-                                    <Video className="w-3.5 h-3.5 text-amber-500/70" />
-                                    <span>Video</span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <Headphones className="w-3.5 h-3.5 text-amber-500/70" />
-                                    <span>Listen</span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <FileText className="w-3.5 h-3.5 text-amber-500/70" />
-                                    <span>Briefing</span>
-                                  </div>
-                                </>
-                              ) : (
-                                <>
-                                  <div className="flex items-center gap-1">
-                                    <Video className="w-3.5 h-3.5 text-amber-500/70" />
-                                    <span>Video</span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <FileText className="w-3.5 h-3.5 text-amber-500/70" />
-                                    <span>Slides</span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <FileText className="w-3.5 h-3.5 text-amber-500/70" />
-                                    <span>Infographics</span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <BookOpen className="w-3.5 h-3.5 text-amber-500/70" />
-                                    <span>Reading</span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <Brain className="w-3.5 h-3.5 text-amber-500/70" />
-                                    <span>Flashcards</span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <ClipboardCheck className="w-3.5 h-3.5 text-amber-500/70" />
-                                    <span>Quiz</span>
-                                  </div>
-                                </>
+                              {/* Video */}
+                              <div className={`flex items-center gap-1 ${pProgress?.videoWatchPercent >= 85 ? "text-green-400" : ""}`}>
+                                <Video className="w-3.5 h-3.5" />
+                                <span>{pProgress?.videoWatchPercent > 0 ? `${pProgress.videoWatchPercent}%` : "Video"}</span>
+                              </div>
+                              {/* Briefing */}
+                              <div className={`flex items-center gap-1 ${pProgress?.briefingOpened ? "text-green-400" : ""}`}>
+                                <BookOpen className="w-3.5 h-3.5" />
+                                <span>Briefing{pProgress?.briefingOpened ? " ✓" : ""}</span>
+                              </div>
+                              {/* Quiz — Complete users only */}
+                              {userPlan === "complete" && (
+                                <div className={`flex items-center gap-1 ${pProgress?.quizPassed ? "text-green-400" : ""}`}>
+                                  <ClipboardCheck className="w-3.5 h-3.5" />
+                                  <span>
+                                    {pProgress?.quizBestScore != null
+                                      ? `Quiz ${pProgress.quizBestScore}%${pProgress.quizPassed ? " ✓" : ""}`
+                                      : "Quiz"}
+                                  </span>
+                                </div>
                               )}
                             </div>
                           </div>
@@ -596,25 +599,38 @@ function getEraDescription(era: string): string {
 async function getProgress(userId: string) {
   const partProgress = await prisma.partProgress.findMany({
     where: { userId },
-    orderBy: { partNumber: 'asc' }
+    orderBy: { partNumber: 'asc' },
+    select: {
+      partNumber:        true,
+      status:            true,
+      videoWatchPercent: true,
+      briefingOpened:    true,
+    },
   });
 
+  // A part is "unlocked-next" (can proceed past it) when video>=85% + briefing opened
+  // A part is "completed" per DB status field (set by recomputeAndSave server action)
   const completedParts = partProgress
-    .filter(p => p.status === 'completed')
+    .filter(p => p.status === 'completed' || p.status === 'mastered')
     .map(p => p.partNumber);
-  
-  const inProgressParts = partProgress
-    .filter(p => p.status === 'in_progress')
+
+  const unlockedParts = partProgress
+    .filter(p => p.videoWatchPercent >= 85 && p.briefingOpened)
     .map(p => p.partNumber);
-  
-  // Current part is the lowest in-progress part, or 1 if nothing started
-  const currentPart = inProgressParts.length > 0 
-    ? Math.min(...inProgressParts)
-    : (completedParts.length > 0 ? Math.max(...completedParts) + 1 : 1);
+
+  const startedParts = partProgress
+    .filter(p => p.status === 'started' || p.status === 'in_progress')
+    .map(p => p.partNumber);
+
+  // Current part: lowest started/in-progress part, else highest unlocked+1, else 1
+  const currentPart = startedParts.length > 0
+    ? Math.min(...startedParts)
+    : (unlockedParts.length > 0 ? Math.max(...unlockedParts) + 1 : 1);
 
   return {
     currentPart,
     completedParts,
-    inProgressParts,
+    unlockedParts, // video>=85 + briefing: used for unlock gate
+    inProgressParts: startedParts,
   };
 }

@@ -92,7 +92,6 @@ export default function UpgradePage() {
     "Quizzes for mastery",
     "Study guides & Reports",
     "Statement of Facts",
-    "Certificate",
     "Advanced parent reports",
   ];
 

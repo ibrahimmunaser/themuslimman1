@@ -13,7 +13,6 @@ import {
   mindmapExists,
   readQuiz,
   readFlashcards,
-  getPartAssetUrls,
 } from "@/lib/files";
 import { getR2AssetUrl, getR2PublicUrl } from "@/lib/r2";
 import {
@@ -28,6 +27,7 @@ import { PartTabs } from "@/components/part/part-tabs";
 import { prisma } from "@/lib/db";
 import { StudentLayout } from "@/components/student/student-layout";
 import { StudyTimeTracker } from "@/components/study-time-tracker";
+import { trackPartOpened } from "@/app/actions/progress";
 
 export const dynamic = "force-dynamic";
 
@@ -87,7 +87,10 @@ export default async function SeerahPartPage(props: Props) {
   }
 
   const n = partBase.partNumber;
-  
+
+  // Mark part as started (fire-and-forget — doesn't block rendering)
+  trackPartOpened(n).catch(() => {});
+
   console.log(`[Part ${n}] Loading content for ${partId}`);
   
   // Get user's progress for this part (will be implemented later)
@@ -108,7 +111,6 @@ export default async function SeerahPartPage(props: Props) {
   let infStandard: string | null;
   let infBento: string | null;
   let hasMindmap: boolean;
-  let assetUrls: { videoUrl?: string | null; audioUrl?: string | null; mindmapUrl?: string | null };
 
   try {
     [
@@ -125,7 +127,6 @@ export default async function SeerahPartPage(props: Props) {
       infStandard,
       infBento,
       hasMindmap,
-      assetUrls,
     ] = await Promise.all([
       readBriefing(n).catch(e => { console.error(`[Part ${n}] Briefing error:`, e); return null; }),
       readStatementOfFacts(n).catch(e => { console.error(`[Part ${n}] Facts error:`, e); return null; }),
@@ -140,7 +141,6 @@ export default async function SeerahPartPage(props: Props) {
       getInfographicFilename(n, "Standard").catch(e => { console.error(`[Part ${n}] Standard inf error:`, e); return null; }),
       getInfographicFilename(n, "Bento Grid").catch(e => { console.error(`[Part ${n}] Bento inf error:`, e); return null; }),
       mindmapExists(n).catch(e => { console.error(`[Part ${n}] Mindmap error:`, e); return false; }),
-      getPartAssetUrls(n).catch(e => { console.error(`[Part ${n}] Asset URLs error:`, e); return { videoUrl: undefined, audioUrl: undefined, mindmapUrl: undefined }; }),
     ]);
   } catch (error) {
     console.error(`[Part ${n}] Fatal error loading assets:`, error);
@@ -149,14 +149,10 @@ export default async function SeerahPartPage(props: Props) {
     slidesPresentedFiles = slidesDetailedFiles = slidesFactsFiles = [];
     infConcise = infStandard = infBento = null;
     hasMindmap = false;
-    assetUrls = { videoUrl: undefined, audioUrl: undefined, mindmapUrl: undefined };
   }
 
-  // Log asset URLs for debugging
-  console.log(`[Part ${n}] Asset URLs:`, {
-    video: assetUrls.videoUrl,
-    audio: assetUrls.audioUrl,
-    mindmap: assetUrls.mindmapUrl,
+  // Log asset info for debugging
+  console.log(`[Part ${n}] Assets loaded:`, {
     slideCounts: {
       presented: slidesPresentedFiles.length,
       detailed: slidesDetailedFiles.length,
@@ -169,6 +165,7 @@ export default async function SeerahPartPage(props: Props) {
       studyGuide: !!studyGuideText,
       report: !!reportText,
     },
+    hasMindmap,
   });
 
   // Slides are already URLs from getSlideFiles - use them directly
@@ -181,15 +178,13 @@ export default async function SeerahPartPage(props: Props) {
   const part = {
     ...partBase,
     assets: {
-      videoUrl: assetUrls.videoUrl ?? undefined,
-      audioUrl: assetUrls.audioUrl ?? undefined,
+      // Video/audio/mindmap URLs are now lazy-loaded client-side
       briefingText: briefingText ?? undefined,
       statementOfFactsText: statementOfFactsText ?? undefined,
       studyGuideText: studyGuideText ?? undefined,
       reportText: reportText ?? undefined,
       quiz: quizData ?? undefined,
       flashcards: flashcards ?? undefined,
-      mindmapUrl: assetUrls.mindmapUrl ?? undefined,
       infographics: {
         concise: infConcise
           ? (infConcise.includes("/") 
@@ -215,6 +210,15 @@ export default async function SeerahPartPage(props: Props) {
   const currentIndex = allParts.findIndex((p) => p.id === partId);
   const prevPart = currentIndex > 0 ? allParts[currentIndex - 1] : null;
   const nextPart = currentIndex < allParts.length - 1 ? allParts[currentIndex + 1] : null;
+
+  // Unlock next part only when this part's video ≥ 85% AND briefing opened
+  const thisPartProgress = await prisma.partProgress.findUnique({
+    where: { userId_partNumber: { userId: user.id, partNumber: partBase.partNumber } },
+    select: { videoWatchPercent: true, briefingOpened: true },
+  });
+  const isNextPartUnlocked =
+    (thisPartProgress?.videoWatchPercent ?? 0) >= 85 &&
+    (thisPartProgress?.briefingOpened ?? false);
 
   return (
     <StudentLayout userPlan={userPlan} userName={user.fullName}>
@@ -276,16 +280,28 @@ export default async function SeerahPartPage(props: Props) {
           )}
 
           {nextPart && (
-            <Link
-              href={`/seerah/${nextPart.id}`}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gold text-ink hover:bg-gold-light transition-all text-sm font-medium ml-auto"
-            >
-              <div className="text-right">
-                <p className="text-xs text-ink/70">Next</p>
-                <p className="text-ink font-medium">Part {nextPart.partNumber}</p>
+            isNextPartUnlocked ? (
+              <Link
+                href={`/seerah/${nextPart.id}`}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gold text-ink hover:bg-gold-light transition-all text-sm font-medium ml-auto"
+              >
+                <div className="text-right">
+                  <p className="text-xs text-ink/70">Next</p>
+                  <p className="text-ink font-medium">Part {nextPart.partNumber}</p>
+                </div>
+                <ChevronRight className="w-4 h-4" />
+              </Link>
+            ) : (
+              <div className="inline-flex items-center gap-3 px-4 py-2 rounded-lg bg-gold/20 border border-gold/40 ml-auto cursor-not-allowed">
+                <div className="text-right">
+                  <p className="text-xs text-gold/70">Next</p>
+                  <p className="text-gold font-medium">Part {nextPart.partNumber}</p>
+                </div>
+                <div className="w-7 h-7 rounded-lg bg-gold/20 border border-gold/50 flex items-center justify-center shadow-[0_0_8px_rgba(212,175,55,0.4)]">
+                  <Lock className="w-3.5 h-3.5 text-gold" />
+                </div>
               </div>
-              <ChevronRight className="w-4 h-4" />
-            </Link>
+            )
           )}
         </div>
       </div>

@@ -54,6 +54,20 @@ export async function GET(request: NextRequest) {
         const progressData = await prisma.partProgress.findMany({
           where: { userId: user.id },
           orderBy: { partNumber: "asc" },
+          select: {
+            partNumber:        true,
+            status:            true,
+            videoWatchPercent: true,
+            briefingOpened:    true,
+            quizBestScore:     true,
+            updatedAt:         true,
+            quizPassed:        true,
+            flashcardsReviewed:true,
+            startedAt:         true,
+            completedAt:       true,
+            masteredAt:        true,
+            lastAccessedAt:    true,
+          },
         });
 
         // Determine user plan

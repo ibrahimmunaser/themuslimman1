@@ -3,7 +3,8 @@ import { requireStudent } from "@/lib/auth";
 import { StudentLayout } from "@/components/student/student-layout";
 import { ParentEmailSettings } from "@/components/student/parent-email-settings";
 import { prisma } from "@/lib/db";
-import { User, Mail, Lock, Bell, Shield } from "lucide-react";
+import { User, Mail, Shield } from "lucide-react";
+import { ChangePasswordForm } from "@/components/student/change-password-form";
 
 export const metadata = { title: "Settings | Seerah Masterclass" };
 export const dynamic = "force-dynamic";
@@ -73,18 +74,11 @@ export default async function SettingsPage() {
               <Shield className="w-5 h-5 text-gold" />
               <h2 className="text-lg font-semibold text-text">Security</h2>
             </div>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-2">
-                  Password
-                </label>
-                <button
-                  disabled
-                  className="px-4 py-2 rounded-lg bg-surface-raised border border-border text-text-secondary cursor-not-allowed text-sm"
-                >
-                  Change Password (Coming Soon)
-                </button>
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-2">
+                Password
+              </label>
+              <ChangePasswordForm />
             </div>
           </div>
 

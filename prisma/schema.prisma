@@ -40,6 +40,7 @@ model User {
   timezone              String    @default("UTC")
   hasPaid               Boolean   @default(false)
   stripePaymentIntentId String?
+  stripeCustomerId      String?   @unique
   
   // Parent Progress Report Fields
   studentName             String?   // If course is for a child, this is the child's name
@@ -562,18 +563,44 @@ model Purchase {
   @@index([createdAt])
 }
 
-// Simple progress tracking for direct-to-consumer purchases
+// Progress tracking for direct-to-consumer purchases
 model PartProgress {
-  id              String    @id @default(cuid())
-  userId          String
-  partNumber      Int
-  status          String    @default("not_started") // not_started, in_progress, completed
-  progressPercent Int       @default(0)
-  lastAccessedAt  DateTime?
-  startedAt       DateTime?
-  completedAt     DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id         String @id @default(cuid())
+  userId     String
+  partNumber Int
+
+  // Computed status: not_started | started | completed | mastered
+  status String @default("not_started")
+
+  // ── Video ────────────────────────────────────────────────────
+  videoWatchPercent Int     @default(0) // highest percent reached (0-100)
+  videoCompleted    Boolean @default(false) // reached >= 85%
+
+  // ── Briefing ─────────────────────────────────────────────────
+  briefingOpened Boolean @default(false)
+
+  // ── Quiz (Complete users) ─────────────────────────────────────
+  quizAttempts   Int     @default(0)
+  quizCompleted  Boolean @default(false)
+  quizScore      Int?    // most recent score (0-100)
+  quizBestScore  Int?    // best score across all attempts
+  quizPassed     Boolean @default(false) // best score >= 80
+
+  // ── Flashcards ────────────────────────────────────────────────
+  flashcardsReviewed Boolean @default(false)
+
+  // ── Optional assets opened ────────────────────────────────────
+  // JSON array of asset IDs e.g. ["slides","mindmap","infographic","study_guide"]
+  openedAssets String @default("[]")
+
+  // ── Timestamps ───────────────────────────────────────────────
+  startedAt      DateTime?
+  completedAt    DateTime?
+  masteredAt     DateTime?
+  lastAccessedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

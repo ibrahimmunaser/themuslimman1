@@ -1,8 +1,14 @@
 "use client";
 
+import { useEffect } from "react";
+import { trackBriefingOpened, trackAssetOpened } from "@/app/actions/progress";
+
 interface TextViewerProps {
   content: string;
   className?: string;
+  partNumber?: number;
+  /** "briefing" triggers briefingOpened tracking; any other value tracks as optional asset */
+  assetId?: string;
 }
 
 function escapeHtml(s: string): string {
@@ -122,8 +128,19 @@ function formatText(raw: string): string {
   return html;
 }
 
-export function TextViewer({ content, className }: TextViewerProps) {
+export function TextViewer({ content, className, partNumber, assetId }: TextViewerProps) {
   const html = formatText(content);
+
+  useEffect(() => {
+    if (!partNumber) return;
+    if (assetId === "briefing") {
+      trackBriefingOpened(partNumber).catch(() => {});
+    } else if (assetId) {
+      trackAssetOpened(partNumber, assetId).catch(() => {});
+    }
+  // Run once on mount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div

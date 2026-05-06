@@ -37,7 +37,7 @@ export async function Navbar() {
             <Link href="/pricing" className="text-sm text-text-secondary hover:text-text transition-colors">
               Pricing
             </Link>
-            <Link href="/help" className="text-sm text-text-secondary hover:text-text transition-colors">
+            <Link href={user ? "/help" : "/contact"} className="text-sm text-text-secondary hover:text-text transition-colors">
               Help
             </Link>
             <NavbarUserMenu user={user} firstName={firstName} />

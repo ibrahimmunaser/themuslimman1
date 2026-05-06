@@ -2,20 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export async function POST(req: NextRequest) {
+  const resend = new Resend(process.env.RESEND_API_KEY);
   try {
-    const user = await getCurrentUser();
-    
-    if (!user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    const { subject, message } = await req.json();
+    const body = await req.json();
+    const { name: bodyName, email: bodyEmail, subject, message } = body;
 
     if (!subject || !message) {
       return NextResponse.json(
@@ -24,11 +15,24 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Send email to admin
+    // Use session user if logged in; otherwise fall back to body-supplied identity
+    const sessionUser = await getCurrentUser();
+
+    const senderName: string = sessionUser?.fullName ?? bodyName ?? "Anonymous";
+    const senderEmail: string = sessionUser?.email ?? bodyEmail ?? "no-email-provided";
+    const userId: string | null = sessionUser?.id ?? null;
+
+    if (!sessionUser && (!bodyEmail || !bodyEmail.includes("@"))) {
+      return NextResponse.json(
+        { error: "Please provide a valid email address" },
+        { status: 400 }
+      );
+    }
+
     await resend.emails.send({
-      from: "Seerah Support <noreply@themuslimman.com>",
-      to: "themuslimman77@gmail.com", // Admin email
-      replyTo: user.email,
+      from: process.env.EMAIL_FROM ?? "Seerah Support <noreply@themuslimman.com>",
+      to: process.env.SUPPORT_EMAIL ?? "themuslimman77@gmail.com",
+      replyTo: senderEmail,
       subject: `Support Request: ${subject}`,
       html: `
         <!DOCTYPE html>
@@ -42,8 +46,6 @@ export async function POST(req: NextRequest) {
               <tr>
                 <td align="center" style="padding: 40px 20px;">
                   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width: 600px; background-color: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px;">
-                    
-                    <!-- Header -->
                     <tr>
                       <td style="padding: 32px 32px 24px; border-bottom: 1px solid #2a2a2a;">
                         <h1 style="margin: 0; font-size: 24px; font-weight: bold; color: #d4af37;">
@@ -51,28 +53,21 @@ export async function POST(req: NextRequest) {
                         </h1>
                       </td>
                     </tr>
-
-                    <!-- Content -->
                     <tr>
                       <td style="padding: 24px 32px;">
-                        <!-- User Info -->
                         <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom: 24px;">
                           <tr>
                             <td style="padding: 16px; background-color: #0a0a0a; border: 1px solid #2a2a2a; border-radius: 8px;">
                               <p style="margin: 0 0 8px; font-size: 14px; color: #a3a3a3;">
-                                <strong style="color: #e5e5e5;">From:</strong> ${user.fullName}
+                                <strong style="color: #e5e5e5;">From:</strong> ${senderName}
                               </p>
                               <p style="margin: 0 0 8px; font-size: 14px; color: #a3a3a3;">
-                                <strong style="color: #e5e5e5;">Email:</strong> ${user.email}
+                                <strong style="color: #e5e5e5;">Email:</strong> ${senderEmail}
                               </p>
-                              <p style="margin: 0; font-size: 14px; color: #a3a3a3;">
-                                <strong style="color: #e5e5e5;">User ID:</strong> ${user.id}
-                              </p>
+                              ${userId ? `<p style="margin: 0; font-size: 14px; color: #a3a3a3;"><strong style="color: #e5e5e5;">User ID:</strong> ${userId}</p>` : '<p style="margin: 0; font-size: 14px; color: #a3a3a3;"><em>Pre-purchase visitor</em></p>'}
                             </td>
                           </tr>
                         </table>
-
-                        <!-- Subject -->
                         <div style="margin-bottom: 16px;">
                           <p style="margin: 0 0 8px; font-size: 12px; font-weight: 600; color: #d4af37; text-transform: uppercase; letter-spacing: 0.5px;">
                             Subject
@@ -81,8 +76,6 @@ export async function POST(req: NextRequest) {
                             ${subject}
                           </p>
                         </div>
-
-                        <!-- Message -->
                         <div>
                           <p style="margin: 0 0 8px; font-size: 12px; font-weight: 600; color: #d4af37; text-transform: uppercase; letter-spacing: 0.5px;">
                             Message
@@ -93,16 +86,13 @@ export async function POST(req: NextRequest) {
                         </div>
                       </td>
                     </tr>
-
-                    <!-- Footer -->
                     <tr>
                       <td style="padding: 24px 32px; border-top: 1px solid #2a2a2a; text-align: center;">
                         <p style="margin: 0; font-size: 12px; color: #737373;">
-                          Reply directly to this email to respond to the user
+                          Reply directly to this email to respond to the sender
                         </p>
                       </td>
                     </tr>
-
                   </table>
                 </td>
               </tr>

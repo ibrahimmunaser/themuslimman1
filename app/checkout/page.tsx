@@ -71,6 +71,15 @@ function CheckoutForm({ plan }: { plan: typeof PLANS[PlanId] }) {
       <p className="text-xs text-text-muted text-center">
         Secure payment powered by Stripe · Your information is encrypted
       </p>
+
+      <p className="text-xs text-text-muted text-center leading-relaxed">
+        By purchasing, you agree to our{" "}
+        <a href="/terms" className="underline hover:text-text-secondary transition-colors">Terms of Service</a>
+        {", "}
+        <a href="/privacy" className="underline hover:text-text-secondary transition-colors">Privacy Policy</a>
+        {", and "}
+        <a href="/refund" className="underline hover:text-text-secondary transition-colors">Refund Policy</a>.
+      </p>
     </form>
   );
 }

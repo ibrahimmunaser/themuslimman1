@@ -23,9 +23,9 @@ const nextConfig: NextConfig = {
     // Large slides/infographics — allow up to 100MB source files
     dangerouslyAllowSVG: false,
     // Serve modern formats
-    formats: ["image/webp"],
-    // Let ETag headers control revalidation rather than a fixed TTL
-    minimumCacheTTL: 0,
+    formats: ["image/webp", "image/avif"],
+    // Cache optimized images for 30 days — slides/infographics never change
+    minimumCacheTTL: 60 * 60 * 24 * 30,
     // Reasonable device sizes for slide viewing
     deviceSizes: [640, 828, 1080, 1200, 1920],
     imageSizes: [64, 128, 256, 512],

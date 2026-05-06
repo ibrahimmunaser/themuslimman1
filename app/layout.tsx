@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { Toaster } from "sonner";
+import { Analytics } from "@vercel/analytics/next";
 import { ServiceWorkerRegistration } from "@/components/service-worker";
 import "./globals.css";
 
@@ -44,11 +45,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${geist.variable} h-full`} data-scroll-behavior="smooth">
+    <html lang="en" className={`${geist.variable} h-full`} data-scroll-behavior="smooth" suppressHydrationWarning>
       <body className="min-h-full bg-ink text-text antialiased">
         <ServiceWorkerRegistration />
         {children}
         <Toaster position="bottom-right" richColors theme="dark" />
+        <Analytics />
       </body>
     </html>
   );

@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { clsx } from "clsx";
 import { CheckCircle2, XCircle, ChevronRight, RotateCcw, Trophy, Tag } from "lucide-react";
 import type { Quiz, QuizQuestion } from "@/lib/types";
+import { trackQuizCompleted } from "@/app/actions/progress";
 
 interface QuizViewerProps {
   quiz: Quiz;
+  partNumber?: number;
 }
 
 type AnswerState = "unanswered" | "correct" | "wrong";
@@ -135,13 +137,22 @@ function ScoreScreen({
   results,
   total,
   onRetry,
+  partNumber,
 }: {
   results: QuestionResult[];
   total: number;
   onRetry: () => void;
+  partNumber?: number;
 }) {
   const score = results.filter((r) => r.correct).length;
-  const pct = Math.round((score / total) * 100);
+  const pct   = Math.round((score / total) * 100);
+
+  useEffect(() => {
+    if (partNumber) {
+      trackQuizCompleted(partNumber, pct).catch(() => {});
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const grade =
     pct === 100 ? { label: "Perfect!", color: "text-gold" } :
@@ -204,7 +215,7 @@ function ScoreScreen({
   );
 }
 
-export function QuizViewer({ quiz }: QuizViewerProps) {
+export function QuizViewer({ quiz, partNumber }: QuizViewerProps) {
   const [current, setCurrent] = useState(0);
   const [results, setResults] = useState<QuestionResult[]>([]);
   const [pendingResult, setPendingResult] = useState<QuestionResult | null>(null);
@@ -240,6 +251,7 @@ export function QuizViewer({ quiz }: QuizViewerProps) {
         results={results}
         total={quiz.questions.length}
         onRetry={handleRetry}
+        partNumber={partNumber}
       />
     );
   }

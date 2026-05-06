@@ -121,12 +121,21 @@ export async function Part1FullPreview() {
       </div>
 
       {/* Call-to-Action */}
-      <div className="p-6 border-t border-border bg-surface-raised text-center">
-        <p className="text-sm text-text-secondary mb-3">
-          ✓ You just experienced the full Part 1 — the exact same format and quality as all 100 parts
+      <div className="p-8 border-t border-gold/20 bg-surface-raised text-center">
+        <p className="text-sm text-text-secondary mb-6">
+          You just experienced the full Part 1 — the exact same format and quality as all 100 parts.
         </p>
-        <p className="text-xs text-gold font-medium">
-          Want the full 100-part course? Choose your plan below.
+        <a
+          href="/signup-checkout?plan=complete"
+          className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-gold to-gold-light hover:from-gold-light hover:to-gold text-ink font-bold text-base shadow-lg shadow-gold/30 transition-all hover:shadow-gold/40 hover:scale-[1.02] active:scale-[0.99]"
+        >
+          Continue the Full Seerah — Get Complete Access for $79
+        </a>
+        <p className="text-sm text-text-muted mt-4 max-w-lg mx-auto leading-relaxed">
+          Unlock the full 100-part Seerah journey with videos, summaries, quizzes, flashcards, mind maps, and progress tracking.
+        </p>
+        <p className="text-xs text-text-muted mt-3">
+          7-Day Clarity Guarantee · Lifetime Access · Instant Unlock
         </p>
       </div>
     </div>
