@@ -32,7 +32,7 @@ function FastImage({ src, alt, className, style, onClick, title, onLoad, imageRe
   onClick?: (e: React.MouseEvent) => void;
   title?: string;
   onLoad?: () => void;
-  imageRef?: React.RefObject<HTMLImageElement>;
+  imageRef?: React.RefObject<HTMLImageElement | null>;
   isPreloaded?: boolean;
 }) {
   const [loaded, setLoaded] = useState(isPreloaded || false);

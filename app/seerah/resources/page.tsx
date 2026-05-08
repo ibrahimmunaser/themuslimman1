@@ -35,6 +35,9 @@ export default async function SeerahResourcesPage() {
       videoCompleted: true,
       openedAssets: true,
       quizCompleted: true,
+      quizPassed: true,
+      quizBestScore: true,
+      quizAttempts: true,
       status: true,
     },
   });
@@ -79,6 +82,21 @@ export default async function SeerahResourcesPage() {
 
   // Quiz stats
   const quizCompletedCount = progress.filter((p) => p.quizCompleted).length;
+  const quizPassedCount = progress.filter((p) => p.quizPassed).length;
+  const quizTotalAttempts = progress.reduce((sum, p) => sum + (p.quizAttempts || 0), 0);
+  const quizAvgScore = quizCompletedCount > 0
+    ? progress.reduce((sum, p) => sum + (p.quizBestScore || 0), 0) / quizCompletedCount
+    : 0;
+
+  // Progress map for quiz resource content
+  const quizProgressMap = Object.fromEntries(
+    progress.map(p => [p.partNumber, {
+      quizCompleted: p.quizCompleted || false,
+      quizBestScore: p.quizBestScore,
+      quizPassed: p.quizPassed || false,
+      quizAttempts: p.quizAttempts || 0,
+    }])
+  );
 
   // Asset progress maps
   const audioProgressMap = getAssetProgressMap("audio");
@@ -177,8 +195,11 @@ export default async function SeerahResourcesPage() {
         }
         quizzesContent={
           <QuizResourceContent
-            progressMap={progressMap}
+            progressMap={quizProgressMap}
             completedCount={quizCompletedCount}
+            passedCount={quizPassedCount}
+            avgScore={quizAvgScore}
+            totalAttempts={quizTotalAttempts}
           />
         }
         studyGuidesContent={

@@ -51,6 +51,7 @@ export default async function LearnIndexPage() {
       briefingOpened:     true,
       quizPassed:         true,
       quizBestScore:      true,
+      quizAttempts:       true,
       flashcardsReviewed: true,
       openedAssets:       true,
     },
@@ -95,6 +96,11 @@ export default async function LearnIndexPage() {
 
   // Quiz stats
   const quizCompletedCount = allPartProgress.filter((p) => p.quizPassed).length;
+  const quizPassedCount = quizCompletedCount;
+  const quizTotalAttempts = allPartProgress.reduce((sum, p) => sum + (p.quizAttempts || 0), 0);
+  const quizAvgScore = quizCompletedCount > 0
+    ? allPartProgress.reduce((sum, p) => sum + (p.quizBestScore || 0), 0) / quizCompletedCount
+    : 0;
 
   // Asset progress maps for resource tabs
   const audioProgressMap = getAssetProgressMap("audio");
@@ -132,12 +138,10 @@ export default async function LearnIndexPage() {
   // Progress map for quiz resource content
   const quizProgressMap = Object.fromEntries(
     allPartProgress.map(p => [p.partNumber, {
-      videoWatchPercent: p.videoWatchPercent,
-      videoCompleted: p.status === "completed" || p.videoWatchPercent >= 85,
       quizCompleted: p.quizPassed || false,
-      quizBestScore: p.quizBestScore || 0,
-      openedAssets: p.openedAssets,
-      status: p.status
+      quizBestScore: p.quizBestScore,
+      quizPassed: p.quizPassed || false,
+      quizAttempts: p.quizAttempts || 0,
     }])
   );
 
@@ -643,6 +647,9 @@ export default async function LearnIndexPage() {
               <QuizResourceContent
                 progressMap={quizProgressMap}
                 completedCount={quizCompletedCount}
+                passedCount={quizPassedCount}
+                avgScore={quizAvgScore}
+                totalAttempts={quizTotalAttempts}
               />
             }
             studyGuidesContent={
