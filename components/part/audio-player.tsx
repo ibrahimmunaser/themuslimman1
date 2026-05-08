@@ -2,12 +2,14 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Play, Pause, Volume2, VolumeX, SkipBack, SkipForward, Headphones, Gauge } from "lucide-react";
+import { trackAssetOpened } from "@/app/actions/progress";
 
 interface AudioPlayerProps {
   src?: string;
   title?: string;
   partNumber?: number;
   compact?: boolean;
+  previewMode?: boolean;
 }
 
 function formatTime(seconds: number): string {
@@ -19,7 +21,7 @@ function formatTime(seconds: number): string {
 
 const PLAYBACK_SPEEDS = [0.75, 1, 1.25, 1.5, 1.75, 2];
 
-export function AudioPlayer({ src, title, partNumber, compact = false }: AudioPlayerProps) {
+export function AudioPlayer({ src, title, partNumber, compact = false, previewMode = false }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(false);
@@ -28,6 +30,7 @@ export function AudioPlayer({ src, title, partNumber, compact = false }: AudioPl
   const [duration, setDuration] = useState(0);
   const [playbackRate, setPlaybackRate] = useState(1);
   const [showSpeedMenu, setShowSpeedMenu] = useState(false);
+  const [hasTrackedPlay, setHasTrackedPlay] = useState(false);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -36,6 +39,14 @@ export function AudioPlayer({ src, title, partNumber, compact = false }: AudioPl
     audio.addEventListener("loadedmetadata", onLoaded);
     return () => audio.removeEventListener("loadedmetadata", onLoaded);
   }, []);
+
+  // Track when audio starts playing for the first time
+  useEffect(() => {
+    if (playing && !hasTrackedPlay && partNumber && !previewMode) {
+      trackAssetOpened(partNumber, "audio").catch(() => {});
+      setHasTrackedPlay(true);
+    }
+  }, [playing, hasTrackedPlay, partNumber, previewMode]);
 
   // Close speed menu when clicking outside
   useEffect(() => {

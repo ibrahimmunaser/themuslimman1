@@ -418,26 +418,6 @@ export function PartTimeline({ partId, partNumber, era, userPlan }: Props) {
 
       </div>
 
-      {/* Essentials upsell — subtle, one line */}
-      {userPlan === "essentials" && (
-        <div
-          className="mt-3 flex items-center justify-between gap-4 px-5 py-3.5 rounded-xl border"
-          style={{ borderColor: "rgba(212,168,67,0.22)", background: "rgba(212,168,67,0.07)" }}
-        >
-          <div className="flex items-center gap-3">
-            <Lock className="w-3.5 h-3.5 text-yellow-400 flex-shrink-0" />
-            <p className="text-xs text-white/60">
-              Quizzes, flashcards, and mastery insights are available in Complete.
-            </p>
-          </div>
-          <Link
-            href="/pricing"
-            className="flex-shrink-0 text-[11px] font-bold text-yellow-400 hover:text-yellow-300 transition-colors"
-          >
-            Upgrade →
-          </Link>
-        </div>
-      )}
 
       <style>{`
         @keyframes pulse-glow {

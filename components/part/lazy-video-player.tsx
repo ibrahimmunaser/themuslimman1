@@ -8,9 +8,10 @@ interface LazyVideoPlayerProps {
   partNumber: number;
   title?: string;
   poster?: string;
+  previewMode?: boolean;
 }
 
-export function LazyVideoPlayer({ partNumber, title, poster }: LazyVideoPlayerProps) {
+export function LazyVideoPlayer({ partNumber, title, poster, previewMode }: LazyVideoPlayerProps) {
   const [videoUrl, setVideoUrl] = useState<string | undefined>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -74,6 +75,7 @@ export function LazyVideoPlayer({ partNumber, title, poster }: LazyVideoPlayerPr
       title={title}
       poster={poster}
       partNumber={partNumber}
+      previewMode={previewMode}
     />
   );
 }

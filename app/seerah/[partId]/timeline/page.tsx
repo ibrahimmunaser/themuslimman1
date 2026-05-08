@@ -30,16 +30,12 @@ export default async function TimelinePage(props: Props) {
   const partBase = getPartById(partId);
   if (!partBase) notFound();
 
-  const purchases = await prisma.purchase.findMany({
+  const purchase = await prisma.purchase.findFirst({
     where: { userId: user.id, status: "succeeded" },
-    orderBy: { createdAt: "desc" },
   });
-  if (purchases.length === 0) redirect("/pricing");
+  if (!purchase) redirect("/pricing");
 
-  const hasComplete = purchases.some((p) => p.planId === "complete");
-  const hasEssentials = purchases.some((p) => p.planId === "essentials");
-  const userPlan = hasComplete ? "complete" : hasEssentials ? "essentials" : null;
-  if (!userPlan) redirect("/pricing");
+  const userPlan = "complete" as const;
 
   // Get user's progress to check completion status
   const partProgress = await prisma.partProgress.findMany({
@@ -71,18 +67,9 @@ export default async function TimelinePage(props: Props) {
   const prevPart = currentIndex > 0 ? allParts[currentIndex - 1] : null;
   const nextPart = currentIndex < allParts.length - 1 ? allParts[currentIndex + 1] : null;
 
-  // Check access for next/previous parts
-  // Previous part: accessible if in user's plan (can always go back)
-  const isPrevPartAccessible = prevPart ? (
-    userPlan === "complete" || (userPlan === "essentials" && prevPart.includedInEssentials)
-  ) : false;
-
-  // Next part: accessible if in user's plan AND current part is completed
-  const isCurrentPartCompleted = completedParts.includes(partBase.partNumber);
-  const isNextPartAccessible = nextPart ? (
-    (userPlan === "complete" || (userPlan === "essentials" && nextPart.includedInEssentials)) &&
-    isCurrentPartCompleted
-  ) : false;
+  // All parts navigable — progress is a guide, not a gate
+  const isPrevPartAccessible = !!prevPart;
+  const isNextPartAccessible = !!nextPart;
 
   return (
     <StudentLayout userPlan={userPlan} userName={user.fullName}>
@@ -99,15 +86,6 @@ export default async function TimelinePage(props: Props) {
               Back to Lesson
             </Link>
             <div className="flex items-center gap-3">
-              {userPlan === "essentials" && (
-                <Link
-                  href="/pricing"
-                  className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-semibold px-3 py-1.5 rounded-full border border-yellow-400/40 text-yellow-400 hover:border-yellow-400/70 hover:bg-yellow-400/10 transition-all"
-                >
-                  <Lock className="w-3 h-3" />
-                  Unlock Mastery View
-                </Link>
-              )}
               <div
                 className="text-[11px] font-bold px-3 py-1.5 rounded-full border"
                 style={{ color: c, borderColor: `${c}60`, background: `${c}20` }}
@@ -536,11 +514,7 @@ export default async function TimelinePage(props: Props) {
                         </p>
                         <div className="flex items-center gap-2 text-[11px] font-semibold text-yellow-400/80 relative z-10">
                           <Lock className="w-3 h-3" />
-                          <span>
-                            {nextPart && (userPlan === "essentials" && !nextPart.includedInEssentials)
-                              ? "Complete plan required"
-                              : `Complete Part ${partBase.partNumber} to unlock`}
-                          </span>
+                          <span>Complete Part {partBase.partNumber} to continue</span>
                         </div>
                       </div>
                     )
@@ -752,42 +726,6 @@ export default async function TimelinePage(props: Props) {
           </div>
         </div>
 
-        {/* ── Essentials upsell ────────────────────────────────────────────── */}
-        {userPlan === "essentials" && (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
-            <div className="rounded-2xl border border-yellow-400/25 bg-gradient-to-br from-yellow-400/10 to-yellow-400/3 p-7 flex flex-col sm:flex-row items-start gap-5">
-              <div className="w-10 h-10 rounded-xl border border-yellow-400/35 bg-yellow-400/15 flex items-center justify-center flex-shrink-0">
-                <Lock className="w-4 h-4 text-yellow-400" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-bold text-white mb-1.5">
-                  Unlock Complete to add quizzes, flashcards, and mastery insights to this timeline.
-                </p>
-                <p className="text-xs text-white/55 mb-5 leading-relaxed">
-                  See quiz performance, flashcard retention, and recommended review assets for every lesson in your journey.
-                </p>
-                <div className="flex flex-wrap gap-2 mb-5">
-                  {["Quiz performance", "Flashcard review", "Weak areas", "Recommended assets"].map((item) => (
-                    <span
-                      key={item}
-                      className="flex items-center gap-1.5 text-[11px] text-white/55 px-3 py-1.5 rounded-full border border-yellow-400/20"
-                    >
-                      <Lock className="w-2.5 h-2.5 text-yellow-400/60" />
-                      {item}
-                    </span>
-                  ))}
-                </div>
-                <Link
-                  href="/pricing"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-yellow-400 hover:bg-yellow-300 text-black font-bold text-sm transition-all"
-                >
-                  Upgrade to Complete
-                  <ChevronRight className="w-4 h-4" />
-                </Link>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* ── Bottom navigation ─────────────────────────────────────────────── */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">

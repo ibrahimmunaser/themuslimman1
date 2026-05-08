@@ -49,17 +49,12 @@ export function CourseProgressContent({
 
       {/* Stats */}
       <div className="grid sm:grid-cols-4 gap-4 mb-8">
-        {(userPlan === "essentials" ? [
-          { icon: Target, label: "Lessons Watched", value: "0 / 100", color: "gold" },
-          { icon: TrendingUp, label: "Progress", value: "0%", color: "green" },
-          { icon: Clock, label: "Study Time", value: "0h", color: "blue" },
-          { icon: FileText, label: "Briefings Read", value: "0", color: "purple" },
-        ] : [
+        {[
           { icon: Target, label: "Lessons Completed", value: "0 / 100", color: "gold" },
           { icon: TrendingUp, label: "Progress", value: "0%", color: "green" },
           { icon: Clock, label: "Study Time", value: "0h", color: "blue" },
           { icon: Award, label: "Quiz Score", value: "0%", color: "purple" },
-        ]).map((stat) => {
+        ].map((stat) => {
           const Icon = stat.icon;
           return (
             <div key={stat.label} className="p-6 rounded-xl border border-zinc-800 bg-zinc-900/50">

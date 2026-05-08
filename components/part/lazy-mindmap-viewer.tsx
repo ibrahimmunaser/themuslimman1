@@ -2,13 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { MindmapViewer } from "./mindmap-viewer";
+import { trackAssetOpened } from "@/app/actions/progress";
 
 interface LazyMindmapViewerProps {
   partNumber: number;
   title: string;
+  previewMode?: boolean;
 }
 
-export function LazyMindmapViewer({ partNumber, title }: LazyMindmapViewerProps) {
+export function LazyMindmapViewer({ partNumber, title, previewMode }: LazyMindmapViewerProps) {
   const [mindmapUrl, setMindmapUrl] = useState<string | undefined>();
   const [loading, setLoading] = useState(true);
 
@@ -25,6 +27,11 @@ export function LazyMindmapViewer({ partNumber, title }: LazyMindmapViewerProps)
         if (mounted) {
           setMindmapUrl(data.mindmapUrl);
           setLoading(false);
+          
+          // Track when mindmap is loaded
+          if (!previewMode && data.mindmapUrl) {
+            trackAssetOpened(partNumber, "mindmap").catch(() => {});
+          }
         }
       } catch (err) {
         console.error("Error fetching mindmap URL:", err);
@@ -39,7 +46,7 @@ export function LazyMindmapViewer({ partNumber, title }: LazyMindmapViewerProps)
     return () => {
       mounted = false;
     };
-  }, [partNumber]);
+  }, [partNumber, previewMode]);
 
   if (loading) {
     return (

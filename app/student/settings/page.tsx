@@ -19,8 +19,7 @@ export default async function SettingsPage() {
 
   if (purchases.length === 0) redirect("/pricing");
 
-  const hasCompletePlan = purchases.some(p => p.planId === "complete");
-  const userPlan = hasCompletePlan ? "complete" : "essentials";
+  const userPlan = "complete" as const;
 
   return (
     <StudentLayout userPlan={userPlan} userName={user.fullName}>
@@ -101,22 +100,12 @@ export default async function SettingsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-text font-semibold capitalize mb-1">
-                  {userPlan === "complete" ? "Complete Seerah" : "Essentials Seerah"}
+                  Complete Seerah Early Access
                 </p>
                 <p className="text-text-secondary text-sm">
-                  {userPlan === "complete" 
-                    ? "Full access to all 100 parts and the complete mastery system"
-                    : "Access to all 100 video lessons, Listen on the Go, and briefings"}
+                  Full access to all 100 parts and the complete mastery system
                 </p>
               </div>
-              {userPlan === "essentials" && (
-                <a
-                  href="/pricing"
-                  className="px-4 py-2 rounded-lg bg-gold text-ink font-semibold hover:bg-gold/90 transition-colors"
-                >
-                  Upgrade
-                </a>
-              )}
             </div>
           </div>
         </div>

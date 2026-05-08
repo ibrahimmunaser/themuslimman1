@@ -18,7 +18,6 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
-  Sparkles,
   Menu,
   X,
 } from "lucide-react";
@@ -99,7 +98,7 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
             <div className="flex-1 min-w-0">
               <p className="text-xs font-semibold text-text truncate">{userName}</p>
               <span className="inline-block px-2 py-0.5 rounded text-[10px] font-semibold bg-gold/10 text-gold border border-gold/20 mt-1">
-                {userPlan === "complete" ? "Complete Plan" : "Essentials Plan"}
+                Complete Access
               </span>
             </div>
           )}
@@ -184,25 +183,6 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
           </button>
         </nav>
 
-        {/* Upgrade CTA for Essentials users */}
-        {userPlan === "essentials" && !collapsed && (
-          <div className="mx-2 mt-2 p-3 rounded-lg bg-gradient-to-b from-gold/15 to-gold/5 border border-gold/30">
-            <div className="flex items-center gap-2 mb-2">
-              <Sparkles className="w-4 h-4 text-gold flex-shrink-0" />
-              <h3 className="text-sm font-bold text-text">Upgrade to Complete</h3>
-            </div>
-            <p className="text-xs text-text-secondary leading-relaxed mb-3">
-              Unlock all 100 parts, mind maps, flashcards, slides, infographics, and expanded lessons.
-            </p>
-            <Link
-              href="/pricing"
-              onClick={() => setMobileOpen(false)}
-              className="w-full flex items-center justify-center px-3 py-2 rounded-lg bg-gold text-ink text-sm font-semibold hover:bg-gold/90 transition-colors"
-            >
-              Upgrade Now
-            </Link>
-          </div>
-        )}
       </div>
     </>
   );

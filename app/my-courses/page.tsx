@@ -32,29 +32,21 @@ export default async function MyCoursesPage() {
     redirect("/pricing");
   }
 
-  // Determine which plans the user has
-  const hasCompletePlan = purchases.some(p => p.planId === "complete");
-  const hasEssentialsPlan = purchases.some(p => p.planId === "essentials");
-  const userPlan = hasCompletePlan ? "complete" : hasEssentialsPlan ? "essentials" : null;
+  const userPlan = "complete" as const;
 
-  // Define available courses (structured for future expansion)
   const courses = [
     {
       id: "seerah",
-      title: userPlan === "complete" ? "Complete Seerah" : "Essentials Seerah",
-      description: userPlan === "complete" 
-        ? "Master the life of the Prophet ﷺ through the complete 100-part study system with slides, mind maps, flashcards, quizzes, and comprehensive review tools."
-        : "Learn the life of the Prophet ﷺ through 100 video lessons with Listen on the Go audio and briefings for each part.",
+      title: "Complete Seerah",
+      description: "Master the life of the Prophet ﷺ through the complete 100-part study system with videos, slides, mind maps, flashcards, quizzes, and comprehensive review tools.",
       link: "/seerah",
-      planType: userPlan,
       lessonCount: 100,
-      estimatedHours: userPlan === "complete" ? 40 : 30,
-      isComplete: userPlan === "complete",
+      estimatedHours: 40,
     },
   ];
 
   return (
-    <StudentLayout userPlan={userPlan || "essentials"} userName={user.fullName}>
+    <StudentLayout userPlan={userPlan} userName={user.fullName}>
       <div className="min-h-screen bg-[#0a0a0a]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Page Header */}
@@ -77,20 +69,11 @@ export default async function MyCoursesPage() {
               >
                 {/* Course Icon & Badge */}
                 <div className="flex items-start justify-between mb-5">
-                  <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${
-                    course.isComplete 
-                      ? "bg-gold/10 border-2 border-gold/30" 
-                      : "bg-blue-500/10 border-2 border-blue-500/30"
-                  }`}>
-                    <BookOpen className={`w-8 h-8 ${course.isComplete ? "text-gold" : "text-blue-400"}`} />
+                  <div className="w-16 h-16 rounded-xl flex items-center justify-center bg-gold/10 border-2 border-gold/30">
+                    <BookOpen className="w-8 h-8 text-gold" />
                   </div>
-                  
-                  <div className={`px-4 py-1.5 rounded-lg text-sm font-semibold ${
-                    course.isComplete
-                      ? "bg-gold/10 text-gold border border-gold/20"
-                      : "bg-blue-500/10 text-blue-400 border border-blue-500/20"
-                  }`}>
-                    {course.isComplete ? "Complete" : "Essentials"}
+                  <div className="px-4 py-1.5 rounded-lg text-sm font-semibold bg-gold/10 text-gold border border-gold/20">
+                    Complete Access
                   </div>
                 </div>
 
@@ -114,43 +97,19 @@ export default async function MyCoursesPage() {
                   </div>
                 </div>
 
-                {/* Features (conditional based on plan) */}
+                {/* Features */}
                 <div className="mb-6 space-y-2">
-                  {course.isComplete ? (
-                    <>
-                      <div className="flex items-center gap-2.5 text-sm text-text-secondary">
-                        <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
-                        <span>100 video lessons with audio</span>
-                      </div>
-                      <div className="flex items-center gap-2.5 text-sm text-text-secondary">
-                        <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
-                        <span>3 slide & 3 infographic formats</span>
-                      </div>
-                      <div className="flex items-center gap-2.5 text-sm text-text-secondary">
-                        <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
-                        <span>Mind maps & flashcards</span>
-                      </div>
-                      <div className="flex items-center gap-2.5 text-sm text-text-secondary">
-                        <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
-                        <span>Briefings, quizzes & study guides</span>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="flex items-center gap-2.5 text-sm text-text-secondary">
-                        <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
-                        <span>100 video lessons</span>
-                      </div>
-                      <div className="flex items-center gap-2.5 text-sm text-text-secondary">
-                        <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
-                        <span>Listen on the Go audio</span>
-                      </div>
-                      <div className="flex items-center gap-2.5 text-sm text-text-secondary">
-                        <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
-                        <span>Briefings for each part</span>
-                      </div>
-                    </>
-                  )}
+                  {[
+                    "100 video lessons with audio",
+                    "3 slide & 3 infographic formats",
+                    "Mind maps & flashcards",
+                    "Briefings, quizzes & study guides",
+                  ].map((f) => (
+                    <div key={f} className="flex items-center gap-2.5 text-sm text-text-secondary">
+                      <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
+                      <span>{f}</span>
+                    </div>
+                  ))}
                 </div>
 
                 {/* Continue Learning CTA */}

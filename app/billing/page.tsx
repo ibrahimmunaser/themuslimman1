@@ -7,7 +7,6 @@ import { CardManager } from "@/components/billing/card-manager";
 import {
   CreditCard,
   CheckCircle2,
-  Zap,
   ArrowRight,
   Receipt,
   ShieldCheck,
@@ -44,9 +43,8 @@ export default async function BillingPage() {
 
   if (purchases.length === 0) redirect("/pricing");
 
-  const hasComplete = purchases.some((p) => p.planId === "complete");
-  const userPlan = hasComplete ? "complete" : "essentials";
-  const plan = hasComplete ? PLANS.complete : PLANS.essentials;
+  const userPlan = "complete" as const;
+  const plan = PLANS.complete;
 
   return (
     <StudentLayout userPlan={userPlan} userName={user.fullName}>
@@ -61,24 +59,18 @@ export default async function BillingPage() {
         </div>
 
         {/* Current plan card */}
-        <div className={`rounded-2xl border p-6 ${hasComplete ? "border-gold/30 bg-gold/5" : "border-border bg-surface"}`}>
+        <div className="rounded-2xl border p-6 border-gold/30 bg-gold/5">
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${hasComplete ? "bg-gold/15" : "bg-surface-raised"}`}>
-                {hasComplete ? (
-                  <Star className="w-5 h-5 text-gold" />
-                ) : (
-                  <ShieldCheck className="w-5 h-5 text-text-secondary" />
-                )}
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-gold/15">
+                <Star className="w-5 h-5 text-gold" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
                   <p className="font-semibold text-text">{plan.name}</p>
-                  {hasComplete && (
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-gold/20 text-gold border border-gold/30">
-                      Active
-                    </span>
-                  )}
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-gold/20 text-gold border border-gold/30">
+                    Active
+                  </span>
                 </div>
                 <p className="text-sm text-text-secondary mt-0.5">{plan.subtitle}</p>
               </div>
@@ -98,30 +90,6 @@ export default async function BillingPage() {
               </div>
             ))}
           </div>
-
-          {/* Upgrade CTA for Essentials */}
-          {!hasComplete && (
-            <div className="mt-6 p-4 rounded-xl bg-gold/8 border border-gold/20">
-              <div className="flex items-center justify-between gap-4 flex-wrap">
-                <div>
-                  <p className="text-sm font-semibold text-text flex items-center gap-2">
-                    <Zap className="w-4 h-4 text-gold" />
-                    Upgrade to Complete Seerah
-                  </p>
-                  <p className="text-xs text-text-secondary mt-1">
-                    Add slides, infographics, mind maps, flashcards, quizzes, and more — just {formatPrice(PLANS.essentials.upgradePrice!)} more.
-                  </p>
-                </div>
-                <Link
-                  href="/upgrade"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gold hover:bg-gold-light text-ink text-sm font-semibold transition-all flex-shrink-0"
-                >
-                  Upgrade Now
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Card manager */}

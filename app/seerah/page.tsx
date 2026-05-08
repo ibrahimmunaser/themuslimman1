@@ -3,13 +3,18 @@ import Link from "next/link";
 import { requireStudent } from "@/lib/auth";
 import { PARTS } from "@/lib/content";
 import { ERA_MAP } from "@/lib/types";
-import { ChevronRight, ChevronDown, Play, CheckCircle2, BookOpen, Lock, Clock, Video, FileText, Brain, ClipboardCheck } from "lucide-react";
+import { ChevronRight, ChevronDown, Play, CheckCircle2, BookOpen, Clock, Video, FileText, Brain, ClipboardCheck, Headphones, Map, Image, Layers, BarChart2, GraduationCap } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { StudentLayout } from "@/components/student/student-layout";
 import { CourseDashboardTabs } from "@/components/course/course-dashboard-tabs";
 import { CourseHomeContent } from "@/components/course/course-home-content";
-import { CourseResourcesContent } from "@/components/course/course-resources-content";
 import { CourseProgressContent } from "@/components/course/course-progress-content";
+import { ResourcesTabs } from "@/components/resources/resources-tabs";
+import { VideoResourceContent } from "@/components/resources/video-resource-content";
+import { AudioResourceContent } from "@/components/resources/audio-resource-content";
+import { TextResourceContent } from "@/components/resources/text-resource-content";
+import { SimpleResourceContent } from "@/components/resources/simple-resource-content";
+import { QuizResourceContent } from "@/components/resources/quiz-resource-content";
 
 export const metadata = { title: "Seerah Masterclass" };
 export const dynamic = "force-dynamic";
@@ -19,29 +24,16 @@ export default async function LearnIndexPage() {
   const user = await requireStudent();
   if (!user.studentProfileId) redirect("/");
 
-  // Check user's purchases
-  const purchases = await prisma.purchase.findMany({
-    where: {
-      userId: user.id,
-      status: "succeeded",
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
+  // Any succeeded purchase grants full access
+  const purchase = await prisma.purchase.findFirst({
+    where: { userId: user.id, status: "succeeded" },
   });
 
-  if (purchases.length === 0) {
+  if (!purchase) {
     redirect("/pricing");
   }
 
-  // Get the highest tier plan purchased (complete > essentials)
-  const hasCompletePlan = purchases.some(p => p.planId === "complete");
-  const hasEssentialsPlan = purchases.some(p => p.planId === "essentials");
-  const userPlan = hasCompletePlan ? "complete" : hasEssentialsPlan ? "essentials" : null;
-
-  if (!userPlan) {
-    redirect("/pricing");
-  }
+  const userPlan = "complete" as const;
 
   const progress = await getProgress(user.id);
   const currentPart    = progress.currentPart    || 1;
@@ -53,16 +45,100 @@ export default async function LearnIndexPage() {
   const allPartProgress = await prisma.partProgress.findMany({
     where: { userId: user.id },
     select: {
-      partNumber:        true,
-      status:            true,
-      videoWatchPercent: true,
-      briefingOpened:    true,
-      quizPassed:        true,
-      quizBestScore:     true,
+      partNumber:         true,
+      status:             true,
+      videoWatchPercent:  true,
+      briefingOpened:     true,
+      quizPassed:         true,
+      quizBestScore:      true,
+      flashcardsReviewed: true,
+      openedAssets:       true,
     },
   });
   const progressMap = Object.fromEntries(
     allPartProgress.map(p => [p.partNumber, p])
+  );
+
+  // Helper functions for resource progress tracking
+  const getAssetProgressMap = (assetType: string) => {
+    return Object.fromEntries(
+      allPartProgress.map((p) => {
+        try {
+          const openedAssets = p.openedAssets ? JSON.parse(p.openedAssets as string) : [];
+          return [p.partNumber, openedAssets.includes(assetType)];
+        } catch {
+          return [p.partNumber, false];
+        }
+      })
+    );
+  };
+
+  const getAssetCompletedCount = (assetType: string) => {
+    return allPartProgress.filter((p) => {
+      try {
+        const openedAssets = p.openedAssets ? JSON.parse(p.openedAssets as string) : [];
+        return openedAssets.includes(assetType);
+      } catch {
+        return false;
+      }
+    }).length;
+  };
+
+  // Video stats for resource tabs
+  const videoCompletedCount = allPartProgress.filter((p) => p.status === "completed" || p.videoWatchPercent >= 85).length;
+  const videoInProgressCount = allPartProgress.filter(
+    (p) => p.videoWatchPercent > 0 && p.videoWatchPercent < 85 && p.status !== "completed"
+  ).length;
+  const videoContinueWatching = allPartProgress
+    .filter((p) => p.videoWatchPercent > 0 && p.videoWatchPercent < 85 && p.status !== "completed")
+    .sort((a, b) => b.videoWatchPercent - a.videoWatchPercent)[0];
+
+  // Quiz stats
+  const quizCompletedCount = allPartProgress.filter((p) => p.quizPassed).length;
+
+  // Asset progress maps for resource tabs
+  const audioProgressMap = getAssetProgressMap("audio");
+  const audioCompletedCount = getAssetCompletedCount("audio");
+
+  const slidesProgressMap = getAssetProgressMap("slides");
+  const slidesCompletedCount = getAssetCompletedCount("slides");
+
+  const infographicsProgressMap = getAssetProgressMap("infographic");
+  const infographicsCompletedCount = getAssetCompletedCount("infographic");
+
+  const mindmapsProgressMap = getAssetProgressMap("mindmap");
+  const mindmapsCompletedCount = getAssetCompletedCount("mindmap");
+
+  const flashcardsProgressMap = getAssetProgressMap("flashcard");
+  const flashcardsCompletedCount = getAssetCompletedCount("flashcard");
+
+  const briefingsProgressMap = getAssetProgressMap("briefing");
+  const briefingsCompletedCount = getAssetCompletedCount("briefing");
+
+  const studyGuidesProgressMap = getAssetProgressMap("study-guide");
+  const studyGuidesCompletedCount = getAssetCompletedCount("study-guide");
+
+  const factsProgressMap = getAssetProgressMap("statement-of-facts");
+  const factsCompletedCount = getAssetCompletedCount("statement-of-facts");
+
+  // Progress map for video resource content (needs videoCompleted)
+  const videoProgressMap = Object.fromEntries(
+    allPartProgress.map(p => [p.partNumber, {
+      videoWatchPercent: p.videoWatchPercent,
+      videoCompleted: p.status === "completed" || p.videoWatchPercent >= 85
+    }])
+  );
+
+  // Progress map for quiz resource content
+  const quizProgressMap = Object.fromEntries(
+    allPartProgress.map(p => [p.partNumber, {
+      videoWatchPercent: p.videoWatchPercent,
+      videoCompleted: p.status === "completed" || p.videoWatchPercent >= 85,
+      quizCompleted: p.quizPassed || false,
+      quizBestScore: p.quizBestScore || 0,
+      openedAssets: p.openedAssets,
+      status: p.status
+    }])
   );
 
   // Show all parts (plan-locked parts are shown for upsell purposes)
@@ -78,20 +154,14 @@ export default async function LearnIndexPage() {
   });
   const currentPartProgress = currentPartProgressRecord?.videoWatchPercent || 0;
 
-  // Calculate progress (include partial progress of current lesson)
-  // Only count parts included in the user's plan
-  const partsInPlan = accessibleParts.filter(p => userPlan === "complete" || p.includedInEssentials);
-  const totalParts = partsInPlan.length;
+  const totalParts = accessibleParts.length;
   const completedCount = completedParts.length;
   const partialProgress = currentPartProgress / 100; // Convert 60% to 0.6
   const totalProgress = completedCount + partialProgress;
   const progressPercentage = Math.round((totalProgress / totalParts) * 100);
 
-  // Group all parts by era (including plan-locked for upsell)
   const partsByEra = accessibleParts.reduce((acc, part) => {
     const era = ERA_MAP[part.era as keyof typeof ERA_MAP]?.label || part.era;
-    const isIncludedInUserPlan = userPlan === "complete" || part.includedInEssentials;
-    
     if (!acc[era]) {
       acc[era] = {
         label: era,
@@ -99,58 +169,21 @@ export default async function LearnIndexPage() {
         parts: [],
         completedCount: 0,
         totalCount: 0,
-        includedCount: 0,
       };
     }
     acc[era].parts.push(part);
     acc[era].totalCount++;
-    if (isIncludedInUserPlan) {
-      acc[era].includedCount++;
-      if (completedParts.includes(part.partNumber)) {
-        acc[era].completedCount++;
-      }
+    if (completedParts.includes(part.partNumber)) {
+      acc[era].completedCount++;
     }
     return acc;
-  }, {} as Record<string, { label: string; description: string; parts: typeof PARTS; completedCount: number; totalCount: number; includedCount: number }>);
+  }, {} as Record<string, { label: string; description: string; parts: typeof PARTS; completedCount: number; totalCount: number }>);
 
-  // Get part status with lock type distinction
+  // All parts are available for paid users — progress is a guide, not a gate
   const getPartStatus = (partNumber: number) => {
-    const part = PARTS.find(p => p.partNumber === partNumber);
-    const isIncludedInPlan = userPlan === "complete" || part?.includedInEssentials;
-
     if (completedParts.includes(partNumber)) return "completed";
     if (inProgressParts.includes(partNumber)) return "in_progress";
-
-    // Not included in user's plan - plan locked
-    if (!isIncludedInPlan) return "plan_locked";
-
-    // Part 1 is always available
-    if (partNumber === 1) return "available";
-
-    // Included in plan — check if previous accessible part is unlocked
-    // Find the nearest previous part that is also in the user's plan
-    const prevAccessiblePart = PARTS
-      .filter(p => p.partNumber < partNumber && (userPlan === "complete" || p.includedInEssentials))
-      .at(-1);
-
-    if (!prevAccessiblePart) return "available"; // No predecessor → available
-
-    // Unlock gate: previous part needs video>=85% + briefing opened
-    if (unlockedParts.includes(prevAccessiblePart.partNumber)) return "available";
-
-    return "progress_locked";
-  };
-
-  // Get the previous required lesson number for progress locks
-  const getPreviousRequiredPart = (partNumber: number) => {
-    // Find the previous part that is included in the user's plan
-    const allParts = PARTS.filter(p => {
-      if (userPlan === "complete") return p.partNumber < partNumber;
-      return p.includedInEssentials && p.partNumber < partNumber;
-    });
-    
-    if (allParts.length === 0) return null;
-    return allParts[allParts.length - 1].partNumber;
+    return "available";
   };
 
   // Get user's first name for header
@@ -169,17 +202,14 @@ export default async function LearnIndexPage() {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h1 className="text-3xl sm:text-4xl font-bold text-white">
-                  {userPlan === "complete" ? "Seerah Masterclass" : "The Life of the Prophet ﷺ"}
+                  Seerah Masterclass
                 </h1>
                 <p className="text-zinc-400 mt-2">
-                  {userPlan === "complete" 
-                    ? "Master the complete biography of Prophet Muhammad ﷺ through video lessons, quizzes, and interactive study tools"
-                    : "Learn the Prophet's ﷺ life in order, understand the lessons, and remember the major events with guided review"
-                  }
+                  Master the complete biography of Prophet Muhammad ﷺ through video lessons, quizzes, and interactive study tools
                 </p>
               </div>
               <div className="px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-sm font-medium whitespace-nowrap">
-                {userPlan === "complete" ? "Complete Access" : "Current Plan: Essentials"}
+                Complete Access
               </div>
             </div>
           </div>
@@ -211,7 +241,7 @@ export default async function LearnIndexPage() {
                 </div>
 
                 <Link 
-                  href={`/learn/part-${currentPart}`}
+                  href={`/seerah/part-${currentPart}`}
                   className="inline-flex items-center gap-2 px-6 py-3 bg-amber-500 hover:bg-amber-600 text-black font-semibold rounded-lg transition-colors"
                 >
                   <Play className="w-4 h-4" />
@@ -232,23 +262,19 @@ export default async function LearnIndexPage() {
                     <FileText className="w-4 h-4 text-amber-500" />
                     <span>Read the briefing</span>
                   </div>
-                  {userPlan === "complete" && (
-                    <>
-                      <div className="flex items-center gap-2">
-                        <Brain className="w-4 h-4 text-amber-500" />
-                        <span>Review flashcards</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <ClipboardCheck className="w-4 h-4 text-amber-500" />
-                        <span>Complete the quiz</span>
-                      </div>
-                    </>
-                  )}
+                  <div className="flex items-center gap-2">
+                    <Brain className="w-4 h-4 text-amber-500" />
+                    <span>Review flashcards</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <ClipboardCheck className="w-4 h-4 text-amber-500" />
+                    <span>Complete the quiz</span>
+                  </div>
                 </div>
                 <div className="mt-4 pt-3 border-t border-zinc-800">
                   <div className="flex items-center gap-2 text-sm">
                     <Clock className="w-4 h-4 text-zinc-500" />
-                    <span className="text-zinc-400">Estimated: <span className="text-white font-medium">{userPlan === "essentials" ? "10" : "25"} min</span></span>
+                    <span className="text-zinc-400">Estimated: <span className="text-white font-medium">25 min</span></span>
                   </div>
                 </div>
               </div>
@@ -277,49 +303,6 @@ export default async function LearnIndexPage() {
             </p>
           </div>
 
-          {/* Upgrade Banner for Essentials */}
-          {userPlan === "essentials" && (
-            <div className="mt-6 bg-gradient-to-br from-amber-500/5 to-amber-600/10 border border-amber-500/20 rounded-xl p-5">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-amber-400 font-semibold mb-2">Unlock the Full Mastery System</p>
-                  <p className="text-zinc-300 text-sm mb-2">
-                    <span className="text-white font-medium">You have all 100 video lessons.</span> Upgrade to Complete Seerah to unlock the full mastery toolkit for every lesson.
-                  </p>
-                  <p className="text-zinc-400 text-xs mb-3">
-                    Unlock slides, infographics, mind maps, flashcards, quizzes, reports, study guides, and statement of facts for all 100 parts.
-                  </p>
-                  <ul className="space-y-1 text-xs text-zinc-400">
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-amber-500" />
-                      3 slide formats & 3 infographic formats for teaching
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-amber-500" />
-                      Mind maps for visual learning & connections
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-amber-500" />
-                      Easy/Medium/Hard flashcards for retention
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-amber-500" />
-                      Quizzes, reports, study guides & statement of facts
-                    </li>
-                  </ul>
-                  <p className="text-amber-400 text-sm font-semibold mt-3">
-                    Upgrade for just $30
-                  </p>
-                </div>
-                <Link 
-                  href="/pricing"
-                  className="px-6 py-3 bg-amber-500 hover:bg-amber-600 text-black font-semibold rounded-lg transition-colors whitespace-nowrap flex-shrink-0"
-                >
-                  Upgrade Now
-                </Link>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
@@ -372,15 +355,9 @@ export default async function LearnIndexPage() {
                           </div>
                           <p className="text-sm text-zinc-400 mb-2">{era.description}</p>
                           <div className="flex items-center gap-4 text-xs text-zinc-500">
-                            <span>{era.includedCount} lessons</span>
-                            {userPlan === "essentials" && era.totalCount > era.includedCount && (
-                              <>
-                                <span>•</span>
-                                <span className="text-amber-500/70">{era.totalCount - era.includedCount} locked</span>
-                              </>
-                            )}
+                            <span>{era.totalCount} lessons</span>
                             <span>•</span>
-                            <span>{era.completedCount} of {era.includedCount} completed</span>
+                            <span>{era.completedCount} of {era.totalCount} completed</span>
                           </div>
                         </div>
                       </div>
@@ -388,7 +365,7 @@ export default async function LearnIndexPage() {
                       <div className="flex items-center gap-3">
                         <div className="text-right">
                           <div className="text-sm font-semibold text-white">
-                            {era.includedCount > 0 ? Math.round((era.completedCount / era.includedCount) * 100) : 0}%
+                            {era.totalCount > 0 ? Math.round((era.completedCount / era.totalCount) * 100) : 0}%
                           </div>
                         </div>
                         <ChevronDown className="w-5 h-5 text-zinc-500 group-open:rotate-180 transition-transform" />
@@ -401,68 +378,16 @@ export default async function LearnIndexPage() {
                 <div className="mt-3 ml-4 pl-4 border-l-2 border-zinc-800 space-y-2">
                   {era.parts.map((part) => {
                     const status = getPartStatus(part.partNumber);
-                    const isProgressLocked = status === "progress_locked";
-                    const isPlanLocked = status === "plan_locked";
                     const isCompleted = status === "completed";
                     const isInProgress = status === "in_progress";
-                    const previousPart = isProgressLocked ? getPreviousRequiredPart(part.partNumber) : null;
                     const pProgress = progressMap[part.partNumber];
                     const dbStatus = pProgress?.status ?? "not_started";
                     const isMastered = dbStatus === "mastered";
 
-                    if (isProgressLocked || isPlanLocked) {
-                      return (
-                        <div
-                          key={part.id}
-                          className="group block p-4 rounded-xl border transition-all bg-zinc-900/30 border-zinc-800/50 cursor-not-allowed"
-                        >
-                        <div className="flex items-center gap-4">
-                          {/* Icon */}
-                          <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-zinc-800 border border-zinc-700">
-                            <Lock className="w-5 h-5 text-zinc-600" />
-                          </div>
-
-                          {/* Content */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="text-xs font-medium text-zinc-600">
-                                Part {part.partNumber}
-                              </span>
-                            </div>
-                            <p className="font-medium mb-1 truncate text-zinc-600">
-                              {part.title}
-                            </p>
-                            {part.subtitle && (
-                              <p className="text-sm text-zinc-600 truncate mb-2">
-                                {part.subtitle}
-                              </p>
-                            )}
-
-                            {/* Locked Message */}
-                            {isProgressLocked ? (
-                              <p className="text-xs text-zinc-500">
-                                🔒 {previousPart ? `Watch Part ${previousPart} (85%+) and read the briefing to unlock` : "Complete the previous lesson to unlock"}
-                              </p>
-                            ) : (
-                              <div>
-                                <p className="text-xs text-amber-500/80 font-medium mb-0.5">
-                                  Complete Seerah Only
-                                </p>
-                                <p className="text-xs text-zinc-600">
-                                  Unlock Complete Seerah to access this lesson
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      );
-                    }
-
                     return (
                       <Link
                         key={part.id}
-                        href={`/learn/part-${part.partNumber}`}
+                        href={`/seerah/part-${part.partNumber}`}
                         className="group block p-4 rounded-xl border transition-all bg-zinc-900/50 border-zinc-800 hover:border-amber-500/30 hover:bg-zinc-900"
                       >
                         <div className="flex items-center gap-4">
@@ -514,28 +439,108 @@ export default async function LearnIndexPage() {
                             )}
 
                             {/* Progress indicators */}
-                            <div className="flex items-center gap-3 text-xs text-zinc-400">
+                            <div className="flex items-center gap-3 text-xs text-zinc-400 flex-wrap">
                               {/* Video */}
                               <div className={`flex items-center gap-1 ${pProgress?.videoWatchPercent >= 85 ? "text-green-400" : ""}`}>
                                 <Video className="w-3.5 h-3.5" />
-                                <span>{pProgress?.videoWatchPercent > 0 ? `${pProgress.videoWatchPercent}%` : "Video"}</span>
+                                <span>{pProgress?.videoWatchPercent > 0 ? `${pProgress.videoWatchPercent}%` : "—"}</span>
                               </div>
+                              {/* Audio */}
+                              {(() => {
+                                const opened = pProgress?.openedAssets ? JSON.parse(pProgress.openedAssets) : [];
+                                const hasAudio = opened.includes("audio");
+                                return (
+                                  <div className={`flex items-center gap-1 ${hasAudio ? "text-green-400" : ""}`}>
+                                    <Headphones className="w-3.5 h-3.5" />
+                                    <span>{hasAudio ? "✓" : "—"}</span>
+                                  </div>
+                                );
+                              })()}
                               {/* Briefing */}
                               <div className={`flex items-center gap-1 ${pProgress?.briefingOpened ? "text-green-400" : ""}`}>
-                                <BookOpen className="w-3.5 h-3.5" />
-                                <span>Briefing{pProgress?.briefingOpened ? " ✓" : ""}</span>
+                                <FileText className="w-3.5 h-3.5" />
+                                <span>{pProgress?.briefingOpened ? "✓" : "—"}</span>
                               </div>
-                              {/* Quiz — Complete users only */}
-                              {userPlan === "complete" && (
-                                <div className={`flex items-center gap-1 ${pProgress?.quizPassed ? "text-green-400" : ""}`}>
-                                  <ClipboardCheck className="w-3.5 h-3.5" />
-                                  <span>
-                                    {pProgress?.quizBestScore != null
-                                      ? `Quiz ${pProgress.quizBestScore}%${pProgress.quizPassed ? " ✓" : ""}`
-                                      : "Quiz"}
-                                  </span>
-                                </div>
-                              )}
+                              {/* Study Guide */}
+                              {(() => {
+                                const opened = pProgress?.openedAssets ? JSON.parse(pProgress.openedAssets) : [];
+                                const hasGuide = opened.includes("study_guide");
+                                return (
+                                  <div className={`flex items-center gap-1 ${hasGuide ? "text-green-400" : ""}`}>
+                                    <GraduationCap className="w-3.5 h-3.5" />
+                                    <span>{hasGuide ? "✓" : "—"}</span>
+                                  </div>
+                                );
+                              })()}
+                              {/* Facts */}
+                              {(() => {
+                                const opened = pProgress?.openedAssets ? JSON.parse(pProgress.openedAssets) : [];
+                                const hasFacts = opened.includes("facts");
+                                return (
+                                  <div className={`flex items-center gap-1 ${hasFacts ? "text-green-400" : ""}`}>
+                                    <BarChart2 className="w-3.5 h-3.5" />
+                                    <span>{hasFacts ? "✓" : "—"}</span>
+                                  </div>
+                                );
+                              })()}
+                              {/* Report */}
+                              {(() => {
+                                const opened = pProgress?.openedAssets ? JSON.parse(pProgress.openedAssets) : [];
+                                const hasReport = opened.includes("report");
+                                return (
+                                  <div className={`flex items-center gap-1 ${hasReport ? "text-green-400" : ""}`}>
+                                    <BookOpen className="w-3.5 h-3.5" />
+                                    <span>{hasReport ? "✓" : "—"}</span>
+                                  </div>
+                                );
+                              })()}
+                              {/* Slides */}
+                              {(() => {
+                                const opened = pProgress?.openedAssets ? JSON.parse(pProgress.openedAssets) : [];
+                                const hasSlides = opened.includes("slides");
+                                return (
+                                  <div className={`flex items-center gap-1 ${hasSlides ? "text-green-400" : ""}`}>
+                                    <Layers className="w-3.5 h-3.5" />
+                                    <span>{hasSlides ? "✓" : "—"}</span>
+                                  </div>
+                                );
+                              })()}
+                              {/* Mindmap */}
+                              {(() => {
+                                const opened = pProgress?.openedAssets ? JSON.parse(pProgress.openedAssets) : [];
+                                const hasMindmap = opened.includes("mindmap");
+                                return (
+                                  <div className={`flex items-center gap-1 ${hasMindmap ? "text-green-400" : ""}`}>
+                                    <Map className="w-3.5 h-3.5" />
+                                    <span>{hasMindmap ? "✓" : "—"}</span>
+                                  </div>
+                                );
+                              })()}
+                              {/* Infographic */}
+                              {(() => {
+                                const opened = pProgress?.openedAssets ? JSON.parse(pProgress.openedAssets) : [];
+                                const hasInfographic = opened.includes("infographic");
+                                return (
+                                  <div className={`flex items-center gap-1 ${hasInfographic ? "text-green-400" : ""}`}>
+                                    <Image className="w-3.5 h-3.5" />
+                                    <span>{hasInfographic ? "✓" : "—"}</span>
+                                  </div>
+                                );
+                              })()}
+                              {/* Flashcards */}
+                              <div className={`flex items-center gap-1 ${pProgress?.flashcardsReviewed ? "text-green-400" : ""}`}>
+                                <Brain className="w-3.5 h-3.5" />
+                                <span>{pProgress?.flashcardsReviewed ? "✓" : "—"}</span>
+                              </div>
+                              {/* Quiz */}
+                              <div className={`flex items-center gap-1 ${pProgress?.quizPassed ? "text-green-400" : ""}`}>
+                                <ClipboardCheck className="w-3.5 h-3.5" />
+                                <span>
+                                  {pProgress?.quizBestScore != null
+                                    ? `${pProgress.quizBestScore}%${pProgress.quizPassed ? " ✓" : ""}`
+                                    : "—"}
+                                </span>
+                              </div>
                             </div>
                           </div>
 
@@ -565,7 +570,101 @@ export default async function LearnIndexPage() {
           />
         }
         lessonsContent={lessonsContent}
-        resourcesContent={<CourseResourcesContent userPlan={userPlan} />}
+        resourcesContent={
+          <ResourcesTabs
+            videosContent={
+              <VideoResourceContent
+                progressMap={videoProgressMap}
+                completedCount={videoCompletedCount}
+                inProgressCount={videoInProgressCount}
+                continueWatching={videoContinueWatching}
+              />
+            }
+            audioContent={
+              <AudioResourceContent
+                progressMap={audioProgressMap}
+                completedCount={audioCompletedCount}
+              />
+            }
+            briefingsContent={
+              <TextResourceContent
+                title="Briefings"
+                description="Concise summaries of each lesson"
+                resourceType="briefing"
+                progressMap={briefingsProgressMap}
+                completedCount={briefingsCompletedCount}
+              />
+            }
+            slidesContent={
+              <SimpleResourceContent
+                title="Slides"
+                description="Professional presentation decks in three formats: Presented, Detailed, and Facts"
+                resourceType="slides"
+                progressMap={slidesProgressMap}
+                completedCount={slidesCompletedCount}
+                actionLabel="View"
+                statusLabel="Viewed"
+              />
+            }
+            infographicsContent={
+              <SimpleResourceContent
+                title="Infographics"
+                description="Visual summaries in three formats: Concise, Standard, and Bento Grid"
+                resourceType="infographic"
+                progressMap={infographicsProgressMap}
+                completedCount={infographicsCompletedCount}
+                actionLabel="View"
+                statusLabel="Viewed"
+              />
+            }
+            mindmapsContent={
+              <SimpleResourceContent
+                title="Mind Maps"
+                description="Visual mind maps connecting people, places, and events throughout the Seerah"
+                resourceType="mindmap"
+                progressMap={mindmapsProgressMap}
+                completedCount={mindmapsCompletedCount}
+                actionLabel="View"
+                statusLabel="Viewed"
+              />
+            }
+            flashcardsContent={
+              <SimpleResourceContent
+                title="Flashcards"
+                description="Interactive flashcards for spaced repetition learning across three difficulty levels"
+                resourceType="flashcard"
+                progressMap={flashcardsProgressMap}
+                completedCount={flashcardsCompletedCount}
+                actionLabel="Study"
+                statusLabel="Studied"
+              />
+            }
+            quizzesContent={
+              <QuizResourceContent
+                progressMap={quizProgressMap}
+                completedCount={quizCompletedCount}
+              />
+            }
+            studyGuidesContent={
+              <TextResourceContent
+                title="Study Guides"
+                description="Comprehensive study guides for each lesson"
+                resourceType="study-guide"
+                progressMap={studyGuidesProgressMap}
+                completedCount={studyGuidesCompletedCount}
+              />
+            }
+            factsContent={
+              <TextResourceContent
+                title="Facts"
+                description="Key facts and information from each lesson"
+                resourceType="statement-of-facts"
+                progressMap={factsProgressMap}
+                completedCount={factsCompletedCount}
+              />
+            }
+          />
+        }
         progressContent={
           <CourseProgressContent 
             userPlan={userPlan}

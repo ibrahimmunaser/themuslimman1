@@ -21,16 +21,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { planId } = await request.json();
+    const body = await request.json();
+    // Only "complete" is sold during early access — silently upgrade any other plan
+    const planId: PlanId = "complete";
 
-    if (!planId || !(planId in PLANS)) {
-      return NextResponse.json(
-        { error: "Invalid plan selected" },
-        { status: 400 }
-      );
-    }
-
-    const plan = PLANS[planId as PlanId];
+    const plan = PLANS[planId];
 
     // Create a payment intent
     const paymentIntent = await stripe.paymentIntents.create({

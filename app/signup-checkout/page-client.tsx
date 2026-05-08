@@ -11,7 +11,8 @@ import { PLANS, formatPrice, type PlanId } from "@/lib/stripe-config";
 function SignupCheckoutContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const planId = (searchParams.get("plan") || "complete") as PlanId;
+  // Only complete is sold during early access; normalize any other value
+  const planId: PlanId = "complete";
   const plan = PLANS[planId];
 
   const [showPassword, setShowPassword] = useState(false);

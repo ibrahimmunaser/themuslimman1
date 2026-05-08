@@ -19,7 +19,7 @@ export default async function CertificatePage() {
   if (purchases.length === 0) redirect("/pricing");
 
   const hasCompletePlan = purchases.some(p => p.planId === "complete");
-  const userPlan = hasCompletePlan ? "complete" : "essentials";
+  const userPlan = "complete" as const;
 
   const requiredLessons = userPlan === "complete" ? 100 : 75;
 
@@ -62,7 +62,7 @@ export default async function CertificatePage() {
                 <p className="text-4xl font-bold text-gold mb-8">{user.fullName}</p>
                 <p className="text-text-secondary mb-4">has successfully completed</p>
                 <p className="text-2xl font-semibold text-text mb-8">
-                  {userPlan === "complete" ? "Complete Seerah Masterclass" : "Essentials Seerah"}
+                  Complete Seerah Masterclass
                 </p>
                 <p className="text-text-muted text-sm">
                   {new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}

@@ -187,79 +187,35 @@ export default async function LandingPage() {
       </section>
 
       {/* ============================================
-          BOTH PLANS INCLUDE ALL 100 PARTS
-      ============================================ */}
-      <section className="py-16 border-t border-border">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-6">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              You are not buying an incomplete Seerah.
-            </h2>
-            <p className="text-lg text-text-secondary max-w-2xl mx-auto leading-relaxed">
-              Both plans include the full 100-part story. Complete adds the review, testing, and mastery tools.
-            </p>
-            <div className="mt-8 grid sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
-              <div className="p-6 rounded-xl border border-border bg-surface text-center">
-                <h3 className="font-bold text-text mb-2">Essentials</h3>
-                <p className="text-sm text-text-secondary">Watch the full Seerah story.</p>
-              </div>
-              <div className="p-6 rounded-xl border-2 border-gold/30 bg-gold/5 text-center">
-                <h3 className="font-bold text-gold mb-2">Complete</h3>
-                <p className="text-sm text-text-secondary">Study, review, test, and master the full Seerah story.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ============================================
-          WHICH PLAN SHOULD I CHOOSE
+          WHAT'S INCLUDED
       ============================================ */}
       <section className="py-16 border-t border-border bg-surface/30">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-10">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-3">
-              Which plan should I choose?
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+              You are getting the full Seerah.
             </h2>
+            <p className="text-lg text-text-secondary max-w-2xl mx-auto leading-relaxed">
+              One complete package. The full 100-part story, with everything you need to learn, review, and retain it.
+            </p>
           </div>
-
-          <div className="grid md:grid-cols-2 gap-8">
-            {/* Essentials */}
-            <div className="p-6 rounded-2xl border border-border bg-surface">
-              <h3 className="text-xl font-bold text-text mb-4">Choose Essentials if:</h3>
-              <ul className="space-y-3">
-                {[
-                  "You want the full 100-part Seerah story",
-                  "You prefer video and audio learning",
-                  "You want a simple, clear path",
-                  "You are mainly learning for yourself",
-                ].map((item) => (
-                  <li key={item} className="flex items-start gap-3 text-text-secondary">
-                    <CheckCircle2 className="w-5 h-5 text-gold flex-shrink-0 mt-0.5" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Complete Seerah */}
-            <div className="p-6 rounded-2xl border-2 border-gold bg-gradient-to-b from-gold/8 to-surface gold-glow">
-              <h3 className="text-xl font-bold text-text mb-4">Choose Complete if:</h3>
-              <ul className="space-y-3">
-                {[
-                  "You want to master and remember what you study",
-                  "You want mind maps, flashcards, and quizzes",
-                  "You want deeper study guides and reports",
-                  "You want to teach your family, children, students, or halaqah",
-                  "You want parent accountability reports",
-                ].map((item) => (
-                  <li key={item} className="flex items-start gap-3 text-text">
-                    <CheckCircle2 className="w-5 h-5 text-gold flex-shrink-0 mt-0.5" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
+            {[
+              { label: "All 100 video lessons" },
+              { label: "Summaries and briefings" },
+              { label: "Quizzes" },
+              { label: "Flashcards" },
+              { label: "Mind maps" },
+              { label: "Visual learning resources" },
+              { label: "Study guides and reports" },
+              { label: "Guided progress tracking" },
+              { label: "Lifetime access" },
+            ].map(({ label }) => (
+              <div key={label} className="flex items-center gap-3 p-4 rounded-xl border border-border bg-surface">
+                <CheckCircle2 className="w-5 h-5 text-gold flex-shrink-0" />
+                <span className="text-sm text-text">{label}</span>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -268,102 +224,66 @@ export default async function LandingPage() {
           PRICING
       ============================================ */}
       <section id="pricing" className="py-16 border-t border-border bg-surface/30">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-10">
             <h2 className="text-3xl sm:text-4xl font-bold mb-3">
-              Choose Your Plan
+              One offer. Full access.
             </h2>
             <p className="text-text-secondary max-w-lg mx-auto">
               One-time payment. Own it for life. No subscriptions.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6 mb-10">
-            {/* Essentials */}
-            <div className="relative p-6 rounded-2xl border border-border bg-surface flex flex-col">
-              <div className="mb-5">
-                <p className="text-text text-sm font-medium mb-1">Essentials Seerah</p>
-                <div className="flex items-baseline gap-2 mb-3">
-                  <span className="text-4xl font-bold text-text">$49</span>
-                </div>
-              </div>
-
-              <ul className="space-y-2.5 mb-6 flex-1">
-                {[
-                  "All 100 video lessons",
-                  "Listen on the Go",
-                  "Briefings",
-                  "Progress tracking",
-                  "Parent progress reports",
-                ].map((item) => (
-                  <li key={item} className="flex items-start gap-3 text-sm text-text">
-                    <CheckCircle2 className="w-5 h-5 text-gold flex-shrink-0 mt-0.5" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-
-              <Link
-                href="/signup-checkout?plan=essentials"
-                className={buttonClass("outline", "lg", "w-full justify-center")}
-              >
-                Start Essentials
-              </Link>
+          {/* Single Complete offer */}
+          <div className="relative p-8 rounded-2xl border-2 border-gold bg-gradient-to-b from-gold/8 to-surface flex flex-col gold-glow">
+            <div className="absolute -top-3 right-6 px-3 py-1 rounded-full bg-gold text-ink text-xs font-bold uppercase tracking-wide shadow-lg">
+              Early Access
             </div>
 
-            {/* Complete Seerah — BEST VALUE */}
-            <div className="relative p-6 rounded-2xl border-2 border-gold bg-gradient-to-b from-gold/8 to-surface flex flex-col gold-glow">
-              <div className="absolute -top-3 right-6 px-3 py-1 rounded-full bg-gold text-ink text-xs font-bold uppercase tracking-wide shadow-lg">
-                Best Value
-              </div>
-              
-              <div className="mb-5">
-                <p className="text-gold text-sm font-medium mb-1">Complete Seerah</p>
-                <div className="flex items-baseline gap-2 mb-1">
-                  <span className="text-4xl font-bold text-text">$79</span>
-                  <span className="text-text-muted text-sm">Founding Access Price</span>
+            <div className="mb-6">
+              <p className="text-gold text-sm font-semibold uppercase tracking-wider mb-2">Complete Seerah Early Access</p>
+              <div className="flex items-baseline gap-3 mb-2">
+                <span className="text-5xl font-bold text-text">$79</span>
+                <div>
+                  <p className="text-text-muted text-sm line-through">$129</p>
+                  <p className="text-xs text-gold">Early access price</p>
                 </div>
-                <p className="text-xs text-text-muted mb-3">
-                  Regular price planned at $129 · Early launch pricing
-                </p>
               </div>
-
-              <ul className="space-y-2.5 mb-7 flex-1">
-                {[
-                  "Everything in Essentials",
-                  "Slides (3 formats)",
-                  "Infographics (3 formats)",
-                  "Mind maps",
-                  "Flashcards",
-                  "Quizzes",
-                  "Study guides & reports",
-                  "Statement of Facts",
-                  "Teaching tools",
-                ].map((item) => (
-                  <li key={item} className="flex items-start gap-3 text-sm text-text">
-                    <CheckCircle2 className="w-5 h-5 text-gold flex-shrink-0 mt-0.5" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-
-              <Link
-                href="/signup-checkout?plan=complete"
-                className={buttonClass("primary", "lg", "w-full justify-center shadow-lg shadow-gold/20")}
-              >
-                Unlock Complete Seerah
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-
-              <p className="text-center text-xs text-text-muted mt-3">
-                Only $30 more than Essentials.
+              <p className="text-sm text-text-secondary">
+                Full access to the structured 100-part Seerah journey.
               </p>
             </div>
-          </div>
 
-          <div className="text-center">
-            <div className="inline-flex items-center gap-2 text-sm text-text-muted mb-2">
-              <Lock className="w-4 h-4" />
+            <ul className="space-y-2.5 mb-8 grid sm:grid-cols-2 gap-x-6">
+              {[
+                "All 100 Seerah parts",
+                "Video lessons",
+                "Summaries and briefings",
+                "Quizzes",
+                "Flashcards",
+                "Mind maps",
+                "Visual learning resources",
+                "Guided progress tracking",
+                "Lifetime access",
+                "7-Day Clarity Guarantee",
+              ].map((item) => (
+                <li key={item} className="flex items-start gap-3 text-sm text-text">
+                  <CheckCircle2 className="w-5 h-5 text-gold flex-shrink-0 mt-0.5" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+
+            <Link
+              href="/signup-checkout?plan=complete"
+              className={buttonClass("primary", "lg", "w-full justify-center shadow-lg shadow-gold/20")}
+            >
+              Get Complete Access
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+
+            <div className="mt-4 flex items-center justify-center gap-2 text-xs text-text-muted">
+              <Lock className="w-3.5 h-3.5" />
               <span>Secure payment · Instant access · Own it for life</span>
             </div>
           </div>
@@ -408,9 +328,9 @@ export default async function LandingPage() {
           </div>
 
           <div className="grid sm:grid-cols-2 gap-8 max-w-3xl mx-auto">
-            {/* Essentials Reports */}
+            {/* Progress Reports */}
             <div className="p-6 rounded-xl border border-border bg-surface">
-              <h3 className="font-bold text-text mb-4">Essentials Reports Include:</h3>
+              <h3 className="font-bold text-text mb-4">Progress Reports Include:</h3>
               <ul className="space-y-2.5">
                 {[
                   "Lessons watched",
@@ -427,9 +347,9 @@ export default async function LandingPage() {
               </ul>
             </div>
 
-            {/* Complete Reports */}
+            {/* Advanced Reports */}
             <div className="p-6 rounded-xl border-2 border-gold/30 bg-gold/5">
-              <h3 className="font-bold text-gold mb-4">Complete Reports Also Include:</h3>
+              <h3 className="font-bold text-gold mb-4">Reports Also Include:</h3>
               <ul className="space-y-2.5">
                 {[
                   "Quiz scores",
@@ -557,32 +477,28 @@ export default async function LandingPage() {
           <div className="space-y-4">
             {[
               {
-                q: "What is the difference between Essentials and Complete Seerah?",
-                a: "Both plans include all 100 Seerah parts. Essentials provides the core learning path with video lessons, Listen on the Go, and briefings. Complete Seerah adds the full mastery system: slides, infographics, mind maps, flashcards, quizzes, study guides, and teaching tools.",
+                q: "What does Complete Seerah Early Access include?",
+                a: "You get the full 100-part Seerah journey: video lessons, briefings, quizzes, flashcards, mind maps, visual resources, study guides, reports, and guided progress tracking.",
               },
               {
-                q: "Is Essentials a complete course?",
-                a: "Yes. Essentials gives you the complete Seerah story with all 100 video lessons. You can understand the life of the Prophet ﷺ from beginning to end with Essentials alone.",
-              },
-              {
-                q: "Can I upgrade later?",
-                a: "Yes. Essentials students can upgrade to Complete later and only pay the difference.",
-              },
-              {
-                q: "Do I only pay the difference if I upgrade?",
-                a: "Yes. If you own Essentials ($49) and want to upgrade to Complete, you only pay $30 more.",
+                q: "Is there only one plan?",
+                a: "Yes. During early access, we offer one complete package: Complete Seerah Early Access for $79. Full access from day one, no tiers.",
               },
               {
                 q: "Is the course self-paced?",
                 a: "Yes. You can learn at your own pace. Your progress is tracked, and you can continue where you left off at any time.",
               },
               {
+                q: "Can I access any part in any order?",
+                a: "Yes. Once you purchase, you can open any of the 100 parts directly. Progress tracking is a guide, not a gate.",
+              },
+              {
                 q: "Do I get lifetime access?",
-                a: "Yes. One-time payment. Own it for life. No subscriptions.",
+                a: "Yes. One-time payment. Own it for life. No subscriptions, no recurring charges.",
               },
               {
                 q: "Is this suitable for parents and teachers?",
-                a: "Yes. Complete Seerah includes slides, infographics, briefings, and mind maps designed for teaching your children, halaqah lessons, or classroom use.",
+                a: "Yes. The course includes slides, infographics, briefings, and mind maps designed for teaching your children, halaqah lessons, or classroom use.",
               },
               {
                 q: "What is included in the free preview?",
@@ -590,7 +506,7 @@ export default async function LandingPage() {
               },
               {
                 q: "What if I do not feel the course helps me?",
-                a: "We offer a 7-day refund guarantee. If you do not feel the Seerah is becoming clearer and more connected, email us for a refund.",
+                a: "We offer a 7-Day Clarity Guarantee. If you do not feel the Seerah is becoming clearer and more connected, email us within 7 days for a full refund.",
               },
             ].map((item) => (
               <div

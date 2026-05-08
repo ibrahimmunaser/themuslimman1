@@ -17,8 +17,7 @@ export default async function QuizzesPage() {
 
   if (purchases.length === 0) redirect("/pricing");
 
-  const hasCompletePlan = purchases.some(p => p.planId === "complete");
-  const userPlan = hasCompletePlan ? "complete" : "essentials";
+  const userPlan = "complete" as const;
 
   return (
     <StudentLayout userPlan={userPlan} userName={user.fullName}>

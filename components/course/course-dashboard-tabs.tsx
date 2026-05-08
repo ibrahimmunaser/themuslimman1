@@ -44,7 +44,7 @@ export function CourseDashboardTabs({
   return (
     <div>
       {/* Tab Navigation */}
-      <div className="border-b border-zinc-800 bg-zinc-900/50">
+      <div className="sticky top-0 z-50 border-b border-zinc-800 bg-zinc-900/95 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex gap-1">
             {TABS.map((tab) => {

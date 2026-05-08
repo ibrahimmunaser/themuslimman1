@@ -7,9 +7,10 @@ import { Headphones } from "lucide-react";
 interface LazyListenOnTheGoProps {
   partNumber: number;
   title?: string;
+  previewMode?: boolean;
 }
 
-export function LazyListenOnTheGo({ partNumber, title }: LazyListenOnTheGoProps) {
+export function LazyListenOnTheGo({ partNumber, title, previewMode }: LazyListenOnTheGoProps) {
   const [audioUrl, setAudioUrl] = useState<string | undefined>();
   const [loading, setLoading] = useState(true);
 
@@ -47,5 +48,5 @@ export function LazyListenOnTheGo({ partNumber, title }: LazyListenOnTheGoProps)
     return null;
   }
 
-  return <ListenOnTheGo audioUrl={audioUrl} title={title} partNumber={partNumber} />;
+  return <ListenOnTheGo audioUrl={audioUrl} title={title} partNumber={partNumber} previewMode={previewMode} />;
 }

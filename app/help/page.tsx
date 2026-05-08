@@ -20,8 +20,7 @@ export default async function HelpPage() {
     where: { userId: user.id, status: "succeeded" },
   });
 
-  const hasCompletePlan = purchases.some(p => p.planId === "complete");
-  const userPlan = purchases.length > 0 ? (hasCompletePlan ? "complete" : "essentials") : "essentials";
+  const userPlan = "complete" as const;
 
   const faqs = [
     {
@@ -33,12 +32,12 @@ export default async function HelpPage() {
           a: "After purchasing, you can access your course from the Dashboard or My Courses page. Simply click on the course card to start learning.",
         },
         {
-          q: "What's the difference between Essentials and Complete?",
-          a: "Essentials gives you all 100 video lessons, Listen on the Go audio, and briefings for each part. Complete adds depth with slides, infographics, mind maps, flashcards, quizzes, reports, study guides, and statement of facts.",
+          q: "What does Complete Seerah Early Access include?",
+          a: "You get the full 100-part Seerah journey: video lessons, briefings, quizzes, flashcards, mind maps, visual resources, study guides, reports, and guided progress tracking. Full access from day one.",
         },
         {
           q: "How are lessons structured?",
-          a: "Essentials lessons include a video, Listen on the Go audio, and a briefing. Complete users also get 3 slide formats, 3 infographic formats, mind maps, flashcards, quizzes, reports, study guides, and statement of facts.",
+          a: "Each part includes a video lesson, briefing, study guide, flashcards, quiz, mind map, slides, infographics, and reports — everything you need to learn, review, and retain each part.",
         },
       ],
     },
@@ -47,12 +46,8 @@ export default async function HelpPage() {
       icon: CreditCard,
       questions: [
         {
-          q: "Can I upgrade from Essentials to Complete?",
-          a: "Yes! You can upgrade anytime for just $30 (the price difference). Your progress will be preserved.",
-        },
-        {
           q: "Is this a subscription or one-time payment?",
-          a: "It's a one-time payment with lifetime access. No recurring charges.",
+          a: "It's a one-time payment with lifetime access. No recurring charges, no subscriptions.",
         },
         {
           q: "What's your refund policy?",
@@ -65,16 +60,12 @@ export default async function HelpPage() {
       icon: Lock,
       questions: [
         {
-          q: "Why are some lessons locked?",
-          a: "Lessons unlock sequentially as you complete previous ones. This helps you build knowledge in the correct order and prevents overwhelm.",
+          q: "Can I access parts in any order?",
+          a: "Yes. Once you purchase, you can open any of the 100 parts directly. Progress tracking is shown as a guide to help you, not as a gate.",
         },
         {
           q: "Can I access lessons on mobile?",
-          a: "Yes! The course is fully responsive and works on all devices including phones and tablets.",
-        },
-        {
-          q: "Do I need to complete lessons in order?",
-          a: "Yes. Lessons unlock sequentially as you progress. This helps you build knowledge in the correct chronological order of the Seerah.",
+          a: "Yes. The course is fully responsive and works on all devices including phones and tablets.",
         },
       ],
     },

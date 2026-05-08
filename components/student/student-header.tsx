@@ -27,7 +27,7 @@ export function StudentHeader({ userFirstName, userPlan }: StudentHeaderProps) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const showUpgrade = userPlan === "essentials";
+  const showUpgrade = false;
 
   return (
     <header className="sticky top-0 z-50 bg-[#0a0a0a] border-b border-zinc-800">

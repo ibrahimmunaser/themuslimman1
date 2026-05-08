@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { ChevronLeft, ChevronRight, Layers, Maximize2, X } from "lucide-react";
 import Image from "next/image";
+import { trackAssetOpened } from "@/app/actions/progress";
 
 /** Derive the pre-generated WebP URL from an R2 PNG URL (or return null for local paths). */
 function webpVariant(url: string, suffix: "-thumb" | "-medium"): string | null {
@@ -76,9 +77,11 @@ interface SlidesViewerProps {
   slides: string[];
   title?: string;
   type?: "presented" | "detailed";
+  partNumber?: number;
+  previewMode?: boolean;
 }
 
-export function SlidesViewer({ slides, title, type = "presented" }: SlidesViewerProps) {
+export function SlidesViewer({ slides, title, type = "presented", partNumber, previewMode }: SlidesViewerProps) {
   const [current, setCurrent] = useState(0);
   const [fullscreen, setFullscreen] = useState(false);
   const stripRef = useRef<HTMLDivElement>(null);
@@ -88,6 +91,13 @@ export function SlidesViewer({ slides, title, type = "presented" }: SlidesViewer
     () => setCurrent((c) => Math.min(slides.length - 1, c + 1)),
     [slides.length]
   );
+
+  useEffect(() => {
+    if (!partNumber || previewMode || !slides.length) return;
+    trackAssetOpened(partNumber, "slides").catch(() => {});
+  // Run once on mount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const strip = stripRef.current;

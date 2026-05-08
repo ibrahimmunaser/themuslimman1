@@ -122,7 +122,7 @@ export default function PricingPage() {
               </div>
 
               <ul className="space-y-3 mb-6 flex-1">
-                {PLANS.essentials.features.map((feature) => (
+                {["Video lessons", "Briefings", "Progress tracking"].map((feature) => (
                   <li key={feature} className="flex items-start gap-3">
                     <CheckCircle2 className="w-4 h-4 text-text-muted flex-shrink-0 mt-0.5" />
                     <span className="text-sm text-text-secondary">{feature}</span>

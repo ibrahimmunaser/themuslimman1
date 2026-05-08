@@ -66,8 +66,7 @@ export default function RefundPage() {
                   first purchase of a given plan. Repeat purchases of the same plan are not eligible.
                 </li>
                 <li>
-                  <strong className="text-text">Upgrades:</strong> Upgrade purchases (from Essentials to
-                  Complete) are also covered by the 7-day guarantee from the date of the upgrade.
+                  <strong className="text-text">Complete Seerah Early Access ($79):</strong> Covered by the 7-day guarantee from the date of purchase.
                 </li>
               </ul>
             </section>

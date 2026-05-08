@@ -19,9 +19,6 @@ import {
   ArrowLeft,
   ChevronLeft,
   ChevronRight,
-  Clock,
-  BookOpen,
-  Lock,
 } from "lucide-react";
 import { PartTabs } from "@/components/part/part-tabs";
 import { prisma } from "@/lib/db";
@@ -54,37 +51,16 @@ export default async function SeerahPartPage(props: Props) {
   const partBase = getPartById(partId);
   if (!partBase) notFound();
 
-  // Check user's purchases
-  const purchases = await prisma.purchase.findMany({
-    where: {
-      userId: user.id,
-      status: "succeeded",
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
+  // Any succeeded purchase grants full access (Complete is the only plan sold)
+  const purchase = await prisma.purchase.findFirst({
+    where: { userId: user.id, status: "succeeded" },
   });
 
-  if (purchases.length === 0) {
+  if (!purchase) {
     redirect("/pricing");
   }
 
-  // Get the highest tier plan purchased
-  const hasCompletePlan = purchases.some(p => p.planId === "complete");
-  const hasEssentialsPlan = purchases.some(p => p.planId === "essentials");
-  const userPlan = hasCompletePlan ? "complete" : hasEssentialsPlan ? "essentials" : null;
-
-  if (!userPlan) {
-    redirect("/pricing");
-  }
-
-  // Check if user has access to this specific part
-  const hasAccess = userPlan === "complete" || (userPlan === "essentials" && partBase.includedInEssentials);
-
-  if (!hasAccess) {
-    // Redirect to seerah page with message
-    redirect("/seerah?upgrade=true");
-  }
+  const userPlan = "complete" as const;
 
   const n = partBase.partNumber;
 
@@ -211,14 +187,7 @@ export default async function SeerahPartPage(props: Props) {
   const prevPart = currentIndex > 0 ? allParts[currentIndex - 1] : null;
   const nextPart = currentIndex < allParts.length - 1 ? allParts[currentIndex + 1] : null;
 
-  // Unlock next part only when this part's video ≥ 85% AND briefing opened
-  const thisPartProgress = await prisma.partProgress.findUnique({
-    where: { userId_partNumber: { userId: user.id, partNumber: partBase.partNumber } },
-    select: { videoWatchPercent: true, briefingOpened: true },
-  });
-  const isNextPartUnlocked =
-    (thisPartProgress?.videoWatchPercent ?? 0) >= 85 &&
-    (thisPartProgress?.briefingOpened ?? false);
+  // All parts are freely navigable for paid users — no sequential lock
 
   return (
     <StudentLayout userPlan={userPlan} userName={user.fullName}>
@@ -280,28 +249,16 @@ export default async function SeerahPartPage(props: Props) {
           )}
 
           {nextPart && (
-            isNextPartUnlocked ? (
-              <Link
-                href={`/seerah/${nextPart.id}`}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gold text-ink hover:bg-gold-light transition-all text-sm font-medium ml-auto"
-              >
-                <div className="text-right">
-                  <p className="text-xs text-ink/70">Next</p>
-                  <p className="text-ink font-medium">Part {nextPart.partNumber}</p>
-                </div>
-                <ChevronRight className="w-4 h-4" />
-              </Link>
-            ) : (
-              <div className="inline-flex items-center gap-3 px-4 py-2 rounded-lg bg-gold/20 border border-gold/40 ml-auto cursor-not-allowed">
-                <div className="text-right">
-                  <p className="text-xs text-gold/70">Next</p>
-                  <p className="text-gold font-medium">Part {nextPart.partNumber}</p>
-                </div>
-                <div className="w-7 h-7 rounded-lg bg-gold/20 border border-gold/50 flex items-center justify-center shadow-[0_0_8px_rgba(212,175,55,0.4)]">
-                  <Lock className="w-3.5 h-3.5 text-gold" />
-                </div>
+            <Link
+              href={`/seerah/${nextPart.id}`}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gold text-ink hover:bg-gold-light transition-all text-sm font-medium ml-auto"
+            >
+              <div className="text-right">
+                <p className="text-xs text-ink/70">Next</p>
+                <p className="text-ink font-medium">Part {nextPart.partNumber}</p>
               </div>
-            )
+              <ChevronRight className="w-4 h-4" />
+            </Link>
           )}
         </div>
       </div>

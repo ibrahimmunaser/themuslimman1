@@ -87,7 +87,8 @@ function CheckoutForm({ plan }: { plan: typeof PLANS[PlanId] }) {
 export function CheckoutPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const planId = (searchParams.get("plan") || "complete") as PlanId;
+  // Only complete is sold during early access
+  const planId: PlanId = "complete";
   const plan = PLANS[planId];
 
   const [clientSecret, setClientSecret] = useState<string | null>(null);

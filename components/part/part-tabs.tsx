@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { clsx } from "clsx";
 import { ImageLightbox } from "@/components/ui/image-lightbox";
 import { Maximize2 } from "lucide-react";
@@ -16,7 +16,6 @@ import {
   HelpCircle,
   Layers2,
   Clock,
-  Lock,
 } from "lucide-react";
 import NextImage from "next/image";
 import { LazyVideoPlayer } from "./lazy-video-player";
@@ -30,6 +29,7 @@ import { FlashcardsViewer } from "./flashcards-viewer";
 import { ResponsiveImage } from "@/components/ui/responsive-image";
 import type { Part } from "@/lib/types";
 import Link from "next/link";
+import { trackAssetOpened } from "@/app/actions/progress";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -94,32 +94,15 @@ const MODES: Mode[] = [
 // ─── Access Control ───────────────────────────────────────────────────────────
 
 /**
- * Determines if a tab/subtab is accessible based on user's plan
- * PreviewMode: All tabs unlocked (for homepage demo)
- * Essentials: Watch (video) + Read (briefing, study-guide, facts, report)
- * Complete: Everything
+ * All paid users get complete access. previewMode is used only for the
+ * homepage Part 1 demo (no purchase required).
  */
-function isTabAccessible(id: SubTabId, userPlan: UserPlan, previewMode?: boolean): boolean {
-  if (previewMode) return true;
-  if (userPlan === "complete") return true;
-  
-  // Essentials: video and all read content
-  if (userPlan === "essentials") {
-    return id === "video" || id === "briefing" || id === "study-guide" || id === "facts" || id === "report";
-  }
-  
-  return false;
+function isTabAccessible(_id: SubTabId, _userPlan: UserPlan, _previewMode?: boolean): boolean {
+  return true;
 }
 
-/**
- * Determines if a mode is accessible (at least one subtab is accessible)
- */
-function isModeAccessible(mode: Mode, userPlan: UserPlan, previewMode?: boolean): boolean {
-  if (previewMode) return true;
-  if (userPlan === "complete") return true;
-  
-  // For essentials, check if mode has at least one accessible subtab
-  return mode.subTabs.some(tab => isTabAccessible(tab.id, userPlan, previewMode));
+function isModeAccessible(_mode: Mode, _userPlan: UserPlan, _previewMode?: boolean): boolean {
+  return true;
 }
 
 // ─── Content availability ─────────────────────────────────────────────────────
@@ -162,41 +145,6 @@ function EmptyContent({ label }: { label: string }) {
   );
 }
 
-function LockedContent({ featureName }: { featureName: string }) {
-  return (
-    <div className="py-20 text-center px-4">
-      <div className="max-w-md mx-auto">
-        <div className="w-16 h-16 mx-auto rounded-full bg-gold/10 border-2 border-gold/30 flex items-center justify-center mb-6">
-          <Lock className="w-8 h-8 text-gold/60" />
-        </div>
-        
-        <h3 className="text-lg font-bold text-text mb-2">
-          Unlock {featureName} with Complete Seerah
-        </h3>
-        
-        <p className="text-text-secondary text-sm mb-6 leading-relaxed">
-          {featureName} {featureName.toLowerCase().includes("quiz") || featureName.toLowerCase().includes("flashcard") || featureName.toLowerCase().includes("slide") ? "are" : "is"} not included in the Essentials plan. 
-          Upgrade to Complete Seerah for just <span className="text-gold font-semibold">$30 more</span> to unlock all study tools, teaching resources, and the full 100-part system.
-        </p>
-        
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Link
-            href="/upgrade"
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gold hover:bg-gold-light text-ink font-semibold rounded-lg transition-all shadow-lg shadow-gold/20"
-          >
-            Upgrade Now for $30
-          </Link>
-          <Link
-            href="/pricing"
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-surface border border-border hover:border-gold/30 text-text-secondary hover:text-text rounded-lg transition-all"
-          >
-            View Full Comparison
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 /** Derive a pre-generated WebP URL from an R2 PNG URL. */
 function infographicWebp(url: string, suffix: "-medium" | "-large" | ""): string | null {
@@ -206,11 +154,12 @@ function infographicWebp(url: string, suffix: "-medium" | "-large" | ""): string
     : url.replace(/\.png$/i, `${suffix}.webp`);
 }
 
-function InfographicPanel({ part }: { part: Part }) {
+function InfographicPanel({ part, previewMode }: { part: Part; previewMode?: boolean }) {
   const [style, setStyle] = useState<"concise" | "standard" | "bentoGrid">("standard");
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [useFallback, setUseFallback] = useState(false);
+  const [hasTrackedView, setHasTrackedView] = useState(false);
   const inf = part.assets.infographics;
   const styles = [
     { id: "concise"   as const, label: "Concise" },
@@ -222,6 +171,14 @@ function InfographicPanel({ part }: { part: Part }) {
   // Lightbox uses full-size WebP (same quality, ~95% smaller than PNG)
   const lightboxSrc = currentSrc ? (infographicWebp(currentSrc, "") ?? currentSrc) : currentSrc;
   const altLabel = `Part ${part.partNumber} Infographic — ${style}`;
+
+  // Track when infographic is viewed (loaded)
+  useEffect(() => {
+    if (loaded && !hasTrackedView && !previewMode && part.partNumber) {
+      trackAssetOpened(part.partNumber, "infographic").catch(() => {});
+      setHasTrackedView(true);
+    }
+  }, [loaded, hasTrackedView, previewMode, part.partNumber]);
 
   // Reset loading state when style changes
   const handleStyleChange = (id: "concise" | "standard" | "bentoGrid") => {
@@ -317,7 +274,7 @@ const SLIDE_TYPES = [
   { key: "facts"     as const, label: "Facts" },
 ];
 
-function SlidesPanel({ part }: { part: Part }) {
+function SlidesPanel({ part, previewMode }: { part: Part; previewMode?: boolean }) {
   const slides = part.assets.slides;
   const available = SLIDE_TYPES.filter((t) => (slides?.[t.key]?.length ?? 0) > 0);
   const [type, setType] = useState<"presented" | "detailed" | "facts">(available[0]?.key ?? "presented");
@@ -343,12 +300,14 @@ function SlidesPanel({ part }: { part: Part }) {
         slides={slides?.[type] ?? []}
         title={`Part ${part.partNumber} — ${SLIDE_TYPES.find((t) => t.key === type)?.label} Slides`}
         type={type === "facts" ? "presented" : type}
+        partNumber={part.partNumber}
+        previewMode={previewMode}
       />
     </div>
   );
 }
 
-function SubTabContent({ id, part }: { id: SubTabId; part: Part }) {
+function SubTabContent({ id, part, previewMode }: { id: SubTabId; part: Part; previewMode?: boolean }) {
   const wrap = (child: React.ReactNode) => (
     <div className="rounded-xl border border-border/60 bg-surface p-5 sm:p-7">{child}</div>
   );
@@ -361,28 +320,30 @@ function SubTabContent({ id, part }: { id: SubTabId; part: Part }) {
             partNumber={part.partNumber}
             title={part.title}
             poster={part.assets.slides?.presented[0]}
+            previewMode={previewMode}
           />
           <LazyListenOnTheGo
             partNumber={part.partNumber}
             title={part.title}
+            previewMode={previewMode}
           />
         </div>
       );
     case "briefing":
-      return wrap(part.assets.briefingText ? <TextViewer content={part.assets.briefingText} partNumber={part.partNumber} assetId="briefing" /> : <EmptyContent label="Briefing" />);
+      return wrap(part.assets.briefingText ? <TextViewer content={part.assets.briefingText} partNumber={part.partNumber} assetId="briefing" previewMode={previewMode} /> : <EmptyContent label="Briefing" />);
     case "study-guide":
-      return wrap(part.assets.studyGuideText ? <TextViewer content={part.assets.studyGuideText} partNumber={part.partNumber} assetId="study_guide" /> : <EmptyContent label="Study Guide" />);
+      return wrap(part.assets.studyGuideText ? <TextViewer content={part.assets.studyGuideText} partNumber={part.partNumber} assetId="study_guide" previewMode={previewMode} /> : <EmptyContent label="Study Guide" />);
     case "facts":
-      return wrap(part.assets.statementOfFactsText ? <FactsViewer content={part.assets.statementOfFactsText} /> : <EmptyContent label="Statement of Facts" />);
+      return wrap(part.assets.statementOfFactsText ? <FactsViewer content={part.assets.statementOfFactsText} partNumber={part.partNumber} previewMode={previewMode} /> : <EmptyContent label="Facts" />);
     case "report":
-      return wrap(part.assets.reportText ? <TextViewer content={part.assets.reportText} partNumber={part.partNumber} assetId="report" /> : <EmptyContent label="Deep Dive Report" />);
+      return wrap(part.assets.reportText ? <TextViewer content={part.assets.reportText} partNumber={part.partNumber} assetId="report" previewMode={previewMode} /> : <EmptyContent label="Deep Dive Report" />);
     case "flashcards":
       return wrap(part.assets.flashcards ? <FlashcardsViewer flashcards={part.assets.flashcards} /> : <EmptyContent label="Flashcards" />);
     case "quiz":
-      return wrap(part.assets.quiz ? <QuizViewer quiz={part.assets.quiz} partNumber={part.partNumber} /> : <EmptyContent label="Quiz" />);
-    case "slides":      return <SlidesPanel part={part} />;
-    case "mindmap":     return <LazyMindmapViewer partNumber={part.partNumber} title={`Part ${part.partNumber} — Mindmap`} />;
-    case "infographic": return <InfographicPanel part={part} />;
+      return wrap(part.assets.quiz ? <QuizViewer quiz={part.assets.quiz} partNumber={part.partNumber} previewMode={previewMode} /> : <EmptyContent label="Quiz" />);
+    case "slides":      return <SlidesPanel part={part} previewMode={previewMode} />;
+    case "mindmap":     return <LazyMindmapViewer partNumber={part.partNumber} title={`Part ${part.partNumber} — Mindmap`} previewMode={previewMode} />;
+    case "infographic": return <InfographicPanel part={part} previewMode={previewMode} />;
   }
 }
 
@@ -392,10 +353,15 @@ function SubTabContent({ id, part }: { id: SubTabId; part: Part }) {
 function TimelineButton({
   partNumber,
   era,
+  previewMode,
 }: {
   partNumber: number;
   era: string;
+  previewMode?: boolean;
 }) {
+  // In free preview, the timeline page requires login — hide the button
+  if (previewMode) return null;
+
   return (
     <Link
       href={`/seerah/part-${partNumber}/timeline`}
@@ -462,18 +428,14 @@ function ModeButton({
             : "bg-surface-raised group-hover:bg-surface-high"
         )}
       >
-        {isLocked ? (
-          <Lock className="w-4 h-4 text-gold/60" />
-        ) : (
-          <Icon className="w-4 h-4" />
-        )}
+        <Icon className="w-4 h-4" />
       </div>
 
       {/* Labels */}
       <div className="min-w-0 flex-1">
         <p className="text-[13px] font-semibold leading-none">{mode.label}</p>
         <p className="text-[10px] mt-0.5 leading-none opacity-55 hidden sm:block">
-          {isLocked ? "Upgrade to unlock" : mode.hint}
+          {mode.hint}
         </p>
       </div>
 
@@ -508,34 +470,22 @@ interface PartTabsProps {
 }
 
 export function PartTabs({ part, userPlan, previewMode = false }: PartTabsProps) {
-  // Show modes that have content, but keep locked modes visible
   const availableModes = MODES.filter((m) => getModeSubTabs(m, part).length > 0);
-  const defaultMode = availableModes.find(m => isModeAccessible(m, userPlan, previewMode)) ?? availableModes[0] ?? MODES[0];
+  const defaultMode = availableModes[0] ?? MODES[0];
 
   const [activeMode, setActiveMode] = useState<ModeId>(defaultMode.id);
-
   const currentMode = MODES.find((m) => m.id === activeMode) ?? defaultMode;
-  
-  // Filter subtabs based on content AND access control
-  const allSubTabsWithContent = getModeSubTabs(currentMode, part);
-  const accessibleSubTabs = allSubTabsWithContent.filter(tab => isTabAccessible(tab.id, userPlan, previewMode));
-  const subTabs = accessibleSubTabs.length > 0 ? accessibleSubTabs : allSubTabsWithContent;
-  
+  const subTabs = getModeSubTabs(currentMode, part);
+
   const [activeSubTab, setActiveSubTab] = useState<SubTabId>(subTabs[0]?.id ?? "video");
 
   const handleModeChange = (modeId: ModeId) => {
     setActiveMode(modeId);
-    const newMode = MODES.find((m) => m.id === modeId)!;
-    const newSubTabsWithContent = getModeSubTabs(newMode, part);
-    const newAccessibleSubTabs = newSubTabsWithContent.filter(tab => isTabAccessible(tab.id, userPlan, previewMode));
-    const newSubTabs = newAccessibleSubTabs.length > 0 ? newAccessibleSubTabs : newSubTabsWithContent;
-    setActiveSubTab(newSubTabs[0]?.id ?? newMode.subTabs[0].id);
+    const newSubTabs = getModeSubTabs(MODES.find((m) => m.id === modeId)!, part);
+    setActiveSubTab(newSubTabs[0]?.id ?? MODES.find((m) => m.id === modeId)!.subTabs[0].id);
   };
 
   const currentSubTab = subTabs.find((t) => t.id === activeSubTab)?.id ?? subTabs[0]?.id;
-  
-  // Check if current tab is locked
-  const isCurrentTabLocked = currentSubTab ? !isTabAccessible(currentSubTab, userPlan, previewMode) : false;
 
   return (
     <div className="space-y-4">
@@ -544,22 +494,19 @@ export function PartTabs({ part, userPlan, previewMode = false }: PartTabsProps)
       <div className="flex flex-wrap gap-2">
         {MODES.map((mode) => {
           const available = getModeSubTabs(mode, part).length > 0;
-          const accessible = isModeAccessible(mode, userPlan, previewMode);
-          const locked = available && !accessible;
-          
           return (
             <ModeButton
               key={mode.id}
               mode={mode}
               isActive={activeMode === mode.id}
-              isAvailable={available && accessible}
-              isLocked={locked}
-              onClick={() => (available && accessible) ? handleModeChange(mode.id) : (locked ? handleModeChange(mode.id) : undefined)}
+              isAvailable={available}
+              isLocked={false}
+              onClick={() => available ? handleModeChange(mode.id) : undefined}
             />
           );
         })}
-        {/* Timeline — navigates to /seerah/part-[n]/timeline */}
-        <TimelineButton partNumber={part.partNumber} era={part.era} />
+        {/* Timeline — hidden in free preview (requires login) */}
+        <TimelineButton partNumber={part.partNumber} era={part.era} previewMode={previewMode} />
       </div>
 
       {/* ── Sub-tab bar (only when mode has multiple content items) ────── */}
@@ -590,15 +537,12 @@ export function PartTabs({ part, userPlan, previewMode = false }: PartTabsProps)
       {/* ── Content ─────────────────────────────────────────────────────── */}
       {currentSubTab && (
         <div>
-          {isCurrentTabLocked ? (
-            <LockedContent featureName={currentMode.label} />
-          ) : (
-            <SubTabContent
-              key={`${activeMode}-${currentSubTab}`}
-              id={currentSubTab}
-              part={part}
-            />
-          )}
+          <SubTabContent
+            key={`${activeMode}-${currentSubTab}`}
+            id={currentSubTab}
+            part={part}
+            previewMode={previewMode}
+          />
         </div>
       )}
 

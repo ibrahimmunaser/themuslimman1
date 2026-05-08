@@ -12,9 +12,11 @@ interface VideoPlayerProps {
   title?: string;
   poster?: string;
   partNumber?: number;
+  /** When true (free preview), skip progress tracking — user is not logged in */
+  previewMode?: boolean;
 }
 
-export function VideoPlayer({ src, title, poster, partNumber }: VideoPlayerProps) {
+export function VideoPlayer({ src, title, poster, partNumber, previewMode }: VideoPlayerProps) {
   const videoRef   = useRef<HTMLVideoElement>(null);
   const reportedRef = useRef<Set<number>>(new Set());
 
@@ -57,7 +59,7 @@ export function VideoPlayer({ src, title, poster, partNumber }: VideoPlayerProps
     setProgress(rounded);
 
     // Report to server at each threshold (once per session)
-    if (partNumber) {
+    if (partNumber && !previewMode) {
       for (const threshold of REPORT_THRESHOLDS) {
         if (rounded >= threshold && !reportedRef.current.has(threshold)) {
           reportedRef.current.add(threshold);
@@ -123,7 +125,7 @@ export function VideoPlayer({ src, title, poster, partNumber }: VideoPlayerProps
           setPlaying(false);
           setStarted(false);
           // Report 100% on ended
-          if (partNumber && !reportedRef.current.has(100)) {
+          if (partNumber && !previewMode && !reportedRef.current.has(100)) {
             reportedRef.current.add(100);
             trackVideoProgress(partNumber, 100).catch(() => {});
           }

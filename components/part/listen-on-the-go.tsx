@@ -8,9 +8,10 @@ interface ListenOnTheGoProps {
   audioUrl?: string;
   title?: string;
   partNumber?: number;
+  previewMode?: boolean;
 }
 
-export function ListenOnTheGo({ audioUrl, title, partNumber }: ListenOnTheGoProps) {
+export function ListenOnTheGo({ audioUrl, title, partNumber, previewMode }: ListenOnTheGoProps) {
   const [expanded, setExpanded] = useState(false);
 
   if (!audioUrl) {
@@ -60,7 +61,7 @@ export function ListenOnTheGo({ audioUrl, title, partNumber }: ListenOnTheGoProp
           </div>
 
           {/* Audio player */}
-          <AudioPlayer src={audioUrl} title={title} partNumber={partNumber} compact />
+          <AudioPlayer src={audioUrl} title={title} partNumber={partNumber} compact previewMode={previewMode} />
 
           {/* Helpful description */}
           <p className="text-xs text-text-muted leading-relaxed px-1">
