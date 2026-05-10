@@ -5,71 +5,102 @@ import { ROLES } from "@/lib/roles";
 export async function getAdminDashboardData() {
   const [
     totalStudents,
-    activeStudents,
-    totalPrograms,
-    activePrograms,
-    totalEnrollments,
+    paidStudents,
+    revenueResult,
+    partsCompleted,
     quizStats,
     recentSignups,
-    completionStats,
     openSupportTickets,
   ] = await Promise.all([
     // Total students
     prisma.user.count({ where: { role: ROLES.STUDENT } }),
-    
-    // Active students (logged in within last 30 days)
-    prisma.user.count({
-      where: {
-        role: ROLES.STUDENT,
-        lastLoginAt: {
-          gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-        },
-      },
-    }),
-    
-    // Total programs (classes renamed conceptually)
-    prisma.class.count(),
-    
-    // Active programs
-    prisma.class.count({ where: { status: "active" } }),
-    
-    // Total enrollments
-    prisma.classEnrollment.count({ where: { status: "active" } }),
-    
-    // Quiz performance
-    prisma.quizAttempt.aggregate({
-      where: { status: "submitted" },
-      _avg: { score: true },
+
+    // Paid students (successful purchase)
+    prisma.purchase.groupBy({
+      by: ["userId"],
+      where: { status: "succeeded" },
+    }).then((r) => r.length),
+
+    // Total revenue from succeeded purchases
+    prisma.purchase.aggregate({
+      where: { status: "succeeded" },
+      _sum: { amount: true },
       _count: true,
     }),
-    
-    // Recent student signups (students only)
+
+    // Total part completions across all students
+    prisma.partProgress.count({ where: { status: "completed" } }),
+
+    // Quiz performance (part-based quizzes via PartProgress)
+    prisma.partProgress.aggregate({
+      where: { quizCompleted: true, quizBestScore: { not: null } },
+      _avg: { quizBestScore: true },
+      _count: { quizCompleted: true },
+    }),
+
+    // Recent student signups
     prisma.user.findMany({
       where: { role: ROLES.STUDENT },
       orderBy: { createdAt: "desc" },
-      take: 5,
-      select: { id: true, fullName: true, email: true, role: true, createdAt: true, lastLoginAt: true },
+      take: 8,
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        createdAt: true,
+        lastLoginAt: true,
+        hasPaid: true,
+      },
     }),
-    
-    // Course completion stats
-    prisma.studentProgress.aggregate({
-      where: { status: "completed" },
-      _count: true,
-    }),
-    
+
     // Open support tickets
     prisma.supportTicket.count({ where: { status: "open" } }),
   ]);
 
+  const totalRevenueCents = revenueResult._sum.amount ?? 0;
+  const totalOrders = revenueResult._count;
+  const avgQuizScore = quizStats._avg.quizBestScore;
+  const totalQuizCompletions = quizStats._count.quizCompleted;
+
   return {
     totalStudents,
-    activeStudents,
-    totalPrograms,
-    activePrograms,
-    totalEnrollments,
-    quizStats,
+    paidStudents,
+    totalRevenueCents,
+    totalOrders,
+    partsCompleted,
+    avgQuizScore,
+    totalQuizCompletions,
     recentSignups,
-    completionStats,
     openSupportTickets,
+  };
+}
+
+export async function getAdminOrdersData() {
+  const [purchases, revenueResult, paidCount] = await Promise.all([
+    prisma.purchase.findMany({
+      include: {
+        user: { select: { fullName: true, email: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 200,
+    }),
+
+    prisma.purchase.aggregate({
+      where: { status: "succeeded" },
+      _sum: { amount: true },
+      _count: true,
+    }),
+
+    prisma.purchase.groupBy({
+      by: ["userId"],
+      where: { status: "succeeded" },
+    }).then((r) => r.length),
+  ]);
+
+  return {
+    purchases,
+    totalRevenueCents: revenueResult._sum.amount ?? 0,
+    totalOrders: revenueResult._count,
+    uniqueBuyers: paidCount,
   };
 }

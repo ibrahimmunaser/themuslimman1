@@ -1,26 +1,33 @@
 import Link from "next/link";
 import {
   Users,
-  GraduationCap,
+  CreditCard,
   BookOpen,
   TrendingUp,
   Library,
-  ShoppingCart,
   ChevronRight,
   ShieldCheck,
   Activity,
-  Award,
   MessageCircle,
+  CheckCircle2,
+  DollarSign,
+  ShoppingCart,
 } from "lucide-react";
 import { requireAdmin } from "@/lib/auth";
 import { getAdminDashboardData } from "@/lib/queries/admin";
 import { StatCard } from "@/components/ui/stat-card";
+import { formatPrice } from "@/lib/stripe-config";
 
-export const metadata = { title: "Admin Dashboard" };
+export const metadata = { title: "Admin Dashboard | TheMuslimMan" };
 
 export default async function AdminDashboardPage() {
   const user = await requireAdmin();
   const data = await getAdminDashboardData();
+
+  const avgScore =
+    data.avgQuizScore !== null && data.avgQuizScore !== undefined
+      ? `${Math.round(data.avgQuizScore)}%`
+      : "—";
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
@@ -39,14 +46,23 @@ export default async function AdminDashboardPage() {
         </p>
       </div>
 
-      {/* Platform KPIs */}
+      {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
         <StatCard label="Total students" value={data.totalStudents} icon={Users} tone="gold" />
-        <StatCard label="Active students" value={data.activeStudents} icon={Activity} tone="success" />
-        <StatCard label="Programs" value={data.totalPrograms} icon={GraduationCap} />
-        <StatCard label="Active programs" value={data.activePrograms} icon={BookOpen} />
-        <StatCard label="Enrollments" value={data.totalEnrollments} icon={Users} />
-        <StatCard label="Completions" value={data.completionStats._count} icon={Award} />
+        <StatCard label="Paid students" value={data.paidStudents} icon={CreditCard} tone="success" />
+        <StatCard
+          label="Revenue"
+          value={formatPrice(data.totalRevenueCents)}
+          icon={DollarSign}
+          tone="success"
+        />
+        <StatCard label="Orders" value={data.totalOrders} icon={ShoppingCart} />
+        <StatCard label="Parts completed" value={data.partsCompleted} icon={CheckCircle2} />
+        <StatCard
+          label="Avg quiz score"
+          value={avgScore}
+          icon={TrendingUp}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
@@ -56,21 +72,25 @@ export default async function AdminDashboardPage() {
             <TrendingUp className="w-4 h-4 text-gold" />
             <p className="text-xs text-text-muted uppercase tracking-wider">Quiz performance</p>
           </div>
-          <p className="text-3xl font-bold text-text tabular-nums">
-            {data.quizStats._avg.score !== null && data.quizStats._avg.score !== undefined
-              ? `${Math.round(data.quizStats._avg.score)}%`
-              : "—"}
-          </p>
+          <p className="text-3xl font-bold text-text tabular-nums">{avgScore}</p>
           <p className="text-xs text-text-muted mt-1">
-            {data.quizStats._count} total quiz submissions
+            {data.totalQuizCompletions} quiz{data.totalQuizCompletions !== 1 ? "zes" : ""} completed
           </p>
+          <div className="mt-4 pt-4 border-t border-border grid grid-cols-2 gap-3">
+            <div>
+              <p className="text-xs text-text-muted">Parts completed</p>
+              <p className="text-lg font-bold text-text tabular-nums mt-0.5">{data.partsCompleted}</p>
+            </div>
+            <div>
+              <p className="text-xs text-text-muted">Paid students</p>
+              <p className="text-lg font-bold text-text tabular-nums mt-0.5">{data.paidStudents}</p>
+            </div>
+          </div>
         </div>
 
         {/* Quick Actions */}
         <div className="p-6 rounded-2xl border border-border bg-surface">
-          <p className="text-xs text-text-muted uppercase tracking-wider mb-3">
-            Quick actions
-          </p>
+          <p className="text-xs text-text-muted uppercase tracking-wider mb-3">Quick actions</p>
           <div className="grid grid-cols-2 gap-2">
             <Link
               href="/admin/students"
@@ -80,11 +100,11 @@ export default async function AdminDashboardPage() {
               Students
             </Link>
             <Link
-              href="/admin/courses"
+              href="/admin/orders"
               className="flex items-center gap-2 p-3 rounded-xl border border-border bg-surface-raised hover:border-gold/30 transition-all text-sm text-text-secondary hover:text-text"
             >
-              <BookOpen className="w-4 h-4 text-gold" />
-              Courses
+              <ShoppingCart className="w-4 h-4 text-gold" />
+              Orders
             </Link>
             <Link
               href="/admin/content"
@@ -94,11 +114,11 @@ export default async function AdminDashboardPage() {
               Content
             </Link>
             <Link
-              href="/admin/programs"
+              href="/admin/analytics"
               className="flex items-center gap-2 p-3 rounded-xl border border-border bg-surface-raised hover:border-gold/30 transition-all text-sm text-text-secondary hover:text-text"
             >
-              <GraduationCap className="w-4 h-4 text-gold" />
-              Programs
+              <Activity className="w-4 h-4 text-gold" />
+              Analytics
             </Link>
             <Link
               href="/admin/support"
@@ -116,7 +136,7 @@ export default async function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* Recent Student Signups */}
+      {/* Recent Signups */}
       <section>
         <div className="flex items-center justify-between mb-4">
           <p className="text-xs text-text-muted uppercase tracking-wider">Recent student signups</p>
@@ -134,23 +154,37 @@ export default async function AdminDashboardPage() {
               <tr className="text-left">
                 <th className="px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Name</th>
                 <th className="px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Email</th>
-                <th className="px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Joined</th>
-                <th className="px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Last login</th>
+                <th className="px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider hidden sm:table-cell">Joined</th>
+                <th className="px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Paid</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {data.recentSignups.map((u) => (
-                <tr key={u.id} className="hover:bg-surface-raised/50 transition-colors">
-                  <td className="px-4 py-3 text-sm text-text">{u.fullName}</td>
-                  <td className="px-4 py-3 text-sm text-text-secondary">{u.email}</td>
-                  <td className="px-4 py-3 text-sm text-text-muted tabular-nums">
-                    {new Date(u.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-text-muted tabular-nums">
-                    {u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleDateString() : "Never"}
+              {data.recentSignups.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-4 py-8 text-center text-sm text-text-muted">
+                    No students yet.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                data.recentSignups.map((u) => (
+                  <tr key={u.id} className="hover:bg-surface-raised/50 transition-colors">
+                    <td className="px-4 py-3 text-sm text-text">{u.fullName}</td>
+                    <td className="px-4 py-3 text-sm text-text-secondary">{u.email}</td>
+                    <td className="px-4 py-3 text-sm text-text-muted tabular-nums hidden sm:table-cell">
+                      {new Date(u.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-4 py-3">
+                      {u.hasPaid ? (
+                        <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-400">
+                          <CheckCircle2 className="w-3 h-3" /> Paid
+                        </span>
+                      ) : (
+                        <span className="text-xs text-text-muted">Free</span>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

@@ -17,7 +17,7 @@ import {
 } from "./r2";
 
 export const SEERAH_ROOT =
-  process.env.SEERAH_DATA_DIR ?? path.resolve(process.cwd(), "..", "Seerah-data");
+  process.env.SEERAH_DATA_DIR ?? path.resolve(/*turbopackIgnore: true*/ process.cwd(), "..", "Seerah-data");
 
 // Feature flag to use R2 or local filesystem
 const USE_R2 = process.env.R2_BUCKET && process.env.R2_ACCESS_KEY_ID;

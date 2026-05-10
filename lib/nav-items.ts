@@ -2,14 +2,14 @@ import type { LucideIcon } from "lucide-react";
 import {
   LayoutDashboard,
   Users,
-  BookOpen,
   Settings,
   Library,
   BarChart3,
-  GraduationCap,
   ShieldCheck,
   HardDrive,
   ShoppingCart,
+  MessageCircle,
+  BookOpen,
 } from "lucide-react";
 import { ROLES, type Role } from "./roles";
 
@@ -30,11 +30,10 @@ export const STUDENT_NAV: NavItem[] = [
 export const ADMIN_NAV: NavItem[] = [
   { href: "/admin/dashboard",  label: "Dashboard",       icon: LayoutDashboard, exact: true },
   { href: "/admin/students",   label: "Students",        icon: Users },
-  { href: "/admin/courses",    label: "Courses",         icon: BookOpen },
-  { href: "/admin/content",    label: "Content Library", icon: Library },
-  { href: "/admin/programs",   label: "Programs",        icon: GraduationCap },
-  { href: "/admin/analytics",  label: "Analytics",       icon: BarChart3 },
   { href: "/admin/orders",     label: "Orders",          icon: ShoppingCart },
+  { href: "/admin/content",    label: "Content Library", icon: Library },
+  { href: "/admin/analytics",  label: "Analytics",       icon: BarChart3 },
+  { href: "/admin/support",    label: "Support",         icon: MessageCircle },
   { href: "/admin/r2",         label: "R2 Storage",      icon: HardDrive },
   { href: "/admin/settings",   label: "Settings",        icon: ShieldCheck },
 ];

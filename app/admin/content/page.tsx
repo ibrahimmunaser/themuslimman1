@@ -23,7 +23,6 @@ export default async function AdminContentPage() {
               partNumber: true,
               title: true,
               era: true,
-              includedInEssentials: true,
               isPublished: true,
             },
           },
@@ -40,8 +39,7 @@ export default async function AdminContentPage() {
     where: { id: { notIn: allPartIds.size > 0 ? [...allPartIds] : ["__none__"] } },
     orderBy: { partNumber: "asc" },
     select: {
-      id: true, partNumber: true, title: true, era: true,
-      includedInEssentials: true, isPublished: true,
+      id: true, partNumber: true, title: true, era: true, isPublished: true,
     },
   });
 

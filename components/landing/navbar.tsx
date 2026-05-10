@@ -12,7 +12,9 @@ export async function Navbar() {
     user = await getCurrentUser();
     firstName = user ? user.fullName.split(" ")[0] : null;
   } catch (error) {
-    console.error("Navbar: Failed to get current user:", error);
+    if ((error as { digest?: string })?.digest !== "DYNAMIC_SERVER_USAGE") {
+      console.error("Navbar: Failed to get current user:", error);
+    }
   }
 
   return (
