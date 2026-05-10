@@ -2,11 +2,27 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { PARTS } from "@/lib/content";
+import { ERA_MAP } from "@/lib/types";
 import { ResourcePageClient } from "./resource-page-client";
 import { ArrowLeft, Video, Play, CheckCircle2, Clock, X } from "lucide-react";
 import Link from "next/link";
 import { VideoPlayer } from "@/components/part/video-player";
 import { getCachedResource, setCachedResource, prefetchResource } from "@/lib/resource-cache";
+
+function eraGradient(era: string): { background: string } {
+  const colors: Record<string, [string, string]> = {
+    "pre-islamic":        ["#3d2a12", "#8B6F45"],
+    "birth-early-life":   ["#1e1a35", "#7A6B9E"],
+    "early-revelation":   ["#0d2e22", "#4A8C6E"],
+    "makkah-persecution": ["#2e0d0d", "#8C4A4A"],
+    "hijrah":             ["#0d1e2e", "#4A6E8C"],
+    "madinah":            ["#1a2e0d", "#6E8C4A"],
+    "campaigns":          ["#2e1a0d", "#8C6E4A"],
+    "final-years":        ["#2e240d", "#C8A96E"],
+  };
+  const [from, to] = colors[era] ?? ["#18181b", "#3f3f46"];
+  return { background: `linear-gradient(135deg, ${from} 0%, ${to} 100%)` };
+}
 
 interface VideoResourceContentProps {
   progressMap: Record<number, { videoWatchPercent: number; videoCompleted: boolean }>;
@@ -153,8 +169,14 @@ export function VideoResourceContent({
               className="group block cursor-pointer"
             >
               <div className="flex items-center gap-6">
-                <div className="relative flex-shrink-0 w-48 h-28 rounded-xl bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center overflow-hidden">
-                  <Play className="w-8 h-8 text-white/70 group-hover:text-white transition-colors" />
+                <div
+                  className="relative flex-shrink-0 w-48 h-28 rounded-xl flex items-center justify-center overflow-hidden"
+                  style={eraGradient(continueWatchingPart.era)}
+                >
+                  <span className="absolute inset-0 flex items-center justify-center opacity-10 text-7xl font-black text-white select-none pointer-events-none">
+                    {continueWatchingPart.partNumber}
+                  </span>
+                  <Play className="w-8 h-8 text-white/80 group-hover:text-white transition-colors relative z-10" />
                   {continueWatching && (
                     <div className="absolute bottom-0 left-0 right-0 h-1 bg-zinc-800">
                       <div
@@ -204,27 +226,42 @@ export function VideoResourceContent({
                     className="group cursor-pointer rounded-xl border border-zinc-800 bg-zinc-900/50 hover:bg-zinc-900 hover:border-amber-500/30 overflow-hidden transition-all"
                   >
                     {/* Thumbnail */}
-                    <div className="aspect-video bg-gradient-to-br from-zinc-800 to-zinc-900 relative flex items-center justify-center">
+                    <div
+                      className="aspect-video relative flex items-center justify-center overflow-hidden"
+                      style={eraGradient(part.era)}
+                    >
+                      {/* Large part number watermark */}
+                      <span className="absolute inset-0 flex items-center justify-center opacity-[0.12] text-[5rem] font-black text-white select-none pointer-events-none leading-none">
+                        {part.partNumber}
+                      </span>
+
+                      {/* Era label */}
+                      <span className="absolute bottom-8 left-0 right-0 text-center text-[10px] font-semibold uppercase tracking-widest text-white/40 select-none">
+                        {ERA_MAP[part.era as keyof typeof ERA_MAP]?.label ?? part.era}
+                      </span>
+
+                      {/* Status badge */}
                       {isCompleted && (
-                        <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-green-500/20 border border-green-500/40 flex items-center justify-center">
+                        <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-green-500/30 border border-green-500/50 flex items-center justify-center">
                           <CheckCircle2 className="w-4 h-4 text-green-400" />
                         </div>
                       )}
                       {!isCompleted && watchPercent > 0 && (
-                        <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-amber-500/20 border border-amber-500/40 text-amber-400 text-xs font-medium">
+                        <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-black/40 border border-white/20 text-white text-xs font-medium">
                           {watchPercent}%
                         </div>
                       )}
 
-                      <div className="w-12 h-12 rounded-full bg-black/40 border border-white/20 flex items-center justify-center group-hover:bg-amber-500/20 group-hover:border-amber-500/40 transition-all">
+                      {/* Play button */}
+                      <div className="relative z-10 w-11 h-11 rounded-full bg-black/40 border border-white/25 flex items-center justify-center group-hover:bg-white/20 group-hover:border-white/40 transition-all">
                         <Play className="w-5 h-5 text-white ml-0.5" />
                       </div>
 
                       {/* Progress bar */}
                       {watchPercent > 0 && (
-                        <div className="absolute bottom-0 left-0 right-0 h-1 bg-zinc-800">
+                        <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/30">
                           <div
-                            className="h-full bg-amber-500"
+                            className="h-full bg-white/60"
                             style={{ width: `${watchPercent}%` }}
                           />
                         </div>
