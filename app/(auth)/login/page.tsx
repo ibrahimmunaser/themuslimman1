@@ -6,7 +6,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, ShieldCheck, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { login } from "@/lib/auth";
 import { roleHome } from "@/lib/roles";
 
 function LoginContent() {
@@ -22,9 +21,22 @@ function LoginContent() {
     e.preventDefault();
     setError("");
     setLoading(true);
+    
     try {
-      const result = await login(form.email, form.password);
-      if (result.success && result.role) {
+      // Use API route instead of server action for better cookie handling
+      const response = await fetch("/api/auth/signin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: form.email, password: form.password }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success && result.role) {
+        // Cookies are now set by the API route
+        // Add a small delay to ensure cookies are propagated
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         // If there's a return URL, redirect there
         if (returnUrl) {
           router.push(returnUrl);

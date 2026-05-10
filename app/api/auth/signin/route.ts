@@ -29,11 +29,12 @@ export async function POST(request: NextRequest) {
     }
 
     const elapsed = Date.now() - startTime;
-    console.log(`[API] POST /api/auth/signin: SUCCESS for ${email}, role: ${result.role} [${elapsed}ms]`);
+    console.log(`[API] POST /api/auth/signin: SUCCESS for ${email}, role: ${result.role}, hasPurchase: ${result.hasPurchase} [${elapsed}ms]`);
 
     return NextResponse.json({
       success: true,
       role: result.role,
+      hasPurchase: result.hasPurchase,
     });
   } catch (error) {
     const elapsed = Date.now() - startTime;
