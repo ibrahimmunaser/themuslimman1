@@ -7,11 +7,15 @@ import Stripe from "stripe";
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
 export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+  console.log(`[WEBHOOK] POST /api/stripe/webhook: Request received`);
+  
   const body = await request.text();
   const headersList = await headers();
   const signature = headersList.get("stripe-signature");
 
   if (!signature) {
+    console.error(`[WEBHOOK] POST /api/stripe/webhook: No signature provided`);
     return NextResponse.json(
       { error: "No signature provided" },
       { status: 400 }
@@ -22,8 +26,9 @@ export async function POST(request: NextRequest) {
 
   try {
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+    console.log(`[WEBHOOK] POST /api/stripe/webhook: Event verified - type: ${event.type}, id: ${event.id}`);
   } catch (err) {
-    console.error("Webhook signature verification failed:", err);
+    console.error(`[WEBHOOK] POST /api/stripe/webhook: Signature verification FAILED:`, err);
     return NextResponse.json(
       { error: "Webhook signature verification failed" },
       { status: 400 }
@@ -33,32 +38,41 @@ export async function POST(request: NextRequest) {
   switch (event.type) {
     case "payment_intent.succeeded": {
       const paymentIntent = event.data.object as Stripe.PaymentIntent;
+      console.log(`[WEBHOOK] payment_intent.succeeded: ${paymentIntent.id}, amount: ${paymentIntent.amount} ${paymentIntent.currency}, customer: ${paymentIntent.customer}`);
       await handlePaymentSuccess(paymentIntent);
       break;
     }
 
     case "payment_intent.payment_failed": {
       const failedPayment = event.data.object as Stripe.PaymentIntent;
-      console.error("Payment failed:", failedPayment.id);
+      console.error(`[WEBHOOK] payment_intent.payment_failed: ${failedPayment.id}, reason: ${failedPayment.last_payment_error?.message}`);
       break;
     }
 
     default:
-      console.log(`Unhandled event type: ${event.type}`);
+      console.log(`[WEBHOOK] Unhandled event type: ${event.type} (id: ${event.id})`);
   }
+
+  const elapsed = Date.now() - startTime;
+  console.log(`[WEBHOOK] POST /api/stripe/webhook: Complete for event ${event.type} [${elapsed}ms]`);
 
   return NextResponse.json({ received: true });
 }
 
 async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
+  const startTime = Date.now();
   const { userId, planId, planName } = paymentIntent.metadata;
 
+  console.log(`[WEBHOOK] handlePaymentSuccess: Processing payment ${paymentIntent.id} - userId: ${userId}, planId: ${planId}, planName: ${planName}`);
+
   if (!userId || !planId) {
-    console.error("Missing metadata in payment intent:", paymentIntent.id);
+    console.error(`[WEBHOOK] handlePaymentSuccess: Missing metadata in payment intent ${paymentIntent.id} - userId: ${userId}, planId: ${planId}`);
     return;
   }
 
   try {
+    console.log(`[WEBHOOK] handlePaymentSuccess: Upserting purchase record for payment ${paymentIntent.id}...`);
+    
     // Upsert purchase — idempotent so webhook retries and the verify-payment
     // route don't create duplicate records for the same PaymentIntent.
     await prisma.purchase.upsert({
@@ -76,33 +90,41 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
         status: "succeeded",
       },
     });
+    
+    console.log(`[WEBHOOK] handlePaymentSuccess: Purchase record upserted for payment ${paymentIntent.id}`);
 
     // Update user's hasPaid flag and save stripeCustomerId if present
     const updateData: { hasPaid: boolean; stripeCustomerId?: string } = { hasPaid: true };
     if (paymentIntent.customer && typeof paymentIntent.customer === "string") {
       updateData.stripeCustomerId = paymentIntent.customer;
+      console.log(`[WEBHOOK] handlePaymentSuccess: Updating user ${userId} with stripeCustomerId ${paymentIntent.customer}`);
     }
     await prisma.user.update({ where: { id: userId }, data: updateData });
+    console.log(`[WEBHOOK] handlePaymentSuccess: User ${userId} updated with hasPaid=true`);
 
     // Attach payment method to Stripe customer for saved cards
     if (paymentIntent.payment_method && paymentIntent.customer) {
+      console.log(`[WEBHOOK] handlePaymentSuccess: Attaching payment method ${paymentIntent.payment_method} to customer ${paymentIntent.customer}`);
       try {
         await stripe.paymentMethods.attach(paymentIntent.payment_method as string, {
           customer: paymentIntent.customer as string,
         });
-      } catch {
-        // Already attached — ignore
+        console.log(`[WEBHOOK] handlePaymentSuccess: Payment method attached successfully`);
+      } catch (attachError) {
+        console.log(`[WEBHOOK] handlePaymentSuccess: Payment method already attached or attachment failed (non-critical):`, attachError);
       }
     }
 
-    console.log(`Purchase recorded for user ${userId}: ${planName}`);
+    const elapsed = Date.now() - startTime;
+    console.log(`[WEBHOOK] handlePaymentSuccess: Purchase recorded for user ${userId}: ${planName ?? planId} [${elapsed}ms]`);
 
     // Send purchase confirmation email — non-blocking
     sendPurchaseConfirmationEmail(userId, planName ?? planId).catch((err) =>
-      console.error("[PURCHASE_EMAIL] Failed to send confirmation email:", err)
+      console.error("[WEBHOOK] [PURCHASE_EMAIL] Failed to send confirmation email:", err)
     );
   } catch (error) {
-    console.error("Error recording purchase:", error);
+    const elapsed = Date.now() - startTime;
+    console.error(`[WEBHOOK] handlePaymentSuccess: ERROR recording purchase for payment ${paymentIntent.id} [${elapsed}ms]:`, error);
   }
 }
 

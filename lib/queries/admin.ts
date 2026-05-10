@@ -3,6 +3,9 @@ import { prisma } from "@/lib/db";
 import { ROLES } from "@/lib/roles";
 
 export async function getAdminDashboardData() {
+  const startTime = Date.now();
+  console.log(`[ADMIN_QUERY] getAdminDashboardData: Starting dashboard data fetch...`);
+  
   const [
     totalStudents,
     paidStudents,
@@ -62,6 +65,9 @@ export async function getAdminDashboardData() {
   const avgQuizScore = quizStats._avg.quizBestScore;
   const totalQuizCompletions = quizStats._count.quizCompleted;
 
+  const elapsed = Date.now() - startTime;
+  console.log(`[ADMIN_QUERY] getAdminDashboardData: Complete - Students: ${totalStudents} (${paidStudents} paid), Revenue: $${(totalRevenueCents / 100).toFixed(2)} (${totalOrders} orders), Parts completed: ${partsCompleted}, Avg quiz: ${avgQuizScore?.toFixed(1)}%, Recent signups: ${recentSignups.length}, Support tickets: ${openSupportTickets} [${elapsed}ms]`);
+
   return {
     totalStudents,
     paidStudents,
@@ -76,6 +82,9 @@ export async function getAdminDashboardData() {
 }
 
 export async function getAdminOrdersData() {
+  const startTime = Date.now();
+  console.log(`[ADMIN_QUERY] getAdminOrdersData: Starting orders data fetch...`);
+  
   const [purchases, revenueResult, paidCount] = await Promise.all([
     prisma.purchase.findMany({
       include: {
@@ -97,10 +106,16 @@ export async function getAdminOrdersData() {
     }).then((r) => r.length),
   ]);
 
+  const totalRevenueCents = revenueResult._sum.amount ?? 0;
+  const totalOrders = revenueResult._count;
+
+  const elapsed = Date.now() - startTime;
+  console.log(`[ADMIN_QUERY] getAdminOrdersData: Complete - Fetched ${purchases.length} purchases, Revenue: $${(totalRevenueCents / 100).toFixed(2)} (${totalOrders} orders), Unique buyers: ${paidCount} [${elapsed}ms]`);
+
   return {
     purchases,
-    totalRevenueCents: revenueResult._sum.amount ?? 0,
-    totalOrders: revenueResult._count,
+    totalRevenueCents,
+    totalOrders,
     uniqueBuyers: paidCount,
   };
 }
