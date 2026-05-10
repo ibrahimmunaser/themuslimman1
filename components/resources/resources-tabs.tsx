@@ -23,19 +23,21 @@ interface Tab {
   id: TabId;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
+  /** hex accent colour for this tab */
+  color: string;
 }
 
 const TABS: Tab[] = [
-  { id: "videos", label: "Videos", icon: Video },
-  { id: "audio", label: "Audio", icon: Headphones },
-  { id: "briefings", label: "Briefings", icon: FileText },
-  { id: "slides", label: "Slides", icon: Layers },
-  { id: "infographics", label: "Infographics", icon: Image },
-  { id: "mindmaps", label: "Mind Maps", icon: Map },
-  { id: "flashcards", label: "Flashcards", icon: Brain },
-  { id: "quizzes", label: "Quizzes", icon: ClipboardCheck },
-  { id: "study-guides", label: "Study Guides", icon: GraduationCap },
-  { id: "facts", label: "Facts", icon: BarChart2 },
+  { id: "videos",       label: "Videos",       icon: Video,         color: "#f59e0b" }, // amber
+  { id: "audio",        label: "Audio",         icon: Headphones,    color: "#a855f7" }, // purple
+  { id: "briefings",    label: "Briefings",     icon: FileText,      color: "#38bdf8" }, // sky
+  { id: "slides",       label: "Slides",        icon: Layers,        color: "#fb923c" }, // orange
+  { id: "infographics", label: "Infographics",  icon: Image,         color: "#f472b6" }, // pink
+  { id: "mindmaps",     label: "Mind Maps",     icon: Map,           color: "#2dd4bf" }, // teal
+  { id: "flashcards",   label: "Flashcards",    icon: Brain,         color: "#818cf8" }, // indigo
+  { id: "quizzes",      label: "Quizzes",       icon: ClipboardCheck, color: "#4ade80" }, // green
+  { id: "study-guides", label: "Study Guides",  icon: GraduationCap, color: "#60a5fa" }, // blue
+  { id: "facts",        label: "Facts",         icon: BarChart2,     color: "#f87171" }, // red
 ];
 
 export function ResourcesTabs({
@@ -73,17 +75,34 @@ export function ResourcesTabs({
             {TABS.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
+              const c = tab.color;
               
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={clsx(
-                    "flex items-center gap-2.5 px-5 py-3 text-sm font-medium transition-all duration-200 rounded-lg whitespace-nowrap",
-                    isActive
-                      ? "bg-amber-500/15 text-amber-400 border border-amber-500/30 shadow-lg shadow-amber-500/10"
-                      : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50"
-                  )}
+                  className="flex items-center gap-2.5 px-5 py-3 text-sm font-medium transition-all duration-200 rounded-lg whitespace-nowrap"
+                  style={isActive ? {
+                    color: c,
+                    backgroundColor: `${c}18`,
+                    border: `1px solid ${c}40`,
+                    boxShadow: `0 4px 16px ${c}18`,
+                  } : {
+                    color: "#a1a1aa",
+                    border: "1px solid transparent",
+                  }}
+                  onMouseEnter={e => {
+                    if (!isActive) {
+                      (e.currentTarget as HTMLButtonElement).style.color = c;
+                      (e.currentTarget as HTMLButtonElement).style.backgroundColor = `${c}12`;
+                    }
+                  }}
+                  onMouseLeave={e => {
+                    if (!isActive) {
+                      (e.currentTarget as HTMLButtonElement).style.color = "#a1a1aa";
+                      (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
+                    }
+                  }}
                 >
                   <Icon className="w-4 h-4" />
                   {tab.label}
