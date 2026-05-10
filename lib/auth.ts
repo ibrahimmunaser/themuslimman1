@@ -46,12 +46,20 @@ async function clearSessionCookie() {
 }
 
 async function createSession(userId: string, role: string): Promise<string> {
+  console.log(`[AUTH] createSession: Creating session for user ${userId}, role: ${role}`);
   const token = nanoid(48);
   const expiresAt = new Date(Date.now() + COOKIE_MAX_AGE * 1000);
-  await prisma.session.create({ data: { userId, token, expiresAt } });
-  await setSessionCookie(token, expiresAt);
-  await setRoleCookie(role, expiresAt);
-  return token;
+  
+  try {
+    await prisma.session.create({ data: { userId, token, expiresAt } });
+    await setSessionCookie(token, expiresAt);
+    await setRoleCookie(role, expiresAt);
+    console.log(`[AUTH] createSession: Session created successfully for user ${userId}, token ${token.substring(0, 8)}..., expires ${expiresAt.toISOString()}`);
+    return token;
+  } catch (error) {
+    console.error(`[AUTH] createSession: Failed to create session for user ${userId}:`, error);
+    throw error;
+  }
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -59,9 +67,16 @@ async function createSession(userId: string, role: string): Promise<string> {
 // ─────────────────────────────────────────────────────────────
 
 export async function getCurrentUser(): Promise<SessionUser | null> {
+  const startTime = Date.now();
   const cookieStore = await cookies();
   const token = cookieStore.get(COOKIE_NAME)?.value;
-  if (!token) return null;
+  
+  if (!token) {
+    console.log(`[AUTH] getCurrentUser: No session token found`);
+    return null;
+  }
+
+  console.log(`[AUTH] getCurrentUser: Fetching session for token ${token.substring(0, 8)}...`);
 
   const session = await prisma.session.findUnique({
     where: { token },
@@ -74,15 +89,33 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
     },
   });
 
-  if (!session) return null;
+  if (!session) {
+    console.log(`[AUTH] getCurrentUser: No session found for token ${token.substring(0, 8)}...`);
+    return null;
+  }
+
   if (session.expiresAt < new Date()) {
-    await prisma.session.delete({ where: { id: session.id } }).catch(() => {});
+    console.log(`[AUTH] getCurrentUser: Session expired for user ${session.user.email}, expires at ${session.expiresAt.toISOString()}`);
+    await prisma.session.delete({ where: { id: session.id } }).catch((err) => {
+      console.error(`[AUTH] getCurrentUser: Failed to delete expired session:`, err);
+    });
     return null;
   }
 
   const { user } = session;
-  if (!isRole(user.role)) return null;
-  if (!user.isActive) return null;
+  
+  if (!isRole(user.role)) {
+    console.error(`[AUTH] getCurrentUser: Invalid role "${user.role}" for user ${user.email}`);
+    return null;
+  }
+  
+  if (!user.isActive) {
+    console.log(`[AUTH] getCurrentUser: User ${user.email} is inactive`);
+    return null;
+  }
+
+  const elapsed = Date.now() - startTime;
+  console.log(`[AUTH] getCurrentUser: Success for ${user.email} (role: ${user.role}, id: ${user.id}) [${elapsed}ms]`);
 
   return {
     id: user.id,
@@ -107,18 +140,25 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
 // ─────────────────────────────────────────────────────────────
 
 export async function requireAuth(): Promise<SessionUser> {
+  console.log(`[AUTH] requireAuth: Checking authentication...`);
   const user = await getCurrentUser();
-  if (!user) redirect("/login");
+  if (!user) {
+    console.log(`[AUTH] requireAuth: No authenticated user, redirecting to /login`);
+    redirect("/login");
+  }
+  console.log(`[AUTH] requireAuth: Authenticated as ${user.email} (role: ${user.role})`);
   return user;
 }
 
 export async function requireRole(...roles: Role[]): Promise<SessionUser> {
+  console.log(`[AUTH] requireRole: Checking for roles ${roles.join(", ")}`);
   const user = await requireAuth();
   if (!roles.includes(user.role)) {
-    // Redirect to role-specific home
     const home = user.role === ROLES.PLATFORM_ADMIN ? "/admin/dashboard" : "/student/dashboard";
+    console.log(`[AUTH] requireRole: User ${user.email} has role ${user.role}, not in [${roles.join(", ")}]. Redirecting to ${home}`);
     redirect(home);
   }
+  console.log(`[AUTH] requireRole: User ${user.email} authorized with role ${user.role}`);
   return user;
 }
 
@@ -141,42 +181,65 @@ export async function login(
   email: string,
   password: string
 ): Promise<{ success: boolean; error?: string; role?: Role; hasPurchase?: boolean }> {
+  const startTime = Date.now();
+  const lowerEmail = email.toLowerCase();
+  console.log(`[AUTH] login: Attempting login for email ${lowerEmail}`);
+  
   const user = await prisma.user.findUnique({
-    where: { email: email.toLowerCase() },
+    where: { email: lowerEmail },
     include: { student: true },
   });
 
   if (!user) {
+    console.log(`[AUTH] login: User not found for email ${lowerEmail}`);
     return { success: false, error: "Invalid credentials" };
   }
 
+  console.log(`[AUTH] login: User found: ${user.email} (id: ${user.id}, role: ${user.role}, active: ${user.isActive}, emailVerified: ${user.emailVerified})`);
+
   if (!user.isActive) {
+    console.log(`[AUTH] login: Account deactivated for ${user.email}`);
     return { success: false, error: "Account is deactivated" };
   }
 
   if (!user.passwordHash) {
+    console.log(`[AUTH] login: No password hash for ${user.email}`);
     return { success: false, error: "Please set up your password first" };
   }
 
   const valid = await bcrypt.compare(password, user.passwordHash);
   if (!valid) {
+    console.log(`[AUTH] login: Invalid password for ${user.email}`);
     return { success: false, error: "Invalid email or password" };
   }
 
   // In production, require email verification. In development, skip it.
   const isDevelopment = process.env.NODE_ENV !== "production";
   if (!isDevelopment && !user.emailVerified) {
+    console.log(`[AUTH] login: Email not verified for ${user.email} (production mode)`);
     return { success: false, error: "Please verify your email before signing in" };
   }
 
-  await createSession(user.id, user.role);
-  await prisma.user.update({
-    where: { id: user.id },
-    data: { lastLoginAt: new Date() },
-  });
+  console.log(`[AUTH] login: Password valid for ${user.email}, creating session...`);
+  
+  try {
+    await createSession(user.id, user.role);
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { lastLoginAt: new Date() },
+    });
+    console.log(`[AUTH] login: Last login updated for ${user.email}`);
+  } catch (error) {
+    console.error(`[AUTH] login: Failed to create session or update last login for ${user.email}:`, error);
+    return { success: false, error: "Failed to create session. Please try again." };
+  }
 
   // Check if user has any successful purchases
   const hasPurchase = await userHasPurchases(user.id);
+  console.log(`[AUTH] login: User ${user.email} has purchase: ${hasPurchase}`);
+
+  const elapsed = Date.now() - startTime;
+  console.log(`[AUTH] login: SUCCESS for ${user.email} (role: ${user.role}) [${elapsed}ms]`);
 
   return { success: true, role: user.role as Role, hasPurchase };
 }
@@ -190,10 +253,16 @@ export async function logout(): Promise<void> {
   const token = cookieStore.get(COOKIE_NAME)?.value;
 
   if (token) {
-    await prisma.session.delete({ where: { token } }).catch(() => {});
+    console.log(`[AUTH] logout: Deleting session for token ${token.substring(0, 8)}...`);
+    await prisma.session.delete({ where: { token } }).catch((err) => {
+      console.error(`[AUTH] logout: Failed to delete session:`, err);
+    });
+  } else {
+    console.log(`[AUTH] logout: No session token to delete`);
   }
 
   await clearSessionCookie();
+  console.log(`[AUTH] logout: Session cookies cleared`);
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -201,13 +270,16 @@ export async function logout(): Promise<void> {
 // ─────────────────────────────────────────────────────────────
 
 export async function userHasPurchases(userId: string): Promise<boolean> {
+  console.log(`[AUTH] userHasPurchases: Checking purchases for user ${userId}`);
   const purchases = await prisma.purchase.findFirst({
     where: {
       userId,
       status: "succeeded",
     },
   });
-  return !!purchases;
+  const hasPurchase = !!purchases;
+  console.log(`[AUTH] userHasPurchases: User ${userId} has purchase: ${hasPurchase}`);
+  return hasPurchase;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -215,13 +287,18 @@ export async function userHasPurchases(userId: string): Promise<boolean> {
 // ─────────────────────────────────────────────────────────────
 
 export async function verifyEmail(token: string): Promise<{ success: boolean; error?: string }> {
+  console.log(`[AUTH] verifyEmail: Verifying email with token ${token.substring(0, 8)}...`);
+  
   const user = await prisma.user.findFirst({
     where: { verificationToken: token },
   });
 
   if (!user) {
+    console.log(`[AUTH] verifyEmail: Invalid or expired token ${token.substring(0, 8)}...`);
     return { success: false, error: "Invalid or expired verification link" };
   }
+
+  console.log(`[AUTH] verifyEmail: Token valid for user ${user.email}, marking as verified...`);
 
   await prisma.user.update({
     where: { id: user.id },
@@ -231,6 +308,7 @@ export async function verifyEmail(token: string): Promise<{ success: boolean; er
     },
   });
 
+  console.log(`[AUTH] verifyEmail: Email verified successfully for ${user.email}`);
   return { success: true };
 }
 
@@ -331,7 +409,10 @@ export async function resetPassword(
   token: string,
   newPassword: string
 ): Promise<{ success: boolean; error?: string }> {
+  console.log(`[AUTH] resetPassword: Resetting password with token ${token.substring(0, 8)}...`);
+  
   if (newPassword.length < 8) {
+    console.log(`[AUTH] resetPassword: Password too short (${newPassword.length} characters)`);
     return { success: false, error: "Password must be at least 8 characters" };
   }
 
@@ -343,9 +424,11 @@ export async function resetPassword(
   });
 
   if (!user) {
+    console.log(`[AUTH] resetPassword: Invalid or expired token ${token.substring(0, 8)}...`);
     return { success: false, error: "Invalid or expired reset link" };
   }
 
+  console.log(`[AUTH] resetPassword: Token valid for user ${user.email}, hashing new password...`);
   const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
 
   await prisma.user.update({
@@ -358,6 +441,7 @@ export async function resetPassword(
     },
   });
 
+  console.log(`[AUTH] resetPassword: Password reset successfully for ${user.email}`);
   return { success: true };
 }
 
@@ -369,26 +453,37 @@ export async function changePassword(
   currentPassword: string,
   newPassword: string
 ): Promise<{ success: boolean; error?: string }> {
+  console.log(`[AUTH] changePassword: Attempting password change...`);
+  
   const user = await getCurrentUser();
-  if (!user) return { success: false, error: "Not authenticated" };
+  if (!user) {
+    console.log(`[AUTH] changePassword: Not authenticated`);
+    return { success: false, error: "Not authenticated" };
+  }
+
+  console.log(`[AUTH] changePassword: User ${user.email} requesting password change`);
 
   const dbUser = await prisma.user.findUnique({
     where: { id: user.id },
   });
 
   if (!dbUser || !dbUser.passwordHash) {
+    console.error(`[AUTH] changePassword: User ${user.email} not found or has no password hash`);
     return { success: false, error: "User not found" };
   }
 
   const valid = await bcrypt.compare(currentPassword, dbUser.passwordHash);
   if (!valid) {
+    console.log(`[AUTH] changePassword: Current password invalid for ${user.email}`);
     return { success: false, error: "Current password is incorrect" };
   }
 
   if (newPassword.length < 8) {
+    console.log(`[AUTH] changePassword: New password too short (${newPassword.length} characters)`);
     return { success: false, error: "New password must be at least 8 characters" };
   }
 
+  console.log(`[AUTH] changePassword: Current password valid, hashing new password...`);
   const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
 
   await prisma.user.update({
@@ -396,5 +491,6 @@ export async function changePassword(
     data: { passwordHash },
   });
 
+  console.log(`[AUTH] changePassword: Password changed successfully for ${user.email}`);
   return { success: true };
 }

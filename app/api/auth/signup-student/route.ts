@@ -23,18 +23,26 @@ const SignupSchema = z.object({
  * Sends verification email with welcome message
  */
 export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+  console.log(`[API] /api/auth/signup-student: POST request received`);
+  
   try {
     const body = await request.json();
+    console.log(`[API] /api/auth/signup-student: Request body parsed, email: ${body.email}`);
+    
     const parsed = SignupSchema.safeParse(body);
 
     if (!parsed.success) {
+      const errorMsg = parsed.error.issues[0]?.message || "Invalid input";
+      console.log(`[API] /api/auth/signup-student: Validation failed: ${errorMsg}`);
       return NextResponse.json(
-        { error: parsed.error.issues[0]?.message || "Invalid input" },
+        { error: errorMsg },
         { status: 400 }
       );
     }
 
     const { fullName, email, password } = parsed.data;
+    console.log(`[API] /api/auth/signup-student: Validated data - fullName: ${fullName}, email: ${email}`);
 
     // Check if email already exists
     const existingEmail = await prisma.user.findUnique({
@@ -42,21 +50,26 @@ export async function POST(request: NextRequest) {
     });
 
     if (existingEmail) {
+      console.log(`[API] /api/auth/signup-student: Email ${email} already exists (user id: ${existingEmail.id})`);
       return NextResponse.json(
         { error: "An account with this email already exists" },
         { status: 400 }
       );
     }
 
+    console.log(`[API] /api/auth/signup-student: Email ${email} available, hashing password...`);
     // Hash password
     const passwordHash = await bcrypt.hash(password, 12);
+    console.log(`[API] /api/auth/signup-student: Password hashed`);
 
     // In development, auto-verify emails. In production, require verification.
     const isDevelopment = process.env.NODE_ENV !== "production";
     const verificationToken = isDevelopment ? null : generateToken();
     const verificationExpires = isDevelopment ? null : new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    console.log(`[API] /api/auth/signup-student: Mode: ${isDevelopment ? "development" : "production"}, auto-verify: ${isDevelopment}`);
 
     // Create user and student profile in transaction
+    console.log(`[API] /api/auth/signup-student: Creating user and student profile for ${email}...`);
     const user = await prisma.$transaction(async (tx) => {
       const newUser = await tx.user.create({
         data: {
@@ -78,10 +91,12 @@ export async function POST(request: NextRequest) {
         },
       });
 
+      console.log(`[API] /api/auth/signup-student: User created: ${newUser.email} (id: ${newUser.id}, studentProfileId: ${newUser.student?.id})`);
       return newUser;
     });
 
     // Create session and set cookie (auto-login after signup)
+    console.log(`[API] /api/auth/signup-student: Creating session for user ${user.id}...`);
     const sessionToken = nanoid(48);
     const sessionExpiresAt = new Date(Date.now() + COOKIE_MAX_AGE * 1000);
     
@@ -92,6 +107,7 @@ export async function POST(request: NextRequest) {
         expiresAt: sessionExpiresAt,
       },
     });
+    console.log(`[API] /api/auth/signup-student: Session created with token ${sessionToken.substring(0, 8)}..., expires ${sessionExpiresAt.toISOString()}`);
 
     const cookieStore = await cookies();
     cookieStore.set(COOKIE_NAME, sessionToken, {
@@ -108,10 +124,12 @@ export async function POST(request: NextRequest) {
       expires: sessionExpiresAt,
       path: "/",
     });
+    console.log(`[API] /api/auth/signup-student: Session cookies set for ${user.email}`);
 
     // Send verification email (only in production)
     if (!isDevelopment && verificationToken) {
       const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify-email?token=${verificationToken}`;
+      console.log(`[API] /api/auth/signup-student: Sending verification email to ${email}...`);
 
       try {
         const resend = new Resend(process.env.RESEND_API_KEY);
@@ -127,16 +145,19 @@ export async function POST(request: NextRequest) {
         });
 
         if (emailError) {
-          console.error("Failed to send verification email:", emailError);
+          console.error(`[API] /api/auth/signup-student: Failed to send verification email to ${email}:`, emailError);
         } else {
-          console.log(`[EMAIL] Verification email sent to ${email}`);
+          console.log(`[API] /api/auth/signup-student: Verification email sent successfully to ${email}`);
         }
       } catch (emailError) {
-        console.error("Failed to send verification email:", emailError);
+        console.error(`[API] /api/auth/signup-student: Exception sending verification email to ${email}:`, emailError);
       }
     } else {
-      console.log(`[DEV] Auto-verified user: ${email}`);
+      console.log(`[API] /api/auth/signup-student: Skipping verification email (development mode)`);
     }
+
+    const elapsed = Date.now() - startTime;
+    console.log(`[API] /api/auth/signup-student: SUCCESS - User ${email} created and logged in [${elapsed}ms]`);
 
     return NextResponse.json({
       success: true,
@@ -148,12 +169,14 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error("Signup error:", error);
+    const elapsed = Date.now() - startTime;
+    console.error(`[API] /api/auth/signup-student: ERROR [${elapsed}ms]:`, error);
     
     // Provide more specific error messages based on the error type
     if (error instanceof Error) {
       // Database connection errors
       if (error.message.includes("EMAXCONNSESSION") || error.message.includes("max clients")) {
+        console.error(`[API] /api/auth/signup-student: Database connection error`);
         return NextResponse.json(
           { error: "Server is experiencing high traffic. Please try again in a moment." },
           { status: 503 }
@@ -162,6 +185,7 @@ export async function POST(request: NextRequest) {
       
       // Unique constraint violations (duplicate email)
       if (error.message.includes("Unique constraint")) {
+        console.error(`[API] /api/auth/signup-student: Unique constraint violation`);
         return NextResponse.json(
           { error: "An account with this email already exists." },
           { status: 400 }
