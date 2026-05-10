@@ -110,18 +110,3 @@ function Stat({
     </span>
   );
 }
-
-function Stat({
-  icon, label, color = "text-text-muted",
-}: {
-  icon: React.ReactNode;
-  label: string;
-  color?: string;
-}) {
-  return (
-    <span className={`inline-flex items-center gap-1 text-xs ${color}`}>
-      {icon}
-      {label}
-    </span>
-  );
-}
