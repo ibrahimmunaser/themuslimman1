@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { PARTS } from "@/lib/content";
+import { ERA_MAP } from "@/lib/types";
+import { eraGradient } from "./era-gradient";
 import { ResourcePageClient } from "./resource-page-client";
 import { ArrowLeft, Headphones, CheckCircle2, Play, Pause, X, Volume2, VolumeX, SkipBack, SkipForward } from "lucide-react";
 import Link from "next/link";
@@ -385,27 +387,39 @@ export function AudioResourceContent({
                     }`}
                   >
                     {/* Thumbnail */}
-                    <div className="aspect-video bg-gradient-to-br from-zinc-800 to-zinc-900 relative flex items-center justify-center">
+                    <div
+                      className="aspect-video relative flex items-center justify-center overflow-hidden"
+                      style={eraGradient(part.era)}
+                    >
+                      {/* Large part number watermark */}
+                      <span className="absolute inset-0 flex items-center justify-center opacity-[0.12] text-[5rem] font-black text-white select-none pointer-events-none leading-none">
+                        {part.partNumber}
+                      </span>
+                      {/* Era label */}
+                      <span className="absolute bottom-8 left-0 right-0 text-center text-[10px] font-semibold uppercase tracking-widest text-white/40 select-none">
+                        {ERA_MAP[part.era as keyof typeof ERA_MAP]?.label ?? part.era}
+                      </span>
+
                       {isCompleted && (
-                        <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-green-500/20 border border-green-500/40 flex items-center justify-center">
+                        <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-green-500/30 border border-green-500/50 flex items-center justify-center">
                           <CheckCircle2 className="w-4 h-4 text-green-400" />
                         </div>
                       )}
                       {isCurrentlyPlaying && (
-                        <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-amber-500/20 border border-amber-500/40 text-amber-400 text-xs font-medium">
+                        <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-black/40 border border-white/20 text-white text-xs font-medium">
                           Playing
                         </div>
                       )}
 
-                      <div className={`w-16 h-16 rounded-full border flex items-center justify-center transition-all ${
+                      <div className={`relative z-10 w-14 h-14 rounded-full border flex items-center justify-center transition-all ${
                         currentAudio?.partNumber === part.partNumber
-                          ? "bg-amber-500/20 border-amber-500/40"
-                          : "bg-black/40 border-white/20 group-hover:bg-amber-500/20 group-hover:border-amber-500/40"
+                          ? "bg-white/20 border-white/40"
+                          : "bg-black/40 border-white/25 group-hover:bg-white/20 group-hover:border-white/40"
                       }`}>
                         {isCurrentlyPlaying ? (
-                          <Volume2 className="w-7 h-7 text-amber-500" />
+                          <Volume2 className="w-6 h-6 text-white" />
                         ) : (
-                          <Headphones className="w-7 h-7 text-white" />
+                          <Headphones className="w-6 h-6 text-white" />
                         )}
                       </div>
                     </div>
