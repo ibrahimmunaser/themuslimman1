@@ -3,8 +3,10 @@ import { requireStudent } from "@/lib/auth";
 import { StudentLayout } from "@/components/student/student-layout";
 import { prisma } from "@/lib/db";
 import { PARTS } from "@/lib/content";
-import { Video, Play, CheckCircle2, ArrowLeft } from "lucide-react";
+import { ERA_MAP } from "@/lib/types";
+import { Video, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { PartThumbnail } from "@/components/ui/part-thumbnail";
 
 export const metadata = { title: "Video Lessons | Resources" };
 export const dynamic = "force-dynamic";
@@ -70,59 +72,29 @@ export default async function VideosPage() {
               const watchPercent = partProgress?.videoWatchPercent || 0;
               const isCompleted = partProgress?.videoCompleted || watchPercent >= 85;
 
+              const eraInfo = ERA_MAP[part.era as keyof typeof ERA_MAP];
+
               return (
                 <Link
                   key={part.id}
                   href={`/seerah/${part.id}`}
-                  className="group block rounded-xl border border-border bg-surface hover:border-gold/30 hover:bg-surface-raised transition-all overflow-hidden"
+                  className="group block rounded-xl border border-border bg-surface hover:border-gold/30 transition-all overflow-hidden"
                 >
-                  {/* Thumbnail placeholder */}
-                  <div className="aspect-video bg-gradient-to-br from-zinc-800 to-zinc-900 relative flex items-center justify-center">
-                    {isCompleted ? (
-                      <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-green-500/20 border border-green-500/40 flex items-center justify-center">
-                        <CheckCircle2 className="w-4 h-4 text-green-400" />
-                      </div>
-                    ) : watchPercent > 0 ? (
-                      <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-amber-500/20 border border-amber-500/40 text-amber-400 text-xs font-medium">
-                        {watchPercent}%
-                      </div>
-                    ) : null}
-                    
-                    <div className="w-14 h-14 rounded-full bg-black/40 border border-white/20 flex items-center justify-center group-hover:bg-gold/20 group-hover:border-gold/40 transition-all">
-                      <Play className="w-6 h-6 text-white ml-1" />
-                    </div>
+                  <PartThumbnail
+                    partNumber={part.partNumber}
+                    era={part.era}
+                    eraLabel={eraInfo?.label ?? part.era}
+                    watchPercent={watchPercent}
+                    isCompleted={isCompleted}
+                  />
 
-                    {/* Progress bar */}
-                    {watchPercent > 0 && (
-                      <div className="absolute bottom-0 left-0 right-0 h-1 bg-zinc-800">
-                        <div
-                          className="h-full bg-gold"
-                          style={{ width: `${watchPercent}%` }}
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Info */}
-                  <div className="p-4">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-medium text-amber-500">
-                        Part {part.partNumber}
-                      </span>
-                      {isCompleted && (
-                        <span className="px-2 py-0.5 bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium rounded">
-                          Completed
-                        </span>
-                      )}
-                    </div>
-                    <h3 className="text-sm font-semibold text-text group-hover:text-gold transition-colors line-clamp-2">
+                  <div className="p-3">
+                    <p className="text-xs font-medium text-gold mb-0.5">
+                      Part {part.partNumber}
+                    </p>
+                    <h3 className="text-sm font-semibold text-text group-hover:text-gold transition-colors line-clamp-2 leading-snug">
                       {part.title}
                     </h3>
-                    {part.subtitle && (
-                      <p className="text-xs text-text-muted mt-1 line-clamp-1">
-                        {part.subtitle}
-                      </p>
-                    )}
                   </div>
                 </Link>
               );
