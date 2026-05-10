@@ -101,6 +101,13 @@ export async function POST(request: NextRequest) {
       expires: sessionExpiresAt,
       path: "/",
     });
+    cookieStore.set("seerah_role", "student", {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      expires: sessionExpiresAt,
+      path: "/",
+    });
 
     // Send verification email (only in production)
     if (!isDevelopment && verificationToken) {

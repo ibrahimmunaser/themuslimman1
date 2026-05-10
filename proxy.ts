@@ -24,9 +24,17 @@ const PROTECTED_PREFIXES = [
 
 const AUTH_ROUTES = ["/login", "/signup", "/forgot-password", "/reset-password"];
 const SESSION_COOKIE = "seerah_session";
+const ROLE_COOKIE    = "seerah_role";
+
+function roleHome(role: string | undefined): string {
+  if (role === "platform_admin") return "/admin/dashboard";
+  if (role === "student")        return "/my-courses";
+  return "/";
+}
 
 export function proxy(request: NextRequest) {
   const token = request.cookies.get(SESSION_COOKIE)?.value;
+  const role  = request.cookies.get(ROLE_COOKIE)?.value;
   const { pathname } = request.nextUrl;
 
   const isProtected = PROTECTED_PREFIXES.some(
@@ -43,9 +51,10 @@ export function proxy(request: NextRequest) {
   }
 
   if (isAuth && token) {
-    // Signed-in users hitting /login or /signup go to the neutral redirect
-    // resolver which picks the correct home based on role (handled server-side).
-    return NextResponse.redirect(new URL("/post-login", request.url));
+    // Redirect logged-in users directly to their role home using the role cookie.
+    // Falls back to /post-login if the role cookie is missing (e.g. old sessions).
+    const destination = role ? roleHome(role) : "/post-login";
+    return NextResponse.redirect(new URL(destination, request.url));
   }
 
   return NextResponse.next();

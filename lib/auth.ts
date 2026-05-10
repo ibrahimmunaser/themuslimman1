@@ -9,6 +9,7 @@ import type { SessionUser } from "./session";
 import { ROLES, type Role, isRole } from "./roles";
 
 const COOKIE_NAME = "seerah_session";
+const ROLE_COOKIE  = "seerah_role"; // readable by middleware (not httpOnly)
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 const BCRYPT_ROUNDS = 12;
 
@@ -27,16 +28,29 @@ async function setSessionCookie(token: string, expiresAt: Date) {
   });
 }
 
+async function setRoleCookie(role: string, expiresAt: Date) {
+  const cookieStore = await cookies();
+  cookieStore.set(ROLE_COOKIE, role, {
+    httpOnly: false, // must be readable by middleware on the edge
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    expires: expiresAt,
+    path: "/",
+  });
+}
+
 async function clearSessionCookie() {
   const cookieStore = await cookies();
   cookieStore.delete(COOKIE_NAME);
+  cookieStore.delete(ROLE_COOKIE);
 }
 
-async function createSession(userId: string): Promise<string> {
+async function createSession(userId: string, role: string): Promise<string> {
   const token = nanoid(48);
   const expiresAt = new Date(Date.now() + COOKIE_MAX_AGE * 1000);
   await prisma.session.create({ data: { userId, token, expiresAt } });
   await setSessionCookie(token, expiresAt);
+  await setRoleCookie(role, expiresAt);
   return token;
 }
 
@@ -155,7 +169,7 @@ export async function login(
     return { success: false, error: "Please verify your email before signing in" };
   }
 
-  await createSession(user.id);
+  await createSession(user.id, user.role);
   await prisma.user.update({
     where: { id: user.id },
     data: { lastLoginAt: new Date() },
