@@ -52,8 +52,8 @@ export function proxy(request: NextRequest) {
 
   if (isAuth && token) {
     // Redirect logged-in users directly to their role home using the role cookie.
-    // Falls back to /post-login if the role cookie is missing (e.g. old sessions).
-    const destination = role ? roleHome(role) : "/post-login";
+    // If role cookie is missing (old sessions), default to /my-courses and let server-side auth handle proper redirect.
+    const destination = role ? roleHome(role) : "/my-courses";
     return NextResponse.redirect(new URL(destination, request.url));
   }
 
