@@ -1,7 +1,7 @@
 // Service Worker for Advanced Caching
 // Implements intelligent caching strategies for different asset types
 
-const CACHE_VERSION = "v1";
+const CACHE_VERSION = "v2";
 const CACHE_NAME = `seerah-${CACHE_VERSION}`;
 
 // Cache strategies by asset type
@@ -217,6 +217,18 @@ self.addEventListener("fetch", (event) => {
   if (!url.startsWith("http")) {
     return;
   }
+
+  // Never intercept HTML navigation requests — let the browser handle them
+  // directly so server-side auth redirects (307s) are followed correctly
+  // without creating loops.
+  if (request.mode === "navigate") {
+    return;
+  }
+
+  // Never intercept Next.js RSC/prefetch payloads — auth state must be fresh
+  if (url.includes("_rsc=") || url.includes("_next/data/")) {
+    return;
+  }
   
   const strategy = getCacheStrategy(url);
   
@@ -229,14 +241,8 @@ self.addEventListener("fetch", (event) => {
       // Media assets: Cache-first (speed preferred)
       event.respondWith(cacheFirstStrategy(request, strategy));
     }
-  } else {
-    // Default: Network-first for pages
-    event.respondWith(
-      fetch(request).catch(() => {
-        return caches.match(request);
-      })
-    );
   }
+  // All other requests (non-asset, non-navigation) fall through to browser default
 });
 
 /**
