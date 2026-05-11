@@ -22,39 +22,26 @@ const PROTECTED_PREFIXES = [
   "/conclusion",
 ];
 
-const AUTH_ROUTES = ["/login", "/signup", "/forgot-password", "/reset-password"];
 const SESSION_COOKIE = "seerah_session";
-const ROLE_COOKIE    = "seerah_role";
-
-function roleHome(role: string | undefined): string {
-  if (role === "platform_admin") return "/admin/dashboard";
-  if (role === "student")        return "/my-courses";
-  return "/";
-}
 
 export function proxy(request: NextRequest) {
   const token = request.cookies.get(SESSION_COOKIE)?.value;
-  const role  = request.cookies.get(ROLE_COOKIE)?.value;
   const { pathname } = request.nextUrl;
 
   const isProtected = PROTECTED_PREFIXES.some(
     (r) => pathname === r || pathname.startsWith(r + "/")
   );
-  const isAuth = AUTH_ROUTES.some(
-    (r) => pathname === r || pathname.startsWith(r + "/")
-  );
 
+  // Only gate protected routes — proxy cannot verify session validity against
+  // the DB (edge runtime has no DB access). If the cookie exists but the
+  // session is stale, the page server-component will call getCurrentUser(),
+  // get null, and redirect to /login itself. Redirecting auth routes (like
+  // /login) back to /my-courses when a cookie exists creates an infinite loop
+  // whenever the session is invalid, so we intentionally skip that redirect.
   if (isProtected && !token) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl);
-  }
-
-  if (isAuth && token) {
-    // Redirect logged-in users directly to their role home using the role cookie.
-    // If role cookie is missing (old sessions), default to /my-courses and let server-side auth handle proper redirect.
-    const destination = role ? roleHome(role) : "/my-courses";
-    return NextResponse.redirect(new URL(destination, request.url));
   }
 
   return NextResponse.next();
@@ -75,9 +62,5 @@ export const config = {
     "/dashboard/:path*",
     "/parts/:path*",
     "/conclusion/:path*",
-    "/login",
-    "/signup",
-    "/forgot-password",
-    "/reset-password",
   ],
 };
