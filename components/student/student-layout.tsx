@@ -1,5 +1,3 @@
-"use client";
-
 import { StudentSidebar } from "./student-sidebar";
 
 interface StudentLayoutProps {

@@ -2,14 +2,13 @@
 
 import Link from "next/link";
 import { useState, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Eye, EyeOff, ShieldCheck, Users } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { roleHome } from "@/lib/roles";
 
 function LoginContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const returnUrl = searchParams.get("redirect") || searchParams.get("from") || null;
   const [showPassword, setShowPassword] = useState(false);
@@ -33,28 +32,19 @@ function LoginContent() {
       const result = await response.json();
 
       if (response.ok && result.success && result.role) {
-        // Cookies are now set by the API route
-        // Add a small delay to ensure cookies are propagated
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        // If there's a return URL, redirect there
+        // Use window.location.href for a full-page navigation so the server
+        // re-renders with fresh auth cookies — avoids the race condition where
+        // router.push() + router.refresh() discard the RSC payload mid-flight
+        // and leave the page black.
+        let destination: string;
         if (returnUrl) {
-          router.push(returnUrl);
+          destination = returnUrl;
+        } else if (result.role === "student") {
+          destination = result.hasPurchase ? "/my-courses" : "/pricing";
         } else {
-          // Check if user has purchase - redirect accordingly
-          if (result.role === "student") {
-            // For students, check purchase status
-            if (result.hasPurchase) {
-              router.push("/my-courses"); // Has purchase - go to my courses
-            } else {
-              router.push("/pricing"); // No purchase - go to pricing
-            }
-          } else {
-            // For admins, use role-based home
-            router.push(roleHome(result.role));
-          }
+          destination = roleHome(result.role);
         }
-        router.refresh();
+        window.location.href = destination;
       } else {
         setError(result.error || "Login failed. Please try again.");
       }
