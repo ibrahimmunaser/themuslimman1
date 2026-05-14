@@ -20,15 +20,15 @@ export async function Navbar() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
       <div className="border-b border-white/5 bg-ink/80 backdrop-blur-xl">
-        <nav className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+        <nav className="max-w-6xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 rounded-lg bg-gold/10 border border-gold/30 flex items-center justify-center group-hover:border-gold/60 transition-colors">
-              <span className="text-gold text-xs font-bold">T</span>
-            </div>
-            <span className="text-text font-semibold text-sm tracking-wide">
-              TheMuslimMan
-            </span>
+          <Link href="/" className="flex items-center group">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/images/logoicon.png"
+              alt="TheMuslimMan"
+              style={{ height: "56px", width: "auto", maxWidth: "none" }}
+            />
           </Link>
 
           {/* Desktop nav */}

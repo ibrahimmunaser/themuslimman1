@@ -10,11 +10,13 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-10">
           {/* Brand */}
           <div className="md:col-span-1">
-            <Link href="/" className="inline-flex items-center gap-2 text-xl font-bold text-text mb-4">
-              <span className="w-7 h-7 rounded-lg bg-gold/15 border border-gold/25 flex items-center justify-center text-gold text-sm">
-                T
-              </span>
-              TheMuslimMan
+            <Link href="/" className="inline-flex mb-4">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/images/logoicon.png"
+                alt="TheMuslimMan"
+                className="h-10 w-auto"
+              />
             </Link>
             <p className="text-sm text-text-muted leading-relaxed mb-4">
               Structured Seerah learning for serious Muslim learners.
