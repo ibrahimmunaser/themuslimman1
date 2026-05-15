@@ -168,30 +168,46 @@ async function sendPurchaseConfirmationEmail(userId: string, planName: string) {
               Thank you for your purchase. Your <strong>${planName}</strong> is now active and ready to use.
             </p>
 
-            <div style="text-align: center; margin: 36px 0;">
+            <div style="text-align: center; margin: 32px 0;">
               <a href="${appUrl}/seerah" style="display: inline-block; background: #f4c542; color: #1a1a1a; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: 700; font-size: 16px;">
-                Start Learning Now
+                Open the Course Dashboard
               </a>
+            </div>
+
+            <div style="background: #f9f4e8; border: 1px solid #e8d88a; border-radius: 8px; padding: 20px; margin: 24px 0;">
+              <p style="font-size: 15px; font-weight: 700; color: #333; margin: 0 0 12px 0;">Start here:</p>
+              <ol style="font-size: 14px; color: #555; padding-left: 20px; margin: 0; line-height: 1.8;">
+                <li><a href="${appUrl}/seerah" style="color: #b8960c; text-decoration: none;">Open the course dashboard</a></li>
+                <li>Begin with <strong>Part 1</strong></li>
+                <li>For each part, use the <strong>video, briefing, flashcards, and quiz together</strong> — they&rsquo;re designed to work as a set</li>
+                <li>Reply to this email or <a href="${appUrl}/contact" style="color: #b8960c; text-decoration: none;">contact support</a> if anything breaks or is unclear</li>
+              </ol>
             </div>
 
             <p style="font-size: 14px; color: #555; margin: 0 0 10px 0;">
               Your access includes:
             </p>
             <ul style="font-size: 14px; color: #555; padding-left: 20px; margin: 0 0 24px 0;">
-              <li style="margin-bottom: 6px;">All 100 Seerah parts — videos, summaries, quizzes, flashcards, and mind maps</li>
-              <li style="margin-bottom: 6px;">Progress tracking and mastery system</li>
+              <li style="margin-bottom: 6px;">All 100 Seerah parts — videos, audio, briefings, flashcards, quizzes, and more</li>
+              <li style="margin-bottom: 6px;">Progress tracking across every lesson</li>
               <li style="margin-bottom: 6px;">Lifetime access — learn at your own pace, anytime</li>
             </ul>
 
-            <div style="background: #f9f4e8; border: 1px solid #e8d88a; border-radius: 8px; padding: 16px; margin: 24px 0; font-size: 13px; color: #666;">
+            <div style="background: #f5f5f5; border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin: 24px 0; font-size: 13px; color: #666;">
               <strong style="color: #333;">7-Day Clarity Guarantee:</strong> If the course is not what you expected,
               email us within 7 days for a full refund. No hoops.
               <a href="${appUrl}/contact" style="color: #b8960c; text-decoration: none;"> Contact us here.</a>
             </div>
 
-            <p style="font-size: 13px; color: #888; margin: 0;">
-              Questions? Reply to this email or visit
-              <a href="${appUrl}/contact" style="color: #b8960c;">${appUrl}/contact</a>.
+            <p style="font-size: 13px; color: #777; margin: 0 0 12px 0;">
+              Want to understand our approach and sources?
+              <a href="${appUrl}/methodology" style="color: #b8960c;"> Read our methodology.</a>
+            </p>
+
+            <p style="font-size: 13px; color: #aaa; margin: 0;">
+              After you&rsquo;ve had a chance to use the course, we&rsquo;d love to hear what you think.
+              No pressure — whenever you&rsquo;re ready:
+              <a href="${appUrl}/testimonial" style="color: #b8960c;"> Share your feedback.</a>
             </p>
           </div>
 

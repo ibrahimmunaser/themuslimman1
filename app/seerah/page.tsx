@@ -215,45 +215,52 @@ export default async function LearnIndexPage() {
             </div>
           </div>
 
-          {/* Continue Learning Block */}
+          {/* Start Here / Continue Learning Block */}
           <div className="bg-gradient-to-br from-amber-500/10 to-amber-600/5 border border-amber-500/20 rounded-2xl p-6 mb-6">
             <div className="flex items-start justify-between gap-6">
               <div className="flex-1">
-                <p className="text-amber-400 text-sm font-medium mb-2">Continue where you left off</p>
-                <h3 className="text-xl font-semibold text-white mb-2">
+                <p className="text-amber-400 text-sm font-medium mb-2">
+                  {completedCount === 0 ? "Start here — your next step" : "Continue where you left off"}
+                </p>
+                <h3 className="text-xl font-semibold text-white mb-1">
                   Part {currentPart}: {currentPartData?.title || "Getting Started"}
                 </h3>
-                <p className="text-zinc-400 text-sm mb-4">
-                  {currentPartData?.subtitle}
+                {currentPartData?.subtitle && (
+                  <p className="text-zinc-400 text-sm mb-3">{currentPartData.subtitle}</p>
+                )}
+                <p className="text-zinc-500 text-sm mb-4 italic">
+                  Goal: understand this stage of the Seerah as part of the connected story.
                 </p>
-                
-                {/* Progress bar */}
-                <div className="mb-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-zinc-400">Lesson progress</span>
-                    <span className="text-xs text-amber-400 font-medium">{currentPartProgress}% complete</span>
-                  </div>
-                  <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-gradient-to-r from-amber-500 to-amber-600 transition-all duration-300"
-                      style={{ width: `${currentPartProgress}%` }}
-                    />
-                  </div>
-                </div>
 
-                <Link 
+                {/* Progress bar — only shown if lesson has been started */}
+                {currentPartProgress > 0 && (
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs text-zinc-400">Lesson progress</span>
+                      <span className="text-xs text-amber-400 font-medium">{currentPartProgress}% complete</span>
+                    </div>
+                    <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-amber-500 to-amber-600 transition-all duration-300"
+                        style={{ width: `${currentPartProgress}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <Link
                   href={`/seerah/part-${currentPart}`}
                   className="inline-flex items-center gap-2 px-6 py-3 bg-amber-500 hover:bg-amber-600 text-black font-semibold rounded-lg transition-colors"
                 >
                   <Play className="w-4 h-4" />
-                  Continue Lesson
+                  {completedCount === 0 ? "Start Learning" : "Continue Learning"}
                 </Link>
               </div>
 
-              {/* Today's Goal */}
+              {/* How to use each lesson */}
               <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 min-w-[240px]">
-                <p className="text-sm font-medium text-white mb-1">Today's Goal for Part {currentPart}</p>
-                <p className="text-xs text-zinc-500 mb-3">Complete this lesson today</p>
+                <p className="text-sm font-medium text-white mb-1">How to use each lesson</p>
+                <p className="text-xs text-zinc-500 mb-3">Use all four together for best retention</p>
                 <div className="space-y-2 text-sm text-zinc-400">
                   <div className="flex items-center gap-2">
                     <Video className="w-4 h-4 text-amber-500" />
@@ -275,7 +282,7 @@ export default async function LearnIndexPage() {
                 <div className="mt-4 pt-3 border-t border-zinc-800">
                   <div className="flex items-center gap-2 text-sm">
                     <Clock className="w-4 h-4 text-zinc-500" />
-                    <span className="text-zinc-400">Estimated: <span className="text-white font-medium">25 min</span></span>
+                    <span className="text-zinc-400">Estimated: <span className="text-white font-medium">15–20 min</span></span>
                   </div>
                 </div>
               </div>
@@ -310,9 +317,10 @@ export default async function LearnIndexPage() {
       {/* Chapters */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-white mb-2">Chapters</h2>
+          <h2 className="text-2xl font-bold text-white mb-2">Course Roadmap</h2>
           <p className="text-zinc-400 text-sm">
-            Explore the life of Prophet Muhammad ﷺ chronologically, from pre-Islamic Arabia to his final days
+            The life of Prophet Muhammad ﷺ in eight stages — from pre-Islamic Arabia to his final days.
+            Work through each stage in order; every part builds on the one before it.
           </p>
         </div>
 
@@ -321,13 +329,14 @@ export default async function LearnIndexPage() {
             const allCompleted = era.completedCount === era.totalCount;
             const inProgress = era.completedCount > 0 && era.completedCount < era.totalCount;
             const hasCurrentPart = era.parts.some(p => p.partNumber === currentPart);
+            const eraPercent = era.totalCount > 0 ? Math.round((era.completedCount / era.totalCount) * 100) : 0;
 
             return (
               <details key={eraKey} className="group" open={hasCurrentPart || inProgress}>
                 <summary className="cursor-pointer list-none">
                   <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5 hover:border-zinc-700 transition-colors">
                     <div className="flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-4 flex-1">
+                      <div className="flex items-center gap-4 flex-1 min-w-0">
                         <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
                           allCompleted ? "bg-green-500/10 border border-green-500/20" :
                           inProgress ? "bg-amber-500/10 border border-amber-500/20" :
@@ -339,9 +348,9 @@ export default async function LearnIndexPage() {
                             <BookOpen className={`w-6 h-6 ${inProgress ? "text-amber-500" : "text-zinc-500"}`} />
                           )}
                         </div>
-                        
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-1">
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-3 mb-1 flex-wrap">
                             <h3 className="text-lg font-semibold text-white">{era.label}</h3>
                             {allCompleted && (
                               <span className="px-2 py-0.5 bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium rounded">
@@ -354,20 +363,27 @@ export default async function LearnIndexPage() {
                               </span>
                             )}
                           </div>
-                          <p className="text-sm text-zinc-400 mb-2">{era.description}</p>
-                          <div className="flex items-center gap-4 text-xs text-zinc-500">
-                            <span>{era.totalCount} lessons</span>
-                            <span>•</span>
-                            <span>{era.completedCount} of {era.totalCount} completed</span>
+                          <p className="text-sm text-zinc-400 mb-3">{era.description}</p>
+                          {/* Era progress bar */}
+                          <div className="flex items-center gap-3">
+                            <div className="flex-1 h-1.5 bg-zinc-800 rounded-full overflow-hidden max-w-[180px]">
+                              <div
+                                className={`h-full rounded-full transition-all duration-300 ${
+                                  allCompleted ? "bg-green-500" : "bg-amber-500"
+                                }`}
+                                style={{ width: `${eraPercent}%` }}
+                              />
+                            </div>
+                            <span className="text-xs text-zinc-500">
+                              {era.completedCount}/{era.totalCount} parts
+                            </span>
                           </div>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3">
-                        <div className="text-right">
-                          <div className="text-sm font-semibold text-white">
-                            {era.totalCount > 0 ? Math.round((era.completedCount / era.totalCount) * 100) : 0}%
-                          </div>
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        <div className={`text-sm font-bold ${allCompleted ? "text-green-400" : inProgress ? "text-amber-400" : "text-zinc-600"}`}>
+                          {eraPercent}%
                         </div>
                         <ChevronDown className="w-5 h-5 text-zinc-500 group-open:rotate-180 transition-transform" />
                       </div>
