@@ -121,9 +121,6 @@ export default async function LearnIndexPage() {
   const briefingsProgressMap = getAssetProgressMap("briefing");
   const briefingsCompletedCount = getAssetCompletedCount("briefing");
 
-  const studyGuidesProgressMap = getAssetProgressMap("study-guide");
-  const studyGuidesCompletedCount = getAssetCompletedCount("study-guide");
-
   const factsProgressMap = getAssetProgressMap("statement-of-facts");
   const factsCompletedCount = getAssetCompletedCount("statement-of-facts");
 
@@ -650,15 +647,6 @@ export default async function LearnIndexPage() {
                 passedCount={quizPassedCount}
                 avgScore={quizAvgScore}
                 totalAttempts={quizTotalAttempts}
-              />
-            }
-            studyGuidesContent={
-              <TextResourceContent
-                title="Study Guides"
-                description="Comprehensive study guides for each lesson"
-                resourceType="study-guide"
-                progressMap={studyGuidesProgressMap}
-                completedCount={studyGuidesCompletedCount}
               />
             }
             factsContent={

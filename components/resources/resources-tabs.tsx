@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Video, Headphones, FileText, Image, Map, Layers, Brain, ClipboardCheck, GraduationCap, BarChart2 } from "lucide-react";
+import { Video, Headphones, FileText, Image, Map, Layers, Brain, ClipboardCheck, BarChart2 } from "lucide-react";
 import { clsx } from "clsx";
 
 interface ResourcesTabsProps {
@@ -13,11 +13,10 @@ interface ResourcesTabsProps {
   mindmapsContent: React.ReactNode;
   flashcardsContent: React.ReactNode;
   quizzesContent: React.ReactNode;
-  studyGuidesContent: React.ReactNode;
   factsContent: React.ReactNode;
 }
 
-type TabId = "videos" | "audio" | "briefings" | "slides" | "infographics" | "mindmaps" | "flashcards" | "quizzes" | "study-guides" | "facts";
+type TabId = "videos" | "audio" | "briefings" | "slides" | "infographics" | "mindmaps" | "flashcards" | "quizzes" | "facts";
 
 interface Tab {
   id: TabId;
@@ -27,17 +26,18 @@ interface Tab {
   color: string;
 }
 
+const ACTIVE_COLOR = "#f59e0b";
+
 const TABS: Tab[] = [
-  { id: "videos",       label: "Videos",       icon: Video,         color: "#f59e0b" }, // amber
-  { id: "audio",        label: "Audio",         icon: Headphones,    color: "#a855f7" }, // purple
-  { id: "briefings",    label: "Briefings",     icon: FileText,      color: "#38bdf8" }, // sky
-  { id: "slides",       label: "Slides",        icon: Layers,        color: "#fb923c" }, // orange
-  { id: "infographics", label: "Infographics",  icon: Image,         color: "#f472b6" }, // pink
-  { id: "mindmaps",     label: "Mind Maps",     icon: Map,           color: "#2dd4bf" }, // teal
-  { id: "flashcards",   label: "Flashcards",    icon: Brain,         color: "#818cf8" }, // indigo
-  { id: "quizzes",      label: "Quizzes",       icon: ClipboardCheck, color: "#4ade80" }, // green
-  { id: "study-guides", label: "Study Guides",  icon: GraduationCap, color: "#60a5fa" }, // blue
-  { id: "facts",        label: "Facts",         icon: BarChart2,     color: "#f87171" }, // red
+  { id: "videos",       label: "Videos",       icon: Video,          color: ACTIVE_COLOR },
+  { id: "audio",        label: "Audio",         icon: Headphones,     color: ACTIVE_COLOR },
+  { id: "briefings",    label: "Briefings",     icon: FileText,       color: ACTIVE_COLOR },
+  { id: "slides",       label: "Slides",        icon: Layers,         color: ACTIVE_COLOR },
+  { id: "infographics", label: "Infographics",  icon: Image,          color: ACTIVE_COLOR },
+  { id: "mindmaps",     label: "Mind Maps",     icon: Map,            color: ACTIVE_COLOR },
+  { id: "flashcards",   label: "Flashcards",    icon: Brain,          color: ACTIVE_COLOR },
+  { id: "quizzes",      label: "Quizzes",       icon: ClipboardCheck, color: ACTIVE_COLOR },
+  { id: "facts",        label: "Facts",         icon: BarChart2,      color: ACTIVE_COLOR },
 ];
 
 export function ResourcesTabs({
@@ -49,7 +49,6 @@ export function ResourcesTabs({
   mindmapsContent,
   flashcardsContent,
   quizzesContent,
-  studyGuidesContent,
   factsContent,
 }: ResourcesTabsProps) {
   const [activeTab, setActiveTab] = useState<TabId>("videos");
@@ -138,9 +137,6 @@ export function ResourcesTabs({
         </div>
         <div className={activeTab === "quizzes" ? "block" : "hidden"}>
           {quizzesContent}
-        </div>
-        <div className={activeTab === "study-guides" ? "block" : "hidden"}>
-          {studyGuidesContent}
         </div>
         <div className={activeTab === "facts" ? "block" : "hidden"}>
           {factsContent}
