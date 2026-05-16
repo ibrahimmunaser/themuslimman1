@@ -8,16 +8,12 @@ import { clsx } from "clsx";
 import {
   LayoutDashboard,
   BookOpen,
-  GraduationCap,
   FolderOpen,
-  ClipboardCheck,
   TrendingUp,
-  Award,
   HelpCircle,
   User,
   CreditCard,
   LogOut,
-  ChevronLeft,
   ChevronRight,
   Menu,
   X,
@@ -49,16 +45,16 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const MAIN_MENU: MenuItem[] = [
-    { id: "dashboard",  label: "Dashboard",  href: "/seerah",              icon: LayoutDashboard, tabId: "home" },
-    { id: "lessons",    label: "Lessons",    href: "/seerah?tab=lessons",  icon: BookOpen,        tabId: "lessons" },
-    { id: "resources",  label: "Resources",  href: "/seerah?tab=resources",icon: FolderOpen,      tabId: "resources" },
-    { id: "progress",   label: "Progress",   href: "/seerah?tab=progress", icon: TrendingUp,      tabId: "progress" },
-    { id: "help",       label: "Help",       href: "/help",                icon: HelpCircle },
+    { id: "dashboard",  label: "Dashboard",  href: "/seerah",               icon: LayoutDashboard, tabId: "home" },
+    { id: "lessons",    label: "Lessons",    href: "/seerah?tab=lessons",   icon: BookOpen,        tabId: "lessons" },
+    { id: "resources",  label: "Resources",  href: "/seerah?tab=resources", icon: FolderOpen,      tabId: "resources" },
+    { id: "progress",   label: "Progress",   href: "/seerah?tab=progress",  icon: TrendingUp,      tabId: "progress" },
   ];
 
   const ACCOUNT_MENU: MenuItem[] = [
+    { id: "help",    label: "Help",     href: "/help",              icon: HelpCircle },
     ...ACCOUNT_MENU_BASE,
-    { id: "billing", label: "Billing", href: "/billing", icon: CreditCard },
+    { id: "billing", label: "Billing",  href: "/billing",           icon: CreditCard },
   ];
 
   const isActive = (item: MenuItem) => {
@@ -120,84 +116,89 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
         </div>
       </div>
 
-      {/* Main Menu */}
+      {/* Navigation */}
       <div className="flex-1 overflow-y-auto py-3">
-        <nav className="space-y-1 px-3">
-          {/* Main Menu Section */}
+        <nav className="px-3">
+          {/* Course Section */}
           {!collapsed && (
-            <p className="px-2 text-xs font-semibold text-text-muted mb-2">
-              Main Menu
+            <p className="px-2 text-xs font-semibold text-text-muted mb-2 uppercase tracking-wider">
+              Course
             </p>
           )}
-          {MAIN_MENU.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item);
+          <div className="space-y-1">
+            {MAIN_MENU.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item);
 
-            return (
-              <Link
-                key={item.id}
-                href={item.href}
-                onClick={() => setMobileOpen(false)}
-                className={clsx(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
-                  active
-                    ? "bg-gold/10 text-gold border border-gold/25"
-                    : "text-text-secondary hover:text-text hover:bg-surface-raised"
-                )}
-              >
-                <Icon className="w-5 h-5 flex-shrink-0" />
-                {!collapsed && (
-                  <>
-                    <span className="flex-1">{item.label}</span>
-                    {item.badge && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-gold/20 text-gold font-semibold">
-                        {item.badge}
-                      </span>
-                    )}
-                  </>
-                )}
-              </Link>
-            );
-          })}
+              return (
+                <Link
+                  key={item.id}
+                  href={item.href}
+                  onClick={() => setMobileOpen(false)}
+                  className={clsx(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
+                    active
+                      ? "bg-gold/10 text-gold border border-gold/25"
+                      : "text-text-secondary hover:text-text hover:bg-surface-raised"
+                  )}
+                >
+                  <Icon className="w-5 h-5 flex-shrink-0" />
+                  {!collapsed && (
+                    <>
+                      <span className="flex-1">{item.label}</span>
+                      {item.badge && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-gold/20 text-gold font-semibold">
+                          {item.badge}
+                        </span>
+                      )}
+                    </>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
 
           {/* Account Section */}
-          {!collapsed && (
-            <p className="px-2 text-xs font-semibold text-text-muted mt-6 mb-2">
-              Account
-            </p>
-          )}
-          {ACCOUNT_MENU.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item);
+          <div className={clsx("border-t border-border", collapsed ? "mt-3 pt-3" : "mt-5 pt-4")}>
+            {!collapsed && (
+              <p className="px-2 text-xs font-semibold text-text-muted mb-2 uppercase tracking-wider">
+                Account
+              </p>
+            )}
+            <div className="space-y-1">
+              {ACCOUNT_MENU.map((item) => {
+                const Icon = item.icon;
+                const active = isActive(item);
 
-            return (
-              <Link
-                key={item.id}
-                href={item.href}
-                onClick={() => setMobileOpen(false)}
-                className={clsx(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
-                  active
-                    ? "bg-gold/10 text-gold border border-gold/25"
-                    : "text-text-secondary hover:text-text hover:bg-surface-raised"
-                )}
+                return (
+                  <Link
+                    key={item.id}
+                    href={item.href}
+                    onClick={() => setMobileOpen(false)}
+                    className={clsx(
+                      "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
+                      active
+                        ? "bg-gold/10 text-gold border border-gold/25"
+                        : "text-text-secondary hover:text-text hover:bg-surface-raised"
+                    )}
+                  >
+                    <Icon className="w-5 h-5 flex-shrink-0" />
+                    {!collapsed && <span className="flex-1">{item.label}</span>}
+                  </Link>
+                );
+              })}
+
+              {/* Sign Out */}
+              <button
+                onClick={handleSignOut}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-text-secondary hover:text-red-400 hover:bg-red-500/5 transition-all"
               >
-                <Icon className="w-5 h-5 flex-shrink-0" />
-                {!collapsed && <span className="flex-1">{item.label}</span>}
-              </Link>
-            );
-          })}
-
-          {/* Sign Out */}
-          <button
-            onClick={handleSignOut}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-text-secondary hover:text-text hover:bg-surface-raised transition-all"
-          >
-            <LogOut className="w-5 h-5 flex-shrink-0" />
-            {!collapsed && <span className="flex-1 text-left">Sign Out</span>}
-          </button>
+                <LogOut className="w-5 h-5 flex-shrink-0" />
+                {!collapsed && <span className="flex-1 text-left">Sign Out</span>}
+              </button>
+            </div>
+          </div>
         </nav>
-
       </div>
     </>
   );
@@ -207,10 +208,11 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
       {/* Mobile Menu Button */}
       <button
         onClick={() => setMobileOpen(!mobileOpen)}
-        className="lg:hidden fixed top-4 right-4 z-50 w-10 h-10 rounded-lg bg-surface border border-border flex items-center justify-center text-text-secondary hover:text-text hover:bg-surface-raised transition-all"
-        aria-label="Toggle menu"
+        className="lg:hidden fixed top-3 right-3 z-50 flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface border border-border text-text-secondary hover:text-text hover:bg-surface-raised transition-all shadow-sm"
+        aria-label={mobileOpen ? "Close menu" : "Open menu"}
       >
-        {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        {mobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+        <span className="text-xs font-semibold">{mobileOpen ? "Close" : "Menu"}</span>
       </button>
 
       {/* Mobile Overlay */}

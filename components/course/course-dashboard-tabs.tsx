@@ -67,7 +67,7 @@ export function CourseDashboardTabs({
       {/* Tab Navigation */}
       <div className="sticky top-0 z-50 border-b border-border bg-surface/95 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex gap-1 overflow-x-auto scrollbar-hide pr-12 sm:pr-0">
+          <div className="flex gap-1 overflow-x-auto scrollbar-hide pr-20 sm:pr-0">
             {TABS.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
