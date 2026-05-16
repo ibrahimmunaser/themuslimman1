@@ -5,8 +5,8 @@
   --color-surface: #111118;
   --color-surface-raised: #16161F;
   --color-surface-high: #1C1C27;
-  --color-border: #1E1E2C;
-  --color-border-subtle: #161622;
+  --color-border: #272738;
+  --color-border-subtle: #1E1E2E;
 
   --color-gold: #C8A96E;
   --color-gold-light: #DFBE8A;
@@ -14,8 +14,8 @@
   --color-gold-bg: #1A1409;
 
   --color-text: #F0EBE3;
-  --color-text-secondary: #A8A4B0;
-  --color-text-muted: #5C5C70;
+  --color-text-secondary: #C0BBCC;
+  --color-text-muted: #7E7A92;
 
   --color-success: #2A9C5F;
   --color-error: #C0392B;
