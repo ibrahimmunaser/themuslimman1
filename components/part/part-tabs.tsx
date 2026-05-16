@@ -406,7 +406,7 @@ function ModeButton({
       onClick={onClick}
       disabled={!isAvailable && !isLocked}
       className={clsx(
-        "flex items-center gap-2 px-3 py-3 rounded-xl border text-sm font-medium flex-shrink-0 whitespace-nowrap transition-all duration-150",
+        "flex items-center justify-center gap-2 px-3 py-3 rounded-xl border text-sm font-medium flex-1 min-w-max whitespace-nowrap transition-all duration-150",
         isActive
           ? "border-gold/35 bg-gold/10 text-gold"
           : isLocked
