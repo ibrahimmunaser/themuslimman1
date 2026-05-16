@@ -35,7 +35,9 @@ export const metadata: Metadata = {
       "Finally understand the full life of the Prophet ﷺ in one structured, complete system.",
   },
   icons: {
-    icon: "/favicon.ico",
+    icon: "/images/logodashboard.png",
+    shortcut: "/images/logodashboard.png",
+    apple: "/images/logodashboard.png",
   },
 };
 
