@@ -1,6 +1,28 @@
-import { Sparkles } from "lucide-react";
+"use client";
 
-const FROZEN_TIME = { days: 14, hours: 0, minutes: 0, seconds: 0 };
+import { Sparkles } from "lucide-react";
+import { useEffect, useState } from "react";
+
+// Fixed early-access deadline — 14 days from launch (May 16 2026)
+const DEADLINE = new Date("2026-05-30T23:59:59Z");
+
+interface TimeLeft {
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+}
+
+function getTimeLeft(): TimeLeft {
+  const diff = Math.max(0, DEADLINE.getTime() - Date.now());
+  const totalSeconds = Math.floor(diff / 1000);
+  return {
+    days: Math.floor(totalSeconds / 86400),
+    hours: Math.floor((totalSeconds % 86400) / 3600),
+    minutes: Math.floor((totalSeconds % 3600) / 60),
+    seconds: totalSeconds % 60,
+  };
+}
 
 function TimerUnit({ value, label }: { value: number; label: string }) {
   return (
@@ -18,17 +40,20 @@ function TimerUnit({ value, label }: { value: number; label: string }) {
 }
 
 function Colon() {
-  return (
-    <span className="text-gold/50 font-bold text-sm pb-3 select-none">:</span>
-  );
+  return <span className="text-gold/50 font-bold text-sm pb-3 select-none">:</span>;
 }
 
-/**
- * Slim early-access banner with a frozen timer display.
- * The timer is static — it is not a live countdown.
- */
 export function EarlyAccessBanner() {
-  const { days, hours, minutes, seconds } = FROZEN_TIME;
+  const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(null);
+
+  useEffect(() => {
+    // Initialise immediately then tick every second
+    setTimeLeft(getTimeLeft());
+    const id = setInterval(() => setTimeLeft(getTimeLeft()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const t = timeLeft ?? { days: 14, hours: 0, minutes: 0, seconds: 0 };
 
   return (
     <div className="w-full bg-gold/10 border-b border-gold/20 px-4 py-2.5">
@@ -47,15 +72,15 @@ export function EarlyAccessBanner() {
         {/* Divider */}
         <span className="hidden sm:block text-gold/30 text-xs">|</span>
 
-        {/* Frozen timer */}
+        {/* Live countdown */}
         <div className="flex items-end gap-1">
-          <TimerUnit value={days} label="days" />
+          <TimerUnit value={t.days} label="days" />
           <Colon />
-          <TimerUnit value={hours} label="hrs" />
+          <TimerUnit value={t.hours} label="hrs" />
           <Colon />
-          <TimerUnit value={minutes} label="min" />
+          <TimerUnit value={t.minutes} label="min" />
           <Colon />
-          <TimerUnit value={seconds} label="sec" />
+          <TimerUnit value={t.seconds} label="sec" />
         </div>
       </div>
     </div>
