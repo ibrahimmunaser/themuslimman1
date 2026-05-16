@@ -412,7 +412,7 @@ function ModeButton({
           : isLocked
           ? "border-border/50 bg-surface/80 text-text-muted/60 hover:border-gold/20 hover:bg-surface-raised/80 cursor-pointer"
           : isAvailable
-          ? "border-border bg-surface text-text-muted hover:border-border-subtle hover:bg-surface-raised hover:text-text-secondary cursor-pointer"
+          ? "border-border bg-surface-raised text-text-secondary hover:border-gold/30 hover:bg-surface-high hover:text-text cursor-pointer"
           : "border-border/30 bg-surface/50 text-text-muted/25 cursor-not-allowed opacity-40 pointer-events-none"
       )}
     >
