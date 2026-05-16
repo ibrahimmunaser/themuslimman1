@@ -5,8 +5,7 @@ import { PARTS } from "@/lib/content";
 import { ERA_MAP } from "@/lib/types";
 import { eraGradient } from "./era-gradient";
 import { ResourcePageClient } from "./resource-page-client";
-import { ArrowLeft, Video, Play, CheckCircle2, Clock, X } from "lucide-react";
-import Link from "next/link";
+import { Video, Play, CheckCircle2, Clock, X } from "lucide-react";
 import { VideoPlayer } from "@/components/part/video-player";
 import { getCachedResource, setCachedResource, prefetchResource } from "@/lib/resource-cache";
 
@@ -108,55 +107,53 @@ export function VideoResourceContent({
     : null;
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a]">
-      {/* Hero Section */}
-      <div className="border-b border-zinc-800 bg-gradient-to-b from-zinc-900 to-[#0a0a0a]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-              <Video className="w-7 h-7 text-amber-500" />
-            </div>
-            <div>
-              <h1 className="text-4xl font-bold text-white">Video Lessons</h1>
-              <p className="text-zinc-400 mt-1">All 100 guided video lessons from the Seerah Masterclass</p>
-            </div>
+    <div>
+      {/* Header */}
+      <div className="border-b border-border px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex items-center gap-3 mb-5">
+          <div className="w-10 h-10 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center">
+            <Video className="w-5 h-5 text-gold" />
           </div>
+          <div>
+            <h1 className="text-2xl font-bold text-text">Video Lessons</h1>
+            <p className="text-sm text-text-muted mt-0.5">All 100 guided video lessons from the Seerah Masterclass</p>
+          </div>
+        </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
-              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">Total</p>
-              <p className="text-3xl font-bold text-white">{totalVideos}</p>
-            </div>
-            <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
-              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">Completed</p>
-              <p className="text-3xl font-bold text-green-400">{completedCount}</p>
-            </div>
-            <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
-              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">In Progress</p>
-              <p className="text-3xl font-bold text-amber-400">{inProgressCount}</p>
-            </div>
-            <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
-              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">Not Started</p>
-              <p className="text-3xl font-bold text-zinc-400">{notStartedCount}</p>
-            </div>
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="p-4 rounded-xl bg-surface border border-border">
+            <p className="text-text-muted text-xs font-medium uppercase tracking-wider mb-1">Total</p>
+            <p className="text-3xl font-bold text-text">{totalVideos}</p>
+          </div>
+          <div className="p-4 rounded-xl bg-surface border border-border">
+            <p className="text-text-muted text-xs font-medium uppercase tracking-wider mb-1">Completed</p>
+            <p className="text-3xl font-bold text-gold">{completedCount}</p>
+          </div>
+          <div className="p-4 rounded-xl bg-surface border border-border">
+            <p className="text-text-muted text-xs font-medium uppercase tracking-wider mb-1">In Progress</p>
+            <p className="text-3xl font-bold text-gold/70">{inProgressCount}</p>
+          </div>
+          <div className="p-4 rounded-xl bg-surface border border-border">
+            <p className="text-text-muted text-xs font-medium uppercase tracking-wider mb-1">Not Started</p>
+            <p className="text-3xl font-bold text-text-muted">{notStartedCount}</p>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="px-4 sm:px-6 lg:px-8 py-6">
         {/* Continue Watching */}
         {mounted && continueWatchingPart && (
-          <div className="mb-8 p-6 rounded-2xl bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/20">
-            <p className="text-amber-400 text-sm font-medium uppercase tracking-wider mb-3">Continue Watching</p>
+          <div className="mb-6 p-5 rounded-2xl bg-gold/5 border border-gold/20">
+            <p className="text-gold text-xs font-semibold uppercase tracking-wider mb-3">Continue Watching</p>
             <div
               onClick={() => handleOpenVideo(continueWatchingPart)}
               onMouseEnter={() => handlePrefetch(continueWatchingPart.partNumber)}
               className="group block cursor-pointer"
             >
-              <div className="flex items-center gap-6">
+              <div className="flex items-center gap-4 sm:gap-6">
                 <div
-                  className="relative flex-shrink-0 w-48 h-28 rounded-xl flex items-center justify-center overflow-hidden"
+                  className="relative flex-shrink-0 w-32 sm:w-48 h-20 sm:h-28 rounded-xl flex items-center justify-center overflow-hidden"
                   style={eraGradient(continueWatchingPart.era)}
                 >
                   <span className="absolute inset-0 flex items-center justify-center opacity-10 text-7xl font-black text-white select-none pointer-events-none">
@@ -164,27 +161,27 @@ export function VideoResourceContent({
                   </span>
                   <Play className="w-8 h-8 text-white/80 group-hover:text-white transition-colors relative z-10" />
                   {continueWatching && (
-                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-zinc-800">
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-background/50">
                       <div
-                        className="h-full bg-amber-500"
+                        className="h-full bg-gold"
                         style={{ width: `${continueWatching.videoWatchPercent}%` }}
                       />
                     </div>
                   )}
                 </div>
-                <div className="flex-1">
-                  <p className="text-xs text-amber-500 font-medium mb-1">Part {continueWatchingPart.partNumber}</p>
-                  <h3 className="text-xl font-semibold text-white mb-1 group-hover:text-amber-400 transition-colors">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-gold font-medium mb-1">Part {continueWatchingPart.partNumber}</p>
+                  <h3 className="text-base sm:text-xl font-semibold text-text mb-1 group-hover:text-gold transition-colors line-clamp-2">
                     {continueWatchingPart.title}
                   </h3>
                   {continueWatchingPart.subtitle && (
-                    <p className="text-sm text-zinc-400">{continueWatchingPart.subtitle}</p>
+                    <p className="text-sm text-text-secondary hidden sm:block">{continueWatchingPart.subtitle}</p>
                   )}
                   {continueWatching && (
-                    <p className="text-xs text-zinc-500 mt-2">{continueWatching.videoWatchPercent}% complete</p>
+                    <p className="text-xs text-text-muted mt-1">{continueWatching.videoWatchPercent}% complete</p>
                   )}
                 </div>
-                <div className="flex-shrink-0 px-6 py-3 rounded-xl bg-amber-500 text-black font-semibold group-hover:bg-amber-400 transition-colors">
+                <div className="flex-shrink-0 px-4 sm:px-6 py-2 sm:py-3 rounded-xl bg-gold text-ink text-sm font-semibold group-hover:bg-gold/90 transition-colors">
                   Resume
                 </div>
               </div>
@@ -209,7 +206,7 @@ export function VideoResourceContent({
                     key={part.id}
                     onClick={() => handleOpenVideo(part)}
                     onMouseEnter={() => handlePrefetch(part.partNumber)}
-                    className="group cursor-pointer rounded-xl border border-zinc-800 bg-zinc-900/50 hover:bg-zinc-900 hover:border-amber-500/30 overflow-hidden transition-all"
+                    className="group cursor-pointer rounded-xl border border-border bg-surface hover:bg-surface-raised hover:border-gold/30 overflow-hidden transition-all"
                   >
                     {/* Thumbnail */}
                     <div
@@ -228,8 +225,8 @@ export function VideoResourceContent({
 
                       {/* Status badge */}
                       {isCompleted && (
-                        <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-green-500/30 border border-green-500/50 flex items-center justify-center">
-                          <CheckCircle2 className="w-4 h-4 text-green-400" />
+                        <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-gold/20 border border-gold/40 flex items-center justify-center">
+                          <CheckCircle2 className="w-4 h-4 text-gold" />
                         </div>
                       )}
                       {!isCompleted && watchPercent > 0 && (
@@ -247,7 +244,7 @@ export function VideoResourceContent({
                       {watchPercent > 0 && (
                         <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/30">
                           <div
-                            className="h-full bg-white/60"
+                            className="h-full bg-gold/70"
                             style={{ width: `${watchPercent}%` }}
                           />
                         </div>
@@ -257,21 +254,21 @@ export function VideoResourceContent({
                     {/* Info */}
                     <div className="p-4">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs font-medium text-amber-500">Part {part.partNumber}</span>
+                        <span className="text-xs font-medium text-gold">Part {part.partNumber}</span>
                         {isCompleted && (
-                          <span className="px-2 py-0.5 bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium rounded">
+                          <span className="px-2 py-0.5 bg-gold/10 border border-gold/20 text-gold text-xs font-medium rounded">
                             Completed
                           </span>
                         )}
                       </div>
-                      <h3 className="text-sm font-semibold text-white mb-1 line-clamp-2 group-hover:text-amber-400 transition-colors">
+                      <h3 className="text-sm font-semibold text-text mb-1 line-clamp-2 group-hover:text-gold transition-colors">
                         {part.title}
                       </h3>
                       {part.subtitle && (
-                        <p className="text-xs text-zinc-500 line-clamp-1 mb-2">{part.subtitle}</p>
+                        <p className="text-xs text-text-muted line-clamp-1 mb-2">{part.subtitle}</p>
                       )}
                       {part.duration && (
-                        <div className="flex items-center gap-1 text-xs text-zinc-500">
+                        <div className="flex items-center gap-1 text-xs text-text-muted">
                           <Clock className="w-3 h-3" />
                           {part.duration}
                         </div>
@@ -292,37 +289,37 @@ export function VideoResourceContent({
           onClick={handleClose}
         >
           <div 
-            className="relative w-full max-w-6xl max-h-[90vh] bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-950 border-2 border-amber-500/20 rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+            className="relative w-full max-w-6xl max-h-[90vh] bg-surface border border-gold/20 rounded-2xl shadow-2xl flex flex-col overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Decorative glow */}
-            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-500/50 to-transparent"></div>
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent"></div>
             
             {/* Modal Header */}
-            <div className="flex items-center justify-between p-6 border-b border-zinc-800 bg-zinc-900/50 backdrop-blur">
-              <div>
+            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-border">
+              <div className="min-w-0 flex-1 pr-4">
                 <div className="flex items-center gap-2 mb-1">
-                  <Video className="w-5 h-5 text-amber-500" />
-                  <span className="text-sm font-medium text-amber-500">Part {selectedPart.partNumber}</span>
+                  <Video className="w-4 h-4 text-gold flex-shrink-0" />
+                  <span className="text-sm font-medium text-gold">Part {selectedPart.partNumber}</span>
                 </div>
-                <h2 className="text-2xl font-bold text-white">{selectedPart.title}</h2>
+                <h2 className="text-lg sm:text-2xl font-bold text-text line-clamp-2">{selectedPart.title}</h2>
                 {selectedPart.subtitle && (
-                  <p className="text-sm text-zinc-400 mt-1">{selectedPart.subtitle}</p>
+                  <p className="text-sm text-text-secondary mt-1 hidden sm:block">{selectedPart.subtitle}</p>
                 )}
               </div>
               <button
                 onClick={handleClose}
-                className="w-10 h-10 rounded-lg hover:bg-zinc-800 flex items-center justify-center transition-colors flex-shrink-0"
+                className="w-10 h-10 rounded-lg hover:bg-surface-raised flex items-center justify-center transition-colors flex-shrink-0"
               >
-                <X className="w-5 h-5 text-zinc-400" />
+                <X className="w-5 h-5 text-text-muted" />
               </button>
             </div>
 
             {/* Modal Content */}
-            <div className="flex-1 overflow-hidden bg-zinc-950 p-6">
+            <div className="flex-1 overflow-y-auto bg-background p-4 sm:p-6">
               {isLoadingVideo ? (
-                <div className="h-full flex items-center justify-center">
-                  <div className="text-zinc-400">Loading video...</div>
+                <div className="h-48 flex items-center justify-center">
+                  <div className="text-text-muted">Loading video...</div>
                 </div>
               ) : (
                 <VideoPlayer 
@@ -334,10 +331,10 @@ export function VideoResourceContent({
             </div>
 
             {/* Modal Footer */}
-            <div className="flex items-center justify-end p-6 border-t border-zinc-800 bg-zinc-900/50 backdrop-blur">
+            <div className="flex items-center justify-end p-4 sm:p-6 border-t border-border">
               <button
                 onClick={handleClose}
-                className="px-6 py-2 rounded-lg bg-amber-500 text-black hover:bg-amber-400 text-sm font-semibold transition-all hover:scale-105 shadow-lg shadow-amber-500/20"
+                className="px-5 py-2 rounded-lg bg-gold text-ink hover:bg-gold/90 text-sm font-semibold transition-colors"
               >
                 Close
               </button>

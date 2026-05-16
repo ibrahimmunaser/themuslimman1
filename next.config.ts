@@ -11,6 +11,9 @@ const nextConfig: NextConfig = {
       {
         pathname: "/seerah-media/**",
       },
+      {
+        pathname: "/images/**",
+      },
     ],
     // Allow R2 public URLs
     remotePatterns: [

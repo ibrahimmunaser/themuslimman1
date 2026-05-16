@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
 import { LogOut, ChevronRight, X } from "lucide-react";
@@ -32,10 +33,14 @@ export function RoleSidebar({ user, mobile, onClose }: RoleSidebarProps) {
           className="flex items-center gap-2.5 group"
           {...(onClose ? { onClick: onClose } : {})}
         >
-          <div className="w-7 h-7 rounded-lg bg-gold/10 border border-gold/30 flex items-center justify-center">
-            <span className="text-gold text-xs font-bold">S</span>
-          </div>
-          <span className="text-text font-semibold text-sm tracking-wide">Seerah LMS</span>
+          <Image
+            src="/images/logodashboard.png"
+            alt="Complete Seerah"
+            width={28}
+            height={28}
+            className="w-7 h-7 rounded-lg flex-shrink-0"
+          />
+          <span className="text-text font-semibold text-sm tracking-wide">Complete Seerah</span>
         </Link>
         {mobile && (
           <button onClick={onClose} className="text-text-muted hover:text-text transition-colors">

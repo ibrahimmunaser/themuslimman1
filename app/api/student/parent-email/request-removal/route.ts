@@ -33,7 +33,7 @@ export async function POST() {
     const resend = new Resend(process.env.RESEND_API_KEY);
 
     const { error: emailError } = await resend.emails.send({
-      from: process.env.EMAIL_FROM || "Seerah LMS <noreply@themuslimman.com>",
+      from: process.env.EMAIL_FROM || "Complete Seerah <noreply@themuslimman.com>",
       to: user.parentEmail,
       subject: `Confirm Removal of Your Email from ${user.studentName || user.fullName}'s Progress Reports`,
       html: generateRemovalConfirmationEmail({
@@ -125,7 +125,7 @@ function generateRemovalConfirmationEmail(data: {
 
     <div style="background: #f8f9fa; padding: 30px; text-align: center; border-radius: 0 0 12px 12px; border: 1px solid #e5e5e5; border-top: none;">
       <p style="font-size: 13px; color: #999; margin: 0;">
-        © ${new Date().getFullYear()} Seerah LMS · TheMuslimMan
+        © ${new Date().getFullYear()} Complete Seerah · TheMuslimMan
       </p>
       <p style="font-size: 12px; color: #999; margin: 10px 0 0 0;">
         This removal request expires in 24 hours.

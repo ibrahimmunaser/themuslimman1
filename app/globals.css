@@ -162,49 +162,447 @@ body {
   display: none;
 }
 
-/* Prose-like formatted text */
-.formatted-text h1,
-.formatted-text h2,
-.formatted-text h3 {
+/* ─── Premium article shell ───────────────────────────────────────────────── */
+
+.article-shell {
+  width: 100%;
+}
+
+.article-container {
+  max-width: 840px;
+  margin: 0 auto;
+  background: rgba(200, 169, 110, 0.04);
+  border: 1px solid rgba(200, 169, 110, 0.15);
+  border-radius: 16px;
+  padding: 2.5rem 3rem 3rem;
+  overflow: hidden;
+}
+
+/* Article header */
+.article-header {
+  margin-bottom: 0;
+}
+
+.article-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #C8A96E;
+  margin-bottom: 0.6rem;
+}
+
+.article-title {
+  font-size: 1.625rem;
+  font-weight: 700;
   color: #F0EBE3;
-  font-weight: 600;
-  margin-top: 1.5em;
-  margin-bottom: 0.5em;
-  line-height: 1.3;
+  line-height: 1.2;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.025em;
 }
-.formatted-text h1 { font-size: 1.5rem; }
-.formatted-text h2 { font-size: 1.25rem; color: #C8A96E; }
-.formatted-text h3 { font-size: 1.1rem; }
 
+.article-subtitle {
+  font-size: 0.9375rem;
+  color: #8A8A9E;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.article-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.article-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  color: #6A6A80;
+}
+
+.article-meta-sep {
+  color: #4A4A5C;
+  font-size: 0.75rem;
+}
+
+/* Divider between header and body */
+.article-divider {
+  height: 1px;
+  background: linear-gradient(to right, rgba(200, 169, 110, 0.35), transparent);
+  margin: 1.75rem 0 2.25rem;
+}
+
+/* ─── Premium lesson article typography ───────────────────────────────────── */
+
+.formatted-text {
+  font-size: 1.125rem;
+  line-height: 1.85;
+  color: #D8D4CC;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Paragraphs */
+.formatted-text .seerah-p,
 .formatted-text p {
-  margin-bottom: 1em;
-  line-height: 1.8;
-  color: #A8A4B0;
+  font-size: 1.125rem;
+  line-height: 1.85;
+  color: #D8D4CC;
+  margin-bottom: 1.1rem;
 }
 
+/* H2 — major section headings */
+.formatted-text .seerah-h2,
+.formatted-text h2 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #F5F1EB;
+  margin-top: 3.5rem;
+  margin-bottom: 1.125rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid rgba(200, 169, 110, 0.35);
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+}
+.formatted-text .seerah-h2:first-child,
+.formatted-text h2:first-child {
+  margin-top: 0;
+}
+
+/* H3 — sub-section headings */
+.formatted-text .seerah-h3,
+.formatted-text h3 {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: #D4A84B;
+  margin-top: 2.25rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.4;
+}
+
+/* H3 bar hidden — clean text only */
+.formatted-text .seerah-h3-bar {
+  display: none;
+}
+
+/* Lists — flowing text, not stacked boxes */
+.formatted-text .seerah-list,
 .formatted-text ul,
 .formatted-text ol {
-  margin-bottom: 1em;
-  padding-left: 1.5em;
-  color: #A8A4B0;
+  margin: 0.5rem 0 1.5rem 0;
+  padding: 0;
+  list-style: none;
 }
 
+.formatted-text .seerah-li,
 .formatted-text li {
-  margin-bottom: 0.375em;
-  line-height: 1.7;
+  font-size: 1.125rem;
+  line-height: 1.8;
+  color: #D8D4CC;
+  padding: 0.15rem 0 0.15rem 1.5rem;
+  margin-bottom: 0.5rem;
+  position: relative;
+}
+.formatted-text .seerah-li::before,
+.formatted-text li::before {
+  content: "·";
+  position: absolute;
+  left: 0.375rem;
+  color: #C8A96E;
+  font-size: 1.25rem;
+  line-height: 1.55;
+  opacity: 0.9;
 }
 
-.formatted-text strong {
-  color: #F0EBE3;
+/* Strong */
+.formatted-text strong,
+.formatted-text b {
+  color: #F5F1EB;
   font-weight: 600;
 }
 
-.formatted-text blockquote {
-  border-left: 3px solid #C8A96E;
-  padding-left: 1rem;
-  margin: 1.5em 0;
-  color: #DFC08A;
+/* Italic */
+.formatted-text em,
+.formatted-text i {
+  color: #B8B4C0;
   font-style: italic;
+}
+
+/* Label list items (e.g. "First visit:") — styled as mini sub-headings */
+.formatted-text .seerah-li-label {
+  color: #E8E4DC;
+  font-weight: 600;
+  font-size: 1rem;
+  margin-top: 0.75rem;
+  margin-bottom: 0.1rem;
+  letter-spacing: 0.01em;
+}
+
+/* Quranic verse / Hadith quote blockquote */
+.formatted-text .seerah-verse {
+  border-left: 4px solid #C8A96E;
+  background: linear-gradient(to right, rgba(200, 169, 110, 0.12), rgba(200, 169, 110, 0.03));
+  padding: 1.25rem 1.5rem 1.25rem 1.5rem;
+  margin: 2rem 0;
+  border-radius: 0 12px 12px 0;
+  color: #F0E8CC;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 1.9;
+  font-size: 1.125rem;
+  box-shadow: 0 0 24px rgba(200, 169, 110, 0.08), inset 0 0 0 0.5px rgba(200, 169, 110, 0.1);
+}
+
+.formatted-text .seerah-verse-label {
+  display: block;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #C8A96E;
+  margin-bottom: 0.6rem;
+  opacity: 0.9;
+}
+
+/* Blockquotes — simple left-border accent for source labels and general quotes */
+.formatted-text blockquote {
+  border-left: 2px solid rgba(200, 169, 110, 0.4);
+  background: transparent;
+  padding: 0.25rem 0 0.25rem 1.125rem;
+  margin: 1.25rem 0;
+  border-radius: 0;
+  color: #B0ACBC;
+  font-style: italic;
+  line-height: 1.75;
+  font-size: 1rem;
+}
+
+/* ─── Restrained category highlights ─────────────────────────────────────── */
+/* These are the ONLY intentional inline highlights. They must never look like
+   hyperlinks: no underline, no blue/cyan/green. */
+
+/* Prophet ﷺ references — gold, semibold */
+.formatted-text .seerah-prophet {
+  color: #C8A96E;
+  font-weight: 600;
+}
+
+/* Qur'an / Revelation terms — semibold only, inherits body colour */
+.formatted-text .seerah-revelation {
+  font-weight: 600;
+  color: inherit;
+}
+
+/* Core Islamic concepts — slightly brightened, semibold */
+.formatted-text .seerah-concept {
+  font-weight: 600;
+  color: #F5F1EB;
+}
+
+/* Quoted text — muted italic */
+.formatted-text .seerah-quote {
+  color: #8A8A9E;
+  font-style: italic;
+}
+
+/* ─── Source / caution note callouts ─────────────────────────────────────── */
+/* Rendered from blockquotes whose first line matches a known note label.
+   E.g. "> Historical Note:\n> These are broad patterns." */
+.formatted-text .seerah-callout {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  border-left: 2px solid rgba(200, 169, 110, 0.3);
+  background: rgba(200, 169, 110, 0.04);
+  padding: 0.7rem 1.25rem;
+  margin: 1.25rem 0;
+  border-radius: 0 8px 8px 0;
+}
+
+.formatted-text .seerah-callout-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #C8A96E;
+  opacity: 0.8;
+}
+
+.formatted-text .seerah-callout-body {
+  font-size: 0.9375rem;
+  color: #9A96A8;
+  line-height: 1.65;
+  font-style: normal;
+}
+
+/* Links — gold, never browser blue */
+/* Neutralise legacy semantic-highlight spans pre-rendered with link-like colours.
+   These were generated by an older version of text-formatter.ts.
+   New renders no longer emit these classes, but existing briefingHtml still may. */
+.formatted-text span.text-blue-400,
+.formatted-text span.text-cyan-400,
+.formatted-text span.text-green-400 {
+  color: rgb(212 212 216); /* zinc-300 — neutral, not link-like */
+  font-weight: normal;
+}
+
+/* Neutralise old amber date spans — dates are no longer highlighted */
+.formatted-text span.text-amber-300 {
+  color: inherit;
+  font-weight: normal;
+}
+
+/* Neutralise old amber-400 bold Prophet spans (superseded by .seerah-prophet) */
+.formatted-text span.text-amber-400 {
+  color: #C8A96E;
+  font-weight: 600;
+}
+
+.formatted-text a {
+  color: #C8A96E;
+  text-decoration: underline;
+  text-decoration-color: rgba(200, 169, 110, 0.35);
+  text-underline-offset: 4px;
+  transition: color 0.15s ease, text-decoration-color 0.15s ease;
+}
+.formatted-text a:hover {
+  color: #DFBE8A;
+  text-decoration-color: rgba(223, 190, 138, 0.65);
+}
+
+/* Horizontal rules */
+.formatted-text hr {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  margin: 2.75rem 0;
+}
+
+/* Tables — generic */
+.formatted-text table {
+  width: 100%;
+  margin: 1.75rem 0 2.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  overflow: hidden;
+  font-size: 1rem;
+}
+.formatted-text table td {
+  padding: 0.7rem 1.125rem;
+  line-height: 1.65;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: #D8D4CC;
+}
+.formatted-text table tr:last-child td {
+  border-bottom: none;
+}
+.formatted-text table tr:hover {
+  background: rgba(200, 169, 110, 0.03);
+}
+
+/* Structured data table (tab-separated source) */
+.formatted-text .seerah-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.75rem 0 2.25rem;
+  border: 1px solid rgba(200, 169, 110, 0.15);
+  border-radius: 8px;
+  overflow: hidden;
+  font-size: 1rem;
+}
+.formatted-text .seerah-data-table thead tr {
+  background: rgba(200, 169, 110, 0.06);
+}
+.formatted-text .seerah-data-table th {
+  text-align: left;
+  padding: 0.625rem 1.125rem;
+  color: #C8A96E;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(200, 169, 110, 0.2);
+}
+.formatted-text .seerah-data-table td {
+  padding: 0.6rem 1.125rem;
+  line-height: 1.65;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: #D8D4CC;
+  vertical-align: top;
+}
+.formatted-text .seerah-data-table tr:last-child td {
+  border-bottom: none;
+}
+.formatted-text .seerah-data-table tbody tr:hover td {
+  background: rgba(200, 169, 110, 0.03);
+}
+
+/* Nested list (2-space indented bullets) — indented to align under parent text */
+.formatted-text .seerah-nested-list {
+  margin: 0.15rem 0 0.4rem 1.5rem;
+  padding: 0;
+  list-style: none;
+  border-left: none;
+}
+.formatted-text .seerah-nested-li {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: #C0BCB4;
+  padding: 0.1rem 0 0.1rem 1.25rem;
+  margin-bottom: 0.2rem;
+}
+.formatted-text .seerah-nested-li::before {
+  content: "–";
+  position: absolute;
+  left: 0.25rem;
+  color: rgba(200, 169, 110, 0.65);
+  font-size: 0.875rem;
+  line-height: 1.75;
+}
+
+/* Empty-line spacer — zero height; paragraph margins already provide rhythm */
+.formatted-text .h-4 {
+  height: 0;
+}
+
+/* ─── Mobile ──────────────────────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .article-container {
+    padding: 1.375rem 1.25rem 2rem;
+    border-radius: 12px;
+  }
+
+  .article-title {
+    font-size: 1.25rem;
+  }
+
+  .formatted-text,
+  .formatted-text .seerah-p,
+  .formatted-text p {
+    font-size: 1rem;
+    line-height: 1.8;
+    margin-bottom: 0.9rem;
+    color: #D8D4CC;
+  }
+
+  .formatted-text .seerah-h2,
+  .formatted-text h2 {
+    font-size: 1.125rem;
+    margin-top: 2.5rem;
+  }
+
+  .formatted-text .seerah-h3,
+  .formatted-text h3 {
+    font-size: 1rem;
+    margin-top: 1.75rem;
+  }
+
+  .formatted-text .seerah-li,
+  .formatted-text li {
+    font-size: 1rem;
+  }
 }
 
 /* Formatted content (used in modals and resource pages) */

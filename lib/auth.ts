@@ -298,6 +298,12 @@ export async function verifyEmail(token: string): Promise<{ success: boolean; er
     return { success: false, error: "Invalid or expired verification link" };
   }
 
+  // Check token expiry
+  if (user.verificationExpires && user.verificationExpires < new Date()) {
+    console.log(`[AUTH] verifyEmail: Token expired for user ${user.email}`);
+    return { success: false, error: "This verification link has expired. Please request a new one." };
+  }
+
   console.log(`[AUTH] verifyEmail: Token valid for user ${user.email}, marking as verified...`);
 
   await prisma.user.update({
@@ -305,6 +311,7 @@ export async function verifyEmail(token: string): Promise<{ success: boolean; er
     data: {
       emailVerified: true,
       verificationToken: null,
+      verificationExpires: null,
     },
   });
 

@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import Image from "next/image";
+import { usePathname, useSearchParams } from "next/navigation";
 import { clsx } from "clsx";
 import {
   LayoutDashboard,
@@ -33,12 +34,8 @@ interface MenuItem {
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   badge?: string;
+  tabId?: string; // for /seerah?tab=X links
 }
-
-const MAIN_MENU: MenuItem[] = [
-  { id: "my-courses", label: "My Courses", href: "/my-courses", icon: BookOpen },
-  { id: "help", label: "Help", href: "/help", icon: HelpCircle },
-];
 
 const ACCOUNT_MENU_BASE: MenuItem[] = [
   { id: "settings", label: "Settings", href: "/student/settings", icon: User },
@@ -46,19 +43,34 @@ const ACCOUNT_MENU_BASE: MenuItem[] = [
 
 export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const activeTabParam = searchParams.get("tab");
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  
-  const ACCOUNT_MENU: MenuItem[] = [
-    ...ACCOUNT_MENU_BASE,
-    { id: "billing", label: "Billing / Upgrade", href: "/billing", icon: CreditCard },
+
+  const MAIN_MENU: MenuItem[] = [
+    { id: "dashboard",  label: "Dashboard",  href: "/seerah",              icon: LayoutDashboard, tabId: "home" },
+    { id: "lessons",    label: "Lessons",    href: "/seerah?tab=lessons",  icon: BookOpen,        tabId: "lessons" },
+    { id: "resources",  label: "Resources",  href: "/seerah?tab=resources",icon: FolderOpen,      tabId: "resources" },
+    { id: "progress",   label: "Progress",   href: "/seerah?tab=progress", icon: TrendingUp,      tabId: "progress" },
+    { id: "help",       label: "Help",       href: "/help",                icon: HelpCircle },
   ];
 
-  const isActive = (href: string) => {
-    if (href === "/learn") {
-      return pathname === "/learn";
+  const ACCOUNT_MENU: MenuItem[] = [
+    ...ACCOUNT_MENU_BASE,
+    { id: "billing", label: "Billing", href: "/billing", icon: CreditCard },
+  ];
+
+  const isActive = (item: MenuItem) => {
+    // Tab-based /seerah items: match pathname AND the current tab param
+    if (item.tabId !== undefined) {
+      if (pathname !== "/seerah") return false;
+      const currentTab = activeTabParam ?? "home";
+      return item.tabId === currentTab;
     }
-    return pathname.startsWith(href);
+    // Standard page links
+    if (item.href === "/learn") return pathname === "/learn";
+    return pathname.startsWith(item.href);
   };
 
   const handleSignOut = async () => {
@@ -75,13 +87,16 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
       {/* Logo/Brand */}
       {!collapsed && (
         <div className="p-4 border-b border-border">
-          <Link href="/my-courses" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gold/10 border border-gold/30 flex items-center justify-center flex-shrink-0">
-              <span className="text-gold font-bold text-sm">S</span>
-            </div>
-            <div>
-              <h1 className="text-sm font-bold text-text">Seerah LMS</h1>
-            </div>
+          <Link href="/my-courses" className="flex items-center gap-2.5">
+            <Image
+              src="/images/logodashboard.png"
+              alt="Complete Seerah"
+              width={32}
+              height={32}
+              className="w-8 h-8 rounded-lg flex-shrink-0"
+              priority
+            />
+            <h1 className="text-sm font-bold text-text">Complete Seerah</h1>
           </Link>
         </div>
       )}
@@ -116,7 +131,7 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
           )}
           {MAIN_MENU.map((item) => {
             const Icon = item.icon;
-            const active = isActive(item.href);
+            const active = isActive(item);
 
             return (
               <Link
@@ -153,7 +168,7 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
           )}
           {ACCOUNT_MENU.map((item) => {
             const Icon = item.icon;
-            const active = isActive(item.href);
+            const active = isActive(item);
 
             return (
               <Link
@@ -192,7 +207,7 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
       {/* Mobile Menu Button */}
       <button
         onClick={() => setMobileOpen(!mobileOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 w-10 h-10 rounded-lg bg-surface border border-border flex items-center justify-center text-text-secondary hover:text-text hover:bg-surface-raised transition-all"
+        className="lg:hidden fixed top-4 right-4 z-50 w-10 h-10 rounded-lg bg-surface border border-border flex items-center justify-center text-text-secondary hover:text-text hover:bg-surface-raised transition-all"
         aria-label="Toggle menu"
       >
         {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -210,15 +225,25 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
       <aside
         className={clsx(
           "fixed top-0 left-0 bottom-0 z-40 bg-surface border-r border-border flex flex-col transition-all duration-300",
-          // Mobile: slide in/out
-          "lg:relative lg:translate-x-0",
+          // Desktop: sticky column frozen at top, full viewport height
+          "lg:sticky lg:top-0 lg:h-screen lg:translate-x-0",
           mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
           // Desktop: collapsible width
           collapsed ? "lg:w-16" : "w-64"
         )}
       >
         {collapsed ? (
-          <div className="hidden lg:flex flex-col items-center py-3">
+          <div className="hidden lg:flex flex-col items-center gap-2 py-3 border-b border-border">
+            <Link href="/my-courses" aria-label="Complete Seerah">
+              <Image
+                src="/images/logodashboard.png"
+                alt="Complete Seerah"
+                width={32}
+                height={32}
+                className="w-8 h-8 rounded-lg"
+                priority
+              />
+            </Link>
             <button
               onClick={() => setCollapsed(false)}
               className="w-8 h-8 rounded-lg bg-surface-raised hover:bg-surface-high flex items-center justify-center text-text-muted hover:text-text transition-all"

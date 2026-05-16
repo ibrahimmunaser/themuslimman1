@@ -5,7 +5,7 @@ import { StudentLayout } from "@/components/student/student-layout";
 import { prisma } from "@/lib/db";
 import { Award, Lock, CheckCircle2 } from "lucide-react";
 
-export const metadata = { title: "Certificate | Seerah Masterclass" };
+export const metadata = { title: "Certificate | Complete Seerah" };
 export const dynamic = "force-dynamic";
 
 export default async function CertificatePage() {

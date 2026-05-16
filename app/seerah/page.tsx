@@ -16,7 +16,7 @@ import { TextResourceContent } from "@/components/resources/text-resource-conten
 import { SimpleResourceContent } from "@/components/resources/simple-resource-content";
 import { QuizResourceContent } from "@/components/resources/quiz-resource-content";
 
-export const metadata = { title: "Seerah Masterclass" };
+export const metadata = { title: "Complete Seerah" };
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
@@ -157,9 +157,8 @@ export default async function LearnIndexPage() {
 
   const totalParts = accessibleParts.length;
   const completedCount = completedParts.length;
-  const partialProgress = currentPartProgress / 100; // Convert 60% to 0.6
-  const totalProgress = completedCount + partialProgress;
-  const progressPercentage = Math.round((totalProgress / totalParts) * 100);
+  // Only count fully-completed parts — partial video progress does NOT inflate the %
+  const progressPercentage = completedCount > 0 ? Math.round((completedCount / totalParts) * 100) : 0;
 
   const partsByEra = accessibleParts.reduce((acc, part) => {
     const era = ERA_MAP[part.era as keyof typeof ERA_MAP]?.label || part.era;
@@ -183,12 +182,53 @@ export default async function LearnIndexPage() {
   // All parts are available for paid users — progress is a guide, not a gate
   const getPartStatus = (partNumber: number) => {
     if (completedParts.includes(partNumber)) return "completed";
-    if (inProgressParts.includes(partNumber)) return "in_progress";
-    return "available";
+    // Only flag as in_progress if there is REAL activity, not just a DB record existing
+    const p = progressMap[partNumber];
+    const hasActivity = p && (
+      (p.videoWatchPercent > 0) ||
+      p.briefingOpened ||
+      (p.quizAttempts > 0) ||
+      p.flashcardsReviewed
+    );
+    if (hasActivity) return "in_progress";
+    return "not_started";
   };
 
   // Get user's first name for header
   const userFirstName = user.fullName.split(" ")[0];
+
+  // Build stagesData for home dashboard
+  const stagesData = Object.values(partsByEra).map((era, idx) => ({
+    label: era.label,
+    description: era.description,
+    stageNumber: idx + 1,
+    totalCount: era.totalCount,
+    completedCount: era.completedCount,
+    firstPartNumber: era.parts[0]?.partNumber ?? 1,
+  }));
+
+  // Determine which stage the currentPart belongs to
+  const currentStageNumber = (() => {
+    const eraArr = Object.values(partsByEra);
+    for (let i = 0; i < eraArr.length; i++) {
+      if (eraArr[i].parts.some((p) => p.partNumber === currentPart)) return i + 1;
+    }
+    return 1;
+  })();
+
+  // Parts with any real activity (for progress tab recent activity)
+  const activeParts = allPartProgress
+    .filter(p =>
+      (p.videoWatchPercent > 0) ||
+      p.briefingOpened ||
+      (p.quizAttempts > 0) ||
+      p.flashcardsReviewed
+    )
+    .map(p => p.partNumber)
+    .sort((a, b) => a - b);
+
+  // Title map for progress tab activity list
+  const partTitleMap = Object.fromEntries(PARTS.map(p => [p.partNumber, p.title]));
 
   // Lessons content
   const lessonsContent = (
@@ -197,119 +237,17 @@ export default async function LearnIndexPage() {
       {/* Course Hero */}
       <div className="border-b border-zinc-800 bg-zinc-900/50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Welcome Back Section */}
-          <div className="mb-6">
-            <p className="text-zinc-400 text-sm mb-2">Welcome back, {user.fullName}</p>
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h1 className="text-3xl sm:text-4xl font-bold text-white">
-                  Seerah Masterclass
-                </h1>
-                <p className="text-zinc-400 mt-2">
-                  Master the complete biography of Prophet Muhammad ﷺ through video lessons, quizzes, and interactive study tools
-                </p>
-              </div>
-              <div className="px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-sm font-medium whitespace-nowrap">
-                Complete Access
-              </div>
-            </div>
+          {/* Lessons Header */}
+          <div className="mb-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-white">Lessons</h1>
+            <p className="text-zinc-400 text-sm mt-1">Browse all 100 lessons. All parts are unlocked.</p>
           </div>
 
-          {/* Start Here / Continue Learning Block */}
-          <div className="bg-gradient-to-br from-amber-500/10 to-amber-600/5 border border-amber-500/20 rounded-2xl p-6 mb-6">
-            <div className="flex items-start justify-between gap-6">
-              <div className="flex-1">
-                <p className="text-amber-400 text-sm font-medium mb-2">
-                  {completedCount === 0 ? "Start here — your next step" : "Continue where you left off"}
-                </p>
-                <h3 className="text-xl font-semibold text-white mb-1">
-                  Part {currentPart}: {currentPartData?.title || "Getting Started"}
-                </h3>
-                {currentPartData?.subtitle && (
-                  <p className="text-zinc-400 text-sm mb-3">{currentPartData.subtitle}</p>
-                )}
-                <p className="text-zinc-500 text-sm mb-4 italic">
-                  Goal: understand this stage of the Seerah as part of the connected story.
-                </p>
 
-                {/* Progress bar — only shown if lesson has been started */}
-                {currentPartProgress > 0 && (
-                  <div className="mb-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs text-zinc-400">Lesson progress</span>
-                      <span className="text-xs text-amber-400 font-medium">{currentPartProgress}% complete</span>
-                    </div>
-                    <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-amber-500 to-amber-600 transition-all duration-300"
-                        style={{ width: `${currentPartProgress}%` }}
-                      />
-                    </div>
-                  </div>
-                )}
 
-                <Link
-                  href={`/seerah/part-${currentPart}`}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-amber-500 hover:bg-amber-600 text-black font-semibold rounded-lg transition-colors"
-                >
-                  <Play className="w-4 h-4" />
-                  {completedCount === 0 ? "Start Learning" : "Continue Learning"}
-                </Link>
-              </div>
 
-              {/* How to use each lesson */}
-              <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 min-w-[240px]">
-                <p className="text-sm font-medium text-white mb-1">How to use each lesson</p>
-                <p className="text-xs text-zinc-500 mb-3">Use all four together for best retention</p>
-                <div className="space-y-2 text-sm text-zinc-400">
-                  <div className="flex items-center gap-2">
-                    <Video className="w-4 h-4 text-amber-500" />
-                    <span>Watch the video</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-amber-500" />
-                    <span>Read the briefing</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Brain className="w-4 h-4 text-amber-500" />
-                    <span>Review flashcards</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <ClipboardCheck className="w-4 h-4 text-amber-500" />
-                    <span>Complete the quiz</span>
-                  </div>
-                </div>
-                <div className="mt-4 pt-3 border-t border-zinc-800">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Clock className="w-4 h-4 text-zinc-500" />
-                    <span className="text-zinc-400">Estimated: <span className="text-white font-medium">15–20 min</span></span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
 
-          {/* Course Progress */}
-          <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-semibold text-white">Course Progress</h3>
-              <span className="text-2xl font-bold text-amber-500">{progressPercentage}%</span>
-            </div>
-            <div className="h-3 bg-zinc-800 rounded-full overflow-hidden mb-3">
-              <div 
-                className="h-full bg-gradient-to-r from-amber-500 to-amber-600"
-                style={{ width: `${progressPercentage}%` }}
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <p className="text-sm text-zinc-400">
-                {completedCount} of {totalParts} lessons completed
-              </p>
-            </div>
-            <p className="text-xs text-zinc-500 mt-2">
-              💡 Recommended: Complete lessons in order. Each part builds on the previous one.
-            </p>
-          </div>
+
 
         </div>
       </div>
@@ -320,7 +258,7 @@ export default async function LearnIndexPage() {
           <h2 className="text-2xl font-bold text-white mb-2">Course Roadmap</h2>
           <p className="text-zinc-400 text-sm">
             The life of Prophet Muhammad ﷺ in eight stages — from pre-Islamic Arabia to his final days.
-            Work through each stage in order; every part builds on the one before it.
+            All parts are unlocked. The course is arranged chronologically so each part adds context to the next.
           </p>
         </div>
 
@@ -332,7 +270,7 @@ export default async function LearnIndexPage() {
             const eraPercent = era.totalCount > 0 ? Math.round((era.completedCount / era.totalCount) * 100) : 0;
 
             return (
-              <details key={eraKey} className="group" open={hasCurrentPart || inProgress}>
+              <details key={eraKey} className="group" open={hasCurrentPart}>
                 <summary className="cursor-pointer list-none">
                   <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5 hover:border-zinc-700 transition-colors">
                     <div className="flex items-center justify-between gap-4">
@@ -392,8 +330,9 @@ export default async function LearnIndexPage() {
                 </summary>
 
                 {/* Chapter lessons */}
-                <div className="mt-3 ml-4 pl-4 border-l-2 border-zinc-800 space-y-2">
-                  {era.parts.map((part) => {
+                <div className="mt-3 ml-4 pl-4 border-l-2 border-zinc-800">
+                  <div className="space-y-2">
+                  {era.parts.slice(0, 5).map((part) => {
                     const status = getPartStatus(part.partNumber);
                     const isCompleted = status === "completed";
                     const isInProgress = status === "in_progress";
@@ -455,109 +394,23 @@ export default async function LearnIndexPage() {
                               </p>
                             )}
 
-                            {/* Progress indicators */}
-                            <div className="flex items-center gap-3 text-xs text-zinc-400 flex-wrap">
-                              {/* Video */}
-                              <div className={`flex items-center gap-1 ${pProgress?.videoWatchPercent >= 85 ? "text-green-400" : ""}`}>
-                                <Video className="w-3.5 h-3.5" />
-                                <span>{pProgress?.videoWatchPercent > 0 ? `${pProgress.videoWatchPercent}%` : "—"}</span>
-                              </div>
-                              {/* Audio */}
-                              {(() => {
-                                const opened = pProgress?.openedAssets ? JSON.parse(pProgress.openedAssets) : [];
-                                const hasAudio = opened.includes("audio");
-                                return (
-                                  <div className={`flex items-center gap-1 ${hasAudio ? "text-green-400" : ""}`}>
-                                    <Headphones className="w-3.5 h-3.5" />
-                                    <span>{hasAudio ? "✓" : "—"}</span>
-                                  </div>
-                                );
-                              })()}
-                              {/* Briefing */}
-                              <div className={`flex items-center gap-1 ${pProgress?.briefingOpened ? "text-green-400" : ""}`}>
-                                <FileText className="w-3.5 h-3.5" />
-                                <span>{pProgress?.briefingOpened ? "✓" : "—"}</span>
-                              </div>
-                              {/* Study Guide */}
-                              {(() => {
-                                const opened = pProgress?.openedAssets ? JSON.parse(pProgress.openedAssets) : [];
-                                const hasGuide = opened.includes("study_guide");
-                                return (
-                                  <div className={`flex items-center gap-1 ${hasGuide ? "text-green-400" : ""}`}>
-                                    <GraduationCap className="w-3.5 h-3.5" />
-                                    <span>{hasGuide ? "✓" : "—"}</span>
-                                  </div>
-                                );
-                              })()}
-                              {/* Facts */}
-                              {(() => {
-                                const opened = pProgress?.openedAssets ? JSON.parse(pProgress.openedAssets) : [];
-                                const hasFacts = opened.includes("facts");
-                                return (
-                                  <div className={`flex items-center gap-1 ${hasFacts ? "text-green-400" : ""}`}>
-                                    <BarChart2 className="w-3.5 h-3.5" />
-                                    <span>{hasFacts ? "✓" : "—"}</span>
-                                  </div>
-                                );
-                              })()}
-                              {/* Report */}
-                              {(() => {
-                                const opened = pProgress?.openedAssets ? JSON.parse(pProgress.openedAssets) : [];
-                                const hasReport = opened.includes("report");
-                                return (
-                                  <div className={`flex items-center gap-1 ${hasReport ? "text-green-400" : ""}`}>
-                                    <BookOpen className="w-3.5 h-3.5" />
-                                    <span>{hasReport ? "✓" : "—"}</span>
-                                  </div>
-                                );
-                              })()}
-                              {/* Slides */}
-                              {(() => {
-                                const opened = pProgress?.openedAssets ? JSON.parse(pProgress.openedAssets) : [];
-                                const hasSlides = opened.includes("slides");
-                                return (
-                                  <div className={`flex items-center gap-1 ${hasSlides ? "text-green-400" : ""}`}>
-                                    <Layers className="w-3.5 h-3.5" />
-                                    <span>{hasSlides ? "✓" : "—"}</span>
-                                  </div>
-                                );
-                              })()}
-                              {/* Mindmap */}
-                              {(() => {
-                                const opened = pProgress?.openedAssets ? JSON.parse(pProgress.openedAssets) : [];
-                                const hasMindmap = opened.includes("mindmap");
-                                return (
-                                  <div className={`flex items-center gap-1 ${hasMindmap ? "text-green-400" : ""}`}>
-                                    <Map className="w-3.5 h-3.5" />
-                                    <span>{hasMindmap ? "✓" : "—"}</span>
-                                  </div>
-                                );
-                              })()}
-                              {/* Infographic */}
-                              {(() => {
-                                const opened = pProgress?.openedAssets ? JSON.parse(pProgress.openedAssets) : [];
-                                const hasInfographic = opened.includes("infographic");
-                                return (
-                                  <div className={`flex items-center gap-1 ${hasInfographic ? "text-green-400" : ""}`}>
-                                    <Image className="w-3.5 h-3.5" />
-                                    <span>{hasInfographic ? "✓" : "—"}</span>
-                                  </div>
-                                );
-                              })()}
-                              {/* Flashcards */}
-                              <div className={`flex items-center gap-1 ${pProgress?.flashcardsReviewed ? "text-green-400" : ""}`}>
-                                <Brain className="w-3.5 h-3.5" />
-                                <span>{pProgress?.flashcardsReviewed ? "✓" : "—"}</span>
-                              </div>
-                              {/* Quiz */}
-                              <div className={`flex items-center gap-1 ${pProgress?.quizPassed ? "text-green-400" : ""}`}>
-                                <ClipboardCheck className="w-3.5 h-3.5" />
-                                <span>
-                                  {pProgress?.quizBestScore != null
-                                    ? `${pProgress.quizBestScore}%${pProgress.quizPassed ? " ✓" : ""}`
-                                    : "—"}
-                                </span>
-                              </div>
+                            {/* Resources — green only for truly completed, muted otherwise */}
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1 text-xs">
+                              <span className={(pProgress?.videoWatchPercent ?? 0) >= 85 ? "text-green-400" : (pProgress?.videoWatchPercent ?? 0) > 0 ? "text-amber-400" : "text-zinc-600"}>
+                                {(pProgress?.videoWatchPercent ?? 0) >= 85 ? "✓ Video" : (pProgress?.videoWatchPercent ?? 0) > 0 ? `Video ${pProgress!.videoWatchPercent}%` : "Video"}
+                              </span>
+                              <span className="text-zinc-700">·</span>
+                              <span className={pProgress?.briefingOpened ? "text-green-400" : "text-zinc-600"}>
+                                {pProgress?.briefingOpened ? "✓ Briefing" : "Briefing"}
+                              </span>
+                              <span className="text-zinc-700">·</span>
+                              <span className={pProgress?.flashcardsReviewed ? "text-green-400" : "text-zinc-600"}>
+                                {pProgress?.flashcardsReviewed ? "✓ Flashcards" : "Flashcards"}
+                              </span>
+                              <span className="text-zinc-700">·</span>
+                              <span className={pProgress?.quizPassed ? "text-green-400" : "text-zinc-600"}>
+                                {pProgress?.quizPassed ? `✓ Quiz ${pProgress.quizBestScore}%` : "Quiz"}
+                              </span>
                             </div>
                           </div>
 
@@ -566,6 +419,52 @@ export default async function LearnIndexPage() {
                       </Link>
                     );
                   })}
+                  </div>
+                  {era.parts.length > 5 && (
+                    <details className="mt-2 group/more">
+                      <summary className="cursor-pointer list-none py-2 px-1 text-xs text-amber-400 hover:text-amber-300 flex items-center gap-1.5 select-none">
+                        <ChevronDown className="w-3.5 h-3.5 group-open/more:rotate-180 transition-transform" />
+                        View all {era.parts.length - 5} more parts in this stage
+                      </summary>
+                      <div className="space-y-2 mt-2">
+                        {era.parts.slice(5).map((part) => {
+                          const status = getPartStatus(part.partNumber);
+                          const isCompleted2 = status === "completed";
+                          const isInProgress2 = status === "in_progress";
+                          const pProgress2 = progressMap[part.partNumber];
+                          const isMastered2 = (pProgress2?.status ?? "") === "mastered";
+                          return (
+                            <Link
+                              key={part.id}
+                              href={`/seerah/part-${part.partNumber}`}
+                              className="group block p-4 rounded-xl border transition-all bg-zinc-900/50 border-zinc-800 hover:border-amber-500/30 hover:bg-zinc-900"
+                            >
+                              <div className="flex items-center gap-4">
+                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                                  isMastered2   ? "bg-yellow-500/15 border border-yellow-500/30" :
+                                  isCompleted2  ? "bg-green-500/10  border border-green-500/20"  :
+                                  isInProgress2 ? "bg-amber-500/10  border border-amber-500/20"  :
+                                  "bg-zinc-800 border border-zinc-700"
+                                }`}>
+                                  {isMastered2 ? <span className="text-base">✦</span> : isCompleted2 ? <CheckCircle2 className="w-5 h-5 text-green-400" /> : <Play className={`w-5 h-5 ${isInProgress2 ? "text-amber-500" : "text-zinc-500"}`} />}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-xs font-medium text-amber-500">Part {part.partNumber}</span>
+                                    {isCompleted2 && !isMastered2 && <span className="px-2 py-0.5 bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium rounded">Completed</span>}
+                                    {isInProgress2 && <span className="px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-medium rounded">In Progress</span>}
+                                  </div>
+                                  <p className="font-medium mb-0.5 truncate text-white group-hover:text-amber-400">{part.title}</p>
+                                  {part.subtitle && <p className="text-sm text-zinc-500 truncate">{part.subtitle}</p>}
+                                </div>
+                                <ChevronRight className="w-5 h-5 text-zinc-600 group-hover:text-amber-500 transition-colors flex-shrink-0" />
+                              </div>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </details>
+                  )}
                 </div>
               </details>
             );
@@ -584,6 +483,13 @@ export default async function LearnIndexPage() {
             completionPercentage={progressPercentage}
             completedLessons={completedCount}
             totalLessons={totalParts}
+            userName={userFirstName}
+            currentPart={currentPart}
+            currentPartTitle={currentPartData?.title ?? "Getting Started"}
+            currentPartSubtitle={currentPartData?.subtitle}
+            currentPartVideoProgress={currentPartProgress}
+            stagesData={stagesData}
+            currentStageNumber={currentStageNumber}
           />
         }
         lessonsContent={lessonsContent}
@@ -683,6 +589,15 @@ export default async function LearnIndexPage() {
             parentEmail={user.parentEmail || undefined}
             studentName={user.studentName || undefined}
             sendWeeklyReports={user.sendWeeklyReports}
+            completedLessons={completedCount}
+            totalLessons={totalParts}
+            progressPercentage={progressPercentage}
+            currentPart={currentPart}
+            stagesData={stagesData}
+            quizAvgScore={quizAvgScore}
+            quizTotalAttempts={quizTotalAttempts}
+            activeParts={activeParts}
+            partTitleMap={partTitleMap}
           />
         }
       />

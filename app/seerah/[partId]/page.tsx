@@ -197,7 +197,7 @@ export default async function SeerahPartPage(props: Props) {
       <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="border-b border-border bg-surface sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="max-w-6xl mx-auto px-4 pr-14 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between gap-4">
             <Link
               href="/seerah"

@@ -1,9 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { login } from "@/lib/auth";
+import { checkRateLimit, getIP } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
   console.log(`[API] POST /api/auth/signin: Request received`);
+
+  // Rate limit: 5 attempts per 10 minutes per IP
+  const ip = getIP(request);
+  const rl = checkRateLimit(`signin:${ip}`, 5, 10 * 60 * 1000);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Too many attempts. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSeconds) } }
+    );
+  }
   
   try {
     const { email, password } = await request.json();

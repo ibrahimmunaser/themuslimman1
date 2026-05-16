@@ -39,7 +39,7 @@ type ModeId = "watch" | "read" | "study" | "slides" | "mindmap" | "infographic" 
 
 type SubTabId =
   | "video"
-  | "briefing" | "study-guide" | "facts" | "report"
+  | "briefing" | "study-guide" | "facts"
   | "flashcards" | "quiz"
   | "slides" | "mindmap" | "infographic";
 
@@ -66,7 +66,6 @@ const MODES: Mode[] = [
       { id: "briefing",    label: "Briefing",    icon: FileText },
       { id: "study-guide", label: "Study Guide", icon: BookOpen },
       { id: "facts",       label: "Facts",       icon: BarChart2 },
-      { id: "report",      label: "Deep Dive",   icon: FileText },
     ],
   },
   {
@@ -113,7 +112,6 @@ function subTabHasContent(id: SubTabId, part: Part): boolean {
     case "briefing":    return !!part.assets.briefingText;
     case "study-guide": return !!part.assets.studyGuideText;
     case "facts":       return !!part.assets.statementOfFactsText;
-    case "report":      return !!part.assets.reportText;
     case "flashcards":  return !!part.assets.flashcards;
     case "quiz":        return !!part.assets.quiz;
     case "slides":      return !!(
@@ -139,8 +137,8 @@ function getModeSubTabs(mode: Mode, part: Part): SubTab[] {
 function EmptyContent({ label }: { label: string }) {
   return (
     <div className="py-14 text-center">
-      <p className="text-text-secondary text-sm font-medium">{label} coming soon</p>
-      <p className="text-xs text-text-muted mt-1">This content will be available shortly</p>
+      <p className="text-text-secondary text-sm font-medium">{label} not available for this part</p>
+      <p className="text-xs text-text-muted mt-1">New content is added progressively</p>
     </div>
   );
 }
@@ -308,6 +306,7 @@ function SlidesPanel({ part, previewMode }: { part: Part; previewMode?: boolean 
 }
 
 function SubTabContent({ id, part, previewMode }: { id: SubTabId; part: Part; previewMode?: boolean }) {
+  // Generic wrap for non-article content (flashcards, quiz, facts)
   const wrap = (child: React.ReactNode) => (
     <div className="rounded-xl border border-border/60 bg-surface p-5 sm:p-7">{child}</div>
   );
@@ -329,14 +328,18 @@ function SubTabContent({ id, part, previewMode }: { id: SubTabId; part: Part; pr
           />
         </div>
       );
+    // Text content — TextViewer owns its own premium article container
     case "briefing":
-      return wrap(part.assets.briefingText ? <TextViewer content={part.assets.briefingText} partNumber={part.partNumber} assetId="briefing" previewMode={previewMode} /> : <EmptyContent label="Briefing" />);
+      return part.assets.briefingText
+        ? <TextViewer content={part.assets.briefingText} partNumber={part.partNumber} assetId="briefing" previewMode={previewMode} />
+        : wrap(<EmptyContent label="Briefing" />);
     case "study-guide":
-      return wrap(part.assets.studyGuideText ? <TextViewer content={part.assets.studyGuideText} partNumber={part.partNumber} assetId="study_guide" previewMode={previewMode} /> : <EmptyContent label="Study Guide" />);
+      return part.assets.studyGuideText
+        ? <TextViewer content={part.assets.studyGuideText} partNumber={part.partNumber} assetId="study_guide" previewMode={previewMode} />
+        : wrap(<EmptyContent label="Study Guide" />);
+    // Non-article content keeps the generic card wrap
     case "facts":
       return wrap(part.assets.statementOfFactsText ? <FactsViewer content={part.assets.statementOfFactsText} partNumber={part.partNumber} previewMode={previewMode} /> : <EmptyContent label="Facts" />);
-    case "report":
-      return wrap(part.assets.reportText ? <TextViewer content={part.assets.reportText} partNumber={part.partNumber} assetId="report" previewMode={previewMode} /> : <EmptyContent label="Deep Dive Report" />);
     case "flashcards":
       return wrap(part.assets.flashcards ? <FlashcardsViewer flashcards={part.assets.flashcards} /> : <EmptyContent label="Flashcards" />);
     case "quiz":
@@ -359,8 +362,7 @@ function TimelineButton({
   era: string;
   previewMode?: boolean;
 }) {
-  // In free preview, the timeline page requires login — hide the button
-  if (previewMode) return null;
+  return null;
 
   return (
     <Link
@@ -488,10 +490,10 @@ export function PartTabs({ part, userPlan, previewMode = false }: PartTabsProps)
   const currentSubTab = subTabs.find((t) => t.id === activeSubTab)?.id ?? subTabs[0]?.id;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
 
       {/* ── Mode selector strip ─────────────────────────────────────────── */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
         {MODES.map((mode) => {
           const available = getModeSubTabs(mode, part).length > 0;
           return (
@@ -511,7 +513,7 @@ export function PartTabs({ part, userPlan, previewMode = false }: PartTabsProps)
 
       {/* ── Sub-tab bar (only when mode has multiple content items) ────── */}
       {subTabs.length > 1 && (
-        <div className="flex gap-1.5 flex-wrap pl-4">
+        <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pl-4">
           {subTabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = currentSubTab === tab.id;
@@ -520,7 +522,7 @@ export function PartTabs({ part, userPlan, previewMode = false }: PartTabsProps)
                 key={tab.id}
                 onClick={() => setActiveSubTab(tab.id)}
                 className={clsx(
-                  "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all duration-150",
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all duration-150 flex-shrink-0 whitespace-nowrap",
                   isActive
                     ? "bg-gold/10 text-gold border-gold/25"
                     : "bg-surface text-text-muted border-border hover:text-text-secondary hover:border-border-subtle hover:bg-surface-raised"
@@ -536,7 +538,7 @@ export function PartTabs({ part, userPlan, previewMode = false }: PartTabsProps)
 
       {/* ── Content ─────────────────────────────────────────────────────── */}
       {currentSubTab && (
-        <div>
+        <div className="pt-1">
           <SubTabContent
             key={`${activeMode}-${currentSubTab}`}
             id={currentSubTab}

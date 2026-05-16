@@ -15,6 +15,7 @@ import {
   getR2AssetUrl,
   getR2PublicUrl,
 } from "./r2";
+import { PART_CONTENT } from "./part-content-data";
 
 export const SEERAH_ROOT =
   process.env.SEERAH_DATA_DIR ?? path.resolve(/*turbopackIgnore: true*/ process.cwd(), "..", "Seerah-data");
@@ -58,6 +59,10 @@ export function readTextFile(filePath: string): string | null {
 // ─── Briefing ─────────────────────────────────────────────────────────────────
 
 export async function readBriefing(partNum: number): Promise<string | null> {
+  // Return hardcoded content if available (takes priority over R2/filesystem)
+  const hardcoded = PART_CONTENT[partNum]?.briefingText;
+  if (hardcoded != null) return hardcoded;
+
   if (USE_R2) {
     return await r2ReadBriefing(partNum);
   }
@@ -68,6 +73,10 @@ export async function readBriefing(partNum: number): Promise<string | null> {
 // ─── Statement of Facts ───────────────────────────────────────────────────────
 
 export async function readStatementOfFacts(partNum: number): Promise<string | null> {
+  // Return hardcoded content if available (takes priority over R2/filesystem)
+  const hardcoded = PART_CONTENT[partNum]?.statementOfFactsText;
+  if (hardcoded != null) return hardcoded;
+
   if (USE_R2) {
     return await r2ReadStatementOfFacts(partNum);
   }

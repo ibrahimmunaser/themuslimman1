@@ -9,7 +9,7 @@ import { TextResourceContent } from "@/components/resources/text-resource-conten
 import { SimpleResourceContent } from "@/components/resources/simple-resource-content";
 import { QuizResourceContent } from "@/components/resources/quiz-resource-content";
 
-export const metadata = { title: "Resource Library | Seerah Masterclass" };
+export const metadata = { title: "Resource Library | Complete Seerah" };
 export const dynamic = "force-dynamic";
 
 export default async function SeerahResourcesPage() {

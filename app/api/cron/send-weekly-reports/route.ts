@@ -194,7 +194,7 @@ export async function GET(request: NextRequest) {
         const resend = new Resend(process.env.RESEND_API_KEY);
 
         const { error: emailError } = await resend.emails.send({
-          from: process.env.EMAIL_FROM || "Seerah LMS <noreply@themuslimman.com>",
+          from: process.env.EMAIL_FROM || "Complete Seerah <noreply@themuslimman.com>",
           to: user.parentEmail,
           subject: `${user.studentName || user.fullName}'s Weekly Seerah Progress Report`,
           html: emailHtml,

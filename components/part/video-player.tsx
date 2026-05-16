@@ -34,7 +34,7 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode }: Vid
           <Play className="w-7 h-7 text-gold/60 ml-1" />
         </div>
         <div className="text-center">
-          <p className="text-text-secondary text-sm font-medium">Video coming soon</p>
+          <p className="text-text-secondary text-sm font-medium">No video for this part</p>
           <p className="text-text-muted text-xs mt-1">This content will be available shortly</p>
         </div>
       </div>

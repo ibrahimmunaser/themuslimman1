@@ -2,9 +2,9 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Sources & Methodology | Seerah Masterclass",
+  title: "Sources & Methodology | Complete Seerah",
   description:
-    "How the Seerah Masterclass approaches the life of Prophet Muhammad ﷺ — sources used, what this course is, and what it is not.",
+    "How Complete Seerah approaches the life of Prophet Muhammad ﷺ — sources used, what this course is, and what it is not.",
 };
 
 export default function MethodologyPage() {

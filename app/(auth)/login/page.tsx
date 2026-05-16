@@ -56,9 +56,15 @@ function LoginContent() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+    <div className="min-h-screen bg-background px-4 py-16 flex flex-col items-center justify-start">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/images/logodashboard.png"
+            alt="Complete Seerah"
+            className="w-12 h-12 rounded-xl mx-auto mb-4"
+          />
           <h1 className="text-2xl font-bold text-text mb-2">Sign in to Seerah</h1>
           <p className="text-text-secondary text-sm">
             Use your email to continue learning

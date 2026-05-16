@@ -136,7 +136,7 @@ export function SendProgressReportButton({
               <Check className="w-4 h-4 text-green-400" />
               <span className="text-sm text-text-secondary">Parent Email:</span>
             </div>
-            <span className="text-sm font-medium text-text">{parentEmail}</span>
+            <span className="text-sm font-medium text-text truncate max-w-[160px] sm:max-w-xs">{parentEmail}</span>
           </div>
 
           {/* Weekly Reports Status */}

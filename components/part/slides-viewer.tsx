@@ -85,12 +85,41 @@ export function SlidesViewer({ slides, title, type = "presented", partNumber, pr
   const [current, setCurrent] = useState(0);
   const [fullscreen, setFullscreen] = useState(false);
   const stripRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const prev = useCallback(() => setCurrent((c) => Math.max(0, c - 1)), []);
   const next = useCallback(
     () => setCurrent((c) => Math.min(slides.length - 1, c + 1)),
     [slides.length]
   );
+
+  // Sync fullscreen state with the native Fullscreen API
+  useEffect(() => {
+    const handler = () => setFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", handler);
+    return () => document.removeEventListener("fullscreenchange", handler);
+  }, []);
+
+  const enterFullscreen = useCallback(async () => {
+    if (containerRef.current?.requestFullscreen) {
+      try {
+        await containerRef.current.requestFullscreen();
+      } catch {
+        // Browser denied — fall back to CSS overlay
+        setFullscreen(true);
+      }
+    } else {
+      setFullscreen(true);
+    }
+  }, []);
+
+  const exitFullscreenMode = useCallback(() => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else {
+      setFullscreen(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (!partNumber || previewMode || !slides.length) return;
@@ -111,11 +140,11 @@ export function SlidesViewer({ slides, title, type = "presented", partNumber, pr
     const handler = (e: KeyboardEvent) => {
       if (e.key === "ArrowLeft") prev();
       if (e.key === "ArrowRight") next();
-      if (e.key === "Escape") setFullscreen(false);
+      if (e.key === "Escape") exitFullscreenMode();
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [fullscreen, prev, next]);
+  }, [fullscreen, prev, next, exitFullscreenMode]);
 
   if (!slides.length) {
     return (
@@ -124,7 +153,7 @@ export function SlidesViewer({ slides, title, type = "presented", partNumber, pr
           <Layers className="w-6 h-6 text-gold/50" />
         </div>
         <div className="text-center">
-          <p className="text-text-secondary text-sm font-medium">Slides coming soon</p>
+          <p className="text-text-secondary text-sm font-medium">No slides for this part</p>
           <p className="text-xs text-text-muted mt-1">
             {type === "presented" ? "Presented" : "Detailed"} slides will be available shortly
           </p>
@@ -135,6 +164,7 @@ export function SlidesViewer({ slides, title, type = "presented", partNumber, pr
 
   return (
     <div
+      ref={containerRef}
       className={
         fullscreen
           ? "fixed inset-0 z-50 bg-black flex flex-col"
@@ -151,8 +181,9 @@ export function SlidesViewer({ slides, title, type = "presented", partNumber, pr
           {current + 1} / {slides.length}
         </span>
         <button
-          onClick={() => setFullscreen((f) => !f)}
+          onClick={() => fullscreen ? exitFullscreenMode() : enterFullscreen()}
           className="text-text-muted hover:text-text transition-colors"
+          title={fullscreen ? "Exit fullscreen" : "Enter fullscreen"}
         >
           {fullscreen ? <X className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
         </button>
@@ -162,8 +193,8 @@ export function SlidesViewer({ slides, title, type = "presented", partNumber, pr
       <div
         className={`relative flex-1 bg-black ${!fullscreen ? "group cursor-zoom-in" : ""}`}
         style={{ minHeight: fullscreen ? undefined : "420px" }}
-        onClick={!fullscreen ? () => setFullscreen(true) : undefined}
-        title={!fullscreen ? "Click to enlarge" : undefined}
+        onClick={!fullscreen ? () => enterFullscreen() : undefined}
+        title={!fullscreen ? "Click for fullscreen" : undefined}
       >
         {/* Only render current ±2 slides */}
         {slides.map((slide, idx) => {
@@ -203,7 +234,7 @@ export function SlidesViewer({ slides, title, type = "presented", partNumber, pr
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/70 border border-white/15 text-white text-xs font-medium">
               <Maximize2 className="w-3.5 h-3.5" />
-              Enlarge
+              Fullscreen
             </div>
           </div>
         )}

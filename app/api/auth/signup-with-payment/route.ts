@@ -28,7 +28,7 @@ function generateWelcomeEmail({
         <table width="600" cellpadding="0" cellspacing="0" style="background-color: #1a1a1a; border-radius: 8px; overflow: hidden;">
           <tr>
             <td style="padding: 40px 40px 30px;">
-              <h1 style="margin: 0 0 20px; color: #d4af37; font-size: 28px;">Welcome to Seerah LMS!</h1>
+              <h1 style="margin: 0 0 20px; color: #d4af37; font-size: 28px;">Welcome to Complete Seerah!</h1>
               <p style="margin: 0 0 20px; color: #e0e0e0; font-size: 16px; line-height: 1.5;">
                 Hi ${fullName},
               </p>
@@ -139,7 +139,7 @@ export async function POST(req: NextRequest) {
 
     const sentFrom = new Sender(
       "admin@themuslimman.com",
-      "Seerah LMS"
+      "Complete Seerah"
     );
 
     const recipients = [new Recipient(email, fullName.trim())];
@@ -147,7 +147,7 @@ export async function POST(req: NextRequest) {
     const emailParams = new EmailParams()
       .setFrom(sentFrom)
       .setTo(recipients)
-      .setSubject("Welcome to Seerah LMS - Verify your email")
+      .setSubject("Welcome to Complete Seerah - Verify your email")
       .setHtml(generateWelcomeEmail({
         fullName: fullName.trim(),
         verificationUrl,

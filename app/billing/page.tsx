@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-export const metadata = { title: "Billing | Seerah Masterclass" };
+export const metadata = { title: "Billing | Complete Seerah" };
 export const dynamic = "force-dynamic";
 
 function formatDate(d: Date) {

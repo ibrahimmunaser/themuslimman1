@@ -1,5 +1,11 @@
-import { TrendingUp, Target, Clock, Award, FileText, Mail } from "lucide-react";
+import Link from "next/link";
+import {
+  TrendingUp, Target, Award,
+  Play, ChevronRight, BookOpen, CheckCircle2,
+  Mail, FileText,
+} from "lucide-react";
 import { SendProgressReportButton } from "./send-progress-report-button";
+import type { StageData } from "./course-home-content";
 
 interface CourseProgressContentProps {
   userPlan: "essentials" | "complete";
@@ -7,85 +13,277 @@ interface CourseProgressContentProps {
   parentEmail?: string;
   studentName?: string;
   sendWeeklyReports?: boolean;
+  completedLessons: number;
+  totalLessons: number;
+  progressPercentage: number;
+  currentPart: number;
+  stagesData: StageData[];
+  quizAvgScore: number;
+  quizTotalAttempts: number;
+  activeParts: number[];
+  partTitleMap: Record<number, string>;
 }
 
-export function CourseProgressContent({ 
-  userPlan, 
+export function CourseProgressContent({
+  userPlan,
   hasParentEmail = false,
   parentEmail,
   studentName,
   sendWeeklyReports = false,
+  completedLessons,
+  totalLessons,
+  progressPercentage,
+  currentPart,
+  stagesData,
+  quizAvgScore,
+  quizTotalAttempts,
+  activeParts,
+  partTitleMap,
 }: CourseProgressContentProps) {
+  const hasAnyActivity = completedLessons > 0 || activeParts.length > 0;
+  const hasQuizData = quizTotalAttempts > 0;
+
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Send Progress Report Button or Setup Message */}
-      {hasParentEmail ? (
-        <SendProgressReportButton
-          userPlan={userPlan}
-          hasParentEmail={hasParentEmail}
-          parentEmail={parentEmail}
-          studentName={studentName}
-          sendWeeklyReports={sendWeeklyReports}
-        />
-      ) : (
-        <div className="p-6 rounded-xl border border-amber-500/20 bg-amber-500/5 mb-8">
-          <div className="flex items-start gap-3">
-            <FileText className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
-            <div>
-              <h3 className="text-base font-semibold text-amber-400 mb-1">Parent Progress Reports</h3>
-              <p className="text-sm text-zinc-300 mb-3">
-                Want to keep a parent or guardian updated on your progress? Set up automated weekly reports or send them on-demand.
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+
+      {/* ── Page Header ──────────────────────────────────────────────────── */}
+      <section>
+        <h1 className="text-2xl sm:text-3xl font-bold text-text mb-2">Your Progress</h1>
+        <p className="text-text-secondary text-sm mb-4">
+          Track your journey through the Complete Seerah course.
+        </p>
+
+        {!hasAnyActivity ? (
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-xl border border-gold/25 bg-gold/5">
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-text-secondary">
+                You have not started yet. Begin Part 1 to start tracking your progress.
               </p>
-              <a 
-                href="/student/settings"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-black font-semibold rounded-lg transition-colors text-sm"
+            </div>
+            <Link
+              href="/seerah/part-1"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gold hover:bg-gold/90 text-ink font-semibold rounded-lg text-sm transition-colors whitespace-nowrap shrink-0"
+            >
+              <Play className="w-3.5 h-3.5" />
+              Start Part 1
+            </Link>
+          </div>
+        ) : (
+          <Link
+            href={`/seerah/part-${currentPart}`}
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-gold hover:bg-gold/90 text-ink font-semibold rounded-lg text-sm transition-colors"
+          >
+            <Play className="w-3.5 h-3.5" />
+            Continue Learning
+          </Link>
+        )}
+      </section>
+
+      {/* ── Summary Cards ─────────────────────────────────────────────────── */}
+      <section>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {/* Completed Parts */}
+          <div className="p-5 rounded-2xl border border-border bg-surface">
+            <div className="flex items-center gap-2 mb-3">
+              <Target className="w-4 h-4 text-gold/70" />
+              <p className="text-xs font-semibold uppercase tracking-wider text-text-muted">Completed</p>
+            </div>
+            <p className="text-2xl font-bold text-text tabular-nums">
+              {completedLessons}
+              <span className="text-text-muted font-normal text-base"> / {totalLessons}</span>
+            </p>
+            <p className="text-xs text-text-muted mt-1">Parts fully completed</p>
+            <div className="mt-3 h-1.5 bg-surface-raised rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-gold to-amber-400 rounded-full"
+                style={{ width: `${progressPercentage}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Progress % */}
+          <div className="p-5 rounded-2xl border border-border bg-surface">
+            <div className="flex items-center gap-2 mb-3">
+              <TrendingUp className="w-4 h-4 text-gold/70" />
+              <p className="text-xs font-semibold uppercase tracking-wider text-text-muted">Progress</p>
+            </div>
+            <p className="text-2xl font-bold text-text tabular-nums">{`${progressPercentage}%`}</p>
+            <p className="text-xs text-text-muted mt-1">
+              {progressPercentage === 0 ? "Not started" : `of 100 parts`}
+            </p>
+          </div>
+
+          {/* Quiz Performance */}
+          <div className="p-5 rounded-2xl border border-border bg-surface">
+            <div className="flex items-center gap-2 mb-3">
+              <Award className="w-4 h-4 text-gold/70" />
+              <p className="text-xs font-semibold uppercase tracking-wider text-text-muted">Quiz</p>
+            </div>
+            {hasQuizData ? (
+              <>
+                <p className="text-2xl font-bold text-text tabular-nums">{Math.round(quizAvgScore)}%</p>
+                <p className="text-xs text-text-muted mt-1">avg · {quizTotalAttempts} attempt{quizTotalAttempts !== 1 ? "s" : ""}</p>
+              </>
+            ) : (
+              <>
+                <p className="text-xl font-semibold text-text-muted">—</p>
+                <p className="text-xs text-text-muted mt-1">No quizzes yet</p>
+              </>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Stage Progress (replaces "coming soon") ───────────────────────── */}
+      <section>
+        <div className="mb-5">
+          <h2 className="text-xl font-bold text-text mb-1">Stage Progress</h2>
+          <p className="text-sm text-text-secondary">
+            Your progress across the {stagesData.length} stages of the course.
+          </p>
+        </div>
+
+        <div className="grid sm:grid-cols-2 gap-4">
+          {stagesData.map((stage) => {
+            const pct = stage.totalCount > 0 ? Math.round((stage.completedCount / stage.totalCount) * 100) : 0;
+            const isDone = stage.completedCount === stage.totalCount && stage.totalCount > 0;
+            const hasStarted = stage.completedCount > 0;
+
+            return (
+              <div
+                key={stage.stageNumber}
+                className={`p-5 rounded-2xl border transition-colors ${
+                  isDone ? "border-green-500/25 bg-green-500/5" : "border-border bg-surface"
+                }`}
               >
-                Set Up Parent Reports
-              </a>
-            </div>
-          </div>
-        </div>
-      )}
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <div className="flex-1 min-w-0">
+                    <span className={`text-xs font-bold uppercase tracking-wider ${isDone ? "text-green-400" : "text-text-muted"}`}>
+                      Stage {stage.stageNumber}
+                    </span>
+                    <h3 className="text-sm font-semibold text-text leading-snug mt-0.5 truncate">{stage.label}</h3>
+                  </div>
+                  <span className={`text-xs tabular-nums shrink-0 ${isDone ? "text-green-400" : "text-text-muted"}`}>
+                    {stage.completedCount}/{stage.totalCount}
+                  </span>
+                </div>
 
-      {/* Stats */}
-      <div className="grid sm:grid-cols-4 gap-4 mb-8">
-        {[
-          { icon: Target, label: "Lessons Completed", value: "0 / 100", color: "gold" },
-          { icon: TrendingUp, label: "Progress", value: "0%", color: "green" },
-          { icon: Clock, label: "Study Time", value: "0h", color: "blue" },
-          { icon: Award, label: "Quiz Score", value: "0%", color: "purple" },
-        ].map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <div key={stat.label} className="p-6 rounded-xl border border-zinc-800 bg-zinc-900/50">
-              <div className="flex items-center gap-3 mb-2">
-                <Icon className="w-5 h-5 text-amber-500" />
+                <p className="text-xs text-text-muted leading-relaxed mb-3">{stage.description}</p>
+
+                <div className="h-1.5 bg-surface-raised rounded-full overflow-hidden mb-3">
+                  <div
+                    className={`h-full rounded-full transition-all ${isDone ? "bg-green-500" : "bg-gradient-to-r from-gold to-amber-400"}`}
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+
+                <Link
+                  href={`/seerah/part-${stage.firstPartNumber}`}
+                  className="inline-flex items-center gap-1 text-xs font-medium text-gold hover:text-gold/80 transition-colors"
+                >
+                  {isDone ? "Review" : hasStarted ? "Continue" : "Start"}
+                  <ChevronRight className="w-3 h-3" />
+                </Link>
               </div>
-              <p className="text-zinc-400 text-sm mb-1">{stat.label}</p>
-              <p className="text-2xl font-bold text-white">{stat.value}</p>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      </section>
 
-      {/* Progress Chart Placeholder */}
-      <div className="p-8 rounded-xl border border-zinc-800 bg-zinc-900/50 mb-8">
-        <h2 className="text-lg font-semibold text-white mb-4">Learning Progress</h2>
-        <div className="h-64 flex items-center justify-center text-zinc-400">
-          <div className="text-center">
-            <TrendingUp className="w-12 h-12 mx-auto mb-3 opacity-50" />
-            <p>Progress chart coming soon</p>
+      {/* ── Recent Activity ───────────────────────────────────────────────── */}
+      <section>
+        <h2 className="text-xl font-bold text-text mb-4">Recently Opened Lessons</h2>
+
+        {!hasAnyActivity ? (
+          <div className="p-8 rounded-2xl border border-border bg-surface text-center">
+            <BookOpen className="w-10 h-10 mx-auto mb-3 text-text-muted opacity-50" />
+            <p className="font-medium text-text mb-1">No activity yet</p>
+            <p className="text-sm text-text-secondary mb-4 max-w-sm mx-auto">
+              Start Part 1 and your opened lessons will appear here.
+            </p>
+            <Link
+              href="/seerah/part-1"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-gold hover:bg-gold/90 text-ink font-semibold rounded-lg text-sm transition-colors"
+            >
+              <Play className="w-3.5 h-3.5" />
+              Start Part 1
+            </Link>
           </div>
-        </div>
-      </div>
+        ) : (
+          <div className="space-y-2">
+            {completedLessons > 0 && (
+              <div className="flex items-center gap-3 p-4 rounded-xl border border-green-500/20 bg-green-500/5">
+                <CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" />
+                <p className="text-sm text-text-secondary flex-1">
+                  <span className="text-green-400 font-semibold">{completedLessons}</span> part{completedLessons !== 1 ? "s" : ""} completed
+                </p>
+                <Link href="/seerah?tab=lessons" className="text-xs text-gold hover:text-gold/80 flex items-center gap-1 shrink-0">
+                  View all <ChevronRight className="w-3 h-3" />
+                </Link>
+              </div>
+            )}
 
-      {/* Recent Activity */}
-      <div className="p-8 rounded-xl border border-zinc-800 bg-zinc-900/50">
-        <h2 className="text-lg font-semibold text-white mb-4">Recent Activity</h2>
-        <div className="text-center py-8 text-zinc-400">
-          <p>No recent activity yet. Start learning to see your progress here!</p>
-        </div>
-      </div>
+            {activeParts.slice(0, 6).map((partNum) => (
+              <Link
+                key={partNum}
+                href={`/seerah/part-${partNum}`}
+                className="group flex items-center gap-3 p-4 rounded-xl border border-border bg-surface hover:border-gold/30 hover:bg-gold/5 transition-all"
+              >
+                <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
+                  <Play className="w-3.5 h-3.5 text-amber-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className="text-xs text-amber-500 font-medium">Part {partNum}</span>
+                  <p className="text-sm font-medium text-text truncate">
+                    {partTitleMap[partNum] ?? `Part ${partNum}`}
+                  </p>
+                </div>
+                <span className="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded shrink-0">
+                  In Progress
+                </span>
+                <ChevronRight className="w-4 h-4 text-zinc-600 group-hover:text-gold transition-colors shrink-0" />
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* ── Email / Parent Progress Reports ───────────────────────────────── */}
+      <section>
+        <h2 className="text-xl font-bold text-text mb-4">Email Progress Reports</h2>
+
+        {hasParentEmail ? (
+          <SendProgressReportButton
+            userPlan={userPlan}
+            hasParentEmail={hasParentEmail}
+            parentEmail={parentEmail}
+            studentName={studentName}
+            sendWeeklyReports={sendWeeklyReports}
+          />
+        ) : (
+          <div className="p-5 sm:p-6 rounded-2xl border border-border bg-surface">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-lg bg-gold/10 border border-gold/25 flex items-center justify-center shrink-0">
+                <Mail className="w-5 h-5 text-gold" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-text mb-1">Set up parent reports</h3>
+                <p className="text-sm text-text-secondary mb-4">
+                  Keep a parent or guardian updated with automated weekly progress reports or on-demand summaries.
+                </p>
+                <Link
+                  href="/student/settings"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-gold hover:bg-gold/90 text-ink font-semibold rounded-lg text-sm transition-colors"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  Set Up in Settings
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
+      </section>
+
     </div>
   );
 }

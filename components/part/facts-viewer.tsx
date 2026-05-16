@@ -54,14 +54,14 @@ export function FactsViewer({ content, partNumber, previewMode }: FactsViewerPro
   }, []);
 
   return (
-    <ol className="space-y-2">
+    <ol className="space-y-3">
       {facts.map((fact, i) => (
-        <li key={i} className="flex gap-3.5 items-baseline">
-          <span className="flex-shrink-0 w-6 text-right text-xs font-semibold text-gold/60 tabular-nums mt-[1px]">
+        <li key={i} className="flex gap-4 items-baseline">
+          <span className="flex-shrink-0 w-7 text-right text-xs font-semibold text-gold/50 tabular-nums mt-[2px]">
             {i + 1}
           </span>
           <span 
-            className="text-sm text-zinc-300 leading-relaxed"
+            className="text-base text-zinc-300 leading-relaxed"
             dangerouslySetInnerHTML={{ __html: formatFactLine(fact) }}
           />
         </li>

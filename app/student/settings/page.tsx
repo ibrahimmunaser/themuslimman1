@@ -6,7 +6,7 @@ import { prisma } from "@/lib/db";
 import { User, Mail, Shield } from "lucide-react";
 import { ChangePasswordForm } from "@/components/student/change-password-form";
 
-export const metadata = { title: "Settings | Seerah Masterclass" };
+export const metadata = { title: "Settings | Complete Seerah" };
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {

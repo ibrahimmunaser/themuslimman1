@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Check } from "lucide-react";
 
-export const metadata = { title: "Email Verified | Seerah LMS" };
+export const metadata = { title: "Email Verified | Complete Seerah" };
 
 export default function ParentEmailVerifiedPage() {
   return (
@@ -40,7 +40,7 @@ export default function ParentEmailVerifiedPage() {
         </div>
 
         <p className="text-text-muted text-sm mt-6">
-          © {new Date().getFullYear()} Seerah LMS · TheMuslimMan
+          © {new Date().getFullYear()} Complete Seerah · TheMuslimMan
         </p>
       </div>
     </div>

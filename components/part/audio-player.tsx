@@ -63,7 +63,7 @@ export function AudioPlayer({ src, title, partNumber, compact = false, previewMo
           <Headphones className="w-4 h-4 text-gold/50" />
         </div>
         <div>
-          <p className="text-sm font-medium text-text-secondary">Audio coming soon</p>
+          <p className="text-sm font-medium text-text-secondary">No audio for this part</p>
           <p className="text-xs text-text-muted mt-0.5">Audio version will be available shortly</p>
         </div>
       </div>

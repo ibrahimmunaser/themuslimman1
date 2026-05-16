@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Check } from "lucide-react";
 
-export const metadata = { title: "Email Removed | Seerah LMS" };
+export const metadata = { title: "Email Removed | Complete Seerah" };
 
 export default function ParentEmailRemovedPage() {
   return (
@@ -35,7 +35,7 @@ export default function ParentEmailRemovedPage() {
         </div>
 
         <p className="text-text-muted text-sm mt-6">
-          © {new Date().getFullYear()} Seerah LMS · TheMuslimMan
+          © {new Date().getFullYear()} Complete Seerah · TheMuslimMan
         </p>
       </div>
     </div>

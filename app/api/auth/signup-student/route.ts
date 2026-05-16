@@ -5,6 +5,7 @@ import { customAlphabet, nanoid } from "nanoid";
 import { prisma } from "@/lib/db";
 import { Resend } from "resend";
 import { cookies } from "next/headers";
+import { checkRateLimit, getIP } from "@/lib/rate-limit";
 
 const generateToken = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 32);
 const COOKIE_NAME = "seerah_session";
@@ -25,7 +26,17 @@ const SignupSchema = z.object({
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
   console.log(`[API] /api/auth/signup-student: POST request received`);
-  
+
+  // Rate limit: 5 signups per 10 minutes per IP
+  const ip = getIP(request);
+  const rl = checkRateLimit(`signup:${ip}`, 5, 10 * 60 * 1000);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Too many attempts. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSeconds) } }
+    );
+  }
+
   try {
     const body = await request.json();
     console.log(`[API] /api/auth/signup-student: Request body parsed, email: ${body.email}`);
@@ -137,7 +148,7 @@ export async function POST(request: NextRequest) {
         const { error: emailError } = await resend.emails.send({
           from: process.env.EMAIL_FROM || "TheMuslimMan <noreply@themuslimman.com>",
           to: email,
-          subject: "Welcome to Seerah LMS - Verify your email",
+          subject: "Welcome to Complete Seerah - Verify your email",
           html: generateWelcomeEmail({
             fullName: fullName.trim(),
             verificationUrl,
@@ -213,12 +224,12 @@ function generateWelcomeEmail(data: {
       <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Welcome to Seerah LMS</title>
+        <title>Welcome to Complete Seerah</title>
       </head>
       <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
         
         <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); padding: 40px 20px; text-align: center; border-radius: 12px 12px 0 0;">
-          <h1 style="color: #f4c542; margin: 0; font-size: 28px;">Welcome to Seerah LMS</h1>
+          <h1 style="color: #f4c542; margin: 0; font-size: 28px;">Welcome to Complete Seerah</h1>
           <p style="color: #e5e5e5; margin: 10px 0 0 0; font-size: 16px;">Start your journey through the life of the Prophet ﷺ</p>
         </div>
 
@@ -248,7 +259,7 @@ function generateWelcomeEmail(data: {
             Ready to start learning? Complete the full Seerah from beginning to end.
           </p>
           <p style="font-size: 13px; color: #999; margin: 0;">
-            © ${new Date().getFullYear()} Seerah LMS · TheMuslimMan
+            © ${new Date().getFullYear()} Complete Seerah · TheMuslimMan
           </p>
         </div>
 

@@ -15,6 +15,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (subject.length > 200 || message.length > 5000) {
+      return NextResponse.json(
+        { error: "Subject or message is too long" },
+        { status: 400 }
+      );
+    }
+
     // Use session user if logged in; otherwise fall back to body-supplied identity
     const sessionUser = await getCurrentUser();
 

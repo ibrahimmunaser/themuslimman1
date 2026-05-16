@@ -4,7 +4,7 @@ import { StudentLayout } from "@/components/student/student-layout";
 import { prisma } from "@/lib/db";
 import { TrendingUp, Target, Clock, Award, FileText } from "lucide-react";
 
-export const metadata = { title: "Progress | Seerah Masterclass" };
+export const metadata = { title: "Progress | Complete Seerah" };
 export const dynamic = "force-dynamic";
 
 export default async function ProgressPage() {
@@ -51,13 +51,13 @@ export default async function ProgressPage() {
             })}
           </div>
 
-          {/* Progress Chart Placeholder */}
+          {/* Learning Progress section */}
           <div className="p-8 rounded-xl border border-border bg-surface mb-8">
             <h2 className="text-lg font-semibold text-text mb-4">Learning Progress</h2>
-            <div className="h-64 flex items-center justify-center text-text-muted">
+            <div className="h-32 flex items-center justify-center text-text-muted">
               <div className="text-center">
-                <TrendingUp className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>Progress chart coming soon</p>
+                <TrendingUp className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                <p className="text-sm text-text-muted">Detailed progress available in your dashboard</p>
               </div>
             </div>
           </div>

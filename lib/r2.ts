@@ -369,41 +369,46 @@ export async function r2ReadJsonFile<T = any>(key: string): Promise<T | null> {
 }
 
 /**
- * Read briefing document
+ * Read briefing document — prefers .md (structured markdown), falls back to .txt
  */
 export async function r2ReadBriefing(partNum: number): Promise<string | null> {
+  const md = await r2ReadTextFile(`briefing/Part ${partNum} Briefing Document.md`);
+  if (md) return md;
   return await r2ReadTextFile(`briefing/Part ${partNum} Briefing Document.txt`);
 }
 
 /**
- * Read statement of facts
+ * Read statement of facts — prefers .md, falls back to .txt
  */
 export async function r2ReadStatementOfFacts(partNum: number): Promise<string | null> {
+  const md = await r2ReadTextFile(`statement-of-facts/Part ${partNum} - Statement of Facts.md`);
+  if (md) return md;
   return await r2ReadTextFile(`statement-of-facts/Part ${partNum} - Statement of Facts.txt`);
 }
 
 /**
- * Read study guide
+ * Read study guide — prefers .md, falls back to .txt
  */
 export async function r2ReadStudyGuide(partNum: number): Promise<string | null> {
-  const txt = await r2ReadTextFile(`studyguides/Part ${partNum} - Study Guide.txt`);
-  return txt;
+  const md = await r2ReadTextFile(`studyguides/Part ${partNum} - Study Guide.md`);
+  if (md) return md;
+  return await r2ReadTextFile(`studyguides/Part ${partNum} - Study Guide.txt`);
 }
 
 /**
- * Read report
+ * Read report — prefers .md, falls back to .txt
  */
 export async function r2ReadReport(partNum: number): Promise<string | null> {
-  // List all files in reports folder
   const files = await r2ListFiles("reports/");
   const prefix = `reports/Part ${partNum} - Report`;
-  
-  const match = files.find((f) => 
-    f.key.startsWith(prefix) && f.key.endsWith(".txt")
-  );
-  
-  if (!match) return null;
-  return await r2ReadTextFile(match.key);
+
+  // Prefer .md over .txt
+  const mdMatch = files.find((f) => f.key.startsWith(prefix) && f.key.endsWith(".md"));
+  if (mdMatch) return await r2ReadTextFile(mdMatch.key);
+
+  const txtMatch = files.find((f) => f.key.startsWith(prefix) && f.key.endsWith(".txt"));
+  if (!txtMatch) return null;
+  return await r2ReadTextFile(txtMatch.key);
 }
 
 /**

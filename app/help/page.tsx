@@ -5,7 +5,7 @@ import { prisma } from "@/lib/db";
 import { HelpCircle, BookOpen, CreditCard, Lock } from "lucide-react";
 import { ContactSupportForm } from "@/components/help/contact-support-form";
 
-export const metadata = { title: "Help & FAQ | Seerah Masterclass" };
+export const metadata = { title: "Help & FAQ | Complete Seerah" };
 export const dynamic = "force-dynamic";
 
 export default async function HelpPage() {
@@ -79,7 +79,7 @@ export default async function HelpPage() {
         },
         {
           q: "Is the certificate official?",
-          a: "Yes, it's an official certificate of completion from The Muslim Man showing you've completed the Seerah Masterclass.",
+          a: "Yes, it's an official certificate of completion from The Muslim Man showing you've completed Complete Seerah.",
         },
       ],
     },

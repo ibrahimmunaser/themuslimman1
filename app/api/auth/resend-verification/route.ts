@@ -3,10 +3,21 @@ import { customAlphabet } from "nanoid";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { Resend } from "resend";
+import { checkRateLimit, getIP } from "@/lib/rate-limit";
 
 const generateToken = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 32);
 
 export async function POST(request: NextRequest) {
+  // Rate limit: 3 attempts per 15 minutes per IP
+  const ip = getIP(request);
+  const rl = checkRateLimit(`resend-verify:${ip}`, 3, 15 * 60 * 1000);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Too many attempts. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSeconds) } }
+    );
+  }
+
   try {
     const user = await getCurrentUser();
     
@@ -127,7 +138,7 @@ function generateVerificationEmail(data: {
 
         <div style="background: #f8f9fa; padding: 30px; text-align: center; border-radius: 0 0 12px 12px; border: 1px solid #e5e5e5; border-top: none;">
           <p style="font-size: 13px; color: #999; margin: 0;">
-            © ${new Date().getFullYear()} TheMuslimMan · Seerah Masterclass
+            © ${new Date().getFullYear()} TheMuslimMan · Complete Seerah
           </p>
         </div>
 

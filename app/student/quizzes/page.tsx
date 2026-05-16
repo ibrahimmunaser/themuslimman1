@@ -4,7 +4,7 @@ import { StudentLayout } from "@/components/student/student-layout";
 import { prisma } from "@/lib/db";
 import { ClipboardCheck, Clock, CheckCircle2, XCircle } from "lucide-react";
 
-export const metadata = { title: "Quizzes | Seerah Masterclass" };
+export const metadata = { title: "Quizzes | Complete Seerah" };
 export const dynamic = "force-dynamic";
 
 export default async function QuizzesPage() {
@@ -50,14 +50,14 @@ export default async function QuizzesPage() {
             })}
           </div>
 
-          {/* Coming Soon */}
+          {/* Quiz history empty state */}
           <div className="text-center py-16">
             <div className="w-16 h-16 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center mx-auto mb-4">
               <ClipboardCheck className="w-8 h-8 text-gold" />
             </div>
-            <h2 className="text-xl font-semibold text-text mb-2">Quiz History Coming Soon</h2>
+            <h2 className="text-xl font-semibold text-text mb-2">No Quiz History Yet</h2>
             <p className="text-text-secondary max-w-md mx-auto">
-              Your quiz attempts and scores will be displayed here. Complete quizzes within lessons to track your progress.
+              Your quiz attempts and scores will appear here. Complete quizzes inside lessons to track your progress.
             </p>
           </div>
         </div>
