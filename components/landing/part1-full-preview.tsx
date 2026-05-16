@@ -116,7 +116,7 @@ export async function Part1FullPreview() {
       </div>
 
       {/* Full Part 1 Content */}
-      <div className="bg-surface">
+      <div className="bg-surface px-4 sm:px-6 pt-6 pb-2">
         <PartTabs part={part} userPlan="essentials" previewMode={true} />
       </div>
 

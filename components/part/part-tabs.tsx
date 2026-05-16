@@ -509,6 +509,8 @@ export function PartTabs({ part, userPlan, previewMode = false }: PartTabsProps)
         })}
         {/* Timeline — hidden in free preview (requires login) */}
         <TimelineButton partNumber={part.partNumber} era={part.era} previewMode={previewMode} />
+        {/* Trailing spacer — prevents the last button from hitting the scroll container edge */}
+        <div className="flex-shrink-0 w-4" aria-hidden="true" />
       </div>
 
       {/* ── Sub-tab bar (only when mode has multiple content items) ────── */}
