@@ -129,7 +129,7 @@ export async function Part1FullPreview() {
           href="/signup-checkout?plan=complete"
           className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-gold to-gold-light hover:from-gold-light hover:to-gold text-ink font-bold text-base shadow-lg shadow-gold/30 transition-all hover:shadow-gold/40 hover:scale-[1.02] active:scale-[0.99]"
         >
-          Continue the Full Seerah — Get Complete Access for $79
+          Continue the Full Seerah — Get Complete Access for $99
         </a>
         <p className="text-sm text-text-muted mt-4 max-w-lg mx-auto leading-relaxed">
           Unlock the full 100-part Seerah journey with videos, summaries, quizzes, flashcards, mind maps, and progress tracking.

@@ -8,6 +8,7 @@ import { Check, Lock, ArrowLeft, Tag, X, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PLANS, formatPrice, type PlanId } from "@/lib/stripe-config";
+import { EarlyAccessBanner } from "@/components/landing/early-access-banner";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
@@ -217,6 +218,7 @@ export function CheckoutPageContent() {
 
   return (
     <div className="min-h-screen bg-ink text-text">
+      <EarlyAccessBanner />
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12">
         {/* Header */}
         <div className="mb-8">
@@ -283,7 +285,7 @@ export function CheckoutPageContent() {
                     {!showPromo ? (
                       <button
                         onClick={() => setShowPromo(true)}
-                        className="flex items-center gap-1.5 text-sm text-text-muted hover:text-text-secondary transition-colors"
+                        className="flex items-center gap-1.5 text-sm text-text-secondary hover:text-text transition-colors"
                       >
                         <Tag className="w-3.5 h-3.5" />
                         Have a promo code?
@@ -317,9 +319,15 @@ export function CheckoutPageContent() {
                   </div>
                 )}
 
+                {!appliedPromo && (
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-text-secondary text-sm">Regular price</span>
+                    <span className="text-text-muted text-sm line-through">{formatPrice(plan.regularPrice!)}</span>
+                  </div>
+                )}
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-text-secondary">Subtotal</span>
-                  <span className={appliedPromo ? "line-through text-text-muted text-sm" : "text-text"}>
+                  <span className="text-text-secondary">{appliedPromo ? "Subtotal" : "Early access price"}</span>
+                  <span className={appliedPromo ? "line-through text-text-muted text-sm" : "text-text font-medium"}>
                     {formatPrice(plan.price)}
                   </span>
                 </div>

@@ -28,8 +28,8 @@ export const PLANS = {
     id: "complete",
     name: "Complete Seerah Early Access",
     subtitle: "Full access to the structured 100-part Seerah journey",
-    price: 7900, // $79.00 early access price
-    regularPrice: 12900, // $129.00 planned regular price
+    price: 9900, // $99.00 early access price (14-day offer)
+    regularPrice: 14900, // $149.00 regular price
     features: [
       "All 100 Seerah parts",
       "Video lessons",

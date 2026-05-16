@@ -7,13 +7,14 @@ import {
   Layers, Target, Lock,
 } from "lucide-react";
 import { PLANS, formatPrice } from "@/lib/stripe-config";
+import { EarlyAccessBanner } from "@/components/landing/early-access-banner";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
 export const metadata = {
   title: "Pricing — Complete Seerah Early Access",
   description:
-    "Get full lifetime access to the structured 100-part Seerah journey. One-time payment. $79 during early access.",
+    "Get full lifetime access to the structured 100-part Seerah journey. One-time payment. $99 early access price — regular price $149.",
 };
 
 export const dynamic = "force-dynamic";
@@ -33,6 +34,7 @@ export default async function PricingPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-ink text-text">
+      <EarlyAccessBanner />
       <Navbar />
 
       {/* Hero */}
@@ -71,7 +73,7 @@ export default async function PricingPage() {
                   <p className="text-text-muted text-sm line-through">
                     {formatPrice(plan.regularPrice!)}
                   </p>
-                  <p className="text-xs text-gold">Early access price</p>
+                  <p className="text-xs text-gold">Early access price · 14-day offer</p>
                 </div>
               </div>
               <p className="text-sm text-gold font-medium mb-1">
@@ -238,7 +240,7 @@ export default async function PricingPage() {
               },
               {
                 q: "What is the early access price?",
-                a: "During early launch, Complete Seerah is available for $79. The regular price is planned to increase to $129 after launch. Early access students lock in the lower price permanently.",
+                a: "During the 14-day early access window, Complete Seerah is available for $99. The regular price is $149. Early access students lock in the lower price permanently with lifetime access.",
               },
               {
                 q: "What if I'm not satisfied?",
@@ -260,7 +262,7 @@ export default async function PricingPage() {
           <div className="max-w-xl mx-auto px-4 sm:px-6 text-center">
             <h2 className="text-2xl sm:text-3xl font-bold mb-4">Ready to start?</h2>
             <p className="text-text-secondary mb-8">
-              $79 one-time. Lifetime access. 7-Day Clarity Guarantee.
+              $99 one-time early access price. Lifetime access. 7-Day Clarity Guarantee.
             </p>
             <Link
               href="/signup-checkout?plan=complete"

@@ -66,7 +66,7 @@ export default function RefundPage() {
                   first purchase of a given plan. Repeat purchases of the same plan are not eligible.
                 </li>
                 <li>
-                  <strong className="text-text">Complete Seerah Early Access ($79):</strong> Covered by the 7-day guarantee from the date of purchase.
+                  <strong className="text-text">Complete Seerah Early Access:</strong> Covered by the 7-day guarantee from the date of purchase. Discount codes may be offered for local or limited promotions — the guarantee applies regardless of the amount paid.
                 </li>
               </ul>
             </section>

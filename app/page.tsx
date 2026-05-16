@@ -26,6 +26,7 @@ import { Badge } from "@/components/ui/badge";
 import { getCurrentUser } from "@/lib/auth";
 import { getStudentDashboardData } from "@/lib/queries/student";
 import { EmailVerificationBanner } from "@/components/auth/email-verification-banner";
+import { EarlyAccessBanner } from "@/components/landing/early-access-banner";
 
 // Revalidate every 60 seconds to reduce database load
 export const revalidate = 60;
@@ -58,6 +59,9 @@ export default async function LandingPage() {
     <div className="flex flex-col min-h-screen bg-ink text-text">
       <Navbar />
       
+      {/* Early access pricing banner */}
+      <EarlyAccessBanner />
+
       {/* Show verification banner if user is logged in but email not verified */}
       {user && !user.emailVerified && (
         <EmailVerificationBanner email={user.email} />
@@ -243,10 +247,10 @@ export default async function LandingPage() {
             <div className="mb-6">
               <p className="text-gold text-sm font-semibold uppercase tracking-wider mb-2">Complete Seerah Early Access</p>
               <div className="flex items-baseline gap-3 mb-2">
-                <span className="text-5xl font-bold text-text">$79</span>
+                <span className="text-5xl font-bold text-text">$99</span>
                 <div>
-                  <p className="text-text-muted text-sm line-through">$129</p>
-                  <p className="text-xs text-gold">Early access price</p>
+                  <p className="text-text-muted text-sm line-through">$149</p>
+                  <p className="text-xs text-gold">Early access price · 14-day offer</p>
                 </div>
               </div>
               <p className="text-sm text-text-secondary">
@@ -300,7 +304,7 @@ export default async function LandingPage() {
               Limited Early Access
             </h2>
             <p className="text-text-secondary leading-relaxed mb-6 max-w-xl mx-auto">
-              Complete Seerah is currently available for $79 during early access. The regular price is planned to increase to $129 after launch. Get lifetime access now at the founding price.
+              Complete Seerah is available for $99 during early access — regular price $149. One-time payment, lifetime access. Get in at the early access price before the offer ends.
             </p>
             <Link
               href="/signup-checkout?plan=complete"
@@ -482,7 +486,7 @@ export default async function LandingPage() {
               },
               {
                 q: "Is there only one plan?",
-                a: "Yes. During early access, we offer one complete package: Complete Seerah Early Access for $79. Full access from day one, no tiers.",
+                a: "Yes. During early access, we offer one complete package: Complete Seerah Early Access for $99. Full access from day one, no tiers.",
               },
               {
                 q: "Is the course self-paced?",

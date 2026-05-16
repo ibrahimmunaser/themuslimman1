@@ -17,21 +17,30 @@ export interface PromoCode {
   label: string;
 }
 
+/** Built-in codes that are always active (no env var required). */
+const BUILT_IN_CODES: Record<string, PromoCode> = {
+  // Local community discount — $50 off the $99 early access price → $49
+  AMS49: { type: "fixed", value: 5000, label: "local community discount" },
+};
+
 function loadCodes(): Record<string, PromoCode> {
+  // Start with built-in codes
+  const codes: Record<string, PromoCode> = { ...BUILT_IN_CODES };
+
+  // Merge in any extra codes from PROMO_CODES env var (can override built-ins)
   const raw = process.env.PROMO_CODES;
-  if (!raw) return {};
-  try {
-    const parsed = JSON.parse(raw);
-    // Normalise all keys to upper-case
-    const normalised: Record<string, PromoCode> = {};
-    for (const [k, v] of Object.entries(parsed)) {
-      normalised[k.toUpperCase()] = v as PromoCode;
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw);
+      for (const [k, v] of Object.entries(parsed)) {
+        codes[k.toUpperCase()] = v as PromoCode;
+      }
+    } catch {
+      console.error("[PROMO] Failed to parse PROMO_CODES env var");
     }
-    return normalised;
-  } catch {
-    console.error("[PROMO] Failed to parse PROMO_CODES env var");
-    return {};
   }
+
+  return codes;
 }
 
 /** Returns the matching promo code or null if invalid / not found. */
