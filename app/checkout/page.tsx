@@ -4,14 +4,14 @@ import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
-import { Check, Lock, ArrowLeft } from "lucide-react";
+import { Check, Lock, ArrowLeft, Tag, X, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PLANS, formatPrice, type PlanId } from "@/lib/stripe-config";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
-function CheckoutForm({ plan }: { plan: typeof PLANS[PlanId] }) {
+function CheckoutForm({ plan, finalPrice }: { plan: typeof PLANS[PlanId]; finalPrice: number }) {
   const stripe = useStripe();
   const elements = useElements();
   const router = useRouter();
@@ -65,7 +65,7 @@ function CheckoutForm({ plan }: { plan: typeof PLANS[PlanId] }) {
         className="w-full justify-center"
       >
         <Lock className="w-4 h-4" />
-        Complete Purchase - {formatPrice(plan.price)}
+        Complete Purchase - {formatPrice(finalPrice)}
       </Button>
 
       <p className="text-xs text-text-muted text-center">
@@ -98,43 +98,94 @@ export function CheckoutPageContent() {
   const [resendLoading, setResendLoading] = useState(false);
   const [resendSuccess, setResendSuccess] = useState(false);
 
-  useEffect(() => {
-    async function createPaymentIntent() {
-      try {
-        const response = await fetch("/api/stripe/create-payment-intent", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ planId }),
-        });
+  // Promo code state
+  const [showPromo, setShowPromo] = useState(false);
+  const [promoInput, setPromoInput] = useState("");
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoError, setPromoError] = useState<string | null>(null);
+  const [appliedPromo, setAppliedPromo] = useState<{
+    code: string; label: string; discountAmount: number; finalPrice: number;
+  } | null>(null);
 
-        const data = await response.json();
+  const displayPrice = appliedPromo ? appliedPromo.finalPrice : plan.price;
 
-        if (!response.ok) {
-          if (response.status === 401) {
-            // User not logged in, redirect to signup
-            router.push(`/signup-checkout?plan=${planId}`);
-            return;
-          }
-          if (response.status === 403 && data.requiresVerification) {
-            // Email not verified
-            setRequiresVerification(true);
-            setError(data.error);
-            setLoading(false);
-            return;
-          }
-          throw new Error(data.error || "Failed to create payment intent");
+  const createPaymentIntent = async (promoCode?: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/stripe/create-payment-intent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ planId, promoCode }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          router.push(`/signup-checkout?plan=${planId}`);
+          return;
         }
-
-        setClientSecret(data.clientSecret);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "An error occurred");
-      } finally {
-        setLoading(false);
+        if (response.status === 403 && data.requiresVerification) {
+          setRequiresVerification(true);
+          setError(data.error);
+          return;
+        }
+        throw new Error(data.error || "Failed to create payment intent");
       }
-    }
 
+      setClientSecret(data.clientSecret);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     createPaymentIntent();
-  }, [planId, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleApplyPromo = async () => {
+    const code = promoInput.trim();
+    if (!code) return;
+    setPromoLoading(true);
+    setPromoError(null);
+
+    try {
+      const res = await fetch(`/api/stripe/validate-promo?code=${encodeURIComponent(code)}`);
+      const data = await res.json();
+
+      if (!res.ok || !data.valid) {
+        setPromoError(data.error || "Invalid promo code");
+        return;
+      }
+
+      setAppliedPromo({
+        code: data.code,
+        label: data.label,
+        discountAmount: data.discountAmount,
+        finalPrice: data.finalPrice,
+      });
+      setPromoError(null);
+      // Recreate the payment intent with the discounted amount
+      setClientSecret(null);
+      await createPaymentIntent(data.code);
+    } catch {
+      setPromoError("Could not validate code. Please try again.");
+    } finally {
+      setPromoLoading(false);
+    }
+  };
+
+  const handleRemovePromo = async () => {
+    setAppliedPromo(null);
+    setPromoInput("");
+    setPromoError(null);
+    setClientSecret(null);
+    await createPaymentIntent();
+  };
 
   const handleResendVerification = async () => {
     setResendLoading(true);
@@ -210,14 +261,79 @@ export function CheckoutPageContent() {
                 </div>
               </div>
 
+              {/* Promo code */}
               <div className="pt-4 border-t border-border">
+                {appliedPromo ? (
+                  <div className="flex items-center justify-between p-2.5 rounded-lg bg-green-500/10 border border-green-500/20 mb-3">
+                    <div className="flex items-center gap-2 text-green-400 text-sm">
+                      <Tag className="w-3.5 h-3.5 flex-shrink-0" />
+                      <span className="font-medium">{appliedPromo.code}</span>
+                      <span className="text-green-400/80">{appliedPromo.label}</span>
+                    </div>
+                    <button
+                      onClick={handleRemovePromo}
+                      className="text-green-400/60 hover:text-green-400 transition-colors"
+                      aria-label="Remove promo code"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="mb-3">
+                    {!showPromo ? (
+                      <button
+                        onClick={() => setShowPromo(true)}
+                        className="flex items-center gap-1.5 text-sm text-text-muted hover:text-text-secondary transition-colors"
+                      >
+                        <Tag className="w-3.5 h-3.5" />
+                        Have a promo code?
+                        <ChevronDown className="w-3 h-3" />
+                      </button>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={promoInput}
+                            onChange={(e) => { setPromoInput(e.target.value.toUpperCase()); setPromoError(null); }}
+                            onKeyDown={(e) => e.key === "Enter" && handleApplyPromo()}
+                            placeholder="Enter code"
+                            className="flex-1 px-3 py-2 text-sm rounded-lg border border-border bg-surface-raised text-text placeholder-text-muted focus:outline-none focus:border-gold/50 uppercase"
+                            autoFocus
+                          />
+                          <button
+                            onClick={handleApplyPromo}
+                            disabled={promoLoading || !promoInput.trim()}
+                            className="px-4 py-2 text-sm font-medium rounded-lg bg-gold/10 border border-gold/30 text-gold hover:bg-gold/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                          >
+                            {promoLoading ? "..." : "Apply"}
+                          </button>
+                        </div>
+                        {promoError && (
+                          <p className="text-xs text-red-400">{promoError}</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-text-secondary">Subtotal</span>
-                  <span className="text-text">{formatPrice(plan.price)}</span>
+                  <span className={appliedPromo ? "line-through text-text-muted text-sm" : "text-text"}>
+                    {formatPrice(plan.price)}
+                  </span>
                 </div>
+
+                {appliedPromo && (
+                  <div className="flex items-center justify-between mb-2 text-green-400">
+                    <span className="text-sm">Discount</span>
+                    <span className="text-sm font-medium">−{formatPrice(appliedPromo.discountAmount)}</span>
+                  </div>
+                )}
+
                 <div className="flex items-center justify-between font-semibold text-lg">
                   <span>Total</span>
-                  <span className="text-gold">{formatPrice(plan.price)}</span>
+                  <span className="text-gold">{formatPrice(displayPrice)}</span>
                 </div>
               </div>
 
@@ -311,7 +427,7 @@ export function CheckoutPageContent() {
                     },
                   }}
                 >
-                  <CheckoutForm plan={plan} />
+                  <CheckoutForm plan={plan} finalPrice={displayPrice} />
                 </Elements>
               )}
             </div>
