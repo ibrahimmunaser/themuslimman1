@@ -4,14 +4,14 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="min-h-screen bg-ink flex flex-col">
       {/* Header */}
-      <div className="border-b border-border/50 px-4 sm:px-6 py-4">
-        <Link href="/" className="inline-flex items-center gap-2.5 group">
-          <div className="w-7 h-7 rounded-lg bg-gold/10 border border-gold/30 flex items-center justify-center group-hover:border-gold/60 transition-colors">
-            <span className="text-gold text-xs font-bold">T</span>
-          </div>
-          <span className="text-text font-semibold text-sm tracking-wide">
-            TheMuslimMan
-          </span>
+      <div className="border-b border-border/50 px-4 sm:px-6 py-3">
+        <Link href="/" className="inline-flex items-center group">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/images/logoicon.png"
+            alt="TheMuslimMan"
+            style={{ height: "44px", width: "auto" }}
+          />
         </Link>
       </div>
 
