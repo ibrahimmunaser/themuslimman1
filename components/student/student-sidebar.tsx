@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -43,6 +43,17 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
   const activeTabParam = searchParams.get("tab");
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Listen for Account-tab trigger dispatched by CourseDashboardTabs
+  useEffect(() => {
+    const handler = () => setMobileOpen(true);
+    window.addEventListener("seerah:openMobileMenu", handler);
+    return () => window.removeEventListener("seerah:openMobileMenu", handler);
+  }, []);
+
+  // On /seerah dashboard the Account tab handles menu access; hide the floating button there.
+  // On lesson pages (/seerah/part-1 etc.) the floating button remains the entry point.
+  const isOnDashboard = pathname === "/seerah";
 
   const MAIN_MENU: MenuItem[] = [
     { id: "dashboard",  label: "Dashboard",  href: "/seerah",               icon: LayoutDashboard, tabId: "home" },
@@ -205,15 +216,18 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
 
   return (
     <>
-      {/* Mobile Menu Button */}
-      <button
-        onClick={() => setMobileOpen(!mobileOpen)}
-        className="lg:hidden fixed top-3 right-3 z-50 flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface border border-border text-text-secondary hover:text-text hover:bg-surface-raised transition-all shadow-sm"
-        aria-label={mobileOpen ? "Close menu" : "Open menu"}
-      >
-        {mobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-        <span className="text-xs font-semibold">{mobileOpen ? "Close" : "Menu"}</span>
-      </button>
+      {/* Floating Menu button — shown on lesson pages where the Account tab isn't present.
+          Hidden on /seerah dashboard where the Account tab in the top nav handles this. */}
+      {!isOnDashboard && (
+        <button
+          onClick={() => setMobileOpen(!mobileOpen)}
+          className="lg:hidden fixed top-3 right-3 z-50 flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface border border-border text-text-secondary hover:text-text hover:bg-surface-raised transition-all shadow-sm"
+          aria-label={mobileOpen ? "Close menu" : "Open menu"}
+        >
+          {mobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+          <span className="text-xs font-semibold">{mobileOpen ? "Close" : "Menu"}</span>
+        </button>
+      )}
 
       {/* Mobile Overlay */}
       {mobileOpen && (

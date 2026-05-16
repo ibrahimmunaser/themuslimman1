@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { LayoutDashboard, BookOpen, FolderOpen, TrendingUp } from "lucide-react";
+import { LayoutDashboard, BookOpen, FolderOpen, TrendingUp, CircleUser } from "lucide-react";
 import { clsx } from "clsx";
 
 interface CourseDashboardTabsProps {
@@ -67,7 +67,7 @@ export function CourseDashboardTabs({
       {/* Tab Navigation */}
       <div className="sticky top-0 z-50 border-b border-border bg-surface/95 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex gap-1 overflow-x-auto scrollbar-hide pr-20 sm:pr-0">
+          <div className="flex gap-1 overflow-x-auto scrollbar-hide">
             {TABS.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -88,6 +88,16 @@ export function CourseDashboardTabs({
                 </button>
               );
             })}
+
+            {/* Account tab — mobile only; opens the sidebar account section */}
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent("seerah:openMobileMenu"))}
+              className="lg:hidden flex items-center gap-2 px-3 py-3 text-sm font-medium transition-all border-b-2 border-transparent text-text-muted hover:text-text-secondary hover:border-border flex-shrink-0 whitespace-nowrap ml-auto"
+              aria-label="Open account menu"
+            >
+              <CircleUser className="w-4 h-4" />
+              Account
+            </button>
           </div>
         </div>
       </div>
