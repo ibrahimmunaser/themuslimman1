@@ -26,7 +26,6 @@ import { Badge } from "@/components/ui/badge";
 import { getCurrentUser } from "@/lib/auth";
 import { getStudentDashboardData } from "@/lib/queries/student";
 import { EmailVerificationBanner } from "@/components/auth/email-verification-banner";
-import { EarlyAccessBanner } from "@/components/landing/early-access-banner";
 
 // Revalidate every 60 seconds to reduce database load
 export const revalidate = 60;
@@ -59,9 +58,6 @@ export default async function LandingPage() {
     <div className="flex flex-col min-h-screen bg-ink text-text">
       <Navbar />
       
-      {/* Early access pricing banner */}
-      <EarlyAccessBanner />
-
       {/* Show verification banner if user is logged in but email not verified */}
       {user && !user.emailVerified && (
         <EmailVerificationBanner email={user.email} />
@@ -70,7 +66,7 @@ export default async function LandingPage() {
       {/* ============================================
           HERO SECTION
       ============================================ */}
-      <section className="relative pt-32 pb-20 md:pt-40 md:pb-28 overflow-hidden">
+      <section className="relative pt-44 pb-20 md:pt-52 md:pb-28 overflow-hidden">
         {/* Background effects */}
         <div className="absolute inset-0 geo-pattern opacity-40" />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gold/5 rounded-full blur-3xl" />

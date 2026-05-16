@@ -8,7 +8,6 @@ import { Check, Lock, ArrowLeft, Tag, X, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PLANS, formatPrice, type PlanId } from "@/lib/stripe-config";
-import { EarlyAccessBanner } from "@/components/landing/early-access-banner";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
@@ -218,7 +217,6 @@ export function CheckoutPageContent() {
 
   return (
     <div className="min-h-screen bg-ink text-text">
-      <EarlyAccessBanner />
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12">
         {/* Header */}
         <div className="mb-8">

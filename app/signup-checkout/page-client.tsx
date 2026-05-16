@@ -7,7 +7,6 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PLANS, formatPrice, type PlanId } from "@/lib/stripe-config";
-import { EarlyAccessBanner } from "@/components/landing/early-access-banner";
 
 function SignupCheckoutContent() {
   const searchParams = useSearchParams();
@@ -157,7 +156,6 @@ function SignupCheckoutContent() {
 
   return (
     <div className="min-h-screen bg-ink text-text">
-      <EarlyAccessBanner />
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12">
         {/* Header */}
         <div className="mb-8 text-center">

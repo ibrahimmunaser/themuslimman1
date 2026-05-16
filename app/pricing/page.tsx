@@ -7,7 +7,6 @@ import {
   Layers, Target, Lock,
 } from "lucide-react";
 import { PLANS, formatPrice } from "@/lib/stripe-config";
-import { EarlyAccessBanner } from "@/components/landing/early-access-banner";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
@@ -34,11 +33,10 @@ export default async function PricingPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-ink text-text">
-      <EarlyAccessBanner />
       <Navbar />
 
       {/* Hero */}
-      <section className="relative pt-32 pb-16 overflow-hidden">
+      <section className="relative pt-44 pb-16 overflow-hidden">
         <div className="absolute inset-0 geo-pattern opacity-20" />
         <div className="relative max-w-3xl mx-auto px-4 sm:px-6 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gold/10 border border-gold/30 text-gold text-sm font-medium mb-6">
