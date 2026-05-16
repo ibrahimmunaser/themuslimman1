@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PLANS, formatPrice, type PlanId } from "@/lib/stripe-config";
+import { REGULAR_PRICE, isEarlyAccessActive, EARLY_ACCESS_PRICE } from "@/lib/early-access";
 
 function SignupCheckoutContent() {
   const searchParams = useSearchParams();
@@ -196,13 +197,24 @@ function SignupCheckoutContent() {
               </div>
 
               <div className="pt-4 border-t border-border">
+                {/* Regular price — crossed out if early access is active */}
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-text-secondary text-sm">Regular price</span>
-                  <span className="text-text-muted text-sm line-through">{formatPrice(plan.regularPrice!)}</span>
+                  <span className={`text-sm ${isEarlyAccessActive() ? "line-through text-text-muted" : "text-text"}`}>
+                    {formatPrice(REGULAR_PRICE)}
+                  </span>
                 </div>
-                <div className="flex items-center justify-between font-semibold text-lg">
-                  <span>Early access price</span>
-                  <span className="text-gold">{formatPrice(plan.price)}</span>
+                {/* Early access discount */}
+                {isEarlyAccessActive() && (
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-text-secondary text-sm">Early access discount</span>
+                    <span className="text-green-400 text-sm font-medium">−{formatPrice(REGULAR_PRICE - EARLY_ACCESS_PRICE)}</span>
+                  </div>
+                )}
+                {/* Total */}
+                <div className="flex items-center justify-between font-semibold text-lg border-t border-border pt-2 mt-1">
+                  <span>Total</span>
+                  <span className="text-gold">{formatPrice(isEarlyAccessActive() ? EARLY_ACCESS_PRICE : REGULAR_PRICE)}</span>
                 </div>
               </div>
 
