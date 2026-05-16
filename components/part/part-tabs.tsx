@@ -405,59 +405,23 @@ function ModeButton({
     <button
       onClick={onClick}
       disabled={!isAvailable && !isLocked}
-      style={
-        isActive
-          ? { boxShadow: "0 0 0 1px rgba(200,169,110,0.30), 0 4px 20px rgba(200,169,110,0.07)" }
-          : undefined
-      }
       className={clsx(
-        "group relative flex items-center gap-3 px-4 py-3.5 rounded-xl border flex-shrink-0 transition-all duration-200 text-left min-w-0",
+        "flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium flex-shrink-0 whitespace-nowrap transition-all duration-150",
         isActive
-          ? "border-gold/35 bg-gradient-to-b from-gold/10 to-gold/5 text-gold"
+          ? "border-gold/35 bg-gold/10 text-gold"
           : isLocked
-          ? "border-border/50 bg-surface/80 text-text-muted/70 hover:border-gold/20 hover:bg-surface-raised/80 cursor-pointer"
+          ? "border-border/50 bg-surface/80 text-text-muted/60 hover:border-gold/20 hover:bg-surface-raised/80 cursor-pointer"
           : isAvailable
           ? "border-border bg-surface text-text-muted hover:border-border-subtle hover:bg-surface-raised hover:text-text-secondary cursor-pointer"
           : "border-border/30 bg-surface/50 text-text-muted/25 cursor-not-allowed opacity-40 pointer-events-none"
       )}
     >
-      {/* Icon container */}
-      <div
-        className={clsx(
-          "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors relative",
-          isActive
-            ? "bg-gold/15"
-            : "bg-surface-raised group-hover:bg-surface-high"
-        )}
-      >
-        <Icon className="w-4 h-4" />
-      </div>
-
-      {/* Labels */}
-      <div className="min-w-0 flex-1">
-        <p className="text-[13px] font-semibold leading-none">{mode.label}</p>
-        <p className="text-[10px] mt-0.5 leading-none opacity-55 hidden sm:block">
-          {mode.hint}
-        </p>
-      </div>
-
-      {/* "Start" indicator on Watch */}
-      {mode.primary && isAvailable && !isLocked && (
-        <span className="ml-1 px-1.5 py-0.5 rounded text-[9px] bg-gold/10 text-gold/60 font-semibold uppercase tracking-wider flex-shrink-0">
-          Start
-        </span>
-      )}
-
-      {/* Lock badge */}
+      <Icon className="w-4 h-4 flex-shrink-0" />
+      {mode.label}
       {isLocked && (
-        <span className="ml-1 px-1.5 py-0.5 rounded text-[9px] bg-gold/10 text-gold/70 font-semibold uppercase tracking-wider flex-shrink-0">
+        <span className="text-[9px] font-semibold uppercase tracking-wider opacity-60 flex-shrink-0">
           Locked
         </span>
-      )}
-
-      {/* Active underline pip */}
-      {isActive && (
-        <span className="absolute bottom-0 left-1/2 -translate-x-1/2 mb-0 w-6 h-[2px] bg-gold rounded-full" />
       )}
     </button>
   );
