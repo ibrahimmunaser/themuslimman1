@@ -3,8 +3,8 @@
 import { Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 
-// Fixed early-access deadline — 14 days from launch (May 16 2026)
-const DEADLINE = new Date("2026-05-30T23:59:59Z");
+// Fixed early-access deadline — exactly 14 days from launch (May 16 2026 ~22:00 UTC)
+const DEADLINE = new Date("2026-05-30T22:00:00Z");
 
 interface TimeLeft {
   days: number;
