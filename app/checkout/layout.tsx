@@ -8,7 +8,7 @@ export default function CheckoutLayout({
   return (
     <>
       <Navbar />
-      <div className="pt-32">
+      <div>
         {children}
       </div>
     </>

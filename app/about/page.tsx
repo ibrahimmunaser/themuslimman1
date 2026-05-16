@@ -13,7 +13,7 @@ export default function AboutPage() {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen bg-ink pb-16 pt-36">
+      <main className="min-h-screen bg-ink py-16">
         <div className="max-w-3xl mx-auto px-4 sm:px-6">
 
           {/* Page header */}
@@ -226,4 +226,5 @@ export default function AboutPage() {
     </>
   );
 }
+
 

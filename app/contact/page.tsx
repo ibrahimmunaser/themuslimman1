@@ -13,7 +13,7 @@ export default function ContactPage() {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen bg-ink pb-16 pt-36">
+      <main className="min-h-screen bg-ink py-16">
         <div className="max-w-3xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-10">
             <h1 className="text-2xl sm:text-3xl font-bold text-text mb-3">Contact Us</h1>
@@ -55,4 +55,5 @@ export default function ContactPage() {
     </>
   );
 }
+
 

@@ -8,7 +8,7 @@ export default function PaymentLayout({
   return (
     <>
       <Navbar />
-      <div className="pt-16">{children}</div>
+      <div>{children}</div>
     </>
   );
 }

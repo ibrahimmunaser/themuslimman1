@@ -15,7 +15,7 @@ export default function RefundPage() {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen bg-ink pb-16 pt-36">
+      <main className="min-h-screen bg-ink py-16">
         <div className="max-w-3xl mx-auto px-4 sm:px-6">
           <div className="mb-10 flex items-center gap-4">
             <div className="w-10 h-10 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center">
@@ -108,4 +108,5 @@ export default function RefundPage() {
     </>
   );
 }
+
 

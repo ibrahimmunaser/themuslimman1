@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 export default function MethodologyPage() {
   return (
     <main className="min-h-screen bg-ink text-text">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 pb-16 sm:pb-24 pt-36">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
         {/* Back link */}
         <div className="mb-10">
           <Link

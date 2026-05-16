@@ -36,7 +36,7 @@ export default async function PricingPage() {
       <Navbar />
 
       {/* Hero */}
-      <section className="relative pt-44 pb-16 overflow-hidden">
+      <section className="relative pt-16 pb-16 overflow-hidden">
         <div className="absolute inset-0 geo-pattern opacity-20" />
         <div className="relative max-w-3xl mx-auto px-4 sm:px-6 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gold/10 border border-gold/30 text-gold text-sm font-medium mb-6">

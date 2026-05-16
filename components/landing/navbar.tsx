@@ -19,9 +19,9 @@ export async function Navbar() {
   }
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50">
+    <header className="sticky top-0 z-[90] w-full bg-ink">
       <EarlyAccessBanner />
-      <div className="border-b border-white/5 bg-ink/80 backdrop-blur-xl">
+      <div className="border-b border-white/5">
         <nav className="max-w-6xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center group">

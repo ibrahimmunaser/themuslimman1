@@ -66,7 +66,7 @@ export default async function LandingPage() {
       {/* ============================================
           HERO SECTION
       ============================================ */}
-      <section className="relative pt-44 pb-20 md:pt-52 md:pb-28 overflow-hidden">
+      <section className="relative pt-16 pb-20 md:pt-24 md:pb-28 overflow-hidden">
         {/* Background effects */}
         <div className="absolute inset-0 geo-pattern opacity-40" />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gold/5 rounded-full blur-3xl" />

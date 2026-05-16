@@ -94,7 +94,7 @@ export function EarlyAccessBanner() {
   }
 
   return (
-    <div className="w-full bg-gold/10 border-b border-gold/20 px-4 py-2.5">
+    <div className="w-full bg-[#0f0d07] border-b border-gold/25 px-4 py-2.5">
       <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4">
         {/* Pricing text */}
         <div className="flex items-center gap-2 text-sm text-gold font-medium flex-wrap justify-center">
