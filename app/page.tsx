@@ -237,20 +237,20 @@ export default async function LandingPage() {
           {/* Single Complete offer */}
           <div className="relative p-8 rounded-2xl border-2 border-gold bg-gradient-to-b from-gold/8 to-surface flex flex-col gold-glow">
             <div className="absolute -top-3 right-6 px-3 py-1 rounded-full bg-gold text-ink text-xs font-bold uppercase tracking-wide shadow-lg">
-              Early Access
+              Early Supporter
             </div>
 
             <div className="mb-6">
-              <p className="text-gold text-sm font-semibold uppercase tracking-wider mb-2">Complete Seerah Early Access</p>
+              <p className="text-gold text-sm font-semibold uppercase tracking-wider mb-2">Complete Seerah</p>
               <div className="flex items-baseline gap-3 mb-2">
                 <span className="text-5xl font-bold text-text">$99</span>
                 <div>
                   <p className="text-text-muted text-sm line-through">$149</p>
-                  <p className="text-xs text-gold">Early access price · 14-day offer</p>
+                  <p className="text-xs text-gold">Early supporter price · Regular price planned at $149</p>
                 </div>
               </div>
               <p className="text-sm text-text-secondary">
-                Full access to the structured 100-part Seerah journey.
+                Join as an early supporter and receive lifetime access while helping us improve Complete Seerah before wider launch.
               </p>
             </div>
 
@@ -297,16 +297,16 @@ export default async function LandingPage() {
         <div className="max-w-3xl mx-auto px-4 sm:px-6">
           <div className="p-8 rounded-2xl border-2 border-gold/30 bg-gradient-to-b from-gold/10 to-surface text-center">
             <h2 className="text-2xl sm:text-3xl font-bold mb-4">
-              Limited Early Access
+              Early Supporter Access Is Now Opening
             </h2>
             <p className="text-text-secondary leading-relaxed mb-6 max-w-xl mx-auto">
-              Complete Seerah is available for $99 during early access — regular price $149. One-time payment, lifetime access. Get in at the early access price before the offer ends.
+              Complete Seerah is available at $99 for early supporters — regular price planned at $149. One-time payment, lifetime access. Part 1 is free to preview before you decide.
             </p>
             <Link
               href="/signup-checkout?plan=complete"
               className={buttonClass("primary", "xl", "shadow-lg shadow-gold/25")}
             >
-              Get Complete Seerah
+              Join as an Early Supporter
               <ArrowRight className="w-5 h-5" />
             </Link>
           </div>
@@ -477,12 +477,12 @@ export default async function LandingPage() {
           <div className="space-y-4">
             {[
               {
-                q: "What does Complete Seerah Early Access include?",
+                q: "What does Complete Seerah include?",
                 a: "You get the full 100-part Seerah journey: video lessons, briefings, quizzes, flashcards, mind maps, visual resources, study guides, reports, and guided progress tracking.",
               },
               {
                 q: "Is there only one plan?",
-                a: "Yes. During early access, we offer one complete package: Complete Seerah Early Access for $99. Full access from day one, no tiers.",
+                a: "Yes. We offer one complete package: Complete Seerah for $99 at the early supporter price. Full access from day one, no tiers.",
               },
               {
                 q: "Is the course self-paced?",

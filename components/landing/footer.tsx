@@ -23,7 +23,7 @@ export function Footer() {
             </p>
             <div className="flex items-center gap-2 text-xs text-text-muted">
               <ShieldCheck className="w-3.5 h-3.5 text-text-muted" />
-              <span>Early Access Now Open</span>
+              <span>Early Supporter Pricing</span>
             </div>
           </div>
 

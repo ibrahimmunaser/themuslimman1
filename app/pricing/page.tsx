@@ -11,9 +11,9 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
 export const metadata = {
-  title: "Pricing — Complete Seerah Early Access",
+  title: "Pricing — Complete Seerah",
   description:
-    "Get full lifetime access to the structured 100-part Seerah journey. One-time payment. $99 early access price — regular price $149.",
+    "Get full lifetime access to the structured 100-part Seerah journey. One-time payment. $99 early supporter price — regular price planned at $149.",
 };
 
 export const dynamic = "force-dynamic";
@@ -41,10 +41,10 @@ export default async function PricingPage() {
         <div className="relative max-w-3xl mx-auto px-4 sm:px-6 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gold/10 border border-gold/30 text-gold text-sm font-medium mb-6">
             <Sparkles className="w-4 h-4" />
-            Early Access Now Open
+            Early Supporter Pricing
           </div>
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-text mb-5 leading-tight">
-            Complete Seerah Early Access
+            Complete Seerah
           </h1>
           <p className="text-base sm:text-lg text-text-secondary max-w-2xl mx-auto leading-relaxed">
             One complete package. The full structured 100-part Seerah — everything you need to learn, review, and retain it.
@@ -58,7 +58,7 @@ export default async function PricingPage() {
           <div className="relative p-8 rounded-2xl border-2 border-gold bg-gradient-to-b from-gold/8 to-surface flex flex-col gold-glow">
             <div className="absolute -top-3 right-6 px-3 py-1 rounded-full bg-gold text-ink text-xs font-bold flex items-center gap-1 shadow-lg z-10">
               <Star className="w-3 h-3 fill-current" />
-              EARLY ACCESS
+              EARLY SUPPORTER
             </div>
 
             <div className="mb-6">
@@ -71,14 +71,14 @@ export default async function PricingPage() {
                   <p className="text-text-muted text-sm line-through">
                     {formatPrice(plan.regularPrice!)}
                   </p>
-                  <p className="text-xs text-gold">Early access price · 14-day offer</p>
+                  <p className="text-xs text-gold">Early supporter price · Regular price planned at $149</p>
                 </div>
               </div>
               <p className="text-sm text-gold font-medium mb-1">
                 One-time payment · Lifetime access
               </p>
               <p className="text-xs text-text-secondary italic">
-                {plan.subtitle}
+                Join as an early supporter and help shape the platform before wider launch.
               </p>
             </div>
 
@@ -221,7 +221,7 @@ export default async function PricingPage() {
                 a: "Yes. Once you purchase, you have lifetime access to all current content and all future updates at no extra cost.",
               },
               {
-                q: "What does Complete Seerah Early Access include?",
+                q: "What does Complete Seerah include?",
                 a: "You get the full 100-part Seerah journey: video lessons, briefings, quizzes, flashcards, mind maps, visual resources, study guides, reports, and guided progress tracking.",
               },
               {
@@ -234,11 +234,11 @@ export default async function PricingPage() {
               },
               {
                 q: "Will more content be added?",
-                a: "Yes. During early access, we are continually improving and expanding the platform. All future content and improvements are included at no extra cost.",
+                a: "Yes. We are continually improving and expanding the platform. All future content and improvements are included at no extra cost.",
               },
               {
-                q: "What is the early access price?",
-                a: "During the 14-day early access window, Complete Seerah is available for $99. The regular price is $149. Early access students lock in the lower price permanently with lifetime access.",
+                q: "What is the early supporter price?",
+                a: "Complete Seerah is available for $99 for early supporters. The regular price is planned at $149. Early supporters lock in the lower price permanently with lifetime access.",
               },
               {
                 q: "What if I'm not satisfied?",
@@ -260,7 +260,7 @@ export default async function PricingPage() {
           <div className="max-w-xl mx-auto px-4 sm:px-6 text-center">
             <h2 className="text-2xl sm:text-3xl font-bold mb-4">Ready to start?</h2>
             <p className="text-text-secondary mb-8">
-              $99 one-time early access price. Lifetime access. 7-Day Clarity Guarantee.
+              $99 early supporter price. Lifetime access. 7-Day Clarity Guarantee.
             </p>
             <Link
               href="/signup-checkout?plan=complete"

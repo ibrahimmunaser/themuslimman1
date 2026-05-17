@@ -204,10 +204,10 @@ function SignupCheckoutContent() {
                     {formatPrice(REGULAR_PRICE)}
                   </span>
                 </div>
-                {/* Early access discount */}
+                {/* Early supporter discount */}
                 {isEarlyAccessActive() && (
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-text-secondary text-sm">Early access discount</span>
+                    <span className="text-text-secondary text-sm">Early supporter discount</span>
                     <span className="text-green-400 text-sm font-medium">−{formatPrice(REGULAR_PRICE - EARLY_ACCESS_PRICE)}</span>
                   </div>
                 )}

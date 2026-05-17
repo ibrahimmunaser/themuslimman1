@@ -300,10 +300,10 @@ export function CheckoutPageContent() {
                   </span>
                 </div>
 
-                {/* Early-access discount row */}
+                {/* Early supporter discount row */}
                 {earlyAccessActive && (
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-text-secondary text-sm">Early access discount</span>
+                    <span className="text-text-secondary text-sm">Early supporter discount</span>
                     <span className="text-green-400 text-sm font-medium">
                       −{formatPrice(earlyAccessDiscount)}
                     </span>
@@ -329,11 +329,11 @@ export function CheckoutPageContent() {
                   <span className="text-gold">{formatPrice(displayPrice)}</span>
                 </div>
 
-                {/* Early access context note */}
+                {/* Early supporter context note */}
                 {earlyAccessActive && !appliedPromo && (
                   <p className="text-xs text-gold/70 mt-2">
-                    Early access pricing. Regular price restores to{" "}
-                    {formatPrice(REGULAR_PRICE)} after the offer ends.
+                    Early supporter price. Regular price planned at{" "}
+                    {formatPrice(REGULAR_PRICE)}.
                   </p>
                 )}
               </div>
