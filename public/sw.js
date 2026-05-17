@@ -1,7 +1,7 @@
 // Service Worker for Advanced Caching
 // Implements intelligent caching strategies for different asset types
 
-const CACHE_VERSION = "v2";
+const CACHE_VERSION = "v5";
 const CACHE_NAME = `seerah-${CACHE_VERSION}`;
 
 // Cache strategies by asset type
