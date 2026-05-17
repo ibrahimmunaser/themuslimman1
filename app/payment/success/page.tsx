@@ -1,21 +1,29 @@
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Check, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 function PaymentSuccessPageContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isFreeAccess, setIsFreeAccess] = useState(false);
 
   const paymentIntent = searchParams.get("payment_intent");
+  const free = searchParams.get("free");
 
   useEffect(() => {
-    // Verify payment intent
+    // Free access via promo code — no Stripe payment to verify
+    if (free === "1") {
+      setIsFreeAccess(true);
+      setLoading(false);
+      return;
+    }
+
+    // Verify Stripe payment intent
     async function verifyPayment() {
       if (!paymentIntent) {
         setError("No payment information found");
@@ -38,7 +46,7 @@ function PaymentSuccessPageContent() {
     }
 
     verifyPayment();
-  }, [paymentIntent]);
+  }, [paymentIntent, free]);
 
   if (loading) {
     return (
@@ -85,20 +93,32 @@ function PaymentSuccessPageContent() {
             <Check className="w-10 h-10 text-green-400" />
             <div className="absolute inset-0 rounded-full bg-green-500/20 animate-ping" />
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold mb-3">Payment Successful!</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold mb-3">
+            {isFreeAccess ? "Access Granted!" : "Payment Successful!"}
+          </h1>
           <p className="text-lg text-text-secondary">
-            Welcome to TheMuslimMan Seerah
+            Welcome to Complete Seerah
           </p>
         </div>
 
         <div className="bg-surface border border-border rounded-2xl p-6 sm:p-8 space-y-6">
           <div className="space-y-3">
+            {!isFreeAccess && (
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-gold/10 border border-gold/25 flex items-center justify-center flex-shrink-0">
+                  <Check className="w-4 h-4 text-gold" />
+                </div>
+                <p className="text-text-secondary">
+                  Payment processed successfully
+                </p>
+              </div>
+            )}
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-gold/10 border border-gold/25 flex items-center justify-center flex-shrink-0">
                 <Check className="w-4 h-4 text-gold" />
               </div>
               <p className="text-text-secondary">
-                Payment processed successfully
+                Full access granted to all 100 parts
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -106,21 +126,13 @@ function PaymentSuccessPageContent() {
                 <Check className="w-4 h-4 text-gold" />
               </div>
               <p className="text-text-secondary">
-                Full access granted to all content
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-gold/10 border border-gold/25 flex items-center justify-center flex-shrink-0">
-                <Check className="w-4 h-4 text-gold" />
-              </div>
-              <p className="text-text-secondary">
-                Receipt sent to your email
+                Your progress will be saved automatically
               </p>
             </div>
           </div>
 
           <div className="pt-6 border-t border-border">
-            <Link href="/my-courses" className="w-full">
+            <Link href="/seerah" className="w-full">
               <Button variant="primary" size="lg" className="w-full gap-2">
                 Start Learning
                 <ArrowRight className="w-4 h-4" />

@@ -185,7 +185,7 @@ export function CheckoutPageContent() {
       });
       const data = await res.json();
       if (!res.ok) { setFreeClaimError(data.error || "Something went wrong"); return; }
-      router.push("/payment/success");
+      router.push("/payment/success?free=1");
     } catch {
       setFreeClaimError("Something went wrong. Please try again.");
     } finally {
