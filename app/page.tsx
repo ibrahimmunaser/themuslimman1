@@ -245,7 +245,7 @@ export default async function LandingPage() {
               <div className="flex items-baseline gap-3 mb-2">
                 <span className="text-5xl font-bold text-text">$99</span>
                 <div>
-                  <p className="text-text-muted text-sm line-through">$149</p>
+                  <p className="text-red-400/70 text-sm line-through">$149</p>
                   <p className="text-xs text-gold">Early supporter price · Regular price planned at $149</p>
                 </div>
               </div>

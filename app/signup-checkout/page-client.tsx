@@ -200,7 +200,7 @@ function SignupCheckoutContent() {
                 {/* Regular price — crossed out if early access is active */}
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-text-secondary text-sm">Regular price</span>
-                  <span className={`text-sm ${isEarlyAccessActive() ? "line-through text-text-muted" : "text-text"}`}>
+                  <span className={`text-sm ${isEarlyAccessActive() ? "line-through text-red-400/70" : "text-text"}`}>
                     {formatPrice(REGULAR_PRICE)}
                   </span>
                 </div>

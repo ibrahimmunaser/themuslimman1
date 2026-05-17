@@ -68,7 +68,7 @@ export default async function PricingPage() {
               <div className="flex items-baseline gap-3 mb-2">
                 <span className="text-5xl font-bold text-text">{formatPrice(plan.price)}</span>
                 <div>
-                  <p className="text-text-muted text-sm line-through">
+                  <p className="text-red-400/70 text-sm line-through">
                     {formatPrice(plan.regularPrice!)}
                   </p>
                   <p className="text-xs text-gold">Early supporter price · Regular price planned at $149</p>
