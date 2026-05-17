@@ -30,10 +30,10 @@ export default function ContactPage() {
               <div>
                 <p className="text-sm font-semibold text-text mb-0.5">Email us directly</p>
                 <a
-                  href="mailto:admin@themuslimman.com"
+                  href="mailto:themuslimman77@gmail.com"
                   className="text-sm text-gold hover:underline"
                 >
-                  admin@themuslimman.com
+                  themuslimman77@gmail.com
                 </a>
               </div>
             </div>

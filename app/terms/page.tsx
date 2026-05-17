@@ -136,8 +136,8 @@ export default function TermsPage() {
                 Questions about these terms?{" "}
                 <Link href="/contact" className="text-gold hover:underline">Contact us here</Link>{" "}
                 or email{" "}
-                <a href="mailto:admin@themuslimman.com" className="text-gold hover:underline">
-                  admin@themuslimman.com
+                <a href="mailto:themuslimman77@gmail.com" className="text-gold hover:underline">
+                  themuslimman77@gmail.com
                 </a>
                 .
               </p>

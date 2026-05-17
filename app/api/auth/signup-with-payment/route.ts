@@ -138,7 +138,7 @@ export async function POST(req: NextRequest) {
     });
 
     const sentFrom = new Sender(
-      "admin@themuslimman.com",
+      "themuslimman77@gmail.com",
       "Complete Seerah"
     );
 

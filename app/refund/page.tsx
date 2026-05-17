@@ -43,8 +43,8 @@ export default function RefundPage() {
               <h2 className="text-base font-semibold text-text mb-2">How to Request a Refund</h2>
               <p>
                 Email us at{" "}
-                <a href="mailto:admin@themuslimman.com" className="text-gold hover:underline">
-                  admin@themuslimman.com
+                <a href="mailto:themuslimman77@gmail.com" className="text-gold hover:underline">
+                  themuslimman77@gmail.com
                 </a>{" "}
                 or use our{" "}
                 <Link href="/contact" className="text-gold hover:underline">contact form</Link>{" "}

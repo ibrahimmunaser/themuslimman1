@@ -226,8 +226,8 @@ export function TestimonialForm() {
         {status === "error" && (
           <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3">
             Something went wrong. Please try again or email us directly at{" "}
-            <a href="mailto:admin@themuslimman.com" className="underline">
-              admin@themuslimman.com
+            <a href="mailto:themuslimman77@gmail.com" className="underline">
+              themuslimman77@gmail.com
             </a>
             .
           </p>
