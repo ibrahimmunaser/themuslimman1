@@ -34,11 +34,6 @@ export const metadata: Metadata = {
     description:
       "Finally understand the full life of the Prophet ﷺ in one structured, complete system.",
   },
-  icons: {
-    icon: [{ url: "/images/logodashboard.png?v=5", type: "image/png" }],
-    shortcut: [{ url: "/images/logodashboard.png?v=5", type: "image/png" }],
-    apple: [{ url: "/images/logodashboard.png?v=5", type: "image/png" }],
-  },
 };
 
 export default function RootLayout({
@@ -48,6 +43,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${geist.variable} h-full`} data-scroll-behavior="smooth" suppressHydrationWarning>
+      <head>
+        <link rel="icon" type="image/png" href="/images/logodashboard.png?v=7" />
+        <link rel="shortcut icon" type="image/png" href="/images/logodashboard.png?v=7" />
+        <link rel="apple-touch-icon" type="image/png" href="/images/logodashboard.png?v=7" />
+      </head>
       <body className="min-h-full bg-ink text-text antialiased">
         <ServiceWorkerRegistration />
         {children}

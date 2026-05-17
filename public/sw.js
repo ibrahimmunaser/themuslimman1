@@ -1,7 +1,7 @@
 // Service Worker for Advanced Caching
 // Implements intelligent caching strategies for different asset types
 
-const CACHE_VERSION = "v5";
+const CACHE_VERSION = "v7";
 const CACHE_NAME = `seerah-${CACHE_VERSION}`;
 
 // Cache strategies by asset type
@@ -215,6 +215,16 @@ self.addEventListener("fetch", (event) => {
   
   // Skip chrome extensions and other protocols
   if (!url.startsWith("http")) {
+    return;
+  }
+
+  // Never cache favicons or icons — let browser manage its own favicon cache
+  if (
+    url.includes("/favicon") ||
+    url.includes("/icon") ||
+    url.includes("logodashboard") ||
+    url.includes("logoicon")
+  ) {
     return;
   }
 
