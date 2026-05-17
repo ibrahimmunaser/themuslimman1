@@ -83,9 +83,10 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
   const handleSignOut = async () => {
     try {
       await fetch("/api/auth/signout", { method: "POST" });
-      window.location.href = "/login";
     } catch (error) {
       console.error("Sign out error:", error);
+    } finally {
+      window.location.href = "/login";
     }
   };
 

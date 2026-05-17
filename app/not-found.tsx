@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, Home, HelpCircle, DollarSign } from "lucide-react";
+import { Home, HelpCircle, DollarSign } from "lucide-react";
 import { buttonClass } from "@/components/ui/button";
 
 export default function NotFound() {
@@ -8,12 +8,12 @@ export default function NotFound() {
       <div className="max-w-2xl w-full text-center">
         {/* Logo */}
         <Link href="/" className="inline-flex items-center gap-2.5 mb-8 group">
-          <div className="w-10 h-10 rounded-lg bg-gold/10 border border-gold/30 flex items-center justify-center group-hover:border-gold/60 transition-colors">
-            <span className="text-gold font-bold">T</span>
-          </div>
-          <span className="text-text font-semibold text-lg tracking-wide">
-            TheMuslimMan
-          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/images/logoicon.png"
+            alt="TheMuslimMan"
+            className="h-10 w-auto"
+          />
         </Link>
 
         {/* 404 Message */}
@@ -29,24 +29,15 @@ export default function NotFound() {
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-3 justify-center mb-8">
-          <Link
-            href="/"
-            className={buttonClass("primary", "lg")}
-          >
+          <Link href="/" className={buttonClass("primary", "lg")}>
             <Home className="w-4 h-4" />
             Go Home
           </Link>
-          <Link
-            href="/pricing"
-            className={buttonClass("outline", "lg")}
-          >
+          <Link href="/pricing" className={buttonClass("outline", "lg")}>
             <DollarSign className="w-4 h-4" />
             View Pricing
           </Link>
-          <Link
-            href="/help"
-            className={buttonClass("outline", "lg")}
-          >
+          <Link href="/contact" className={buttonClass("outline", "lg")}>
             <HelpCircle className="w-4 h-4" />
             Get Help
           </Link>
@@ -56,11 +47,7 @@ export default function NotFound() {
         <div className="pt-8 border-t border-border">
           <p className="text-sm text-text-muted mb-3">Looking for something else?</p>
           <div className="flex flex-wrap gap-4 justify-center text-sm">
-            <Link href="/my-courses" className="text-text-secondary hover:text-gold transition-colors">
-              My Courses
-            </Link>
-            <span className="text-border">•</span>
-            <Link href="/my-courses" className="text-text-secondary hover:text-gold transition-colors">
+            <Link href="/seerah" className="text-text-secondary hover:text-gold transition-colors">
               Dashboard
             </Link>
             <span className="text-border">•</span>
@@ -68,8 +55,8 @@ export default function NotFound() {
               Sign In
             </Link>
             <span className="text-border">•</span>
-            <Link href="/signup" className="text-text-secondary hover:text-gold transition-colors">
-              Create Account
+            <Link href="/signup-checkout?plan=complete" className="text-text-secondary hover:text-gold transition-colors">
+              Get Access
             </Link>
           </div>
         </div>

@@ -97,7 +97,7 @@ export function StudentHeader({ userFirstName, userPlan }: StudentHeaderProps) {
               {profileDropdownOpen && (
                 <div className="absolute right-0 top-full mt-2 w-56 rounded-lg bg-zinc-900 border border-zinc-800 shadow-xl py-1 z-50">
                   <Link
-                    href="/student/profile"
+                    href="/student/settings"
                     className="flex items-center gap-3 px-4 py-2.5 text-sm text-zinc-400 hover:text-white hover:bg-zinc-800/50 transition-colors"
                     onClick={() => setProfileDropdownOpen(false)}
                   >
@@ -201,7 +201,7 @@ export function StudentHeader({ userFirstName, userPlan }: StudentHeaderProps) {
             <div className="h-px bg-zinc-800 my-2" />
 
             <Link
-              href="/student/profile"
+              href="/student/settings"
               className="flex items-center gap-3 px-4 py-2.5 text-sm text-zinc-400 hover:text-white hover:bg-zinc-900/50 rounded transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
