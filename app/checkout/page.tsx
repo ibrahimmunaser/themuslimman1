@@ -93,6 +93,10 @@ export function CheckoutPageContent() {
     earlyAccessDiscount: REGULAR_PRICE - plan.price,
   });
 
+  const [freeAccess, setFreeAccess] = useState(false);
+  const [freeClaimLoading, setFreeClaimLoading] = useState(false);
+  const [freeClaimError, setFreeClaimError] = useState<string | null>(null);
+
   // Promo code state
   const [showPromo, setShowPromo] = useState(false);
   const [promoInput, setPromoInput] = useState("");
@@ -120,13 +124,18 @@ export function CheckoutPageContent() {
         if (res.status === 403 && data.requiresVerification) { setRequiresVerification(true); setError(data.error); return; }
         throw new Error(data.error || "Failed to create payment intent");
       }
-      setClientSecret(data.clientSecret);
       // Update pricing from authoritative server response
       setPricing({
         earlyAccessActive: data.earlyAccessActive,
         serverBasePrice: data.baseAmount,
         earlyAccessDiscount: data.earlyAccessDiscount,
       });
+
+      if (data.freeAccess) {
+        setFreeAccess(true);
+      } else {
+        setClientSecret(data.clientSecret);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
@@ -162,6 +171,26 @@ export function CheckoutPageContent() {
     setPromoInput("");
     setPromoError(null);
     await createPaymentIntent();
+  };
+
+  const handleClaimFreeAccess = async () => {
+    if (!appliedPromo) return;
+    setFreeClaimLoading(true);
+    setFreeClaimError(null);
+    try {
+      const res = await fetch("/api/stripe/claim-free-access", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ promoCode: appliedPromo.code }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setFreeClaimError(data.error || "Something went wrong"); return; }
+      router.push("/payment/success");
+    } catch {
+      setFreeClaimError("Something went wrong. Please try again.");
+    } finally {
+      setFreeClaimLoading(false);
+    }
   };
 
   const handleResendVerification = async () => {
@@ -357,6 +386,41 @@ export function CheckoutPageContent() {
                 <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm mb-4">
                   {error}
                   <button onClick={() => window.location.reload()} className="block mt-2 text-red-300 underline hover:text-red-200">Try again</button>
+                </div>
+              )}
+
+              {/* Free access claim (promo code gives $0 total) */}
+              {freeAccess && !loading && !requiresVerification && (
+                <div className="space-y-6">
+                  <div className="p-5 rounded-xl bg-gold/10 border border-gold/30 text-center">
+                    <div className="text-3xl mb-3">🎁</div>
+                    <h3 className="text-lg font-bold text-text mb-1">Free Access Applied</h3>
+                    <p className="text-text-secondary text-sm">
+                      Your promo code gives you full access at no charge.
+                    </p>
+                  </div>
+
+                  {freeClaimError && (
+                    <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+                      {freeClaimError}
+                    </div>
+                  )}
+
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    onClick={handleClaimFreeAccess}
+                    loading={freeClaimLoading}
+                    disabled={freeClaimLoading}
+                    className="w-full justify-center"
+                  >
+                    <Lock className="w-4 h-4" />
+                    Claim Free Access
+                  </Button>
+
+                  <p className="text-xs text-text-muted text-center">
+                    Your access will be activated immediately.
+                  </p>
                 </div>
               )}
 

@@ -55,6 +55,20 @@ export async function POST(request: NextRequest) {
 
     const earlyAccessDiscount = earlyAccessActive ? REGULAR_PRICE - baseAmount : 0; // 5000 or 0
 
+    // ── Free access: skip Stripe entirely ──────────────────────────────────
+    if (finalAmount === 0) {
+      return NextResponse.json({
+        freeAccess: true,
+        appliedPromoCode,
+        earlyAccessActive,
+        regularAmount: REGULAR_PRICE,
+        baseAmount,
+        earlyAccessDiscount,
+        promoDiscountAmount,
+        finalAmount: 0,
+      });
+    }
+
     // ── Create Stripe PaymentIntent ──
     const paymentIntent = await stripe.paymentIntents.create({
       amount: finalAmount,
@@ -66,9 +80,9 @@ export async function POST(request: NextRequest) {
         planName: plan.name,
         earlyAccessActive: String(earlyAccessActive),
         earlyAccessEndDate: EARLY_ACCESS_END_DATE.toISOString(),
-        regularAmount: String(REGULAR_PRICE),       // always $149
-        baseAmount: String(baseAmount),             // $99 or $149
-        earlyAccessDiscount: String(earlyAccessDiscount), // $50 or $0
+        regularAmount: String(REGULAR_PRICE),
+        baseAmount: String(baseAmount),
+        earlyAccessDiscount: String(earlyAccessDiscount),
         finalAmount: String(finalAmount),
         ...(appliedPromoCode
           ? {
@@ -83,13 +97,13 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       clientSecret: paymentIntent.client_secret,
-      // These fields drive the checkout UI — all server-computed
+      freeAccess: false,
       earlyAccessActive,
       earlyAccessEndDate: EARLY_ACCESS_END_DATE.toISOString(),
-      regularAmount: REGULAR_PRICE,      // 14900
-      baseAmount,                         // 9900 or 14900
-      earlyAccessDiscount,               // 5000 or 0
-      promoDiscountAmount,               // e.g. 5000 for AMS49 against $99 base
+      regularAmount: REGULAR_PRICE,
+      baseAmount,
+      earlyAccessDiscount,
+      promoDiscountAmount,
       finalAmount,
     });
   } catch (error) {

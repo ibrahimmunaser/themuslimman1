@@ -24,6 +24,8 @@ export interface PromoCode {
 const BUILT_IN_CODES: Record<string, PromoCode> = {
   // Local community discount — always charges $49 regardless of early-access state.
   AMS49: { type: "absolute", value: 4900, label: "local community discount" },
+  // Family/personal free access — bypasses Stripe entirely.
+  FAMILY: { type: "absolute", value: 0, label: "family access" },
 };
 
 function loadCodes(): Record<string, PromoCode> {
