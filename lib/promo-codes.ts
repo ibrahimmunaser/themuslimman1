@@ -26,6 +26,8 @@ const BUILT_IN_CODES: Record<string, PromoCode> = {
   AMS49: { type: "absolute", value: 4900, label: "local community discount" },
   // Family/personal free access — bypasses Stripe entirely.
   FAMILY: { type: "absolute", value: 0, label: "family access" },
+  // Free access for the deen.
+  DEEN: { type: "absolute", value: 0, label: "free access" },
 };
 
 function loadCodes(): Record<string, PromoCode> {
