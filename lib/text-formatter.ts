@@ -111,15 +111,20 @@ export function formatSeerahContent(text: string): string {
 
   // Returns true if a line looks like a section heading.
   // Handles mixed-case headings like "Location and Boundaries" or "Hub of Exchange".
+  // Deliberately conservative: prose lead-ins that happen to be title-cased should
+  // stay as paragraphs; only clean short noun-phrase titles qualify.
   const isSectionHeading = (ln: string): boolean => {
-    if (ln.length >= 80 || ln.match(/[.!?]$/)) return false;
+    if (ln.length >= 80 || ln.match(/[.!?:]$/)) return false;
+    // Commas indicate a clause or complex phrase, not a clean title
+    if (ln.includes(',')) return false;
     const words = ln.split(/\s+/);
-    if (words.length < 2 || words.length > 10) return false;
+    // Tighten word count: real section titles are short (2–7 words)
+    if (words.length < 2 || words.length > 7) return false;
     // First word and last word must start with uppercase
     if (!/^[A-Z]/.test(words[0]) || !/^[A-Z]/.test(words[words.length - 1])) return false;
-    // At least 60% of words must start with uppercase (allows "and", "of", "the" in middle)
+    // At least 70% of words must start with uppercase
     const capCount = words.filter(w => /^[A-Z]/.test(w)).length;
-    return capCount / words.length >= 0.5;
+    return capCount / words.length >= 0.7;
   };
 
   // Extra state for pipe-table header tracking
@@ -308,8 +313,7 @@ export function formatSeerahContent(text: string): string {
     // ── H2 Headings (plain-text format) ──────────────────────────────────────
     if (
       (line === line.toUpperCase() && line.length > 3 && !line.match(/^\d/)) ||
-      line.match(/^(Executive Summary|Summary|Introduction|Conclusion|Background|Overview|Key Points|Important Notes?|Context|Analysis):?$/i) ||
-      (line.match(/^[A-Z]/) && line.endsWith(':') && line.length < 80)
+      line.match(/^(Executive Summary|Summary|Introduction|Conclusion|Background|Overview|Key Points|Important Notes?|Context|Analysis):?$/i)
     ) {
       closeList();
       formatted.push(`<h2 class="seerah-h2">${escapeHtml(line.replace(/:$/, ''))}</h2>`);
