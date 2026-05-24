@@ -9,7 +9,7 @@ import {
   EARLY_ACCESS_END_DATE,
   REGULAR_PRICE,
 } from "@/lib/early-access";
-import { hasActiveCourseAccess } from "@/lib/access";
+import { getUserAccessInfo } from "@/lib/access";
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,9 +29,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // If the user already has lifetime access, there is nothing to buy
-    const alreadyHasAccess = await hasActiveCourseAccess(user.id);
-    if (alreadyHasAccess) {
+    // If the user already has lifetime access, there is nothing to buy.
+    // Monthly subscribers are NOT blocked — they can still upgrade to lifetime.
+    const { hasLifetime } = await getUserAccessInfo(user.id);
+    if (hasLifetime) {
       return NextResponse.json(
         { error: "You already have access to this course", hasLifetime: true },
         { status: 409 }
