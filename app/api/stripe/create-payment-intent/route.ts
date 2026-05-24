@@ -9,6 +9,7 @@ import {
   EARLY_ACCESS_END_DATE,
   REGULAR_PRICE,
 } from "@/lib/early-access";
+import { hasActiveCourseAccess } from "@/lib/access";
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,6 +26,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: "Please verify your email address before making a purchase", requiresVerification: true },
         { status: 403 }
+      );
+    }
+
+    // If the user already has lifetime access, there is nothing to buy
+    const alreadyHasAccess = await hasActiveCourseAccess(user.id);
+    if (alreadyHasAccess) {
+      return NextResponse.json(
+        { error: "You already have access to this course", hasLifetime: true },
+        { status: 409 }
       );
     }
 

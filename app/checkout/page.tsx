@@ -161,6 +161,7 @@ export function CheckoutPageContent() {
       if (!res.ok) {
         if (res.status === 401) { router.push(`/signup-checkout?plan=${planId}`); return; }
         if (res.status === 403 && data.requiresVerification) { setRequiresVerification(true); setError(data.error); return; }
+        if (res.status === 409 && data.hasLifetime) { router.push("/my-courses"); return; }
         throw new Error(data.error || "Failed to create payment intent");
       }
       setPricing({
