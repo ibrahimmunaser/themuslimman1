@@ -59,6 +59,9 @@ model User {
   purchases     Purchase[]
   partProgress  PartProgress[]
   studySessions StudySession[]
+  giftsMade     GiftPurchase[] @relation("GiftPurchasesMade")
+  giftsClaimed  GiftPurchase[] @relation("GiftPurchasesClaimed")
+  subscriptions Subscription[]
 
   @@index([role])
   @@index([email])
@@ -627,6 +630,30 @@ model StudySession {
   @@index([startedAt])
 }
 
+// ─────────────────────────────────────────────────────────────
+// Monthly Subscriptions
+// ─────────────────────────────────────────────────────────────
+
+model Subscription {
+  id                   String   @id @default(cuid())
+  userId               String
+  stripeCustomerId     String
+  stripeSubscriptionId String   @unique
+  stripePriceId        String
+  // active | trialing | past_due | canceled | unpaid | incomplete | incomplete_expired
+  status               String
+  currentPeriodStart   DateTime
+  currentPeriodEnd     DateTime
+  cancelAtPeriodEnd    Boolean  @default(false)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+}
+
 model SupportTicket {
   id        String   @id @default(cuid())
   name      String
@@ -640,4 +667,33 @@ model SupportTicket {
   @@index([status])
   @@index([email])
   @@index([createdAt])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Gift Purchases — buyer gifts lifetime access to a recipient
+// ─────────────────────────────────────────────────────────────
+
+model GiftPurchase {
+  id                    String    @id @default(cuid())
+  stripePaymentIntentId String    @unique
+  purchaserUserId       String?
+  purchaserEmail        String
+  recipientEmail        String
+  recipientName         String?
+  giftMessage           String?
+  claimTokenHash        String?   @unique // SHA-256 of raw token; null until payment confirmed
+  claimedByUserId       String?
+  claimedAt             DateTime?
+  emailSentAt           DateTime? // set once gift email sent to recipient
+  createdAt             DateTime  @default(now())
+  expiresAt             DateTime?
+  // pending → paid → claimed | expired | refunded
+  status                String    @default("pending")
+
+  purchaser User? @relation("GiftPurchasesMade",    fields: [purchaserUserId],  references: [id])
+  claimedBy User? @relation("GiftPurchasesClaimed", fields: [claimedByUserId], references: [id])
+
+  @@index([recipientEmail])
+  @@index([status])
+  @@index([purchaserUserId])
 }

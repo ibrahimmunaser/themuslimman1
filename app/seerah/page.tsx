@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { requireStudent } from "@/lib/auth";
+import { hasActiveCourseAccess } from "@/lib/access";
 import { PARTS } from "@/lib/content";
 import { ERA_MAP } from "@/lib/types";
 import { ChevronRight, ChevronDown, Play, CheckCircle2, BookOpen, Clock, Video, FileText, Brain, ClipboardCheck, Headphones, Map, Image, Layers, BarChart2, GraduationCap } from "lucide-react";
@@ -24,12 +25,9 @@ export default async function LearnIndexPage() {
   const user = await requireStudent();
   if (!user.studentProfileId) redirect("/");
 
-  // Any succeeded purchase grants full access
-  const purchase = await prisma.purchase.findFirst({
-    where: { userId: user.id, status: "succeeded" },
-  });
-
-  if (!purchase) {
+  // Lifetime purchase OR active monthly subscription grants access
+  const hasAccess = await hasActiveCourseAccess(user.id);
+  if (!hasAccess) {
     redirect("/pricing");
   }
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { stripe, PLANS, type PlanId } from "@/lib/stripe";
 import { getCurrentUser } from "@/lib/auth";
 import { validatePromoCode, applyDiscount } from "@/lib/promo-codes";
+import { getCreatorPromoConfig } from "@/lib/creator-promos";
 import {
   getBasePrice,
   isEarlyAccessActive,
@@ -55,6 +56,9 @@ export async function POST(request: NextRequest) {
 
     const earlyAccessDiscount = earlyAccessActive ? REGULAR_PRICE - baseAmount : 0; // 5000 or 0
 
+    // Resolve creator metadata from the promo code (if it's a creator code)
+    const creatorConfig = appliedPromoCode ? getCreatorPromoConfig(appliedPromoCode) : null;
+
     // ── Free access: skip Stripe entirely ──────────────────────────────────
     if (finalAmount === 0) {
       return NextResponse.json({
@@ -88,6 +92,15 @@ export async function POST(request: NextRequest) {
           ? {
               promoCode: appliedPromoCode,
               promoDiscountAmount: String(promoDiscountAmount),
+            }
+          : {}),
+        ...(creatorConfig
+          ? {
+              creator: creatorConfig.creator,
+              utm_source: creatorConfig.utm_source,
+              utm_medium: creatorConfig.utm_medium,
+              utm_campaign: creatorConfig.utm_campaign,
+              utm_content: creatorConfig.utm_content,
             }
           : {}),
       },

@@ -1,17 +1,17 @@
 import { redirect } from "next/navigation";
 import { requireStudent } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { getUserAccessInfo } from "@/lib/access";
 import { StudentLayout } from "@/components/student/student-layout";
-import { PLANS, formatPrice } from "@/lib/stripe-config";
+import { PLANS } from "@/lib/stripe-config";
 import { CardManager } from "@/components/billing/card-manager";
 import {
   CreditCard,
   CheckCircle2,
-  ArrowRight,
   Receipt,
-  ShieldCheck,
   Star,
   Lock,
+  RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -31,20 +31,22 @@ function formatAmount(cents: number, currency: string) {
   }).format(cents / 100);
 }
 
-
 export default async function BillingPage() {
   const user = await requireStudent();
   if (!user.studentProfileId) redirect("/");
+
+  const accessInfo = await getUserAccessInfo(user.id);
+  if (!accessInfo.hasAccess) redirect("/pricing");
 
   const purchases = await prisma.purchase.findMany({
     where: { userId: user.id, status: "succeeded" },
     orderBy: { createdAt: "desc" },
   });
 
-  if (purchases.length === 0) redirect("/pricing");
-
   const userPlan = "complete" as const;
-  const plan = PLANS.complete;
+
+  const isMonthly = !accessInfo.hasLifetime && accessInfo.hasActiveSubscription;
+  const sub = accessInfo.subscription;
 
   return (
     <StudentLayout userPlan={userPlan} userName={user.fullName}>
@@ -53,9 +55,7 @@ export default async function BillingPage() {
         {/* Header */}
         <div>
           <h1 className="text-2xl font-bold text-text">Billing &amp; Plan</h1>
-          <p className="text-text-secondary text-sm mt-1">
-            Your plan details and purchase history.
-          </p>
+          <p className="text-text-secondary text-sm mt-1">Your plan details and billing history.</p>
         </div>
 
         {/* Current plan card */}
@@ -63,27 +63,51 @@ export default async function BillingPage() {
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-gold/15">
-                <Star className="w-5 h-5 text-gold" />
+                {isMonthly ? <RefreshCw className="w-5 h-5 text-gold" /> : <Star className="w-5 h-5 text-gold" />}
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <p className="font-semibold text-text">{plan.name}</p>
+                  <p className="font-semibold text-text">
+                    {isMonthly ? PLANS.monthly.name : PLANS.complete.name}
+                  </p>
                   <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-gold/20 text-gold border border-gold/30">
                     Active
                   </span>
                 </div>
-                <p className="text-sm text-text-secondary mt-0.5">{plan.subtitle}</p>
+                <p className="text-sm text-text-secondary mt-0.5">
+                  {isMonthly ? PLANS.monthly.subtitle : PLANS.complete.subtitle}
+                </p>
               </div>
             </div>
             <div className="text-right">
-              <p className="text-xs text-text-muted">One-time payment</p>
-              <p className="text-sm font-semibold text-text mt-0.5">Lifetime access</p>
+              {isMonthly ? (
+                <>
+                  <p className="text-xs text-text-muted">$9 / month</p>
+                  {sub && (
+                    <p className="text-xs text-text-muted mt-0.5">
+                      {sub.cancelAtPeriodEnd
+                        ? `Cancels ${formatDate(sub.currentPeriodEnd)}`
+                        : `Renews ${formatDate(sub.currentPeriodEnd)}`}
+                    </p>
+                  )}
+                </>
+              ) : (
+                <>
+                  <p className="text-xs text-text-muted">One-time payment</p>
+                  <p className="text-sm font-semibold text-text mt-0.5">Lifetime access</p>
+                </>
+              )}
             </div>
           </div>
 
-          {/* Features */}
+          {isMonthly && sub?.cancelAtPeriodEnd && (
+            <div className="mt-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs">
+              Your subscription is set to cancel on {formatDate(sub.currentPeriodEnd)}. You&apos;ll retain access until then.
+            </div>
+          )}
+
           <div className="mt-5 grid sm:grid-cols-2 gap-y-2 gap-x-4">
-            {plan.features.slice(0, 8).map((f) => (
+            {(isMonthly ? PLANS.monthly.features : PLANS.complete.features).slice(0, 8).map((f) => (
               <div key={f} className="flex items-center gap-2 text-sm text-text-secondary">
                 <CheckCircle2 className="w-3.5 h-3.5 text-gold flex-shrink-0" />
                 {f}
@@ -92,45 +116,47 @@ export default async function BillingPage() {
           </div>
         </div>
 
-        {/* Card manager */}
-        <CardManager />
+        {/* Card manager (only relevant for lifetime / Stripe-stored cards) */}
+        {accessInfo.hasLifetime && <CardManager />}
 
         {/* Purchase history */}
-        <div>
-          <h2 className="text-base font-semibold text-text mb-4 flex items-center gap-2">
-            <Receipt className="w-4 h-4 text-text-muted" />
-            Purchase History
-          </h2>
-          <div className="rounded-xl border border-border overflow-hidden">
-            {purchases.map((purchase, i) => (
-              <div
-                key={purchase.id}
-                className={`flex items-center gap-4 px-5 py-4 ${i > 0 ? "border-t border-border" : ""}`}
-              >
-                <div className="w-8 h-8 rounded-lg bg-surface-raised flex items-center justify-center flex-shrink-0">
-                  <CreditCard className="w-4 h-4 text-text-muted" />
+        {purchases.length > 0 && (
+          <div>
+            <h2 className="text-base font-semibold text-text mb-4 flex items-center gap-2">
+              <Receipt className="w-4 h-4 text-text-muted" />
+              Purchase History
+            </h2>
+            <div className="rounded-xl border border-border overflow-hidden">
+              {purchases.map((purchase, i) => (
+                <div
+                  key={purchase.id}
+                  className={`flex items-center gap-4 px-5 py-4 ${i > 0 ? "border-t border-border" : ""}`}
+                >
+                  <div className="w-8 h-8 rounded-lg bg-surface-raised flex items-center justify-center flex-shrink-0">
+                    <CreditCard className="w-4 h-4 text-text-muted" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-text">{purchase.planName}</p>
+                    <p className="text-xs text-text-muted mt-0.5">
+                      {formatDate(purchase.createdAt)}
+                      <span className="mx-1.5 opacity-30">·</span>
+                      ID: <span className="font-mono">{purchase.stripePaymentIntentId.slice(-8)}</span>
+                    </p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-sm font-semibold text-text">
+                      {formatAmount(purchase.amount, purchase.currency)}
+                    </p>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-400 mt-0.5">
+                      <CheckCircle2 className="w-3 h-3" />
+                      Paid
+                    </span>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-text">{purchase.planName}</p>
-                  <p className="text-xs text-text-muted mt-0.5">
-                    {formatDate(purchase.createdAt)}
-                    <span className="mx-1.5 opacity-30">·</span>
-                    ID: <span className="font-mono">{purchase.stripePaymentIntentId.slice(-8)}</span>
-                  </p>
-                </div>
-                <div className="text-right flex-shrink-0">
-                  <p className="text-sm font-semibold text-text">
-                    {formatAmount(purchase.amount, purchase.currency)}
-                  </p>
-                  <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-400 mt-0.5">
-                    <CheckCircle2 className="w-3 h-3" />
-                    Paid
-                  </span>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Help section */}
         <div className="rounded-xl border border-border bg-surface p-5 flex items-start gap-4">
@@ -138,9 +164,9 @@ export default async function BillingPage() {
             <Lock className="w-4 h-4 text-text-muted" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-text">Questions about your purchase?</p>
+            <p className="text-sm font-semibold text-text">Questions about billing?</p>
             <p className="text-xs text-text-secondary mt-1 leading-relaxed">
-              All purchases come with a 7-day refund guarantee. For receipts, refund requests, or billing questions,{" "}
+              For receipts, refund requests, subscription changes, or billing questions,{" "}
               <Link href="/help" className="text-gold hover:text-gold-light underline underline-offset-2">
                 contact support
               </Link>

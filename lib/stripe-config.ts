@@ -22,13 +22,27 @@ export const PLANS = {
       "Preview of the complete Seerah study system",
     ],
   },
+  monthly: {
+    id: "monthly",
+    name: "Monthly Access",
+    subtitle: "Full access while subscribed",
+    price: 900, // $9.00/month
+    interval: "month" as const,
+    features: [
+      "All 100 Seerah parts",
+      "Video lessons, audio, briefings",
+      "Quizzes, flashcards, mind maps",
+      "Guided progress tracking",
+      "Cancel anytime",
+    ],
+  },
   // Essentials kept for internal DB/legacy reference but not sold publicly
   essentials: _ESSENTIALS_INTERNAL,
   complete: {
     id: "complete",
-    name: "Complete Seerah Early Access",
+    name: "Complete Seerah",
     subtitle: "Full access to the structured 100-part Seerah journey",
-    price: 9900, // $99.00 early access price (14-day offer)
+    price: 9900, // $99.00 early access price
     regularPrice: 14900, // $149.00 regular price
     features: [
       "All 100 Seerah parts",
@@ -42,7 +56,7 @@ export const PLANS = {
       "Lifetime access to current course material",
     ],
     recommended: true,
-    badge: "Early Access",
+    badge: "Best Value",
   },
 } as const;
 

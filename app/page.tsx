@@ -16,7 +16,10 @@ import {
   Zap,
   LayoutDashboard,
   CircleCheck,
+  RefreshCw,
+  Infinity,
 } from "lucide-react";
+import { MonthlyCheckoutButton } from "@/components/pricing/monthly-checkout-button";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
 import { TestimonialsSection } from "@/components/landing/testimonials";
@@ -26,6 +29,7 @@ import { Badge } from "@/components/ui/badge";
 import { getCurrentUser } from "@/lib/auth";
 import { getStudentDashboardData } from "@/lib/queries/student";
 import { EmailVerificationBanner } from "@/components/auth/email-verification-banner";
+import { CreatorPromoTracker } from "@/components/promo/creator-promo-tracker";
 
 // Revalidate every 60 seconds to reduce database load
 export const revalidate = 60;
@@ -58,6 +62,9 @@ export default async function LandingPage() {
     <div className="flex flex-col min-h-screen bg-ink text-text">
       <Navbar />
       
+      {/* Capture ?promo= URL param and persist to localStorage */}
+      <CreatorPromoTracker />
+
       {/* Show verification banner if user is logged in but email not verified */}
       {user && !user.emailVerified && (
         <EmailVerificationBanner email={user.email} />
@@ -224,92 +231,92 @@ export default async function LandingPage() {
           PRICING
       ============================================ */}
       <section id="pricing" className="py-16 border-t border-border bg-surface/30">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-10">
             <h2 className="text-3xl sm:text-4xl font-bold mb-3">
-              One offer. Full access.
+              Choose your plan
             </h2>
             <p className="text-text-secondary max-w-lg mx-auto">
-              One-time payment. Own it for life. No subscriptions.
+              Full access to all 100 parts — monthly or own it forever.
             </p>
           </div>
 
-          {/* Single Complete offer */}
-          <div className="relative p-8 rounded-2xl border-2 border-gold bg-gradient-to-b from-gold/8 to-surface flex flex-col gold-glow">
-            <div className="absolute -top-3 right-6 px-3 py-1 rounded-full bg-gold text-ink text-xs font-bold uppercase tracking-wide shadow-lg">
-              Early Supporter
-            </div>
+          {/* Creator promo banner — only visible if a creator promo is stored */}
+          <div className="max-w-3xl mx-auto mb-6">
+            <CreatorPromoTracker showBanner />
+          </div>
 
-            <div className="mb-6">
-              <p className="text-gold text-sm font-semibold uppercase tracking-wider mb-2">Complete Seerah</p>
-              <div className="flex items-baseline gap-3 mb-2">
-                <span className="text-5xl font-bold text-text">$99</span>
-                <div>
-                  <p className="text-red-400/70 text-sm line-through">$149</p>
-                  <p className="text-xs text-gold">Early supporter price · Regular price planned at $149</p>
+          <div className="grid sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
+
+            {/* Monthly */}
+            <div className="p-7 rounded-2xl border border-border bg-surface flex flex-col">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-9 h-9 rounded-lg bg-surface-raised border border-border flex items-center justify-center">
+                  <RefreshCw className="w-4 h-4 text-text-secondary" />
                 </div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-text-secondary">Monthly Access</p>
               </div>
-              <p className="text-sm text-text-secondary">
-                Join as an early supporter and receive lifetime access while helping us improve Complete Seerah before wider launch.
-              </p>
+              <div className="mb-5">
+                <div className="flex items-baseline gap-1.5 mb-1">
+                  <span className="text-4xl font-bold text-text">$9</span>
+                  <span className="text-text-muted text-sm">/month</span>
+                </div>
+                <p className="text-sm text-text-secondary">Full access while subscribed · Cancel anytime</p>
+              </div>
+              <ul className="space-y-2 mb-7 flex-1">
+                {["All 100 Seerah parts", "Videos, briefings, flashcards, quizzes", "Progress tracking", "Cancel anytime"].map((f) => (
+                  <li key={f} className="flex items-start gap-2.5">
+                    <CheckCircle2 className="w-4 h-4 text-text-secondary flex-shrink-0 mt-0.5" />
+                    <span className="text-sm text-text-secondary">{f}</span>
+                  </li>
+                ))}
+              </ul>
+              <MonthlyCheckoutButton isLoggedIn={false} />
             </div>
 
-            <ul className="space-y-2.5 mb-8 grid sm:grid-cols-2 gap-x-6">
-              {[
-                "All 100 Seerah parts",
-                "Video lessons",
-                "Summaries and briefings",
-                "Quizzes",
-                "Flashcards",
-                "Mind maps",
-                "Visual learning resources",
-                "Guided progress tracking",
-                "Lifetime access",
-                "7-Day Clarity Guarantee",
-              ].map((item) => (
-                <li key={item} className="flex items-start gap-3 text-sm text-text">
-                  <CheckCircle2 className="w-5 h-5 text-gold flex-shrink-0 mt-0.5" />
-                  {item}
-                </li>
-              ))}
-            </ul>
-
-            <Link
-              href="/signup-checkout?plan=complete"
-              className={buttonClass("primary", "lg", "w-full justify-center shadow-lg shadow-gold/20")}
-            >
-              Get Complete Access
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-
-            <div className="mt-4 flex items-center justify-center gap-2 text-xs text-text-muted">
-              <Lock className="w-3.5 h-3.5" />
-              <span>Secure payment · Instant access · Own it for life</span>
+            {/* Lifetime — Best Value */}
+            <div className="relative p-7 rounded-2xl border-2 border-gold bg-gradient-to-b from-gold/8 to-surface flex flex-col gold-glow">
+              <div className="absolute -top-3 right-5 px-3 py-1 rounded-full bg-gold text-ink text-xs font-bold flex items-center gap-1 shadow-lg">
+                <Star className="w-3 h-3 fill-current" />
+                BEST VALUE
+              </div>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-9 h-9 rounded-lg bg-gold/15 border border-gold/25 flex items-center justify-center">
+                  <Infinity className="w-4 h-4 text-gold" />
+                </div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-gold">Lifetime Access</p>
+              </div>
+              <div className="mb-5">
+                <div className="flex items-baseline gap-2 mb-1">
+                  <span className="text-4xl font-bold text-text">$99</span>
+                </div>
+                <p className="text-sm text-gold font-medium">One-time payment · Pay once. Keep it forever.</p>
+              </div>
+              <ul className="space-y-2 mb-7 flex-1">
+                {["All 100 Seerah parts", "Videos, briefings, flashcards, quizzes", "Progress tracking", "Lifetime access — no recurring charges", "7-Day Clarity Guarantee"].map((f) => (
+                  <li key={f} className="flex items-start gap-2.5">
+                    <CheckCircle2 className="w-4 h-4 text-gold flex-shrink-0 mt-0.5" />
+                    <span className="text-sm text-text">{f}</span>
+                  </li>
+                ))}
+              </ul>
+              <Link
+                href="/signup-checkout?plan=complete"
+                className={buttonClass("primary", "lg", "w-full justify-center shadow-lg shadow-gold/20")}
+              >
+                Get Lifetime Access
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+              <div className="mt-4 flex items-center justify-center gap-2 text-xs text-text-muted">
+                <Lock className="w-3.5 h-3.5" />
+                <span>Secure payment · Instant access</span>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* ============================================
-          LIMITED EARLY ACCESS
-      ============================================ */}
-      <section className="py-16 border-t border-border">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6">
-          <div className="p-8 rounded-2xl border-2 border-gold/30 bg-gradient-to-b from-gold/10 to-surface text-center">
-            <h2 className="text-2xl sm:text-3xl font-bold mb-4">
-              Early Supporter Access Is Now Opening
-            </h2>
-            <p className="text-text-secondary leading-relaxed mb-6 max-w-xl mx-auto">
-              Complete Seerah is available at $99 for early supporters — regular price planned at $149. One-time payment, lifetime access. Part 1 is free to preview before you decide.
-            </p>
-            <Link
-              href="/signup-checkout?plan=complete"
-              className={buttonClass("primary", "xl", "shadow-lg shadow-gold/25")}
-            >
-              Join as an Early Supporter
-              <ArrowRight className="w-5 h-5" />
-            </Link>
-          </div>
+          <p className="text-center text-xs text-text-muted mt-5">
+            At $9/month, lifetime access pays for itself in 11 months.
+          </p>
         </div>
       </section>
 
@@ -482,7 +489,7 @@ export default async function LandingPage() {
               },
               {
                 q: "Is there only one plan?",
-                a: "Yes. We offer one complete package: Complete Seerah for $99 at the early supporter price. Full access from day one, no tiers.",
+                a: "Yes. We offer two options: Monthly Access at $9/month (cancel anytime) or Lifetime Access for a one-time $99 payment. Both give full access from day one.",
               },
               {
                 q: "Is the course self-paced?",
@@ -494,7 +501,7 @@ export default async function LandingPage() {
               },
               {
                 q: "Do I get lifetime access?",
-                a: "Yes. One-time payment. Own it for life. No subscriptions, no recurring charges.",
+                a: "With the lifetime plan, yes — one-time payment, own it for life, no recurring charges. We also offer a $9/month subscription if you prefer to start with a lower upfront cost.",
               },
               {
                 q: "Is this suitable for parents and teachers?",

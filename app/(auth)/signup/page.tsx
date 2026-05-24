@@ -11,14 +11,16 @@ function SignupPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const plan = searchParams.get("plan") || "complete";
-  
+  const hintEmail = searchParams.get("email") ?? "";
+  const redirectAfter = searchParams.get("redirect") ?? "";
+
   const [step, setStep] = useState<"signup" | "verification">("signup");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [form, setForm] = useState({
     fullName: "",
-    email: "",
+    email: hintEmail,
     password: "",
     confirmPassword: "",
   });
@@ -68,10 +70,9 @@ function SignupPageContent() {
         return;
       }
 
-      // Success - redirect to student dashboard (user is now logged in)
-      // In development, they're auto-verified
-      // In production, they'll need to verify email before accessing courses
-      router.push("/my-courses");
+      // Success — redirect to gift claim page if we came from there, else dashboard
+      const destination = redirectAfter || "/my-courses";
+      router.push(destination);
     } catch (err) {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -145,6 +146,11 @@ function SignupPageContent() {
         </div>
 
         <div className="bg-surface border border-border rounded-2xl p-6 sm:p-8">
+          {hintEmail && (
+            <div className="mb-4 p-3 rounded-lg bg-gold/8 border border-gold/25 text-sm text-text-secondary text-center">
+              Create your account with <span className="text-gold font-medium">{hintEmail}</span> to claim your gift.
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Full Name */}
             <div>
@@ -159,16 +165,23 @@ function SignupPageContent() {
               />
             </div>
 
-            {/* Email */}
-            <Input
-              label="Email address"
-              type="email"
-              placeholder="you@example.com"
-              value={form.email || ""}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-              required
-              autoComplete="email"
-            />
+            {/* Email — locked to recipient email if coming from a gift link */}
+            <div>
+              <Input
+                label="Email address"
+                type="email"
+                placeholder="you@example.com"
+                value={form.email || ""}
+                onChange={(e) => !hintEmail && setForm({ ...form, email: e.target.value })}
+                readOnly={!!hintEmail}
+                required
+                autoComplete="email"
+                className={hintEmail ? "opacity-70 cursor-not-allowed" : ""}
+              />
+              {hintEmail && (
+                <p className="text-xs text-gold/80 mt-1">This email is required to claim your gift.</p>
+              )}
+            </div>
 
             {/* Password */}
             <div className="relative">

@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { getUserAccessInfo } from "@/lib/access";
 import { StudentLayout } from "@/components/student/student-layout";
-import { BookOpen, ChevronRight, Clock, CheckCircle2 } from "lucide-react";
+import { BookOpen, ChevronRight, Clock, CheckCircle2, Gift } from "lucide-react";
 
 export const metadata = { title: "My Courses" };
 export const dynamic = "force-dynamic";
@@ -16,19 +16,9 @@ export default async function MyCoursesPage() {
     redirect("/login?redirect=/my-courses");
   }
 
-  // Get user's purchases
-  const purchases = await prisma.purchase.findMany({
-    where: {
-      userId: user.id,
-      status: "succeeded",
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
+  const accessInfo = await getUserAccessInfo(user.id);
 
-  // If no purchases, redirect to pricing
-  if (purchases.length === 0) {
+  if (!accessInfo.hasAccess) {
     redirect("/pricing");
   }
 
@@ -62,10 +52,9 @@ export default async function MyCoursesPage() {
           {/* Courses Grid */}
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
             {courses.map((course) => (
-              <Link
+              <div
                 key={course.id}
-                href={course.link}
-                className="group block bg-surface border border-border rounded-2xl p-8 hover:border-gold/40 hover:shadow-xl hover:shadow-gold/5 transition-all"
+                className="group bg-surface border border-border rounded-2xl p-8 hover:border-gold/40 hover:shadow-xl hover:shadow-gold/5 transition-all flex flex-col"
               >
                 {/* Course Icon & Badge */}
                 <div className="flex items-start justify-between mb-5">
@@ -73,7 +62,7 @@ export default async function MyCoursesPage() {
                     <BookOpen className="w-8 h-8 text-gold" />
                   </div>
                   <div className="px-4 py-1.5 rounded-lg text-sm font-semibold bg-gold/10 text-gold border border-gold/20">
-                    Complete Access
+                    {accessInfo.hasLifetime ? "Lifetime Access" : "Monthly Access"}
                   </div>
                 </div>
 
@@ -98,7 +87,7 @@ export default async function MyCoursesPage() {
                 </div>
 
                 {/* Features */}
-                <div className="mb-6 space-y-2">
+                <div className="mb-6 space-y-2 flex-1">
                   {[
                     "100 video lessons with audio",
                     "3 slide & 3 infographic formats",
@@ -112,14 +101,24 @@ export default async function MyCoursesPage() {
                   ))}
                 </div>
 
-                {/* Continue Learning CTA */}
-                <div className="flex items-center justify-between pt-5 border-t border-border">
-                  <span className="text-gold font-semibold">
+                {/* Actions */}
+                <div className="flex items-center justify-between gap-3 pt-5 border-t border-border">
+                  <Link
+                    href={course.link}
+                    className="flex items-center gap-2 text-gold font-semibold hover:text-gold-light transition-colors"
+                  >
                     Continue Course
-                  </span>
-                  <ChevronRight className="w-5 h-5 text-text-muted group-hover:text-gold group-hover:translate-x-1 transition-all" />
+                    <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+                  <Link
+                    href="/gift-checkout"
+                    className="flex items-center gap-1.5 text-sm text-text-secondary hover:text-gold border border-border hover:border-gold/40 rounded-lg px-3 py-1.5 transition-all"
+                  >
+                    <Gift className="w-3.5 h-3.5" />
+                    Gift this course
+                  </Link>
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
 

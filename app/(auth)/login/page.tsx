@@ -11,10 +11,11 @@ import { roleHome } from "@/lib/roles";
 function LoginContent() {
   const searchParams = useSearchParams();
   const returnUrl = searchParams.get("redirect") || searchParams.get("from") || null;
+  const hintEmail = searchParams.get("email") ?? "";
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({ email: hintEmail, password: "" });
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -72,6 +73,11 @@ function LoginContent() {
         </div>
 
         <div className="bg-surface border border-border rounded-2xl p-6 sm:p-8">
+          {hintEmail && (
+            <div className="mb-4 p-3 rounded-lg bg-gold/8 border border-gold/25 text-sm text-text-secondary text-center">
+              Sign in with <span className="text-gold font-medium">{hintEmail}</span> to claim your gift.
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
               label="Email address"

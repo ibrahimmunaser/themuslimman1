@@ -2,9 +2,23 @@ import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/db";
+import { generateGiftToken, hashGiftToken, buildClaimUrl, sendGiftClaimEmail } from "@/lib/gift";
 import Stripe from "stripe";
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+
+/** Extract subscription ID from Invoice across old and new Stripe API versions. */
+function getInvoiceSubscriptionId(invoice: Stripe.Invoice): string | null {
+  // New API (v2025+): invoice.parent.subscription_details.subscription
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const inv = invoice as any;
+  const fromParent: string | null =
+    inv?.parent?.subscription_details?.subscription ?? null;
+  // Old API fallback
+  const fromRoot: string | null =
+    typeof inv?.subscription === "string" ? inv.subscription : null;
+  return fromParent ?? fromRoot;
+}
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
@@ -39,13 +53,65 @@ export async function POST(request: NextRequest) {
     case "payment_intent.succeeded": {
       const paymentIntent = event.data.object as Stripe.PaymentIntent;
       console.log(`[WEBHOOK] payment_intent.succeeded: ${paymentIntent.id}, amount: ${paymentIntent.amount} ${paymentIntent.currency}, customer: ${paymentIntent.customer}`);
-      await handlePaymentSuccess(paymentIntent);
+      if (paymentIntent.metadata?.type === "gift") {
+        await handleGiftPaymentSuccess(paymentIntent);
+      } else if (paymentIntent.metadata?.type === "subscription") {
+        // Subscription payment — access is handled by customer.subscription.* events
+        console.log(`[WEBHOOK] payment_intent.succeeded: subscription PI ${paymentIntent.id}, skipping Purchase creation`);
+      } else {
+        await handlePaymentSuccess(paymentIntent);
+      }
       break;
     }
 
     case "payment_intent.payment_failed": {
       const failedPayment = event.data.object as Stripe.PaymentIntent;
       console.error(`[WEBHOOK] payment_intent.payment_failed: ${failedPayment.id}, reason: ${failedPayment.last_payment_error?.message}`);
+      break;
+    }
+
+    case "checkout.session.completed": {
+      const session = event.data.object as Stripe.Checkout.Session;
+      console.log(`[WEBHOOK] checkout.session.completed: ${session.id}, mode: ${session.mode}`);
+      if (session.mode === "subscription") {
+        await handleSubscriptionCheckoutCompleted(session);
+      }
+      break;
+    }
+
+    case "customer.subscription.created":
+    case "customer.subscription.updated": {
+      const sub = event.data.object as Stripe.Subscription;
+      console.log(`[WEBHOOK] ${event.type}: ${sub.id}, status: ${sub.status}`);
+      await handleSubscriptionUpsert(sub);
+      break;
+    }
+
+    case "customer.subscription.deleted": {
+      const sub = event.data.object as Stripe.Subscription;
+      console.log(`[WEBHOOK] customer.subscription.deleted: ${sub.id}`);
+      await handleSubscriptionDeleted(sub);
+      break;
+    }
+
+    case "invoice.payment_succeeded": {
+      const invoice = event.data.object as Stripe.Invoice;
+      // subscription_id is at invoice.parent?.subscription_details?.subscription in API v2
+      const invoiceSubId = getInvoiceSubscriptionId(invoice);
+      console.log(`[WEBHOOK] invoice.payment_succeeded: ${invoice.id}, subscription: ${invoiceSubId}`);
+      if (invoiceSubId) {
+        await syncSubscriptionStatus(invoiceSubId);
+      }
+      break;
+    }
+
+    case "invoice.payment_failed": {
+      const invoice = event.data.object as Stripe.Invoice;
+      const invoiceSubId2 = getInvoiceSubscriptionId(invoice);
+      console.error(`[WEBHOOK] invoice.payment_failed: ${invoice.id}, subscription: ${invoiceSubId2}`);
+      if (invoiceSubId2) {
+        await syncSubscriptionStatus(invoiceSubId2);
+      }
       break;
     }
 
@@ -115,6 +181,20 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
       }
     }
 
+    // If the user was on a monthly subscription, cancel it now — lifetime replaces it
+    const activeSub = await prisma.subscription.findFirst({
+      where: { userId, status: { in: ["active", "trialing"] } },
+      select: { stripeSubscriptionId: true },
+    });
+    if (activeSub) {
+      try {
+        await stripe.subscriptions.cancel(activeSub.stripeSubscriptionId);
+        console.log(`[WEBHOOK] handlePaymentSuccess: Cancelled monthly subscription ${activeSub.stripeSubscriptionId} after lifetime purchase for user ${userId}`);
+      } catch (cancelErr) {
+        console.error(`[WEBHOOK] handlePaymentSuccess: Failed to cancel subscription ${activeSub.stripeSubscriptionId}:`, cancelErr);
+      }
+    }
+
     const elapsed = Date.now() - startTime;
     console.log(`[WEBHOOK] handlePaymentSuccess: Purchase recorded for user ${userId}: ${planName ?? planId} [${elapsed}ms]`);
 
@@ -125,6 +205,207 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
   } catch (error) {
     const elapsed = Date.now() - startTime;
     console.error(`[WEBHOOK] handlePaymentSuccess: ERROR recording purchase for payment ${paymentIntent.id} [${elapsed}ms]:`, error);
+  }
+}
+
+// ── Subscription helpers ──────────────────────────────────────────────────────
+
+async function handleSubscriptionCheckoutCompleted(session: Stripe.Checkout.Session) {
+  const userId = session.metadata?.userId;
+  if (!userId) {
+    console.error("[WEBHOOK] handleSubscriptionCheckoutCompleted: No userId in session metadata", session.id);
+    return;
+  }
+
+  const subscriptionId =
+    typeof session.subscription === "string"
+      ? session.subscription
+      : session.subscription?.id;
+
+  if (!subscriptionId) {
+    console.error("[WEBHOOK] handleSubscriptionCheckoutCompleted: No subscription in session", session.id);
+    return;
+  }
+
+  try {
+    const sub = await stripe.subscriptions.retrieve(subscriptionId);
+    await upsertSubscription(userId, sub);
+    // Save Stripe customer ID on user if missing
+    const customerId =
+      typeof sub.customer === "string" ? sub.customer : sub.customer?.id;
+    if (customerId) {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { stripeCustomerId: customerId },
+      }).catch(() => {});
+    }
+    console.log(`[WEBHOOK] Subscription ${subscriptionId} created for user ${userId}`);
+  } catch (err) {
+    console.error("[WEBHOOK] handleSubscriptionCheckoutCompleted error:", err);
+  }
+}
+
+async function handleSubscriptionUpsert(sub: Stripe.Subscription) {
+  // userId is in subscription metadata (set during checkout session creation)
+  const userId = sub.metadata?.userId;
+  if (!userId) {
+    // Fall back: look up user by stripeCustomerId
+    const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer?.id;
+    if (customerId) {
+      const user = await prisma.user.findFirst({
+        where: { stripeCustomerId: customerId },
+        select: { id: true },
+      });
+      if (user) {
+        await upsertSubscription(user.id, sub);
+        return;
+      }
+    }
+    console.error("[WEBHOOK] handleSubscriptionUpsert: Cannot resolve userId for sub", sub.id);
+    return;
+  }
+  await upsertSubscription(userId, sub);
+}
+
+async function handleSubscriptionDeleted(sub: Stripe.Subscription) {
+  await prisma.subscription.updateMany({
+    where: { stripeSubscriptionId: sub.id },
+    data: { status: "canceled", updatedAt: new Date() },
+  });
+  console.log(`[WEBHOOK] Subscription ${sub.id} marked canceled`);
+}
+
+async function syncSubscriptionStatus(subscriptionId: string) {
+  try {
+    const sub = await stripe.subscriptions.retrieve(subscriptionId, {
+      expand: ["items.data"],
+    });
+    const periods = getSubPeriod(sub);
+    await prisma.subscription.updateMany({
+      where: { stripeSubscriptionId: subscriptionId },
+      data: {
+        status: sub.status,
+        currentPeriodStart: periods.start,
+        currentPeriodEnd: periods.end,
+        cancelAtPeriodEnd: sub.cancel_at_period_end,
+        updatedAt: new Date(),
+      },
+    });
+  } catch (err) {
+    console.error("[WEBHOOK] syncSubscriptionStatus error:", err);
+  }
+}
+
+/**
+ * In Stripe API 2026-04-22.dahlia, period dates moved from Subscription to SubscriptionItem.
+ * This helper reads from SubscriptionItem first, falling back to created date.
+ */
+function getSubPeriod(sub: Stripe.Subscription): { start: Date; end: Date } {
+  const item = sub.items?.data?.[0];
+  if (item && item.current_period_start && item.current_period_end) {
+    return {
+      start: new Date(item.current_period_start * 1000),
+      end: new Date(item.current_period_end * 1000),
+    };
+  }
+  // Fallback: approximate 30-day period from subscription creation
+  const startMs = sub.created * 1000;
+  return {
+    start: new Date(startMs),
+    end: new Date(startMs + 30 * 24 * 60 * 60 * 1000),
+  };
+}
+
+async function upsertSubscription(userId: string, sub: Stripe.Subscription) {
+  const customerId = typeof sub.customer === "string" ? sub.customer : (sub.customer as Stripe.Customer)?.id ?? "";
+  const priceId = sub.items.data[0]?.price?.id ?? "";
+  const periods = getSubPeriod(sub);
+
+  await prisma.subscription.upsert({
+    where: { stripeSubscriptionId: sub.id },
+    create: {
+      userId,
+      stripeCustomerId: customerId,
+      stripeSubscriptionId: sub.id,
+      stripePriceId: priceId,
+      status: sub.status,
+      currentPeriodStart: periods.start,
+      currentPeriodEnd: periods.end,
+      cancelAtPeriodEnd: sub.cancel_at_period_end,
+    },
+    update: {
+      status: sub.status,
+      stripePriceId: priceId,
+      currentPeriodStart: periods.start,
+      currentPeriodEnd: periods.end,
+      cancelAtPeriodEnd: sub.cancel_at_period_end,
+      updatedAt: new Date(),
+    },
+  });
+}
+
+// ── Gift payment ──────────────────────────────────────────────────────────────
+
+async function handleGiftPaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
+  const { purchaserUserId, purchaserEmail, recipientEmail, recipientName, giftMessage } =
+    paymentIntent.metadata;
+
+  console.log(`[WEBHOOK] handleGiftPaymentSuccess: ${paymentIntent.id} purchaser: ${purchaserEmail} → recipient: ${recipientEmail}`);
+
+  if (!purchaserEmail || !recipientEmail) {
+    console.error(`[WEBHOOK] handleGiftPaymentSuccess: Missing metadata in ${paymentIntent.id}`);
+    return;
+  }
+
+  try {
+    // Ensure a GiftPurchase record exists (create if webhook fires before verify-and-create)
+    await prisma.giftPurchase.upsert({
+      where: { stripePaymentIntentId: paymentIntent.id },
+      create: {
+        stripePaymentIntentId: paymentIntent.id,
+        purchaserUserId: purchaserUserId || null,
+        purchaserEmail,
+        recipientEmail,
+        recipientName: recipientName || null,
+        giftMessage: giftMessage || null,
+        status: "pending",
+      },
+      update: {},
+    });
+
+    // Atomically transition pending → paid and generate claim token
+    const rawToken = generateGiftToken();
+    const tokenHash = hashGiftToken(rawToken);
+
+    const updated = await prisma.giftPurchase.updateMany({
+      where: { stripePaymentIntentId: paymentIntent.id, status: "pending" },
+      data: { status: "paid", claimTokenHash: tokenHash },
+    });
+
+    if (updated.count > 0) {
+      // We own this transition — send the email
+      const claimUrl = buildClaimUrl(rawToken);
+      try {
+        await sendGiftClaimEmail({
+          recipientEmail,
+          recipientName: recipientName || null,
+          purchaserEmail,
+          giftMessage: giftMessage || null,
+          claimUrl,
+        });
+        await prisma.giftPurchase.update({
+          where: { stripePaymentIntentId: paymentIntent.id },
+          data: { emailSentAt: new Date() },
+        });
+        console.log(`[WEBHOOK] handleGiftPaymentSuccess: Gift email sent to ${recipientEmail}`);
+      } catch (emailErr) {
+        console.error(`[WEBHOOK] handleGiftPaymentSuccess: Email failed for ${recipientEmail}:`, emailErr);
+      }
+    } else {
+      console.log(`[WEBHOOK] handleGiftPaymentSuccess: Gift ${paymentIntent.id} already processed, skipping`);
+    }
+  } catch (error) {
+    console.error(`[WEBHOOK] handleGiftPaymentSuccess: ERROR for ${paymentIntent.id}:`, error);
   }
 }
 

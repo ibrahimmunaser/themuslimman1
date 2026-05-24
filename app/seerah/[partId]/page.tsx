@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { requireStudent } from "@/lib/auth";
+import { hasActiveCourseAccess } from "@/lib/access";
 import { getPartById, PARTS } from "@/lib/content";
 import { ERA_MAP } from "@/lib/types";
 import {
@@ -51,12 +52,9 @@ export default async function SeerahPartPage(props: Props) {
   const partBase = getPartById(partId);
   if (!partBase) notFound();
 
-  // Any succeeded purchase grants full access (Complete is the only plan sold)
-  const purchase = await prisma.purchase.findFirst({
-    where: { userId: user.id, status: "succeeded" },
-  });
-
-  if (!purchase) {
+  // Lifetime purchase OR active monthly subscription grants access
+  const hasAccess = await hasActiveCourseAccess(user.id);
+  if (!hasAccess) {
     redirect("/pricing");
   }
 

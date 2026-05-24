@@ -18,6 +18,13 @@ export interface PromoCode {
   type: "percent" | "fixed" | "absolute";
   value: number;
   label: string;
+  /**
+   * When true, this code is reserved for creator/influencer campaigns and
+   * must only be applied to lifetime (one-time) purchases — never to monthly
+   * subscriptions. The monthly checkout has no promo UI and no API support
+   * for promos, so this flag is primarily for documentation and auditing.
+   */
+  creatorOnly?: boolean;
 }
 
 /** Built-in codes that are always active (no env var required). */
@@ -28,6 +35,9 @@ const BUILT_IN_CODES: Record<string, PromoCode> = {
   FAMILY: { type: "absolute", value: 0, label: "family access" },
   // Free access for the deen.
   DEEN: { type: "absolute", value: 0, label: "free access" },
+  // Creator / influencer codes — lifetime access only.
+  KORRA20: { type: "percent", value: 20, label: "20% off (Korra)", creatorOnly: true },
+  ITACHI20: { type: "percent", value: 20, label: "20% off (Itachi)", creatorOnly: true },
 };
 
 function loadCodes(): Record<string, PromoCode> {
