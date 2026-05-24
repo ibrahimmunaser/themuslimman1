@@ -4,8 +4,10 @@ import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Tag, X } from "lucide-react";
 import {
-  CREATOR_PROMO_STORAGE_KEY,
   getCreatorPromoConfig,
+  getCreatorPromo,
+  setCreatorPromo,
+  clearCreatorPromo,
 } from "@/lib/creator-promos";
 
 interface CreatorPromoTrackerProps {
@@ -16,7 +18,6 @@ interface CreatorPromoTrackerProps {
 function CreatorPromoTrackerInner({ showBanner = false }: CreatorPromoTrackerProps) {
   const searchParams = useSearchParams();
   const [activePromo, setActivePromo] = useState<{ code: string; displayLabel: string } | null>(null);
-  const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
     // Capture ?promo= from URL and persist it
@@ -24,23 +25,30 @@ function CreatorPromoTrackerInner({ showBanner = false }: CreatorPromoTrackerPro
     if (urlPromo) {
       const config = getCreatorPromoConfig(urlPromo);
       if (config) {
-        localStorage.setItem(CREATOR_PROMO_STORAGE_KEY, config.code);
+        setCreatorPromo(config.code);
       }
     }
 
     // Read whatever is currently stored (either just set or from a previous visit)
-    const stored = localStorage.getItem(CREATOR_PROMO_STORAGE_KEY);
+    const stored = getCreatorPromo();
     if (stored) {
       const config = getCreatorPromoConfig(stored);
       if (config) {
         setActivePromo({ code: config.code, displayLabel: config.displayLabel });
       } else {
-        localStorage.removeItem(CREATOR_PROMO_STORAGE_KEY);
+        // Stored code is no longer valid — clean it up
+        clearCreatorPromo();
       }
     }
   }, [searchParams]);
 
-  if (!showBanner || !activePromo || dismissed) return null;
+  const handleDismiss = () => {
+    // Full removal — not just hiding. Refreshing or returning will not re-apply.
+    clearCreatorPromo();
+    setActivePromo(null);
+  };
+
+  if (!showBanner || !activePromo) return null;
 
   return (
     <div className="w-full bg-gold/10 border-b border-gold/20 px-4 py-2.5">
@@ -51,9 +59,10 @@ function CreatorPromoTrackerInner({ showBanner = false }: CreatorPromoTrackerPro
           <span className="text-text-secondary">{activePromo.displayLabel}</span>
         </div>
         <button
-          onClick={() => setDismissed(true)}
+          onClick={handleDismiss}
           className="text-text-muted hover:text-text transition-colors flex-shrink-0"
-          aria-label="Dismiss promo banner"
+          aria-label="Remove promo code"
+          title="Remove this promo code"
         >
           <X className="w-4 h-4" />
         </button>
@@ -67,6 +76,7 @@ function CreatorPromoTrackerInner({ showBanner = false }: CreatorPromoTrackerPro
  * to localStorage so they survive navigation and can be auto-applied at checkout.
  *
  * - Pass `showBanner` to display a subtle dismissible strip announcing the offer.
+ * - Clicking the X fully clears the promo from localStorage (not just hides it).
  * - Monthly checkout is unaffected — it has no promo code support at all.
  */
 export function CreatorPromoTracker(props: CreatorPromoTrackerProps) {

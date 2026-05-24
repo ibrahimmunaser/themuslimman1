@@ -49,3 +49,30 @@ export const CREATOR_PROMO_STORAGE_KEY = "creator_promo";
 export function getCreatorPromoConfig(code: string): CreatorPromoConfig | null {
   return CREATOR_PROMO_CODES[code.trim().toUpperCase()] ?? null;
 }
+
+// ── localStorage utilities ────────────────────────────────────────────────────
+// All reads/writes go through these helpers so the key is never duplicated
+// across files and clearing is guaranteed to be complete.
+
+/** Read the active creator promo code from localStorage. Returns null if none stored or on server. */
+export function getCreatorPromo(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(CREATOR_PROMO_STORAGE_KEY);
+}
+
+/** Persist a creator promo code to localStorage. */
+export function setCreatorPromo(code: string): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(CREATOR_PROMO_STORAGE_KEY, code);
+}
+
+/**
+ * Fully remove the creator promo from localStorage.
+ * Call this whenever the user explicitly dismisses or removes the promo —
+ * e.g. clicking the X in the banner or the Remove button in checkout.
+ * After calling this, refreshing or returning to checkout will NOT re-apply the promo.
+ */
+export function clearCreatorPromo(): void {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(CREATOR_PROMO_STORAGE_KEY);
+}

@@ -8,7 +8,7 @@ import { Check, Lock, ArrowLeft, Tag, X, ChevronDown, Gift } from "lucide-react"
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PLANS, formatPrice, type PlanId } from "@/lib/stripe-config";
-import { CREATOR_PROMO_STORAGE_KEY } from "@/lib/creator-promos";
+import { clearCreatorPromo, getCreatorPromo } from "@/lib/creator-promos";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
@@ -120,6 +120,8 @@ export function CheckoutPageContent() {
   const [promoLoading, setPromoLoading] = useState(false);
   const [promoError, setPromoError] = useState<string | null>(null);
   const [appliedPromo, setAppliedPromo] = useState<AppliedPromo | null>(null);
+  // true when monthly checkout is shown and a creator promo is stored (for hint text)
+  const [monthlyHasStoredPromo, setMonthlyHasStoredPromo] = useState(false);
 
   const displayPrice = isMonthly ? 900 : (appliedPromo ? appliedPromo.finalPrice : pricing.serverBasePrice);
 
@@ -181,16 +183,15 @@ export function CheckoutPageContent() {
 
   useEffect(() => {
     if (isMonthly) {
+      // Check if a creator promo is stored so we can show the hint text
+      setMonthlyHasStoredPromo(getCreatorPromo() !== null);
       createSubscriptionIntent();
       return;
     }
 
     // Auto-apply a stored creator promo for lifetime checkout.
     // Monthly checkout is intentionally excluded — it has no promo support.
-    const storedPromo =
-      typeof window !== "undefined"
-        ? localStorage.getItem(CREATOR_PROMO_STORAGE_KEY)
-        : null;
+    const storedPromo = getCreatorPromo();
 
     if (storedPromo) {
       fetch(`/api/stripe/validate-promo?code=${encodeURIComponent(storedPromo)}`)
@@ -207,7 +208,7 @@ export function CheckoutPageContent() {
             return createPaymentIntent(data.code);
           }
           // Stored code no longer valid — clear it and proceed normally
-          localStorage.removeItem(CREATOR_PROMO_STORAGE_KEY);
+          clearCreatorPromo();
           return createPaymentIntent();
         })
         .catch(() => createPaymentIntent());
@@ -239,6 +240,8 @@ export function CheckoutPageContent() {
   };
 
   const handleRemovePromo = async () => {
+    // Clear from localStorage so refresh / return visits don't re-apply
+    clearCreatorPromo();
     setAppliedPromo(null);
     setPromoInput("");
     setPromoError(null);
@@ -401,6 +404,12 @@ export function CheckoutPageContent() {
                     <span className="text-gold">$9</span>
                   </div>
                   <p className="text-xs text-text-muted mt-1">Billed monthly · Cancel anytime</p>
+                  {/* Show contextual hint only when a creator promo is stored */}
+                  {monthlyHasStoredPromo && (
+                    <p className="text-xs text-text-muted mt-2 border-t border-border/50 pt-2">
+                      <span className="text-gold/70">Creator codes apply to lifetime access only.</span>
+                    </p>
+                  )}
                 </div>
               )}
 

@@ -8,6 +8,7 @@ import {
   EARLY_ACCESS_END_DATE,
   REGULAR_PRICE,
 } from "@/lib/early-access";
+import { validatePromoCode, applyDiscount } from "@/lib/promo-codes";
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,10 +29,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { recipientEmail, recipientName, giftMessage } = body as {
+    const { recipientEmail, recipientName, giftMessage, promoCode } = body as {
       recipientEmail: string;
       recipientName?: string;
       giftMessage?: string;
+      promoCode?: string;
     };
 
     if (!recipientEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmail)) {
@@ -53,8 +55,24 @@ export async function POST(request: NextRequest) {
     const baseAmount = getBasePrice();
     const earlyAccessDiscount = earlyAccessActive ? REGULAR_PRICE - baseAmount : 0;
 
+    // Apply creator/promo discount if a valid code is provided
+    let finalAmount = baseAmount;
+    let promoDiscountAmount = 0;
+    let appliedPromoCode: string | null = null;
+    let appliedPromoLabel: string | null = null;
+
+    if (promoCode) {
+      const promo = validatePromoCode(promoCode);
+      if (promo) {
+        finalAmount = applyDiscount(baseAmount, promo);
+        promoDiscountAmount = baseAmount - finalAmount;
+        appliedPromoCode = promoCode.trim().toUpperCase();
+        appliedPromoLabel = promo.label;
+      }
+    }
+
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: baseAmount,
+      amount: finalAmount,
       currency: "usd",
       payment_method_types: ["card"],
       metadata: {
@@ -71,7 +89,9 @@ export async function POST(request: NextRequest) {
         regularAmount: String(REGULAR_PRICE),
         baseAmount: String(baseAmount),
         earlyAccessDiscount: String(earlyAccessDiscount),
-        finalAmount: String(baseAmount),
+        promoCode: appliedPromoCode ?? "",
+        promoDiscountAmount: String(promoDiscountAmount),
+        finalAmount: String(finalAmount),
       },
       description: `Gift: ${plan.name} → ${recipientEmail.trim().toLowerCase()} — TheMuslimMan`,
       receipt_email: user.email,
@@ -97,7 +117,10 @@ export async function POST(request: NextRequest) {
       regularAmount: REGULAR_PRICE,
       baseAmount,
       earlyAccessDiscount,
-      finalAmount: baseAmount,
+      promoCode: appliedPromoCode,
+      promoLabel: appliedPromoLabel,
+      promoDiscountAmount,
+      finalAmount,
     });
   } catch (error) {
     console.error("[GIFT-PAYMENT] Error creating gift payment intent:", error);

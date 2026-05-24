@@ -4,11 +4,12 @@ import { useState, useEffect, Suspense } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import {
-  Lock, ArrowLeft, ArrowRight, Gift, Check, Mail, User, MessageSquare,
+  Lock, ArrowLeft, ArrowRight, Gift, Check, Mail, User, MessageSquare, Tag, X,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PLANS, formatPrice } from "@/lib/stripe-config";
+import { getCreatorPromo, clearCreatorPromo, getCreatorPromoConfig } from "@/lib/creator-promos";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
@@ -96,6 +97,20 @@ interface GiftDetails {
   giftMessage: string;
 }
 
+interface GiftPromoState {
+  code: string;
+  displayLabel: string;
+  discountPercent: number;
+  estimatedFinalPrice: number;
+}
+
+interface GiftPricing {
+  baseAmount: number;
+  finalAmount: number;
+  promoCode: string | null;
+  promoDiscountAmount: number;
+}
+
 export default function GiftCheckoutClient({ purchaserEmail, purchaserName }: GiftCheckoutClientProps) {
   const plan = PLANS.complete;
 
@@ -112,7 +127,39 @@ export default function GiftCheckoutClient({ purchaserEmail, purchaserName }: Gi
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [requiresVerification, setRequiresVerification] = useState(false);
 
-  const [pricing, setPricing] = useState({ baseAmount: plan.price });
+  const [pricing, setPricing] = useState<GiftPricing>({
+    baseAmount: plan.price,
+    finalAmount: plan.price,
+    promoCode: null,
+    promoDiscountAmount: 0,
+  });
+
+  // Creator promo — applies to gift checkout since it is still lifetime access
+  const [giftPromo, setGiftPromo] = useState<GiftPromoState | null>(null);
+
+  useEffect(() => {
+    const stored = getCreatorPromo();
+    if (!stored) return;
+    const config = getCreatorPromoConfig(stored);
+    if (!config) {
+      // Stored code is no longer valid — remove it
+      clearCreatorPromo();
+      return;
+    }
+    const estimatedFinal = Math.round(plan.price * (1 - config.discountPercent / 100));
+    setGiftPromo({
+      code: config.code,
+      displayLabel: config.displayLabel,
+      discountPercent: config.discountPercent,
+      estimatedFinalPrice: estimatedFinal,
+    });
+  }, [plan.price]);
+
+  const handleRemoveGiftPromo = () => {
+    // Full removal — localStorage cleared so re-visiting gift checkout won't re-apply
+    clearCreatorPromo();
+    setGiftPromo(null);
+  };
 
   const handleDetailsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,6 +183,8 @@ export default function GiftCheckoutClient({ purchaserEmail, purchaserName }: Gi
           recipientEmail: details.recipientEmail,
           recipientName: details.recipientName,
           giftMessage: details.giftMessage,
+          // Pass promo code so server can apply the discount and include it in Stripe metadata
+          promoCode: giftPromo?.code ?? undefined,
         }),
       });
       const data = await res.json();
@@ -148,7 +197,12 @@ export default function GiftCheckoutClient({ purchaserEmail, purchaserName }: Gi
         setDetailsError(data.error ?? "Failed to initialize payment");
         return;
       }
-      setPricing({ baseAmount: data.baseAmount });
+      setPricing({
+        baseAmount: data.baseAmount,
+        finalAmount: data.finalAmount,
+        promoCode: data.promoCode ?? null,
+        promoDiscountAmount: data.promoDiscountAmount ?? 0,
+      });
       setClientSecret(data.clientSecret);
       setStep("payment");
     } catch (err) {
@@ -158,7 +212,14 @@ export default function GiftCheckoutClient({ purchaserEmail, purchaserName }: Gi
     }
   };
 
-  const displayPrice = pricing.baseAmount;
+  // Before payment is created: use estimated price from client-side promo config.
+  // After payment is created: use the server-verified finalAmount.
+  const displayPrice =
+    step === "payment"
+      ? pricing.finalAmount
+      : giftPromo
+        ? giftPromo.estimatedFinalPrice
+        : plan.price;
 
   if (requiresVerification) {
     return (
@@ -218,11 +279,50 @@ export default function GiftCheckoutClient({ purchaserEmail, purchaserName }: Gi
                 </ul>
               </div>
 
+              {/* Creator promo banner — allow Remove on both steps */}
+              {giftPromo && (
+                <div className="mb-4 flex items-start justify-between gap-2 rounded-lg bg-gold/10 border border-gold/20 px-3 py-2.5">
+                  <div className="flex items-start gap-2 text-sm min-w-0">
+                    <Tag className="w-3.5 h-3.5 text-gold mt-0.5 flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-gold font-medium leading-tight">Creator offer applied</p>
+                      <p className="text-text-secondary text-xs mt-0.5 break-words">{giftPromo.displayLabel} — lifetime gift access</p>
+                    </div>
+                  </div>
+                  {step === "details" && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveGiftPromo}
+                      className="text-text-muted hover:text-text transition-colors flex-shrink-0 mt-0.5"
+                      aria-label="Remove promo code"
+                      title="Remove this promo code"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              )}
+
               <div className="pt-4 border-t border-border space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-text-secondary text-sm">Lifetime Access</span>
-                  <span className="text-sm text-text">{formatPrice(displayPrice)} one-time</span>
+                  <span className="text-text-secondary text-sm">Lifetime Gift Access</span>
+                  <span className="text-sm text-text">
+                    {giftPromo ? (
+                      <>
+                        <span className="line-through text-text-muted mr-1.5">{formatPrice(plan.price)}</span>
+                        {formatPrice(displayPrice)}
+                      </>
+                    ) : (
+                      <>{formatPrice(displayPrice)} one-time</>
+                    )}
+                  </span>
                 </div>
+                {giftPromo && (
+                  <div className="flex items-center justify-between text-sm text-gold">
+                    <span>Creator discount ({giftPromo.discountPercent}% off)</span>
+                    <span>−{formatPrice(plan.price - displayPrice)}</span>
+                  </div>
+                )}
                 <div className="flex items-center justify-between font-semibold text-lg border-t border-border pt-2 mt-2">
                   <span>Gift Total</span>
                   <span className="text-gold">{formatPrice(displayPrice)}</span>
