@@ -274,7 +274,7 @@ export default async function PricingPage() {
             {[
               {
                 q: "What is the difference between monthly and lifetime?",
-                a: "Monthly gives you full access for $9/month — cancel anytime and access stops at the end of your billing period. Lifetime is a one-time $99 payment that gives you permanent access, no recurring charges ever.",
+                a: "Monthly gives you full access for $9/month — cancel anytime and access stops at the end of your billing period. Lifetime is a one-time $49 payment that gives you permanent access, no recurring charges ever.",
               },
               {
                 q: "What happens if I cancel monthly?",
@@ -316,7 +316,7 @@ export default async function PricingPage() {
           <div className="max-w-xl mx-auto px-4 sm:px-6 text-center">
             <h2 className="text-2xl sm:text-3xl font-bold mb-4">Ready to start?</h2>
             <p className="text-text-secondary mb-8">
-              $9/month or $99 lifetime. Full access. 7-Day Clarity Guarantee.
+              $9/month or $49 lifetime. Full access. 7-Day Clarity Guarantee.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link

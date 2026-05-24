@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
         userId: user.id,
         planId: "complete",
         planName: "Complete Seerah (dev test)",
-        amount: 9900,
+        amount: 4900,
         currency: "usd",
         stripePaymentIntentId: `dev_lifetime_${user.id}`,
         status: "succeeded",

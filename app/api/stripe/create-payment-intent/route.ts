@@ -46,9 +46,9 @@ export async function POST(request: NextRequest) {
 
     const plan = PLANS[planId];
 
-    // Server decides the price — always $99, client cannot override.
+    // Server decides the price — always $49, client cannot override.
     const earlyAccessActive = isEarlyAccessActive(); // always false
-    const baseAmount: number = getBasePrice(); // always 9900
+    const baseAmount: number = getBasePrice(); // always 4900
 
     // ── Apply promo code if provided ──
     let finalAmount: number = baseAmount;
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
       appliedPromoCode = promoCode.trim().toUpperCase();
     }
 
-    const earlyAccessDiscount = 0; // no early-access discount — price is flat $99
+    const earlyAccessDiscount = 0; // no early-access discount — price is flat $49
 
     // Resolve creator metadata from the promo code (if it's a creator code)
     const creatorConfig = appliedPromoCode ? getCreatorPromoConfig(appliedPromoCode) : null;
