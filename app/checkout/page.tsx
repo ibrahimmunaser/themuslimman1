@@ -98,7 +98,6 @@ export function CheckoutPageContent() {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [hasLifetimeAlready, setHasLifetimeAlready] = useState(false);
   const [requiresVerification, setRequiresVerification] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
   const [resendSuccess, setResendSuccess] = useState(false);
@@ -137,7 +136,7 @@ export function CheckoutPageContent() {
       if (!res.ok) {
         if (res.status === 401) { router.push("/signup-checkout?plan=monthly"); return; }
         if (res.status === 403 && data.requiresVerification) { setRequiresVerification(true); setError(data.error); return; }
-        if (res.status === 409 && data.hasLifetime) { setHasLifetimeAlready(true); setLoading(false); return; }
+        if (res.status === 409 && data.hasLifetime) { router.push("/my-courses"); return; }
         throw new Error(data.error || "Failed to create subscription");
       }
       setClientSecret(data.clientSecret);
@@ -458,24 +457,6 @@ export function CheckoutPageContent() {
                 <div className="py-12 text-center">
                   <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin mx-auto mb-3" />
                   <p className="text-sm text-text-secondary">Loading payment form…</p>
-                </div>
-              )}
-
-              {hasLifetimeAlready && !loading && (
-                <div className="py-8 text-center space-y-4">
-                  <div className="p-5 rounded-xl bg-gold/10 border border-gold/30">
-                    <p className="text-2xl mb-3">✓</p>
-                    <h3 className="text-lg font-bold text-gold mb-2">You already have lifetime access</h3>
-                    <p className="text-text-secondary text-sm">
-                      You own Complete Seerah permanently. There&apos;s no need for a monthly subscription.
-                    </p>
-                  </div>
-                  <Link href="/seerah" className="block w-full py-3 px-6 rounded-lg bg-gold text-ink font-semibold text-center hover:bg-gold/90 transition-colors">
-                    Go to Course →
-                  </Link>
-                  <Link href="/my-courses" className="block text-sm text-text-muted hover:text-gold transition-colors">
-                    View my courses
-                  </Link>
                 </div>
               )}
 
