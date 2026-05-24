@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getPartById } from "@/lib/content";
 import { readFlashcards } from "@/lib/files";
+import { requirePartAccess } from "@/lib/part-access";
 
 export async function GET(
   request: Request,
@@ -9,10 +10,13 @@ export async function GET(
   try {
     const { partId } = await params;
     const part = getPartById(partId);
-    
+
     if (!part) {
       return NextResponse.json({ error: "Part not found" }, { status: 404 });
     }
+
+    const deny = await requirePartAccess(part.partNumber);
+    if (deny) return deny;
 
     const flashcards = await readFlashcards(part.partNumber);
 

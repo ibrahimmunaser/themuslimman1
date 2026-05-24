@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { r2StreamFile, r2GetMetadata, r2GetAudioKey, generateETag, isCached } from "@/lib/r2";
+import { requirePartAccess } from "@/lib/part-access";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,17 +13,18 @@ export async function GET(
   const partNum = parseInt(part, 10);
   if (isNaN(partNum)) return new NextResponse("Bad request", { status: 400 });
 
+  const deny = await requirePartAccess(partNum);
+  if (deny) return deny;
+
   try {
-    // Get audio key from R2
     const audioKey = await r2GetAudioKey(partNum);
-    
+
     if (!audioKey) {
       return new NextResponse("Not found", { status: 404 });
     }
 
-    // Get file metadata
     const metadata = await r2GetMetadata(audioKey);
-    
+
     if (!metadata) {
       return new NextResponse("Not found", { status: 404 });
     }
@@ -30,19 +32,16 @@ export async function GET(
     const fileSize = metadata.size;
     const etag = generateETag({ size: metadata.size, lastModified: metadata.lastModified });
     const clientETag = req.headers.get("if-none-match");
-    
-    // Check cache
+
     if (isCached(etag, clientETag)) {
       return new NextResponse(null, { status: 304 });
     }
 
-    // Handle range requests
     const rangeHeader = req.headers.get("range");
-    
+
     if (!rangeHeader) {
-      // Stream entire file
       const response = await r2StreamFile(audioKey);
-      
+
       if (!response.Body) {
         return new NextResponse("Error reading file", { status: 500 });
       }
@@ -52,18 +51,17 @@ export async function GET(
       return new NextResponse(stream as any, {
         status: 200,
         headers: {
-          "Content-Type": "audio/wav",
+          "Content-Type": "audio/mpeg",
           "Content-Length": String(fileSize),
           "Accept-Ranges": "bytes",
-          "Cache-Control": "public, max-age=31536000, immutable",
+          "Cache-Control": "private, max-age=3600",
           "ETag": etag,
         },
       });
     }
 
-    // Parse range header
     const match = /bytes=(\d+)-(\d*)/.exec(rangeHeader);
-    
+
     if (!match) {
       return new NextResponse("Invalid range", { status: 416 });
     }
@@ -80,9 +78,8 @@ export async function GET(
 
     const chunkSize = end - start + 1;
 
-    // Stream range from R2
     const response = await r2StreamFile(audioKey, `bytes=${start}-${end}`);
-    
+
     if (!response.Body) {
       return new NextResponse("Error reading file", { status: 500 });
     }
@@ -95,8 +92,8 @@ export async function GET(
         "Content-Range": `bytes ${start}-${end}/${fileSize}`,
         "Accept-Ranges": "bytes",
         "Content-Length": String(chunkSize),
-        "Content-Type": "audio/wav",
-        "Cache-Control": "public, max-age=31536000, immutable",
+        "Content-Type": "audio/mpeg",
+        "Cache-Control": "private, max-age=3600",
         "ETag": etag,
       },
     });

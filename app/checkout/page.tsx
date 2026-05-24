@@ -81,8 +81,8 @@ interface AppliedPromo {
 
 interface PricingState {
   earlyAccessActive: boolean;
-  serverBasePrice: number;   // 9900 or 14900 (server-decided)
-  earlyAccessDiscount: number; // 5000 or 0
+  serverBasePrice: number;   // always 9900
+  earlyAccessDiscount: number; // always 0
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
@@ -257,7 +257,7 @@ export function CheckoutPageContent() {
       });
       const data = await res.json();
       if (!res.ok) { setFreeClaimError(data.error || "Something went wrong"); return; }
-      router.push("/payment/success?free=1");
+      router.push("/my-courses");
     } catch {
       setFreeClaimError("Something went wrong. Please try again.");
     } finally {

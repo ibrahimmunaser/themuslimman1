@@ -23,23 +23,23 @@ export async function GET(request: NextRequest) {
   }
 
   const earlyAccessActive = isEarlyAccessActive();
-  const basePrice = getBasePrice();       // 9900 or 14900 depending on deadline
+  const basePrice = getBasePrice();       // always 9900
   const finalPrice = applyDiscount(basePrice, promo);
   const promoDiscountAmount = basePrice - finalPrice;
-  const earlyAccessDiscount = earlyAccessActive ? REGULAR_PRICE - basePrice : 0;
+  const earlyAccessDiscount = 0; // no early-access period
 
   return NextResponse.json({
     valid: true,
     code: code.trim().toUpperCase(),
     label: promo.label,
-    // Base price server computed (9900 or 14900)
+    // Base price is always 9900 ($99)
     basePrice,
     // How much the promo saves vs. the current base
     promoDiscountAmount,
     finalPrice,
-    // Early-access context so the UI can display the full discount stack
+    // Early-access context (always false — kept for API shape compatibility)
     earlyAccessActive,
     earlyAccessDiscount,
-    regularPrice: REGULAR_PRICE, // always 14900
+    regularPrice: REGULAR_PRICE, // always 9900
   });
 }

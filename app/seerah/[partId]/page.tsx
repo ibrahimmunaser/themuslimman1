@@ -15,7 +15,7 @@ import {
   readQuiz,
   readFlashcards,
 } from "@/lib/files";
-import { getR2AssetUrl, getR2PublicUrl } from "@/lib/r2";
+import { getR2PublicUrl } from "@/lib/r2";
 import {
   ArrowLeft,
   ChevronLeft,
@@ -52,15 +52,18 @@ export default async function SeerahPartPage(props: Props) {
   const partBase = getPartById(partId);
   if (!partBase) notFound();
 
-  // Lifetime purchase OR active monthly subscription grants access
-  const hasAccess = await hasActiveCourseAccess(user.id);
-  if (!hasAccess) {
-    redirect("/pricing");
+  const n = partBase.partNumber;
+
+  // Part 1 is free — logged-in users can view it without a purchase.
+  // Parts 2–100 require a lifetime purchase or an active/trialing monthly subscription.
+  if (n !== 1) {
+    const hasAccess = await hasActiveCourseAccess(user.id);
+    if (!hasAccess) {
+      redirect("/pricing");
+    }
   }
 
   const userPlan = "complete" as const;
-
-  const n = partBase.partNumber;
 
   // Mark part as started (fire-and-forget — doesn't block rendering)
   trackPartOpened(n).catch(() => {});

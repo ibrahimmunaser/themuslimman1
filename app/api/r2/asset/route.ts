@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { r2StreamFile, r2GetMetadata, generateETag, isCached } from "@/lib/r2";
+import { requirePartAccess, extractPartNumberFromR2Key } from "@/lib/part-access";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -31,38 +32,45 @@ export async function GET(req: NextRequest) {
     return new NextResponse("Missing key parameter", { status: 400 });
   }
 
+  // Access control: extract part number from key and enforce paid-content rules.
+  // Key format examples: "videos/Part 50.mp4", "audio/Part 1.mp3", "mindmaps/Part 3 - Mindmap.png"
+  const partNum = extractPartNumberFromR2Key(key);
+
+  if (partNum !== null) {
+    const deny = await requirePartAccess(partNum);
+    if (deny) return deny;
+  } else {
+    // Key does not match a known part — deny by default to avoid arbitrary R2 access.
+    return new NextResponse("Forbidden", { status: 403 });
+  }
+
   try {
-    // Get file metadata
     const metadata = await r2GetMetadata(key);
-    
+
     if (!metadata) {
       return new NextResponse("Not found", { status: 404 });
     }
 
-    // Check ETag for cache validation
     const etag = generateETag({ size: metadata.size, lastModified: metadata.lastModified });
     const clientETag = req.headers.get("if-none-match");
-    
+
     if (isCached(etag, clientETag)) {
       return new NextResponse(null, { status: 304 });
     }
 
-    // Handle range requests for video/audio streaming
     const rangeHeader = req.headers.get("range");
     const contentType = getMimeType(key);
-    
+
     if (rangeHeader && (contentType.startsWith("video/") || contentType.startsWith("audio/"))) {
       return await handleRangeRequest(key, rangeHeader, metadata, contentType, etag);
     }
 
-    // Stream the entire file
     const response = await r2StreamFile(key);
-    
+
     if (!response.Body) {
       return new NextResponse("Error reading file", { status: 500 });
     }
 
-    // Convert the stream to a Web Stream
     const stream = response.Body.transformToWebStream();
 
     return new NextResponse(stream as any, {
@@ -70,7 +78,7 @@ export async function GET(req: NextRequest) {
       headers: {
         "Content-Type": contentType,
         "Content-Length": String(metadata.size),
-        "Cache-Control": "public, max-age=31536000, immutable",
+        "Cache-Control": "private, max-age=3600",
         "ETag": etag,
         "Accept-Ranges": "bytes",
       },
@@ -90,7 +98,7 @@ async function handleRangeRequest(
 ) {
   const fileSize = metadata.size;
   const match = /bytes=(\d+)-(\d*)/.exec(rangeHeader);
-  
+
   if (!match) {
     return new NextResponse("Invalid range", { status: 416 });
   }
@@ -109,7 +117,7 @@ async function handleRangeRequest(
 
   try {
     const response = await r2StreamFile(key, `bytes=${start}-${end}`);
-    
+
     if (!response.Body) {
       return new NextResponse("Error reading file", { status: 500 });
     }
@@ -123,7 +131,7 @@ async function handleRangeRequest(
         "Content-Range": `bytes ${start}-${end}/${fileSize}`,
         "Accept-Ranges": "bytes",
         "Content-Length": String(chunkSize),
-        "Cache-Control": "public, max-age=31536000, immutable",
+        "Cache-Control": "private, max-age=3600",
         "ETag": etag,
       },
     });

@@ -48,7 +48,7 @@ export default async function PricingPage() {
         <div className="relative max-w-3xl mx-auto px-4 sm:px-6 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gold/10 border border-gold/30 text-gold text-sm font-medium mb-6">
             <Sparkles className="w-4 h-4" />
-            Early Supporter Pricing
+            Simple Pricing
           </div>
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-text mb-5 leading-tight">
             Choose Your Path

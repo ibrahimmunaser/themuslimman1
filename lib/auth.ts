@@ -270,16 +270,18 @@ export async function logout(): Promise<void> {
 // ─────────────────────────────────────────────────────────────
 
 export async function userHasPurchases(userId: string): Promise<boolean> {
-  console.log(`[AUTH] userHasPurchases: Checking purchases for user ${userId}`);
-  const purchases = await prisma.purchase.findFirst({
-    where: {
-      userId,
-      status: "succeeded",
-    },
-  });
-  const hasPurchase = !!purchases;
-  console.log(`[AUTH] userHasPurchases: User ${userId} has purchase: ${hasPurchase}`);
-  return hasPurchase;
+  console.log(`[AUTH] userHasPurchases: Checking access for user ${userId}`);
+  const [purchase, subscription] = await Promise.all([
+    prisma.purchase.findFirst({
+      where: { userId, status: "succeeded" },
+    }),
+    prisma.subscription.findFirst({
+      where: { userId, status: { in: ["active", "trialing"] } },
+    }),
+  ]);
+  const hasAccess = !!(purchase || subscription);
+  console.log(`[AUTH] userHasPurchases: User ${userId} has access: ${hasAccess}`);
+  return hasAccess;
 }
 
 // ─────────────────────────────────────────────────────────────

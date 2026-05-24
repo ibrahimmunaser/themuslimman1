@@ -29,15 +29,12 @@ export interface PromoCode {
 
 /** Built-in codes that are always active (no env var required). */
 const BUILT_IN_CODES: Record<string, PromoCode> = {
-  // Local community discount — always charges $49 regardless of early-access state.
-  AMS49: { type: "absolute", value: 4900, label: "local community discount" },
-  // Family/personal free access — bypasses Stripe entirely.
-  FAMILY: { type: "absolute", value: 0, label: "family access" },
-  // Free access for the deen.
-  DEEN: { type: "absolute", value: 0, label: "free access" },
   // Creator / influencer codes — lifetime access only.
   KORRA20: { type: "percent", value: 20, label: "20% off (Korra)", creatorOnly: true },
   ITACHI20: { type: "percent", value: 20, label: "20% off (Itachi)", creatorOnly: true },
+  // Private codes (AMS49, FAMILY, DEEN) are no longer hardcoded in source.
+  // Add them via the PROMO_CODES environment variable:
+  //   PROMO_CODES={"AMS49":{"type":"absolute","value":4900,"label":"community discount"}}
 };
 
 function loadCodes(): Record<string, PromoCode> {

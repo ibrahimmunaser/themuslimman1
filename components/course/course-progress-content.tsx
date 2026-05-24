@@ -1,8 +1,8 @@
 import Link from "next/link";
 import {
   TrendingUp, Target, Award,
-  Play, ChevronRight, BookOpen, CheckCircle2,
-  Mail, FileText,
+  Play, CheckCircle2, BookOpen,
+  Mail, FileText, ChevronRight,
 } from "lucide-react";
 import { SendProgressReportButton } from "./send-progress-report-button";
 import type { StageData } from "./course-home-content";
@@ -134,7 +134,7 @@ export function CourseProgressContent({
         </div>
       </section>
 
-      {/* ── Stage Progress (replaces "coming soon") ───────────────────────── */}
+      {/* ── Stage Progress ────────────────────────────────────────────────── */}
       <section>
         <div className="mb-5">
           <h2 className="text-xl font-bold text-text mb-1">Stage Progress</h2>
@@ -143,47 +143,53 @@ export function CourseProgressContent({
           </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 gap-4">
+        <div className="rounded-2xl border border-border bg-surface overflow-hidden divide-y divide-border">
           {stagesData.map((stage) => {
             const pct = stage.totalCount > 0 ? Math.round((stage.completedCount / stage.totalCount) * 100) : 0;
             const isDone = stage.completedCount === stage.totalCount && stage.totalCount > 0;
             const hasStarted = stage.completedCount > 0;
 
             return (
-              <div
-                key={stage.stageNumber}
-                className={`p-5 rounded-2xl border transition-colors ${
-                  isDone ? "border-green-500/25 bg-green-500/5" : "border-border bg-surface"
-                }`}
-              >
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <div className="flex-1 min-w-0">
-                    <span className={`text-xs font-bold uppercase tracking-wider ${isDone ? "text-green-400" : "text-text-muted"}`}>
-                      Stage {stage.stageNumber}
-                    </span>
-                    <h3 className="text-sm font-semibold text-text leading-snug mt-0.5 truncate">{stage.label}</h3>
+              <div key={stage.stageNumber} className="px-5 py-4">
+                <div className="flex items-center gap-4">
+                  {/* Stage number badge */}
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-xs font-bold tabular-nums ${
+                    isDone
+                      ? "bg-green-500/15 border border-green-500/25 text-green-400"
+                      : hasStarted
+                      ? "bg-gold/10 border border-gold/25 text-gold"
+                      : "bg-surface-raised border border-border text-text-muted"
+                  }`}>
+                    {isDone ? <CheckCircle2 className="w-4 h-4" /> : stage.stageNumber}
                   </div>
-                  <span className={`text-xs tabular-nums shrink-0 ${isDone ? "text-green-400" : "text-text-muted"}`}>
-                    {stage.completedCount}/{stage.totalCount}
+
+                  {/* Label + bar */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2 mb-1.5">
+                      <p className="text-sm font-medium text-text truncate">{stage.label}</p>
+                      <span className={`text-xs tabular-nums shrink-0 font-medium ${
+                        isDone ? "text-green-400" : hasStarted ? "text-gold" : "text-text-muted"
+                      }`}>
+                        {stage.completedCount}/{stage.totalCount}
+                      </span>
+                    </div>
+                    <div className="h-1.5 bg-surface-raised rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${
+                          isDone ? "bg-green-500" : "bg-gradient-to-r from-gold to-amber-400"
+                        }`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Percentage */}
+                  <span className={`text-sm font-bold tabular-nums w-10 text-right shrink-0 ${
+                    isDone ? "text-green-400" : hasStarted ? "text-gold" : "text-text-muted"
+                  }`}>
+                    {pct}%
                   </span>
                 </div>
-
-                <p className="text-xs text-text-muted leading-relaxed mb-3">{stage.description}</p>
-
-                <div className="h-1.5 bg-surface-raised rounded-full overflow-hidden mb-3">
-                  <div
-                    className={`h-full rounded-full transition-all ${isDone ? "bg-green-500" : "bg-gradient-to-r from-gold to-amber-400"}`}
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
-
-                <Link
-                  href={`/seerah/part-${stage.firstPartNumber}`}
-                  className="inline-flex items-center gap-1 text-xs font-medium text-gold hover:text-gold/80 transition-colors"
-                >
-                  {isDone ? "Review" : hasStarted ? "Continue" : "Start"}
-                  <ChevronRight className="w-3 h-3" />
-                </Link>
               </div>
             );
           })}

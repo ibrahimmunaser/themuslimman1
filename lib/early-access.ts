@@ -1,62 +1,41 @@
 /**
- * Early-access pricing configuration.
+ * Pricing configuration for Complete Seerah lifetime access.
  *
- * Source of truth for the deadline is the environment variable:
- *   NEXT_PUBLIC_EARLY_ACCESS_END_DATE  (ISO 8601 string)
- *
- * Example .env / Vercel env value:
- *   NEXT_PUBLIC_EARLY_ACCESS_END_DATE=2026-05-30T22:00:00Z
- *
- * The NEXT_PUBLIC_ prefix makes this available on both server and client,
- * so the same deadline is used everywhere — no per-visitor variation.
- *
- * If the env var is missing, the fallback constant is used and a warning
- * is printed at startup.
+ * $99 is the permanent launch price. There is no deadline-based increase.
+ * All server-side checkout and all frontend displays use 9900 cents.
  */
 
-const FALLBACK_DEADLINE = "2026-05-30T22:00:00Z";
-
-const rawDeadline =
-  process.env.NEXT_PUBLIC_EARLY_ACCESS_END_DATE ?? FALLBACK_DEADLINE;
-
-const parsed = new Date(rawDeadline);
-
-if (isNaN(parsed.getTime())) {
-  console.error(
-    `[early-access] Invalid NEXT_PUBLIC_EARLY_ACCESS_END_DATE: "${rawDeadline}". ` +
-      `Using fallback: ${FALLBACK_DEADLINE}`
-  );
-}
-
-/** The single global deadline used for all users, all pages, all API calls. */
-export const EARLY_ACCESS_END_DATE: Date = isNaN(parsed.getTime())
-  ? new Date(FALLBACK_DEADLINE)
-  : parsed;
-
-/** Early-access price in cents: $99 */
+/** Lifetime access price in cents: $99 (permanent). */
 export const EARLY_ACCESS_PRICE = 9900;
 
-/** Regular (post-deadline) price in cents: $149 */
-export const REGULAR_PRICE = 14900;
+/** Kept for import compatibility — same value as EARLY_ACCESS_PRICE. */
+export const REGULAR_PRICE = 9900;
 
 /**
- * Returns true if the early-access window is still open.
- * Pass `now` for unit-testing; defaults to the real clock.
+ * Early access ended — always returns false.
+ * Kept for import compatibility; do not use for logic.
+ * @deprecated
  */
-export function isEarlyAccessActive(now?: Date): boolean {
-  return (now ?? new Date()) < EARLY_ACCESS_END_DATE;
+export const EARLY_ACCESS_END_DATE: Date = new Date("2026-05-30T22:00:00Z");
+
+/**
+ * Early access period has ended.
+ * Always returns false — no countdown UI or deadline logic should be shown.
+ * @deprecated
+ */
+export function isEarlyAccessActive(): boolean {
+  return false;
+}
+
+/** Returns the current lifetime access price in cents: always $99. */
+export function getBasePrice(): number {
+  return 9900;
 }
 
 /**
- * Returns the correct base price in cents for a new purchase:
- * - $99 during early access
- * - $149 after deadline
+ * Always returns 0 — the deadline has passed.
+ * @deprecated
  */
-export function getBasePrice(now?: Date): number {
-  return isEarlyAccessActive(now) ? EARLY_ACCESS_PRICE : REGULAR_PRICE;
-}
-
-/** Milliseconds remaining until the deadline (minimum 0). */
-export function getMsRemaining(now?: Date): number {
-  return Math.max(0, EARLY_ACCESS_END_DATE.getTime() - (now ?? new Date()).getTime());
+export function getMsRemaining(): number {
+  return 0;
 }

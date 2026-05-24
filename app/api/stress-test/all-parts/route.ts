@@ -181,6 +181,11 @@ async function testPart(partNum: number): Promise<AssetTestResult> {
 
 export async function GET(req: NextRequest) {
   try {
+    // Only available in development — never expose R2 URLs to unauthenticated/unpaid users in prod
+    if (process.env.NODE_ENV !== "development") {
+      return NextResponse.json({ error: "Not available" }, { status: 403 });
+    }
+
     const user = await requireStudent();
 
     const searchParams = req.nextUrl.searchParams;

@@ -35,9 +35,9 @@ export async function POST(request: NextRequest) {
 
     const plan = PLANS[planId];
 
-    // ── Deadline-aware base price (server decides, client cannot override) ──
-    const earlyAccessActive = isEarlyAccessActive();
-    const baseAmount: number = getBasePrice(); // 9900 or 14900
+    // Server decides the price — always $99, client cannot override.
+    const earlyAccessActive = isEarlyAccessActive(); // always false
+    const baseAmount: number = getBasePrice(); // always 9900
 
     // ── Apply promo code if provided ──
     let finalAmount: number = baseAmount;
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
       appliedPromoCode = promoCode.trim().toUpperCase();
     }
 
-    const earlyAccessDiscount = earlyAccessActive ? REGULAR_PRICE - baseAmount : 0; // 5000 or 0
+    const earlyAccessDiscount = 0; // no early-access discount — price is flat $99
 
     // Resolve creator metadata from the promo code (if it's a creator code)
     const creatorConfig = appliedPromoCode ? getCreatorPromoConfig(appliedPromoCode) : null;

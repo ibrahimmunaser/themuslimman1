@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { hashGiftToken } from "@/lib/gift";
+import { stripe } from "@/lib/stripe";
 
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser();
@@ -88,6 +89,17 @@ export async function POST(request: NextRequest) {
 
   // Grant lifetime access to the recipient: set hasPaid flag AND create a Purchase record
   // so access.ts, billing page, and admin dashboards all see a consistent record.
+  // Use the actual Stripe amount rather than a hardcoded constant.
+  let paidAmount = 9900; // fallback if Stripe lookup fails
+  let paidCurrency = "usd";
+  try {
+    const pi = await stripe.paymentIntents.retrieve(gift.stripePaymentIntentId);
+    if (pi.amount) paidAmount = pi.amount;
+    if (pi.currency) paidCurrency = pi.currency;
+  } catch (piErr) {
+    console.error("[GIFT CLAIM] Could not fetch PaymentIntent for amount — using fallback:", piErr);
+  }
+
   await Promise.all([
     prisma.user.update({
       where: { id: user.id },
@@ -100,8 +112,8 @@ export async function POST(request: NextRequest) {
         stripePaymentIntentId: gift.stripePaymentIntentId,
         planId: "complete",
         planName: "Complete Seerah (gift)",
-        amount: 9900,
-        currency: "usd",
+        amount: paidAmount,
+        currency: paidCurrency,
         status: "succeeded",
       },
       update: {
