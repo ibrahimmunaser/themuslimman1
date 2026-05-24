@@ -19,6 +19,8 @@ import {
   X,
 } from "lucide-react";
 
+import { DidYouKnowWidget } from "./did-you-know-widget";
+
 interface StudentSidebarProps {
   userPlan: "essentials" | "complete";
   userName: string;
@@ -242,6 +244,9 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
           </div>
         </nav>
       </div>
+
+      {/* Did You Know widget — hidden when sidebar is collapsed */}
+      {!collapsed && <DidYouKnowWidget />}
     </>
   );
 
