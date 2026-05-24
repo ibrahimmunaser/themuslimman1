@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { LayoutDashboard, BookOpen, FolderOpen, TrendingUp, CircleUser } from "lucide-react";
 import { clsx } from "clsx";
@@ -49,11 +49,22 @@ export function CourseDashboardTabs({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tabParam]);
 
-  const switchTab = (id: TabId) => {
+  const switchTab = useCallback((id: TabId) => {
     setActiveTab(id);
     const url = id === "home" ? "/seerah" : `/seerah?tab=${id}`;
     router.replace(url, { scroll: false });
-  };
+  }, [router]);
+
+  // Listen for tab-switch events dispatched by the sidebar so it can switch
+  // tabs instantly without triggering a full server-side navigation.
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const tabId = (e as CustomEvent<TabId>).detail;
+      if (TABS.some((t) => t.id === tabId)) switchTab(tabId);
+    };
+    window.addEventListener("seerah:switchTab", handler);
+    return () => window.removeEventListener("seerah:switchTab", handler);
+  }, [switchTab]);
 
   const content: Record<TabId, React.ReactNode> = {
     home:      homeContent,

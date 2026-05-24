@@ -90,6 +90,11 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
     }
   };
 
+  const handleTabSwitch = (tabId: string) => {
+    window.dispatchEvent(new CustomEvent("seerah:switchTab", { detail: tabId }));
+    setMobileOpen(false);
+  };
+
   const SidebarContent = () => (
     <>
       {/* Logo/Brand */}
@@ -141,18 +146,43 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
             {MAIN_MENU.map((item) => {
               const Icon = item.icon;
               const active = isActive(item);
+              const itemClass = clsx(
+                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all w-full text-left",
+                active
+                  ? "bg-gold/10 text-gold border border-gold/25"
+                  : "text-text-secondary hover:text-text hover:bg-surface-raised"
+              );
 
+              // When already on /seerah, switch tabs instantly via event (no server round-trip)
+              if (isOnDashboard && item.tabId !== undefined) {
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => handleTabSwitch(item.tabId!)}
+                    className={itemClass}
+                  >
+                    <Icon className="w-5 h-5 flex-shrink-0" />
+                    {!collapsed && (
+                      <>
+                        <span className="flex-1">{item.label}</span>
+                        {item.badge && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-gold/20 text-gold font-semibold">
+                            {item.badge}
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </button>
+                );
+              }
+
+              // On other pages: navigate normally to /seerah?tab=X
               return (
                 <Link
                   key={item.id}
                   href={item.href}
                   onClick={() => setMobileOpen(false)}
-                  className={clsx(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
-                    active
-                      ? "bg-gold/10 text-gold border border-gold/25"
-                      : "text-text-secondary hover:text-text hover:bg-surface-raised"
-                  )}
+                  className={itemClass}
                 >
                   <Icon className="w-5 h-5 flex-shrink-0" />
                   {!collapsed && (
