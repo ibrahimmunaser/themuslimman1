@@ -40,6 +40,26 @@ export const CREATOR_PROMO_CODES: Record<string, CreatorPromoConfig> = {
     utm_campaign: "seerah_launch",
     utm_content: "itachi",
   },
+  DEEN20: {
+    code: "DEEN20",
+    discountPercent: 20,
+    displayLabel: "DEEN20 — 20% off lifetime access",
+    creator: "deenresponds",
+    utm_source: "youtube",
+    utm_medium: "influencer",
+    utm_campaign: "seerah_launch",
+    utm_content: "deenresponds",
+  },
+  ORTHODOX20: {
+    code: "ORTHODOX20",
+    discountPercent: 20,
+    displayLabel: "ORTHODOX20 — 20% off lifetime access",
+    creator: "theorthodoxmuslim",
+    utm_source: "youtube",
+    utm_medium: "influencer",
+    utm_campaign: "seerah_launch",
+    utm_content: "theorthodoxmuslim",
+  },
 };
 
 /** localStorage key used to persist the active creator promo across pages. */

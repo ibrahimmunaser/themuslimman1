@@ -556,6 +556,8 @@ model Purchase {
   currency              String   @default("usd")
   status                String   @default("pending")
   stripePaymentIntentId String   @unique
+  promoCode             String?  // promo code used, if any
+  creator               String?  // influencer creator slug, if via creator link
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 
@@ -564,6 +566,7 @@ model Purchase {
   @@index([userId])
   @@index([status])
   @@index([createdAt])
+  @@index([creator])
 }
 
 // Progress tracking for direct-to-consumer purchases
@@ -667,6 +670,19 @@ model SupportTicket {
   @@index([status])
   @@index([email])
   @@index([createdAt])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Influencer link click tracking
+// ─────────────────────────────────────────────────────────────
+
+model InfluencerClick {
+  id        String   @id @default(cuid())
+  creator   String   // e.g. "korra", "itachi", "deenresponds", "theorthodoxmuslim"
+  clickedAt DateTime @default(now())
+
+  @@index([creator])
+  @@index([clickedAt])
 }
 
 // ─────────────────────────────────────────────────────────────

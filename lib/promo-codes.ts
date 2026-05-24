@@ -30,8 +30,10 @@ export interface PromoCode {
 /** Built-in codes that are always active (no env var required). */
 const BUILT_IN_CODES: Record<string, PromoCode> = {
   // Creator / influencer codes — lifetime access only.
-  KORRA20: { type: "percent", value: 20, label: "20% off (Korra)", creatorOnly: true },
-  ITACHI20: { type: "percent", value: 20, label: "20% off (Itachi)", creatorOnly: true },
+  KORRA20:    { type: "percent", value: 20, label: "20% off (Korra)",             creatorOnly: true },
+  ITACHI20:   { type: "percent", value: 20, label: "20% off (Itachi)",            creatorOnly: true },
+  DEEN20:     { type: "percent", value: 20, label: "20% off (Deen Responds)",     creatorOnly: true },
+  ORTHODOX20: { type: "percent", value: 20, label: "20% off (The Orthodox Muslim)", creatorOnly: true },
   // Private codes (AMS49, FAMILY, DEEN) are no longer hardcoded in source.
   // Add them via the PROMO_CODES environment variable:
   //   PROMO_CODES={"AMS49":{"type":"absolute","value":4900,"label":"community discount"}}

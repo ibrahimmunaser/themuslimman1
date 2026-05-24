@@ -151,9 +151,13 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
         currency: paymentIntent.currency,
         stripePaymentIntentId: paymentIntent.id,
         status: "succeeded",
+        promoCode: paymentIntent.metadata.promoCode || null,
+        creator:   paymentIntent.metadata.creator   || null,
       },
       update: {
-        status: "succeeded",
+        status:    "succeeded",
+        promoCode: paymentIntent.metadata.promoCode || null,
+        creator:   paymentIntent.metadata.creator   || null,
       },
     });
     

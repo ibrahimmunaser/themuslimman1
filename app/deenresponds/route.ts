@@ -6,10 +6,10 @@ const APP_URL =
 
 export async function GET() {
   // Fire-and-forget click tracking — never block the redirect
-  prisma.influencerClick.create({ data: { creator: "korra" } }).catch(() => {});
+  prisma.influencerClick.create({ data: { creator: "deenresponds" } }).catch(() => {});
 
   return NextResponse.redirect(
-    `${APP_URL}/?utm_source=tiktok&utm_medium=influencer&utm_campaign=seerah_launch&utm_content=korra&promo=KORRA20`,
+    `${APP_URL}/?utm_source=youtube&utm_medium=influencer&utm_campaign=seerah_launch&utm_content=deenresponds&promo=DEEN20`,
     { status: 302 }
   );
 }
