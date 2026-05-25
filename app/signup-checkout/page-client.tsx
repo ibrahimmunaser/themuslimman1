@@ -162,8 +162,8 @@ function SignupCheckoutContent() {
 
   return (
     <div className="min-h-screen bg-ink text-text">
-      {/* Capture ?promo= and persist to localStorage; show banner if active */}
-      <CreatorPromoTracker showBanner />
+      {/* Only show promo banner when a valid promo code is present in the URL — never from stale localStorage */}
+      <CreatorPromoTracker showBanner={!!promoConfig} />
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12">
         <div className="mb-8 text-center">
           <h1 className="text-3xl sm:text-4xl font-bold mb-2">Create Your Account</h1>

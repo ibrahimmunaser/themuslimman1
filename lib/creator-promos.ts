@@ -66,6 +66,18 @@ export const CREATOR_PROMO_CODES: Record<string, CreatorPromoConfig> = {
 /** localStorage key used to persist the active creator promo across pages. */
 export const CREATOR_PROMO_STORAGE_KEY = "creator_promo";
 
+/**
+ * Promos expire after 48 hours. This prevents codes stored during a previous
+ * browser session (e.g. a test visit to ?promo=X) from bleeding into a new
+ * user's signup flow on the same device.
+ */
+const PROMO_TTL_MS = 48 * 60 * 60 * 1000;
+
+interface StoredPromo {
+  code: string;
+  storedAt: number;
+}
+
 /** Returns the config for a creator promo code (case-insensitive), or null if not a creator code. */
 export function getCreatorPromoConfig(code: string): CreatorPromoConfig | null {
   return CREATOR_PROMO_CODES[code.trim().toUpperCase()] ?? null;
@@ -75,16 +87,30 @@ export function getCreatorPromoConfig(code: string): CreatorPromoConfig | null {
 // All reads/writes go through these helpers so the key is never duplicated
 // across files and clearing is guaranteed to be complete.
 
-/** Read the active creator promo code from localStorage. Returns null if none stored or on server. */
+/** Read the active creator promo code from localStorage. Returns null if none stored, expired, or on server. */
 export function getCreatorPromo(): string | null {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem(CREATOR_PROMO_STORAGE_KEY);
+  const raw = localStorage.getItem(CREATOR_PROMO_STORAGE_KEY);
+  if (!raw) return null;
+  try {
+    const { code, storedAt } = JSON.parse(raw) as StoredPromo;
+    if (Date.now() - storedAt > PROMO_TTL_MS) {
+      localStorage.removeItem(CREATOR_PROMO_STORAGE_KEY);
+      return null;
+    }
+    return code;
+  } catch {
+    // Legacy plain-string entry — treat as expired and remove it
+    localStorage.removeItem(CREATOR_PROMO_STORAGE_KEY);
+    return null;
+  }
 }
 
-/** Persist a creator promo code to localStorage. */
+/** Persist a creator promo code to localStorage with a timestamp for expiry checks. */
 export function setCreatorPromo(code: string): void {
   if (typeof window === "undefined") return;
-  localStorage.setItem(CREATOR_PROMO_STORAGE_KEY, code);
+  const entry: StoredPromo = { code, storedAt: Date.now() };
+  localStorage.setItem(CREATOR_PROMO_STORAGE_KEY, JSON.stringify(entry));
 }
 
 /**
