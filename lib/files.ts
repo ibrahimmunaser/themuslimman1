@@ -13,7 +13,6 @@ import {
   r2GetVideoKey,
   r2GetAudioKey,
   getR2AssetUrl,
-  getR2PublicUrl,
   generateSignedR2Url,
   VIDEO_URL_EXPIRY,
   IMAGE_URL_EXPIRY,
@@ -211,11 +210,8 @@ export async function getSlideFiles(
 ): Promise<string[]> {
   if (USE_R2) {
     const keys = await r2GetSlideKeys(partNum, type);
-    // Part 1 is free — use public URLs. All other parts use short-lived signed URLs.
-    // Presigning is a local HMAC operation; no network round-trip per key.
-    if (partNum === 1) {
-      return keys.map((key) => getR2PublicUrl(key) || getR2AssetUrl(key));
-    }
+    // All parts (including Part 1) use short-lived signed URLs.
+    // Part 1 remains free from an access-control standpoint but assets are not permanently public.
     return Promise.all(keys.map((key) => generateSignedR2Url(key, IMAGE_URL_EXPIRY)));
   }
 
@@ -315,17 +311,8 @@ export async function getPartAssetUrls(partNum: number) {
     r2GetMindmapKey(partNum),
   ]);
 
-  // Part 1 is intentionally free — public URLs are acceptable
-  if (partNum === 1) {
-    return {
-      videoUrl: videoKey ? getR2PublicUrl(videoKey) ?? undefined : undefined,
-      audioUrl: audioKey ? getR2PublicUrl(audioKey) ?? undefined : undefined,
-      mindmapUrl: mindmapKey ? getR2PublicUrl(mindmapKey) ?? undefined : undefined,
-    };
-  }
-
-  // Parts 2–101: generate short-lived signed URLs so files cannot be shared directly.
-  // Signing is a local crypto operation — no extra network calls.
+  // All parts — including free Part 1 — use short-lived signed URLs.
+  // Access control (free vs paid) is enforced at the page/API level, not via permanent URLs.
   const [videoUrl, audioUrl, mindmapUrl] = await Promise.all([
     videoKey ? generateSignedR2Url(videoKey, VIDEO_URL_EXPIRY) : Promise.resolve(undefined),
     audioKey ? generateSignedR2Url(audioKey, VIDEO_URL_EXPIRY) : Promise.resolve(undefined),

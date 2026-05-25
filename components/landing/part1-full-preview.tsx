@@ -11,7 +11,7 @@ import {
   readFlashcards,
   getPartAssetUrls,
 } from "@/lib/files";
-import { getR2PublicUrl } from "@/lib/r2";
+import { generateSignedR2Url, IMAGE_URL_EXPIRY } from "@/lib/r2";
 import { PartTabs } from "@/components/part/part-tabs";
 import { Badge } from "@/components/ui/badge";
 
@@ -75,23 +75,22 @@ export async function Part1FullPreview() {
       quiz: quiz ?? undefined,
       flashcards: flashcards ?? undefined,
       slides: slideFiles,
-      infographics: {
-        concise: infConcise
-          ? (infConcise.includes("/") 
-              ? getR2PublicUrl(infConcise) ?? undefined
-              : `/seerah-media/Infographics/Concise/${infConcise}`)
-          : undefined,
-        standard: infStandard
-          ? (infStandard.includes("/") 
-              ? getR2PublicUrl(infStandard) ?? undefined
-              : `/seerah-media/Infographics/Standard/${infStandard}`)
-          : undefined,
-        bentoGrid: infBento
-          ? (infBento.includes("/") 
-              ? getR2PublicUrl(infBento) ?? undefined
-              : `/seerah-media/Infographics/Bento Grid/${infBento}`)
-          : undefined,
-      },
+      infographics: await (async () => {
+        // R2 keys always contain "/"; local filenames never do
+        const sign = (key: string | null, localFolder: string) =>
+          key
+            ? key.includes("/")
+              ? generateSignedR2Url(key, IMAGE_URL_EXPIRY)
+              : Promise.resolve(`/seerah-media/Infographics/${localFolder}/${key}`)
+            : Promise.resolve(undefined);
+
+        const [concise, standard, bentoGrid] = await Promise.all([
+          sign(infConcise, "Concise"),
+          sign(infStandard, "Standard"),
+          sign(infBento, "Bento Grid"),
+        ]);
+        return { concise, standard, bentoGrid };
+      })(),
     },
   };
 
