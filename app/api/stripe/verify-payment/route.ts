@@ -80,9 +80,16 @@ export async function GET(request: NextRequest) {
     console.log(
       `[VERIFY-PAYMENT] Checks passed for user ${currentUser.id} — upserting purchase…`
     );
+    const promoCode = paymentIntent.metadata.promoCode ?? null;
+    const creator   = paymentIntent.metadata.creator   ?? null;
+
     await prisma.purchase.upsert({
       where: { stripePaymentIntentId: paymentIntent.id },
-      update: {},
+      // If the webhook already wrote the record, only fill in nulls (don't overwrite)
+      update: {
+        ...(promoCode ? { promoCode } : {}),
+        ...(creator   ? { creator }   : {}),
+      },
       create: {
         userId,
         planId,
@@ -91,6 +98,8 @@ export async function GET(request: NextRequest) {
         currency: paymentIntent.currency,
         stripePaymentIntentId: paymentIntent.id,
         status: "succeeded",
+        promoCode,
+        creator,
       },
     });
 
