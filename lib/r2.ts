@@ -199,22 +199,15 @@ export async function r2GetVideoKey(partNum: number): Promise<string | null> {
  * Get audio filename for a part number
  */
 export async function r2GetAudioKey(partNum: number): Promise<string | null> {
-  // Check for .mp3 files first (production format)
-  const mp3 = `audio/Part ${partNum}.mp3`;
-  if (await r2FileExists(mp3)) return mp3;
-  
-  // Check for .mp3 with (1) suffix (Windows duplicate naming)
-  const mp3WithSuffix = `audio/Part ${partNum} (1).mp3`;
-  if (await r2FileExists(mp3WithSuffix)) return mp3WithSuffix;
-  
-  // Fallback to .wav files (legacy format)
-  const wavWithSuffix = `audio/Part ${partNum} (1).wav`;
-  if (await r2FileExists(wavWithSuffix)) return wavWithSuffix;
-  
-  const wav = `audio/Part ${partNum}.wav`;
-  if (await r2FileExists(wav)) return wav;
-  
-  return null;
+  // Candidate keys in priority order — checked in parallel to avoid 4× round-trips
+  const candidates = [
+    `audio/Part ${partNum}.mp3`,
+    `audio/Part ${partNum} (1).mp3`,
+    `audio/Part ${partNum} (1).wav`,
+    `audio/Part ${partNum}.wav`,
+  ];
+  const results = await Promise.all(candidates.map((k) => r2FileExists(k)));
+  return candidates.find((_, i) => results[i]) ?? null;
 }
 
 /**

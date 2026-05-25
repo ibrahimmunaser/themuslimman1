@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { r2StreamFile, r2GetMetadata, generateETag, isCached } from "@/lib/r2";
+import { requirePartAccess, extractPartNumberFromR2Key } from "@/lib/part-access";
+import { getCurrentUser } from "@/lib/auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,8 +26,18 @@ export async function GET(req: NextRequest) {
   if (!relPath) return new NextResponse("Missing path", { status: 400 });
 
   try {
-    // Remove leading slash if present and construct R2 key
     const key = relPath.startsWith("/") ? relPath.slice(1) : relPath;
+
+    // Access control: if the key contains a part number, enforce per-part access rules.
+    // Keys without a part number (thumbnails, etc.) still require a valid session.
+    const partNumber = extractPartNumberFromR2Key(key);
+    if (partNumber !== null) {
+      const deny = await requirePartAccess(partNumber);
+      if (deny) return deny;
+    } else {
+      const user = await getCurrentUser();
+      if (!user) return new NextResponse("Authentication required", { status: 401 });
+    }
 
     // Get file metadata
     const metadata = await r2GetMetadata(key);

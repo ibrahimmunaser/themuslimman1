@@ -45,71 +45,92 @@ export async function GET(request: NextRequest) {
       errors: [] as string[],
     };
 
+    if (usersWithReports.length === 0) {
+      return NextResponse.json({ success: true, message: "No users to report", results });
+    }
+
+    // Batch-load all data upfront — 4 queries total regardless of user count
+    const userIds = usersWithReports.map((u) => u.id);
+    const studentIds = usersWithReports.map((u) => u.student?.id).filter(Boolean) as string[];
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+    const [allProgress, allPurchases, allStudySessions, allQuizAttempts] = await Promise.all([
+      prisma.partProgress.findMany({
+        where: { userId: { in: userIds } },
+        orderBy: { partNumber: "asc" },
+        select: {
+          userId: true, partNumber: true, status: true, videoWatchPercent: true,
+          briefingOpened: true, quizBestScore: true, updatedAt: true, quizPassed: true,
+          flashcardsReviewed: true, startedAt: true, completedAt: true, masteredAt: true,
+          lastAccessedAt: true,
+        },
+      }),
+      prisma.purchase.findMany({
+        where: { userId: { in: userIds }, status: "succeeded" },
+        select: { userId: true },
+      }),
+      prisma.studySession.findMany({
+        where: { userId: { in: userIds } },
+        select: { userId: true, startedAt: true, secondsTracked: true },
+      }),
+      studentIds.length > 0
+        ? prisma.quizAttempt.findMany({
+            where: { studentId: { in: studentIds }, submittedAt: { not: null } },
+            select: { studentId: true, score: true, submittedAt: true },
+          })
+        : Promise.resolve([]),
+    ]);
+
+    // Index everything by userId / studentId for O(1) lookup
+    const progressByUser = new Map<string, typeof allProgress>();
+    for (const p of allProgress) {
+      const arr = progressByUser.get(p.userId) ?? [];
+      arr.push(p);
+      progressByUser.set(p.userId, arr);
+    }
+    const paidUserIds = new Set(allPurchases.map((p) => p.userId));
+    const sessionsByUser = new Map<string, typeof allStudySessions>();
+    for (const s of allStudySessions) {
+      const arr = sessionsByUser.get(s.userId) ?? [];
+      arr.push(s);
+      sessionsByUser.set(s.userId, arr);
+    }
+    const quizByStudent = new Map<string, typeof allQuizAttempts>();
+    for (const q of allQuizAttempts) {
+      const arr = quizByStudent.get(q.studentId) ?? [];
+      arr.push(q);
+      quizByStudent.set(q.studentId, arr);
+    }
+
     // Send reports
     for (const user of usersWithReports) {
       try {
         if (!user.parentEmail) continue;
 
-        // Get user's progress data
-        const progressData = await prisma.partProgress.findMany({
-          where: { userId: user.id },
-          orderBy: { partNumber: "asc" },
-          select: {
-            partNumber:        true,
-            status:            true,
-            videoWatchPercent: true,
-            briefingOpened:    true,
-            quizBestScore:     true,
-            updatedAt:         true,
-            quizPassed:        true,
-            flashcardsReviewed:true,
-            startedAt:         true,
-            completedAt:       true,
-            masteredAt:        true,
-            lastAccessedAt:    true,
-          },
-        });
-
-        // Determine user plan
-        const purchases = await prisma.purchase.findFirst({
-          where: { userId: user.id, status: "succeeded" },
-        });
-        const userPlan = purchases ? "complete" : "essentials";
+        const progressData = progressByUser.get(user.id) ?? [];
+        const userPlan = paidUserIds.has(user.id) ? "complete" : "essentials";
 
         const totalLessons = 100;
         const completedLessons = progressData.filter((p) => p.status === "completed").length;
 
-        // Calculate weekly activity (past 7 days)
-        const oneWeekAgo = new Date();
-        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-        
         const weeklyProgress = progressData.filter(
           (p) => p.updatedAt >= oneWeekAgo && (p.status === "completed" || p.status === "in_progress")
         );
-        
+
         const weeklyLessons = weeklyProgress.filter((p) => p.status === "completed").length;
-        const weeklyBriefings = weeklyLessons; // Use completed lessons as proxy for briefings
-        
-        // Get actual tracked study time
-        const allStudySessions = await prisma.studySession.findMany({
-          where: { userId: user.id },
-        });
-        
-        const weeklyStudySessions = allStudySessions.filter(
-          (s) => s.startedAt >= oneWeekAgo
-        );
-        
-        const totalStudySeconds = allStudySessions.reduce((sum, s) => sum + s.secondsTracked, 0);
+        const weeklyBriefings = weeklyLessons;
+
+        const userSessions = sessionsByUser.get(user.id) ?? [];
+        const weeklyStudySessions = userSessions.filter((s) => s.startedAt >= oneWeekAgo);
+
+        const totalStudySeconds = userSessions.reduce((sum, s) => sum + s.secondsTracked, 0);
         const weeklyStudySeconds = weeklyStudySessions.reduce((sum, s) => sum + s.secondsTracked, 0);
-        
-        // Convert to hours (rounded to 1 decimal)
+
         const studyTimeHours = Math.round((totalStudySeconds / 3600) * 10) / 10;
         const weeklyStudyTime = Math.round((weeklyStudySeconds / 3600) * 10) / 10;
-        
-        // Check if there's any weekly activity
         const hasWeeklyActivity = weeklyProgress.length > 0 || weeklyStudySeconds > 0;
 
-        // Find current and next lesson
         const lastAccessedPart = progressData
           .filter((p) => p.lastAccessedAt)
           .sort((a, b) => {
@@ -122,34 +143,22 @@ export async function GET(request: NextRequest) {
         const currentLessonStatus = currentLessonData?.status || "not_started";
         const nextLessonNumber = Math.min(currentLessonNumber + 1, totalLessons);
 
-        // Get quiz stats for Complete users
         let quizScore: number | undefined;
         let quizAttempts = 0;
         let weeklyQuizzes = 0;
-        let weeklyFlashcards = 0;
+        const weeklyFlashcards = 0;
 
         if (userPlan === "complete" && user.student?.id) {
-          const allQuizAttempts = await prisma.quizAttempt.findMany({
-            where: {
-              studentId: user.student.id,
-              submittedAt: { not: null },
-            },
-          });
-
-          quizAttempts = allQuizAttempts.length;
-          
-          // Calculate weekly quizzes
-          weeklyQuizzes = allQuizAttempts.filter(
+          const studentQuizzes = quizByStudent.get(user.student.id) ?? [];
+          quizAttempts = studentQuizzes.length;
+          weeklyQuizzes = studentQuizzes.filter(
             (q) => q.submittedAt && q.submittedAt >= oneWeekAgo
           ).length;
 
-          if (allQuizAttempts.length > 0) {
-            const validScores = allQuizAttempts.filter((a) => a.score !== null);
-            if (validScores.length > 0) {
-              const avgScore =
-                validScores.reduce((sum, attempt) => sum + (attempt.score || 0), 0) / validScores.length;
-              quizScore = Math.round(avgScore);
-            }
+          const validScores = studentQuizzes.filter((a) => a.score !== null);
+          if (validScores.length > 0) {
+            const avgScore = validScores.reduce((sum, a) => sum + (a.score ?? 0), 0) / validScores.length;
+            quizScore = Math.round(avgScore);
           }
         }
 

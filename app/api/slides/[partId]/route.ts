@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getPartById } from "@/lib/content";
 import { getSlideFiles } from "@/lib/files";
+import { requirePartAccess } from "@/lib/part-access";
 
 export async function GET(
   request: Request,
@@ -15,6 +16,9 @@ export async function GET(
     }
 
     const n = part.partNumber;
+
+    const deny = await requirePartAccess(n);
+    if (deny) return deny;
 
     // Fetch slide files - getSlideFiles already returns public URLs
     const [presented, detailed, facts] = await Promise.all([
