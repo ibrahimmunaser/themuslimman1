@@ -11,6 +11,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { getUserAccessInfo } from "@/lib/access";
 import { MonthlyCheckoutButton } from "@/components/pricing/monthly-checkout-button";
 import { CreatorPromoTracker } from "@/components/promo/creator-promo-tracker";
+import { LifetimePriceDisplay } from "@/components/pricing/lifetime-price-display";
 
 export const metadata = {
   title: "Pricing — Complete Seerah",
@@ -122,12 +123,7 @@ export default async function PricingPage() {
                 </p>
               </div>
 
-              <div className="mb-5">
-                <div className="flex items-baseline gap-2 mb-1">
-                  <span className="text-4xl font-bold text-text">{formatPrice(lifetime.price)}</span>
-                </div>
-                <p className="text-sm text-gold font-medium">One-time payment · Lifetime access</p>
-              </div>
+              <LifetimePriceDisplay basePrice={lifetime.price} />
 
               <ul className="space-y-2.5 mb-7 flex-1">
                 {lifetime.features.map((f) => (

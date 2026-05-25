@@ -42,7 +42,7 @@ export const PLANS = {
     id: "complete",
     name: "Complete Seerah",
     subtitle: "Full access to the structured 100-part Seerah journey",
-    price: 4900, // $49.00 lifetime access
+    price: 9900, // $99.00 lifetime access
     features: [
       "All 100 Seerah parts",
       "Video lessons",

@@ -50,6 +50,7 @@ export default async function DeenRespondsStatsPage({
       clicksThisMonth={clicksThisMonth}
       totalPurchases={purchases.length}
       totalRevenueCents={totalRevenueCents}
+      commissionCents={purchases.length * 500}
       lastUpdated={now}
     />
   );

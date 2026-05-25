@@ -100,7 +100,7 @@ interface GiftDetails {
 interface GiftPromoState {
   code: string;
   displayLabel: string;
-  discountPercent: number;
+  discountAmount: number;
   estimatedFinalPrice: number;
 }
 
@@ -146,11 +146,11 @@ export default function GiftCheckoutClient({ purchaserEmail, purchaserName }: Gi
       clearCreatorPromo();
       return;
     }
-    const estimatedFinal = Math.round(plan.price * (1 - config.discountPercent / 100));
+    const estimatedFinal = plan.price - config.discountAmount;
     setGiftPromo({
       code: config.code,
       displayLabel: config.displayLabel,
-      discountPercent: config.discountPercent,
+      discountAmount: config.discountAmount,
       estimatedFinalPrice: estimatedFinal,
     });
   }, [plan.price]);
@@ -319,7 +319,7 @@ export default function GiftCheckoutClient({ purchaserEmail, purchaserName }: Gi
                 </div>
                 {giftPromo && (
                   <div className="flex items-center justify-between text-sm text-gold">
-                    <span>Creator discount ({giftPromo.discountPercent}% off)</span>
+                    <span>Creator discount (${giftPromo.discountAmount / 100} off)</span>
                     <span>−{formatPrice(plan.price - displayPrice)}</span>
                   </div>
                 )}

@@ -8,7 +8,8 @@
 
 export interface CreatorPromoConfig {
   code: string;
-  discountPercent: number;
+  /** Fixed discount amount in cents (e.g. 2000 = $20 off). */
+  discountAmount: number;
   /** Human-readable label shown in the UI banner. */
   displayLabel: string;
   /** Creator name used for Stripe metadata / analytics. */
@@ -22,8 +23,8 @@ export interface CreatorPromoConfig {
 export const CREATOR_PROMO_CODES: Record<string, CreatorPromoConfig> = {
   KORRA20: {
     code: "KORRA20",
-    discountPercent: 20,
-    displayLabel: "KORRA20 — 20% off lifetime access",
+    discountAmount: 2000,
+    displayLabel: "KORRA20 — $20 off lifetime access",
     creator: "korra",
     utm_source: "tiktok",
     utm_medium: "influencer",
@@ -32,8 +33,8 @@ export const CREATOR_PROMO_CODES: Record<string, CreatorPromoConfig> = {
   },
   ITACHI20: {
     code: "ITACHI20",
-    discountPercent: 20,
-    displayLabel: "ITACHI20 — 20% off lifetime access",
+    discountAmount: 2000,
+    displayLabel: "ITACHI20 — $20 off lifetime access",
     creator: "itachi",
     utm_source: "tiktok",
     utm_medium: "influencer",
@@ -42,8 +43,8 @@ export const CREATOR_PROMO_CODES: Record<string, CreatorPromoConfig> = {
   },
   DEEN20: {
     code: "DEEN20",
-    discountPercent: 20,
-    displayLabel: "DEEN20 — 20% off lifetime access",
+    discountAmount: 2000,
+    displayLabel: "DEEN20 — $20 off lifetime access",
     creator: "deenresponds",
     utm_source: "youtube",
     utm_medium: "influencer",
@@ -52,8 +53,8 @@ export const CREATOR_PROMO_CODES: Record<string, CreatorPromoConfig> = {
   },
   ORTHODOX20: {
     code: "ORTHODOX20",
-    discountPercent: 20,
-    displayLabel: "ORTHODOX20 — 20% off lifetime access",
+    discountAmount: 2000,
+    displayLabel: "ORTHODOX20 — $20 off lifetime access",
     creator: "theorthodoxmuslim",
     utm_source: "youtube",
     utm_medium: "influencer",

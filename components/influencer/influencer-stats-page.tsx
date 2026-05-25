@@ -6,6 +6,7 @@ interface InfluencerStatsPageProps {
   clicksThisMonth: number;
   totalPurchases: number;
   totalRevenueCents: number;
+  commissionCents: number;
   lastUpdated: Date;
 }
 
@@ -17,6 +18,7 @@ export function InfluencerStatsPage({
   clicksThisMonth,
   totalPurchases,
   totalRevenueCents,
+  commissionCents,
   lastUpdated,
 }: InfluencerStatsPageProps) {
   const conversionRate =
@@ -25,6 +27,11 @@ export function InfluencerStatsPage({
       : "0.00";
 
   const revenueFormatted = (totalRevenueCents / 100).toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+  });
+
+  const commissionFormatted = (commissionCents / 100).toLocaleString("en-US", {
     style: "currency",
     currency: "USD",
   });
@@ -53,6 +60,15 @@ export function InfluencerStatsPage({
               {promoCode}
             </span>
           </p>
+        </div>
+
+        {/* Commission */}
+        <div className="mb-8 border border-amber-500/30 rounded-xl p-5 bg-amber-500/5">
+          <p className="text-xs font-semibold text-amber-500/70 uppercase tracking-wider mb-1">
+            Your Commission
+          </p>
+          <p className="text-4xl font-bold text-amber-400">{commissionFormatted}</p>
+          <p className="text-xs text-zinc-500 mt-1">$5 per sale · {totalPurchases} sale{totalPurchases !== 1 ? "s" : ""}</p>
         </div>
 
         {/* Metrics */}

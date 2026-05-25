@@ -1,15 +1,15 @@
 /**
  * Pricing configuration for Complete Seerah lifetime access.
  *
- * $49 is the current launch price. All server-side checkout and all frontend
- * displays use 4900 cents.
+ * $99 is the current price. All server-side checkout and all frontend
+ * displays use 9900 cents.
  */
 
-/** Lifetime access price in cents: $49. */
-export const EARLY_ACCESS_PRICE = 4900;
+/** Lifetime access price in cents: $99. */
+export const EARLY_ACCESS_PRICE = 9900;
 
 /** Kept for import compatibility — same value as EARLY_ACCESS_PRICE. */
-export const REGULAR_PRICE = 4900;
+export const REGULAR_PRICE = 9900;
 
 /**
  * Early access ended — always returns false.
@@ -27,9 +27,9 @@ export function isEarlyAccessActive(): boolean {
   return false;
 }
 
-/** Returns the current lifetime access price in cents: always $49. */
+/** Returns the current lifetime access price in cents: always $99. */
 export function getBasePrice(): number {
-  return 4900;
+  return 9900;
 }
 
 /**

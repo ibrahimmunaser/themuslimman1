@@ -9,7 +9,7 @@ export async function GET() {
   prisma.influencerClick.create({ data: { creator: "theorthodoxmuslim" } }).catch(() => {});
 
   return NextResponse.redirect(
-    `${APP_URL}/?utm_source=youtube&utm_medium=influencer&utm_campaign=seerah_launch&utm_content=theorthodoxmuslim&promo=ORTHODOX20`,
+    `${APP_URL}/pricing?utm_source=youtube&utm_medium=influencer&utm_campaign=seerah_launch&utm_content=theorthodoxmuslim&promo=ORTHODOX20`,
     { status: 302 }
   );
 }
