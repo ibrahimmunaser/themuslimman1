@@ -71,7 +71,7 @@ export const CREATOR_PROMO_STORAGE_KEY = "creator_promo";
  * browser session (e.g. a test visit to ?promo=X) from bleeding into a new
  * user's signup flow on the same device.
  */
-const PROMO_TTL_MS = 48 * 60 * 60 * 1000;
+const PROMO_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
 interface StoredPromo {
   code: string;
