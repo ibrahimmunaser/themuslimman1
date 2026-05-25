@@ -64,15 +64,15 @@ export function DidYouKnowWidget() {
 
   return (
     <div className="mx-3 mb-3 mt-2">
-      <div className="rounded-xl border border-gold/30 bg-[#1A1409] p-3 overflow-hidden relative">
+      <div className="rounded-xl border border-gold/30 bg-[#1A1409] p-4 overflow-hidden relative">
         {/* Subtle left accent bar */}
-        <div className="absolute left-0 top-3 bottom-3 w-[2px] rounded-full bg-gold/50" />
+        <div className="absolute left-0 top-4 bottom-4 w-[2px] rounded-full bg-gold/50" />
 
-        <div className="pl-3">
+        <div className="pl-3.5">
           {/* Header */}
-          <div className="flex items-center gap-1.5 mb-2">
-            <span className="text-gold-light text-xs leading-none">✦</span>
-            <span className="text-[10px] font-bold text-gold-light uppercase tracking-widest">Did You Know?</span>
+          <div className="flex items-center gap-2 mb-2.5">
+            <span className="text-gold-light text-sm leading-none">✦</span>
+            <span className="text-[11px] font-bold text-gold-light uppercase tracking-widest">Did You Know?</span>
           </div>
 
           {/* Fact text — fades between facts */}
@@ -82,14 +82,14 @@ export function DidYouKnowWidget() {
               transition: `opacity ${FADE_DURATION_MS}ms ease-in-out`,
             }}
           >
-            <p className="text-[11px] text-[#E8E4F0] leading-relaxed line-clamp-4">
+            <p className="text-xs text-[#E8E4F0] leading-relaxed line-clamp-5">
               {fact.clean_fact}
             </p>
-            <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-              <span className="inline-block px-1.5 py-0.5 rounded text-[9px] font-semibold bg-gold/20 text-gold border border-gold/30 leading-none">
+            <div className="flex items-center gap-1.5 mt-2.5 flex-wrap">
+              <span className="inline-block px-2 py-0.5 rounded text-[10px] font-semibold bg-gold/20 text-gold border border-gold/30 leading-none">
                 {fact.category}
               </span>
-              <span className="text-[9px] text-[#9E9AAC]">· {shortRef}</span>
+              <span className="text-[10px] text-[#9E9AAC]">· {shortRef}</span>
             </div>
           </div>
         </div>
