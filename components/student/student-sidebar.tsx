@@ -45,6 +45,23 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
   const activeTabParam = searchParams.get("tab");
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  // Mirror the active tab in local state so it updates in sync with CourseDashboardTabs
+  const [activeTab, setActiveTab] = useState<string>(activeTabParam ?? "home");
+
+  // Keep local state in sync with URL (browser back/forward)
+  useEffect(() => {
+    setActiveTab(activeTabParam ?? "home");
+  }, [activeTabParam]);
+
+  // Update instantly when the sidebar (or anything else) fires seerah:switchTab
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const tabId = (e as CustomEvent<string>).detail;
+      setActiveTab(tabId);
+    };
+    window.addEventListener("seerah:switchTab", handler);
+    return () => window.removeEventListener("seerah:switchTab", handler);
+  }, []);
 
   // Listen for Account-tab trigger dispatched by CourseDashboardTabs
   useEffect(() => {
@@ -71,11 +88,10 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
   ];
 
   const isActive = (item: MenuItem) => {
-    // Tab-based /seerah items: match pathname AND the current tab param
+    // Tab-based /seerah items: match pathname AND the synced local tab state
     if (item.tabId !== undefined) {
       if (pathname !== "/seerah") return false;
-      const currentTab = activeTabParam ?? "home";
-      return item.tabId === currentTab;
+      return item.tabId === activeTab;
     }
     // Standard page links
     if (item.href === "/learn") return pathname === "/learn";
