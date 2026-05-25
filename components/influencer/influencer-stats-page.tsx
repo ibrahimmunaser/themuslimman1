@@ -75,7 +75,6 @@ export function InfluencerStatsPage({
         <div className="space-y-3">
           <StatRow label="Clicks" value={totalClicks.toLocaleString()} />
           <StatRow label="Purchases" value={totalPurchases.toLocaleString()} />
-          <StatRow label="Revenue attributed" value={revenueFormatted} accent />
           <StatRow label="Conversion rate" value={`${conversionRate}%`} />
         </div>
 
@@ -105,9 +104,6 @@ export function InfluencerStatsPage({
         {/* Footer */}
         <p className="text-xs text-zinc-700 text-center mt-10">
           Last updated: {lastUpdatedFormatted}
-        </p>
-        <p className="text-xs text-zinc-800 text-center mt-1">
-          Revenue reflects actual amounts paid after discounts.
         </p>
       </div>
     </div>
