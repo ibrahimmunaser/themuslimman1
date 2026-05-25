@@ -2,6 +2,7 @@ interface Purchase {
   id: string;
   amount: number;
   createdAt: Date;
+  userEmail: string;
 }
 
 interface InfluencerStatsPageProps {
@@ -87,38 +88,41 @@ export function InfluencerStatsPage({
               <p className="text-zinc-700 text-xs mt-1">Sales using your code will appear here.</p>
             </div>
           ) : (
-            <div className="border border-zinc-800 rounded-xl overflow-hidden">
-              <table className="w-full text-sm">
+            <div className="border border-zinc-800 rounded-xl overflow-hidden overflow-x-auto">
+              <table className="w-full text-sm min-w-[560px]">
                 <thead>
                   <tr className="border-b border-zinc-800 bg-zinc-900/60">
-                    <th className="text-left px-5 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider">#</th>
-                    <th className="text-left px-5 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Date</th>
-                    <th className="text-right px-5 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Amount Paid</th>
-                    <th className="text-right px-5 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Your Cut</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider">#</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Date</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Time</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Email</th>
+                    <th className="text-right px-4 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Your Cut</th>
                   </tr>
                 </thead>
                 <tbody>
                   {purchases.map((p, i) => {
+                    const d = new Date(p.createdAt);
                     const date = new Intl.DateTimeFormat("en-US", {
                       month: "short",
                       day: "numeric",
                       year: "numeric",
-                    }).format(new Date(p.createdAt));
-
-                    const amountFormatted = (p.amount / 100).toLocaleString("en-US", {
-                      style: "currency",
-                      currency: "USD",
-                    });
+                    }).format(d);
+                    const time = new Intl.DateTimeFormat("en-US", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      timeZoneName: "short",
+                    }).format(d);
 
                     return (
                       <tr
                         key={p.id}
                         className="border-b border-zinc-800/60 last:border-0 bg-zinc-900/20 hover:bg-zinc-900/50 transition-colors"
                       >
-                        <td className="px-5 py-4 text-zinc-600 text-xs">{i + 1}</td>
-                        <td className="px-5 py-4 text-zinc-300">{date}</td>
-                        <td className="px-5 py-4 text-right text-white font-medium">{amountFormatted}</td>
-                        <td className="px-5 py-4 text-right text-amber-400 font-semibold">$5.00</td>
+                        <td className="px-4 py-4 text-zinc-600 text-xs">{i + 1}</td>
+                        <td className="px-4 py-4 text-zinc-300 whitespace-nowrap">{date}</td>
+                        <td className="px-4 py-4 text-zinc-500 text-xs whitespace-nowrap">{time}</td>
+                        <td className="px-4 py-4 text-zinc-300 font-mono text-xs">{p.userEmail}</td>
+                        <td className="px-4 py-4 text-right text-amber-400 font-semibold whitespace-nowrap">$5.00</td>
                       </tr>
                     );
                   })}

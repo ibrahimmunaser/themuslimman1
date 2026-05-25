@@ -26,7 +26,7 @@ export default async function TheOrthodoxMuslimStatsPage({
     prisma.influencerClick.count({ where: { creator: CREATOR } }),
     prisma.purchase.findMany({
       where: { creator: CREATOR, status: "succeeded" },
-      select: { id: true, amount: true, createdAt: true },
+      select: { id: true, amount: true, createdAt: true, user: { select: { email: true } } },
       orderBy: { createdAt: "desc" },
     }),
   ]);
@@ -39,7 +39,7 @@ export default async function TheOrthodoxMuslimStatsPage({
       totalPurchases={purchases.length}
       commissionCents={purchases.length * 500}
       lastUpdated={now}
-      purchases={purchases}
+      purchases={purchases.map(p => ({ ...p, userEmail: p.user.email }))}
     />
   );
 }
