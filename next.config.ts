@@ -2,6 +2,10 @@ import type { NextConfig } from "next";
 import path from "path";
 
 const nextConfig: NextConfig = {
+  // Expose R2 public base URL to client-side code so components can build direct CDN URLs
+  env: {
+    NEXT_PUBLIC_R2_PUBLIC_URL: process.env.R2_PUBLIC_URL ?? "",
+  },
   turbopack: {
     root: path.resolve(__dirname),
   },

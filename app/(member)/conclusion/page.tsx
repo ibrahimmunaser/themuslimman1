@@ -2,7 +2,7 @@ import { requireAuth } from "@/lib/auth";
 import Link from "next/link";
 import { ChevronRight, Star } from "lucide-react";
 import { VideoPlayer } from "@/components/part/video-player";
-import { videoExists } from "@/lib/files";
+import { getPartAssetUrls } from "@/lib/files";
 
 export const metadata = {
   title: "The Conclusion — Seerah Course",
@@ -13,8 +13,8 @@ export const metadata = {
 export default async function ConclusionPage() {
   await requireAuth();
 
-  const hasVideo = await videoExists(101);
-  const videoUrl = hasVideo ? "/api/media/video/101" : null;
+  const assetUrls = await getPartAssetUrls(101);
+  const videoUrl = assetUrls.videoUrl ?? null;
 
   return (
     <div className="min-h-full">

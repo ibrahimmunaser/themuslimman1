@@ -9,6 +9,15 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ part: string }> }
 ) {
+  // In production all audio is served via direct Cloudflare R2 public URLs.
+  // This proxy route exists only for local development (no R2 configured).
+  if (process.env.NODE_ENV === "production") {
+    return new NextResponse(
+      "Deprecated: use the direct R2 public URL returned by getPartAssetUrls()",
+      { status: 410 }
+    );
+  }
+
   const { part } = await params;
   const partNum = parseInt(part, 10);
   if (isNaN(partNum)) return new NextResponse("Bad request", { status: 400 });

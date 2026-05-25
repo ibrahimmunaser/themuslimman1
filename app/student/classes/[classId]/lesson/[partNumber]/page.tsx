@@ -16,7 +16,7 @@ import {
   readFlashcards,
   getPartAssetUrls,
 } from "@/lib/files";
-import { getR2AssetUrl } from "@/lib/r2";
+import { getR2PublicUrl, getR2AssetUrl } from "@/lib/r2";
 import {
   ArrowLeft,
   ChevronLeft,
@@ -121,19 +121,20 @@ export default async function StudentLessonPage({ params }: Props) {
       flashcards: flashcards ?? undefined,
       slides: slideFiles,
       infographics: {
+        // R2 keys always contain "/" (folder/filename); local filenames never do
         concise: infConcise
-          ? (infConcise.includes("infographics/") 
-              ? getR2AssetUrl(infConcise) 
+          ? (infConcise.includes("/")
+              ? (getR2PublicUrl(infConcise) ?? getR2AssetUrl(infConcise))
               : `/seerah-media/Infographics/Concise/${infConcise}`)
           : undefined,
         standard: infStandard
-          ? (infStandard.includes("infographics/") 
-              ? getR2AssetUrl(infStandard) 
+          ? (infStandard.includes("/")
+              ? (getR2PublicUrl(infStandard) ?? getR2AssetUrl(infStandard))
               : `/seerah-media/Infographics/Standard/${infStandard}`)
           : undefined,
         bentoGrid: infBento
-          ? (infBento.includes("infographics/") 
-              ? getR2AssetUrl(infBento) 
+          ? (infBento.includes("/")
+              ? (getR2PublicUrl(infBento) ?? getR2AssetUrl(infBento))
               : `/seerah-media/Infographics/Bento Grid/${infBento}`)
           : undefined,
       },

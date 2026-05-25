@@ -567,6 +567,7 @@ model Purchase {
   @@index([status])
   @@index([createdAt])
   @@index([creator])
+  @@index([promoCode])
 }
 
 // Progress tracking for direct-to-consumer purchases

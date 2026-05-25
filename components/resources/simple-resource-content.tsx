@@ -13,13 +13,21 @@ import { trackAssetOpened } from "@/app/actions/progress";
 import type { FlashcardSet } from "@/lib/types";
 import { getCachedResource, setCachedResource, prefetchResource } from "@/lib/resource-cache";
 
+/** Build a direct Cloudflare R2 CDN URL for a known key. Falls back to proxy route only if public URL is unavailable. */
+function r2Url(key: string): string {
+  const base = process.env.NEXT_PUBLIC_R2_PUBLIC_URL;
+  if (base) return `${base}/${key}`;
+  return `/api/r2/asset?key=${encodeURIComponent(key)}`;
+}
+
 /** Derive the pre-generated WebP URL from an R2 PNG URL (or return null for local paths). */
 function webpVariant(url: string): string | null {
   if (!url.startsWith("http")) return null; // local dev path — skip
-  // For R2 assets via /api/r2/asset?key=..., extract the key and add -medium.webp
+  // For direct R2 public URLs: replace .png with -medium.webp
+  if (!url.includes("/api/r2/")) return url.replace(/\.png$/i, "-medium.webp");
+  // Legacy proxy URL: /api/r2/asset?key=... — rewrite key to WebP variant
   const match = url.match(/key=([^&]+)/);
   if (!match) return url.replace(/\.png$/i, "-medium.webp");
-  
   const key = decodeURIComponent(match[1]);
   const webpKey = key.replace(/\.png$/i, "-medium.webp");
   return `/api/r2/asset?key=${encodeURIComponent(webpKey)}`;
@@ -189,17 +197,14 @@ export function SimpleResourceContent({
   useEffect(() => {
     if (selectedPart && resourceType === "mindmap") {
       setIsLoadingResource(true);
-      // Mindmaps: "mindmaps/Part N - Mindmap.png"
-      const r2Key = `mindmaps/Part ${selectedPart.partNumber} - Mindmap.png`;
-      const url = `/api/r2/asset?key=${encodeURIComponent(r2Key)}`;
+      const url = r2Url(`mindmaps/Part ${selectedPart.partNumber} - Mindmap.png`);
       setResourceUrl(url);
       setIsLoadingResource(false);
     } else if (selectedPart && resourceType === "infographic") {
       setIsLoadingResource(true);
-      // Prepare all three infographic URLs
-      const bentoUrl = `/api/r2/asset?key=${encodeURIComponent(`Infographics-Bento-Grid/Part ${selectedPart.partNumber}.png`)}`;
-      const conciseUrl = `/api/r2/asset?key=${encodeURIComponent(`Infographics-Concise/Part ${selectedPart.partNumber} - Infographic.png`)}`;
-      const standardUrl = `/api/r2/asset?key=${encodeURIComponent(`Infographics-Standard/Part ${selectedPart.partNumber} - Infographic.png`)}`;
+      const bentoUrl   = r2Url(`Infographics-Bento-Grid/Part ${selectedPart.partNumber}.png`);
+      const conciseUrl = r2Url(`Infographics-Concise/Part ${selectedPart.partNumber} - Infographic.png`);
+      const standardUrl = r2Url(`Infographics-Standard/Part ${selectedPart.partNumber} - Infographic.png`);
       
       const urls = {
         bentoGrid: bentoUrl,
