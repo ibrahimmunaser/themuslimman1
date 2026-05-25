@@ -64,28 +64,33 @@ export function DidYouKnowWidget() {
 
   return (
     <div className="mx-3 mb-3 mt-2">
-      <div className="rounded-xl border border-gold/15 bg-gold/5 p-3 overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center gap-1.5 mb-2">
-          <span className="text-gold text-xs">✦</span>
-          <span className="text-[10px] font-semibold text-gold uppercase tracking-wider">Did You Know?</span>
-        </div>
+      <div className="rounded-xl border border-gold/30 bg-[#1A1409] p-3 overflow-hidden relative">
+        {/* Subtle left accent bar */}
+        <div className="absolute left-0 top-3 bottom-3 w-[2px] rounded-full bg-gold/50" />
 
-        {/* Fact text — fades between facts */}
-        <div
-          style={{
-            opacity: visible ? 1 : 0,
-            transition: `opacity ${FADE_DURATION_MS}ms ease-in-out`,
-          }}
-        >
-          <p className="text-xs text-text-secondary leading-relaxed line-clamp-4">
-            {fact.clean_fact}
-          </p>
-          <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-            <span className="inline-block px-1.5 py-0.5 rounded text-[9px] font-semibold bg-gold/10 text-gold border border-gold/20 leading-none">
-              {fact.category}
-            </span>
-            <span className="text-[9px] text-text-muted">· {shortRef}</span>
+        <div className="pl-3">
+          {/* Header */}
+          <div className="flex items-center gap-1.5 mb-2">
+            <span className="text-gold-light text-xs leading-none">✦</span>
+            <span className="text-[10px] font-bold text-gold-light uppercase tracking-widest">Did You Know?</span>
+          </div>
+
+          {/* Fact text — fades between facts */}
+          <div
+            style={{
+              opacity: visible ? 1 : 0,
+              transition: `opacity ${FADE_DURATION_MS}ms ease-in-out`,
+            }}
+          >
+            <p className="text-[11px] text-[#E8E4F0] leading-relaxed line-clamp-4">
+              {fact.clean_fact}
+            </p>
+            <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+              <span className="inline-block px-1.5 py-0.5 rounded text-[9px] font-semibold bg-gold/20 text-gold border border-gold/30 leading-none">
+                {fact.category}
+              </span>
+              <span className="text-[9px] text-[#9E9AAC]">· {shortRef}</span>
+            </div>
           </div>
         </div>
       </div>

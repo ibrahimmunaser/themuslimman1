@@ -243,10 +243,10 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
             </div>
           </div>
         </nav>
-      </div>
 
-      {/* Did You Know widget — hidden when sidebar is collapsed */}
-      {!collapsed && <DidYouKnowWidget />}
+        {/* Did You Know widget — directly below Sign Out, hidden when collapsed */}
+        {!collapsed && <DidYouKnowWidget />}
+      </div>
     </>
   );
 
