@@ -15,7 +15,7 @@ import {
   readFlashcards,
   getPartAssetUrls,
 } from "@/lib/files";
-import { getR2PublicUrl, getR2AssetUrl } from "@/lib/r2";
+import { getR2AssetUrl, generateSignedR2Url, IMAGE_URL_EXPIRY } from "@/lib/r2";
 import { ChevronLeft, ChevronRight, Clock, BookOpen, Star } from "lucide-react";
 import { PartTabs } from "@/components/part/part-tabs";
 import { CourseContentsDrawer } from "@/components/part/course-contents-drawer";
@@ -99,24 +99,22 @@ export default async function PartPage(props: { params: Promise<{ partId: string
       quiz: quiz ?? undefined,
       flashcards: flashcards ?? undefined,
       slides: slideFiles,
-      infographics: {
-        // R2 keys always contain "/" (folder/filename); local filenames never do
-        concise: infConcise
-          ? (infConcise.includes("/")
-              ? (getR2PublicUrl(infConcise) ?? getR2AssetUrl(infConcise))
-              : `/seerah-media/Infographics/Concise/${infConcise}`)
-          : undefined,
-        standard: infStandard
-          ? (infStandard.includes("/")
-              ? (getR2PublicUrl(infStandard) ?? getR2AssetUrl(infStandard))
-              : `/seerah-media/Infographics/Standard/${infStandard}`)
-          : undefined,
-        bentoGrid: infBento
-          ? (infBento.includes("/")
-              ? (getR2PublicUrl(infBento) ?? getR2AssetUrl(infBento))
-              : `/seerah-media/Infographics/Bento Grid/${infBento}`)
-          : undefined,
-      },
+      infographics: await (async () => {
+        // R2 keys contain "/" — sign them. Local filenames don't contain "/" — use local path.
+        const sign = (key: string | null, localFolder: string) =>
+          key
+            ? key.includes("/")
+              ? generateSignedR2Url(key, IMAGE_URL_EXPIRY)
+              : Promise.resolve(`/seerah-media/Infographics/${localFolder}/${key}`)
+            : Promise.resolve(undefined);
+
+        const [concise, standard, bentoGrid] = await Promise.all([
+          sign(infConcise, "Concise"),
+          sign(infStandard, "Standard"),
+          sign(infBento, "Bento Grid"),
+        ]);
+        return { concise, standard, bentoGrid };
+      })(),
     },
   };
 

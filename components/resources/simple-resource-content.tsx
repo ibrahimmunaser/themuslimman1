@@ -13,24 +13,33 @@ import { trackAssetOpened } from "@/app/actions/progress";
 import type { FlashcardSet } from "@/lib/types";
 import { getCachedResource, setCachedResource, prefetchResource } from "@/lib/resource-cache";
 
-/** Build a direct Cloudflare R2 CDN URL for a known key. Falls back to proxy route only if public URL is unavailable. */
-function r2Url(key: string): string {
-  const base = process.env.NEXT_PUBLIC_R2_PUBLIC_URL;
-  if (base) return `${base}/${key}`;
-  return `/api/r2/asset?key=${encodeURIComponent(key)}`;
+/**
+ * Fetch a short-lived signed R2 URL for a paid asset from the server.
+ * The browser will load the file directly from Cloudflare R2 using the returned URL.
+ */
+async function fetchSignedUrl(key: string, partNumber: number): Promise<string> {
+  const res = await fetch(
+    `/api/assets/signed-url?key=${encodeURIComponent(key)}&partNumber=${partNumber}`
+  );
+  if (!res.ok) throw new Error(`Failed to sign URL for ${key}: ${res.status}`);
+  const data = await res.json();
+  return data.url as string;
 }
 
-/** Derive the pre-generated WebP URL from an R2 PNG URL (or return null for local paths). */
+/** Derive the pre-generated WebP URL from an R2 PNG URL (or return null). */
 function webpVariant(url: string): string | null {
-  if (!url.startsWith("http")) return null; // local dev path — skip
-  // For direct R2 public URLs: replace .png with -medium.webp
-  if (!url.includes("/api/r2/")) return url.replace(/\.png$/i, "-medium.webp");
-  // Legacy proxy URL: /api/r2/asset?key=... — rewrite key to WebP variant
-  const match = url.match(/key=([^&]+)/);
-  if (!match) return url.replace(/\.png$/i, "-medium.webp");
-  const key = decodeURIComponent(match[1]);
-  const webpKey = key.replace(/\.png$/i, "-medium.webp");
-  return `/api/r2/asset?key=${encodeURIComponent(webpKey)}`;
+  if (!url.startsWith("http")) return null;
+  // Presigned URLs already contain HMAC signatures — WebP key needs its own signature
+  if (url.includes("X-Amz-Signature") || url.includes("X-Amz-Algorithm")) return null;
+  // Proxy URL: /api/r2/asset?key=...
+  if (url.includes("/api/r2/")) {
+    const match = url.match(/key=([^&]+)/);
+    if (!match) return url.replace(/\.png$/i, "-medium.webp");
+    const key = decodeURIComponent(match[1]);
+    return `/api/r2/asset?key=${encodeURIComponent(key.replace(/\.png$/i, "-medium.webp"))}`;
+  }
+  // Direct public CDN URL
+  return url.replace(/\.png$/i, "-medium.webp");
 }
 
 /** Fast-loading image component with WebP optimization */
@@ -197,45 +206,46 @@ export function SimpleResourceContent({
   useEffect(() => {
     if (selectedPart && resourceType === "mindmap") {
       setIsLoadingResource(true);
-      const url = r2Url(`mindmaps/Part ${selectedPart.partNumber} - Mindmap.png`);
-      setResourceUrl(url);
-      setIsLoadingResource(false);
+      const key = `mindmaps/Part ${selectedPart.partNumber} - Mindmap.png`;
+      fetchSignedUrl(key, selectedPart.partNumber)
+        .then((url) => {
+          setResourceUrl(url);
+          setIsLoadingResource(false);
+        })
+        .catch((err) => {
+          console.error("Failed to load mindmap:", err);
+          setIsLoadingResource(false);
+        });
     } else if (selectedPart && resourceType === "infographic") {
       setIsLoadingResource(true);
-      const bentoUrl   = r2Url(`Infographics-Bento-Grid/Part ${selectedPart.partNumber}.png`);
-      const conciseUrl = r2Url(`Infographics-Concise/Part ${selectedPart.partNumber} - Infographic.png`);
-      const standardUrl = r2Url(`Infographics-Standard/Part ${selectedPart.partNumber} - Infographic.png`);
-      
-      const urls = {
-        bentoGrid: bentoUrl,
-        concise: conciseUrl,
-        standard: standardUrl
-      };
-      setInfographicUrls(urls);
-      setResourceUrl(bentoUrl);
-      setInfographicType("bentoGrid");
-      
-      // Preload all three infographic types immediately for instant switching
-      const preloadImage = (url: string) => {
-        const webpUrl = webpVariant(url);
-        const img = new Image();
-        img.src = webpUrl || url;
-        img.onload = () => {
-          setPreloadedImages(prev => new Set(prev).add(url));
-        };
-        // Also preload PNG fallback
-        if (webpUrl && webpUrl !== url) {
-          const pngImg = new Image();
-          pngImg.src = url;
-        }
-      };
-      
-      // Preload all types
-      preloadImage(bentoUrl);
-      preloadImage(conciseUrl);
-      preloadImage(standardUrl);
-      
-      setIsLoadingResource(false);
+      const n = selectedPart.partNumber;
+      Promise.all([
+        fetchSignedUrl(`Infographics-Bento-Grid/Part ${n}.png`, n),
+        fetchSignedUrl(`Infographics-Concise/Part ${n} - Infographic.png`, n),
+        fetchSignedUrl(`Infographics-Standard/Part ${n} - Infographic.png`, n),
+      ])
+        .then(([bentoUrl, conciseUrl, standardUrl]) => {
+          const urls = { bentoGrid: bentoUrl, concise: conciseUrl, standard: standardUrl };
+          setInfographicUrls(urls);
+          setResourceUrl(bentoUrl);
+          setInfographicType("bentoGrid");
+
+          // Preload all three types immediately for instant tab-switching
+          const preloadImage = (url: string) => {
+            const img = new Image();
+            img.src = url;
+            img.onload = () => setPreloadedImages((prev) => new Set(prev).add(url));
+          };
+          preloadImage(bentoUrl);
+          preloadImage(conciseUrl);
+          preloadImage(standardUrl);
+
+          setIsLoadingResource(false);
+        })
+        .catch((err) => {
+          console.error("Failed to load infographics:", err);
+          setIsLoadingResource(false);
+        });
     }
   }, [selectedPart, resourceType]);
 

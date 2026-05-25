@@ -14,6 +14,9 @@ import {
   r2GetAudioKey,
   getR2AssetUrl,
   getR2PublicUrl,
+  generateSignedR2Url,
+  VIDEO_URL_EXPIRY,
+  IMAGE_URL_EXPIRY,
 } from "./r2";
 import { PART_CONTENT } from "./part-content-data";
 
@@ -208,11 +211,12 @@ export async function getSlideFiles(
 ): Promise<string[]> {
   if (USE_R2) {
     const keys = await r2GetSlideKeys(partNum, type);
-    // Return R2 public URLs for images (Next.js Image needs these)
-    return keys.map((key) => {
-      const publicUrl = getR2PublicUrl(key);
-      return publicUrl || getR2AssetUrl(key); // Fallback to API route if no public URL
-    });
+    // Part 1 is free — use public URLs. All other parts use short-lived signed URLs.
+    // Presigning is a local HMAC operation; no network round-trip per key.
+    if (partNum === 1) {
+      return keys.map((key) => getR2PublicUrl(key) || getR2AssetUrl(key));
+    }
+    return Promise.all(keys.map((key) => generateSignedR2Url(key, IMAGE_URL_EXPIRY)));
   }
 
   let folder: string;
@@ -295,7 +299,7 @@ export async function audioExists(partNum: number): Promise<boolean> {
  */
 export async function getPartAssetUrls(partNum: number) {
   if (!USE_R2) {
-    // Return local paths
+    // Local dev without R2: use local proxy routes
     return {
       videoUrl: (await videoExists(partNum)) ? `/api/media/video/${partNum}` : undefined,
       audioUrl: (await audioExists(partNum)) ? `/api/media/audio/${partNum}` : undefined,
@@ -305,17 +309,28 @@ export async function getPartAssetUrls(partNum: number) {
     };
   }
 
-  // Get R2 keys
   const [videoKey, audioKey, mindmapKey] = await Promise.all([
     r2GetVideoKey(partNum),
     r2GetAudioKey(partNum),
     r2GetMindmapKey(partNum),
   ]);
 
-  return {
-    // Use public URLs for better performance (direct CDN access)
-    videoUrl: videoKey ? getR2PublicUrl(videoKey) : undefined,
-    audioUrl: audioKey ? getR2PublicUrl(audioKey) : undefined,
-    mindmapUrl: mindmapKey ? getR2PublicUrl(mindmapKey) : undefined,
-  };
+  // Part 1 is intentionally free — public URLs are acceptable
+  if (partNum === 1) {
+    return {
+      videoUrl: videoKey ? getR2PublicUrl(videoKey) ?? undefined : undefined,
+      audioUrl: audioKey ? getR2PublicUrl(audioKey) ?? undefined : undefined,
+      mindmapUrl: mindmapKey ? getR2PublicUrl(mindmapKey) ?? undefined : undefined,
+    };
+  }
+
+  // Parts 2–101: generate short-lived signed URLs so files cannot be shared directly.
+  // Signing is a local crypto operation — no extra network calls.
+  const [videoUrl, audioUrl, mindmapUrl] = await Promise.all([
+    videoKey ? generateSignedR2Url(videoKey, VIDEO_URL_EXPIRY) : Promise.resolve(undefined),
+    audioKey ? generateSignedR2Url(audioKey, VIDEO_URL_EXPIRY) : Promise.resolve(undefined),
+    mindmapKey ? generateSignedR2Url(mindmapKey, IMAGE_URL_EXPIRY) : Promise.resolve(undefined),
+  ]);
+
+  return { videoUrl, audioUrl, mindmapUrl };
 }

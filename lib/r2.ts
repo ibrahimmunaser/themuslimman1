@@ -1,4 +1,5 @@
 import { S3Client, GetObjectCommand, ListObjectsV2Command, HeadObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 // ─── R2 Client Configuration ──────────────────────────────────────────────────
 
@@ -20,6 +21,40 @@ const r2Client = new S3Client({
     secretAccessKey: R2_SECRET_ACCESS_KEY || "",
   },
 });
+
+// ─── Signed URL Expiry Constants ─────────────────────────────────────────────
+
+/** 4 hours — long enough to stream an entire video/audio file without re-signing */
+export const VIDEO_URL_EXPIRY = 4 * 60 * 60;
+
+/** 2 hours — for images (infographics, mindmaps, slides) */
+export const IMAGE_URL_EXPIRY = 2 * 60 * 60;
+
+/** 10 minutes — general-purpose default */
+export const DEFAULT_URL_EXPIRY = 10 * 60;
+
+// ─── Signed URL Generation ────────────────────────────────────────────────────
+
+/**
+ * Generate a short-lived presigned URL for a private R2 object.
+ *
+ * The URL grants time-limited GET access directly from Cloudflare R2 — the
+ * browser fetches the file from R2, NOT from Vercel. Presigning is a local
+ * HMAC-SHA256 crypto operation; it does NOT make a network request to R2.
+ *
+ * @param key            - R2 object key (e.g. "videos/Part 5.mp4")
+ * @param expiresInSeconds - How long the URL remains valid (default 10 min)
+ */
+export async function generateSignedR2Url(
+  key: string,
+  expiresInSeconds = DEFAULT_URL_EXPIRY
+): Promise<string> {
+  if (!R2_BUCKET) throw new Error("R2_BUCKET is not configured");
+
+  const command = new GetObjectCommand({ Bucket: R2_BUCKET, Key: key });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return getSignedUrl(r2Client as any, command, { expiresIn: expiresInSeconds });
+}
 
 // ─── Public URL Generation ────────────────────────────────────────────────────
 
