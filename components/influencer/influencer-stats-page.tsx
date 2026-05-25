@@ -121,7 +121,7 @@ export function InfluencerStatsPage({
                         <td className="px-4 py-4 text-zinc-600 text-xs">{i + 1}</td>
                         <td className="px-4 py-4 text-zinc-300 whitespace-nowrap">{date}</td>
                         <td className="px-4 py-4 text-zinc-500 text-xs whitespace-nowrap">{time}</td>
-                        <td className="px-4 py-4 text-zinc-300 font-mono text-xs">{p.userEmail}</td>
+                        <td className="px-4 py-4 text-zinc-300 font-mono text-xs">{maskEmail(p.userEmail)}</td>
                         <td className="px-4 py-4 text-right text-amber-400 font-semibold whitespace-nowrap">$5.00</td>
                       </tr>
                     );
@@ -139,6 +139,13 @@ export function InfluencerStatsPage({
       </div>
     </div>
   );
+}
+
+function maskEmail(email: string): string {
+  const [local, domain] = email.split("@");
+  if (!domain) return email;
+  const visible = local.slice(0, 3);
+  return `${visible}***@${domain}`;
 }
 
 function StatRow({
