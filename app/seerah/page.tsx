@@ -159,11 +159,13 @@ export default async function LearnIndexPage() {
   const progressPercentage = completedCount > 0 ? Math.round((completedCount / totalParts) * 100) : 0;
 
   const partsByEra = accessibleParts.reduce((acc, part) => {
-    const era = ERA_MAP[part.era as keyof typeof ERA_MAP]?.label || part.era;
+    const eraInfo = ERA_MAP[part.era as keyof typeof ERA_MAP];
+    const era = eraInfo?.label || part.era;
     if (!acc[era]) {
       acc[era] = {
         label: era,
         description: getEraDescription(era),
+        color: eraInfo?.color ?? "#8B6F45",
         parts: [],
         completedCount: 0,
         totalCount: 0,
@@ -175,7 +177,7 @@ export default async function LearnIndexPage() {
       acc[era].completedCount++;
     }
     return acc;
-  }, {} as Record<string, { label: string; description: string; parts: typeof PARTS; completedCount: number; totalCount: number }>);
+  }, {} as Record<string, { label: string; description: string; color: string; parts: typeof PARTS; completedCount: number; totalCount: number }>);
 
   // All parts are available for paid users — progress is a guide, not a gate
   const getPartStatus = (partNumber: number) => {
@@ -270,24 +272,22 @@ export default async function LearnIndexPage() {
             return (
               <details key={eraKey} className="group" open={hasCurrentPart}>
                 <summary className="cursor-pointer list-none">
-                  <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5 hover:border-zinc-700 transition-colors">
+                  <div className="bg-zinc-900/50 rounded-xl p-5 transition-colors border" style={{ borderColor: `${era.color}40` }}>
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex items-center gap-4 flex-1 min-w-0">
                         <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                          allCompleted ? "bg-green-500/10 border border-green-500/20" :
-                          inProgress ? "bg-amber-500/10 border border-amber-500/20" :
-                          "bg-zinc-800 border border-zinc-700"
-                        }`}>
+                          allCompleted ? "bg-green-500/10 border border-green-500/20" : ""
+                        }`} style={!allCompleted ? { backgroundColor: `${era.color}18`, border: `1px solid ${era.color}40` } : {}}>
                           {allCompleted ? (
                             <CheckCircle2 className="w-6 h-6 text-green-400" />
                           ) : (
-                            <BookOpen className={`w-6 h-6 ${inProgress ? "text-amber-500" : "text-zinc-500"}`} />
+                            <BookOpen className="w-6 h-6" style={{ color: era.color }} />
                           )}
                         </div>
 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-3 mb-1 flex-wrap">
-                            <h3 className="text-lg font-semibold text-white">{era.label}</h3>
+                            <h3 className="text-lg font-semibold" style={{ color: era.color }}>{era.label}</h3>
                             {allCompleted && (
                               <span className="px-2 py-0.5 bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium rounded">
                                 Completed
@@ -328,7 +328,7 @@ export default async function LearnIndexPage() {
                 </summary>
 
                 {/* Chapter lessons */}
-                <div className="mt-3 ml-4 pl-4 border-l-2 border-zinc-800">
+                <div className="mt-3 ml-4 pl-4 border-l-2" style={{ borderColor: `${era.color}50` }}>
                   <div className="space-y-2">
                   {era.parts.slice(0, 5).map((part) => {
                     const status = getPartStatus(part.partNumber);
@@ -419,12 +419,7 @@ export default async function LearnIndexPage() {
                   })}
                   </div>
                   {era.parts.length > 5 && (
-                    <details className="mt-2 group/more">
-                      <summary className="cursor-pointer list-none py-2 px-1 text-xs text-amber-400 hover:text-amber-300 flex items-center gap-1.5 select-none">
-                        <ChevronDown className="w-3.5 h-3.5 group-open/more:rotate-180 transition-transform" />
-                        View all {era.parts.length - 5} more parts in this stage
-                      </summary>
-                      <div className="space-y-2 mt-2">
+                    <div className="space-y-2 mt-2">
                         {era.parts.slice(5).map((part) => {
                           const status = getPartStatus(part.partNumber);
                           const isCompleted2 = status === "completed";
@@ -460,8 +455,7 @@ export default async function LearnIndexPage() {
                             </Link>
                           );
                         })}
-                      </div>
-                    </details>
+                    </div>
                   )}
                 </div>
               </details>
