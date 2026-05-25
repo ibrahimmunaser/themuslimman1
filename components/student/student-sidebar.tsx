@@ -20,6 +20,9 @@ import {
 } from "lucide-react";
 
 import { DidYouKnowWidget } from "./did-you-know-widget";
+import { MiraclesWidget } from "./miracles-widget";
+import { PropheciesWidget } from "./prophecies-widget";
+import { WidgetCycleProvider } from "./widget-cycle-context";
 
 interface StudentSidebarProps {
   userPlan: "essentials" | "complete";
@@ -260,8 +263,14 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
           </div>
         </nav>
 
-        {/* Did You Know widget — directly below Sign Out, hidden when collapsed */}
-        {!collapsed && <DidYouKnowWidget />}
+        {/* Widgets — hidden when collapsed, share a single fade cycle */}
+        {!collapsed && (
+          <WidgetCycleProvider>
+            <DidYouKnowWidget />
+            <MiraclesWidget />
+            <PropheciesWidget />
+          </WidgetCycleProvider>
+        )}
       </div>
     </>
   );
