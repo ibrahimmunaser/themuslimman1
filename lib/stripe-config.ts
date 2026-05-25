@@ -5,7 +5,7 @@
 const _ESSENTIALS_INTERNAL = {
   id: "essentials",
   name: "Essentials Seerah",
-  price: 4900, // $49.00 — not for sale during early access
+  price: 4900, // $49.00 — internal only, not for sale
   upgradePrice: 3000,
 } as const;
 

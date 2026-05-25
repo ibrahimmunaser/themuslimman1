@@ -288,7 +288,7 @@ export default async function LandingPage() {
               </div>
               <div className="mb-5">
                 <div className="flex items-baseline gap-2 mb-1">
-                  <span className="text-4xl font-bold text-text">$49</span>
+                  <span className="text-4xl font-bold text-text">$99</span>
                 </div>
                 <p className="text-sm text-gold font-medium">One-time payment · Pay once. Keep it forever.</p>
               </div>
@@ -489,7 +489,7 @@ export default async function LandingPage() {
               },
               {
                 q: "Is there only one plan?",
-                a: "Yes. We offer two options: Monthly Access at $9/month (cancel anytime) or Lifetime Access for a one-time $49 payment. Both give full access from day one.",
+                a: "Yes. We offer two options: Monthly Access at $9/month (cancel anytime) or Lifetime Access for a one-time $99 payment. Both give full access from day one.",
               },
               {
                 q: "Is the course self-paced?",

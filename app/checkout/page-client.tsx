@@ -438,7 +438,7 @@ export function CheckoutPageContent() {
               <div className="mt-4 pt-4 border-t border-border text-center">
                 {isMonthly ? (
                   <Link href="/checkout?plan=complete" className="text-xs text-text-muted hover:text-gold transition-colors">
-                    Switch to Lifetime ($49 one-time) →
+                    Switch to Lifetime ($99 one-time) →
                   </Link>
                 ) : (
                   <Link href="/checkout?plan=monthly" className="text-xs text-text-muted hover:text-gold transition-colors">

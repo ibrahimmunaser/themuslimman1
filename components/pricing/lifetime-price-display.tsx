@@ -39,10 +39,6 @@ export function LifetimePriceDisplay({ basePrice }: LifetimePriceDisplayProps) {
         <p className="text-sm text-gold font-medium">
           One-time payment · Lifetime access
         </p>
-        <p className="text-xs text-text-secondary mt-1">
-          ${discount.amount / 100} off with code{" "}
-          <span className="font-mono font-semibold text-gold">{discount.code}</span>
-        </p>
       </div>
     );
   }

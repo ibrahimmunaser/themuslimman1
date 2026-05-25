@@ -9,7 +9,7 @@ export async function GET() {
   prisma.influencerClick.create({ data: { creator: "deenresponds" } }).catch(() => {});
 
   return NextResponse.redirect(
-    `${APP_URL}/pricing?utm_source=youtube&utm_medium=influencer&utm_campaign=seerah_launch&utm_content=deenresponds&promo=DEEN20`,
+    `${APP_URL}/signup-checkout?plan=complete&promo=DEEN20&utm_source=youtube&utm_medium=influencer&utm_campaign=seerah_launch&utm_content=deenresponds`,
     { status: 302 }
   );
 }

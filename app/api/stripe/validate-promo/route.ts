@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     valid: true,
     code: code.trim().toUpperCase(),
     label: promo.label,
-    // Base price is always 4900 ($49)
+    // Base price is always 9900 ($99)
     basePrice,
     // How much the promo saves vs. the current base
     promoDiscountAmount,

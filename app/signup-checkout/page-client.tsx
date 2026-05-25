@@ -7,6 +7,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PLANS, formatPrice, type PlanId } from "@/lib/stripe-config";
+import { CreatorPromoTracker } from "@/components/promo/creator-promo-tracker";
+import { getCreatorPromoConfig } from "@/lib/creator-promos";
 
 type AllowedPlanId = "complete" | "monthly";
 const ALLOWED_PLANS: AllowedPlanId[] = ["complete", "monthly"];
@@ -35,7 +37,12 @@ function SignupCheckoutContent() {
   const [loading, setLoading] = useState(false);
   const [showVerificationMessage, setShowVerificationMessage] = useState(false);
 
-  const checkoutUrl = `/checkout?plan=${planId}`;
+  const urlPromo = searchParams.get("promo") ?? "";
+  const promoConfig = urlPromo ? getCreatorPromoConfig(urlPromo) : null;
+  const discountAmount = !isMonthly && promoConfig ? promoConfig.discountAmount : 0;
+  const displayPrice = plan.price - discountAmount;
+
+  const checkoutUrl = `/checkout?plan=${planId}${urlPromo ? `&promo=${encodeURIComponent(urlPromo)}` : ""}`;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -155,6 +162,8 @@ function SignupCheckoutContent() {
 
   return (
     <div className="min-h-screen bg-ink text-text">
+      {/* Capture ?promo= and persist to localStorage; show banner if active */}
+      <CreatorPromoTracker showBanner />
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12">
         <div className="mb-8 text-center">
           <h1 className="text-3xl sm:text-4xl font-bold mb-2">Create Your Account</h1>
@@ -194,21 +203,38 @@ function SignupCheckoutContent() {
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-border">
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-text-secondary text-sm">
-                    {isMonthly ? "Monthly Access" : "Lifetime Access"}
+              <div className="pt-4 border-t border-border space-y-3">
+                {/* Product row */}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-zinc-400">
+                    {isMonthly ? "Monthly Access" : "Complete Seerah — Lifetime Access"}
                   </span>
-                  <span className="text-sm text-text">
-                    {formatPrice(plan.price)}
-                    {isMonthly ? "/mo" : " one-time"}
+                  <span className="leading-none">
+                    {discountAmount > 0
+                      ? <span className="text-xs text-zinc-600 line-through">{formatPrice(plan.price)}</span>
+                      : <span className="text-sm text-text">{formatPrice(plan.price)}{isMonthly ? "/mo" : ""}</span>
+                    }
                   </span>
                 </div>
-                <div className="flex items-center justify-between font-semibold text-lg border-t border-border pt-2 mt-1">
-                  <span>Total</span>
-                  <span className="text-gold">
-                    {formatPrice(plan.price)}
-                    {isMonthly ? "/mo" : ""}
+
+                {/* Discount row */}
+                {discountAmount > 0 && (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-zinc-400">Creator Discount</span>
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold text-green-400 bg-green-400/10 border border-green-400/20">
+                        ✓ {promoConfig!.code}
+                      </span>
+                    </div>
+                    <span className="text-sm font-semibold text-green-400">−{formatPrice(discountAmount)}</span>
+                  </div>
+                )}
+
+                {/* Total row */}
+                <div className="flex items-center justify-between border-t border-zinc-700 pt-4">
+                  <span className="text-base font-semibold text-white">Total</span>
+                  <span className="text-3xl font-bold text-gold">
+                    {formatPrice(displayPrice)}{isMonthly ? "/mo" : ""}
                   </span>
                 </div>
               </div>
