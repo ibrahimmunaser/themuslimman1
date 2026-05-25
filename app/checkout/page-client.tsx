@@ -101,6 +101,7 @@ export function CheckoutPageContent() {
   const [requiresVerification, setRequiresVerification] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
   const [resendSuccess, setResendSuccess] = useState(false);
+  const [justVerified, setJustVerified] = useState(false);
 
   // Pricing driven entirely by server response (lifetime only)
   const [pricing, setPricing] = useState<PricingState>({
@@ -217,6 +218,32 @@ export function CheckoutPageContent() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isMonthly]);
+
+  // Poll for email verification every 3 seconds while waiting
+  useEffect(() => {
+    if (!requiresVerification) return;
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch("/api/auth/check-verification");
+        const data = await res.json();
+        if (data.verified) {
+          clearInterval(interval);
+          setJustVerified(true);
+          setRequiresVerification(false);
+          setError(null);
+          // Small delay so user sees the success flash before the form loads
+          setTimeout(() => {
+            if (isMonthly) createSubscriptionIntent();
+            else createPaymentIntent();
+          }, 800);
+        }
+      } catch {
+        // silent — keep polling
+      }
+    }, 3000);
+    return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [requiresVerification, isMonthly]);
 
   // ── Promo ──────────────────────────────────────────────────────────────────
 
@@ -461,6 +488,16 @@ export function CheckoutPageContent() {
                 </div>
               )}
 
+              {justVerified && !loading && (
+                <div className="py-8 text-center">
+                  <div className="w-16 h-16 rounded-full bg-green-500/20 border-2 border-green-500/40 flex items-center justify-center mx-auto mb-4">
+                    <Check className="w-8 h-8 text-green-400" />
+                  </div>
+                  <h3 className="text-xl font-bold text-text mb-2">Email Verified!</h3>
+                  <p className="text-text-secondary">Loading your payment form…</p>
+                </div>
+              )}
+
               {requiresVerification && !loading && (
                 <div className="py-8">
                   <div className="p-6 rounded-xl bg-gold/10 border border-gold/30 text-center">
@@ -478,7 +515,10 @@ export function CheckoutPageContent() {
                         Resend Verification Email
                       </Button>
                     )}
-                    <p className="text-xs text-text-muted mt-4">After verifying, refresh this page to continue</p>
+                    <div className="flex items-center justify-center gap-2 mt-4">
+                      <div className="w-2 h-2 rounded-full bg-gold/60 animate-pulse" />
+                      <p className="text-xs text-text-muted">Waiting for verification — this page will update automatically</p>
+                    </div>
                   </div>
                 </div>
               )}
