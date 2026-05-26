@@ -211,7 +211,7 @@ export function SimpleResourceContent({
   useEffect(() => {
     if (selectedPart && resourceType === "mindmap") {
       setIsLoadingResource(true);
-      const key = `mindmaps/Part ${selectedPart.partNumber} - Mindmap.png`;
+      const key = `mindmaps/Part ${selectedPart.partNumber} - Mindmap.webp`;
       fetchSignedUrl(key, selectedPart.partNumber)
         .then((url) => {
           setResourceUrl(url);
@@ -225,9 +225,9 @@ export function SimpleResourceContent({
       setIsLoadingResource(true);
       const n = selectedPart.partNumber;
       Promise.all([
-        fetchSignedUrl(`Infographics-Bento-Grid/Part ${n}.png`, n),
-        fetchSignedUrl(`Infographics-Concise/Part ${n} - Infographic.png`, n),
-        fetchSignedUrl(`Infographics-Standard/Part ${n} - Infographic.png`, n),
+        fetchSignedUrl(`Infographics-Bento-Grid/Part ${n}.webp`, n),
+        fetchSignedUrl(`Infographics-Concise/Part ${n} - Infographic.webp`, n),
+        fetchSignedUrl(`Infographics-Standard/Part ${n} - Infographic.webp`, n),
       ])
         .then(([bentoUrl, conciseUrl, standardUrl]) => {
           const urls = { bentoGrid: bentoUrl, concise: conciseUrl, standard: standardUrl };
@@ -339,8 +339,8 @@ export function SimpleResourceContent({
     if (currentIndex !== -1 && currentIndex < PARTS.length - 1) {
       const nextPart = PARTS[currentIndex + 1];
       const nextUrl = resourceType === "mindmap"
-        ? `/api/r2/asset?key=${encodeURIComponent(`mindmaps/Part ${nextPart.partNumber} - Mindmap.png`)}`
-        : `/api/r2/asset?key=${encodeURIComponent(`Infographics-Bento-Grid/Part ${nextPart.partNumber}.png`)}`;
+        ? `/api/r2/asset?key=${encodeURIComponent(`mindmaps/Part ${nextPart.partNumber} - Mindmap.webp`)}`
+        : `/api/r2/asset?key=${encodeURIComponent(`Infographics-Bento-Grid/Part ${nextPart.partNumber}.webp`)}`;
       
       const webpUrl = webpVariant(nextUrl);
       if (webpUrl) {

@@ -273,12 +273,13 @@ export async function r2GetAudioKey(partNum: number): Promise<string | null> {
 }
 
 /**
- * Get mindmap image key
+ * Get mindmap image key — prefers WebP, falls back to PNG.
  */
 export async function r2GetMindmapKey(partNum: number): Promise<string | null> {
-  const key = `mindmaps/Part ${partNum} - Mindmap.png`;
-  const exists = await r2FileExists(key);
-  return exists ? key : null;
+  const webp = `mindmaps/Part ${partNum} - Mindmap.webp`;
+  if (await r2FileExists(webp)) return webp;
+  const png = `mindmaps/Part ${partNum} - Mindmap.png`;
+  return (await r2FileExists(png)) ? png : null;
 }
 
 /**
@@ -296,12 +297,16 @@ export async function r2GetInfographicKey(
   };
   
   const prefix = `${folderMap[style]}/`;
-  
-  // Simple filename: "Part X.png"
+
+  // Prefer WebP — check the two standard WebP key patterns first
+  const simpleWebp = `${prefix}Part ${partNum}.webp`;
+  if (await r2FileExists(simpleWebp)) return simpleWebp;
+  const suffixWebp = `${prefix}Part ${partNum} - Infographic.webp`;
+  if (await r2FileExists(suffixWebp)) return suffixWebp;
+
+  // WebP not found — fall back to PNG
   const simpleKey = `${prefix}Part ${partNum}.png`;
-  if (await r2FileExists(simpleKey)) {
-    return simpleKey;
-  }
+  if (await r2FileExists(simpleKey)) return simpleKey;
   
   // List files in the folder to find alternate naming
   const files = await r2ListFiles(prefix);
