@@ -20,7 +20,7 @@ export function fetchPartAssets(partNumber: number): Promise<PartAssets> {
 
   const promise = fetch(`/api/part/${partNumber}/assets`)
     .then((r) => (r.ok ? r.json() : {}))
-    .then((data): PartAssets => ({
+    .then((data: Partial<PartAssets>): PartAssets => ({
       videoUrl:   data.videoUrl,
       audioUrl:   data.audioUrl,
       mindmapUrl: data.mindmapUrl,
