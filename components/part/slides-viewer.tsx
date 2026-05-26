@@ -8,7 +8,9 @@ import { trackAssetOpened } from "@/app/actions/progress";
 /** Derive the pre-generated WebP URL from an R2 PNG URL (or return null for local paths). */
 function webpVariant(url: string, suffix: "-thumb" | "-medium"): string | null {
   if (!url.startsWith("http")) return null; // local dev path — skip
-  return url.replace(/\.png$/i, `${suffix}.webp`);
+  // Signed URLs have query params after .png (e.g. "...slide.png?X-Amz-...")
+  // Use \.png(\?|$) so we match .png even when query params follow
+  return url.replace(/\.png(\?|$)/i, `${suffix}.webp$1`);
 }
 
 /** Main slide image: tries pre-generated WebP, falls back to next/image on error. */

@@ -147,9 +147,10 @@ function EmptyContent({ label }: { label: string }) {
 /** Derive a pre-generated WebP URL from an R2 PNG URL. */
 function infographicWebp(url: string, suffix: "-medium" | "-large" | ""): string | null {
   if (!url.startsWith("http")) return null;
+  // Signed URLs have query params after .png — match \.png(\?|$) not \.png$
   return suffix === ""
-    ? url.replace(/\.png$/i, ".webp")
-    : url.replace(/\.png$/i, `${suffix}.webp`);
+    ? url.replace(/\.png(\?|$)/i, ".webp$1")
+    : url.replace(/\.png(\?|$)/i, `${suffix}.webp$1`);
 }
 
 function InfographicPanel({ part, previewMode }: { part: Part; previewMode?: boolean }) {
@@ -276,6 +277,13 @@ function SlidesPanel({ part, previewMode }: { part: Part; previewMode?: boolean 
   const slides = part.assets.slides;
   const available = SLIDE_TYPES.filter((t) => (slides?.[t.key]?.length ?? 0) > 0);
   const [type, setType] = useState<"presented" | "detailed" | "facts">(available[0]?.key ?? "presented");
+  // Track which slide types have been visited — keep them mounted to preserve loaded images
+  const [rendered, setRendered] = useState<Set<string>>(() => new Set([available[0]?.key ?? "presented"]));
+
+  const handleTypeChange = (key: "presented" | "detailed" | "facts") => {
+    setType(key);
+    setRendered((prev) => new Set([...prev, key]));
+  };
 
   return (
     <div>
@@ -283,7 +291,7 @@ function SlidesPanel({ part, previewMode }: { part: Part; previewMode?: boolean 
         <div className="flex gap-2 mb-4 flex-wrap pl-4">
           {available.map((t) => (
             <button
-              key={t.key} onClick={() => setType(t.key)}
+              key={t.key} onClick={() => handleTypeChange(t.key)}
               className={clsx(
                 "px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
                 type === t.key
@@ -294,13 +302,18 @@ function SlidesPanel({ part, previewMode }: { part: Part; previewMode?: boolean 
           ))}
         </div>
       )}
-      <SlidesViewer
-        slides={slides?.[type] ?? []}
-        title={`Part ${part.partNumber} — ${SLIDE_TYPES.find((t) => t.key === type)?.label} Slides`}
-        type={type === "facts" ? "presented" : type}
-        partNumber={part.partNumber}
-        previewMode={previewMode}
-      />
+      {/* Render each visited slide type once and keep it mounted — switching back is instant */}
+      {[...rendered].map((key) => (
+        <div key={key} className={type === key ? "" : "hidden"}>
+          <SlidesViewer
+            slides={slides?.[key as "presented" | "detailed" | "facts"] ?? []}
+            title={`Part ${part.partNumber} — ${SLIDE_TYPES.find((t) => t.key === key)?.label} Slides`}
+            type={key === "facts" ? "presented" : key as "presented" | "detailed"}
+            partNumber={part.partNumber}
+            previewMode={previewMode}
+          />
+        </div>
+      ))}
     </div>
   );
 }
