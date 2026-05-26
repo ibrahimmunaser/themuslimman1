@@ -66,7 +66,7 @@ export async function getThumbnailUrls(
 ): Promise<Record<number, string>> {
   function firstSlideKey(n: number): string {
     const p = String(n).padStart(2, "0");
-    return `slides-presented/Part ${p}/Part_${p}_Slide_001_watermarked.png`;
+    return `thumbnails/part-${p}-thumb.jpg`;
   }
 
   const entries = await Promise.all(
