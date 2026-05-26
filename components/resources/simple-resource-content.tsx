@@ -130,7 +130,7 @@ export function SimpleResourceContent({
   const [flashcardData, setFlashcardData] = useState<FlashcardSet | null>(null);
   const [isLoadingFlashcards, setIsLoadingFlashcards] = useState(false);
   const [resourceUrl, setResourceUrl] = useState<string | null>(null);
-  const [infographicUrls, setInfographicUrls] = useState<{ bentoGrid: string; concise: string; standard: string } | null>(null);
+  const [infographicUrls, setInfographicUrls] = useState<{ bentoGrid: string | null; concise: string | null; standard: string | null } | null>(null);
   const [infographicType, setInfographicType] = useState<"bentoGrid" | "concise" | "standard">("bentoGrid");
   const [isLoadingResource, setIsLoadingResource] = useState(false);
   const [preloadedImages, setPreloadedImages] = useState<Set<string>>(new Set());
@@ -224,31 +224,37 @@ export function SimpleResourceContent({
     } else if (selectedPart && resourceType === "infographic") {
       setIsLoadingResource(true);
       const n = selectedPart.partNumber;
-      Promise.all([
+      Promise.allSettled([
         fetchSignedUrl(`Infographics-Bento-Grid/Part ${n}.webp`, n),
         fetchSignedUrl(`Infographics-Concise/Part ${n} - Infographic.webp`, n),
         fetchSignedUrl(`Infographics-Standard/Part ${n} - Infographic.webp`, n),
       ])
-        .then(([bentoUrl, conciseUrl, standardUrl]) => {
+        .then(([bentoResult, conciseResult, standardResult]) => {
+          const bentoUrl    = bentoResult.status    === "fulfilled" ? bentoResult.value    : null;
+          const conciseUrl  = conciseResult.status  === "fulfilled" ? conciseResult.value  : null;
+          const standardUrl = standardResult.status === "fulfilled" ? standardResult.value : null;
+
           const urls = { bentoGrid: bentoUrl, concise: conciseUrl, standard: standardUrl };
           setInfographicUrls(urls);
-          setResourceUrl(bentoUrl);
-          setInfographicType("bentoGrid");
 
-          // Preload all three types immediately for instant tab-switching
+          // Default to first available type
+          const firstAvailable = bentoUrl ? "bentoGrid" : conciseUrl ? "concise" : "standard";
+          setInfographicType(firstAvailable as "bentoGrid" | "concise" | "standard");
+          setResourceUrl(bentoUrl ?? conciseUrl ?? standardUrl);
+
+          // Preload all available types immediately for instant tab-switching
           const preloadImage = (url: string) => {
             const img = new Image();
             img.src = url;
             img.onload = () => setPreloadedImages((prev) => new Set(prev).add(url));
           };
-          preloadImage(bentoUrl);
-          preloadImage(conciseUrl);
-          preloadImage(standardUrl);
+          if (bentoUrl)    preloadImage(bentoUrl);
+          if (conciseUrl)  preloadImage(conciseUrl);
+          if (standardUrl) preloadImage(standardUrl);
 
           setIsLoadingResource(false);
         })
-        .catch((err) => {
-          console.error("Failed to load infographics:", err);
+        .catch(() => {
           setIsLoadingResource(false);
         });
     }
@@ -257,7 +263,7 @@ export function SimpleResourceContent({
   // Update resource URL when infographic type changes (lazy load)
   useEffect(() => {
     if (infographicUrls && resourceType === "infographic") {
-      setResourceUrl(infographicUrls[infographicType]);
+      setResourceUrl(infographicUrls[infographicType] ?? null);
       // Reset zoom when changing type
       setZoom(1);
       setPan({ x: 0, y: 0 });
@@ -613,60 +619,42 @@ export function SimpleResourceContent({
                       {/* Infographic type selector (only for infographics, not mindmaps) */}
                       {resourceType === "infographic" && !isFullscreen && infographicUrls && (
                         <div className="flex gap-2">
-                          <button
-                            onClick={() => setInfographicType("bentoGrid")}
-                            onMouseEnter={() => {
-                              // Preload WebP variant on hover
-                              const webpUrl = webpVariant(infographicUrls.bentoGrid);
-                              if (webpUrl) {
-                                const img = new Image();
-                                img.src = webpUrl;
-                              }
-                            }}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
-                              infographicType === "bentoGrid"
-                                ? "bg-amber-500/12 text-amber-400 border-amber-500/25"
-                                : "bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-zinc-300"
-                            }`}
-                          >
-                            Bento Grid
-                          </button>
-                          <button
-                            onClick={() => setInfographicType("concise")}
-                            onMouseEnter={() => {
-                              // Preload WebP variant on hover
-                              const webpUrl = webpVariant(infographicUrls.concise);
-                              if (webpUrl) {
-                                const img = new Image();
-                                img.src = webpUrl;
-                              }
-                            }}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
-                              infographicType === "concise"
-                                ? "bg-amber-500/12 text-amber-400 border-amber-500/25"
-                                : "bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-zinc-300"
-                            }`}
-                          >
-                            Concise
-                          </button>
-                          <button
-                            onClick={() => setInfographicType("standard")}
-                            onMouseEnter={() => {
-                              // Preload WebP variant on hover
-                              const webpUrl = webpVariant(infographicUrls.standard);
-                              if (webpUrl) {
-                                const img = new Image();
-                                img.src = webpUrl;
-                              }
-                            }}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
-                              infographicType === "standard"
-                                ? "bg-amber-500/12 text-amber-400 border-amber-500/25"
-                                : "bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-zinc-300"
-                            }`}
-                          >
-                            Standard
-                          </button>
+                          {infographicUrls.bentoGrid && (
+                            <button
+                              onClick={() => setInfographicType("bentoGrid")}
+                              className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                                infographicType === "bentoGrid"
+                                  ? "bg-amber-500/12 text-amber-400 border-amber-500/25"
+                                  : "bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-zinc-300"
+                              }`}
+                            >
+                              Bento Grid
+                            </button>
+                          )}
+                          {infographicUrls.concise && (
+                            <button
+                              onClick={() => setInfographicType("concise")}
+                              className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                                infographicType === "concise"
+                                  ? "bg-amber-500/12 text-amber-400 border-amber-500/25"
+                                  : "bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-zinc-300"
+                              }`}
+                            >
+                              Concise
+                            </button>
+                          )}
+                          {infographicUrls.standard && (
+                            <button
+                              onClick={() => setInfographicType("standard")}
+                              className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                                infographicType === "standard"
+                                  ? "bg-amber-500/12 text-amber-400 border-amber-500/25"
+                                  : "bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-zinc-300"
+                              }`}
+                            >
+                              Standard
+                            </button>
+                          )}
                         </div>
                       )}
                       
