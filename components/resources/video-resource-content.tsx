@@ -264,18 +264,18 @@ export function VideoResourceContent({
                             Completed
                           </span>
                         )}
+                        {!isCompleted && watchPercent > 0 && (
+                          <span className="ml-auto flex items-center gap-1 text-xs text-text-muted">
+                            <Clock className="w-3 h-3" />
+                            {part.duration}
+                          </span>
+                        )}
                       </div>
                       <h3 className="text-sm font-semibold text-text mb-1 line-clamp-2 group-hover:text-gold transition-colors">
                         {part.title}
                       </h3>
                       {part.subtitle && (
-                        <p className="text-xs text-text-muted line-clamp-1 mb-2">{part.subtitle}</p>
-                      )}
-                      {part.duration && (
-                        <div className="flex items-center gap-1 text-xs text-text-muted">
-                          <Clock className="w-3 h-3" />
-                          {part.duration}
-                        </div>
+                        <p className="text-xs text-text-muted line-clamp-1">{part.subtitle}</p>
                       )}
                     </div>
                   </div>
