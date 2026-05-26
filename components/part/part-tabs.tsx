@@ -167,8 +167,8 @@ function InfographicPanel({ part, previewMode }: { part: Part; previewMode?: boo
   ].filter((s) => inf?.[s.id]);
   const currentSrc = inf?.[style] ?? inf?.[styles[0]?.id];
   const mediumSrc = currentSrc ? infographicWebp(currentSrc, "-medium") : null;
-  // Lightbox uses full-size WebP (same quality, ~95% smaller than PNG)
-  const lightboxSrc = currentSrc ? (infographicWebp(currentSrc, "") ?? currentSrc) : currentSrc;
+  // Lightbox uses the original signed URL — avoids invalid-signature from client-side URL rewriting
+  const lightboxSrc = currentSrc;
   const altLabel = `Part ${part.partNumber} Infographic — ${style}`;
 
   // Track when infographic is viewed (loaded)
@@ -188,8 +188,9 @@ function InfographicPanel({ part, previewMode }: { part: Part; previewMode?: boo
 
   return (
     <div className="space-y-4">
-      {styles.length > 1 && (
-        <div className="flex gap-2 mb-4 pl-4">
+      {/* Header row: type selector + fullscreen button */}
+      <div className="flex items-center gap-2 pl-4 pr-1">
+        <div className="flex gap-2 flex-1 flex-wrap">
           {styles.map((s) => (
             <button
               key={s.id} onClick={() => handleStyleChange(s.id)}
@@ -202,13 +203,23 @@ function InfographicPanel({ part, previewMode }: { part: Part; previewMode?: boo
             >{s.label}</button>
           ))}
         </div>
-      )}
+        {currentSrc && (
+          <button
+            onClick={() => setLightboxOpen(true)}
+            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-border bg-surface text-text-muted hover:text-text hover:border-border-subtle transition-colors"
+            title="View fullscreen"
+          >
+            <Maximize2 className="w-3.5 h-3.5" />
+            Fullscreen
+          </button>
+        )}
+      </div>
       {currentSrc ? (
         <>
           <div
             className="relative group rounded-xl border border-border/60 bg-surface overflow-hidden cursor-zoom-in min-h-[200px]"
             onClick={() => setLightboxOpen(true)}
-            title="Click to enlarge"
+            title="Click to view fullscreen"
           >
             {/* Spinner while loading */}
             {!loaded && (
@@ -246,12 +257,7 @@ function InfographicPanel({ part, previewMode }: { part: Part; previewMode?: boo
             )}
 
             {/* Hover overlay */}
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-colors flex items-center justify-center pointer-events-none">
-              <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/70 border border-white/15 text-white text-xs font-medium">
-                <Maximize2 className="w-3.5 h-3.5" />
-                Enlarge
-              </div>
-            </div>
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors pointer-events-none" />
           </div>
           <ImageLightbox
             src={lightboxSrc ?? currentSrc}

@@ -51,28 +51,31 @@ export function SlidesViewer({ slides, title, type = "presented", partNumber, pr
   );
 
   useEffect(() => {
-    const handler = () => setFullscreen(!!document.fullscreenElement);
+    // Keep CSS state in sync when native fullscreen is toggled (e.g. Esc key)
+    const handler = () => {
+      if (!document.fullscreenElement) setFullscreen(false);
+    };
     document.addEventListener("fullscreenchange", handler);
     return () => document.removeEventListener("fullscreenchange", handler);
   }, []);
 
   const enterFullscreen = useCallback(async () => {
+    // Set CSS overlay immediately — reliable across all browsers
+    setFullscreen(true);
+    // Also attempt native fullscreen as an enhancement (browser chrome disappears)
     if (containerRef.current?.requestFullscreen) {
       try {
         await containerRef.current.requestFullscreen();
       } catch {
-        setFullscreen(true);
+        // Native fullscreen denied — CSS overlay is already shown, nothing to do
       }
-    } else {
-      setFullscreen(true);
     }
   }, []);
 
   const exitFullscreenMode = useCallback(() => {
+    setFullscreen(false);
     if (document.fullscreenElement) {
-      document.exitFullscreen();
-    } else {
-      setFullscreen(false);
+      document.exitFullscreen().catch(() => {});
     }
   }, []);
 
