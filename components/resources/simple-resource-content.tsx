@@ -763,7 +763,7 @@ export function SimpleResourceContent({
                     </div>
                   ) : flashcardData ? (
                     <div className="h-full overflow-y-auto">
-                      <FlashcardsViewer flashcards={flashcardData} />
+                      <FlashcardsViewer flashcards={flashcardData} partNumber={selectedPart?.partNumber} />
                     </div>
                   ) : (
                     <div className="h-full flex items-center justify-center text-zinc-400">

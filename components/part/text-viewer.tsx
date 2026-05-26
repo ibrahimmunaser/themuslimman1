@@ -50,8 +50,10 @@ export function TextViewer({
     if (!partNumber || previewMode) return;
     if (assetId === "briefing") {
       trackBriefingOpened(partNumber).catch(() => {});
+      window.dispatchEvent(new CustomEvent("seerah:progressUpdate", { detail: { briefingOpened: true } }));
     } else if (assetId) {
       trackAssetOpened(partNumber, assetId).catch(() => {});
+      window.dispatchEvent(new CustomEvent("seerah:progressUpdate", { detail: { openedAssets: [assetId] } }));
     }
     // Run once on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps

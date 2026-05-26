@@ -60,7 +60,15 @@ export async function generateSignedR2Url(
  * Generate signed thumbnail URLs for a set of part numbers in parallel.
  * Returns a map of { [partNumber]: signedUrl }.
  * Parts whose thumbnail is missing or fails are silently omitted.
+ *
+ * Results are cached in memory for 1 hour (half the 2-hour URL expiry) so
+ * repeated page loads don't re-sign the same 100 keys every time.
  */
+
+// Cache: key → { url, expiresAt (ms epoch) }
+const thumbnailCache = new Map<string, { url: string; expiresAt: number }>();
+const THUMBNAIL_CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+
 export async function getThumbnailUrls(
   partNumbers: number[]
 ): Promise<Record<number, string>> {
@@ -69,10 +77,18 @@ export async function getThumbnailUrls(
     return `thumbnails/part-${p}-thumb.jpg`;
   }
 
+  const now = Date.now();
+
   const entries = await Promise.all(
     partNumbers.map(async (n) => {
+      const key = firstSlideKey(n);
+      const cached = thumbnailCache.get(key);
+      if (cached && cached.expiresAt > now) {
+        return [n, cached.url] as [number, string];
+      }
       try {
-        const url = await generateSignedR2Url(firstSlideKey(n), IMAGE_URL_EXPIRY);
+        const url = await generateSignedR2Url(key, IMAGE_URL_EXPIRY);
+        thumbnailCache.set(key, { url, expiresAt: now + THUMBNAIL_CACHE_TTL_MS });
         return [n, url] as [number, string];
       } catch {
         return null;

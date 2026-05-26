@@ -2,7 +2,7 @@ import Link from "next/link";
 import {
   TrendingUp, Target, Award,
   Play, CheckCircle2, BookOpen,
-  Mail, FileText, ChevronRight,
+  Mail, FileText, ChevronRight, Info,
 } from "lucide-react";
 import { SendProgressReportButton } from "./send-progress-report-button";
 import type { StageData } from "./course-home-content";
@@ -130,6 +130,33 @@ export function CourseProgressContent({
                 <p className="text-xs text-text-muted mt-1">No quizzes yet</p>
               </>
             )}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Completion Criteria ───────────────────────────────────────────── */}
+      <section>
+        <div className="flex items-start gap-3 p-4 rounded-xl border border-border bg-surface/50">
+          <Info className="w-4 h-4 text-gold/70 mt-0.5 shrink-0" />
+          <div>
+            <p className="text-sm font-semibold text-text mb-2">How a part counts as completed</p>
+            <ul className="space-y-1.5">
+              <li className="flex items-center gap-2 text-xs text-text-secondary">
+                <CheckCircle2 className="w-3.5 h-3.5 text-green-500/80 shrink-0" />
+                Watch at least <span className="font-semibold text-text mx-0.5">85%</span> of the video
+              </li>
+              <li className="flex items-center gap-2 text-xs text-text-secondary">
+                <CheckCircle2 className="w-3.5 h-3.5 text-green-500/80 shrink-0" />
+                Open and read the <span className="font-semibold text-text mx-0.5">Briefing</span>
+              </li>
+              <li className="flex items-center gap-2 text-xs text-text-secondary">
+                <CheckCircle2 className="w-3.5 h-3.5 text-green-500/80 shrink-0" />
+                Pass the <span className="font-semibold text-text mx-0.5">Quiz</span> with a score of 80% or higher
+              </li>
+            </ul>
+            <p className="text-xs text-text-muted mt-2.5">
+              All three are required. Video progress only, or an opened briefing alone, won&apos;t move the counter until the quiz is passed.
+            </p>
           </div>
         </div>
       </section>

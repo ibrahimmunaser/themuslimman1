@@ -21,7 +21,10 @@ export function LazyMindmapViewer({ partNumber, title, previewMode, mindmapUrl: 
     if (mindmapUrlProp) {
       setMindmapUrl(mindmapUrlProp);
       setLoading(false);
-      if (!previewMode) trackAssetOpened(partNumber, "mindmap").catch(() => {});
+      if (!previewMode) {
+        trackAssetOpened(partNumber, "mindmap").catch(() => {});
+        window.dispatchEvent(new CustomEvent("seerah:progressUpdate", { detail: { openedAssets: ["mindmap"] } }));
+      }
       return;
     }
 
@@ -31,7 +34,10 @@ export function LazyMindmapViewer({ partNumber, title, previewMode, mindmapUrl: 
         if (mounted) {
           setMindmapUrl(data.mindmapUrl);
           setLoading(false);
-          if (!previewMode && data.mindmapUrl) trackAssetOpened(partNumber, "mindmap").catch(() => {});
+          if (!previewMode && data.mindmapUrl) {
+            trackAssetOpened(partNumber, "mindmap").catch(() => {});
+            window.dispatchEvent(new CustomEvent("seerah:progressUpdate", { detail: { openedAssets: ["mindmap"] } }));
+          }
         }
       })
       .catch(() => { if (mounted) setLoading(false); });

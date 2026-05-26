@@ -105,8 +105,12 @@ export default async function LearnIndexPage() {
   const quizCompletedCount = allPartProgress.filter((p) => p.quizPassed).length;
   const quizPassedCount = quizCompletedCount;
   const quizTotalAttempts = allPartProgress.reduce((sum, p) => sum + (p.quizAttempts || 0), 0);
-  const quizAvgScore = quizCompletedCount > 0
-    ? allPartProgress.reduce((sum, p) => sum + (p.quizBestScore || 0), 0) / quizCompletedCount
+  // Only average rows where the user actually attempted a quiz (has a score).
+  // Including zero-score rows in the denominator's count-only calculation was
+  // producing averages > 100% (e.g. 5 passed rows / 10 scored rows = inflated avg).
+  const quizScoredRows = allPartProgress.filter((p) => (p.quizAttempts || 0) > 0 && p.quizBestScore != null);
+  const quizAvgScore = quizScoredRows.length > 0
+    ? quizScoredRows.reduce((sum, p) => sum + (p.quizBestScore || 0), 0) / quizScoredRows.length
     : 0;
 
   // Asset progress maps for resource tabs
@@ -238,6 +242,32 @@ export default async function LearnIndexPage() {
 
   // Title map for progress tab activity list
   const partTitleMap = Object.fromEntries(PARTS.map(p => [p.partNumber, p.title]));
+
+  // Helper: asset indicator row for each lesson card
+  function partAssetBadges(p: typeof progressMap[number] | undefined) {
+    let opened: string[] = [];
+    try { opened = JSON.parse((p?.openedAssets as string) ?? "[]"); } catch {}
+    const vp = p?.videoWatchPercent ?? 0;
+    const assets = [
+      { key: "video",       label: vp >= 85 ? "✓ Video" : vp > 0 ? `Video ${vp}%` : "Video",                               done: vp >= 85,              partial: vp > 0 && vp < 85 },
+      { key: "briefing",    label: p?.briefingOpened        ? "✓ Briefing"    : "Briefing",                                   done: !!p?.briefingOpened,   partial: false },
+      { key: "slides",      label: opened.includes("slides")    ? "✓ Slides"      : "Slides",                                done: opened.includes("slides"),    partial: false },
+      { key: "audio",       label: opened.includes("audio")     ? "✓ Audio"       : "Audio",                                 done: opened.includes("audio"),     partial: false },
+      { key: "mindmap",     label: opened.includes("mindmap")   ? "✓ Mind Map"    : "Mind Map",                              done: opened.includes("mindmap"),   partial: false },
+      { key: "infographic", label: opened.includes("infographic") ? "✓ Infographic" : "Infographic",                         done: opened.includes("infographic"), partial: false },
+      { key: "flashcards",  label: p?.flashcardsReviewed    ? "✓ Flashcards"  : "Flashcards",                                done: !!p?.flashcardsReviewed, partial: false },
+      { key: "quiz",        label: p?.quizPassed ? `✓ Quiz ${p.quizBestScore}%` : p?.quizBestScore ? `Quiz ${p.quizBestScore}%` : "Quiz", done: !!p?.quizPassed, partial: !!(p?.quizBestScore && !p?.quizPassed) },
+    ];
+    return (
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1 text-xs">
+        {assets.map((a, i) => (
+          <span key={a.key} className={a.done ? "text-green-400" : a.partial ? "text-amber-400" : "text-zinc-600"}>
+            {a.label}{i < assets.length - 1 ? <span className="ml-3 text-zinc-700">·</span> : null}
+          </span>
+        ))}
+      </div>
+    );
+  }
 
   // Lessons content
   const lessonsContent = (
@@ -401,24 +431,8 @@ export default async function LearnIndexPage() {
                               </p>
                             )}
 
-                            {/* Resources — green only for truly completed, muted otherwise */}
-                            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1 text-xs">
-                              <span className={(pProgress?.videoWatchPercent ?? 0) >= 85 ? "text-green-400" : (pProgress?.videoWatchPercent ?? 0) > 0 ? "text-amber-400" : "text-zinc-600"}>
-                                {(pProgress?.videoWatchPercent ?? 0) >= 85 ? "✓ Video" : (pProgress?.videoWatchPercent ?? 0) > 0 ? `Video ${pProgress!.videoWatchPercent}%` : "Video"}
-                              </span>
-                              <span className="text-zinc-700">·</span>
-                              <span className={pProgress?.briefingOpened ? "text-green-400" : "text-zinc-600"}>
-                                {pProgress?.briefingOpened ? "✓ Briefing" : "Briefing"}
-                              </span>
-                              <span className="text-zinc-700">·</span>
-                              <span className={pProgress?.flashcardsReviewed ? "text-green-400" : "text-zinc-600"}>
-                                {pProgress?.flashcardsReviewed ? "✓ Flashcards" : "Flashcards"}
-                              </span>
-                              <span className="text-zinc-700">·</span>
-                              <span className={pProgress?.quizPassed ? "text-green-400" : "text-zinc-600"}>
-                                {pProgress?.quizPassed ? `✓ Quiz ${pProgress.quizBestScore}%` : "Quiz"}
-                              </span>
-                            </div>
+                            {/* Resources — green=done, amber=in-progress, zinc=untouched */}
+                            {partAssetBadges(pProgress)}
                           </div>
 
                           <ChevronRight className="w-5 h-5 text-zinc-600 group-hover:text-amber-500 transition-colors flex-shrink-0" />
@@ -457,7 +471,8 @@ export default async function LearnIndexPage() {
                                     {isInProgress2 && <span className="px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-medium rounded">In Progress</span>}
                                   </div>
                                   <p className="font-medium mb-0.5 truncate text-white group-hover:text-amber-400">{part.title}</p>
-                                  {part.subtitle && <p className="text-sm text-zinc-500 truncate">{part.subtitle}</p>}
+                                  {part.subtitle && <p className="text-sm text-zinc-500 truncate mb-1">{part.subtitle}</p>}
+                                  {partAssetBadges(pProgress2)}
                                 </div>
                                 <ChevronRight className="w-5 h-5 text-zinc-600 group-hover:text-amber-500 transition-colors flex-shrink-0" />
                               </div>

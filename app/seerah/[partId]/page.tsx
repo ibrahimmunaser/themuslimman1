@@ -7,6 +7,7 @@ import { getPartById, PARTS } from "@/lib/content";
 import { ERA_MAP } from "@/lib/types";
 import type { Part } from "@/lib/types";
 import { getPartPageData } from "@/lib/part-content-cache";
+import { prisma } from "@/lib/db";
 import {
   ArrowLeft,
   ChevronLeft,
@@ -16,6 +17,7 @@ import { PartTabs } from "@/components/part/part-tabs";
 import { StudentLayout } from "@/components/student/student-layout";
 import { StudyTimeTracker } from "@/components/study-time-tracker";
 import { trackPartOpened } from "@/app/actions/progress";
+import { PartProgressBadges } from "@/components/part/part-progress-badges";
 
 export const dynamic = "force-dynamic";
 
@@ -139,16 +141,32 @@ export default async function SeerahPartPage(props: Props) {
   //    joins this same promise rather than starting a new one.
   getPartPageData(n).catch(() => {});
 
-  // ② Auth + access check (sequential — must finish before rendering anything)
+  // ② Auth + access check + progress fetch (parallel where possible)
   const user = await requireStudent();
   if (!user.studentProfileId) notFound();
 
-  if (n !== 1) {
-    const hasAccess = await hasActiveCourseAccess(user.id);
-    if (!hasAccess) redirect("/pricing");
-  }
+  const [accessOk, partProgress] = await Promise.all([
+    n !== 1 ? hasActiveCourseAccess(user.id) : Promise.resolve(true),
+    prisma.partProgress.findUnique({
+      where: { userId_partNumber: { userId: user.id, partNumber: n } },
+      select: {
+        videoWatchPercent:  true,
+        briefingOpened:     true,
+        quizPassed:         true,
+        quizBestScore:      true,
+        flashcardsReviewed: true,
+        openedAssets:       true,
+      },
+    }),
+  ]);
+
+  if (!accessOk) redirect("/pricing");
 
   const userPlan = "complete" as const;
+
+  // Parse openedAssets for the live header badge component
+  let openedAssets: string[] = [];
+  try { openedAssets = JSON.parse((partProgress?.openedAssets as string) ?? "[]"); } catch {}
 
   // ③ Background fire-and-forget tasks (don't block rendering)
   trackPartOpened(n).catch(() => {});
@@ -197,6 +215,18 @@ export default async function SeerahPartPage(props: Props) {
             {partBase.subtitle && (
               <p className="text-sm text-text-secondary mt-1">{partBase.subtitle}</p>
             )}
+
+            {/* Per-asset progress indicators — live client component */}
+            <PartProgressBadges
+              initial={{
+                videoWatchPercent:  partProgress?.videoWatchPercent  ?? 0,
+                briefingOpened:     partProgress?.briefingOpened     ?? false,
+                quizPassed:         partProgress?.quizPassed         ?? false,
+                quizBestScore:      partProgress?.quizBestScore      ?? null,
+                flashcardsReviewed: partProgress?.flashcardsReviewed ?? false,
+                openedAssets,
+              }}
+            />
           </div>
         </div>
 

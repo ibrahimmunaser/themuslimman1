@@ -82,6 +82,7 @@ export function SlidesViewer({ slides, title, type = "presented", partNumber, pr
   useEffect(() => {
     if (!partNumber || previewMode || !slides.length) return;
     trackAssetOpened(partNumber, "slides").catch(() => {});
+    window.dispatchEvent(new CustomEvent("seerah:progressUpdate", { detail: { openedAssets: ["slides"] } }));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

@@ -15,12 +15,20 @@ type UserPlan = "essentials" | "complete";
 
 async function getUserPlan(userId: string): Promise<UserPlan | null> {
   console.log(`[PROGRESS] getUserPlan: Fetching plan for user ${userId}`);
-  const purchases = await prisma.purchase.findMany({
-    where: { userId, status: "succeeded" },
-    select: { planId: true },
-  });
-  
-  if (purchases.some((p) => p.planId === "complete")) {
+
+  // Check all three access signals in parallel: hasPaid flag, lifetime purchase, active subscription.
+  // Monthly subscribers have no Purchase row — they would silently fail progress tracking
+  // if we only checked purchases.
+  const [user, purchases, subscription] = await Promise.all([
+    prisma.user.findUnique({ where: { id: userId }, select: { hasPaid: true } }),
+    prisma.purchase.findMany({ where: { userId, status: "succeeded" }, select: { planId: true } }),
+    prisma.subscription.findFirst({
+      where: { userId, status: { in: ["active", "trialing"] } },
+      select: { id: true },
+    }),
+  ]);
+
+  if (purchases.some((p) => p.planId === "complete") || user?.hasPaid || subscription) {
     console.log(`[PROGRESS] getUserPlan: User ${userId} has "complete" plan`);
     return "complete";
   }
@@ -28,8 +36,8 @@ async function getUserPlan(userId: string): Promise<UserPlan | null> {
     console.log(`[PROGRESS] getUserPlan: User ${userId} has "essentials" plan`);
     return "essentials";
   }
-  
-  console.log(`[PROGRESS] getUserPlan: User ${userId} has no valid plan (purchases: ${purchases.length})`);
+
+  console.log(`[PROGRESS] getUserPlan: User ${userId} has no valid plan`);
   return null;
 }
 

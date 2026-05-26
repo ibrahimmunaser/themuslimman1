@@ -175,6 +175,7 @@ function InfographicPanel({ part, previewMode }: { part: Part; previewMode?: boo
   useEffect(() => {
     if (loaded && !hasTrackedView && !previewMode && part.partNumber) {
       trackAssetOpened(part.partNumber, "infographic").catch(() => {});
+      window.dispatchEvent(new CustomEvent("seerah:progressUpdate", { detail: { openedAssets: ["infographic"] } }));
       setHasTrackedView(true);
     }
   }, [loaded, hasTrackedView, previewMode, part.partNumber]);
@@ -366,7 +367,7 @@ function SubTabContent({ id, part, previewMode, assetUrls }: {
     case "facts":
       return wrap(part.assets.statementOfFactsText ? <FactsViewer content={part.assets.statementOfFactsText} partNumber={part.partNumber} previewMode={previewMode} /> : <EmptyContent label="Facts" />);
     case "flashcards":
-      return wrap(part.assets.flashcards ? <FlashcardsViewer flashcards={part.assets.flashcards} /> : <EmptyContent label="Flashcards" />);
+      return wrap(part.assets.flashcards ? <FlashcardsViewer flashcards={part.assets.flashcards} partNumber={part.partNumber} /> : <EmptyContent label="Flashcards" />);
     case "quiz":
       return wrap(part.assets.quiz ? <QuizViewer quiz={part.assets.quiz} partNumber={part.partNumber} previewMode={previewMode} /> : <EmptyContent label="Quiz" />);
     case "slides":      return <SlidesPanel part={part} previewMode={previewMode} />;

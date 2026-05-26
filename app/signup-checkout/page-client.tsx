@@ -270,7 +270,7 @@ function SignupCheckoutContent() {
                 <Input
                   label="Full name"
                   type="text"
-                  placeholder="Ibrahim Munaser"
+                  placeholder="Your full name"
                   value={form.fullName}
                   onChange={(e) => setForm({ ...form, fullName: e.target.value })}
                   required

@@ -44,9 +44,21 @@ export function AudioPlayer({ src, title, partNumber, compact = false, previewMo
   useEffect(() => {
     if (playing && !hasTrackedPlay && partNumber && !previewMode) {
       trackAssetOpened(partNumber, "audio").catch(() => {});
+      window.dispatchEvent(new CustomEvent("seerah:progressUpdate", { detail: { openedAssets: ["audio"] } }));
       setHasTrackedPlay(true);
     }
   }, [playing, hasTrackedPlay, partNumber, previewMode]);
+
+  // Pause audio when video starts playing elsewhere on the page
+  useEffect(() => {
+    const handler = () => {
+      if (audioRef.current && !audioRef.current.paused) {
+        audioRef.current.pause();
+      }
+    };
+    window.addEventListener("seerah:videoPlaying", handler);
+    return () => window.removeEventListener("seerah:videoPlaying", handler);
+  }, []);
 
   // Close speed menu when clicking outside
   useEffect(() => {
@@ -115,7 +127,7 @@ export function AudioPlayer({ src, title, partNumber, compact = false, previewMo
         preload="metadata"
         onTimeUpdate={handleTimeUpdate}
         onEnded={() => setPlaying(false)}
-        onPlay={() => setPlaying(true)}
+        onPlay={() => { setPlaying(true); window.dispatchEvent(new CustomEvent("seerah:audioPlaying")); }}
         onPause={() => setPlaying(false)}
       />
 

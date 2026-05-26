@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { clsx } from "clsx";
 import { ChevronLeft, ChevronRight, RotateCcw, Shuffle } from "lucide-react";
 import type { FlashcardSet, FlashcardLevel, Flashcard } from "@/lib/types";
+import { trackFlashcardsReviewed } from "@/app/actions/progress";
 
 interface FlashcardsViewerProps {
   flashcards: FlashcardSet;
+  partNumber?: number;
 }
 
 const LEVELS: { id: FlashcardLevel; label: string }[] = [
@@ -122,11 +124,23 @@ function FlipCard({ card, index, total }: { card: Flashcard; index: number; tota
   );
 }
 
-export function FlashcardsViewer({ flashcards }: FlashcardsViewerProps) {
+export function FlashcardsViewer({ flashcards, partNumber }: FlashcardsViewerProps) {
   const [level, setLevel] = useState<FlashcardLevel>("easy");
   const [index, setIndex] = useState(0);
   const [deck, setDeck] = useState<Flashcard[]>(flashcards.easy);
   const [shuffled, setShuffled] = useState(false);
+  const trackedRef = useRef(false);
+
+  // Track on first open (mount) and update the header badge live.
+  useEffect(() => {
+    if (!partNumber || trackedRef.current) return;
+    trackedRef.current = true;
+    trackFlashcardsReviewed(partNumber).catch(() => {});
+    window.dispatchEvent(
+      new CustomEvent("seerah:progressUpdate", { detail: { flashcardsReviewed: true } })
+    );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const switchLevel = useCallback((newLevel: FlashcardLevel) => {
     setLevel(newLevel);

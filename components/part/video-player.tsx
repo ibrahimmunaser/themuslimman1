@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
-import { Play, Pause, Volume2, VolumeX, Maximize } from "lucide-react";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { Play, Pause, Volume2, VolumeX, Maximize, RotateCcw, RotateCw } from "lucide-react";
 import { trackVideoProgress } from "@/app/actions/progress";
 
 // Report at these percent thresholds (once each per mount)
@@ -19,6 +19,17 @@ interface VideoPlayerProps {
 export function VideoPlayer({ src, title, poster, partNumber, previewMode }: VideoPlayerProps) {
   const videoRef   = useRef<HTMLVideoElement>(null);
   const reportedRef = useRef<Set<number>>(new Set());
+
+  // Pause video when audio starts playing elsewhere on the page
+  useEffect(() => {
+    const handler = () => {
+      if (videoRef.current && !videoRef.current.paused) {
+        videoRef.current.pause();
+      }
+    };
+    window.addEventListener("seerah:audioPlaying", handler);
+    return () => window.removeEventListener("seerah:audioPlaying", handler);
+  }, []);
 
   const [started,  setStarted]  = useState(false);
   const [playing,  setPlaying]  = useState(false);
@@ -130,7 +141,7 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode }: Vid
             trackVideoProgress(partNumber, 100).catch(() => {});
           }
         }}
-        onPlay={() => setPlaying(true)}
+        onPlay={() => { setPlaying(true); window.dispatchEvent(new CustomEvent("seerah:videoPlaying")); }}
         onPause={() => setPlaying(false)}
         title={title}
       />
@@ -175,6 +186,26 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode }: Vid
               ? <Pause className="w-4 h-4 text-white" />
               : <Play  className="w-4 h-4 text-white ml-0.5" />
             }
+          </button>
+
+          {/* Rewind 10s */}
+          <button
+            onClick={() => { if (videoRef.current) videoRef.current.currentTime = Math.max(0, videoRef.current.currentTime - 10); }}
+            className="relative w-7 h-7 flex items-center justify-center text-white/70 hover:text-white transition-colors"
+            title="Rewind 10s"
+          >
+            <RotateCcw className="w-5 h-5" />
+            <span className="absolute text-[7px] font-bold leading-none">10</span>
+          </button>
+
+          {/* Forward 10s */}
+          <button
+            onClick={() => { if (videoRef.current) videoRef.current.currentTime = Math.min(videoRef.current.duration || Infinity, videoRef.current.currentTime + 10); }}
+            className="relative w-7 h-7 flex items-center justify-center text-white/70 hover:text-white transition-colors"
+            title="Forward 10s"
+          >
+            <RotateCw className="w-5 h-5" />
+            <span className="absolute text-[7px] font-bold leading-none">10</span>
           </button>
 
           <div className="relative flex items-center gap-2">

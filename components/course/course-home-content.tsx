@@ -3,7 +3,7 @@ import {
   Play, ArrowRight,
   Video, Headphones, FileText, Map, Layers, Brain, ClipboardCheck, BarChart2,
   BookOpen, Clock, Milestone, HelpCircle, Mail,
-  Image as ImageIcon,
+  Image as ImageIcon, Info,
 } from "lucide-react";
 import { PrefetchPartLink } from "@/components/course/prefetch-part-link";
 
@@ -63,6 +63,10 @@ export function CourseHomeContent({
               <span className="text-text-muted font-normal text-xl"> / {totalLessons}</span>
             </p>
             <p className="text-xs text-text-muted mt-1">Parts fully completed</p>
+            <p className="flex items-center gap-1 text-xs text-text-muted/70 mt-1.5">
+              <Info className="w-3 h-3 shrink-0" />
+              Requires video + briefing + quiz (80%+)
+            </p>
             {completedLessons > 0 && (
               <div className="mt-3 h-1.5 bg-surface-raised rounded-full overflow-hidden">
                 <div

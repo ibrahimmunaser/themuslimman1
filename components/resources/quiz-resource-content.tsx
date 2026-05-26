@@ -207,17 +207,10 @@ export function QuizResourceContent({
                         </div>
                       )}
 
-                      <div className="relative z-10 flex flex-col items-center gap-2">
+                      <div className="relative z-10 flex items-center justify-center">
                         <div className="w-14 h-14 rounded-full bg-black/40 border border-white/25 flex items-center justify-center group-hover:bg-white/20 group-hover:border-white/40 transition-all">
                           <ClipboardCheck className="w-6 h-6 text-white" />
                         </div>
-                        {bestScore != null && (
-                          <div className={`text-2xl font-bold drop-shadow ${
-                            isPassed ? "text-green-400" : "text-red-400"
-                          }`}>
-                            {bestScore}%
-                          </div>
-                        )}
                       </div>
                     </div>
 
@@ -226,14 +219,14 @@ export function QuizResourceContent({
                       <div className="flex items-center gap-2 mb-2">
                         <span className="text-xs font-medium text-amber-500">Part {part.partNumber}</span>
                         {bestScore != null && (
-                          <span className={`px-2 py-0.5 border text-xs font-medium rounded ${
+                          <span className={`px-2 py-0.5 border text-xs font-semibold rounded ${
                             isPerfect
                               ? "bg-amber-500/10 border-amber-500/20 text-amber-400"
                               : isPassed
                               ? "bg-green-500/10 border-green-500/20 text-green-400"
                               : "bg-red-500/10 border-red-500/20 text-red-400"
                           }`}>
-                            {isPerfect ? "Perfect" : isPassed ? "Passed" : "Failed"}
+                            {bestScore}% — {isPerfect ? "Perfect" : isPassed ? "Passed" : "Failed"}
                           </span>
                         )}
                       </div>

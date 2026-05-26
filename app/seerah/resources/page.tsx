@@ -89,8 +89,10 @@ export default async function SeerahResourcesPage() {
   const quizCompletedCount = progress.filter((p) => p.quizCompleted).length;
   const quizPassedCount = progress.filter((p) => p.quizPassed).length;
   const quizTotalAttempts = progress.reduce((sum, p) => sum + (p.quizAttempts || 0), 0);
-  const quizAvgScore = quizCompletedCount > 0
-    ? progress.reduce((sum, p) => sum + (p.quizBestScore || 0), 0) / quizCompletedCount
+  // Average only rows where the user has a recorded best score.
+  const quizScoredRows = progress.filter((p) => (p.quizAttempts || 0) > 0 && p.quizBestScore != null);
+  const quizAvgScore = quizScoredRows.length > 0
+    ? quizScoredRows.reduce((sum, p) => sum + (p.quizBestScore || 0), 0) / quizScoredRows.length
     : 0;
 
   // Progress map for quiz resource content
