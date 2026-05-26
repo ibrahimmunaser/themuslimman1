@@ -6,9 +6,10 @@ export const dynamic = "force-dynamic";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { partNumber: string } }
+  { params }: { params: Promise<{ partNumber: string }> }
 ) {
-  const partNumber = parseInt(params.partNumber, 10);
+  const { partNumber: partNumberStr } = await params;
+  const partNumber = parseInt(partNumberStr, 10);
   if (isNaN(partNumber) || partNumber < 1 || partNumber > 100) {
     return NextResponse.json({ error: "Invalid partNumber" }, { status: 400 });
   }
