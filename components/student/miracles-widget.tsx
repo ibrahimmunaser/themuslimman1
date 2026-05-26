@@ -23,7 +23,11 @@ function pickRandom(exclude?: number): Miracle {
 
 export function MiraclesWidget() {
   const { visible } = useWidgetCycle();
-  const [miracle, setMiracle] = useState<Miracle>(() => pickRandom());
+  const [miracle, setMiracle] = useState<Miracle>(MIRACLES[0]);
+
+  useEffect(() => {
+    setMiracle(pickRandom());
+  }, []);
 
   // Swap content at the midpoint of the fade-out (while invisible)
   useEffect(() => {

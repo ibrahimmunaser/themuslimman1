@@ -33,7 +33,13 @@ function pickRandom(exclude?: number): Fact {
 
 export function DidYouKnowWidget() {
   const { visible } = useWidgetCycle();
-  const [fact, setFact] = useState<Fact>(() => pickRandom());
+  // Start with index 0 so server and client render the same text (avoids hydration mismatch).
+  // Randomize immediately after mount, then again on each cycle.
+  const [fact, setFact] = useState<Fact>(FACTS[0]);
+
+  useEffect(() => {
+    setFact(pickRandom());
+  }, []);
 
   // Swap content at the midpoint of the fade-out (while invisible)
   useEffect(() => {

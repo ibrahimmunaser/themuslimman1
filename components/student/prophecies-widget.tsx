@@ -23,7 +23,11 @@ function pickRandom(exclude?: number): Prophecy {
 
 export function PropheciesWidget() {
   const { visible } = useWidgetCycle();
-  const [prophecy, setProphecy] = useState<Prophecy>(() => pickRandom());
+  const [prophecy, setProphecy] = useState<Prophecy>(PROPHECIES[0]);
+
+  useEffect(() => {
+    setProphecy(pickRandom());
+  }, []);
 
   useEffect(() => {
     if (!visible) {
