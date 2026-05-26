@@ -134,7 +134,7 @@ export function TextResourceContent({
             </div>
             <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
               <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">Read</p>
-              <p className="text-3xl font-bold text-green-400">{localReadCount}</p>
+              <p className={`text-3xl font-bold ${localReadCount > 0 ? "text-green-400" : "text-zinc-400"}`}>{localReadCount}</p>
             </div>
             <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
               <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">Unread</p>

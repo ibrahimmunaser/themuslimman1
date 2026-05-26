@@ -132,11 +132,11 @@ export function QuizResourceContent({
             </div>
             <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
               <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">Passed</p>
-              <p className="text-3xl font-bold text-green-400">{passedCount}</p>
+              <p className={`text-3xl font-bold ${passedCount > 0 ? "text-green-400" : "text-zinc-400"}`}>{passedCount}</p>
             </div>
             <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
               <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">Average Score</p>
-              <p className="text-3xl font-bold text-amber-400">{avgScore}%</p>
+              <p className={`text-3xl font-bold ${avgScore > 0 ? "text-amber-400" : "text-zinc-400"}`}>{avgScore}%</p>
             </div>
             <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
               <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">Total Attempts</p>

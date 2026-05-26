@@ -213,7 +213,7 @@ export function AudioResourceContent({
             </div>
             <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
               <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">Listened</p>
-              <p className="text-3xl font-bold text-green-400">{localCompletedCount}</p>
+              <p className={`text-3xl font-bold ${localCompletedCount > 0 ? "text-green-400" : "text-zinc-400"}`}>{localCompletedCount}</p>
             </div>
             <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
               <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">Not Listened</p>
