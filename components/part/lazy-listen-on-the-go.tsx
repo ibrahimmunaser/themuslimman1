@@ -8,13 +8,21 @@ interface LazyListenOnTheGoProps {
   partNumber: number;
   title?: string;
   previewMode?: boolean;
+  /** Pre-fetched signed URL — skips the /api/part/N/assets call when provided */
+  audioUrl?: string;
 }
 
-export function LazyListenOnTheGo({ partNumber, title, previewMode }: LazyListenOnTheGoProps) {
-  const [audioUrl, setAudioUrl] = useState<string | undefined>();
-  const [loading, setLoading] = useState(true);
+export function LazyListenOnTheGo({ partNumber, title, previewMode, audioUrl: audioUrlProp }: LazyListenOnTheGoProps) {
+  const [audioUrl, setAudioUrl] = useState<string | undefined>(audioUrlProp);
+  const [loading, setLoading] = useState(!audioUrlProp);
 
   useEffect(() => {
+    if (audioUrlProp) {
+      setAudioUrl(audioUrlProp);
+      setLoading(false);
+      return;
+    }
+
     let mounted = true;
 
     async function fetchAudioUrl() {
@@ -41,7 +49,7 @@ export function LazyListenOnTheGo({ partNumber, title, previewMode }: LazyListen
     return () => {
       mounted = false;
     };
-  }, [partNumber]);
+  }, [partNumber, audioUrlProp]);
 
   // Don't show anything while loading or if no audio available
   if (loading || !audioUrl) {

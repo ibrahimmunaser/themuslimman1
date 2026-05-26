@@ -9,14 +9,22 @@ interface LazyVideoPlayerProps {
   title?: string;
   poster?: string;
   previewMode?: boolean;
+  /** Pre-fetched signed URL — skips the /api/part/N/assets call when provided */
+  videoUrl?: string;
 }
 
-export function LazyVideoPlayer({ partNumber, title, poster, previewMode }: LazyVideoPlayerProps) {
-  const [videoUrl, setVideoUrl] = useState<string | undefined>();
-  const [loading, setLoading] = useState(true);
+export function LazyVideoPlayer({ partNumber, title, poster, previewMode, videoUrl: videoUrlProp }: LazyVideoPlayerProps) {
+  const [videoUrl, setVideoUrl] = useState<string | undefined>(videoUrlProp);
+  const [loading, setLoading] = useState(!videoUrlProp);
   const [error, setError] = useState(false);
 
   useEffect(() => {
+    if (videoUrlProp) {
+      setVideoUrl(videoUrlProp);
+      setLoading(false);
+      return;
+    }
+
     let mounted = true;
 
     async function fetchVideoUrl() {
@@ -44,7 +52,7 @@ export function LazyVideoPlayer({ partNumber, title, poster, previewMode }: Lazy
     return () => {
       mounted = false;
     };
-  }, [partNumber]);
+  }, [partNumber, videoUrlProp]);
 
   if (loading) {
     return (

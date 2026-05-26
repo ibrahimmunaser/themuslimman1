@@ -8,13 +8,22 @@ interface LazyMindmapViewerProps {
   partNumber: number;
   title: string;
   previewMode?: boolean;
+  /** Pre-fetched signed URL — skips the /api/part/N/assets call when provided */
+  mindmapUrl?: string;
 }
 
-export function LazyMindmapViewer({ partNumber, title, previewMode }: LazyMindmapViewerProps) {
-  const [mindmapUrl, setMindmapUrl] = useState<string | undefined>();
-  const [loading, setLoading] = useState(true);
+export function LazyMindmapViewer({ partNumber, title, previewMode, mindmapUrl: mindmapUrlProp }: LazyMindmapViewerProps) {
+  const [mindmapUrl, setMindmapUrl] = useState<string | undefined>(mindmapUrlProp);
+  const [loading, setLoading] = useState(!mindmapUrlProp);
 
   useEffect(() => {
+    if (mindmapUrlProp) {
+      setMindmapUrl(mindmapUrlProp);
+      setLoading(false);
+      if (!previewMode) trackAssetOpened(partNumber, "mindmap").catch(() => {});
+      return;
+    }
+
     let mounted = true;
 
     async function fetchMindmapUrl() {
@@ -28,7 +37,6 @@ export function LazyMindmapViewer({ partNumber, title, previewMode }: LazyMindma
           setMindmapUrl(data.mindmapUrl);
           setLoading(false);
           
-          // Track when mindmap is loaded
           if (!previewMode && data.mindmapUrl) {
             trackAssetOpened(partNumber, "mindmap").catch(() => {});
           }
@@ -46,7 +54,7 @@ export function LazyMindmapViewer({ partNumber, title, previewMode }: LazyMindma
     return () => {
       mounted = false;
     };
-  }, [partNumber, previewMode]);
+  }, [partNumber, previewMode, mindmapUrlProp]);
 
   if (loading) {
     return (

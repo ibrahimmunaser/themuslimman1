@@ -305,8 +305,18 @@ function SlidesPanel({ part, previewMode }: { part: Part; previewMode?: boolean 
   );
 }
 
-function SubTabContent({ id, part, previewMode }: { id: SubTabId; part: Part; previewMode?: boolean }) {
-  // Generic wrap for non-article content (flashcards, quiz, facts)
+interface PartAssetUrls {
+  videoUrl?: string;
+  audioUrl?: string;
+  mindmapUrl?: string;
+}
+
+function SubTabContent({ id, part, previewMode, assetUrls }: {
+  id: SubTabId;
+  part: Part;
+  previewMode?: boolean;
+  assetUrls: PartAssetUrls;
+}) {
   const wrap = (child: React.ReactNode) => (
     <div className="rounded-xl border border-border/60 bg-surface p-5 sm:p-7">{child}</div>
   );
@@ -320,15 +330,16 @@ function SubTabContent({ id, part, previewMode }: { id: SubTabId; part: Part; pr
             title={part.title}
             poster={part.assets.slides?.presented[0]}
             previewMode={previewMode}
+            videoUrl={assetUrls.videoUrl}
           />
           <LazyListenOnTheGo
             partNumber={part.partNumber}
             title={part.title}
             previewMode={previewMode}
+            audioUrl={assetUrls.audioUrl}
           />
         </div>
       );
-    // Text content — TextViewer owns its own premium article container
     case "briefing":
       return part.assets.briefingText
         ? <TextViewer content={part.assets.briefingText} partNumber={part.partNumber} assetId="briefing" previewMode={previewMode} />
@@ -337,7 +348,6 @@ function SubTabContent({ id, part, previewMode }: { id: SubTabId; part: Part; pr
       return part.assets.studyGuideText
         ? <TextViewer content={part.assets.studyGuideText} partNumber={part.partNumber} assetId="study_guide" previewMode={previewMode} />
         : wrap(<EmptyContent label="Study Guide" />);
-    // Non-article content keeps the generic card wrap
     case "facts":
       return wrap(part.assets.statementOfFactsText ? <FactsViewer content={part.assets.statementOfFactsText} partNumber={part.partNumber} previewMode={previewMode} /> : <EmptyContent label="Facts" />);
     case "flashcards":
@@ -345,7 +355,7 @@ function SubTabContent({ id, part, previewMode }: { id: SubTabId; part: Part; pr
     case "quiz":
       return wrap(part.assets.quiz ? <QuizViewer quiz={part.assets.quiz} partNumber={part.partNumber} previewMode={previewMode} /> : <EmptyContent label="Quiz" />);
     case "slides":      return <SlidesPanel part={part} previewMode={previewMode} />;
-    case "mindmap":     return <LazyMindmapViewer partNumber={part.partNumber} title={`Part ${part.partNumber} — Mindmap`} previewMode={previewMode} />;
+    case "mindmap":     return <LazyMindmapViewer partNumber={part.partNumber} title={`Part ${part.partNumber} — Mindmap`} previewMode={previewMode} mindmapUrl={assetUrls.mindmapUrl} />;
     case "infographic": return <InfographicPanel part={part} previewMode={previewMode} />;
   }
 }
@@ -445,13 +455,37 @@ export function PartTabs({ part, userPlan, previewMode = false }: PartTabsProps)
 
   const [activeSubTab, setActiveSubTab] = useState<SubTabId>(subTabs[0]?.id ?? "video");
 
+  // Fetch video/audio/mindmap signed URLs once — passed to children to avoid repeated API calls
+  const [assetUrls, setAssetUrls] = useState<PartAssetUrls>({});
+  useEffect(() => {
+    fetch(`/api/part/${part.partNumber}/assets`)
+      .then((r) => r.ok ? r.json() : {})
+      .then((data) => setAssetUrls({ videoUrl: data.videoUrl, audioUrl: data.audioUrl, mindmapUrl: data.mindmapUrl }))
+      .catch(() => {});
+  }, [part.partNumber]);
+
+  // Track which panels have been rendered at least once — never unmount after first visit
+  const [renderedPanels, setRenderedPanels] = useState<Set<string>>(
+    () => new Set([`${defaultMode.id}::${getModeSubTabs(defaultMode, part)[0]?.id ?? defaultMode.subTabs[0].id}`])
+  );
+
   const handleModeChange = (modeId: ModeId) => {
     setActiveMode(modeId);
     const newSubTabs = getModeSubTabs(MODES.find((m) => m.id === modeId)!, part);
-    setActiveSubTab(newSubTabs[0]?.id ?? MODES.find((m) => m.id === modeId)!.subTabs[0].id);
+    const newSubTabId = newSubTabs[0]?.id ?? MODES.find((m) => m.id === modeId)!.subTabs[0].id;
+    setActiveSubTab(newSubTabId as SubTabId);
+    setRenderedPanels((prev) => new Set([...prev, `${modeId}::${newSubTabId}`]));
+  };
+
+  const handleSubTabChange = (tabId: SubTabId) => {
+    setActiveSubTab(tabId);
+    setRenderedPanels((prev) => new Set([...prev, `${activeMode}::${tabId}`]));
   };
 
   const currentSubTab = subTabs.find((t) => t.id === activeSubTab)?.id ?? subTabs[0]?.id;
+
+  // All panels that should ever be rendered (visited at least once)
+  const allPanels = [...renderedPanels];
 
   return (
     <div className="space-y-6">
@@ -471,9 +505,7 @@ export function PartTabs({ part, userPlan, previewMode = false }: PartTabsProps)
             />
           );
         })}
-        {/* Timeline — hidden in free preview (requires login) */}
         <TimelineButton partNumber={part.partNumber} era={part.era} previewMode={previewMode} />
-        {/* Trailing spacer — prevents the last button from hitting the scroll container edge */}
         <div className="flex-shrink-0 w-4" aria-hidden="true" />
       </div>
 
@@ -486,7 +518,7 @@ export function PartTabs({ part, userPlan, previewMode = false }: PartTabsProps)
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveSubTab(tab.id)}
+                onClick={() => handleSubTabChange(tab.id)}
                 className={clsx(
                   "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all duration-150 flex-shrink-0 whitespace-nowrap",
                   isActive
@@ -502,17 +534,23 @@ export function PartTabs({ part, userPlan, previewMode = false }: PartTabsProps)
         </div>
       )}
 
-      {/* ── Content ─────────────────────────────────────────────────────── */}
-      {currentSubTab && (
-        <div className="pt-1">
-          <SubTabContent
-            key={`${activeMode}-${currentSubTab}`}
-            id={currentSubTab}
-            part={part}
-            previewMode={previewMode}
-          />
-        </div>
-      )}
+      {/* ── Content — panels stay mounted after first visit, hidden via CSS ── */}
+      <div className="pt-1">
+        {allPanels.map((panelKey) => {
+          const [modeId, subTabId] = panelKey.split("::");
+          const isVisible = activeMode === modeId && currentSubTab === subTabId;
+          return (
+            <div key={panelKey} className={isVisible ? "" : "hidden"}>
+              <SubTabContent
+                id={subTabId as SubTabId}
+                part={part}
+                previewMode={previewMode}
+                assetUrls={assetUrls}
+              />
+            </div>
+          );
+        })}
+      </div>
 
     </div>
   );
