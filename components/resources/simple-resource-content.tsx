@@ -10,7 +10,7 @@ import Link from "next/link";
 import { SlidesViewer } from "@/components/part/slides-viewer";
 import { FlashcardsViewer } from "@/components/part/flashcards-viewer";
 import { trackAssetOpened } from "@/app/actions/progress";
-import type { FlashcardSet } from "@/lib/types";
+import type { FlashcardSet, SlideFile } from "@/lib/types";
 import { getCachedResource, setCachedResource, prefetchResource } from "@/lib/resource-cache";
 
 /**
@@ -124,7 +124,7 @@ export function SimpleResourceContent({
 }: SimpleResourceContentProps) {
   const [mounted, setMounted] = useState(false);
   const [selectedPart, setSelectedPart] = useState<{ partNumber: number; title: string; subtitle?: string; id: string } | null>(null);
-  const [slideData, setSlideData] = useState<{ presented: string[]; detailed: string[]; facts: string[] } | null>(null);
+  const [slideData, setSlideData] = useState<{ presented: SlideFile[]; detailed: SlideFile[]; facts: SlideFile[] } | null>(null);
   const [slideType, setSlideType] = useState<"presented" | "detailed" | "facts">("presented");
   const [isLoadingSlides, setIsLoadingSlides] = useState(false);
   const [flashcardData, setFlashcardData] = useState<FlashcardSet | null>(null);
@@ -157,7 +157,7 @@ export function SimpleResourceContent({
   useEffect(() => {
     if (selectedPart && resourceType === "slides") {
       const cacheKey = `slides-${selectedPart.id}`;
-      const cached = getCachedResource<{ presented: string[]; detailed: string[]; facts: string[] }>(cacheKey);
+      const cached = getCachedResource<{ presented: SlideFile[]; detailed: SlideFile[]; facts: SlideFile[] }>(cacheKey);
       
       if (cached) {
         // Use cached data immediately
