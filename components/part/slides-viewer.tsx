@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { ChevronLeft, ChevronRight, Layers, Maximize2, X } from "lucide-react";
-import Image from "next/image";
 import { trackAssetOpened } from "@/app/actions/progress";
+
 
 /** Derive the pre-generated WebP URL from an R2 PNG URL (or return null for local paths). */
 function webpVariant(url: string, suffix: "-thumb" | "-medium"): string | null {
@@ -13,7 +13,7 @@ function webpVariant(url: string, suffix: "-thumb" | "-medium"): string | null {
   return url.replace(/\.png(\?|$)/i, `${suffix}.webp$1`);
 }
 
-/** Main slide image: tries pre-generated WebP, falls back to next/image on error. */
+/** Main slide image: tries WebP first, falls back to the original (PNG) URL. */
 function SlideImg({ src, fallback, alt, priority }: { src: string; fallback: string; alt: string; priority?: boolean }) {
   const [useFallback, setUseFallback] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -24,19 +24,8 @@ function SlideImg({ src, fallback, alt, priority }: { src: string; fallback: str
     setUseFallback(false);
   }, [src]);
 
-  if (useFallback) {
-    return (
-      <Image
-        src={fallback}
-        alt={alt}
-        fill
-        className="object-contain"
-        sizes="(max-width: 1280px) 100vw, 1280px"
-        quality={85}
-        priority={priority}
-      />
-    );
-  }
+  const imgSrc = useFallback ? fallback : src;
+
   return (
     <>
       {!loaded && (
@@ -45,32 +34,29 @@ function SlideImg({ src, fallback, alt, priority }: { src: string; fallback: str
         </div>
       )}
       <img
-        src={src}
+        src={imgSrc}
         alt={alt}
         // eslint-disable-next-line react/no-unknown-property
         fetchPriority={priority ? "high" : "auto"}
         className={`max-w-full max-h-full object-contain transition-opacity duration-200 ${loaded ? "opacity-100" : "opacity-0"}`}
         onLoad={() => setLoaded(true)}
-        onError={() => setUseFallback(true)}
+        onError={() => {
+          if (!useFallback) setUseFallback(true);
+        }}
       />
     </>
   );
 }
 
-/** Thumbnail image: tries pre-generated WebP, falls back to next/image on error. */
+/** Thumbnail image: tries WebP first, falls back to the original (PNG) URL. */
 function ThumbImg({ src, fallback, alt }: { src: string; fallback: string; alt: string }) {
   const [useFallback, setUseFallback] = useState(false);
-  if (useFallback) {
-    return (
-      <Image src={fallback} alt={alt} fill className="object-cover" sizes="64px" quality={50} />
-    );
-  }
   return (
     <img
-      src={src}
+      src={useFallback ? fallback : src}
       alt={alt}
       className="w-full h-full object-cover"
-      onError={() => setUseFallback(true)}
+      onError={() => { if (!useFallback) setUseFallback(true); }}
     />
   );
 }
@@ -213,20 +199,12 @@ export function SlidesViewer({ slides, title, type = "presented", partNumber, pr
                 zIndex: idx === current ? 1 : 0,
               }}
             >
-              {mediumUrl ? (
-                // Pre-generated WebP served directly from R2 CDN — near-instant
-                <SlideImg src={mediumUrl} fallback={slide} alt={`Slide ${idx + 1}`} priority={idx === current} />
-              ) : (
-                <Image
-                  src={slide}
-                  alt={`Slide ${idx + 1}`}
-                  fill
-                  className="object-contain"
-                  sizes="(max-width: 1280px) 100vw, 1280px"
-                  priority={idx === current}
-                  quality={85}
-                />
-              )}
+              <SlideImg
+                src={mediumUrl ?? slide}
+                fallback={slide}
+                alt={`Slide ${idx + 1}`}
+                priority={idx === current}
+              />
             </div>
           );
         })}
@@ -273,18 +251,7 @@ export function SlidesViewer({ slides, title, type = "presented", partNumber, pr
                     : "border-border/50 opacity-50 hover:opacity-100"
                 }`}
               >
-                {thumbUrl ? (
-                  <ThumbImg src={thumbUrl} fallback={slide} alt={`Slide ${i + 1}`} />
-                ) : (
-                  <Image
-                    src={slide}
-                    alt={`Slide ${i + 1}`}
-                    fill
-                    className="object-cover"
-                    sizes="64px"
-                    quality={50}
-                  />
-                )}
+                <ThumbImg src={thumbUrl ?? slide} fallback={slide} alt={`Slide ${i + 1}`} />
               </button>
             );
           })}
