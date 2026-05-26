@@ -143,7 +143,7 @@ export function VideoResourceContent({
         </div>
       </div>
 
-      <div className="px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Continue Watching */}
         {mounted && continueWatchingPart && (
           <div className="mb-6 p-5 rounded-2xl bg-gold/5 border border-gold/20">
