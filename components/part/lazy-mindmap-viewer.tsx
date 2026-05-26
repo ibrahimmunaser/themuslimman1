@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { MindmapViewer } from "./mindmap-viewer";
 import { trackAssetOpened } from "@/app/actions/progress";
+import { fetchPartAssets } from "@/lib/part-asset-cache";
 
 interface LazyMindmapViewerProps {
   partNumber: number;
@@ -25,35 +26,16 @@ export function LazyMindmapViewer({ partNumber, title, previewMode, mindmapUrl: 
     }
 
     let mounted = true;
-
-    async function fetchMindmapUrl() {
-      try {
-        const response = await fetch(`/api/part/${partNumber}/assets`);
-        if (!response.ok) throw new Error("Failed to fetch mindmap");
-        
-        const data = await response.json();
-        
+    fetchPartAssets(partNumber)
+      .then((data) => {
         if (mounted) {
           setMindmapUrl(data.mindmapUrl);
           setLoading(false);
-          
-          if (!previewMode && data.mindmapUrl) {
-            trackAssetOpened(partNumber, "mindmap").catch(() => {});
-          }
+          if (!previewMode && data.mindmapUrl) trackAssetOpened(partNumber, "mindmap").catch(() => {});
         }
-      } catch (err) {
-        console.error("Error fetching mindmap URL:", err);
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    }
-
-    fetchMindmapUrl();
-
-    return () => {
-      mounted = false;
-    };
+      })
+      .catch(() => { if (mounted) setLoading(false); });
+    return () => { mounted = false; };
   }, [partNumber, previewMode, mindmapUrlProp]);
 
   if (loading) {

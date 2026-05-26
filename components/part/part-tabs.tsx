@@ -305,11 +305,7 @@ function SlidesPanel({ part, previewMode }: { part: Part; previewMode?: boolean 
   );
 }
 
-interface PartAssetUrls {
-  videoUrl?: string;
-  audioUrl?: string;
-  mindmapUrl?: string;
-}
+import { fetchPartAssets, type PartAssets as PartAssetUrls } from "@/lib/part-asset-cache";
 
 function SubTabContent({ id, part, previewMode, assetUrls }: {
   id: SubTabId;
@@ -443,9 +439,10 @@ interface PartTabsProps {
   part: Part;
   userPlan: UserPlan;
   previewMode?: boolean;
+  initialAssetUrls?: PartAssetUrls;
 }
 
-export function PartTabs({ part, userPlan, previewMode = false }: PartTabsProps) {
+export function PartTabs({ part, userPlan, previewMode = false, initialAssetUrls }: PartTabsProps) {
   const availableModes = MODES.filter((m) => getModeSubTabs(m, part).length > 0);
   const defaultMode = availableModes[0] ?? MODES[0];
 
@@ -455,14 +452,12 @@ export function PartTabs({ part, userPlan, previewMode = false }: PartTabsProps)
 
   const [activeSubTab, setActiveSubTab] = useState<SubTabId>(subTabs[0]?.id ?? "video");
 
-  // Fetch video/audio/mindmap signed URLs once — passed to children to avoid repeated API calls
-  const [assetUrls, setAssetUrls] = useState<PartAssetUrls>({});
+  // Use server-provided URLs immediately; fall back to client-side fetch only if not provided
+  const [assetUrls, setAssetUrls] = useState<PartAssetUrls>(initialAssetUrls ?? {});
   useEffect(() => {
-    fetch(`/api/part/${part.partNumber}/assets`)
-      .then((r) => r.ok ? r.json() : {})
-      .then((data) => setAssetUrls({ videoUrl: data.videoUrl, audioUrl: data.audioUrl, mindmapUrl: data.mindmapUrl }))
-      .catch(() => {});
-  }, [part.partNumber]);
+    if (initialAssetUrls?.videoUrl || initialAssetUrls?.audioUrl || initialAssetUrls?.mindmapUrl) return;
+    fetchPartAssets(part.partNumber).then(setAssetUrls);
+  }, [part.partNumber, initialAssetUrls]);
 
   // Track which panels have been rendered at least once — never unmount after first visit
   const [renderedPanels, setRenderedPanels] = useState<Set<string>>(

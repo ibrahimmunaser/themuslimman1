@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { VideoPlayer } from "./video-player";
 import { Play } from "lucide-react";
+import { fetchPartAssets } from "@/lib/part-asset-cache";
 
 interface LazyVideoPlayerProps {
   partNumber: number;
@@ -26,32 +27,10 @@ export function LazyVideoPlayer({ partNumber, title, poster, previewMode, videoU
     }
 
     let mounted = true;
-
-    async function fetchVideoUrl() {
-      try {
-        const response = await fetch(`/api/part/${partNumber}/assets`);
-        if (!response.ok) throw new Error("Failed to fetch video");
-        
-        const data = await response.json();
-        
-        if (mounted) {
-          setVideoUrl(data.videoUrl);
-          setLoading(false);
-        }
-      } catch (err) {
-        console.error("Error fetching video URL:", err);
-        if (mounted) {
-          setError(true);
-          setLoading(false);
-        }
-      }
-    }
-
-    fetchVideoUrl();
-
-    return () => {
-      mounted = false;
-    };
+    fetchPartAssets(partNumber)
+      .then((data) => { if (mounted) { setVideoUrl(data.videoUrl); setLoading(false); } })
+      .catch(() => { if (mounted) { setError(true); setLoading(false); } });
+    return () => { mounted = false; };
   }, [partNumber, videoUrlProp]);
 
   if (loading) {

@@ -4,18 +4,7 @@ import { requireStudent } from "@/lib/auth";
 import { hasActiveCourseAccess } from "@/lib/access";
 import { getPartById, PARTS } from "@/lib/content";
 import { ERA_MAP } from "@/lib/types";
-import {
-  readBriefing,
-  readStatementOfFacts,
-  readStudyGuide,
-  readReport,
-  getSlideFiles,
-  getInfographicFilename,
-  mindmapExists,
-  readQuiz,
-  readFlashcards,
-} from "@/lib/files";
-import { generateSignedR2Url, IMAGE_URL_EXPIRY } from "@/lib/r2";
+import { getPartPageData } from "@/lib/part-content-cache";
 import {
   ArrowLeft,
   ChevronLeft,
@@ -68,116 +57,45 @@ export default async function SeerahPartPage(props: Props) {
   // Mark part as started (fire-and-forget — doesn't block rendering)
   trackPartOpened(n).catch(() => {});
 
-  console.log(`[Part ${n}] Loading content for ${partId}`);
-  
-  // Get user's progress for this part (will be implemented later)
-  // TODO: Add direct progress tracking outside of class context
-  const progress = null;
-
-  // Load assets from R2 with error handling
-  let briefingText: string | null;
-  let statementOfFactsText: string | null;
-  let studyGuideText: string | null;
-  let reportText: string | null;
-  let quizData: any;
-  let flashcards: any;
-  let slidesPresentedFiles: string[];
-  let slidesDetailedFiles: string[];
-  let slidesFactsFiles: string[];
-  let infConcise: string | null;
-  let infStandard: string | null;
-  let infBento: string | null;
-  let hasMindmap: boolean;
-
-  try {
-    [
-      briefingText,
-      statementOfFactsText,
-      studyGuideText,
-      reportText,
-      quizData,
-      flashcards,
-      slidesPresentedFiles,
-      slidesDetailedFiles,
-      slidesFactsFiles,
-      infConcise,
-      infStandard,
-      infBento,
-      hasMindmap,
-    ] = await Promise.all([
-      readBriefing(n).catch(e => { console.error(`[Part ${n}] Briefing error:`, e); return null; }),
-      readStatementOfFacts(n).catch(e => { console.error(`[Part ${n}] Facts error:`, e); return null; }),
-      readStudyGuide(n).catch(e => { console.error(`[Part ${n}] Study guide error:`, e); return null; }),
-      readReport(n).catch(e => { console.error(`[Part ${n}] Report error:`, e); return null; }),
-      readQuiz(n).catch(e => { console.error(`[Part ${n}] Quiz error:`, e); return null; }),
-      readFlashcards(n).catch(e => { console.error(`[Part ${n}] Flashcards error:`, e); return null; }),
-      getSlideFiles(n, "presented").catch(e => { console.error(`[Part ${n}] Presented slides error:`, e); return []; }),
-      getSlideFiles(n, "detailed").catch(e => { console.error(`[Part ${n}] Detailed slides error:`, e); return []; }),
-      getSlideFiles(n, "facts").catch(e => { console.error(`[Part ${n}] Facts slides error:`, e); return []; }),
-      getInfographicFilename(n, "Concise").catch(e => { console.error(`[Part ${n}] Concise inf error:`, e); return null; }),
-      getInfographicFilename(n, "Standard").catch(e => { console.error(`[Part ${n}] Standard inf error:`, e); return null; }),
-      getInfographicFilename(n, "Bento Grid").catch(e => { console.error(`[Part ${n}] Bento inf error:`, e); return null; }),
-      mindmapExists(n).catch(e => { console.error(`[Part ${n}] Mindmap error:`, e); return false; }),
-    ]);
-  } catch (error) {
-    console.error(`[Part ${n}] Fatal error loading assets:`, error);
-    // Set defaults to prevent crash
-    briefingText = statementOfFactsText = studyGuideText = reportText = quizData = flashcards = null;
-    slidesPresentedFiles = slidesDetailedFiles = slidesFactsFiles = [];
-    infConcise = infStandard = infBento = null;
-    hasMindmap = false;
-  }
-
-  // Log asset info for debugging
-  console.log(`[Part ${n}] Assets loaded:`, {
-    slideCounts: {
-      presented: slidesPresentedFiles.length,
-      detailed: slidesDetailedFiles.length,
-      facts: slidesFactsFiles.length,
-    },
-    infographics: { infConcise, infStandard, infBento },
-    textContent: {
-      briefing: !!briefingText,
-      facts: !!statementOfFactsText,
-      studyGuide: !!studyGuideText,
-      report: !!reportText,
-    },
+  // Load all part content from cache (first load hits R2; subsequent loads are instant)
+  const {
+    briefingText,
+    statementOfFactsText,
+    studyGuideText,
+    reportText,
+    quizData,
+    flashcards,
+    slidesPresentedFiles,
+    slidesDetailedFiles,
+    slidesFactsFiles,
+    infSignedConcise,
+    infSignedStandard,
+    infSignedBento,
     hasMindmap,
-  });
-
-  // Slides are already URLs from getSlideFiles - use them directly
-  const slideFiles = {
-    presented: slidesPresentedFiles,
-    detailed: slidesDetailedFiles,
-    facts: slidesFactsFiles,
-  };
+    videoUrl,
+    audioUrl,
+    mindmapUrl,
+  } = await getPartPageData(n);
 
   const part = {
     ...partBase,
     assets: {
-      // Video/audio/mindmap URLs are now lazy-loaded client-side
-      briefingText: briefingText ?? undefined,
-      statementOfFactsText: statementOfFactsText ?? undefined,
-      studyGuideText: studyGuideText ?? undefined,
-      reportText: reportText ?? undefined,
-      quiz: quizData ?? undefined,
-      flashcards: flashcards ?? undefined,
-      infographics: await (async () => {
-        const sign = (key: string | null, localFolder: string) =>
-          key
-            ? key.includes("/")
-              ? generateSignedR2Url(key, IMAGE_URL_EXPIRY)
-              : Promise.resolve(`/seerah-media/Infographics/${localFolder}/${key}`)
-            : Promise.resolve(undefined);
-
-        const [concise, standard, bentoGrid] = await Promise.all([
-          sign(infConcise, "Concise"),
-          sign(infStandard, "Standard"),
-          sign(infBento, "Bento Grid"),
-        ]);
-        return { concise, standard, bentoGrid };
-      })(),
-      slides: slideFiles,
+      briefingText:          briefingText ?? undefined,
+      statementOfFactsText:  statementOfFactsText ?? undefined,
+      studyGuideText:        studyGuideText ?? undefined,
+      reportText:            reportText ?? undefined,
+      quiz:                  quizData ?? undefined,
+      flashcards:            flashcards ?? undefined,
+      infographics: {
+        concise:   infSignedConcise,
+        standard:  infSignedStandard,
+        bentoGrid: infSignedBento,
+      },
+      slides: {
+        presented: slidesPresentedFiles,
+        detailed:  slidesDetailedFiles,
+        facts:     slidesFactsFiles,
+      },
     },
   };
 
@@ -228,7 +146,7 @@ export default async function SeerahPartPage(props: Props) {
 
       {/* Content */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <PartTabs part={part} userPlan={userPlan} />
+        <PartTabs part={part} userPlan={userPlan} initialAssetUrls={{ videoUrl, audioUrl, mindmapUrl }} />
 
         {/* Navigation */}
         <div className="mt-8 pt-6 border-t border-border flex items-center justify-between gap-4">

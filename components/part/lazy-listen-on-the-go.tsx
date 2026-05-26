@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { ListenOnTheGo } from "./listen-on-the-go";
 import { Headphones } from "lucide-react";
+import { fetchPartAssets } from "@/lib/part-asset-cache";
 
 interface LazyListenOnTheGoProps {
   partNumber: number;
@@ -24,31 +25,10 @@ export function LazyListenOnTheGo({ partNumber, title, previewMode, audioUrl: au
     }
 
     let mounted = true;
-
-    async function fetchAudioUrl() {
-      try {
-        const response = await fetch(`/api/part/${partNumber}/assets`);
-        if (!response.ok) throw new Error("Failed to fetch audio");
-        
-        const data = await response.json();
-        
-        if (mounted) {
-          setAudioUrl(data.audioUrl);
-          setLoading(false);
-        }
-      } catch (err) {
-        console.error("Error fetching audio URL:", err);
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    }
-
-    fetchAudioUrl();
-
-    return () => {
-      mounted = false;
-    };
+    fetchPartAssets(partNumber)
+      .then((data) => { if (mounted) { setAudioUrl(data.audioUrl); setLoading(false); } })
+      .catch(() => { if (mounted) { setLoading(false); } });
+    return () => { mounted = false; };
   }, [partNumber, audioUrlProp]);
 
   // Don't show anything while loading or if no audio available
