@@ -12,11 +12,13 @@ import { trackAssetOpened } from "@/app/actions/progress";
 interface AudioResourceContentProps {
   progressMap: Record<number, boolean>;
   completedCount: number;
+  thumbnails?: Record<number, string>;
 }
 
 export function AudioResourceContent({
   progressMap,
   completedCount,
+  thumbnails = {},
 }: AudioResourceContentProps) {
   const [mounted, setMounted] = useState(false);
   const [currentAudio, setCurrentAudio] = useState<{ partNumber: number; title: string; subtitle?: string } | null>(null);
@@ -391,6 +393,16 @@ export function AudioResourceContent({
                       className="aspect-video relative flex items-center justify-center overflow-hidden"
                       style={eraGradient(part.era)}
                     >
+                      {thumbnails[part.partNumber] && (
+                        <img
+                          src={thumbnails[part.partNumber]}
+                          alt=""
+                          loading="lazy"
+                          className="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-500"
+                          onLoad={(e) => { (e.currentTarget as HTMLImageElement).style.opacity = "1"; }}
+                          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                        />
+                      )}
                       {/* Large part number watermark */}
                       <span className="absolute inset-0 flex items-center justify-center opacity-[0.12] text-[5rem] font-black text-white select-none pointer-events-none leading-none">
                         {part.partNumber}

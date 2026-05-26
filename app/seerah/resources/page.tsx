@@ -141,6 +141,7 @@ export default async function SeerahResourcesPage() {
           <AudioResourceContent
             progressMap={audioProgressMap}
             completedCount={audioCompletedCount}
+            thumbnails={thumbnails}
           />
         }
         briefingsContent={
@@ -150,6 +151,7 @@ export default async function SeerahResourcesPage() {
             resourceType="briefing"
             progressMap={briefingsProgressMap}
             completedCount={briefingsCompletedCount}
+            thumbnails={thumbnails}
           />
         }
         slidesContent={
@@ -207,6 +209,7 @@ export default async function SeerahResourcesPage() {
             passedCount={quizPassedCount}
             avgScore={quizAvgScore}
             totalAttempts={quizTotalAttempts}
+            thumbnails={thumbnails}
           />
         }
         factsContent={
@@ -216,6 +219,7 @@ export default async function SeerahResourcesPage() {
             resourceType="statement-of-facts"
             progressMap={factsProgressMap}
             completedCount={factsCompletedCount}
+            thumbnails={thumbnails}
           />
         }
       />
