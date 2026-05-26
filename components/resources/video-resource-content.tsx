@@ -109,36 +109,38 @@ export function VideoResourceContent({
     : null;
 
   return (
-    <div>
-      {/* Header */}
-      <div className="border-b border-border px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center gap-3 mb-5">
-          <div className="w-10 h-10 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center">
-            <Video className="w-5 h-5 text-gold" />
+    <div className="min-h-screen bg-[#0a0a0a]">
+      {/* Hero Section */}
+      <div className="border-b border-zinc-800 bg-gradient-to-b from-zinc-900 to-[#0a0a0a]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+              <Video className="w-7 h-7 text-amber-500" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold text-white">Video Lessons</h1>
+              <p className="text-zinc-400 mt-1">All 100 guided video lessons from the Seerah Masterclass</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold text-text">Video Lessons</h1>
-            <p className="text-sm text-text-muted mt-0.5">All 100 guided video lessons from the Seerah Masterclass</p>
-          </div>
-        </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div className="p-4 rounded-xl bg-surface border border-border">
-            <p className="text-text-muted text-xs font-medium uppercase tracking-wider mb-1">Total</p>
-            <p className="text-3xl font-bold text-text">{totalVideos}</p>
-          </div>
-          <div className="p-4 rounded-xl bg-surface border border-border">
-            <p className="text-text-muted text-xs font-medium uppercase tracking-wider mb-1">Completed</p>
-            <p className="text-3xl font-bold text-gold">{completedCount}</p>
-          </div>
-          <div className="p-4 rounded-xl bg-surface border border-border">
-            <p className="text-text-muted text-xs font-medium uppercase tracking-wider mb-1">In Progress</p>
-            <p className="text-3xl font-bold text-gold/70">{inProgressCount}</p>
-          </div>
-          <div className="p-4 rounded-xl bg-surface border border-border">
-            <p className="text-text-muted text-xs font-medium uppercase tracking-wider mb-1">Not Started</p>
-            <p className="text-3xl font-bold text-text-muted">{notStartedCount}</p>
+          {/* Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
+              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">Total</p>
+              <p className="text-3xl font-bold text-white">{totalVideos}</p>
+            </div>
+            <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
+              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">Completed</p>
+              <p className="text-3xl font-bold text-green-400">{completedCount}</p>
+            </div>
+            <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
+              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">In Progress</p>
+              <p className="text-3xl font-bold text-amber-400">{inProgressCount}</p>
+            </div>
+            <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
+              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">Not Started</p>
+              <p className="text-3xl font-bold text-zinc-400">{notStartedCount}</p>
+            </div>
           </div>
         </div>
       </div>
@@ -208,7 +210,7 @@ export function VideoResourceContent({
                     key={part.id}
                     onClick={() => handleOpenVideo(part)}
                     onMouseEnter={() => handlePrefetch(part.partNumber)}
-                    className="group cursor-pointer rounded-xl border border-border bg-surface hover:bg-surface-raised hover:border-gold/30 overflow-hidden transition-all"
+                    className="group cursor-pointer rounded-xl border border-zinc-800 bg-zinc-900/50 hover:bg-zinc-900 hover:border-amber-500/30 transition-all overflow-hidden"
                   >
                     {/* Thumbnail */}
                     <div
@@ -258,24 +260,24 @@ export function VideoResourceContent({
                     {/* Info */}
                     <div className="p-4">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs font-medium text-gold">Part {part.partNumber}</span>
+                        <span className="text-xs font-medium text-amber-500">Part {part.partNumber}</span>
                         {isCompleted && (
-                          <span className="px-2 py-0.5 bg-gold/10 border border-gold/20 text-gold text-xs font-medium rounded">
+                          <span className="px-2 py-0.5 bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium rounded">
                             Completed
                           </span>
                         )}
                         {!isCompleted && watchPercent > 0 && (
-                          <span className="ml-auto flex items-center gap-1 text-xs text-text-muted">
+                          <span className="ml-auto flex items-center gap-1 text-xs text-zinc-500">
                             <Clock className="w-3 h-3" />
                             {part.duration}
                           </span>
                         )}
                       </div>
-                      <h3 className="text-sm font-semibold text-text mb-1 line-clamp-2 group-hover:text-gold transition-colors">
+                      <h3 className="text-sm font-semibold text-white mb-1 line-clamp-2 group-hover:text-amber-400 transition-colors">
                         {part.title}
                       </h3>
                       {part.subtitle && (
-                        <p className="text-xs text-text-muted line-clamp-1">{part.subtitle}</p>
+                        <p className="text-xs text-zinc-500 line-clamp-1">{part.subtitle}</p>
                       )}
                     </div>
                   </div>
