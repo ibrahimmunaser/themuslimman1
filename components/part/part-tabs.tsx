@@ -61,14 +61,6 @@ const MODES: Mode[] = [
     subTabs: [{ id: "video",       label: "Video",       icon: Video }],
   },
   {
-    id: "read",        label: "Read",        hint: "Written content",  icon: BookOpen,
-    subTabs: [
-      { id: "briefing",    label: "Briefing",    icon: FileText },
-      { id: "study-guide", label: "Study Guide", icon: BookOpen },
-      { id: "facts",       label: "Facts",       icon: BarChart2 },
-    ],
-  },
-  {
     id: "slides",      label: "Slides",      hint: "Slide decks",     icon: Layers,
     subTabs: [{ id: "slides",      label: "Slides",      icon: Layers }],
   },
@@ -79,6 +71,14 @@ const MODES: Mode[] = [
   {
     id: "mindmap",     label: "Mindmap",     hint: "Visual map",      icon: Map,
     subTabs: [{ id: "mindmap",     label: "Mindmap",     icon: Map }],
+  },
+  {
+    id: "read",        label: "Read",        hint: "Written content",  icon: BookOpen,
+    subTabs: [
+      { id: "briefing",    label: "Briefing",    icon: FileText },
+      { id: "study-guide", label: "Study Guide", icon: BookOpen },
+      { id: "facts",       label: "Facts",       icon: BarChart2 },
+    ],
   },
   {
     id: "flashcards",  label: "Flashcards",  hint: "Memory cards",    icon: Layers2,
