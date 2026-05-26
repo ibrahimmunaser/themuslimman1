@@ -204,15 +204,29 @@ export function getFactsSlideFolder(partNum: number): string {
   return path.join(SEERAH_ROOT, "Slides - Watermark - Facts", `Part ${partNum}`);
 }
 
+export type { SlideFile } from "./types";
+import type { SlideFile } from "./types";
+
 export async function getSlideFiles(
   partNum: number,
   type: "presented" | "detailed" | "facts"
-): Promise<string[]> {
+): Promise<SlideFile[]> {
   if (USE_R2) {
-    const keys = await r2GetSlideKeys(partNum, type);
-    // All parts (including Part 1) use short-lived signed URLs.
-    // Part 1 remains free from an access-control standpoint but assets are not permanently public.
-    return Promise.all(keys.map((key) => generateSignedR2Url(key, IMAGE_URL_EXPIRY)));
+    const pngKeys = await r2GetSlideKeys(partNum, type);
+    // Sign the pre-generated WebP variants instead of the raw PNGs.
+    // Signed URLs are cryptographically bound to their exact path, so we must sign
+    // each variant key individually rather than rewriting URLs on the client.
+    return Promise.all(
+      pngKeys.map(async (pngKey) => {
+        const mediumKey = pngKey.replace(/\.png$/i, "-medium.webp");
+        const thumbKey  = pngKey.replace(/\.png$/i, "-thumb.webp");
+        const [medium, thumb] = await Promise.all([
+          generateSignedR2Url(mediumKey, IMAGE_URL_EXPIRY),
+          generateSignedR2Url(thumbKey,  IMAGE_URL_EXPIRY),
+        ]);
+        return { medium, thumb };
+      })
+    );
   }
 
   let folder: string;
@@ -227,9 +241,10 @@ export async function getSlideFiles(
       .filter((f) => f.endsWith(".png"))
       .sort()
       .map((f) => {
-        // Return relative path from SEERAH_ROOT for use in local API
         const rel = path.relative(SEERAH_ROOT, path.join(folder, f));
-        return `/seerah-media/${rel.replace(/\\/g, "/")}`; // Return as URL path
+        const base = `/seerah-media/${rel.replace(/\\/g, "/")}`;
+        // Local dev: no WebP variants — use PNG for both
+        return { medium: base, thumb: base };
       });
   } catch {
     return [];

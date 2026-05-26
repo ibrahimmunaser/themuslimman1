@@ -3,28 +3,13 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { ChevronLeft, ChevronRight, Layers, Maximize2, X } from "lucide-react";
 import { trackAssetOpened } from "@/app/actions/progress";
+import type { SlideFile } from "@/lib/types";
 
-
-/** Derive the pre-generated WebP URL from an R2 PNG URL (or return null for local paths). */
-function webpVariant(url: string, suffix: "-thumb" | "-medium"): string | null {
-  if (!url.startsWith("http")) return null; // local dev path — skip
-  // Signed URLs have query params after .png (e.g. "...slide.png?X-Amz-...")
-  // Use \.png(\?|$) so we match .png even when query params follow
-  return url.replace(/\.png(\?|$)/i, `${suffix}.webp$1`);
-}
-
-/** Main slide image: tries WebP first, falls back to the original (PNG) URL. */
-function SlideImg({ src, fallback, alt, priority }: { src: string; fallback: string; alt: string; priority?: boolean }) {
-  const [useFallback, setUseFallback] = useState(false);
+/** Main slide image. Shows a spinner while loading, re-triggers on src change. */
+function SlideImg({ src, alt, priority }: { src: string; alt: string; priority?: boolean }) {
   const [loaded, setLoaded] = useState(false);
 
-  // Reset on src change
-  useEffect(() => {
-    setLoaded(false);
-    setUseFallback(false);
-  }, [src]);
-
-  const imgSrc = useFallback ? fallback : src;
+  useEffect(() => { setLoaded(false); }, [src]);
 
   return (
     <>
@@ -34,35 +19,19 @@ function SlideImg({ src, fallback, alt, priority }: { src: string; fallback: str
         </div>
       )}
       <img
-        src={imgSrc}
+        src={src}
         alt={alt}
         // eslint-disable-next-line react/no-unknown-property
         fetchPriority={priority ? "high" : "auto"}
         className={`max-w-full max-h-full object-contain transition-opacity duration-200 ${loaded ? "opacity-100" : "opacity-0"}`}
         onLoad={() => setLoaded(true)}
-        onError={() => {
-          if (!useFallback) setUseFallback(true);
-        }}
       />
     </>
   );
 }
 
-/** Thumbnail image: tries WebP first, falls back to the original (PNG) URL. */
-function ThumbImg({ src, fallback, alt }: { src: string; fallback: string; alt: string }) {
-  const [useFallback, setUseFallback] = useState(false);
-  return (
-    <img
-      src={useFallback ? fallback : src}
-      alt={alt}
-      className="w-full h-full object-cover"
-      onError={() => { if (!useFallback) setUseFallback(true); }}
-    />
-  );
-}
-
 interface SlidesViewerProps {
-  slides: string[];
+  slides: SlideFile[];
   title?: string;
   type?: "presented" | "detailed";
   partNumber?: number;
@@ -81,7 +50,6 @@ export function SlidesViewer({ slides, title, type = "presented", partNumber, pr
     [slides.length]
   );
 
-  // Sync fullscreen state with the native Fullscreen API
   useEffect(() => {
     const handler = () => setFullscreen(!!document.fullscreenElement);
     document.addEventListener("fullscreenchange", handler);
@@ -93,7 +61,6 @@ export function SlidesViewer({ slides, title, type = "presented", partNumber, pr
       try {
         await containerRef.current.requestFullscreen();
       } catch {
-        // Browser denied — fall back to CSS overlay
         setFullscreen(true);
       }
     } else {
@@ -112,7 +79,6 @@ export function SlidesViewer({ slides, title, type = "presented", partNumber, pr
   useEffect(() => {
     if (!partNumber || previewMode || !slides.length) return;
     trackAssetOpened(partNumber, "slides").catch(() => {});
-  // Run once on mount
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -177,18 +143,17 @@ export function SlidesViewer({ slides, title, type = "presented", partNumber, pr
         </button>
       </div>
 
-      {/* Slide area — 16:9 aspect ratio container */}
+      {/* Slide area */}
       <div
         className={`relative flex-1 bg-black ${!fullscreen ? "group cursor-zoom-in" : ""}`}
         style={{ minHeight: fullscreen ? undefined : "420px" }}
         onClick={!fullscreen ? () => enterFullscreen() : undefined}
         title={!fullscreen ? "Click for fullscreen" : undefined}
       >
-        {/* Only render current ±2 slides */}
+        {/* Render current ±2 slides; hidden ones are pre-loaded but invisible */}
         {slides.map((slide, idx) => {
           const distance = Math.abs(idx - current);
           if (distance > 2) return null;
-          const mediumUrl = webpVariant(slide, "-medium");
           return (
             <div
               key={idx}
@@ -199,17 +164,11 @@ export function SlidesViewer({ slides, title, type = "presented", partNumber, pr
                 zIndex: idx === current ? 1 : 0,
               }}
             >
-              <SlideImg
-                src={mediumUrl ?? slide}
-                fallback={slide}
-                alt={`Slide ${idx + 1}`}
-                priority={idx === current}
-              />
+              <SlideImg src={slide.medium} alt={`Slide ${idx + 1}`} priority={idx === current} />
             </div>
           );
         })}
 
-        {/* Click-to-enlarge hint overlay (only in non-fullscreen) */}
         {!fullscreen && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/70 border border-white/15 text-white text-xs font-medium">
@@ -219,7 +178,6 @@ export function SlidesViewer({ slides, title, type = "presented", partNumber, pr
           </div>
         )}
 
-        {/* Nav arrows — stop propagation so they don't trigger the enlarge click */}
         <button
           onClick={(e) => { e.stopPropagation(); prev(); }}
           disabled={current === 0}
@@ -239,22 +197,19 @@ export function SlidesViewer({ slides, title, type = "presented", partNumber, pr
       {/* Thumbnail strip */}
       {slides.length > 1 && (
         <div ref={stripRef} className="pl-4 py-3 bg-ink/80 border-t border-border/50 flex gap-2 overflow-x-auto no-scrollbar flex-shrink-0">
-          {slides.map((slide, i) => {
-            const thumbUrl = webpVariant(slide, "-thumb");
-            return (
-              <button
-                key={i}
-                onClick={() => setCurrent(i)}
-                className={`flex-shrink-0 w-16 h-10 rounded border overflow-hidden transition-all relative ${
-                  i === current
-                    ? "border-gold ring-1 ring-gold/30"
-                    : "border-border/50 opacity-50 hover:opacity-100"
-                }`}
-              >
-                <ThumbImg src={thumbUrl ?? slide} fallback={slide} alt={`Slide ${i + 1}`} />
-              </button>
-            );
-          })}
+          {slides.map((slide, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrent(i)}
+              className={`flex-shrink-0 w-16 h-10 rounded border overflow-hidden transition-all ${
+                i === current
+                  ? "border-gold ring-1 ring-gold/30"
+                  : "border-border/50 opacity-50 hover:opacity-100"
+              }`}
+            >
+              <img src={slide.thumb} alt={`Slide ${i + 1}`} className="w-full h-full object-cover" />
+            </button>
+          ))}
           <div className="flex-shrink-0 w-6" aria-hidden />
         </div>
       )}

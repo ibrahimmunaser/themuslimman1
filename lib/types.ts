@@ -35,10 +35,15 @@ export interface InfographicSet {
   bentoGrid?: string;
 }
 
+export interface SlideFile {
+  medium: string; // signed -medium.webp URL  (≈ 20–90 KB)
+  thumb:  string; // signed -thumb.webp URL   (≈ 3–10 KB)
+}
+
 export interface SlideSet {
-  presented: string[];
-  detailed: string[];
-  facts: string[];
+  presented: SlideFile[];
+  detailed:  SlideFile[];
+  facts:     SlideFile[];
 }
 
 export interface Flashcard {

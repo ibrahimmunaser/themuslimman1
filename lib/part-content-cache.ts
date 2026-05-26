@@ -19,6 +19,7 @@ import {
   readQuiz,
   readFlashcards,
 } from "@/lib/files";
+import type { SlideFile } from "@/lib/types";
 import {
   generateSignedR2Url,
   IMAGE_URL_EXPIRY,
@@ -37,9 +38,9 @@ interface CachedPartData {
   reportText: string | null;
   quizData: unknown;
   flashcards: unknown;
-  slidesPresentedFiles: string[];
-  slidesDetailedFiles: string[];
-  slidesFactsFiles: string[];
+  slidesPresentedFiles: SlideFile[];
+  slidesDetailedFiles: SlideFile[];
+  slidesFactsFiles: SlideFile[];
   infConcise: string | null;
   infStandard: string | null;
   infBento: string | null;

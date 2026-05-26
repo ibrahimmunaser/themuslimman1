@@ -337,7 +337,7 @@ function SubTabContent({ id, part, previewMode, assetUrls }: {
           <LazyVideoPlayer
             partNumber={part.partNumber}
             title={part.title}
-            poster={part.assets.slides?.presented[0]}
+            poster={part.assets.slides?.presented[0]?.medium}
             previewMode={previewMode}
             videoUrl={assetUrls.videoUrl}
           />
