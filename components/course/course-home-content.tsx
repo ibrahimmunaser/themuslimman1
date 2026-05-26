@@ -1,10 +1,11 @@
 import Link from "next/link";
 import {
-  Play, ChevronRight, ArrowRight,
+  Play, ArrowRight,
   Video, Headphones, FileText, Map, Layers, Brain, ClipboardCheck, BarChart2,
   BookOpen, Clock, Milestone, HelpCircle, Mail,
   Image as ImageIcon,
 } from "lucide-react";
+import { PrefetchPartLink } from "@/components/course/prefetch-part-link";
 
 export interface StageData {
   label: string;
@@ -87,13 +88,11 @@ export function CourseHomeContent({
             <p className="text-xs font-semibold uppercase tracking-widest text-text-muted mb-3">Next Lesson</p>
             <p className="text-sm font-bold text-text">Part {currentPart}</p>
             <p className="text-xs text-text-muted mt-0.5 line-clamp-2 leading-relaxed">{currentPartTitle}</p>
-            <Link
-              href={`/seerah/part-${currentPart}`}
+            <PrefetchPartLink
+              partNumber={currentPart}
+              label={isNewUser ? "Start now" : "Continue"}
               className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-gold hover:text-gold/80 transition-colors"
-            >
-              {isNewUser ? "Start now" : "Continue"}
-              <ChevronRight className="w-3 h-3" />
-            </Link>
+            />
           </div>
         </div>
       </section>
@@ -162,13 +161,13 @@ export function CourseHomeContent({
 
               {/* Buttons */}
               <div className="flex flex-wrap gap-3">
-                <Link
-                  href={`/seerah/part-${currentPart}`}
+                <PrefetchPartLink
+                  partNumber={currentPart}
                   className="inline-flex items-center gap-2 px-5 py-2.5 bg-gold hover:bg-gold-light text-ink font-semibold rounded-xl text-sm transition-colors shadow-lg shadow-gold/20"
                 >
                   <Play className="w-4 h-4" />
                   {isNewUser ? "Start Part 1" : "Continue Lesson"}
-                </Link>
+                </PrefetchPartLink>
                 <a
                   href="#roadmap"
                   className="inline-flex items-center gap-2 px-5 py-2.5 border border-border hover:border-gold/40 hover:text-text text-text-secondary font-medium rounded-xl text-sm transition-colors"
@@ -262,13 +261,10 @@ export function CourseHomeContent({
                   />
                 </div>
 
-                <Link
-                  href={`/seerah/part-${stage.firstPartNumber}`}
-                  className="inline-flex items-center gap-1.5 text-xs font-medium text-gold hover:text-gold-light transition-colors"
-                >
-                  {isDone ? "Review stage" : stage.completedCount > 0 ? "Continue stage" : "Start stage"}
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </Link>
+                <PrefetchPartLink
+                  partNumber={stage.firstPartNumber}
+                  label={isDone ? "Review stage" : stage.completedCount > 0 ? "Continue stage" : "Start stage"}
+                />
               </div>
             );
           })}

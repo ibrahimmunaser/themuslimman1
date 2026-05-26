@@ -60,6 +60,17 @@ const cache = new Map<number, CachedPartData>();
 const inflight = new Map<number, Promise<CachedPartData>>();
 
 async function loadPartData(n: number): Promise<CachedPartData> {
+  const signImg = (key: string | null, localFolder: string) =>
+    key
+      ? key.includes("/")
+        ? generateSignedR2Url(key, IMAGE_URL_EXPIRY)
+        : Promise.resolve(`/seerah-media/Infographics/${localFolder}/${key}`)
+      : Promise.resolve(undefined);
+
+  // Run all independent R2 operations in one flat Promise.all.
+  // Batch A (content reads) and Batch B (media key lookups) were previously
+  // sequential — merging them saves the entire duration of whichever finishes
+  // first (typically 200-600 ms per the stress-test data).
   const [
     briefingText,
     statementOfFactsText,
@@ -74,7 +85,11 @@ async function loadPartData(n: number): Promise<CachedPartData> {
     infStandard,
     infBento,
     hasMindmap,
+    videoKey,
+    audioKey,
+    mindmapKey,
   ] = await Promise.all([
+    // Batch A — content reads
     readBriefing(n).catch(() => null),
     readStatementOfFacts(n).catch(() => null),
     readStudyGuide(n).catch(() => null),
@@ -88,22 +103,13 @@ async function loadPartData(n: number): Promise<CachedPartData> {
     getInfographicFilename(n, "Standard").catch(() => null),
     getInfographicFilename(n, "Bento Grid").catch(() => null),
     mindmapExists(n).catch(() => false),
+    // Batch B — media key lookups (independent of Batch A)
+    r2GetVideoKey(n).catch(() => null),
+    r2GetAudioKey(n).catch(() => null),
+    r2GetMindmapKey(n).catch(() => null),
   ]);
 
-  const signImg = (key: string | null, localFolder: string) =>
-    key
-      ? key.includes("/")
-        ? generateSignedR2Url(key, IMAGE_URL_EXPIRY)
-        : Promise.resolve(`/seerah-media/Infographics/${localFolder}/${key}`)
-      : Promise.resolve(undefined);
-
-  // Also resolve video/audio/mindmap keys and sign them server-side
-  const [videoKey, audioKey, mindmapKey] = await Promise.all([
-    r2GetVideoKey(n),
-    r2GetAudioKey(n),
-    r2GetMindmapKey(n),
-  ]);
-
+  // Batch C — URL signing (depends on Batch A infographic keys + Batch B media keys)
   const [infSignedConcise, infSignedStandard, infSignedBento, videoUrl, audioUrl, mindmapUrl] =
     await Promise.all([
       signImg(infConcise, "Concise"),

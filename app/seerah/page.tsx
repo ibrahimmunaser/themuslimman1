@@ -4,6 +4,7 @@ import { requireStudent } from "@/lib/auth";
 import { hasActiveCourseAccess } from "@/lib/access";
 import { PARTS } from "@/lib/content";
 import { getThumbnailUrls } from "@/lib/r2";
+import { getPartPageData } from "@/lib/part-content-cache";
 import { ERA_MAP } from "@/lib/types";
 import { ChevronRight, ChevronDown, Play, CheckCircle2, BookOpen, Clock, Video, FileText, Brain, ClipboardCheck, Headphones, Map, Image, Layers, BarChart2, GraduationCap } from "lucide-react";
 import { prisma } from "@/lib/db";
@@ -42,6 +43,10 @@ export default async function LearnIndexPage() {
   const completedParts = progress.completedParts  || [];
   const unlockedParts  = progress.unlockedParts   || [];
   const inProgressParts = progress.inProgressParts || [];
+
+  // Proactively warm the user's current part so clicking "Continue" / "Start stage"
+  // hits a hot cache instead of waiting for cold R2 fetches.
+  getPartPageData(currentPart).catch(() => {});
 
   // Per-part progress map for UI badges
   const allPartProgress = await prisma.partProgress.findMany({

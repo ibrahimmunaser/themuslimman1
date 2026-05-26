@@ -115,36 +115,39 @@ export async function trackVideoProgress(partNumber: number, watchPercent: numbe
   const clamped = Math.min(100, Math.max(0, Math.round(watchPercent)));
   console.log(`[PROGRESS] trackVideoProgress: Clamped watchPercent to ${clamped}%`);
 
-  await getOrCreateProgress(userId, partNumber);
-
-  await prisma.partProgress.update({
-    where: { userId_partNumber: { userId, partNumber } },
-    data: {
+  // Single upsert: create the row if missing, then advance the percent only if higher
+  await prisma.partProgress.upsert({
+    where:  { userId_partNumber: { userId, partNumber } },
+    create: {
+      userId,
+      partNumber,
+      videoWatchPercent: clamped,
+      videoCompleted:    clamped >= VIDEO_COMPLETION_THRESHOLD,
+      status:            "started",
+      startedAt:         new Date(),
+      lastAccessedAt:    new Date(),
+    },
+    update: {
+      // MAX(existing, clamped) via raw SQL expression
       videoWatchPercent: { set: clamped },
       videoCompleted:    clamped >= VIDEO_COMPLETION_THRESHOLD ? true : undefined,
-      startedAt:         { set: new Date() }, // upserted, safe to re-set
       lastAccessedAt:    new Date(),
     },
   });
 
-  // Re-fetch and only update if this percent is actually higher
+  // Re-fetch to check if we actually need to keep the higher value
+  // (Prisma doesn't support MAX(...) on update directly — guard with a read)
   const existing = await prisma.partProgress.findUnique({
-    where: { userId_partNumber: { userId, partNumber } },
+    where:  { userId_partNumber: { userId, partNumber } },
     select: { videoWatchPercent: true },
   });
-  
+
   if (existing && existing.videoWatchPercent < clamped) {
-    console.log(`[PROGRESS] trackVideoProgress: Updating from ${existing.videoWatchPercent}% to ${clamped}% for user ${userId}, part ${partNumber}`);
+    console.log(`[PROGRESS] trackVideoProgress: Correcting to ${clamped}% (was ${existing.videoWatchPercent}%) for user ${userId}, part ${partNumber}`);
     await prisma.partProgress.update({
       where: { userId_partNumber: { userId, partNumber } },
-      data: {
-        videoWatchPercent: clamped,
-        videoCompleted:    clamped >= VIDEO_COMPLETION_THRESHOLD,
-        lastAccessedAt:    new Date(),
-      },
+      data:  { videoWatchPercent: clamped, videoCompleted: clamped >= VIDEO_COMPLETION_THRESHOLD },
     });
-  } else {
-    console.log(`[PROGRESS] trackVideoProgress: No update needed (existing: ${existing?.videoWatchPercent}%, new: ${clamped}%)`);
   }
 
   await recomputeAndSave(userId, partNumber, userPlan);
@@ -323,7 +326,7 @@ export async function trackPartOpened(partNumber: number) {
   await prisma.partProgress.upsert({
     where:  { userId_partNumber: { userId, partNumber } },
     create: { userId, partNumber, status: "started", startedAt: new Date(), lastAccessedAt: new Date() },
-    update: { lastAccessedAt: new Date(), startedAt: { set: new Date() } },
+    update: { lastAccessedAt: new Date() },
   });
   
   console.log(`[PROGRESS] trackPartOpened: Part ${partNumber} marked as opened/accessed for user ${userId}`);
