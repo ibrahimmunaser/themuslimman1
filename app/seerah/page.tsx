@@ -3,6 +3,7 @@ import Link from "next/link";
 import { requireStudent } from "@/lib/auth";
 import { hasActiveCourseAccess } from "@/lib/access";
 import { PARTS } from "@/lib/content";
+import { getThumbnailUrls } from "@/lib/r2";
 import { ERA_MAP } from "@/lib/types";
 import { ChevronRight, ChevronDown, Play, CheckCircle2, BookOpen, Clock, Video, FileText, Brain, ClipboardCheck, Headphones, Map, Image, Layers, BarChart2, GraduationCap } from "lucide-react";
 import { prisma } from "@/lib/db";
@@ -33,7 +34,10 @@ export default async function LearnIndexPage() {
 
   const userPlan = "complete" as const;
 
-  const progress = await getProgress(user.id);
+  const [progress, thumbnails] = await Promise.all([
+    getProgress(user.id),
+    getThumbnailUrls(PARTS.map((p) => p.partNumber)),
+  ]);
   const currentPart    = progress.currentPart    || 1;
   const completedParts = progress.completedParts  || [];
   const unlockedParts  = progress.unlockedParts   || [];
@@ -493,6 +497,7 @@ export default async function LearnIndexPage() {
                 completedCount={videoCompletedCount}
                 inProgressCount={videoInProgressCount}
                 continueWatching={videoContinueWatching}
+                thumbnails={thumbnails}
               />
             }
             audioContent={
@@ -519,6 +524,7 @@ export default async function LearnIndexPage() {
                 completedCount={slidesCompletedCount}
                 actionLabel="View"
                 statusLabel="Viewed"
+                thumbnails={thumbnails}
               />
             }
             infographicsContent={
@@ -530,6 +536,7 @@ export default async function LearnIndexPage() {
                 completedCount={infographicsCompletedCount}
                 actionLabel="View"
                 statusLabel="Viewed"
+                thumbnails={thumbnails}
               />
             }
             mindmapsContent={
@@ -541,6 +548,7 @@ export default async function LearnIndexPage() {
                 completedCount={mindmapsCompletedCount}
                 actionLabel="View"
                 statusLabel="Viewed"
+                thumbnails={thumbnails}
               />
             }
             flashcardsContent={
@@ -552,6 +560,7 @@ export default async function LearnIndexPage() {
                 completedCount={flashcardsCompletedCount}
                 actionLabel="Study"
                 statusLabel="Studied"
+                thumbnails={thumbnails}
               />
             }
             quizzesContent={

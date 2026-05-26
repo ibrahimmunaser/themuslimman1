@@ -14,6 +14,7 @@ interface VideoResourceContentProps {
   completedCount: number;
   inProgressCount: number;
   continueWatching?: { partNumber: number; videoWatchPercent: number };
+  thumbnails?: Record<number, string>;
 }
 
 export function VideoResourceContent({
@@ -21,12 +22,13 @@ export function VideoResourceContent({
   completedCount,
   inProgressCount,
   continueWatching,
+  thumbnails = {},
 }: VideoResourceContentProps) {
   const [mounted, setMounted] = useState(false);
   const [selectedPart, setSelectedPart] = useState<{ partNumber: number; title: string; subtitle?: string; id: string } | null>(null);
   const [videoUrl, setVideoUrl] = useState<string>("");
   const [isLoadingVideo, setIsLoadingVideo] = useState(false);
-  
+
   const totalVideos = PARTS.length;
   const notStartedCount = totalVideos - completedCount - inProgressCount;
 
@@ -213,24 +215,26 @@ export function VideoResourceContent({
                       className="aspect-video relative flex items-center justify-center overflow-hidden"
                       style={eraGradient(part.era)}
                     >
-                      {/* Large part number watermark */}
-                      <span className="absolute inset-0 flex items-center justify-center opacity-[0.12] text-[5rem] font-black text-white select-none pointer-events-none leading-none">
-                        {part.partNumber}
-                      </span>
-
-                      {/* Era label */}
-                      <span className="absolute bottom-8 left-0 right-0 text-center text-[10px] font-semibold uppercase tracking-widest text-white/40 select-none">
-                        {ERA_MAP[part.era as keyof typeof ERA_MAP]?.label ?? part.era}
-                      </span>
+                      {/* Slide thumbnail — rendered once batch URLs are loaded */}
+                      {thumbnails[part.partNumber] && (
+                        <img
+                          src={thumbnails[part.partNumber]}
+                          alt=""
+                          loading="lazy"
+                          className="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-500"
+                          onLoad={(e) => { (e.currentTarget as HTMLImageElement).style.opacity = "1"; }}
+                          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                        />
+                      )}
 
                       {/* Status badge */}
                       {isCompleted && (
-                        <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-gold/20 border border-gold/40 flex items-center justify-center">
+                        <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-gold/20 border border-gold/40 flex items-center justify-center z-10">
                           <CheckCircle2 className="w-4 h-4 text-gold" />
                         </div>
                       )}
                       {!isCompleted && watchPercent > 0 && (
-                        <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-black/40 border border-white/20 text-white text-xs font-medium">
+                        <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-black/60 border border-white/20 text-white text-xs font-medium z-10">
                           {watchPercent}%
                         </div>
                       )}
@@ -242,7 +246,7 @@ export function VideoResourceContent({
 
                       {/* Progress bar */}
                       {watchPercent > 0 && (
-                        <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/30">
+                        <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/30 z-10">
                           <div
                             className="h-full bg-gold/70"
                             style={{ width: `${watchPercent}%` }}

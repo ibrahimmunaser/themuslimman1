@@ -109,6 +109,7 @@ interface SimpleResourceContentProps {
   completedCount: number;
   actionLabel: string;
   statusLabel: string;
+  thumbnails?: Record<number, string>;
 }
 
 export function SimpleResourceContent({
@@ -119,6 +120,7 @@ export function SimpleResourceContent({
   completedCount,
   actionLabel,
   statusLabel,
+  thumbnails: thumbnailsProp = {},
 }: SimpleResourceContentProps) {
   const [mounted, setMounted] = useState(false);
   const [selectedPart, setSelectedPart] = useState<{ partNumber: number; title: string; subtitle?: string; id: string } | null>(null);
@@ -142,6 +144,9 @@ export function SimpleResourceContent({
   // Local state for progress tracking
   const [localProgressMap, setLocalProgressMap] = useState(progressMap);
   const [localCompletedCount, setLocalCompletedCount] = useState(completedCount);
+
+  // Thumbnail URLs passed from the server — no client fetch needed
+  const thumbnails = thumbnailsProp;
 
   // Ensure client-side hydration
   useEffect(() => {
@@ -830,17 +835,20 @@ export function SimpleResourceContent({
                       className="aspect-video relative flex items-center justify-center overflow-hidden"
                       style={eraGradient(part.era)}
                     >
-                      {/* Large part number watermark */}
-                      <span className="absolute inset-0 flex items-center justify-center opacity-[0.12] text-[5rem] font-black text-white select-none pointer-events-none leading-none">
-                        {part.partNumber}
-                      </span>
-                      {/* Era label */}
-                      <span className="absolute bottom-8 left-0 right-0 text-center text-[10px] font-semibold uppercase tracking-widest text-white/40 select-none">
-                        {ERA_MAP[part.era as keyof typeof ERA_MAP]?.label ?? part.era}
-                      </span>
+                      {/* Slide thumbnail — rendered once batch URLs are loaded */}
+                      {thumbnails[part.partNumber] && (
+                        <img
+                          src={thumbnails[part.partNumber]}
+                          alt=""
+                          loading="lazy"
+                          className="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-500"
+                          onLoad={(e) => { (e.currentTarget as HTMLImageElement).style.opacity = "1"; }}
+                          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                        />
+                      )}
 
                       {isCompleted && (
-                        <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-green-500/30 border border-green-500/50 flex items-center justify-center">
+                        <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-green-500/30 border border-green-500/50 flex items-center justify-center z-10">
                           <CheckCircle2 className="w-4 h-4 text-green-400" />
                         </div>
                       )}

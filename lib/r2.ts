@@ -56,6 +56,33 @@ export async function generateSignedR2Url(
   return getSignedUrl(r2Client as any, command, { expiresIn: expiresInSeconds });
 }
 
+/**
+ * Generate signed thumbnail URLs for a set of part numbers in parallel.
+ * Returns a map of { [partNumber]: signedUrl }.
+ * Parts whose thumbnail is missing or fails are silently omitted.
+ */
+export async function getThumbnailUrls(
+  partNumbers: number[]
+): Promise<Record<number, string>> {
+  function firstSlideKey(n: number): string {
+    const p = String(n).padStart(2, "0");
+    return `slides-presented/Part ${p}/Part_${p}_Slide_001_watermarked.png`;
+  }
+
+  const entries = await Promise.all(
+    partNumbers.map(async (n) => {
+      try {
+        const url = await generateSignedR2Url(firstSlideKey(n), IMAGE_URL_EXPIRY);
+        return [n, url] as [number, string];
+      } catch {
+        return null;
+      }
+    })
+  );
+
+  return Object.fromEntries(entries.filter((e): e is [number, string] => e !== null));
+}
+
 // ─── Public URL Generation ────────────────────────────────────────────────────
 
 /**

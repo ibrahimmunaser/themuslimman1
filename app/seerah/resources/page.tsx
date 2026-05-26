@@ -8,6 +8,8 @@ import { AudioResourceContent } from "@/components/resources/audio-resource-cont
 import { TextResourceContent } from "@/components/resources/text-resource-content";
 import { SimpleResourceContent } from "@/components/resources/simple-resource-content";
 import { QuizResourceContent } from "@/components/resources/quiz-resource-content";
+import { PARTS } from "@/lib/content";
+import { getThumbnailUrls } from "@/lib/r2";
 
 export const metadata = { title: "Resource Library | Complete Seerah" };
 export const dynamic = "force-dynamic";
@@ -26,21 +28,24 @@ export default async function SeerahResourcesPage() {
 
   const userPlan = "complete" as const;
 
-  // Fetch all progress data for all resource types
-  const progress = await prisma.partProgress.findMany({
-    where: { userId: user.id },
-    select: {
-      partNumber: true,
-      videoWatchPercent: true,
-      videoCompleted: true,
-      openedAssets: true,
-      quizCompleted: true,
-      quizPassed: true,
-      quizBestScore: true,
-      quizAttempts: true,
-      status: true,
-    },
-  });
+  // Fetch progress and thumbnail URLs in parallel
+  const [progress, thumbnails] = await Promise.all([
+    prisma.partProgress.findMany({
+      where: { userId: user.id },
+      select: {
+        partNumber: true,
+        videoWatchPercent: true,
+        videoCompleted: true,
+        openedAssets: true,
+        quizCompleted: true,
+        quizPassed: true,
+        quizBestScore: true,
+        quizAttempts: true,
+        status: true,
+      },
+    }),
+    getThumbnailUrls(PARTS.map((p) => p.partNumber)),
+  ]);
 
   const progressMap = Object.fromEntries(
     progress.map((p) => [p.partNumber, p])
@@ -129,6 +134,7 @@ export default async function SeerahResourcesPage() {
             completedCount={videoCompletedCount}
             inProgressCount={videoInProgressCount}
             continueWatching={videoContinueWatching}
+            thumbnails={thumbnails}
           />
         }
         audioContent={
@@ -155,6 +161,7 @@ export default async function SeerahResourcesPage() {
             completedCount={slidesCompletedCount}
             actionLabel="View"
             statusLabel="Viewed"
+            thumbnails={thumbnails}
           />
         }
         infographicsContent={
@@ -166,6 +173,7 @@ export default async function SeerahResourcesPage() {
             completedCount={infographicsCompletedCount}
             actionLabel="View"
             statusLabel="Viewed"
+            thumbnails={thumbnails}
           />
         }
         mindmapsContent={
@@ -177,6 +185,7 @@ export default async function SeerahResourcesPage() {
             completedCount={mindmapsCompletedCount}
             actionLabel="View"
             statusLabel="Viewed"
+            thumbnails={thumbnails}
           />
         }
         flashcardsContent={
@@ -188,6 +197,7 @@ export default async function SeerahResourcesPage() {
             completedCount={flashcardsCompletedCount}
             actionLabel="Study"
             statusLabel="Studied"
+            thumbnails={thumbnails}
           />
         }
         quizzesContent={
