@@ -224,15 +224,12 @@ export function SimpleResourceContent({
     } else if (selectedPart && resourceType === "infographic") {
       setIsLoadingResource(true);
       const n = selectedPart.partNumber;
-      Promise.allSettled([
-        fetchSignedUrl(`Infographics-Bento-Grid/Part ${n}.webp`, n),
-        fetchSignedUrl(`Infographics-Concise/Part ${n} - Infographic.webp`, n),
-        fetchSignedUrl(`Infographics-Standard/Part ${n} - Infographic.webp`, n),
-      ])
-        .then(([bentoResult, conciseResult, standardResult]) => {
-          const bentoUrl    = bentoResult.status    === "fulfilled" ? bentoResult.value    : null;
-          const conciseUrl  = conciseResult.status  === "fulfilled" ? conciseResult.value  : null;
-          const standardUrl = standardResult.status === "fulfilled" ? standardResult.value : null;
+      fetch(`/api/infographics/${n}`)
+        .then((res) => res.json())
+        .then((data: { bentoGrid: string | null; concise: string | null; standard: string | null }) => {
+          const bentoUrl    = data.bentoGrid ?? null;
+          const conciseUrl  = data.concise   ?? null;
+          const standardUrl = data.standard  ?? null;
 
           const urls = { bentoGrid: bentoUrl, concise: conciseUrl, standard: standardUrl };
           setInfographicUrls(urls);
