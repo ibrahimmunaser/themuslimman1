@@ -251,14 +251,6 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
                 );
               })}
 
-              {/* Sign Out */}
-              <button
-                onClick={handleSignOut}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-text-secondary hover:text-red-400 hover:bg-red-500/5 transition-all"
-              >
-                <LogOut className="w-5 h-5 flex-shrink-0" />
-                {!collapsed && <span className="flex-1 text-left">Sign Out</span>}
-              </button>
             </div>
           </div>
         </nav>
@@ -271,6 +263,17 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
             <PropheciesWidget />
           </WidgetCycleProvider>
         )}
+      </div>
+
+      {/* Sign Out — pinned to bottom, always visible */}
+      <div className="p-3 border-t border-border flex-shrink-0">
+        <button
+          onClick={handleSignOut}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-400/70 hover:text-red-400 hover:bg-red-500/8 transition-all"
+        >
+          <LogOut className="w-5 h-5 flex-shrink-0" />
+          {!collapsed && <span className="flex-1 text-left">Sign Out</span>}
+        </button>
       </div>
     </>
   );
