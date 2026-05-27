@@ -59,8 +59,10 @@ export function ResourcesTabs({
         </p>
       </div>
 
-      {/* Tab Navigation — sticky below the dashboard tab bar (44px) */}
-      <div className="sticky top-11 z-30 border-b border-border bg-surface backdrop-blur-md">
+      {/* Tab Navigation — sticky below the dashboard tab bar.
+          Dashboard tabs: flex-col+py-3 on mobile ≈ 60px; flex-row+py-4 on sm+ ≈ 52px.
+          top-16 (64px) mobile / sm:top-14 (56px) sm+ ensures we clear the bar. */}
+      <div className="sticky top-16 sm:top-14 z-30 border-b border-border bg-surface backdrop-blur-md">
         <div className="px-3 sm:px-6 lg:px-8 py-2 sm:py-1.5">
 
           {/* ── Mobile: 3-column grid so all tabs are visible without scrolling ── */}

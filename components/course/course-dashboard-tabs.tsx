@@ -87,6 +87,7 @@ export function CourseDashboardTabs({
               return (
                 <button
                   key={tab.id}
+                  id={`tab-${tab.id}`}
                   role="tab"
                   aria-selected={isActive}
                   aria-controls={`tab-panel-${tab.id}`}
@@ -122,8 +123,14 @@ export function CourseDashboardTabs({
         </div>
       </div>
 
-      {/* Tab Content */}
-      <div>
+      {/* Tab Content — panel id matches aria-controls on each tab button */}
+      <div
+        id={`tab-panel-${activeTab}`}
+        role="tabpanel"
+        aria-labelledby={`tab-${activeTab}`}
+        tabIndex={0}
+        className="outline-none"
+      >
         {content[activeTab]}
       </div>
     </div>

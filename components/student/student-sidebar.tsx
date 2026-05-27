@@ -17,6 +17,8 @@ import {
   ChevronRight,
   Menu,
   X,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 
 import { DidYouKnowWidget } from "./did-you-know-widget";
@@ -151,10 +153,10 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
   // ── Desktop sidebar content (full nav + widgets) ───────────────────────────
   const DesktopContent = () => (
     <>
-      {/* Logo */}
+      {/* Logo + collapse toggle (desktop only) */}
       {!collapsed && (
-        <div className="p-4 border-b border-border">
-          <Link href="/my-courses" className="flex items-center gap-2.5">
+        <div className="p-4 border-b border-border flex items-center justify-between gap-2">
+          <Link href="/my-courses" className="flex items-center gap-2.5 min-w-0">
             <Image
               src="/images/logodashboard.png"
               alt="Complete Seerah"
@@ -163,8 +165,17 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
               className="w-8 h-8 rounded-lg flex-shrink-0"
               priority
             />
-            <h1 className="text-sm font-bold text-text">Complete Seerah</h1>
+            <h1 className="text-sm font-bold text-text truncate">Complete Seerah</h1>
           </Link>
+          {/* Collapse button — lg+ only */}
+          <button
+            onClick={() => setCollapsed(true)}
+            className="hidden lg:flex w-7 h-7 rounded-md items-center justify-center text-text-muted hover:text-text hover:bg-surface-raised transition-all flex-shrink-0"
+            aria-label="Collapse sidebar"
+            title="Collapse sidebar"
+          >
+            <PanelLeftClose className="w-4 h-4" />
+          </button>
         </div>
       )}
 
@@ -465,8 +476,9 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
               onClick={() => setCollapsed(false)}
               className="w-8 h-8 rounded-lg bg-surface-raised hover:bg-surface-high flex items-center justify-center text-text-muted hover:text-text transition-all"
               aria-label="Expand sidebar"
+              title="Expand sidebar"
             >
-              <ChevronRight className="w-4 h-4" />
+              <PanelLeftOpen className="w-4 h-4" />
             </button>
           </div>
         )}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { PARTS } from "@/lib/content";
 import { eraGradient } from "./era-gradient";
 import { ResourcePageClient } from "./resource-page-client";
@@ -32,6 +32,10 @@ export function VideoResourceContent({
   } | null>(null);
   const [videoUrl, setVideoUrl]           = useState<string>("");
   const [isLoadingVideo, setIsLoadingVideo] = useState(false);
+
+  // Focus management for video modal
+  const prevFocusRef = useRef<Element | null>(null);
+  const modalRef     = useRef<HTMLDivElement>(null);
 
   const totalVideos    = PARTS.length;
   const notStartedCount = totalVideos - completedCount - inProgressCount;
@@ -79,7 +83,53 @@ export function VideoResourceContent({
     }
   };
 
-  const handleClose = () => { setSelectedPart(null); setVideoUrl(""); };
+  const handleClose = useCallback(() => {
+    setSelectedPart(null);
+    setVideoUrl("");
+  }, []);
+
+  // Store previously focused element when modal opens; restore on close
+  useEffect(() => {
+    if (selectedPart) {
+      prevFocusRef.current = document.activeElement;
+      // Move focus to close button after paint so the DOM is ready
+      requestAnimationFrame(() => {
+        modalRef.current?.querySelector<HTMLElement>('[aria-label="Close video"]')?.focus();
+      });
+    } else if (prevFocusRef.current instanceof HTMLElement) {
+      prevFocusRef.current.focus();
+      prevFocusRef.current = null;
+    }
+  }, [selectedPart]);
+
+  // Focus trap + Escape key while modal is open — listener exists only during open state
+  useEffect(() => {
+    if (!selectedPart || !modalRef.current) return;
+    const modal = modalRef.current;
+    const FOCUSABLE = 'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        handleClose();
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const focusable = Array.from(modal.querySelectorAll<HTMLElement>(FOCUSABLE));
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last  = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [selectedPart, handleClose]);
 
   const continueWatchingPart = continueWatching
     ? PARTS.find((p) => p.partNumber === continueWatching.partNumber)
@@ -180,10 +230,12 @@ export function VideoResourceContent({
             <div className="px-4 pt-3 pb-1.5">
               <p className="text-[10px] font-bold uppercase tracking-widest text-gold/80">Continue Watching</p>
             </div>
-            <div
+            <button
+              type="button"
               onClick={() => handleOpenVideo(continueWatchingPart)}
               onMouseEnter={() => handlePrefetch(continueWatchingPart.partNumber)}
-              className="group cursor-pointer px-4 pb-3"
+              className="group w-full text-left cursor-pointer px-4 pb-3"
+              aria-label={`Resume Part ${continueWatchingPart.partNumber}: ${continueWatchingPart.title}`}
             >
               <div className="flex items-center gap-3 sm:gap-5">
                 {/* Thumbnail */}
@@ -234,7 +286,7 @@ export function VideoResourceContent({
                   Resume
                 </div>
               </div>
-            </div>
+            </button>
           </div>
         )}
 
@@ -342,6 +394,10 @@ export function VideoResourceContent({
           onClick={handleClose}
         >
           <div
+            ref={modalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="video-modal-title"
             className="relative w-full max-w-5xl sm:max-h-[90vh] bg-surface border border-gold/15 sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
@@ -355,7 +411,7 @@ export function VideoResourceContent({
                   <Video className="w-3.5 h-3.5 text-gold flex-shrink-0" />
                   <span className="text-xs font-medium text-gold">Part {selectedPart.partNumber}</span>
                 </div>
-                <h2 className="text-base sm:text-xl font-bold text-text line-clamp-2 leading-snug">
+                <h2 id="video-modal-title" className="text-base sm:text-xl font-bold text-text line-clamp-2 leading-snug">
                   {selectedPart.title}
                 </h2>
               </div>

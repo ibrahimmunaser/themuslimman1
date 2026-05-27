@@ -60,6 +60,22 @@ body {
   overflow-x: hidden;
 }
 
+/* ── Global focus-visible ring for keyboard navigation ──────────────────────
+   Applied only to interactive elements; skips non-interactive layout divs.
+   Uses the gold brand colour so the ring feels native to the dark theme.
+   Does not trigger on mouse clicks (`:focus-visible` only fires for keyboard).  */
+a[href]:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:not([tabindex="-1"]):focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 3px;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

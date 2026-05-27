@@ -454,8 +454,9 @@ function ModeButton({
       onClick={onClick}
       disabled={isDisabled}
       aria-disabled={isDisabled ? "true" : undefined}
+      aria-pressed={isActive}
       className={clsx(
-        "relative flex flex-col items-center justify-center flex-1 rounded-xl border",
+        "relative flex flex-col items-center justify-center flex-1 lg:flex-none lg:max-w-[150px] rounded-xl border",
         "transition-all duration-200 active:scale-[0.96]",
         "min-h-[52px] sm:min-h-[56px]",
         isPrimary
@@ -632,8 +633,8 @@ export function PartTabs({ part, userPlan, previewMode = false, initialAssetUrls
             </div>
           </div>
         </div>
-        {/* Desktop: all in one row */}
-        <div className="hidden sm:flex gap-2">
+        {/* Desktop: all in one row — lg:justify-center prevents giant buttons at ultrawide */}
+        <div className="hidden sm:flex gap-2 lg:justify-center lg:flex-wrap">
           {MODES.map((mode) => {
             const available = getModeSubTabs(mode, part).length > 0;
             return (
