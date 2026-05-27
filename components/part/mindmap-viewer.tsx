@@ -182,26 +182,37 @@ export function MindmapViewer({ src, title }: MindmapViewerProps) {
   }
 
   const toolbar = (
-    <div className="flex items-center gap-2 px-4 py-3 border-b border-border bg-surface flex-shrink-0">
+    <div className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 border-b border-border bg-surface flex-shrink-0">
       <p className="text-sm font-medium text-text-secondary flex-1 truncate">{title || "Mindmap"}</p>
-      <button onClick={() => { const c = getCenter(); zoomAt(c.x, c.y, 1 / 1.25); }}
-        className="w-8 h-8 rounded-lg bg-surface-raised border border-border flex items-center justify-center text-text-muted hover:text-text transition-colors" title="Zoom out">
+      <button
+        onClick={() => { const c = getCenter(); zoomAt(c.x, c.y, 1 / 1.25); }}
+        className="min-w-[44px] min-h-[44px] rounded-lg bg-surface-raised border border-border flex items-center justify-center text-text-muted hover:text-text transition-colors"
+        aria-label="Zoom out"
+      >
         <ZoomOut className="w-3.5 h-3.5" />
       </button>
       <span className="text-xs text-text-muted w-10 text-center tabular-nums">
         {Math.round(t.scale * 100)}%
       </span>
-      <button onClick={() => { const c = getCenter(); zoomAt(c.x, c.y, 1.25); }}
-        className="w-8 h-8 rounded-lg bg-surface-raised border border-border flex items-center justify-center text-text-muted hover:text-text transition-colors" title="Zoom in">
+      <button
+        onClick={() => { const c = getCenter(); zoomAt(c.x, c.y, 1.25); }}
+        className="min-w-[44px] min-h-[44px] rounded-lg bg-surface-raised border border-border flex items-center justify-center text-text-muted hover:text-text transition-colors"
+        aria-label="Zoom in"
+      >
         <ZoomIn className="w-3.5 h-3.5" />
       </button>
-      <button onClick={fitToContainer}
-        className="w-8 h-8 rounded-lg bg-surface-raised border border-border flex items-center justify-center text-text-muted hover:text-text transition-colors" title="Reset / fit to view">
+      <button
+        onClick={fitToContainer}
+        className="min-w-[44px] min-h-[44px] rounded-lg bg-surface-raised border border-border flex items-center justify-center text-text-muted hover:text-text transition-colors"
+        aria-label="Reset and fit to view"
+      >
         <RotateCcw className="w-3.5 h-3.5" />
       </button>
-      <button onClick={() => fullscreen ? exitFullscreenMode() : enterFullscreen()}
-        className="w-8 h-8 rounded-lg bg-surface-raised border border-border flex items-center justify-center text-text-muted hover:text-text transition-colors"
-        title={fullscreen ? "Exit fullscreen" : "Fullscreen"}>
+      <button
+        onClick={() => fullscreen ? exitFullscreenMode() : enterFullscreen()}
+        className="min-w-[44px] min-h-[44px] rounded-lg bg-surface-raised border border-border flex items-center justify-center text-text-muted hover:text-text transition-colors"
+        aria-label={fullscreen ? "Exit fullscreen" : "View fullscreen"}
+      >
         <Maximize2 className="w-3.5 h-3.5" />
       </button>
     </div>
@@ -213,7 +224,7 @@ export function MindmapViewer({ src, title }: MindmapViewerProps) {
         ref={wrapperRef}
         className={
           fullscreen
-            ? "fixed inset-0 z-50 bg-ink flex flex-col"
+            ? "fixed inset-0 z-[80] bg-ink flex flex-col"
             : "rounded-2xl border border-border bg-surface overflow-hidden flex flex-col"
         }
         style={fullscreen ? undefined : { height: "70vh" }}
@@ -253,7 +264,11 @@ export function MindmapViewer({ src, title }: MindmapViewerProps) {
           />
 
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2 pointer-events-none select-none">
-            <span className="text-xs text-text-muted/40 whitespace-nowrap">
+            {/* Show touch hint on mobile, mouse hint on desktop */}
+            <span className="md:hidden text-xs text-text-muted/40 whitespace-nowrap">
+              Pinch to zoom · Drag to pan · Double-tap to fit
+            </span>
+            <span className="hidden md:block text-xs text-text-muted/40 whitespace-nowrap">
               Scroll to zoom · Drag to pan · Double-click to fit
             </span>
           </div>

@@ -12,6 +12,7 @@ import {
   ArrowLeft,
   ChevronLeft,
   ChevronRight,
+  Clock,
 } from "lucide-react";
 import { PartTabs } from "@/components/part/part-tabs";
 import { StudentLayout } from "@/components/student/student-layout";
@@ -186,21 +187,23 @@ export default async function SeerahPartPage(props: Props) {
       <StudyTimeTracker partNumber={n} />
 
       <div className="min-h-screen bg-background">
-        {/* Header — only uses sync/in-memory data; renders with the shell */}
+        {/* Header — sticky, renders with the shell */}
         <div className="border-b border-border bg-surface sticky top-0 z-10">
-          <div className="max-w-6xl mx-auto px-4 pr-20 sm:px-6 lg:px-8 py-4">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-4">
+            {/* Top row: back + part badge — padding kept symmetric; floating menu overlays independently */}
             <div className="flex items-center justify-between gap-4">
               <Link
                 href="/seerah"
-                className="inline-flex items-center gap-2 text-text-secondary hover:text-text transition-colors text-sm"
+                className="inline-flex items-center gap-1.5 text-text-secondary hover:text-text transition-colors text-sm min-h-[44px]"
               >
-                <ArrowLeft className="w-4 h-4" />
+                <ArrowLeft className="w-4 h-4 shrink-0" />
                 <span className="hidden sm:inline">Back to Seerah</span>
                 <span className="sm:hidden">Back</span>
               </Link>
 
-              <div className="flex items-center gap-3">
-                <span className="px-2 py-1 text-xs font-medium rounded-md bg-gold/10 text-gold border border-gold/20">
+              {/* Right side — part badge + era (+ gap for floating menu on mobile) */}
+              <div className="flex items-center gap-2 mr-10 sm:mr-0">
+                <span className="px-2 py-1 text-xs font-semibold rounded-md bg-gold/10 text-gold border border-gold/20">
                   Part {partBase.partNumber}
                 </span>
                 <span className="text-xs text-text-muted uppercase tracking-wider hidden sm:inline">
@@ -209,12 +212,28 @@ export default async function SeerahPartPage(props: Props) {
               </div>
             </div>
 
-            <h1 className="text-xl sm:text-2xl font-bold text-text mt-3">
+            {/* Title — no hyphen breaks; subtitle hidden on mobile to save height */}
+            <h1
+              className="text-base sm:text-2xl font-bold text-text mt-1 leading-snug"
+              style={{ hyphens: "none", overflowWrap: "normal", wordBreak: "normal" }}
+            >
               {partBase.title}
             </h1>
             {partBase.subtitle && (
-              <p className="text-sm text-text-secondary mt-1">{partBase.subtitle}</p>
+              <p className="hidden sm:block text-xs sm:text-sm text-text-secondary/80 mt-0.5 leading-snug">{partBase.subtitle}</p>
             )}
+
+            {/* Lesson metadata — era (mobile only) + estimated time — collapsed on mobile to save header height */}
+            <div className="hidden sm:flex items-center gap-2.5 mt-1.5">
+              <span className="text-[11px] text-text-muted/60 uppercase tracking-wider">
+                {ERA_MAP[partBase.era as keyof typeof ERA_MAP]?.label || partBase.era}
+              </span>
+              <span className="text-text-muted/30 text-[10px]">·</span>
+              <span className="flex items-center gap-1 text-[11px] text-text-muted/60">
+                <Clock className="w-3 h-3" />
+                15–20 min
+              </span>
+            </div>
 
             {/* Per-asset progress indicators — live client component */}
             <PartProgressBadges
@@ -231,7 +250,7 @@ export default async function SeerahPartPage(props: Props) {
         </div>
 
         {/* Content */}
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
           {/* PartTabs: streams in when R2 data is ready */}
           <Suspense fallback={<PartTabsFallback />}>
             <PartTabsContent
@@ -241,17 +260,30 @@ export default async function SeerahPartPage(props: Props) {
             />
           </Suspense>
 
-          {/* Navigation — renders with the shell, no R2 needed */}
-          <div className="mt-8 pt-6 border-t border-border flex items-center justify-between gap-4">
+          {/* Up Next card — preview only, nav row handles the CTA */}
+          {nextPart && (
+            <div className="mt-8 px-4 py-3.5 sm:px-5 sm:py-4 rounded-xl bg-gold/5 border border-gold/15">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-gold/80 mb-1.5">Up Next</p>
+              <p className="text-sm font-semibold text-text leading-snug line-clamp-2" style={{ hyphens: "none" }}>
+                Part {nextPart.partNumber}: {nextPart.title}
+              </p>
+              {nextPart.subtitle && (
+                <p className="text-xs text-text-secondary/70 mt-0.5 leading-snug">{nextPart.subtitle}</p>
+              )}
+            </div>
+          )}
+
+          {/* Navigation row */}
+          <div className="mt-4 pt-4 border-t border-border/50 flex items-center justify-between gap-3">
             {prevPart ? (
               <Link
                 href={`/seerah/${prevPart.id}`}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-surface border border-border hover:border-gold/30 hover:bg-surface-raised transition-all text-sm"
+                className="inline-flex items-center gap-2 px-3 py-2.5 rounded-lg hover:bg-surface-raised transition-all min-h-[48px] opacity-50 hover:opacity-80"
               >
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft className="w-3.5 h-3.5 text-text-muted shrink-0" />
                 <div className="text-left">
-                  <p className="text-xs text-text-muted">Previous</p>
-                  <p className="text-text font-medium">Part {prevPart.partNumber}</p>
+                  <p className="text-[10px] text-text-muted">Previous</p>
+                  <p className="text-xs font-medium text-text-secondary">Part {prevPart.partNumber}</p>
                 </div>
               </Link>
             ) : (
@@ -261,14 +293,25 @@ export default async function SeerahPartPage(props: Props) {
             {nextPart && (
               <Link
                 href={`/seerah/${nextPart.id}`}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gold text-ink hover:bg-gold-light transition-all text-sm font-medium ml-auto"
+                className="inline-flex items-center gap-2 px-5 sm:px-6 py-3 rounded-xl bg-gold text-ink hover:bg-gold-light transition-all font-bold ml-auto min-h-[52px] shadow-lg shadow-gold/25 text-sm"
               >
                 <div className="text-right">
-                  <p className="text-xs text-ink/70">Next</p>
-                  <p className="text-ink font-medium">Part {nextPart.partNumber}</p>
+                  <p className="text-[10px] text-ink/60 font-normal leading-none mb-0.5">Continue</p>
+                  <p className="font-bold leading-none">Part {nextPart.partNumber}</p>
                 </div>
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-4 h-4 shrink-0" />
               </Link>
+            )}
+          </div>
+
+          {/* Bottom progression — binge momentum */}
+          <div className="mt-5 pb-2 flex items-center justify-center gap-2 text-[11px] text-text-muted/50 max-w-full">
+            <span className="flex-shrink-0">Part {n} of {allParts.length}</span>
+            {nextPart && (
+              <>
+                <span className="text-[9px] flex-shrink-0">·</span>
+                <span className="truncate min-w-0">Next: {nextPart.title}</span>
+              </>
             )}
           </div>
         </div>

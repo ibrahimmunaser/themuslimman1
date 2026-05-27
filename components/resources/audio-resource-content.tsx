@@ -225,7 +225,10 @@ export function AudioResourceContent({
 
       {/* Fixed Audio Player at Bottom */}
       {mounted && currentAudio && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-r from-amber-500 to-amber-600 border-t-2 border-amber-400 shadow-2xl">
+        <div
+          className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-r from-amber-500 to-amber-600 border-t-2 border-amber-400 shadow-2xl"
+          style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+        >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             {/* Progress Bar */}
             <div className="mb-3">
@@ -373,7 +376,7 @@ export function AudioResourceContent({
           filterByStatus={filterByStatus}
         >
           {(parts) => (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
               {parts.map((part) => {
                 const isCompleted = localProgressMap[part.partNumber] || false;
                 const isCurrentlyPlaying = currentAudio?.partNumber === part.partNumber && isPlaying;

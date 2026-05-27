@@ -38,7 +38,12 @@ export function ImageLightbox({ src, alt, isOpen, onClose }: ImageLightboxProps)
   if (!isOpen || typeof document === "undefined") return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex flex-col">
+    <div
+      className="fixed inset-0 z-[100] flex flex-col"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Image viewer: ${alt}`}
+    >
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/92 backdrop-blur-sm"
@@ -46,37 +51,37 @@ export function ImageLightbox({ src, alt, isOpen, onClose }: ImageLightboxProps)
       />
 
       {/* Toolbar */}
-      <div className="relative z-10 flex items-center justify-between px-4 py-3 flex-shrink-0">
-        <p className="text-xs text-white/50 truncate max-w-xs">{alt}</p>
-        <div className="flex items-center gap-1.5">
+      <div className="relative z-10 flex items-center justify-between px-3 py-1.5 flex-shrink-0">
+        <p className="text-xs text-white/50 truncate max-w-[50vw]">{alt}</p>
+        <div className="flex items-center gap-1">
           <button
             onClick={zoomOut}
-            className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-all"
-            title="Zoom out (−)"
+            className="min-w-[44px] min-h-[44px] rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-all"
+            aria-label="Zoom out"
           >
-            <ZoomOut className="w-3.5 h-3.5" />
+            <ZoomOut className="w-4 h-4" />
           </button>
           <button
             onClick={resetZoom}
-            className="px-2.5 h-8 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 text-xs text-white/70 hover:text-white transition-all tabular-nums min-w-[3rem] text-center"
-            title="Reset zoom (0)"
+            className="px-2 min-h-[44px] rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 text-xs text-white/70 hover:text-white transition-all tabular-nums min-w-[3.5rem] text-center"
+            aria-label={`Reset zoom, currently ${Math.round(zoom * 100)}%`}
           >
             {Math.round(zoom * 100)}%
           </button>
           <button
             onClick={zoomIn}
-            className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-all"
-            title="Zoom in (+)"
+            className="min-w-[44px] min-h-[44px] rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-all"
+            aria-label="Zoom in"
           >
-            <ZoomIn className="w-3.5 h-3.5" />
+            <ZoomIn className="w-4 h-4" />
           </button>
           <div className="w-px h-5 bg-white/15 mx-1" />
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-lg bg-white/10 hover:bg-red-500/30 border border-white/10 hover:border-red-500/30 flex items-center justify-center text-white/70 hover:text-white transition-all"
-            title="Close (Esc)"
+            className="min-w-[44px] min-h-[44px] rounded-lg bg-white/10 hover:bg-red-500/30 border border-white/10 hover:border-red-500/30 flex items-center justify-center text-white/70 hover:text-white transition-all"
+            aria-label="Close image viewer"
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </button>
         </div>
       </div>
@@ -110,7 +115,7 @@ export function ImageLightbox({ src, alt, isOpen, onClose }: ImageLightboxProps)
 
       {/* Hint bar */}
       <div className="relative z-10 flex-shrink-0 py-2 text-center">
-        <p className="text-[11px] text-white/25">Click outside to close · Esc · +/− to zoom</p>
+        <p className="text-[11px] text-white/25">Tap outside to close · Esc · +/− to zoom</p>
       </div>
     </div>,
     document.body

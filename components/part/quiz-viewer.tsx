@@ -78,7 +78,7 @@ function QuestionCard({
       </div>
 
       {/* Options */}
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3" role="radiogroup" aria-label="Answer options">
         {question.options.map((option, i) => {
           const state = getOptionState(option);
           return (
@@ -86,6 +86,8 @@ function QuestionCard({
               key={i}
               onClick={() => handleSelect(option)}
               disabled={answered}
+              role="radio"
+              aria-checked={chosen === option}
               className={clsx(
                 "group relative overflow-hidden flex items-center gap-4 w-full text-left px-5 py-4 rounded-xl border transition-all text-base font-medium",
                 !answered && "hover:border-amber-500/40 hover:bg-amber-500/5 cursor-pointer hover:translate-x-1",

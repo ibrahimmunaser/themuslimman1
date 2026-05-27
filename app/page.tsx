@@ -80,9 +80,8 @@ export default async function LandingPage() {
         <div className="absolute top-20 right-0 w-[400px] h-[400px] bg-gold/3 rounded-full blur-3xl" />
 
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 text-center">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1] mb-6">
-            Most Muslims only know fragments of the Seerah.
-            <br />
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight mb-6">
+            Most Muslims only know fragments of the Seerah.{" "}
             <span className="text-gradient-gold">Learn it as one connected story.</span>
           </h1>
 
@@ -456,7 +455,7 @@ export default async function LandingPage() {
               >
                 <div className="text-3xl mb-3">{item.icon}</div>
                 <h3 className="font-semibold text-text text-sm mb-2">{item.title}</h3>
-                <p className="text-xs text-text-secondary leading-relaxed">
+                <p className="text-xs sm:text-sm text-text-secondary/80 leading-relaxed">
                   {item.desc}
                 </p>
               </div>

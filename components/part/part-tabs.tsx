@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import { ImageLightbox } from "@/components/ui/image-lightbox";
 import { Maximize2 } from "lucide-react";
@@ -47,6 +48,8 @@ interface SubTab { id: SubTabId; label: string; icon: React.FC<{ className?: str
 interface Mode {
   id: ModeId;
   label: string;
+  shortLabel?: string;
+  subtitle: string;
   hint: string;
   icon: React.FC<{ className?: string }>;
   subTabs: SubTab[];
@@ -57,23 +60,11 @@ interface Mode {
 
 const MODES: Mode[] = [
   {
-    id: "watch",       label: "Watch",       hint: "Video lesson",    icon: Video,        primary: true,
+    id: "watch",       label: "Watch",       subtitle: "Video Lesson",      hint: "Video lesson",   icon: Video,       primary: true,
     subTabs: [{ id: "video",       label: "Video",       icon: Video }],
   },
   {
-    id: "slides",      label: "Slides",      hint: "Slide decks",     icon: Layers,
-    subTabs: [{ id: "slides",      label: "Slides",      icon: Layers }],
-  },
-  {
-    id: "infographic", label: "Infographic", hint: "Visual summary",  icon: ImageIcon,
-    subTabs: [{ id: "infographic", label: "Infographic", icon: ImageIcon }],
-  },
-  {
-    id: "mindmap",     label: "Mindmap",     hint: "Visual map",      icon: Map,
-    subTabs: [{ id: "mindmap",     label: "Mindmap",     icon: Map }],
-  },
-  {
-    id: "read",        label: "Read",        hint: "Written content",  icon: BookOpen,
+    id: "read",        label: "Read",        subtitle: "Structured Notes",  hint: "Written content", icon: BookOpen,    primary: true,
     subTabs: [
       { id: "briefing",    label: "Briefing",    icon: FileText },
       { id: "study-guide", label: "Study Guide", icon: BookOpen },
@@ -81,11 +72,23 @@ const MODES: Mode[] = [
     ],
   },
   {
-    id: "flashcards",  label: "Flashcards",  hint: "Memory cards",    icon: Layers2,
+    id: "slides",      label: "Slides",      subtitle: "Presentation",      hint: "Slide decks",    icon: Layers,      primary: true,
+    subTabs: [{ id: "slides",      label: "Slides",      icon: Layers }],
+  },
+  {
+    id: "infographic", label: "Infographic", shortLabel: "Visual", subtitle: "Visual Summary",    hint: "Visual summary", icon: ImageIcon,
+    subTabs: [{ id: "infographic", label: "Infographic", icon: ImageIcon }],
+  },
+  {
+    id: "mindmap",     label: "Mindmap",     shortLabel: "Mindmap", subtitle: "Connected Ideas",   hint: "Visual map",     icon: Map,
+    subTabs: [{ id: "mindmap",     label: "Mindmap",     icon: Map }],
+  },
+  {
+    id: "flashcards",  label: "Flashcards",  shortLabel: "Cards",  subtitle: "Memory Review",     hint: "Memory cards",   icon: Layers2,
     subTabs: [{ id: "flashcards",  label: "Flashcards",  icon: Layers2 }],
   },
   {
-    id: "quiz",        label: "Quiz",        hint: "Test yourself",   icon: HelpCircle,
+    id: "quiz",        label: "Quiz",        subtitle: "Test Knowledge",    hint: "Test yourself",  icon: HelpCircle,
     subTabs: [{ id: "quiz",        label: "Quiz",        icon: HelpCircle }],
   },
 ];
@@ -163,7 +166,7 @@ function InfographicPanel({ part, previewMode }: { part: Part; previewMode?: boo
   const styles = [
     { id: "concise"   as const, label: "Concise" },
     { id: "standard"  as const, label: "Standard" },
-    { id: "bentoGrid" as const, label: "Bento Grid" },
+    { id: "bentoGrid" as const, label: "Gallery View" },
   ].filter((s) => inf?.[s.id]);
   const currentSrc = inf?.[style] ?? inf?.[styles[0]?.id];
   const mediumSrc = currentSrc ? infographicWebp(currentSrc, "-medium") : null;
@@ -188,62 +191,66 @@ function InfographicPanel({ part, previewMode }: { part: Part; previewMode?: boo
   };
 
   return (
-    <div className="space-y-4">
-      {/* Header row: type selector + fullscreen button */}
-      <div className="flex items-center gap-2 pl-4 pr-1">
-        <div className="flex gap-2 flex-1 flex-wrap">
+    <div className="space-y-3">
+      {/* Contextual framing header */}
+      <div className="mb-1">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-gold/60 leading-none">Infographic</p>
+        <p className="text-xs text-text-muted/50 mt-0.5 leading-snug" style={{ hyphens: "none" }}>{part.title}</p>
+      </div>
+
+      {/* Style selector row — only when multiple styles available */}
+      {styles.length > 1 && (
+        <div className="flex gap-1.5">
           {styles.map((s) => (
             <button
-              key={s.id} onClick={() => handleStyleChange(s.id)}
+              key={s.id}
+              onClick={() => handleStyleChange(s.id)}
               className={clsx(
-                "px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+                "px-3 rounded-lg text-xs font-medium transition-all duration-150 min-h-[44px] active:scale-95",
                 style === s.id
-                  ? "bg-gold/12 text-gold border-gold/25"
-                  : "bg-surface text-text-muted border-border hover:text-text-secondary hover:border-border-subtle"
+                  ? "bg-gold/12 text-gold ring-1 ring-gold/25"
+                  : "bg-surface-raised/50 text-text-muted/60 hover:text-text-secondary hover:bg-surface-raised"
               )}
-            >{s.label}</button>
+            >
+              {s.label}
+            </button>
           ))}
         </div>
-        {currentSrc && (
-          <button
-            onClick={() => setLightboxOpen(true)}
-            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-border bg-surface text-text-muted hover:text-text hover:border-border-subtle transition-colors"
-            title="View fullscreen"
-          >
-            <Maximize2 className="w-3.5 h-3.5" />
-            Fullscreen
-          </button>
-        )}
-      </div>
+      )}
+
       {currentSrc ? (
         <>
+          {/* Image container — warm elevation, embedded fullscreen */}
           <div
-            className="relative group rounded-xl border border-border/60 bg-surface overflow-hidden cursor-zoom-in min-h-[200px]"
+            className="relative group rounded-2xl overflow-hidden cursor-zoom-in min-h-[200px]"
+            style={{
+              border: "1px solid rgba(200, 169, 110, 0.18)",
+              boxShadow: "0 4px 24px rgba(0,0,0,0.45), 0 0 0 1px rgba(200,169,110,0.06), inset 0 1px 0 rgba(200,169,110,0.08)",
+            }}
             onClick={() => setLightboxOpen(true)}
-            title="Click to view fullscreen"
+            onTouchEnd={() => setLightboxOpen(true)}
+            title="Tap to view fullscreen"
           >
-            {/* Spinner while loading */}
+            {/* Loading spinner */}
             {!loaded && (
-              <div className="absolute inset-0 flex items-center justify-center bg-surface">
+              <div className="absolute inset-0 flex items-center justify-center bg-surface/80">
                 <div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
               </div>
             )}
 
             {useFallback || !mediumSrc ? (
-              /* Fallback: next/image on the raw URL */
               <NextImage
                 key={currentSrc}
                 src={currentSrc}
                 alt={altLabel}
                 width={1200}
                 height={675}
-                className={`w-full h-auto rounded-lg transition-opacity duration-200 ${loaded ? "opacity-100" : "opacity-0"}`}
+                className={`w-full h-auto transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
                 priority
                 unoptimized
                 onLoad={() => setLoaded(true)}
               />
             ) : (
-              /* Pre-generated medium WebP — direct from R2 CDN */
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 key={mediumSrc}
@@ -251,14 +258,27 @@ function InfographicPanel({ part, previewMode }: { part: Part; previewMode?: boo
                 alt={altLabel}
                 // eslint-disable-next-line react/no-unknown-property
                 fetchPriority="high"
-                className={`w-full h-auto rounded-lg transition-opacity duration-200 ${loaded ? "opacity-100" : "opacity-0"}`}
+                className={`w-full h-auto transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
                 onLoad={() => setLoaded(true)}
                 onError={() => { setUseFallback(true); setLoaded(false); }}
               />
             )}
 
-            {/* Hover overlay */}
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors pointer-events-none" />
+            {/* Fullscreen button — always visible in corner on mobile, hover-reveal on desktop */}
+            <button
+              className={clsx(
+                "absolute bottom-2.5 right-2.5 flex items-center gap-1 px-2.5 rounded-lg",
+                "bg-black/65 backdrop-blur-sm border border-white/10",
+                "text-white/70 hover:text-white transition-all duration-150",
+                "sm:opacity-0 sm:group-hover:opacity-100 opacity-80",
+                "min-h-[44px]"
+              )}
+              onClick={(e) => { e.stopPropagation(); setLightboxOpen(true); }}
+              aria-label="View infographic fullscreen"
+            >
+              <Maximize2 className="w-3.5 h-3.5" />
+              <span className="text-[10px] font-medium ml-1">Expand</span>
+            </button>
           </div>
           <ImageLightbox
             src={lightboxSrc ?? currentSrc}
@@ -295,12 +315,12 @@ function SlidesPanel({ part, previewMode }: { part: Part; previewMode?: boolean 
   return (
     <div>
       {available.length > 1 && (
-        <div className="flex gap-2 mb-4 flex-wrap pl-4">
+        <div className="flex gap-2 mb-4 flex-wrap">
           {available.map((t) => (
             <button
               key={t.key} onClick={() => handleTypeChange(t.key)}
               className={clsx(
-                "px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+                "px-3 min-h-[44px] rounded-lg text-xs font-medium border transition-colors",
                 type === t.key
                   ? "bg-gold/12 text-gold border-gold/25"
                   : "bg-surface text-text-muted border-border hover:text-text-secondary"
@@ -334,7 +354,7 @@ function SubTabContent({ id, part, previewMode, assetUrls }: {
   assetUrls: PartAssetUrls;
 }) {
   const wrap = (child: React.ReactNode) => (
-    <div className="rounded-xl border border-border/60 bg-surface p-5 sm:p-7">{child}</div>
+    <div className="rounded-xl bg-surface/60 p-4 sm:p-6">{child}</div>
   );
 
   switch (id) {
@@ -426,28 +446,68 @@ function ModeButton({
   onClick: () => void;
 }) {
   const Icon = mode.icon;
+  const isPrimary = !!mode.primary;
+  const isDisabled = !isAvailable && !isLocked;
 
   return (
     <button
       onClick={onClick}
-      disabled={!isAvailable && !isLocked}
+      disabled={isDisabled}
+      aria-disabled={isDisabled ? "true" : undefined}
       className={clsx(
-        "flex items-center justify-center gap-2 px-3 py-3 rounded-xl border text-sm font-medium flex-1 min-w-max whitespace-nowrap transition-all duration-150",
+        "relative flex flex-col items-center justify-center flex-1 rounded-xl border",
+        "transition-all duration-200 active:scale-[0.96]",
+        "min-h-[52px] sm:min-h-[56px]",
+        isPrimary
+          ? "px-1.5 sm:px-4 py-2.5 sm:py-3 gap-0.5"
+          : "px-1 sm:px-3 py-2 sm:py-2.5 gap-0.5",
+        // Active — softer gold so media stays dominant
         isActive
-          ? "border-gold/35 bg-gold/10 text-gold"
-          : isLocked
-          ? "border-border/50 bg-surface/80 text-text-muted/60 hover:border-gold/20 hover:bg-surface-raised/80 cursor-pointer"
+          ? "border-gold/30 bg-gold/8 text-gold shadow-sm shadow-gold/10"
+          : isDisabled
+          ? "border-border/15 bg-surface/20 text-text-muted/25 cursor-not-allowed pointer-events-none"
           : isAvailable
-          ? "border-border bg-surface-raised text-text-secondary hover:border-gold/30 hover:bg-surface-high hover:text-text cursor-pointer"
-          : "border-border/30 bg-surface/50 text-text-muted/25 cursor-not-allowed opacity-40 pointer-events-none"
+          ? isPrimary
+            // Primary inactive — clearer, more prominent
+            ? "border-border/60 bg-surface-raised/70 text-text-secondary hover:border-gold/20 hover:bg-surface-high hover:text-text cursor-pointer"
+            // Secondary inactive — brighter than before, still quieter than primary
+            : "border-border/50 bg-surface-raised/50 text-text-secondary/75 hover:border-border/70 hover:bg-surface-raised hover:text-text-secondary cursor-pointer"
+          : "border-border/30 bg-surface/40 text-text-muted/60 hover:border-gold/15 hover:bg-surface-raised/50 cursor-pointer"
       )}
     >
-      <Icon className="w-4 h-4 flex-shrink-0" />
-      {mode.label}
-      {isLocked && (
-        <span className="text-[9px] font-semibold uppercase tracking-wider opacity-60 flex-shrink-0">
-          Locked
-        </span>
+      {/* Icon */}
+      <Icon className={clsx(
+        "flex-shrink-0 transition-all duration-200",
+        isPrimary ? "w-4 h-4" : "w-3.5 h-3.5",
+        isActive ? "opacity-100" : isDisabled ? "opacity-20" : isPrimary ? "opacity-65" : "opacity-75"
+      )} />
+
+      {/* Label — use shortLabel on narrow screens when available */}
+      <span className={clsx(
+        "truncate leading-none font-semibold",
+        isPrimary ? "text-[11px] sm:text-[13px]" : "text-[10px] sm:text-xs",
+        isActive ? "opacity-100" : isDisabled ? "opacity-25" : "opacity-90"
+      )}>
+        {mode.shortLabel ? (
+          <>
+            <span className="min-[360px]:hidden">{mode.shortLabel}</span>
+            <span className="hidden min-[360px]:inline">{mode.label}</span>
+          </>
+        ) : mode.label}
+      </span>
+
+      {/* Subtitle — primary on mobile, all on desktop */}
+      <span className={clsx(
+        "leading-none truncate",
+        isPrimary ? "text-[9px] sm:text-[10px]" : "hidden sm:block text-[9px]",
+        isActive ? "text-gold/55" : isDisabled ? "opacity-20" : isPrimary ? "text-text-muted/40" : "text-text-muted/55",
+      )}>
+        {mode.subtitle}
+      </span>
+
+      {/* Active underline accent */}
+      {isActive && (
+        <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-[2px] bg-gold/60 rounded-full" />
       )}
     </button>
   );
@@ -466,11 +526,30 @@ export function PartTabs({ part, userPlan, previewMode = false, initialAssetUrls
   const availableModes = MODES.filter((m) => getModeSubTabs(m, part).length > 0);
   const defaultMode = availableModes[0] ?? MODES[0];
 
-  const [activeMode, setActiveMode] = useState<ModeId>(defaultMode.id);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  // Initialise from ?mode= URL param so deep links and browser back/fwd work
+  const modeParam = searchParams.get("mode") as ModeId | null;
+  const resolvedInitialMode: ModeId =
+    modeParam && availableModes.some((m) => m.id === modeParam) ? modeParam : defaultMode.id;
+
+  const [activeMode, setActiveMode] = useState<ModeId>(resolvedInitialMode);
   const currentMode = MODES.find((m) => m.id === activeMode) ?? defaultMode;
   const subTabs = getModeSubTabs(currentMode, part);
 
   const [activeSubTab, setActiveSubTab] = useState<SubTabId>(subTabs[0]?.id ?? "video");
+
+  // Sync state when browser navigates (back/forward)
+  useEffect(() => {
+    const incoming = modeParam && availableModes.some((m) => m.id === modeParam) ? modeParam : defaultMode.id;
+    if (incoming !== activeMode) {
+      setActiveMode(incoming);
+      const newSubTabs = getModeSubTabs(MODES.find((m) => m.id === incoming)!, part);
+      setActiveSubTab(newSubTabs[0]?.id ?? MODES.find((m) => m.id === incoming)!.subTabs[0].id as SubTabId);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modeParam]);
 
   // Use server-provided URLs immediately; fall back to client-side fetch only if not provided
   const [assetUrls, setAssetUrls] = useState<PartAssetUrls>(initialAssetUrls ?? {});
@@ -481,16 +560,20 @@ export function PartTabs({ part, userPlan, previewMode = false, initialAssetUrls
 
   // Track which panels have been rendered at least once — never unmount after first visit
   const [renderedPanels, setRenderedPanels] = useState<Set<string>>(
-    () => new Set([`${defaultMode.id}::${getModeSubTabs(defaultMode, part)[0]?.id ?? defaultMode.subTabs[0].id}`])
+    () => new Set([`${resolvedInitialMode}::${getModeSubTabs(MODES.find((m) => m.id === resolvedInitialMode)!, part)[0]?.id ?? MODES.find((m) => m.id === resolvedInitialMode)!.subTabs[0].id}`])
   );
 
-  const handleModeChange = (modeId: ModeId) => {
+  const handleModeChange = useCallback((modeId: ModeId) => {
     setActiveMode(modeId);
     const newSubTabs = getModeSubTabs(MODES.find((m) => m.id === modeId)!, part);
     const newSubTabId = newSubTabs[0]?.id ?? MODES.find((m) => m.id === modeId)!.subTabs[0].id;
     setActiveSubTab(newSubTabId as SubTabId);
     setRenderedPanels((prev) => new Set([...prev, `${modeId}::${newSubTabId}`]));
-  };
+    // Persist in URL without full navigation
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("mode", modeId);
+    router.replace(`?${params.toString()}`, { scroll: false });
+  }, [part, searchParams, router]);
 
   const handleSubTabChange = (tabId: SubTabId) => {
     setActiveSubTab(tabId);
@@ -506,27 +589,71 @@ export function PartTabs({ part, userPlan, previewMode = false, initialAssetUrls
     <div className="space-y-6">
 
       {/* ── Mode selector strip ─────────────────────────────────────────── */}
-      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-        {MODES.map((mode) => {
-          const available = getModeSubTabs(mode, part).length > 0;
-          return (
-            <ModeButton
-              key={mode.id}
-              mode={mode}
-              isActive={activeMode === mode.id}
-              isAvailable={available}
-              isLocked={false}
-              onClick={() => available ? handleModeChange(mode.id) : undefined}
-            />
-          );
-        })}
-        <TimelineButton partNumber={part.partNumber} era={part.era} previewMode={previewMode} />
-        <div className="flex-shrink-0 w-4" aria-hidden="true" />
+      <div className="space-y-1.5 sm:space-y-0">
+        {/* Mobile: two rows — primary (Watch/Read/Slides) then secondary */}
+        {/* Desktop: single row with all tabs */}
+        <div className="sm:hidden space-y-2">
+          {/* LEARN group */}
+          <div className="space-y-1">
+            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-text-muted/35 px-0.5">Learn</p>
+            <div className="flex gap-1.5">
+              {MODES.filter((m) => m.primary).map((mode) => {
+                const available = getModeSubTabs(mode, part).length > 0;
+                return (
+                  <ModeButton
+                    key={mode.id}
+                    mode={mode}
+                    isActive={activeMode === mode.id}
+                    isAvailable={available}
+                    isLocked={false}
+                    onClick={() => available ? handleModeChange(mode.id) : undefined}
+                  />
+                );
+              })}
+            </div>
+          </div>
+          {/* REVIEW group */}
+          <div className="space-y-1">
+            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-text-muted/35 px-0.5">Review</p>
+            <div className="flex gap-1">
+              {MODES.filter((m) => !m.primary).map((mode) => {
+                const available = getModeSubTabs(mode, part).length > 0;
+                return (
+                  <ModeButton
+                    key={mode.id}
+                    mode={mode}
+                    isActive={activeMode === mode.id}
+                    isAvailable={available}
+                    isLocked={false}
+                    onClick={() => available ? handleModeChange(mode.id) : undefined}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        </div>
+        {/* Desktop: all in one row */}
+        <div className="hidden sm:flex gap-2">
+          {MODES.map((mode) => {
+            const available = getModeSubTabs(mode, part).length > 0;
+            return (
+              <ModeButton
+                key={mode.id}
+                mode={mode}
+                isActive={activeMode === mode.id}
+                isAvailable={available}
+                isLocked={false}
+                onClick={() => available ? handleModeChange(mode.id) : undefined}
+              />
+            );
+          })}
+          <TimelineButton partNumber={part.partNumber} era={part.era} previewMode={previewMode} />
+        </div>
       </div>
 
       {/* ── Sub-tab bar (only when mode has multiple content items) ────── */}
       {subTabs.length > 1 && (
-        <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pl-4">
+        <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
           {subTabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = currentSubTab === tab.id;
@@ -535,13 +662,15 @@ export function PartTabs({ part, userPlan, previewMode = false, initialAssetUrls
                 key={tab.id}
                 onClick={() => handleSubTabChange(tab.id)}
                 className={clsx(
-                  "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all duration-150 flex-shrink-0 whitespace-nowrap",
+                  "flex items-center gap-1.5 px-3 rounded-lg text-xs font-medium",
+                  "transition-all duration-150 active:scale-95 flex-shrink-0 whitespace-nowrap",
+                  "min-h-[44px]",
                   isActive
-                    ? "bg-gold/10 text-gold border-gold/25"
-                    : "bg-surface text-text-muted border-border hover:text-text-secondary hover:border-border-subtle hover:bg-surface-raised"
+                    ? "bg-gold/12 text-gold ring-1 ring-gold/20"
+                    : "bg-surface-raised/50 text-text-muted/75 hover:text-text-secondary hover:bg-surface-raised"
                 )}
               >
-                <Icon className="w-3 h-3" />
+                <Icon className={clsx("w-3 h-3 transition-opacity", isActive ? "opacity-100" : "opacity-55")} />
                 {tab.label}
               </button>
             );
@@ -550,12 +679,15 @@ export function PartTabs({ part, userPlan, previewMode = false, initialAssetUrls
       )}
 
       {/* ── Content — panels stay mounted after first visit, hidden via CSS ── */}
-      <div className="pt-1">
+      <div className="pt-0.5">
         {allPanels.map((panelKey) => {
           const [modeId, subTabId] = panelKey.split("::");
           const isVisible = activeMode === modeId && currentSubTab === subTabId;
           return (
-            <div key={panelKey} className={isVisible ? "" : "hidden"}>
+            <div
+              key={panelKey}
+              className={isVisible ? "animate-in fade-in-0 duration-200" : "hidden"}
+            >
               <SubTabContent
                 id={subTabId as SubTabId}
                 part={part}

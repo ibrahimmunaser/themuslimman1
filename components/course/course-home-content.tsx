@@ -95,7 +95,7 @@ export function CourseHomeContent({
             <PrefetchPartLink
               partNumber={currentPart}
               label={isNewUser ? "Start now" : "Continue"}
-              className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-gold hover:text-gold/80 transition-colors"
+              className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-gold hover:text-gold/80 transition-colors min-h-[44px]"
             />
           </div>
         </div>
@@ -167,14 +167,14 @@ export function CourseHomeContent({
               <div className="flex flex-wrap gap-3">
                 <PrefetchPartLink
                   partNumber={currentPart}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-gold hover:bg-gold-light text-ink font-semibold rounded-xl text-sm transition-colors shadow-lg shadow-gold/20"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[44px] bg-gold hover:bg-gold-light text-ink font-semibold rounded-xl text-sm transition-colors shadow-lg shadow-gold/20"
                 >
                   <Play className="w-4 h-4" />
                   {isNewUser ? "Start Part 1" : "Continue Lesson"}
                 </PrefetchPartLink>
                 <a
                   href="#roadmap"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 border border-border hover:border-gold/40 hover:text-text text-text-secondary font-medium rounded-xl text-sm transition-colors"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[44px] border border-border hover:border-gold/40 hover:text-text text-text-secondary font-medium rounded-xl text-sm transition-colors"
                 >
                   View Roadmap
                   <ArrowRight className="w-4 h-4" />

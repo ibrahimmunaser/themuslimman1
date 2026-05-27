@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import { requireStudent } from "@/lib/auth";
+import { hasActiveCourseAccess } from "@/lib/access";
 import { StudentLayout } from "@/components/student/student-layout";
 import { ParentEmailSettings } from "@/components/student/parent-email-settings";
-import { prisma } from "@/lib/db";
 import { User, Mail, Shield } from "lucide-react";
 import { ChangePasswordForm } from "@/components/student/change-password-form";
 
@@ -13,11 +13,8 @@ export default async function SettingsPage() {
   const user = await requireStudent();
   if (!user.studentProfileId) redirect("/");
 
-  const purchases = await prisma.purchase.findMany({
-    where: { userId: user.id, status: "succeeded" },
-  });
-
-  if (purchases.length === 0) redirect("/pricing");
+  const hasAccess = await hasActiveCourseAccess(user.id);
+  if (!hasAccess) redirect("/pricing");
 
   const userPlan = "complete" as const;
 
@@ -26,7 +23,7 @@ export default async function SettingsPage() {
       <div className="min-h-screen bg-[#0a0a0a]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-text mb-2">Profile & Settings</h1>
+            <h1 className="text-xl sm:text-3xl font-bold text-text mb-2">Profile & Settings</h1>
             <p className="text-text-secondary">
               Manage your account preferences and settings
             </p>

@@ -34,9 +34,23 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode }: Vid
   const [started,  setStarted]  = useState(false);
   const [playing,  setPlaying]  = useState(false);
   const [muted,    setMuted]    = useState(false);
-  const [volume,   setVolume]   = useState(0.5); // Default 50%
+  const [volume,   setVolume]   = useState(0.5);
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [controlsVisible, setControlsVisible] = useState(false);
+  const [videoError, setVideoError] = useState(false);
+  const controlsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showControlsTemporarily = useCallback(() => {
+    setControlsVisible(true);
+    if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
+    controlsTimerRef.current = setTimeout(() => setControlsVisible(false), 3000);
+  }, []);
+
+  const handleVideoTap = useCallback(() => {
+    if (!started) return; // pre-play overlay handles this
+    showControlsTemporarily();
+  }, [started, showControlsTemporarily]);
 
   if (!src) {
     return (
@@ -118,6 +132,26 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode }: Vid
     }
   };
 
+  if (videoError) {
+    return (
+      <div className="aspect-video rounded-2xl bg-surface border border-border flex flex-col items-center justify-center gap-3 px-4 text-center">
+        <div className="w-14 h-14 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+          <Play className="w-6 h-6 text-red-400/60 ml-0.5" />
+        </div>
+        <div>
+          <p className="text-text-secondary text-sm font-medium">Video unavailable</p>
+          <p className="text-text-muted text-xs mt-1">Try refreshing the page or check your connection</p>
+        </div>
+        <button
+          onClick={() => setVideoError(false)}
+          className="mt-1 px-4 py-2 rounded-lg bg-surface-raised border border-border text-sm text-text-secondary hover:text-text hover:border-gold/30 transition-colors min-h-[44px]"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-2xl overflow-hidden border border-border bg-black relative group">
       <video
@@ -125,17 +159,20 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode }: Vid
         src={src}
         poster={poster}
         preload="none"
+        playsInline
         className="w-full aspect-video"
+        onClick={handleVideoTap}
+        onTouchEnd={handleVideoTap}
         onLoadedMetadata={() => {
           if (videoRef.current) {
             videoRef.current.volume = volume;
           }
         }}
         onTimeUpdate={handleTimeUpdate}
+        onError={() => setVideoError(true)}
         onEnded={() => {
           setPlaying(false);
           setStarted(false);
-          // Report 100% on ended
           if (partNumber && !previewMode && !reportedRef.current.has(100)) {
             reportedRef.current.add(100);
             trackVideoProgress(partNumber, 100).catch(() => {});
@@ -163,56 +200,68 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode }: Vid
         </button>
       )}
 
-      {/* Controls */}
-      <div className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-4 transition-all duration-200 ${
-        started ? "opacity-0 group-hover:opacity-100" : "opacity-0"
-      }`}>
+      {/* Controls — visible on hover (desktop) or tap (mobile) */}
+      <div
+        className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-4 transition-all duration-200 ${
+          started ? (controlsVisible ? "opacity-100" : "opacity-0 group-hover:opacity-100") : "opacity-0"
+        }`}
+        onTouchStart={showControlsTemporarily}
+        onMouseMove={showControlsTemporarily}
+      >
+        {/* Seek bar — tall invisible hit area wraps the thin visual bar */}
         <div
-          className="w-full h-1 bg-white/25 rounded-full mb-3 cursor-pointer"
+          className="relative w-full h-8 flex items-center mb-1 cursor-pointer"
           onClick={handleSeek}
+          aria-label="Video progress"
         >
-          <div
-            className="h-1 bg-gold rounded-full transition-all"
-            style={{ width: `${progress}%` }}
-          />
+          <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-1 bg-white/25 rounded-full">
+            <div
+              className="h-1 bg-gold rounded-full transition-all"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1">
+          {/* Play/Pause — 44px */}
           <button
             onClick={togglePlay}
-            className="w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center transition-colors"
+            className="min-w-[44px] min-h-[44px] rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center transition-colors"
+            aria-label={playing ? "Pause" : "Play"}
           >
             {playing
-              ? <Pause className="w-4 h-4 text-white" />
-              : <Play  className="w-4 h-4 text-white ml-0.5" />
+              ? <Pause className="w-5 h-5 text-white" />
+              : <Play  className="w-5 h-5 text-white ml-0.5" />
             }
           </button>
 
-          {/* Rewind 10s */}
+          {/* Rewind 10s — 44px */}
           <button
             onClick={() => { if (videoRef.current) videoRef.current.currentTime = Math.max(0, videoRef.current.currentTime - 10); }}
-            className="relative w-7 h-7 flex items-center justify-center text-white/70 hover:text-white transition-colors"
-            title="Rewind 10s"
+            className="relative min-w-[44px] min-h-[44px] flex items-center justify-center text-white/70 hover:text-white transition-colors"
+            aria-label="Rewind 10 seconds"
           >
             <RotateCcw className="w-5 h-5" />
-            <span className="absolute text-[7px] font-bold leading-none">10</span>
+            <span className="absolute text-[7px] font-bold leading-none" aria-hidden>10</span>
           </button>
 
-          {/* Forward 10s */}
+          {/* Forward 10s — 44px */}
           <button
             onClick={() => { if (videoRef.current) videoRef.current.currentTime = Math.min(videoRef.current.duration || Infinity, videoRef.current.currentTime + 10); }}
-            className="relative w-7 h-7 flex items-center justify-center text-white/70 hover:text-white transition-colors"
-            title="Forward 10s"
+            className="relative min-w-[44px] min-h-[44px] flex items-center justify-center text-white/70 hover:text-white transition-colors"
+            aria-label="Forward 10 seconds"
           >
             <RotateCw className="w-5 h-5" />
-            <span className="absolute text-[7px] font-bold leading-none">10</span>
+            <span className="absolute text-[7px] font-bold leading-none" aria-hidden>10</span>
           </button>
 
-          <div className="relative flex items-center gap-2">
-            <button 
-              onClick={() => setShowVolumeSlider(!showVolumeSlider)} 
+          <div className="relative flex items-center gap-1">
+            {/* Mute — 44px */}
+            <button
+              onClick={() => setShowVolumeSlider(!showVolumeSlider)}
               onDoubleClick={toggleMute}
-              className="text-white/70 hover:text-white transition-colors"
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center text-white/70 hover:text-white transition-colors"
+              aria-label={muted || volume === 0 ? "Unmute" : "Mute"}
             >
               {muted || volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
             </button>
@@ -238,9 +287,11 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode }: Vid
 
           <div className="flex-1" />
 
+          {/* Fullscreen — 44px */}
           <button
             onClick={() => videoRef.current?.requestFullscreen()}
-            className="text-white/70 hover:text-white transition-colors"
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center text-white/70 hover:text-white transition-colors"
+            aria-label="Fullscreen"
           >
             <Maximize className="w-4 h-4" />
           </button>

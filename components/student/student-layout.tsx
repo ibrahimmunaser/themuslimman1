@@ -14,7 +14,7 @@ export function StudentLayout({ children, userPlan, userName }: StudentLayoutPro
         <StudentSidebar userPlan={userPlan} userName={userName} />
       </Suspense>
       
-      <main className="flex-1 lg:ml-0">
+      <main className="flex-1 min-w-0 overflow-x-hidden">
         <div className="h-full">
           {children}
         </div>

@@ -54,18 +54,26 @@ export function FactsViewer({ content, partNumber, previewMode }: FactsViewerPro
   }, []);
 
   return (
-    <ol className="space-y-3">
-      {facts.map((fact, i) => (
-        <li key={i} className="flex gap-4 items-baseline">
-          <span className="flex-shrink-0 w-7 text-right text-xs font-semibold text-gold/50 tabular-nums mt-[2px]">
-            {i + 1}
-          </span>
-          <span 
-            className="text-base text-zinc-300 leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: formatFactLine(fact) }}
-          />
-        </li>
-      ))}
-    </ol>
+    <div>
+      {/* Header */}
+      <div className="mb-5">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-gold/60">Statement of Facts</p>
+        <p className="text-[11px] text-text-muted/50 mt-0.5">{facts.length} key points from this lesson</p>
+      </div>
+
+      <ol className="space-y-4">
+        {facts.map((fact, i) => (
+          <li key={i} className="flex gap-3 sm:gap-4">
+            <span className="flex-shrink-0 w-6 text-right text-[11px] font-semibold text-gold/40 tabular-nums pt-[3px] select-none">
+              {i + 1}
+            </span>
+            <span
+              className="text-[0.9375rem] sm:text-base text-[#C8C4BC] leading-[1.82] flex-1 min-w-0"
+              dangerouslySetInnerHTML={{ __html: formatFactLine(fact) }}
+            />
+          </li>
+        ))}
+      </ol>
+    </div>
   );
 }

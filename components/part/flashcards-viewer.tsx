@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { clsx } from "clsx";
 import { ChevronLeft, ChevronRight, RotateCcw, Shuffle } from "lucide-react";
 import type { FlashcardSet, FlashcardLevel, Flashcard } from "@/lib/types";
@@ -29,6 +29,8 @@ function shuffleArray<T>(arr: T[]): T[] {
 function FlipCard({ card, index, total }: { card: Flashcard; index: number; total: number }) {
   const [flipped, setFlipped] = useState(false);
 
+  const toggle = () => setFlipped((f) => !f);
+
   return (
     <div className="flex flex-col gap-6">
       {/* Progress indicator */}
@@ -54,69 +56,72 @@ function FlipCard({ card, index, total }: { card: Flashcard; index: number; tota
         </div>
       </div>
 
-      {/* Flip card */}
-      <div
-        className="relative cursor-pointer select-none group"
-        style={{ perspective: "1200px" }}
-        onClick={() => setFlipped((f) => !f)}
-      >
-        <div
-          className="relative transition-transform duration-500 ease-out"
-          style={{
-            transformStyle: "preserve-3d",
-            transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)",
-            minHeight: "280px",
-          }}
-        >
-          {/* Front — question */}
-          <div
-            className="absolute inset-0 flex flex-col justify-center items-center rounded-2xl border-2 border-zinc-800 bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-950 p-8 sm:p-10 shadow-xl group-hover:border-amber-500/30 transition-colors"
-            style={{ backfaceVisibility: "hidden" }}
-          >
-            <div className="absolute top-4 left-1/2 -translate-x-1/2">
-              <span className="inline-block px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-xs font-semibold tracking-wider uppercase text-amber-400">
-                Question
-              </span>
-            </div>
-            <p className="text-lg sm:text-xl font-semibold text-white leading-relaxed text-center max-w-2xl">
-              {card.side1}
-            </p>
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 text-amber-400/80 text-sm font-medium">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
-              </svg>
-              <span>Click to reveal answer</span>
-            </div>
-          </div>
+      {/* Live region announces flip state to screen readers */}
+      <div aria-live="polite" aria-atomic="true" className="sr-only">
+        {flipped ? `Answer: ${card.side2}` : `Question: ${card.side1}`}
+      </div>
 
-          {/* Back — answer */}
-          <div
-            className="absolute inset-0 flex flex-col justify-center items-center rounded-2xl border-2 border-amber-500/40 bg-gradient-to-br from-amber-950/20 via-zinc-900 to-zinc-950 p-8 sm:p-10 shadow-xl"
-            style={{
-              backfaceVisibility: "hidden",
-              transform: "rotateY(180deg)",
-            }}
-          >
-            <div className="absolute top-4 left-1/2 -translate-x-1/2">
-              <span className="inline-block px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/30 text-xs font-semibold tracking-wider uppercase text-amber-300">
-                Answer
-              </span>
+      {/* Flip card — using opacity swap for universal mobile compatibility */}
+      <div
+        className="relative cursor-pointer select-none min-h-[260px] sm:min-h-[300px]"
+        onClick={toggle}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } }}
+        role="button"
+        tabIndex={0}
+        aria-label={flipped ? "Card showing answer — press Enter or tap to flip back to question" : "Card showing question — press Enter or tap to reveal answer"}
+      >
+        {/* Front — question */}
+        <div
+          className={clsx(
+            "absolute inset-0 flex flex-col justify-center items-center rounded-2xl border-2 border-zinc-800 bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-950 p-6 sm:p-10 shadow-xl transition-all duration-300",
+            flipped ? "opacity-0 pointer-events-none scale-95" : "opacity-100 scale-100"
+          )}
+        >
+          <div className="absolute top-4 left-1/2 -translate-x-1/2">
+            <span className="inline-block px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-xs font-semibold tracking-wider uppercase text-amber-400">
+              Question
+            </span>
+          </div>
+          <p className="text-base sm:text-xl font-semibold text-white leading-relaxed text-center max-w-2xl mt-4">
+            {card.side1}
+          </p>
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 text-amber-400/80 text-sm font-medium whitespace-nowrap">
+            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+            </svg>
+            <span>Tap to reveal answer</span>
+          </div>
+        </div>
+
+        {/* Back — answer */}
+        <div
+          className={clsx(
+            "absolute inset-0 flex flex-col justify-center items-center rounded-2xl border-2 border-amber-500/40 bg-gradient-to-br from-amber-950/20 via-zinc-900 to-zinc-950 p-6 sm:p-10 shadow-xl transition-all duration-300",
+            flipped ? "opacity-100 scale-100" : "opacity-0 pointer-events-none scale-95"
+          )}
+        >
+          <div className="absolute top-4 left-1/2 -translate-x-1/2">
+            <span className="inline-block px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/30 text-xs font-semibold tracking-wider uppercase text-amber-300">
+              Answer
+            </span>
+          </div>
+          <p className="text-base sm:text-xl font-semibold text-white leading-relaxed text-center max-w-2xl mt-4 mb-4">
+            {card.side2}
+          </p>
+          {card.tags.length > 0 && (
+            <div className="flex flex-wrap justify-center gap-2">
+              {card.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="text-xs px-3 py-1 rounded-lg bg-zinc-800/50 border border-zinc-700 text-zinc-400"
+                >
+                  #{tag}
+                </span>
+              ))}
             </div>
-            <p className="text-lg sm:text-xl font-semibold text-white leading-relaxed text-center max-w-2xl mb-6">
-              {card.side2}
-            </p>
-            {card.tags.length > 0 && (
-              <div className="flex flex-wrap justify-center gap-2">
-                {card.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="text-xs px-3 py-1 rounded-lg bg-zinc-800/50 border border-zinc-700 text-zinc-400"
-                  >
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-            )}
+          )}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-zinc-500 text-xs whitespace-nowrap">
+            Tap to flip back
           </div>
         </div>
       </div>

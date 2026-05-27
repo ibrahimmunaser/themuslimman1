@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -35,7 +35,7 @@ interface MenuItem {
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   badge?: string;
-  tabId?: string; // for /seerah?tab=X links
+  tabId?: string;
 }
 
 const ACCOUNT_MENU_BASE: MenuItem[] = [
@@ -43,60 +43,95 @@ const ACCOUNT_MENU_BASE: MenuItem[] = [
 ];
 
 export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
-  const pathname = usePathname();
+  const pathname     = usePathname();
   const searchParams = useSearchParams();
   const activeTabParam = searchParams.get("tab");
-  const [collapsed, setCollapsed] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  // Mirror the active tab in local state so it updates in sync with CourseDashboardTabs
-  const [activeTab, setActiveTab] = useState<string>(activeTabParam ?? "home");
 
-  // Keep local state in sync with URL (browser back/forward)
+  const [collapsed,  setCollapsed]  = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [activeTab,  setActiveTab]  = useState<string>(activeTabParam ?? "home");
+
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const drawerRef  = useRef<HTMLElement>(null);
+
+  // Keep local tab state in sync with URL
   useEffect(() => {
     setActiveTab(activeTabParam ?? "home");
   }, [activeTabParam]);
 
-  // Update instantly when the sidebar (or anything else) fires seerah:switchTab
+  // Sync when seerah:switchTab fires
   useEffect(() => {
-    const handler = (e: Event) => {
-      const tabId = (e as CustomEvent<string>).detail;
-      setActiveTab(tabId);
-    };
+    const handler = (e: Event) => setActiveTab((e as CustomEvent<string>).detail);
     window.addEventListener("seerah:switchTab", handler);
     return () => window.removeEventListener("seerah:switchTab", handler);
   }, []);
 
-  // Listen for Account-tab trigger dispatched by CourseDashboardTabs
+  // Account tab in CourseDashboardTabs triggers this to open drawer
   useEffect(() => {
     const handler = () => setMobileOpen(true);
     window.addEventListener("seerah:openMobileMenu", handler);
     return () => window.removeEventListener("seerah:openMobileMenu", handler);
   }, []);
 
-  // On /seerah dashboard the Account tab handles menu access; hide the floating button there.
-  // On lesson pages (/seerah/part-1 etc.) the floating button remains the entry point.
+  // Lock body scroll when mobile drawer is open
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [mobileOpen]);
+
+  // Escape key closes drawer; focus returns to trigger
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeDrawer();
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [mobileOpen]);
+
+  // Move focus into drawer when it opens
+  useEffect(() => {
+    if (mobileOpen) {
+      // Small delay to allow CSS transition
+      const t = setTimeout(() => {
+        const firstFocusable = drawerRef.current?.querySelector<HTMLElement>(
+          "a, button, [tabindex]:not([tabindex='-1'])"
+        );
+        firstFocusable?.focus();
+      }, 60);
+      return () => clearTimeout(t);
+    }
+  }, [mobileOpen]);
+
+  const closeDrawer = () => {
+    setMobileOpen(false);
+    triggerRef.current?.focus();
+  };
+
   const isOnDashboard = pathname === "/seerah";
 
   const MAIN_MENU: MenuItem[] = [
-    { id: "dashboard",  label: "Dashboard",  href: "/seerah",               icon: LayoutDashboard, tabId: "home" },
-    { id: "lessons",    label: "Lessons",    href: "/seerah?tab=lessons",   icon: BookOpen,        tabId: "lessons" },
+    { id: "dashboard",  label: "Dashboard",  href: "/seerah",               icon: LayoutDashboard, tabId: "home"      },
+    { id: "lessons",    label: "Lessons",    href: "/seerah?tab=lessons",   icon: BookOpen,        tabId: "lessons"   },
     { id: "resources",  label: "Resources",  href: "/seerah?tab=resources", icon: FolderOpen,      tabId: "resources" },
-    { id: "progress",   label: "Progress",   href: "/seerah?tab=progress",  icon: TrendingUp,      tabId: "progress" },
+    { id: "progress",   label: "Progress",   href: "/seerah?tab=progress",  icon: TrendingUp,      tabId: "progress"  },
   ];
 
   const ACCOUNT_MENU: MenuItem[] = [
-    { id: "help",    label: "Help",     href: "/help",              icon: HelpCircle },
+    { id: "help",    label: "Help",    href: "/help",    icon: HelpCircle },
     ...ACCOUNT_MENU_BASE,
-    { id: "billing", label: "Billing",  href: "/billing",           icon: CreditCard },
+    { id: "billing", label: "Billing", href: "/billing", icon: CreditCard },
   ];
 
   const isActive = (item: MenuItem) => {
-    // Tab-based /seerah items: match pathname AND the synced local tab state
     if (item.tabId !== undefined) {
       if (pathname !== "/seerah") return false;
       return item.tabId === activeTab;
     }
-    // Standard page links
     if (item.href === "/learn") return pathname === "/learn";
     return pathname.startsWith(item.href);
   };
@@ -104,21 +139,19 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
   const handleSignOut = async () => {
     try {
       await fetch("/api/auth/signout", { method: "POST" });
-    } catch (error) {
-      console.error("Sign out error:", error);
-    } finally {
-      window.location.href = "/login";
-    }
+    } catch {}
+    window.location.href = "/login";
   };
 
   const handleTabSwitch = (tabId: string) => {
     window.dispatchEvent(new CustomEvent("seerah:switchTab", { detail: tabId }));
-    setMobileOpen(false);
+    closeDrawer();
   };
 
-  const SidebarContent = () => (
+  // ── Desktop sidebar content (full nav + widgets) ───────────────────────────
+  const DesktopContent = () => (
     <>
-      {/* Logo/Brand */}
+      {/* Logo */}
       {!collapsed && (
         <div className="p-4 border-b border-border">
           <Link href="/my-courses" className="flex items-center gap-2.5">
@@ -139,9 +172,7 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
       <div className="p-3 border-b border-border">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full bg-gold/10 border border-gold/30 flex items-center justify-center flex-shrink-0">
-            <span className="text-gold font-semibold text-xs">
-              {userName.charAt(0).toUpperCase()}
-            </span>
+            <span className="text-gold font-semibold text-xs">{userName.charAt(0).toUpperCase()}</span>
           </div>
           {!collapsed && (
             <div className="flex-1 min-w-0">
@@ -157,87 +188,49 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
       {/* Navigation */}
       <div className="flex-1 overflow-y-auto py-3">
         <nav className="px-3">
-          {/* Course Section */}
           {!collapsed && (
-            <p className="px-2 text-xs font-semibold text-text-muted mb-2 uppercase tracking-wider">
-              Course
-            </p>
+            <p className="px-2 text-xs font-semibold text-text-muted mb-2 uppercase tracking-wider">Course</p>
           )}
           <div className="space-y-1">
             {MAIN_MENU.map((item) => {
-              const Icon = item.icon;
+              const Icon   = item.icon;
               const active = isActive(item);
-              const itemClass = clsx(
+              const cls    = clsx(
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all w-full text-left",
                 active
                   ? "bg-gold/10 text-gold border border-gold/25"
                   : "text-text-secondary hover:text-text hover:bg-surface-raised"
               );
 
-              // When already on /seerah, switch tabs instantly via event (no server round-trip)
               if (isOnDashboard && item.tabId !== undefined) {
                 return (
-                  <button
-                    key={item.id}
-                    onClick={() => handleTabSwitch(item.tabId!)}
-                    className={itemClass}
-                  >
+                  <button key={item.id} onClick={() => handleTabSwitch(item.tabId!)} className={cls}>
                     <Icon className="w-5 h-5 flex-shrink-0" />
-                    {!collapsed && (
-                      <>
-                        <span className="flex-1">{item.label}</span>
-                        {item.badge && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-gold/20 text-gold font-semibold">
-                            {item.badge}
-                          </span>
-                        )}
-                      </>
-                    )}
+                    {!collapsed && <span className="flex-1">{item.label}</span>}
                   </button>
                 );
               }
-
-              // On other pages: navigate normally to /seerah?tab=X
               return (
-                <Link
-                  key={item.id}
-                  href={item.href}
-                  onClick={() => setMobileOpen(false)}
-                  className={itemClass}
-                >
+                <Link key={item.id} href={item.href} className={cls}>
                   <Icon className="w-5 h-5 flex-shrink-0" />
-                  {!collapsed && (
-                    <>
-                      <span className="flex-1">{item.label}</span>
-                      {item.badge && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-gold/20 text-gold font-semibold">
-                          {item.badge}
-                        </span>
-                      )}
-                    </>
-                  )}
+                  {!collapsed && <span className="flex-1">{item.label}</span>}
                 </Link>
               );
             })}
           </div>
 
-          {/* Account Section */}
           <div className={clsx("border-t border-border", collapsed ? "mt-3 pt-3" : "mt-5 pt-4")}>
             {!collapsed && (
-              <p className="px-2 text-xs font-semibold text-text-muted mb-2 uppercase tracking-wider">
-                Account
-              </p>
+              <p className="px-2 text-xs font-semibold text-text-muted mb-2 uppercase tracking-wider">Account</p>
             )}
             <div className="space-y-1">
               {ACCOUNT_MENU.map((item) => {
-                const Icon = item.icon;
+                const Icon   = item.icon;
                 const active = isActive(item);
-
                 return (
                   <Link
                     key={item.id}
                     href={item.href}
-                    onClick={() => setMobileOpen(false)}
                     className={clsx(
                       "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
                       active
@@ -250,12 +243,10 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
                   </Link>
                 );
               })}
-
             </div>
           </div>
         </nav>
 
-        {/* Widgets — hidden when collapsed, share a single fade cycle */}
         {!collapsed && (
           <WidgetCycleProvider>
             <DidYouKnowWidget />
@@ -265,7 +256,7 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
         )}
       </div>
 
-      {/* Sign Out — pinned to bottom, always visible */}
+      {/* Sign Out */}
       <div className="p-3 border-t border-border flex-shrink-0">
         <button
           onClick={handleSignOut}
@@ -278,41 +269,187 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
     </>
   );
 
+  // ── Mobile drawer content (account-focused; no primary nav duplication) ────
+  const MobileDrawerContent = () => (
+    <>
+      {/* Drawer header — logo + close — always visible immediately */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border flex-shrink-0">
+        <Link href="/my-courses" className="flex items-center gap-2.5" onClick={closeDrawer}>
+          <Image
+            src="/images/logodashboard.png"
+            alt="Complete Seerah"
+            width={28}
+            height={28}
+            className="w-7 h-7 rounded-lg flex-shrink-0"
+            priority
+          />
+          <span className="text-sm font-bold text-text">Complete Seerah</span>
+        </Link>
+        <button
+          onClick={closeDrawer}
+          className="min-w-[40px] min-h-[40px] flex items-center justify-center rounded-lg text-text-muted hover:text-text hover:bg-surface-raised transition-colors"
+          aria-label="Close menu"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto overscroll-contain">
+
+        {/* Profile / access */}
+        <div className="px-4 py-3 border-b border-border/60">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-gold/10 border border-gold/30 flex items-center justify-center flex-shrink-0">
+              <span className="text-gold font-bold text-sm">{userName.charAt(0).toUpperCase()}</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-text truncate">{userName}</p>
+              <span className="inline-block px-2 py-0.5 rounded text-[10px] font-semibold bg-gold/10 text-gold border border-gold/20 mt-0.5">
+                Complete Access
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Course nav — only when top tabs are NOT visible (i.e. not on /seerah dashboard) */}
+        {!isOnDashboard && (
+          <nav className="px-3 py-2 border-b border-border/50" aria-label="Course navigation">
+            <p className="px-2 pt-1 pb-2 text-[10px] font-semibold text-text-muted uppercase tracking-[0.12em]">
+              Course
+            </p>
+            <div className="space-y-0.5">
+              {MAIN_MENU.map((item) => {
+                const Icon   = item.icon;
+                const active = isActive(item);
+                return (
+                  <Link
+                    key={item.id}
+                    href={item.href}
+                    onClick={closeDrawer}
+                    className={clsx(
+                      "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all min-h-[44px]",
+                      active
+                        ? "bg-gold/10 text-gold border border-gold/20"
+                        : "text-text-secondary hover:text-text hover:bg-surface-raised"
+                    )}
+                  >
+                    <Icon className="w-4 h-4 flex-shrink-0" />
+                    <span>{item.label}</span>
+                    <ChevronRight className="w-3.5 h-3.5 ml-auto text-text-muted/40" />
+                  </Link>
+                );
+              })}
+            </div>
+          </nav>
+        )}
+
+        {/* Account actions */}
+        <nav className="px-3 py-2" aria-label="Account">
+          <p className="px-2 pt-1 pb-2 text-[10px] font-semibold text-text-muted uppercase tracking-[0.12em]">
+            Account
+          </p>
+          <div className="space-y-0.5">
+            {ACCOUNT_MENU.map((item) => {
+              const Icon   = item.icon;
+              const active = isActive(item);
+              return (
+                <Link
+                  key={item.id}
+                  href={item.href}
+                  onClick={closeDrawer}
+                  className={clsx(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all min-h-[44px]",
+                    active
+                      ? "bg-gold/10 text-gold border border-gold/20"
+                      : "text-text-secondary hover:text-text hover:bg-surface-raised"
+                  )}
+                >
+                  <Icon className="w-4 h-4 flex-shrink-0" />
+                  <span>{item.label}</span>
+                  <ChevronRight className="w-3.5 h-3.5 ml-auto text-text-muted/40" />
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
+
+        {/* Educational enrichment cards — compact on mobile */}
+        <div className="px-3 py-2 border-t border-border/40 mt-1">
+          <p className="px-2 pt-1 pb-2 text-[10px] font-semibold text-text-muted uppercase tracking-[0.12em]">
+            Explore
+          </p>
+          <WidgetCycleProvider>
+            <DidYouKnowWidget />
+            <MiraclesWidget />
+            <PropheciesWidget />
+          </WidgetCycleProvider>
+        </div>
+      </div>
+
+      {/* Sign Out — pinned bottom */}
+      <div className="px-3 py-3 border-t border-border flex-shrink-0"
+           style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
+        <button
+          onClick={handleSignOut}
+          className="w-full flex items-center gap-3 px-3 py-2.5 min-h-[44px] rounded-lg text-sm font-medium text-red-400/70 hover:text-red-400 hover:bg-red-500/8 transition-all"
+        >
+          <LogOut className="w-4 h-4 flex-shrink-0" />
+          <span>Sign Out</span>
+        </button>
+      </div>
+    </>
+  );
+
   return (
     <>
-      {/* Floating Menu button — shown on lesson pages where the Account tab isn't present.
-          Hidden on /seerah dashboard where the Account tab in the top nav handles this. */}
+      {/* ── Floating trigger — lesson pages only (dashboard uses Account tab) ── */}
       {!isOnDashboard && (
         <button
+          ref={triggerRef}
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="lg:hidden fixed top-3 right-3 z-50 flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface border border-border text-text-secondary hover:text-text hover:bg-surface-raised transition-all shadow-sm"
-          aria-label={mobileOpen ? "Close menu" : "Open menu"}
+          aria-label={mobileOpen ? "Close menu" : "Open account menu"}
+          aria-expanded={mobileOpen}
+          aria-controls="mobile-drawer"
+          // z-[70] keeps the button above the overlay (z-[55]) and drawer (z-[65])
+          className="lg:hidden fixed top-3 right-3 z-[70] flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface border border-border text-text-secondary hover:text-text hover:bg-surface-raised transition-all shadow-sm min-h-[36px]"
         >
           {mobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
           <span className="text-xs font-semibold">{mobileOpen ? "Close" : "Menu"}</span>
         </button>
       )}
 
-      {/* Mobile Overlay */}
+      {/* ── Overlay — z-[55] covers sticky tab bar (z-50) ──────────────────── */}
       {mobileOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-black/50 z-40"
-          onClick={() => setMobileOpen(false)}
+          className="lg:hidden fixed inset-0 bg-black/60 z-[55] backdrop-blur-[2px]"
+          onClick={closeDrawer}
+          aria-hidden
         />
       )}
 
-      {/* Unified Sidebar - Desktop & Mobile */}
+      {/* ── Unified sidebar ─────────────────────────────────────────────────── */}
       <aside
+        id="mobile-drawer"
+        ref={drawerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Account menu"
         className={clsx(
-          "fixed top-0 left-0 bottom-0 z-40 bg-surface border-r border-border flex flex-col transition-all duration-300",
-          // Desktop: sticky column frozen at top, full viewport height
-          "lg:sticky lg:top-0 lg:h-screen lg:translate-x-0",
+          "fixed top-0 left-0 bottom-0 bg-surface border-r border-border flex flex-col transition-transform duration-300",
+          // Desktop: sticky, always visible, collapsible width
+          "lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:z-[40]",
+          // Mobile: off-canvas drawer — z-[65] sits above overlay (z-[55])
+          "z-[65]",
           mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
-          // Desktop: collapsible width
-          collapsed ? "lg:w-16" : "w-64"
+          // Width: on desktop use collapse state; on mobile use responsive vw cap
+          collapsed
+            ? "lg:w-16"
+            : "lg:w-64 w-[min(320px,88vw)]"
         )}
       >
-        {collapsed ? (
+        {/* Desktop collapsed icon bar */}
+        {collapsed && (
           <div className="hidden lg:flex flex-col items-center gap-2 py-3 border-b border-border">
             <Link href="/my-courses" aria-label="Complete Seerah">
               <Image
@@ -332,8 +469,15 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
-        ) : null}
-        <SidebarContent />
+        )}
+
+        {/* Render mobile drawer content on mobile, desktop content on desktop */}
+        <div className="lg:hidden flex flex-col flex-1 min-h-0">
+          <MobileDrawerContent />
+        </div>
+        <div className="hidden lg:flex flex-col flex-1 min-h-0">
+          <DesktopContent />
+        </div>
       </aside>
     </>
   );

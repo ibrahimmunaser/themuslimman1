@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/next";
@@ -10,6 +10,12 @@ const geist = Geist({
   subsets: ["latin"],
   display: "swap",
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
 
 export const metadata: Metadata = {
   title: {
@@ -51,7 +57,14 @@ export default function RootLayout({
       <body className="min-h-full bg-ink text-text antialiased">
         <ServiceWorkerRegistration />
         {children}
-        <Toaster position="bottom-right" richColors theme="dark" />
+        <Toaster
+          position="bottom-center"
+          richColors
+          theme="dark"
+          toastOptions={{
+            style: { marginBottom: "env(safe-area-inset-bottom, 0px)" },
+          }}
+        />
         <Analytics />
       </body>
     </html>

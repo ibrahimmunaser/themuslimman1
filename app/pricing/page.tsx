@@ -159,7 +159,7 @@ export default async function PricingPage() {
                   </Link>
                   <Link
                     href="/gift-checkout"
-                    className={buttonClass("ghost", "sm", "w-full justify-center border border-gold/20 text-gold/80 hover:bg-gold/5 text-xs")}
+                    className={buttonClass("ghost", "sm", "w-full justify-center border border-gold/20 text-gold/80 hover:bg-gold/5 text-xs min-h-[44px]")}
                   >
                     <Gift className="w-3.5 h-3.5" />
                     Gift This Course
@@ -169,14 +169,14 @@ export default async function PricingPage() {
 
               <div className="mt-4 flex items-center justify-center gap-2 text-xs text-text-muted">
                 <Lock className="w-3.5 h-3.5" />
-                <span>Secure payment · Instant access · 7-Day Guarantee</span>
+                <span>Secure payment · Instant access · 7-day guarantee</span>
               </div>
             </div>
           </div>
 
           {/* Monthly vs Lifetime comparison note */}
           <p className="text-center text-xs text-text-muted mt-6">
-            At $9/month, lifetime access pays for itself in 11 months.
+            Choose lifetime access once, and it pays for itself in 11 months.
           </p>
         </div>
       </section>

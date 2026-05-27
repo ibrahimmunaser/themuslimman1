@@ -130,7 +130,7 @@ export default async function BillingPage() {
               {purchases.map((purchase, i) => (
                 <div
                   key={purchase.id}
-                  className={`flex items-center gap-4 px-5 py-4 ${i > 0 ? "border-t border-border" : ""}`}
+                  className={`flex items-center gap-4 px-4 sm:px-5 py-4 min-h-[60px] ${i > 0 ? "border-t border-border" : ""}`}
                 >
                   <div className="w-8 h-8 rounded-lg bg-surface-raised flex items-center justify-center flex-shrink-0">
                     <CreditCard className="w-4 h-4 text-text-muted" />

@@ -35,6 +35,20 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 60px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .animate-in,
+  .fade-in-0,
+  [class*="transition-"],
+  [class*="animate-"] {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 body {
@@ -43,6 +57,7 @@ body {
   font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
 /* Scrollbar */
@@ -94,6 +109,15 @@ body {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Learning mode panel fade-in */
+@keyframes panelFadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-in.fade-in-0 {
+  animation: panelFadeIn 0.2s ease forwards;
 }
 
 /* Subtle noise texture for depth */
@@ -171,11 +195,91 @@ body {
 .article-container {
   max-width: 840px;
   margin: 0 auto;
-  background: rgba(200, 169, 110, 0.04);
-  border: 1px solid rgba(200, 169, 110, 0.15);
+  background: rgba(200, 169, 110, 0.03);
+  border: 1px solid rgba(200, 169, 110, 0.12);
   border-radius: 16px;
   padding: 2.5rem 3rem 3rem;
   overflow: hidden;
+  position: relative;
+}
+
+/* ─── Reading progress bar (top of article container) ──────────────────── */
+
+.article-progress-track {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: rgba(200, 169, 110, 0.10);
+  border-radius: 2px 2px 0 0;
+  overflow: hidden;
+}
+
+.article-progress-fill {
+  height: 100%;
+  background: linear-gradient(to right, #C8A96E, #DFBE8A);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+/* ─── Reading progress context (inside header) ──────────────────────────── */
+
+.article-progress-context {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin-top: 0.75rem;
+}
+
+.article-progress-context-bar {
+  flex: 1;
+  height: 3px;
+  background: rgba(200, 169, 110, 0.12);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.article-progress-context-fill {
+  height: 100%;
+  background: linear-gradient(to right, #C8A96E80, #C8A96E);
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+.article-progress-context-label {
+  font-size: 0.6875rem;
+  color: #6A6A80;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ─── Article end marker ────────────────────────────────────────────────── */
+
+.article-end-marker {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+}
+
+.article-end-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, rgba(200, 169, 110, 0.2), transparent);
+}
+
+.article-end-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6A6A80;
+  flex-shrink: 0;
 }
 
 /* Article header */
@@ -189,23 +293,32 @@ body {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #C8A96E;
-  margin-bottom: 0.6rem;
+  opacity: 0.75;
+  margin-bottom: 0.75rem;
 }
 
 .article-title {
   font-size: 1.625rem;
   font-weight: 700;
-  color: #F0EBE3;
+  color: #F5F1EB;
   line-height: 1.2;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.375rem;
   letter-spacing: -0.025em;
 }
 
-.article-subtitle {
+.article-lesson-subtitle {
   font-size: 0.9375rem;
   color: #8A8A9E;
+  line-height: 1.5;
+  margin-bottom: 0.875rem;
+}
+
+.article-subtitle {
+  font-size: 0.875rem;
+  color: #6A6A80;
   line-height: 1.6;
-  margin-bottom: 1rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0;
 }
 
 .article-meta-row {
@@ -213,26 +326,27 @@ body {
   align-items: center;
   gap: 0.5rem;
   flex-wrap: wrap;
+  margin-top: 0.25rem;
 }
 
 .article-meta-item {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  font-size: 0.75rem;
-  color: #6A6A80;
+  gap: 0.3rem;
+  font-size: 0.6875rem;
+  color: #5A5A70;
 }
 
 .article-meta-sep {
-  color: #4A4A5C;
-  font-size: 0.75rem;
+  color: #3A3A4C;
+  font-size: 0.6875rem;
 }
 
 /* Divider between header and body */
 .article-divider {
   height: 1px;
-  background: linear-gradient(to right, rgba(200, 169, 110, 0.35), transparent);
-  margin: 1.75rem 0 2.25rem;
+  background: linear-gradient(to right, rgba(200, 169, 110, 0.25), transparent);
+  margin: 1.75rem 0 2rem;
 }
 
 /* ─── Premium lesson article typography ───────────────────────────────────── */
@@ -481,11 +595,14 @@ body {
 
 /* Tables — generic */
 .formatted-text table {
+  display: block;
   width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   margin: 1.75rem 0 2.25rem;
   border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 8px;
-  overflow: hidden;
   font-size: 1rem;
 }
 .formatted-text table td {
@@ -503,12 +620,15 @@ body {
 
 /* Structured data table (tab-separated source) */
 .formatted-text .seerah-data-table {
+  display: block;
   width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   border-collapse: collapse;
   margin: 1.75rem 0 2.25rem;
   border: 1px solid rgba(200, 169, 110, 0.15);
   border-radius: 8px;
-  overflow: hidden;
   font-size: 1rem;
 }
 .formatted-text .seerah-data-table thead tr {
@@ -569,39 +689,85 @@ body {
 /* ─── Mobile ──────────────────────────────────────────────────────────────── */
 
 @media (max-width: 640px) {
+  /* Open-flow: no border, no background — pure reading canvas */
   .article-container {
-    padding: 1.375rem 1.25rem 2rem;
-    border-radius: 12px;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0 0.125rem 2rem;
+  }
+
+  /* Keep the sticky progress bar visible at top of the shell */
+  .article-progress-track {
+    display: none; /* Hidden on mobile — use context bar in header instead */
   }
 
   .article-title {
     font-size: 1.25rem;
   }
 
+  .article-lesson-subtitle {
+    font-size: 0.875rem;
+  }
+
+  .article-subtitle {
+    font-size: 0.8125rem;
+  }
+
+  /* Softer, warmer off-white for comfortable long reading */
   .formatted-text,
   .formatted-text .seerah-p,
   .formatted-text p {
     font-size: 1rem;
-    line-height: 1.8;
-    margin-bottom: 0.9rem;
-    color: #D8D4CC;
+    line-height: 1.88;
+    margin-bottom: 1rem;
+    color: #CCC8C0; /* slightly softer than desktop #D8D4CC */
   }
 
   .formatted-text .seerah-h2,
   .formatted-text h2 {
     font-size: 1.125rem;
-    margin-top: 2.5rem;
+    margin-top: 2.75rem;
+    margin-bottom: 1rem;
+    /* On mobile: remove bottom border, use left accent instead */
+    border-bottom: none;
+    padding-bottom: 0;
+    padding-left: 0.875rem;
+    border-left: 3px solid rgba(200, 169, 110, 0.50);
+    color: #F0EBE3;
   }
 
   .formatted-text .seerah-h3,
   .formatted-text h3 {
-    font-size: 1rem;
-    margin-top: 1.75rem;
+    font-size: 0.9375rem;
+    margin-top: 1.875rem;
+    margin-bottom: 0.625rem;
   }
 
   .formatted-text .seerah-li,
   .formatted-text li {
+    font-size: 0.9375rem;
+    line-height: 1.8;
+  }
+
+  .formatted-text .seerah-verse {
+    padding: 1rem 1.125rem;
+    margin: 1.5rem 0;
     font-size: 1rem;
+  }
+
+  .formatted-text .seerah-callout {
+    padding: 0.6rem 1rem;
+    margin: 1rem 0;
+  }
+
+  .article-end-marker {
+    margin-top: 2rem;
+    padding-top: 1.25rem;
+  }
+
+  .article-progress-context {
+    margin-top: 0.625rem;
   }
 }
 

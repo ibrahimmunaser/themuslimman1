@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { PARTS } from "@/lib/content";
-import { ERA_MAP } from "@/lib/types";
 import { eraGradient } from "./era-gradient";
 import { ResourcePageClient } from "./resource-page-client";
 import { Video, Play, CheckCircle2, Clock, X } from "lucide-react";
@@ -25,167 +24,213 @@ export function VideoResourceContent({
   thumbnails = {},
 }: VideoResourceContentProps) {
   const [mounted, setMounted] = useState(false);
-  const [selectedPart, setSelectedPart] = useState<{ partNumber: number; title: string; subtitle?: string; id: string } | null>(null);
-  const [videoUrl, setVideoUrl] = useState<string>("");
+  const [selectedPart, setSelectedPart] = useState<{
+    partNumber: number;
+    title: string;
+    subtitle?: string;
+    id: string;
+  } | null>(null);
+  const [videoUrl, setVideoUrl]           = useState<string>("");
   const [isLoadingVideo, setIsLoadingVideo] = useState(false);
 
-  const totalVideos = PARTS.length;
+  const totalVideos    = PARTS.length;
   const notStartedCount = totalVideos - completedCount - inProgressCount;
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => { setMounted(true); }, []);
 
   // Lock body scroll when modal is open
   useEffect(() => {
-    if (selectedPart) {
-      const originalOverflow = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
-      
-      return () => {
-        document.body.style.overflow = originalOverflow;
-      };
-    }
+    if (!selectedPart) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
   }, [selectedPart]);
 
   const filterByStatus = (part: any, status: string) => {
-    const progress = progressMap[part.partNumber];
-    if (status === "completed") return progress?.videoCompleted || false;
-    if (status === "in-progress") return progress && progress.videoWatchPercent > 0 && !progress.videoCompleted;
-    if (status === "not-started") return !progress || progress.videoWatchPercent === 0;
+    const p = progressMap[part.partNumber];
+    if (status === "completed")  return p?.videoCompleted || false;
+    if (status === "in-progress") return !!(p && p.videoWatchPercent > 0 && !p.videoCompleted);
+    if (status === "not-started") return !p || p.videoWatchPercent === 0;
     return true;
   };
 
-  // Prefetch video data on hover
   const handlePrefetch = useCallback((partNumber: number) => {
     prefetchResource("video", partNumber.toString());
   }, []);
 
   const handleOpenVideo = async (part: typeof PARTS[0]) => {
-    setSelectedPart({ 
-      partNumber: part.partNumber, 
-      title: part.title, 
-      subtitle: part.subtitle,
-      id: part.id
-    });
-    
-    // Check cache first
+    setSelectedPart({ partNumber: part.partNumber, title: part.title, subtitle: part.subtitle, id: part.id });
+
     const cacheKey = `video-${part.partNumber}`;
     const cached = getCachedResource<{ videoUrl: string }>(cacheKey);
-    
-    if (cached && cached.videoUrl) {
-      setVideoUrl(cached.videoUrl);
-      return;
-    }
-    
+    if (cached?.videoUrl) { setVideoUrl(cached.videoUrl); return; }
+
     setIsLoadingVideo(true);
-    
     try {
-      const response = await fetch(`/api/part/${part.partNumber}/assets`);
-      if (!response.ok) throw new Error("Failed to fetch video");
-      const data = await response.json();
-      
-      if (data.videoUrl) {
-        setVideoUrl(data.videoUrl);
-        setCachedResource(cacheKey, data); // Cache for next time
-      } else {
-        setVideoUrl("");
-      }
-    } catch (error) {
-      console.error("Error loading video:", error);
+      const res  = await fetch(`/api/part/${part.partNumber}/assets`);
+      if (!res.ok) throw new Error("Failed to fetch video");
+      const data = await res.json();
+      setVideoUrl(data.videoUrl || "");
+      if (data.videoUrl) setCachedResource(cacheKey, data);
+    } catch {
       setVideoUrl("");
     } finally {
       setIsLoadingVideo(false);
     }
   };
 
-  const handleClose = () => {
-    setSelectedPart(null);
-    setVideoUrl("");
-  };
+  const handleClose = () => { setSelectedPart(null); setVideoUrl(""); };
 
   const continueWatchingPart = continueWatching
     ? PARTS.find((p) => p.partNumber === continueWatching.partNumber)
     : null;
 
+  // Stats config — meaningful stats brighter, reference stats quieter
+  const stats = [
+    {
+      label: "Total",
+      value: totalVideos,
+      color: "text-zinc-400",
+      dim: true,
+    },
+    {
+      label: "Completed",
+      value: completedCount,
+      color: completedCount > 0 ? "text-green-400" : "text-zinc-500",
+      dim: false,
+    },
+    {
+      label: "In Progress",
+      value: inProgressCount,
+      color: inProgressCount > 0 ? "text-amber-400" : "text-zinc-500",
+      dim: false,
+    },
+    {
+      label: "Not Started",
+      value: notStartedCount,
+      color: "text-zinc-500",
+      dim: true,
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-[#0a0a0a]">
-      {/* Hero Section */}
+
+      {/* ── Hero Section ─────────────────────────────────────────────────── */}
       <div className="border-b border-zinc-800 bg-gradient-to-b from-zinc-900 to-[#0a0a0a]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-              <Video className="w-7 h-7 text-amber-500" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
+
+          {/* Title row — compact on mobile */}
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center flex-shrink-0">
+              <Video className="w-5 h-5 sm:w-7 sm:h-7 text-amber-500" />
             </div>
-            <div>
-              <h1 className="text-4xl font-bold text-white">Video Lessons</h1>
-              <p className="text-zinc-400 mt-1">All 100 guided video lessons from the Seerah Masterclass</p>
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-3xl font-bold text-white leading-tight">Video Lessons</h1>
+              <p className="text-zinc-500 text-xs sm:text-sm mt-0.5 leading-snug">
+                All {totalVideos} guided lessons from the Seerah Masterclass
+              </p>
             </div>
           </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
-              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">Total</p>
-              <p className="text-3xl font-bold text-white">{totalVideos}</p>
-            </div>
-            <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
-              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">Completed</p>
-              <p className={`text-3xl font-bold ${completedCount > 0 ? "text-green-400" : "text-zinc-400"}`}>{completedCount}</p>
-            </div>
-            <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
-              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">In Progress</p>
-              <p className={`text-3xl font-bold ${inProgressCount > 0 ? "text-amber-400" : "text-zinc-400"}`}>{inProgressCount}</p>
-            </div>
-            <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
-              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">Not Started</p>
-              <p className="text-3xl font-bold text-zinc-400">{notStartedCount}</p>
-            </div>
+          {/* Subtle progress context */}
+          {completedCount > 0 && (
+            <p className="text-xs text-zinc-600 mb-3">
+              {completedCount} of {totalVideos} video lessons completed · continue building your Seerah timeline
+            </p>
+          )}
+
+          {/* Stats grid — differentiated hierarchy */}
+          <div className="grid grid-cols-4 gap-2 sm:gap-3">
+            {stats.map((s) => (
+              <div
+                key={s.label}
+                className={`px-2.5 py-3 sm:px-4 sm:py-4 rounded-xl border flex flex-col ${
+                  s.dim
+                    ? "bg-zinc-900/25 border-zinc-800/40"
+                    : "bg-zinc-900/65 border-zinc-700/50"
+                }`}
+              >
+                {/* Label — fixed min-height keeps numbers baseline-aligned across all cards */}
+                <p className={`text-[10px] font-semibold uppercase leading-tight min-h-[24px] flex items-start ${
+                  s.dim
+                    ? "tracking-[0.12em] text-zinc-600"
+                    : "tracking-[0.12em] text-zinc-400"
+                }`}
+                  style={{ letterSpacing: "0.11em" }}
+                >
+                  {s.label}
+                </p>
+                {/* Number — premium typographic treatment */}
+                <p className={`text-[1.75rem] sm:text-[2.25rem] font-bold leading-none tracking-tight tabular-nums mt-2 ${s.color}`}>
+                  {s.value}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Continue Watching */}
+      {/* ── Main content ──────────────────────────────────────────────────── */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
+
+        {/* Continue Watching — elevated as primary CTA */}
         {mounted && continueWatchingPart && (
-          <div className="mb-6 p-5 rounded-2xl bg-gold/5 border border-gold/20">
-            <p className="text-gold text-xs font-semibold uppercase tracking-wider mb-3">Continue Watching</p>
+          <div className="mb-5 rounded-2xl bg-gold/6 border border-gold/22 overflow-hidden">
+            <div className="px-4 pt-3 pb-1.5">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-gold/80">Continue Watching</p>
+            </div>
             <div
               onClick={() => handleOpenVideo(continueWatchingPart)}
               onMouseEnter={() => handlePrefetch(continueWatchingPart.partNumber)}
-              className="group block cursor-pointer"
+              className="group cursor-pointer px-4 pb-3"
             >
-              <div className="flex items-center gap-4 sm:gap-6">
+              <div className="flex items-center gap-3 sm:gap-5">
+                {/* Thumbnail */}
                 <div
-                  className="relative flex-shrink-0 w-32 sm:w-48 h-20 sm:h-28 rounded-xl flex items-center justify-center overflow-hidden"
-                  style={eraGradient(continueWatchingPart.era)}
+                  className="relative flex-shrink-0 w-28 sm:w-44 rounded-xl overflow-hidden"
+                  style={{ ...eraGradient(continueWatchingPart.era), aspectRatio: "16/9" }}
                 >
-                  <span className="absolute inset-0 flex items-center justify-center opacity-10 text-7xl font-black text-white select-none pointer-events-none">
-                    {continueWatchingPart.partNumber}
-                  </span>
-                  <Play className="w-8 h-8 text-white/80 group-hover:text-white transition-colors relative z-10" />
+                  {thumbnails[continueWatchingPart.partNumber] ? (
+                    <img
+                      src={thumbnails[continueWatchingPart.partNumber]}
+                      alt=""
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="absolute inset-0 flex items-center justify-center opacity-10 text-5xl font-black text-white select-none">
+                      {continueWatchingPart.partNumber}
+                    </span>
+                  )}
+                  {/* Play overlay */}
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
+                    <div className="w-9 h-9 rounded-full bg-black/50 border border-white/30 flex items-center justify-center">
+                      <Play className="w-4 h-4 text-white ml-0.5" />
+                    </div>
+                  </div>
+                  {/* Progress bar */}
                   {continueWatching && (
-                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-background/50">
-                      <div
-                        className="h-full bg-gold"
-                        style={{ width: `${continueWatching.videoWatchPercent}%` }}
-                      />
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/40">
+                      <div className="h-full bg-gold" style={{ width: `${continueWatching.videoWatchPercent}%` }} />
                     </div>
                   )}
                 </div>
+
+                {/* Info */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs text-gold font-medium mb-1">Part {continueWatchingPart.partNumber}</p>
-                  <h3 className="text-base sm:text-xl font-semibold text-text mb-1 group-hover:text-gold transition-colors line-clamp-2">
+                  <p className="text-[11px] text-gold/80 font-medium mb-0.5">
+                    Part {continueWatchingPart.partNumber}
+                  </p>
+                  <h3 className="text-sm sm:text-base font-semibold text-text group-hover:text-gold transition-colors line-clamp-2 leading-snug">
                     {continueWatchingPart.title}
                   </h3>
-                  {continueWatchingPart.subtitle && (
-                    <p className="text-sm text-text-secondary hidden sm:block">{continueWatchingPart.subtitle}</p>
-                  )}
                   {continueWatching && (
-                    <p className="text-xs text-text-muted mt-1">{continueWatching.videoWatchPercent}% complete</p>
+                    <p className="text-xs text-zinc-500 mt-1">{continueWatching.videoWatchPercent}% watched</p>
                   )}
                 </div>
-                <div className="flex-shrink-0 px-4 sm:px-6 py-2 sm:py-3 rounded-xl bg-gold text-ink text-sm font-semibold group-hover:bg-gold/90 transition-colors">
+
+                {/* Resume — 44px */}
+                <div className="flex-shrink-0 inline-flex items-center justify-center min-h-[44px] px-4 sm:px-5 rounded-xl bg-gold text-ink text-sm font-bold group-hover:bg-gold/90 transition-colors shadow-sm shadow-gold/20">
                   Resume
                 </div>
               </div>
@@ -193,31 +238,30 @@ export function VideoResourceContent({
           </div>
         )}
 
-        {/* Filters and Videos */}
+        {/* Filters + Video Grid */}
         <ResourcePageClient
           showStatusFilter
           filterByStatus={filterByStatus}
         >
           {(parts) => (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
               {mounted && parts.map((part) => {
-                const progress = progressMap[part.partNumber];
-                const watchPercent = progress?.videoWatchPercent || 0;
-                const isCompleted = progress?.videoCompleted || watchPercent >= 85;
+                const progress    = progressMap[part.partNumber];
+                const watchPct    = progress?.videoWatchPercent || 0;
+                const isCompleted = progress?.videoCompleted || watchPct >= 85;
 
                 return (
                   <div
                     key={part.id}
                     onClick={() => handleOpenVideo(part)}
                     onMouseEnter={() => handlePrefetch(part.partNumber)}
-                    className="group cursor-pointer rounded-xl border border-zinc-800 bg-zinc-900/50 hover:bg-zinc-900 hover:border-amber-500/30 transition-all overflow-hidden"
+                    className="group cursor-pointer rounded-xl border border-zinc-800 bg-zinc-900/50 hover:bg-zinc-900 hover:border-amber-500/25 transition-all overflow-hidden"
                   >
                     {/* Thumbnail */}
                     <div
-                      className="aspect-video relative flex items-center justify-center overflow-hidden"
+                      className="aspect-video relative overflow-hidden"
                       style={eraGradient(part.era)}
                     >
-                      {/* Slide thumbnail — rendered once batch URLs are loaded */}
                       {thumbnails[part.partNumber] && (
                         <img
                           src={thumbnails[part.partNumber]}
@@ -229,56 +273,59 @@ export function VideoResourceContent({
                         />
                       )}
 
-                      {/* Status badge */}
+                      {/* Bottom gradient — keeps text/controls readable */}
+                      <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/70 to-transparent pointer-events-none" />
+
+                      {/* Status badge — top-right, doesn't cover title area */}
                       {isCompleted && (
-                        <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-gold/20 border border-gold/40 flex items-center justify-center z-10">
-                          <CheckCircle2 className="w-4 h-4 text-gold" />
+                        <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-black/50 border border-gold/40 flex items-center justify-center z-10">
+                          <CheckCircle2 className="w-3 h-3 text-gold" />
                         </div>
                       )}
-                      {!isCompleted && watchPercent > 0 && (
-                        <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-black/60 border border-white/20 text-white text-xs font-medium z-10">
-                          {watchPercent}%
+                      {!isCompleted && watchPct > 0 && (
+                        <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded bg-black/70 border border-white/15 text-white text-[10px] font-medium z-10">
+                          {watchPct}%
                         </div>
                       )}
 
-                      {/* Play button */}
-                      <div className="relative z-10 w-11 h-11 rounded-full bg-black/40 border border-white/25 flex items-center justify-center group-hover:bg-white/20 group-hover:border-white/40 transition-all">
-                        <Play className="w-5 h-5 text-white ml-0.5" />
+                      {/* Play button — centered, safe zone */}
+                      <div className="absolute inset-0 flex items-center justify-center z-10">
+                        <div className="w-9 h-9 rounded-full bg-black/45 border border-white/25 flex items-center justify-center group-hover:bg-white/20 group-hover:border-white/40 transition-all">
+                          <Play className="w-4 h-4 text-white ml-0.5" />
+                        </div>
                       </div>
 
+                      {/* Part number — bottom-left, inside gradient safe zone */}
+                      <span className="absolute bottom-1.5 left-2 text-[10px] font-bold text-white/60 z-10">
+                        {part.partNumber}
+                      </span>
+
                       {/* Progress bar */}
-                      {watchPercent > 0 && (
-                        <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/30 z-10">
-                          <div
-                            className="h-full bg-gold/70"
-                            style={{ width: `${watchPercent}%` }}
-                          />
+                      {watchPct > 0 && (
+                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-black/30 z-10">
+                          <div className="h-full bg-gold/80" style={{ width: `${watchPct}%` }} />
                         </div>
                       )}
                     </div>
 
                     {/* Info */}
-                    <div className="p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs font-medium text-amber-500">Part {part.partNumber}</span>
+                    <div className="p-2.5 sm:p-3">
+                      <div className="flex items-center gap-1.5 mb-1">
                         {isCompleted && (
-                          <span className="px-2 py-0.5 bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium rounded">
-                            Completed
+                          <span className="px-1.5 py-0.5 bg-green-500/10 border border-green-500/15 text-green-400 text-[10px] font-medium rounded">
+                            Done
                           </span>
                         )}
-                        {!isCompleted && watchPercent > 0 && (
-                          <span className="ml-auto flex items-center gap-1 text-xs text-zinc-500">
-                            <Clock className="w-3 h-3" />
+                        {!isCompleted && watchPct > 0 && (
+                          <span className="flex items-center gap-0.5 text-[10px] text-zinc-500 ml-auto">
+                            <Clock className="w-2.5 h-2.5" />
                             {part.duration}
                           </span>
                         )}
                       </div>
-                      <h3 className="text-sm font-semibold text-white mb-1 line-clamp-2 group-hover:text-amber-400 transition-colors">
+                      <h3 className="text-xs sm:text-sm font-semibold text-white line-clamp-2 group-hover:text-amber-400 transition-colors leading-snug">
                         {part.title}
                       </h3>
-                      {part.subtitle && (
-                        <p className="text-xs text-zinc-500 line-clamp-1">{part.subtitle}</p>
-                      )}
                     </div>
                   </div>
                 );
@@ -288,62 +335,52 @@ export function VideoResourceContent({
         </ResourcePageClient>
       </div>
 
-      {/* Video Modal */}
+      {/* ── Video Modal ───────────────────────────────────────────────────── */}
       {mounted && selectedPart && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm"
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/90 sm:p-4 backdrop-blur-sm"
           onClick={handleClose}
         >
-          <div 
-            className="relative w-full max-w-6xl max-h-[90vh] bg-surface border border-gold/20 rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+          <div
+            className="relative w-full max-w-5xl sm:max-h-[90vh] bg-surface border border-gold/15 sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Decorative glow */}
-            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent"></div>
-            
+            {/* Gold top line */}
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
+
             {/* Modal Header */}
-            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-border">
-              <div className="min-w-0 flex-1 pr-4">
-                <div className="flex items-center gap-2 mb-1">
-                  <Video className="w-4 h-4 text-gold flex-shrink-0" />
-                  <span className="text-sm font-medium text-gold">Part {selectedPart.partNumber}</span>
+            <div className="flex items-center justify-between px-4 py-3 sm:p-5 border-b border-border flex-shrink-0">
+              <div className="min-w-0 flex-1 pr-3">
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <Video className="w-3.5 h-3.5 text-gold flex-shrink-0" />
+                  <span className="text-xs font-medium text-gold">Part {selectedPart.partNumber}</span>
                 </div>
-                <h2 className="text-lg sm:text-2xl font-bold text-text line-clamp-2">{selectedPart.title}</h2>
-                {selectedPart.subtitle && (
-                  <p className="text-sm text-text-secondary mt-1 hidden sm:block">{selectedPart.subtitle}</p>
-                )}
+                <h2 className="text-base sm:text-xl font-bold text-text line-clamp-2 leading-snug">
+                  {selectedPart.title}
+                </h2>
               </div>
               <button
                 onClick={handleClose}
-                className="w-10 h-10 rounded-lg hover:bg-surface-raised flex items-center justify-center transition-colors flex-shrink-0"
+                className="min-w-[44px] min-h-[44px] rounded-lg hover:bg-surface-raised flex items-center justify-center transition-colors flex-shrink-0"
+                aria-label="Close video"
               >
                 <X className="w-5 h-5 text-text-muted" />
               </button>
             </div>
 
             {/* Modal Content */}
-            <div className="flex-1 overflow-y-auto bg-background p-4 sm:p-6">
+            <div className="flex-1 overflow-y-auto bg-black p-3 sm:p-5">
               {isLoadingVideo ? (
-                <div className="h-48 flex items-center justify-center">
-                  <div className="text-text-muted">Loading video...</div>
+                <div className="aspect-video flex items-center justify-center">
+                  <div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
                 </div>
               ) : (
-                <VideoPlayer 
-                  src={videoUrl} 
+                <VideoPlayer
+                  src={videoUrl}
                   partNumber={selectedPart.partNumber}
                   title={selectedPart.title}
                 />
               )}
-            </div>
-
-            {/* Modal Footer */}
-            <div className="flex items-center justify-end p-4 sm:p-6 border-t border-border">
-              <button
-                onClick={handleClose}
-                className="px-5 py-2 rounded-lg bg-gold text-ink hover:bg-gold/90 text-sm font-semibold transition-colors"
-              >
-                Close
-              </button>
             </div>
           </div>
         </div>

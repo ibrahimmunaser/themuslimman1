@@ -43,12 +43,25 @@ export function SlidesViewer({ slides, title, type = "presented", partNumber, pr
   const [fullscreen, setFullscreen] = useState(false);
   const stripRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const touchStartX = useRef<number | null>(null);
 
   const prev = useCallback(() => setCurrent((c) => Math.max(0, c - 1)), []);
   const next = useCallback(
     () => setCurrent((c) => Math.min(slides.length - 1, c + 1)),
     [slides.length]
   );
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  }, []);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const delta = e.changedTouches[0].clientX - touchStartX.current;
+    touchStartX.current = null;
+    if (Math.abs(delta) < 50) return; // ignore small taps
+    if (delta < 0) next(); else prev();
+  }, [next, prev]);
 
   useEffect(() => {
     // Keep CSS state in sync when native fullscreen is toggled (e.g. Esc key)
@@ -140,19 +153,21 @@ export function SlidesViewer({ slides, title, type = "presented", partNumber, pr
         </span>
         <button
           onClick={() => fullscreen ? exitFullscreenMode() : enterFullscreen()}
-          className="text-text-muted hover:text-text transition-colors"
-          title={fullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+          className="min-h-[44px] min-w-[44px] flex items-center justify-center text-text-muted hover:text-text transition-colors -mr-2"
+          aria-label={fullscreen ? "Exit fullscreen" : "Enter fullscreen"}
         >
           {fullscreen ? <X className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
         </button>
       </div>
 
-      {/* Slide area */}
+      {/* Slide area — swipe left/right to navigate on mobile */}
       <div
         className={`relative flex-1 bg-black ${!fullscreen ? "group cursor-zoom-in" : ""}`}
-        style={{ minHeight: fullscreen ? undefined : "420px" }}
+        style={{ minHeight: fullscreen ? undefined : "min(420px, 55vw)" }}
         onClick={!fullscreen ? () => enterFullscreen() : undefined}
-        title={!fullscreen ? "Click for fullscreen" : undefined}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        title={!fullscreen ? "Tap for fullscreen · Swipe to navigate" : undefined}
       >
         {/* Render current ±2 slides; hidden ones are pre-loaded but invisible */}
         {slides.map((slide, idx) => {
@@ -173,39 +188,49 @@ export function SlidesViewer({ slides, title, type = "presented", partNumber, pr
           );
         })}
 
+        {/* Fullscreen hint — always visible at low opacity on mobile */}
         {!fullscreen && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/70 border border-white/15 text-white text-xs font-medium">
-              <Maximize2 className="w-3.5 h-3.5" />
-              Fullscreen
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 pointer-events-none">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/60 border border-white/10 text-white/50 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-[10px] font-medium">
+              <Maximize2 className="w-3 h-3" />
+              <span>Tap · Swipe to navigate</span>
             </div>
           </div>
         )}
 
+        {/* Prev — 44px */}
         <button
           onClick={(e) => { e.stopPropagation(); prev(); }}
           disabled={current === 0}
-          className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-black/60 border border-white/15 flex items-center justify-center text-white/70 hover:text-white hover:border-white/40 disabled:opacity-20 transition-all"
+          className="absolute left-2 top-1/2 -translate-y-1/2 z-10 min-w-[44px] min-h-[44px] rounded-full bg-black/60 border border-white/15 flex items-center justify-center text-white/70 hover:text-white hover:border-white/40 disabled:opacity-20 transition-all"
+          aria-label="Previous slide"
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
+        {/* Next — 44px */}
         <button
           onClick={(e) => { e.stopPropagation(); next(); }}
           disabled={current === slides.length - 1}
-          className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-black/60 border border-white/15 flex items-center justify-center text-white/70 hover:text-white hover:border-white/40 disabled:opacity-20 transition-all"
+          className="absolute right-2 top-1/2 -translate-y-1/2 z-10 min-w-[44px] min-h-[44px] rounded-full bg-black/60 border border-white/15 flex items-center justify-center text-white/70 hover:text-white hover:border-white/40 disabled:opacity-20 transition-all"
+          aria-label="Next slide"
         >
           <ChevronRight className="w-5 h-5" />
         </button>
       </div>
 
-      {/* Thumbnail strip */}
+      {/* Thumbnail strip — fade hint at right edge indicates more content */}
       {slides.length > 1 && (
-        <div ref={stripRef} className="pl-4 py-3 bg-ink/80 border-t border-border/50 flex gap-2 overflow-x-auto no-scrollbar flex-shrink-0">
+        <div className="relative bg-ink/80 border-t border-border/50 flex-shrink-0">
+          {/* Fade overlay at right edge */}
+          <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-ink/80 to-transparent z-10" aria-hidden />
+        <div ref={stripRef} className="pl-4 py-3 flex gap-2 overflow-x-auto no-scrollbar">
           {slides.map((slide, i) => (
             <button
               key={i}
               onClick={() => setCurrent(i)}
-              className={`flex-shrink-0 w-16 h-10 rounded border overflow-hidden transition-all ${
+              aria-label={`Go to slide ${i + 1}`}
+              aria-current={i === current ? "true" : undefined}
+              className={`flex-shrink-0 w-20 h-11 rounded border overflow-hidden transition-all ${
                 i === current
                   ? "border-gold ring-1 ring-gold/30"
                   : "border-border/50 opacity-50 hover:opacity-100"
@@ -214,7 +239,8 @@ export function SlidesViewer({ slides, title, type = "presented", partNumber, pr
               <img src={slide.thumb} alt={`Slide ${i + 1}`} className="w-full h-full object-cover" />
             </button>
           ))}
-          <div className="flex-shrink-0 w-6" aria-hidden />
+          <div className="flex-shrink-0 w-8" aria-hidden />
+        </div>
         </div>
       )}
     </div>

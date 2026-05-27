@@ -152,7 +152,7 @@ export function QuizResourceContent({
           filterByStatus={filterByStatus}
         >
           {(parts) => (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
               {parts.map((part) => {
                 const progress = progressMap[part.partNumber];
                 const bestScore = progress?.quizBestScore;
@@ -250,30 +250,33 @@ export function QuizResourceContent({
         </ResourcePageClient>
       </div>
 
-      {/* Quiz Modal */}
+      {/* Quiz Modal — full-screen sheet on mobile, centered dialog on desktop */}
       {mounted && selectedPart && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/90 backdrop-blur-sm sm:p-4"
           onClick={handleCloseModal}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Part ${selectedPart.partNumber} Quiz`}
         >
           <div
-            className="relative flex flex-col overflow-hidden w-full max-w-4xl h-[90vh] bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-950 border-2 border-amber-500/20 rounded-2xl shadow-2xl"
+            className="relative flex flex-col overflow-hidden w-full sm:max-w-4xl h-[100dvh] sm:h-[90vh] bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-950 border-0 sm:border-2 border-amber-500/20 rounded-none sm:rounded-2xl shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-zinc-800 bg-zinc-950">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800 bg-zinc-950 flex-shrink-0">
               <div className="flex-1 min-w-0 pr-4">
-                <h2 className="text-xl font-bold text-white truncate">
+                <h2 className="text-lg sm:text-xl font-bold text-white truncate">
                   Part {selectedPart.partNumber} Quiz
                 </h2>
-                <p className="text-sm text-zinc-400 truncate mt-1">
+                <p className="text-sm text-zinc-400 truncate mt-0.5">
                   {selectedPart.title}
                 </p>
               </div>
               <button
                 onClick={handleCloseModal}
-                className="flex-shrink-0 w-10 h-10 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center transition-colors"
-                aria-label="Close modal"
+                className="flex-shrink-0 min-w-[44px] min-h-[44px] rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center transition-colors"
+                aria-label="Close quiz"
               >
                 <X className="w-5 h-5 text-zinc-400" />
               </button>
@@ -281,7 +284,7 @@ export function QuizResourceContent({
 
             {/* Content */}
             <div
-              className="flex-1 overflow-y-auto p-6 bg-gradient-to-b from-zinc-900 to-zinc-950"
+              className="flex-1 overflow-y-auto p-5 sm:p-6 bg-gradient-to-b from-zinc-900 to-zinc-950"
               style={{ overscrollBehavior: "contain" }}
               onClick={(e) => e.stopPropagation()}
             >

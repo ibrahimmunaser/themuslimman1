@@ -18,16 +18,17 @@ export async function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-[90] w-full bg-ink">
+    <header className="sticky top-0 z-[90] w-full bg-ink overflow-x-hidden">
       <div className="border-b border-white/5">
-        <nav className="max-w-6xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
+        <nav className="max-w-6xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center group">
+          <Link href="/" className="flex items-center group shrink-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/images/logoicon.png"
               alt="TheMuslimMan"
-              style={{ height: "56px", width: "auto", maxWidth: "none" }}
+              style={{ height: "44px", width: "auto" }}
+              className="sm:h-14"
             />
           </Link>
 

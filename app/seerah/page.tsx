@@ -259,7 +259,7 @@ export default async function LearnIndexPage() {
       { key: "quiz",        label: p?.quizPassed ? `✓ Quiz ${p.quizBestScore}%` : p?.quizBestScore ? `Quiz ${p.quizBestScore}%` : "Quiz", done: !!p?.quizPassed, partial: !!(p?.quizBestScore && !p?.quizPassed) },
     ];
     return (
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1 text-xs">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1 text-xs hidden sm:flex">
         {assets.map((a, i) => (
           <span key={a.key} className={a.done ? "text-green-400" : a.partial ? "text-amber-400" : "text-zinc-600"}>
             {a.label}{i < assets.length - 1 ? <span className="ml-3 text-zinc-700">·</span> : null}
@@ -326,7 +326,7 @@ export default async function LearnIndexPage() {
 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-3 mb-1 flex-wrap">
-                            <h3 className="text-lg font-semibold" style={{ color: era.color }}>{era.label}</h3>
+                            <h3 className="text-base sm:text-lg font-semibold truncate min-w-0" style={{ color: era.color }}>{era.label}</h3>
                             {allCompleted && (
                               <span className="px-2 py-0.5 bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium rounded">
                                 Completed
@@ -356,11 +356,11 @@ export default async function LearnIndexPage() {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3 flex-shrink-0">
-                        <div className={`text-sm font-bold ${allCompleted ? "text-green-400" : inProgress ? "text-amber-400" : "text-zinc-600"}`}>
+                      <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                        <div className={`text-sm font-bold tabular-nums ${allCompleted ? "text-green-400" : inProgress ? "text-amber-400" : "text-zinc-600"}`}>
                           {eraPercent}%
                         </div>
-                        <ChevronDown className="w-5 h-5 text-zinc-500 group-open:rotate-180 transition-transform" />
+                        <ChevronDown className="w-5 h-5 text-zinc-500 group-open:rotate-180 transition-transform flex-shrink-0" />
                       </div>
                     </div>
                   </div>

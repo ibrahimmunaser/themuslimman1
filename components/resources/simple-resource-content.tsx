@@ -804,7 +804,7 @@ export function SimpleResourceContent({
           filterByStatus={filterByStatus}
         >
           {(parts) => (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
               {mounted && parts.map((part) => {
                 const isCompleted = localProgressMap[part.partNumber] || false;
 
@@ -844,20 +844,20 @@ export function SimpleResourceContent({
                     </div>
 
                     {/* Info */}
-                    <div className="p-4">
-                      <div className="flex items-center gap-2 mb-2">
+                    <div className="p-3 sm:p-4">
+                      <div className="flex items-center gap-1.5 mb-1.5">
                         <span className="text-xs font-medium text-amber-500">Part {part.partNumber}</span>
                         {isCompleted && (
-                          <span className="px-2 py-0.5 bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium rounded">
+                          <span className="px-1.5 py-0.5 bg-green-500/10 border border-green-500/20 text-green-400 text-[10px] font-medium rounded">
                             {statusLabel}
                           </span>
                         )}
                       </div>
-                      <h3 className="text-sm font-semibold text-white mb-1 line-clamp-2 group-hover:text-amber-400 transition-colors">
+                      <h3 className="text-xs sm:text-sm font-semibold text-white mb-1 line-clamp-2 group-hover:text-amber-400 transition-colors">
                         {part.title}
                       </h3>
                       {part.subtitle && (
-                        <p className="text-xs text-zinc-500 line-clamp-1">{part.subtitle}</p>
+                        <p className="text-[10px] sm:text-xs text-zinc-500 line-clamp-1">{part.subtitle}</p>
                       )}
                     </div>
                   </div>
