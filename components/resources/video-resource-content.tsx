@@ -424,8 +424,8 @@ export function VideoResourceContent({
               </button>
             </div>
 
-            {/* Modal Content */}
-            <div className="flex-1 overflow-y-auto bg-black p-3 sm:p-5">
+            {/* Modal Content — capped at 55vh on desktop to prevent overflow on short screens */}
+            <div className="flex-1 overflow-y-auto bg-black p-3 sm:p-5 sm:max-h-[55vh]">
               {isLoadingVideo ? (
                 <div className="aspect-video flex items-center justify-center">
                   <div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />

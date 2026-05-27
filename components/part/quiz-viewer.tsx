@@ -177,6 +177,21 @@ function ScoreScreen({
 
   return (
     <div className="flex flex-col items-center gap-8 py-6">
+      {/* Completion celebration — shown for passing scores (≥80%) */}
+      {pct >= 80 && (
+        <div className="w-full max-w-md px-4 py-3.5 rounded-xl bg-gradient-to-r from-gold/8 to-green-500/5 border border-gold/25 flex items-center gap-3">
+          <CheckCircle2 className="w-5 h-5 text-gold flex-shrink-0" />
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-gold leading-snug">
+              {pct === 100 ? "Perfect score!" : "Quiz passed"}
+            </p>
+            <p className="text-xs text-zinc-400 mt-0.5">
+              Your understanding of this lesson has been confirmed. Keep going.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Trophy Card */}
       <div className={`w-full max-w-md p-8 rounded-2xl bg-gradient-to-br ${grade.bg} border border-zinc-800 shadow-2xl`}>
         <div className="flex flex-col items-center gap-4">

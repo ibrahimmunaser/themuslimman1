@@ -347,15 +347,18 @@ function SlidesPanel({ part, previewMode }: { part: Part; previewMode?: boolean 
 
 import { fetchPartAssets, type PartAssets as PartAssetUrls } from "@/lib/part-asset-cache";
 
-function SubTabContent({ id, part, previewMode, assetUrls }: {
+function SubTabContent({ id, part, previewMode, assetUrls, onSwitchMode }: {
   id: SubTabId;
   part: Part;
   previewMode?: boolean;
   assetUrls: PartAssetUrls;
+  onSwitchMode?: (mode: ModeId) => void;
 }) {
   const wrap = (child: React.ReactNode) => (
     <div className="rounded-xl bg-surface/60 p-4 sm:p-6">{child}</div>
   );
+
+  const hasQuiz = !!part.assets.quiz;
 
   switch (id) {
     case "video":
@@ -378,11 +381,25 @@ function SubTabContent({ id, part, previewMode, assetUrls }: {
       );
     case "briefing":
       return part.assets.briefingText
-        ? <TextViewer content={part.assets.briefingText} partNumber={part.partNumber} assetId="briefing" previewMode={previewMode} />
+        ? <TextViewer
+            content={part.assets.briefingText}
+            partNumber={part.partNumber}
+            assetId="briefing"
+            previewMode={previewMode}
+            hasQuiz={hasQuiz}
+            onSwitchToQuiz={onSwitchMode && hasQuiz ? () => onSwitchMode("quiz") : undefined}
+          />
         : wrap(<EmptyContent label="Briefing" />);
     case "study-guide":
       return part.assets.studyGuideText
-        ? <TextViewer content={part.assets.studyGuideText} partNumber={part.partNumber} assetId="study_guide" previewMode={previewMode} />
+        ? <TextViewer
+            content={part.assets.studyGuideText}
+            partNumber={part.partNumber}
+            assetId="study_guide"
+            previewMode={previewMode}
+            hasQuiz={hasQuiz}
+            onSwitchToQuiz={onSwitchMode && hasQuiz ? () => onSwitchMode("quiz") : undefined}
+          />
         : wrap(<EmptyContent label="Study Guide" />);
     case "facts":
       return wrap(part.assets.statementOfFactsText ? <FactsViewer content={part.assets.statementOfFactsText} partNumber={part.partNumber} previewMode={previewMode} /> : <EmptyContent label="Facts" />);
@@ -694,6 +711,7 @@ export function PartTabs({ part, userPlan, previewMode = false, initialAssetUrls
                 part={part}
                 previewMode={previewMode}
                 assetUrls={assetUrls}
+                onSwitchMode={handleModeChange}
               />
             </div>
           );

@@ -239,6 +239,13 @@ summary:focus-visible,
   transition: width 0.3s ease;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .article-progress-fill,
+  .article-progress-context-fill {
+    transition: none;
+  }
+}
+
 /* ─── Reading progress context (inside header) ──────────────────────────── */
 
 .article-progress-context {

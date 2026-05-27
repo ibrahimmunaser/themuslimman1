@@ -371,6 +371,36 @@ export function AudioResourceContent({
       )}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style={{ paddingBottom: mounted && currentAudio ? '8rem' : '2rem' }}>
+
+        {/* ── Continue Listening ─────────────────────────────────────────── */}
+        {mounted && (() => {
+          const continuePart = PARTS.find(p => !localProgressMap[p.partNumber]);
+          if (!continuePart) return null;
+          const isCurrentlyActive = currentAudio?.partNumber === continuePart.partNumber;
+          return (
+            <div className="mb-6 p-4 rounded-xl bg-amber-500/5 border border-amber-500/15 flex items-center justify-between gap-4">
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-amber-400/80 mb-0.5">Continue Listening</p>
+                <p className="text-sm font-semibold text-white truncate">
+                  Part {continuePart.partNumber}: {continuePart.title}
+                </p>
+                {continuePart.subtitle && (
+                  <p className="text-xs text-zinc-400 mt-0.5 truncate">{continuePart.subtitle}</p>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => handlePlayAudio(continuePart.partNumber, continuePart.title, continuePart.subtitle)}
+                className="inline-flex items-center gap-2 px-4 py-2 min-h-[40px] bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-lg text-xs transition-colors flex-shrink-0"
+                aria-label={`${isCurrentlyActive ? "Now playing" : "Listen to"} Part ${continuePart.partNumber}: ${continuePart.title}`}
+              >
+                <Headphones className="w-3.5 h-3.5" />
+                {isCurrentlyActive ? "Now Playing" : "Listen"}
+              </button>
+            </div>
+          );
+        })()}
+
         <ResourcePageClient
           showStatusFilter
           filterByStatus={filterByStatus}

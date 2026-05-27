@@ -3,7 +3,7 @@ import {
   Play, ArrowRight,
   Video, Headphones, FileText, Map, Layers, Brain, ClipboardCheck, BarChart2,
   BookOpen, Clock, Milestone, HelpCircle, Mail,
-  Image as ImageIcon, Info,
+  Image as ImageIcon, Info, CheckCircle2,
 } from "lucide-react";
 import { PrefetchPartLink } from "@/components/course/prefetch-part-link";
 
@@ -47,59 +47,11 @@ export function CourseHomeContent({
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
 
-      {/* ── Welcome + Stats ──────────────────────────────────────────────── */}
-      <section>
-        <div className="mb-6">
-          <p className="text-text-muted text-sm mb-1">Welcome back</p>
-          <h1 className="text-2xl sm:text-3xl font-bold text-text">{userName}</h1>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {/* Parts completed */}
-          <div className="p-5 rounded-2xl border border-border bg-surface">
-            <p className="text-xs font-semibold uppercase tracking-widest text-text-muted mb-3">Completed</p>
-            <p className="text-3xl font-bold text-text tabular-nums">
-              {completedLessons}
-              <span className="text-text-muted font-normal text-xl"> / {totalLessons}</span>
-            </p>
-            <p className="text-xs text-text-muted mt-1">Parts fully completed</p>
-            <p className="flex items-center gap-1 text-xs text-text-muted/70 mt-1.5">
-              <Info className="w-3 h-3 shrink-0" />
-              Requires video + briefing + quiz (80%+)
-            </p>
-            {completedLessons > 0 && (
-              <div className="mt-3 h-1.5 bg-surface-raised rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-gold to-amber-400 rounded-full"
-                  style={{ width: `${Math.round((completedLessons / totalLessons) * 100)}%` }}
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Current stage */}
-          <div className="p-5 rounded-2xl border border-border bg-surface">
-            <p className="text-xs font-semibold uppercase tracking-widest text-text-muted mb-3">Current Stage</p>
-            <p className="text-3xl font-bold text-text tabular-nums">
-              {currentStageNumber}
-              <span className="text-text-muted font-normal text-xl"> of {stagesData.length}</span>
-            </p>
-            <p className="text-xs text-text-muted mt-1 truncate">{currentStage?.label ?? "Arabia Before Revelation"}</p>
-          </div>
-
-          {/* Next Lesson */}
-          <div className="p-5 rounded-2xl border border-border bg-surface">
-            <p className="text-xs font-semibold uppercase tracking-widest text-text-muted mb-3">Next Lesson</p>
-            <p className="text-sm font-bold text-text">Part {currentPart}</p>
-            <p className="text-xs text-text-muted mt-0.5 line-clamp-2 leading-relaxed">{currentPartTitle}</p>
-            <PrefetchPartLink
-              partNumber={currentPart}
-              label={isNewUser ? "Start now" : "Continue"}
-              className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-gold hover:text-gold/80 transition-colors min-h-[44px]"
-            />
-          </div>
-        </div>
-      </section>
+      {/* ── Welcome header ─────────────────────────────────────────────────── */}
+      <div>
+        <p className="text-text-muted text-sm mb-1">Welcome back</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-text">{userName}</h1>
+      </div>
 
       {/* ── Start Here / Continue ─────────────────────────────────────────── */}
       <section id="start-here">
@@ -204,6 +156,55 @@ export function CourseHomeContent({
         </div>
       </section>
 
+      {/* ── Stats Grid ────────────────────────────────────────────────────── */}
+      <section>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {/* Parts completed */}
+          <div className="p-5 rounded-2xl border border-border bg-surface">
+            <p className="text-xs font-semibold uppercase tracking-widest text-text-muted mb-3">Completed</p>
+            <p className="text-3xl font-bold text-text tabular-nums">
+              {completedLessons}
+              <span className="text-text-muted font-normal text-xl"> / {totalLessons}</span>
+            </p>
+            <p className="text-xs text-text-muted mt-1">Parts fully completed</p>
+            <p className="flex items-center gap-1 text-xs text-text-muted/70 mt-1.5">
+              <Info className="w-3 h-3 shrink-0" />
+              Requires video + briefing + quiz (80%+)
+            </p>
+            {completedLessons > 0 && (
+              <div className="mt-3 h-1.5 bg-surface-raised rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-gold to-amber-400 rounded-full"
+                  style={{ width: `${Math.round((completedLessons / totalLessons) * 100)}%` }}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Current stage */}
+          <div className="p-5 rounded-2xl border border-border bg-surface">
+            <p className="text-xs font-semibold uppercase tracking-widest text-text-muted mb-3">Current Stage</p>
+            <p className="text-3xl font-bold text-text tabular-nums">
+              {currentStageNumber}
+              <span className="text-text-muted font-normal text-xl"> of {stagesData.length}</span>
+            </p>
+            <p className="text-xs text-text-muted mt-1 truncate">{currentStage?.label ?? "Arabia Before Revelation"}</p>
+          </div>
+
+          {/* Next Lesson */}
+          <div className="p-5 rounded-2xl border border-border bg-surface">
+            <p className="text-xs font-semibold uppercase tracking-widest text-text-muted mb-3">Next Lesson</p>
+            <p className="text-sm font-bold text-text">Part {currentPart}</p>
+            <p className="text-xs text-text-muted mt-0.5 line-clamp-2 leading-relaxed">{currentPartTitle}</p>
+            <PrefetchPartLink
+              partNumber={currentPart}
+              label={isNewUser ? "Start now" : "Continue"}
+              className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-gold hover:text-gold/80 transition-colors min-h-[44px]"
+            />
+          </div>
+        </div>
+      </section>
+
       {/* ── Course Roadmap ────────────────────────────────────────────────── */}
       <section id="roadmap">
         <div className="mb-6">
@@ -214,7 +215,71 @@ export function CourseHomeContent({
           </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 gap-4">
+        {/* Desktop: horizontal timeline */}
+        <div className="hidden sm:block relative">
+          {/* Background connector line — spans between first and last circle centers */}
+          <div className="absolute top-[13px] left-[8%] right-[8%] h-px bg-border/60" aria-hidden />
+
+          <div className="flex overflow-x-auto pb-6">
+            {stagesData.map((stage) => {
+              const pct = stage.totalCount > 0 ? Math.round((stage.completedCount / stage.totalCount) * 100) : 0;
+              const isCurrent = stage.stageNumber === currentStageNumber;
+              const isDone = stage.completedCount === stage.totalCount && stage.totalCount > 0;
+
+              return (
+                <div
+                  key={stage.stageNumber}
+                  className="flex-1 flex flex-col items-center gap-2 min-w-[80px] px-1.5"
+                >
+                  {/* Circle node */}
+                  <div
+                    className={`relative z-10 w-7 h-7 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                      isDone
+                        ? "border-green-500/60 bg-green-500/10 text-green-400"
+                        : isCurrent
+                        ? "border-gold bg-gold/10 text-gold"
+                        : "border-border bg-surface-raised text-text-muted/50"
+                    }`}
+                  >
+                    {isDone
+                      ? <CheckCircle2 className="w-3.5 h-3.5" />
+                      : <span className="text-[11px] font-bold">{stage.stageNumber}</span>}
+                  </div>
+
+                  {/* Stage info */}
+                  <div className="text-center w-full">
+                    <p className={`text-[9px] font-bold uppercase tracking-wider mb-0.5 ${
+                      isCurrent ? "text-gold" : isDone ? "text-green-400/70" : "text-text-muted/50"
+                    }`}>
+                      {isCurrent ? "Current · " : ""}Stage {stage.stageNumber}
+                    </p>
+                    <p className="text-[11px] font-medium text-text leading-tight line-clamp-2">
+                      {stage.label}
+                    </p>
+                    <p className="text-[10px] text-text-muted mt-0.5 tabular-nums">
+                      {stage.completedCount}/{stage.totalCount}
+                    </p>
+                    {/* Mini progress bar */}
+                    <div className="mt-1.5 h-[3px] bg-surface-raised rounded-full overflow-hidden w-full">
+                      <div
+                        className={`h-full rounded-full ${isDone ? "bg-green-500/70" : "bg-gold/60"}`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <PrefetchPartLink
+                      partNumber={stage.firstPartNumber}
+                      label={isDone ? "Review" : stage.completedCount > 0 ? "Continue" : "Start"}
+                      className="mt-2 inline-flex items-center gap-1 text-[10px] font-medium text-gold/70 hover:text-gold transition-colors min-h-[32px]"
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Mobile: 2-column card grid */}
+        <div className="sm:hidden grid grid-cols-2 gap-3">
           {stagesData.map((stage) => {
             const pct = stage.totalCount > 0 ? Math.round((stage.completedCount / stage.totalCount) * 100) : 0;
             const isCurrent = stage.stageNumber === currentStageNumber;
@@ -223,52 +288,40 @@ export function CourseHomeContent({
             return (
               <div
                 key={stage.stageNumber}
-                className={`p-5 rounded-2xl border transition-all ${
+                className={`p-4 rounded-2xl border transition-all ${
                   isCurrent
                     ? "border-gold/40 bg-gold/5"
                     : isDone
                     ? "border-green-500/25 bg-green-500/5"
-                    : "border-border bg-surface hover:border-border-subtle"
+                    : "border-border bg-surface"
                 }`}
               >
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className={`text-xs font-bold uppercase tracking-wider ${isCurrent ? "text-gold" : isDone ? "text-green-400" : "text-text-muted"}`}>
-                        Stage {stage.stageNumber}
-                      </span>
-                      {isCurrent && (
-                        <span className="px-1.5 py-0.5 bg-gold/15 border border-gold/30 text-gold text-[10px] font-bold rounded uppercase tracking-wide">
-                          Current
-                        </span>
-                      )}
-                      {isDone && (
-                        <span className="px-1.5 py-0.5 bg-green-500/10 border border-green-500/25 text-green-400 text-[10px] font-bold rounded uppercase tracking-wide">
-                          Done
-                        </span>
-                      )}
-                    </div>
-                    <h3 className="font-semibold text-text text-sm leading-snug">{stage.label}</h3>
-                  </div>
-                  <span className="text-xs text-text-muted tabular-nums shrink-0">
-                    {stage.completedCount}/{stage.totalCount}
+                <div className="flex items-center gap-2 mb-1">
+                  <span className={`text-[10px] font-bold uppercase tracking-wider ${isCurrent ? "text-gold" : isDone ? "text-green-400" : "text-text-muted"}`}>
+                    Stage {stage.stageNumber}
                   </span>
+                  {isCurrent && (
+                    <span className="px-1 py-0.5 bg-gold/15 border border-gold/30 text-gold text-[9px] font-bold rounded uppercase">
+                      Now
+                    </span>
+                  )}
+                  {isDone && <CheckCircle2 className="w-3 h-3 text-green-400 ml-auto" />}
                 </div>
-
-                <p className="text-xs text-text-muted leading-relaxed mb-3">{stage.description}</p>
-
-                {/* Progress bar */}
-                <div className="h-1.5 bg-surface-raised rounded-full overflow-hidden mb-3">
+                <h3 className="font-semibold text-text text-xs leading-snug line-clamp-2 mb-2">{stage.label}</h3>
+                <div className="h-1.5 bg-surface-raised rounded-full overflow-hidden mb-2">
                   <div
-                    className={`h-full rounded-full transition-all duration-500 ${isDone ? "bg-green-500" : "bg-gradient-to-r from-gold to-amber-400"}`}
+                    className={`h-full rounded-full ${isDone ? "bg-green-500" : "bg-gradient-to-r from-gold to-amber-400"}`}
                     style={{ width: `${pct}%` }}
                   />
                 </div>
-
-                <PrefetchPartLink
-                  partNumber={stage.firstPartNumber}
-                  label={isDone ? "Review stage" : stage.completedCount > 0 ? "Continue stage" : "Start stage"}
-                />
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-text-muted tabular-nums">{stage.completedCount}/{stage.totalCount}</span>
+                  <PrefetchPartLink
+                    partNumber={stage.firstPartNumber}
+                    label={isDone ? "Review" : stage.completedCount > 0 ? "Continue" : "Start"}
+                    className="text-[10px] font-medium text-gold/70 hover:text-gold transition-colors min-h-[32px] flex items-center"
+                  />
+                </div>
               </div>
             );
           })}

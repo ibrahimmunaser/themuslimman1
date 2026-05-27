@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { BookOpen, Clock, Layers } from "lucide-react";
+import { BookOpen, Clock, Layers, ClipboardCheck, ArrowRight } from "lucide-react";
 import { trackBriefingOpened, trackAssetOpened } from "@/app/actions/progress";
 import { formatSeerahContent } from "@/lib/text-formatter";
 import { PART_CONTENT } from "@/lib/part-content-data";
@@ -34,6 +34,10 @@ interface TextViewerProps {
   assetId?: string;
   /** When true (free preview), skip all progress tracking — user is not logged in */
   previewMode?: boolean;
+  /** Whether a quiz is available for this lesson part */
+  hasQuiz?: boolean;
+  /** Callback to switch to the quiz mode from the parent tab controller */
+  onSwitchToQuiz?: () => void;
 }
 
 export function TextViewer({
@@ -42,6 +46,8 @@ export function TextViewer({
   partNumber,
   assetId,
   previewMode,
+  hasQuiz,
+  onSwitchToQuiz,
 }: TextViewerProps) {
   const preRendered =
     partNumber && assetId === "briefing"
@@ -97,6 +103,22 @@ export function TextViewer({
 
   return (
     <div className={`article-shell ${className ?? ""}`} ref={articleRef}>
+      {/* Fixed reading progress bar — sticks to viewport top as user scrolls through article.
+          z-[60] places it above sticky headers; 2px height makes it unobtrusive.
+          pointer-events-none ensures it never blocks clicks. */}
+      {readProgress > 0 && (
+        <div
+          aria-hidden
+          className="pointer-events-none"
+          style={{ position: "fixed", top: 0, left: 0, right: 0, height: 2, zIndex: 60 }}
+        >
+          <div
+            className="article-progress-fill"
+            style={{ width: `${readProgress}%` }}
+          />
+        </div>
+      )}
+
       <div className="article-container">
 
         {/* Thin reading progress bar — top of article */}
@@ -182,6 +204,43 @@ export function TextViewer({
             <p className="article-end-label">
               <BookOpen size={11} strokeWidth={2} />
               End of {meta.label.toLowerCase().replace("lesson ", "")}
+            </p>
+          </div>
+        )}
+
+        {/* End-of-article CTA — shown after reading a briefing or study guide */}
+        {meta && (
+          <div className="mt-8 flex flex-col items-center gap-3 text-center">
+            {onSwitchToQuiz ? (
+              <button
+                type="button"
+                onClick={onSwitchToQuiz}
+                className="inline-flex items-center gap-2 px-6 py-3 min-h-[44px] bg-gold hover:bg-gold-light text-ink font-semibold rounded-xl text-sm transition-colors shadow-md shadow-gold/20"
+              >
+                <ClipboardCheck className="w-4 h-4" />
+                Take the Quiz
+              </button>
+            ) : hasQuiz !== false && partNumber ? (
+              <a
+                href={`?mode=quiz`}
+                className="inline-flex items-center gap-2 px-6 py-3 min-h-[44px] bg-gold hover:bg-gold-light text-ink font-semibold rounded-xl text-sm transition-colors shadow-md shadow-gold/20"
+              >
+                <ClipboardCheck className="w-4 h-4" />
+                Take the Quiz
+              </a>
+            ) : (
+              <a
+                href="/seerah"
+                className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[44px] border border-border hover:border-gold/40 text-text-secondary hover:text-text rounded-xl text-sm font-medium transition-colors"
+              >
+                Continue Learning
+                <ArrowRight className="w-4 h-4" />
+              </a>
+            )}
+            <p className="text-[11px] text-text-muted/60">
+              {onSwitchToQuiz || (hasQuiz !== false && partNumber)
+                ? "Test your understanding of this lesson"
+                : "Return to the lesson list"}
             </p>
           </div>
         )}
