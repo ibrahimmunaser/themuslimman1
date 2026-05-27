@@ -278,7 +278,7 @@ export default async function SeerahPartPage(props: Props) {
             {prevPart ? (
               <Link
                 href={`/seerah/${prevPart.id}`}
-                className="inline-flex items-center gap-2 px-3 py-2.5 rounded-lg hover:bg-surface-raised transition-all min-h-[48px] opacity-50 hover:opacity-80"
+                className="inline-flex items-center gap-2 px-3 py-2.5 rounded-lg border border-border/60 hover:bg-surface-raised hover:border-border transition-all min-h-[48px]"
               >
                 <ChevronLeft className="w-3.5 h-3.5 text-text-muted shrink-0" />
                 <div className="text-left">

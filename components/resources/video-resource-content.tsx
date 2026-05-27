@@ -164,10 +164,10 @@ export function VideoResourceContent({
   ];
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a]">
+    <div className="min-h-screen bg-ink">
 
       {/* ── Hero Section ─────────────────────────────────────────────────── */}
-      <div className="border-b border-zinc-800 bg-gradient-to-b from-zinc-900 to-[#0a0a0a]">
+      <div className="border-b border-zinc-800 bg-gradient-to-b from-zinc-900 to-ink">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
 
           {/* Title row — compact on mobile */}

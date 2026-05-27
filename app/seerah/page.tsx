@@ -271,7 +271,7 @@ export default async function LearnIndexPage() {
 
   // Lessons content
   const lessonsContent = (
-    <div className="min-h-screen bg-[#0a0a0a]">
+    <div className="min-h-screen bg-ink">
 
       {/* Course Hero */}
       <div className="border-b border-zinc-800 bg-zinc-900/50">

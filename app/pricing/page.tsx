@@ -63,7 +63,7 @@ export default async function PricingPage() {
       {/* Pricing cards */}
       <section className="py-8 border-t border-border">
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
-          <div className="grid sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
+          <div className="grid sm:grid-cols-2 gap-6 max-w-3xl mx-auto sm:items-start">
 
             {/* ── Monthly ──────────────────────────────────────────────── */}
             <div className="relative p-7 rounded-2xl border border-border bg-surface flex flex-col">
@@ -103,12 +103,18 @@ export default async function PricingPage() {
                   <p className="text-xs text-gold">You have lifetime access</p>
                 </div>
               ) : (
-                <MonthlyCheckoutButton isLoggedIn={isLoggedIn} />
+                <>
+                  <MonthlyCheckoutButton isLoggedIn={isLoggedIn} />
+                  <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] text-text-muted/60">
+                    <Lock className="w-3 h-3 flex-shrink-0" />
+                    <span>Secure checkout · Cancel anytime</span>
+                  </div>
+                </>
               )}
             </div>
 
             {/* ── Lifetime (Best Value) ─────────────────────────────────── */}
-            <div className="relative p-7 rounded-2xl border-2 border-gold bg-gradient-to-b from-gold/8 to-surface flex flex-col gold-glow">
+            <div className="relative p-7 rounded-2xl border-2 border-gold bg-gradient-to-b from-gold/8 to-surface flex flex-col gold-glow sm:scale-[1.03] sm:origin-center">
               <div className="absolute -top-3 right-5 px-3 py-1 rounded-full bg-gold text-ink text-xs font-bold flex items-center gap-1 shadow-lg z-10">
                 <Star className="w-3 h-3 fill-current" />
                 BEST VALUE

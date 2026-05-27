@@ -45,7 +45,7 @@ export function CourseHomeContent({
   const currentStage = stagesData[currentStageNumber - 1];
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
 
       {/* ── Welcome + Stats ──────────────────────────────────────────────── */}
       <section>
@@ -302,7 +302,7 @@ export function CourseHomeContent({
               className="flex flex-col items-center gap-2 p-4 rounded-xl border border-border bg-surface hover:border-gold/30 hover:bg-gold/5 transition-all group text-center"
             >
               <div className="w-10 h-10 rounded-lg bg-surface-raised border border-border flex items-center justify-center group-hover:border-gold/30 transition-colors">
-                <Icon className="w-4.5 h-4.5 text-text-secondary group-hover:text-gold transition-colors" />
+                <Icon className="w-[18px] h-[18px] text-text-secondary group-hover:text-gold transition-colors" />
               </div>
               <span className="text-xs font-medium text-text-secondary group-hover:text-text transition-colors leading-tight">
                 {label}

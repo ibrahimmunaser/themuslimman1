@@ -196,8 +196,8 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
         </div>
       </div>
 
-      {/* Navigation */}
-      <div className="flex-1 overflow-y-auto py-3">
+      {/* Course Navigation — scrollable middle */}
+      <div className="flex-1 overflow-y-auto py-3 min-h-0">
         <nav className="px-3">
           {!collapsed && (
             <p className="px-2 text-xs font-semibold text-text-muted mb-2 uppercase tracking-wider">Course</p>
@@ -229,33 +229,6 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
               );
             })}
           </div>
-
-          <div className={clsx("border-t border-border", collapsed ? "mt-3 pt-3" : "mt-5 pt-4")}>
-            {!collapsed && (
-              <p className="px-2 text-xs font-semibold text-text-muted mb-2 uppercase tracking-wider">Account</p>
-            )}
-            <div className="space-y-1">
-              {ACCOUNT_MENU.map((item) => {
-                const Icon   = item.icon;
-                const active = isActive(item);
-                return (
-                  <Link
-                    key={item.id}
-                    href={item.href}
-                    className={clsx(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
-                      active
-                        ? "bg-gold/10 text-gold border border-gold/25"
-                        : "text-text-secondary hover:text-text hover:bg-surface-raised"
-                    )}
-                  >
-                    <Icon className="w-5 h-5 flex-shrink-0" />
-                    {!collapsed && <span className="flex-1">{item.label}</span>}
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
         </nav>
 
         {!collapsed && (
@@ -267,15 +240,43 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
         )}
       </div>
 
-      {/* Sign Out */}
-      <div className="p-3 border-t border-border flex-shrink-0">
-        <button
-          onClick={handleSignOut}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-400/70 hover:text-red-400 hover:bg-red-500/8 transition-all"
-        >
-          <LogOut className="w-5 h-5 flex-shrink-0" />
-          {!collapsed && <span className="flex-1 text-left">Sign Out</span>}
-        </button>
+      {/* Account + Sign Out — pinned footer, always visible */}
+      <div className="flex-shrink-0 border-t border-border">
+        <nav className="px-3 pt-2 pb-1" aria-label="Account">
+          {!collapsed && (
+            <p className="px-2 pt-1 pb-1.5 text-xs font-semibold text-text-muted uppercase tracking-wider">Account</p>
+          )}
+          <div className="space-y-0.5">
+            {ACCOUNT_MENU.map((item) => {
+              const Icon   = item.icon;
+              const active = isActive(item);
+              return (
+                <Link
+                  key={item.id}
+                  href={item.href}
+                  className={clsx(
+                    "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all",
+                    active
+                      ? "bg-gold/10 text-gold border border-gold/25"
+                      : "text-text-secondary hover:text-text hover:bg-surface-raised"
+                  )}
+                >
+                  <Icon className="w-5 h-5 flex-shrink-0" />
+                  {!collapsed && <span className="flex-1">{item.label}</span>}
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
+        <div className="px-3 pb-3">
+          <button
+            onClick={handleSignOut}
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-red-400/70 hover:text-red-400 hover:bg-red-500/8 transition-all"
+          >
+            <LogOut className="w-5 h-5 flex-shrink-0" />
+            {!collapsed && <span className="flex-1 text-left">Sign Out</span>}
+          </button>
+        </div>
       </div>
     </>
   );
