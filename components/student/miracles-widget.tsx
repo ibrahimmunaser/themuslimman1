@@ -40,7 +40,7 @@ export function MiraclesWidget() {
   }, [visible]);
 
   return (
-    <div className="mx-3 mb-3">
+    <div className="mx-3 mb-3" role="region" aria-label="Miracles of the Prophet">
       <div className="rounded-xl border border-sky-500/25 bg-[#0A1520] p-4 overflow-hidden relative">
         <div className="absolute left-0 top-4 bottom-4 w-[2px] rounded-full bg-sky-400/50" />
 

@@ -21,10 +21,24 @@ import {
   PanelLeftOpen,
 } from "lucide-react";
 
-import { DidYouKnowWidget } from "./did-you-know-widget";
-import { MiraclesWidget } from "./miracles-widget";
-import { PropheciesWidget } from "./prophecies-widget";
+import dynamic from "next/dynamic";
 import { WidgetCycleProvider } from "./widget-cycle-context";
+
+// Lazy-load widget components so their bundled JSON data (facts, miracles, prophecies)
+// does not block the initial sidebar render. ssr:false avoids hydration mismatch
+// since widgets randomize content on mount anyway.
+const DidYouKnowWidget = dynamic(
+  () => import("./did-you-know-widget").then((m) => ({ default: m.DidYouKnowWidget })),
+  { ssr: false, loading: () => null }
+);
+const MiraclesWidget = dynamic(
+  () => import("./miracles-widget").then((m) => ({ default: m.MiraclesWidget })),
+  { ssr: false, loading: () => null }
+);
+const PropheciesWidget = dynamic(
+  () => import("./prophecies-widget").then((m) => ({ default: m.PropheciesWidget })),
+  { ssr: false, loading: () => null }
+);
 
 interface StudentSidebarProps {
   userPlan: "essentials" | "complete";

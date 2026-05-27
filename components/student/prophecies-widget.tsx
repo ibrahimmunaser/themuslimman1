@@ -39,7 +39,7 @@ export function PropheciesWidget() {
   }, [visible]);
 
   return (
-    <div className="mx-3 mb-3">
+    <div className="mx-3 mb-3" role="region" aria-label="Prophecies of the Prophet">
       <div className="rounded-xl border border-emerald-500/25 bg-[#0A1A10] p-4 overflow-hidden relative">
         <div className="absolute left-0 top-4 bottom-4 w-[2px] rounded-full bg-emerald-400/50" />
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { CheckCircle2, CircleDashed } from "lucide-react";
 
 export interface PartProgressInitial {
   videoWatchPercent: number;
@@ -67,13 +68,17 @@ export function PartProgressBadges({ initial }: PartProgressBadgesProps) {
               aria-label={`${r.label}: ${r.done ? "completed" : r.partial ? "in progress" : "not started"}`}
               className={
                 r.done
-                  ? "w-5 h-5 rounded-full bg-green-500/20 border border-green-500/40 flex items-center justify-center text-green-400 text-[9px]"
+                  ? "w-5 h-5 rounded-full bg-green-500/20 border border-green-500/40 flex items-center justify-center text-green-400"
                   : r.partial
-                  ? "w-5 h-5 rounded-full bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 text-[9px]"
-                  : "w-5 h-5 rounded-full bg-surface-raised border border-border"
+                  ? "w-5 h-5 rounded-full bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400"
+                  : "w-5 h-5 rounded-full bg-surface-raised border border-dashed border-border/70"
               }
             >
-              <span aria-hidden>{r.done ? "✓" : r.partial ? "~" : ""}</span>
+              {r.done
+                ? <CheckCircle2 aria-hidden className="w-3 h-3" />
+                : r.partial
+                ? <CircleDashed aria-hidden className="w-3 h-3" />
+                : null}
             </span>
           ))}
         </div>

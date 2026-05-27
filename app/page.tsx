@@ -74,10 +74,18 @@ export default async function LandingPage() {
           HERO SECTION
       ============================================ */}
       <section className="relative pt-16 pb-20 md:pt-24 md:pb-28 overflow-hidden">
-        {/* Background effects */}
+        {/* Background effects — using radial gradients instead of filter:blur for better performance */}
         <div className="absolute inset-0 geo-pattern opacity-40" />
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gold/5 rounded-full blur-3xl" />
-        <div className="absolute top-20 right-0 w-[400px] h-[400px] bg-gold/3 rounded-full blur-3xl" />
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: "radial-gradient(ellipse 800px 400px at 50% 0%, rgba(200,169,110,0.06) 0%, transparent 70%)" }}
+          aria-hidden
+        />
+        <div
+          className="absolute top-20 right-0 w-[400px] h-[400px] pointer-events-none"
+          style={{ background: "radial-gradient(circle at 70% 30%, rgba(200,169,110,0.04) 0%, transparent 70%)" }}
+          aria-hidden
+        />
 
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 text-center">
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight mb-6">
@@ -167,8 +175,20 @@ export default async function LandingPage() {
           </div>
 
           <Suspense fallback={
-            <div className="rounded-2xl border border-border bg-surface p-8 text-center">
-              <p className="text-text-secondary">Loading Part 1 preview...</p>
+            <div className="rounded-2xl border border-border bg-surface overflow-hidden" style={{ minHeight: 580 }}>
+              {/* Tab bar skeleton */}
+              <div className="h-14 bg-surface border-b border-border flex items-center gap-2 px-4">
+                {[1,2,3,4].map((i) => (
+                  <div key={i} className="h-8 w-20 rounded-lg bg-surface-raised" />
+                ))}
+              </div>
+              {/* Content skeleton */}
+              <div className="p-6 space-y-4">
+                <div className="h-5 bg-surface-raised rounded w-2/3" />
+                <div className="h-4 bg-surface-raised rounded w-1/2" />
+                <div className="h-4 bg-surface-raised rounded w-3/4" />
+                <div className="mt-6 aspect-video bg-surface-raised rounded-xl" />
+              </div>
             </div>
           }>
             <Part1FullPreview />

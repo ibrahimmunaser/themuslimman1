@@ -309,8 +309,13 @@ export default async function LearnIndexPage() {
             const eraPercent = era.totalCount > 0 ? Math.round((era.completedCount / era.totalCount) * 100) : 0;
 
             return (
-              <details key={eraKey} className="group" open={hasCurrentPart}>
-                <summary className="cursor-pointer list-none">
+              <details
+                key={eraKey}
+                className="group"
+                open={hasCurrentPart}
+                style={{ contentVisibility: "auto", containIntrinsicBlockSize: "120px" }}
+              >
+                <summary className="cursor-pointer list-none rounded-xl">
                   <div className="bg-zinc-900/50 rounded-xl p-5 transition-colors border" style={{ borderColor: `${era.color}40` }}>
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex items-center gap-4 flex-1 min-w-0">

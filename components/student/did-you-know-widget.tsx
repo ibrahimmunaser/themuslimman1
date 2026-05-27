@@ -57,7 +57,7 @@ export function DidYouKnowWidget() {
     .replace("Sahih Muslim", "Muslim");
 
   return (
-    <div className="mx-3 mb-3 mt-2">
+    <div className="mx-3 mb-3 mt-2" role="region" aria-label="Did You Know">
       <div className="rounded-xl border border-gold/30 bg-[#1A1409] p-4 overflow-hidden relative">
         <div className="absolute left-0 top-4 bottom-4 w-[2px] rounded-full bg-gold/50" />
 
