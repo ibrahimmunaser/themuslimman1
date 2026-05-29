@@ -62,6 +62,50 @@ export const PLANS = {
     recommended: true,
     badge: "Best Value",
   },
+  family: {
+    id: "family",
+    name: "Family Access",
+    subtitle: "One household account with up to 5 learner profiles",
+    price: 19900, // $199.00 lifetime family access
+    upgradeFromLifetimePrice: 10000, // $100.00 — for Individual Lifetime → Family Lifetime upgrades ($199 - $99)
+    stripeProductId: "prod_UbM83Q8KLI4HX0", // env: STRIPE_FAMILY_LIFETIME_PRICE_ID
+    features: [
+      "One household account",
+      "Up to 5 learner profiles",
+      "Separate progress for every course asset",
+      "All 100 Seerah parts",
+      "Video, audio, briefings, slides, infographics",
+      "Quizzes, flashcards, and mind maps",
+      "Parent progress dashboard",
+      "Easy profile switching",
+      "Lifetime access to the full course",
+    ],
+    recommended: false,
+    badge: "Best for Families",
+    profileLimit: 5,
+  },
+  familyMonthly: {
+    id: "familyMonthly",
+    name: "Family Access Monthly",
+    subtitle: "One household account with up to 5 learner profiles",
+    price: 1900, // $19.00/month
+    interval: "month" as const,
+    stripeProductId: "prod_UbM4rARx0wZTAI", // env: STRIPE_FAMILY_MONTHLY_PRICE_ID
+    features: [
+      "One household account",
+      "Up to 5 learner profiles",
+      "Separate progress for every course asset",
+      "All 100 Seerah parts",
+      "Video, audio, briefings, slides, infographics",
+      "Quizzes, flashcards, and mind maps",
+      "Parent progress dashboard",
+      "Easy profile switching",
+      "Cancel anytime",
+    ],
+    recommended: false,
+    badge: "Best for Families",
+    profileLimit: 5,
+  },
 } as const;
 
 export type PlanId = keyof typeof PLANS;

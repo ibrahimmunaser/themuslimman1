@@ -1,6 +1,6 @@
 "use server";
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
 import { nanoid } from "nanoid";
@@ -8,10 +8,11 @@ import { prisma } from "./db";
 import type { SessionUser } from "./session";
 import { ROLES, type Role, isRole } from "./roles";
 
-const COOKIE_NAME = "seerah_session";
-const ROLE_COOKIE  = "seerah_role"; // readable by middleware (not httpOnly)
+const COOKIE_NAME    = "seerah_session";
+const ROLE_COOKIE    = "seerah_role";    // readable by middleware (not httpOnly)
+const PROFILE_COOKIE = "seerah_profile"; // active learner profile ID (non-httpOnly for client reads)
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
-const BCRYPT_ROUNDS = 12;
+const BCRYPT_ROUNDS  = 12;
 
 // ─────────────────────────────────────────────────────────────
 // Session helpers
@@ -43,6 +44,28 @@ async function clearSessionCookie() {
   const cookieStore = await cookies();
   cookieStore.delete(COOKIE_NAME);
   cookieStore.delete(ROLE_COOKIE);
+  cookieStore.delete(PROFILE_COOKIE);
+}
+
+// ─────────────────────────────────────────────────────────────
+// Profile cookie helpers — called by profile server actions
+// ─────────────────────────────────────────────────────────────
+
+export async function setActiveProfileCookie(profileId: string) {
+  const cookieStore = await cookies();
+  const expiresAt = new Date(Date.now() + COOKIE_MAX_AGE * 1000);
+  cookieStore.set(PROFILE_COOKIE, profileId, {
+    httpOnly: false, // readable client-side to display active profile name
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    expires: expiresAt,
+    path: "/",
+  });
+}
+
+export async function clearActiveProfileCookie() {
+  const cookieStore = await cookies();
+  cookieStore.delete(PROFILE_COOKIE);
 }
 
 async function createSession(userId: string, role: string): Promise<string> {
@@ -73,9 +96,31 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
   const session = await prisma.session.findUnique({
     where: { token },
     include: {
+      // Use select to load only the fields we need, including hasPaid so
+      // downstream access checks can short-circuit for lifetime buyers without
+      // an extra DB round-trip.
       user: {
-        include: {
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+          role: true,
+          isActive: true,
+          profileImage: true,
+          timezone: true,
+          emailVerified: true,
+          hasPaid: true,
+          planType: true,
+          courseFor: true,
+          studentName: true,
+          parentEmail: true,
+          parentEmailVerified: true,
+          sendWeeklyReports: true,
           student: { select: { id: true } },
+          learnerProfiles: {
+            select: { id: true, displayName: true, isDefault: true },
+            orderBy: { createdAt: "asc" },
+          },
         },
       },
     },
@@ -99,6 +144,23 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
   
   if (!user.isActive) return null;
 
+  // Resolve active profile from cookie, validated against this user's profiles.
+  const profileCookieId = cookieStore.get(PROFILE_COOKIE)?.value ?? null;
+  let activeProfile: { id: string; displayName: string } | null = null;
+
+  if (profileCookieId) {
+    // Validate: the profile must belong to this user.
+    activeProfile = user.learnerProfiles.find((p) => p.id === profileCookieId) ?? null;
+  }
+
+  // Fallback to default profile (or first profile if no default is set).
+  if (!activeProfile) {
+    activeProfile =
+      user.learnerProfiles.find((p) => p.isDefault) ??
+      user.learnerProfiles[0] ??
+      null;
+  }
+
   return {
     id: user.id,
     fullName: user.fullName,
@@ -109,6 +171,10 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
     timezone: user.timezone,
     studentProfileId: user.student?.id ?? null,
     emailVerified: user.emailVerified,
+    hasPaid: user.hasPaid,
+    planType: user.planType,
+    activeProfileId: activeProfile?.id ?? null,
+    activeProfileName: activeProfile?.displayName ?? null,
     courseFor: user.courseFor,
     studentName: user.studentName,
     parentEmail: user.parentEmail,
@@ -123,7 +189,29 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
 
 export async function requireAuth(): Promise<SessionUser> {
   const user = await getCurrentUser();
-  if (!user) redirect("/login");
+  if (!user) {
+    // Build a return URL from the middleware-forwarded pathname header so the
+    // user lands back where they came from after signing in.
+    let loginUrl = "/login";
+    try {
+      const hdrs = await headers();
+      const pathname = hdrs.get("x-pathname") ?? "";
+      const search = hdrs.get("x-search") ?? "";
+      // Only forward safe internal paths — skip auth/api routes to avoid loops.
+      if (
+        pathname &&
+        pathname !== "/login" &&
+        !pathname.startsWith("/api/") &&
+        !pathname.startsWith("/_next/")
+      ) {
+        const returnPath = pathname + search;
+        loginUrl = `/login?redirect=${encodeURIComponent(returnPath)}`;
+      }
+    } catch {
+      // headers() unavailable in some edge contexts — fall back to plain /login
+    }
+    redirect(loginUrl);
+  }
   return user;
 }
 
@@ -154,7 +242,7 @@ export async function requireStudent(): Promise<SessionUser> {
 export async function login(
   email: string,
   password: string
-): Promise<{ success: boolean; error?: string; role?: Role; hasPurchase?: boolean }> {
+): Promise<{ success: boolean; error?: string; role?: Role; hasPurchase?: boolean; userId?: string }> {
   const startTime = Date.now();
   const lowerEmail = email.toLowerCase();
 
@@ -179,21 +267,24 @@ export async function login(
 
   try {
     await createSession(user.id, user.role);
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { lastLoginAt: new Date() },
-    });
   } catch (error) {
     console.error(`[AUTH] login: Failed to create session for ${user.id}:`, error);
     return { success: false, error: "Failed to create session. Please try again." };
   }
 
-  const hasPurchase = await userHasPurchases(user.id);
+  // Run lastLoginAt stamp and purchase check in parallel — they are independent.
+  // NOTE: Cannot replace userHasPurchases with user.hasPaid — monthly subscribers
+  // have hasPaid=false (only lifetime purchases set it), so the full check is required
+  // to correctly redirect monthly subscribers to the dashboard instead of /pricing.
+  const [, hasPurchase] = await Promise.all([
+    prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } }),
+    userHasPurchases(user.id),
+  ]);
 
   const elapsed = Date.now() - startTime;
   if (elapsed > 3000) console.warn(`[AUTH] login: Slow login for ${lowerEmail} [${elapsed}ms]`);
 
-  return { success: true, role: user.role as Role, hasPurchase };
+  return { success: true, role: user.role as Role, hasPurchase, userId: user.id };
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -256,12 +347,11 @@ export async function requestPasswordReset(email: string): Promise<{ success: bo
   });
 
   if (!user) {
-    // Don't reveal if email exists
-    console.log(`[PASSWORD_RESET] Email not found: ${email}`);
+    // Don't reveal if email exists — return success to prevent email enumeration.
     return { success: true };
   }
-  
-  console.log(`[PASSWORD_RESET] User found: ${user.email}, sending reset email...`);
+
+  console.log(`[PASSWORD_RESET] Processing reset request`);
 
   const resetToken = nanoid(32);
   const resetExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour

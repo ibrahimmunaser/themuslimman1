@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Video, Headphones, FileText, Image, Map, Layers, Brain, ClipboardCheck, BarChart2 } from "lucide-react";
+import Link from "next/link";
+import { Video, Headphones, FileText, Image, Map, Layers, Brain, ClipboardCheck, BarChart2, ChevronRight } from "lucide-react";
 import { clsx } from "clsx";
 
 interface ResourcesTabsProps {
@@ -53,6 +54,20 @@ export function ResourcesTabs({
     <div className="w-full">
       {/* Header — compressed on mobile */}
       <div className="border-b border-border px-4 sm:px-6 lg:px-8 py-3 sm:py-5">
+        {/* Breadcrumb — desktop only */}
+        <nav aria-label="Breadcrumb" className="hidden sm:flex items-center gap-1 text-xs text-text-muted mb-2">
+          <Link href="/seerah" className="hover:text-text transition-colors">
+            Course
+          </Link>
+          <ChevronRight className="w-3 h-3 flex-shrink-0" aria-hidden />
+          <span className="text-text-secondary font-medium">
+            Resources
+          </span>
+          <ChevronRight className="w-3 h-3 flex-shrink-0" aria-hidden />
+          <span className="text-text capitalize">
+            {TABS.find((t) => t.id === activeTab)?.label ?? "Videos"}
+          </span>
+        </nav>
         <h1 className="text-lg sm:text-2xl font-bold text-text">Resource Library</h1>
         <p className="text-xs sm:text-sm text-text-muted mt-0.5">
           All learning materials across the complete Seerah Masterclass
@@ -101,9 +116,9 @@ export function ResourcesTabs({
             })}
           </div>
 
-          {/* ── Desktop/tablet: horizontal strip (unchanged) ── */}
+          {/* ── Desktop/tablet: horizontal strip ── */}
           <div
-            className="hidden sm:flex gap-1.5 overflow-x-auto scrollbar-hide py-1"
+            className="hidden sm:flex gap-1 overflow-x-auto scrollbar-hide py-1"
             role="tablist"
             aria-label="Resource types"
           >
@@ -117,8 +132,8 @@ export function ResourcesTabs({
                   aria-selected={isActive}
                   onClick={() => setActiveTab(tab.id)}
                   className={clsx(
-                    "flex items-center gap-1.5 px-4 text-sm font-medium",
-                    "transition-all rounded-lg whitespace-nowrap border flex-shrink-0 min-h-[44px]",
+                    "flex items-center gap-1.5 px-3 text-sm font-medium",
+                    "transition-all rounded-lg whitespace-nowrap border flex-shrink-0 min-h-[40px]",
                     isActive
                       ? "text-gold bg-gold/8 border-gold/20"
                       : "text-text-muted border-transparent hover:text-text-secondary hover:bg-surface-raised"

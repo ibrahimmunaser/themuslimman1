@@ -473,7 +473,7 @@ function ModeButton({
       aria-disabled={isDisabled ? "true" : undefined}
       aria-pressed={isActive}
       className={clsx(
-        "relative flex flex-col items-center justify-center flex-1 lg:flex-none lg:max-w-[150px] rounded-xl border",
+        "relative flex flex-col items-center justify-center flex-1 lg:flex-none lg:max-w-[150px] 2xl:max-w-[160px] rounded-xl border",
         "transition-all duration-200 active:scale-[0.96]",
         "min-h-[52px] sm:min-h-[56px]",
         isPrimary

@@ -12,6 +12,9 @@ import {
   Star,
   Lock,
   RefreshCw,
+  Users,
+  ArrowRight,
+  ArrowUpCircle,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -35,21 +38,26 @@ export default async function BillingPage() {
   const user = await requireStudent();
   if (!user.studentProfileId) redirect("/");
 
-  const accessInfo = await getUserAccessInfo(user.id);
+  // Parallelize access info + purchase history — saves one sequential round-trip.
+  const [accessInfo, purchases] = await Promise.all([
+    getUserAccessInfo(user.id, user.hasPaid),
+    prisma.purchase.findMany({
+      where: { userId: user.id, status: "succeeded" },
+      orderBy: { createdAt: "desc" },
+    }),
+  ]);
   if (!accessInfo.hasAccess) redirect("/pricing");
-
-  const purchases = await prisma.purchase.findMany({
-    where: { userId: user.id, status: "succeeded" },
-    orderBy: { createdAt: "desc" },
-  });
 
   const userPlan = "complete" as const;
 
-  const isMonthly = !accessInfo.hasLifetime && accessInfo.hasActiveSubscription;
-  const sub = accessInfo.subscription;
+  const isFamily          = user.planType === "family";
+  const isMonthly         = !accessInfo.hasLifetime && accessInfo.hasActiveSubscription;
+  const isFamilyLifetime  = isFamily && !isMonthly;
+  const isFamilyMonthly   = isFamily && isMonthly;
+  const sub               = accessInfo.subscription;
 
   return (
-    <StudentLayout userPlan={userPlan} userName={user.fullName}>
+    <StudentLayout userPlan={userPlan} userName={user.fullName} planType={user.planType}>
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 space-y-8">
 
         {/* Header */}
@@ -68,19 +76,40 @@ export default async function BillingPage() {
               <div>
                 <div className="flex items-center gap-2">
                   <p className="font-semibold text-text">
-                    {isMonthly ? PLANS.monthly.name : PLANS.complete.name}
+                    {isFamilyMonthly
+                      ? PLANS.familyMonthly.name
+                      : isFamilyLifetime
+                      ? PLANS.family.name
+                      : isMonthly
+                      ? PLANS.monthly.name
+                      : PLANS.complete.name}
                   </p>
                   <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-gold/20 text-gold border border-gold/30">
                     Active
                   </span>
                 </div>
                 <p className="text-sm text-text-secondary mt-0.5">
-                  {isMonthly ? PLANS.monthly.subtitle : PLANS.complete.subtitle}
+                  {isFamilyMonthly || isFamilyLifetime
+                    ? PLANS.family.subtitle
+                    : isMonthly
+                    ? PLANS.monthly.subtitle
+                    : PLANS.complete.subtitle}
                 </p>
               </div>
             </div>
             <div className="text-right">
-              {isMonthly ? (
+              {isFamilyMonthly ? (
+                <>
+                  <p className="text-xs text-text-muted">$19 / month</p>
+                  {sub && (
+                    <p className="text-xs text-text-muted mt-0.5">
+                      {sub.cancelAtPeriodEnd
+                        ? `Cancels ${formatDate(sub.currentPeriodEnd)}`
+                        : `Renews ${formatDate(sub.currentPeriodEnd)}`}
+                    </p>
+                  )}
+                </>
+              ) : isMonthly ? (
                 <>
                   <p className="text-xs text-text-muted">$9 / month</p>
                   {sub && (
@@ -107,7 +136,14 @@ export default async function BillingPage() {
           )}
 
           <div className="mt-5 grid sm:grid-cols-2 gap-y-2 gap-x-4">
-            {(isMonthly ? PLANS.monthly.features : PLANS.complete.features).slice(0, 8).map((f) => (
+            {(isFamilyMonthly
+              ? PLANS.familyMonthly.features
+              : isFamilyLifetime
+              ? PLANS.family.features
+              : isMonthly
+              ? PLANS.monthly.features
+              : PLANS.complete.features
+            ).slice(0, 8).map((f) => (
               <div key={f} className="flex items-center gap-2 text-sm text-text-secondary">
                 <CheckCircle2 className="w-3.5 h-3.5 text-gold flex-shrink-0" />
                 {f}
@@ -115,6 +151,103 @@ export default async function BillingPage() {
             ))}
           </div>
         </div>
+
+        {/* Family Monthly → Lifetime upgrade nudge */}
+        {isFamilyMonthly && (
+          <div className="rounded-2xl border border-gold/20 bg-gold/5 p-6">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-gold/15">
+                <Star className="w-5 h-5 text-gold" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-text">Upgrade to Family Lifetime</p>
+                <p className="text-sm text-text-secondary mt-1 leading-relaxed">
+                  Stop paying monthly. Get permanent Family Access for a one-time payment of $199 —
+                  the same 5 learner profiles, separate progress for every course asset, lifetime access.
+                </p>
+                <div className="mt-4 flex flex-wrap items-center gap-3">
+                  <Link
+                    href="/checkout/family"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gold hover:bg-gold-light text-black font-bold text-sm transition-colors shadow-sm"
+                  >
+                    Upgrade for $199
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                  <span className="text-xs text-text-muted">One-time payment · Cancel your monthly subscription after</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Individual Lifetime → Family Lifetime upgrade card (pays only the $100 difference) */}
+        {accessInfo.hasLifetime && !isFamily && !isMonthly && (
+          <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-6">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-amber-500/15">
+                <Users className="w-5 h-5 text-amber-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-text">Upgrade to Family Access</p>
+                <p className="text-sm text-text-secondary mt-1 leading-relaxed">
+                  Family Access gives one household account with up to 5 learner profiles.
+                  Parents log in once, create profiles for each family member, and each learner
+                  gets their own separate progress for all course assets.
+                </p>
+                <div className="mt-3 flex items-center gap-2 text-xs text-amber-400/80">
+                  <ArrowUpCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                  You&apos;ve already paid $99 for Individual Lifetime — you&apos;re only paying the $100 difference.
+                </div>
+                <div className="mt-4 flex flex-wrap items-center gap-3">
+                  <Link
+                    href="/checkout/family"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm transition-colors shadow-sm"
+                  >
+                    Upgrade for $100
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                  <span className="text-xs text-text-muted">
+                    <span className="line-through opacity-60 mr-1">$199</span>
+                    One-time · Lifetime family access
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Individual Monthly → Family upgrade card (pays full price, no lifetime credit) */}
+        {!accessInfo.hasLifetime && !isFamily && isMonthly && (
+          <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-6">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-amber-500/15">
+                <Users className="w-5 h-5 text-amber-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-text">Upgrade to Family Access</p>
+                <p className="text-sm text-text-secondary mt-1 leading-relaxed">
+                  Family Access gives one household account with up to 5 learner profiles,
+                  separate progress for every learner, and your choice of monthly or lifetime billing.
+                </p>
+                <div className="mt-4 flex flex-wrap items-center gap-3">
+                  <Link
+                    href="/checkout/family?cycle=lifetime"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm transition-colors shadow-sm"
+                  >
+                    Lifetime — $199
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                  <Link
+                    href="/checkout/family?cycle=monthly"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-amber-500/40 hover:border-amber-500/70 text-amber-400 font-semibold text-sm transition-colors"
+                  >
+                    Monthly — $19/mo
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Card manager (only relevant for lifetime / Stripe-stored cards) */}
         {accessInfo.hasLifetime && <CardManager />}

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Check, ArrowRight, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-type SuccessType = "lifetime" | "subscription";
+type SuccessType = "lifetime" | "subscription" | "family" | "family-subscription";
 
 const MAX_POLL_MS = 20_000;
 const POLL_INTERVAL_MS = 2_000;
@@ -18,12 +18,27 @@ function PaymentSuccessPageContent() {
   const [successType, setSuccessType] = useState<SuccessType>("lifetime");
 
   const paymentIntent = searchParams.get("payment_intent");
-  const type = searchParams.get("type"); // "subscription" | null
+  const type = searchParams.get("type"); // "subscription" | "family" | null
+  const preview = searchParams.get("preview"); // dev-only: bypass payment verification
 
   useEffect(() => {
-    // Subscription payment — poll until webhook confirms access (up to MAX_POLL_MS)
-    if (type === "subscription") {
-      setSuccessType("subscription");
+    // Dev preview mode — skip all verification, show the success screen directly.
+    // Explicitly disabled in production so no one can bypass payment verification.
+    if (preview === "1" && process.env.NODE_ENV !== "production") {
+      setSuccessType(
+        type === "family" ? "family" :
+        type === "family-subscription" ? "family-subscription" :
+        type === "subscription" ? "subscription" :
+        "lifetime"
+      );
+      setLoading(false);
+      return;
+    }
+
+    // Subscription payment (individual monthly or family monthly) —
+    // poll until webhook confirms access (up to MAX_POLL_MS).
+    if (type === "subscription" || type === "family-subscription") {
+      setSuccessType(type === "family-subscription" ? "family-subscription" : "subscription");
 
       const start = Date.now();
 
@@ -63,7 +78,8 @@ function PaymentSuccessPageContent() {
       return;
     }
 
-    // Lifetime purchase — verify PaymentIntent via existing endpoint
+    // One-time payment (Individual Lifetime or Family Lifetime) —
+    // verify the PaymentIntent then show the appropriate success screen.
     async function verifyPayment() {
       if (!paymentIntent) {
         setError("No payment information found");
@@ -75,7 +91,7 @@ function PaymentSuccessPageContent() {
           `/api/stripe/verify-payment?payment_intent=${paymentIntent}`
         );
         if (!response.ok) throw new Error("Payment verification failed");
-        setSuccessType("lifetime");
+        setSuccessType(type === "family" ? "family" : "lifetime");
         setLoading(false);
       } catch {
         setError("Failed to verify payment. If you were charged, contact support.");
@@ -88,13 +104,15 @@ function PaymentSuccessPageContent() {
   }, []);
 
   if (loading) {
-    const isSubscription = type === "subscription";
+    // Both individual monthly ("subscription") and family monthly ("family-subscription")
+    // use polling — show subscription copy for both. One-time payments show payment copy.
+    const isAnySubscription = type === "subscription" || type === "family-subscription";
     return (
       <div className="min-h-screen bg-ink text-text flex items-center justify-center px-4">
         <div className="text-center">
           <div className="w-16 h-16 border-2 border-gold border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="text-text-secondary">
-            {isSubscription
+            {isAnySubscription
               ? "Confirming your subscription…"
               : "Verifying your payment…"}
           </p>
@@ -129,14 +147,17 @@ function PaymentSuccessPageContent() {
     );
   }
 
-  const isSubscription = successType === "subscription";
+  const isSubscription      = successType === "subscription";        // individual monthly
+  const isFamilySubscription = successType === "family-subscription"; // family monthly
+  const isFamily             = successType === "family";              // family lifetime
+  const isFamilyAny          = isFamily || isFamilySubscription;      // any family plan
 
   return (
     <div className="min-h-screen bg-ink text-text flex items-center justify-center px-4">
       <div className="max-w-lg w-full">
         <div className="text-center mb-8">
           <div className="w-20 h-20 mx-auto rounded-full bg-green-500/10 border-2 border-green-500/30 flex items-center justify-center mb-6 relative">
-            {isSubscription ? (
+            {isSubscription || isFamilySubscription ? (
               <RefreshCw className="w-10 h-10 text-green-400" />
             ) : (
               <Check className="w-10 h-10 text-green-400" />
@@ -144,14 +165,39 @@ function PaymentSuccessPageContent() {
             <div className="absolute inset-0 rounded-full bg-green-500/20 animate-ping" />
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold mb-3">
-            {isSubscription ? "Subscription Active!" : "Payment Successful!"}
+            {isSubscription || isFamilySubscription ? "Subscription Active!" : "Payment Successful!"}
           </h1>
-          <p className="text-lg text-text-secondary">Welcome to Complete Seerah</p>
+          <p className="text-lg text-text-secondary">
+            {isFamilyAny ? "Welcome to Family Access" : "Welcome to Complete Seerah"}
+          </p>
         </div>
 
         <div className="bg-surface border border-border rounded-2xl p-6 sm:p-8 space-y-6">
           <div className="space-y-3">
-            {isSubscription ? (
+            {isFamilySubscription ? (
+              // Family monthly — subscription + family profile messaging
+              <>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-gold/10 border border-gold/25 flex items-center justify-center flex-shrink-0">
+                    <Check className="w-4 h-4 text-gold" />
+                  </div>
+                  <p className="text-text-secondary">Family subscription activated</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-gold/10 border border-gold/25 flex items-center justify-center flex-shrink-0">
+                    <Check className="w-4 h-4 text-gold" />
+                  </div>
+                  <p className="text-text-secondary">Up to 5 learner profiles for your household</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-gold/10 border border-gold/25 flex items-center justify-center flex-shrink-0">
+                    <Check className="w-4 h-4 text-gold" />
+                  </div>
+                  <p className="text-text-secondary">Cancel anytime from your billing page</p>
+                </div>
+              </>
+            ) : isSubscription ? (
+              // Individual monthly
               <>
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-gold/10 border border-gold/25 flex items-center justify-center flex-shrink-0">
@@ -172,7 +218,30 @@ function PaymentSuccessPageContent() {
                   <p className="text-text-secondary">Cancel anytime from your billing page</p>
                 </div>
               </>
+            ) : isFamily ? (
+              // Family lifetime
+              <>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-gold/10 border border-gold/25 flex items-center justify-center flex-shrink-0">
+                    <Check className="w-4 h-4 text-gold" />
+                  </div>
+                  <p className="text-text-secondary">Family Access activated</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-gold/10 border border-gold/25 flex items-center justify-center flex-shrink-0">
+                    <Check className="w-4 h-4 text-gold" />
+                  </div>
+                  <p className="text-text-secondary">Up to 5 learner profiles for your household</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-gold/10 border border-gold/25 flex items-center justify-center flex-shrink-0">
+                    <Check className="w-4 h-4 text-gold" />
+                  </div>
+                  <p className="text-text-secondary">Lifetime access — no recurring charges</p>
+                </div>
+              </>
             ) : (
+              // Individual lifetime
               <>
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-gold/10 border border-gold/25 flex items-center justify-center flex-shrink-0">
@@ -196,11 +265,19 @@ function PaymentSuccessPageContent() {
             )}
           </div>
 
-          <div className="pt-6 border-t border-border">
-            <Link href="/seerah" className="w-full">
-              <Button variant="primary" size="lg" className="w-full gap-2">
-                Start Learning
-                <ArrowRight className="w-4 h-4" />
+          <div className="pt-6 border-t border-border space-y-3">
+            {isFamilyAny && (
+              <Link href="/profiles" className="w-full block">
+                <Button variant="primary" size="lg" className="w-full gap-2">
+                  Set Up Learner Profiles
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </Link>
+            )}
+            <Link href="/seerah" className="w-full block">
+              <Button variant={isFamilyAny ? "ghost" : "primary"} size="lg" className="w-full gap-2">
+                {isFamilyAny ? "Go to Dashboard" : "Start Learning"}
+                {!isFamilyAny && <ArrowRight className="w-4 h-4" />}
               </Button>
             </Link>
           </div>

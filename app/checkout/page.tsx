@@ -9,7 +9,7 @@ export default async function CheckoutPage() {
   const user = await getCurrentUser();
 
   if (user) {
-    const { hasLifetime } = await getUserAccessInfo(user.id);
+    const { hasLifetime } = await getUserAccessInfo(user.id, user.hasPaid);
     // Only redirect for lifetime owners — monthly subscribers can still upgrade.
     if (hasLifetime) {
       redirect("/my-courses");

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { requireStudent } from "@/lib/auth";
 import { hasActiveCourseAccess } from "@/lib/access";
+import { getActiveProfileId } from "@/app/actions/profiles";
 import { PARTS } from "@/lib/content";
 import { getThumbnailUrls } from "@/lib/r2";
 import { getPartPageData } from "@/lib/part-content-cache";
@@ -27,30 +28,35 @@ export default async function LearnIndexPage() {
   const user = await requireStudent();
   if (!user.studentProfileId) redirect("/");
 
-  // Lifetime purchase OR active monthly subscription grants access
-  const hasAccess = await hasActiveCourseAccess(user.id);
-  if (!hasAccess) {
-    redirect("/pricing");
-  }
+  // Run access check, thumbnail fetch, and profile-ID resolution in parallel.
+  //
+  // Why this order is safe:
+  //   - hasActiveCourseAccess: for lifetime buyers (hasPaid=true) it short-circuits
+  //     instantly; for monthly subscribers it runs 3 parallel DB queries. Either
+  //     way it is completely independent of thumbnails and profile resolution.
+  //   - getThumbnailUrls: pure R2 API call, independent of everything.
+  //   - profileId: reads the cookie value already validated by getCurrentUser();
+  //     falls back to a DB lookup only for brand-new sessions (very rare).
+  //
+  // Previously these ran sequentially (access → profile → [progress + thumbnails]).
+  // For monthly subscribers this collapses one full sequential step, saving the
+  // R2 thumbnail latency (~50–200 ms) off the dashboard's critical path.
+  const [hasAccess, thumbnails, learnerProfileId] = await Promise.all([
+    hasActiveCourseAccess(user.id, user.hasPaid),
+    getThumbnailUrls(PARTS.map((p) => p.partNumber)),
+    user.activeProfileId
+      ? Promise.resolve(user.activeProfileId)
+      : getActiveProfileId(user.id),
+  ]);
+
+  if (!hasAccess) redirect("/pricing");
 
   const userPlan = "complete" as const;
 
-  const [progress, thumbnails] = await Promise.all([
-    getProgress(user.id),
-    getThumbnailUrls(PARTS.map((p) => p.partNumber)),
-  ]);
-  const currentPart    = progress.currentPart    || 1;
-  const completedParts = progress.completedParts  || [];
-  const unlockedParts  = progress.unlockedParts   || [];
-  const inProgressParts = progress.inProgressParts || [];
-
-  // Proactively warm the user's current part so clicking "Continue" / "Start stage"
-  // hits a hot cache instead of waiting for cold R2 fetches.
-  getPartPageData(currentPart).catch(() => {});
-
-  // Per-part progress map for UI badges
+  // Fetch all per-part progress for this profile in one query.
   const allPartProgress = await prisma.partProgress.findMany({
-    where: { userId: user.id },
+    where: { learnerProfileId },
+    orderBy: { partNumber: "asc" },
     select: {
       partNumber:         true,
       status:             true,
@@ -63,34 +69,47 @@ export default async function LearnIndexPage() {
       openedAssets:       true,
     },
   });
+
+  // Derive progress overview stats inline (replaces the old getProgress() call).
+  const completedParts  = allPartProgress
+    .filter(p => p.status === "completed" || p.status === "mastered")
+    .map(p => p.partNumber);
+  const unlockedParts   = allPartProgress
+    .filter(p => p.videoWatchPercent >= 85 && p.briefingOpened)
+    .map(p => p.partNumber);
+  const inProgressParts = allPartProgress
+    .filter(p => p.status === "started" || p.status === "in_progress")
+    .map(p => p.partNumber);
+  const currentPart     = inProgressParts.length > 0
+    ? Math.min(...inProgressParts)
+    : (unlockedParts.length > 0 ? Math.max(...unlockedParts) + 1 : 1);
+
+  // Proactively warm the user's current part so clicking "Continue" / "Start stage"
+  // hits a hot cache instead of waiting for cold R2 fetches.
+  getPartPageData(currentPart).catch(() => {});
+
   const progressMap = Object.fromEntries(
     allPartProgress.map(p => [p.partNumber, p])
   );
 
-  // Helper functions for resource progress tracking
-  const getAssetProgressMap = (assetType: string) => {
-    return Object.fromEntries(
-      allPartProgress.map((p) => {
-        try {
-          const openedAssets = p.openedAssets ? JSON.parse(p.openedAssets as string) : [];
-          return [p.partNumber, openedAssets.includes(assetType)];
-        } catch {
-          return [p.partNumber, false];
-        }
-      })
-    );
-  };
-
-  const getAssetCompletedCount = (assetType: string) => {
-    return allPartProgress.filter((p) => {
+  // Parse openedAssets JSON once per part — reused by all helper functions below.
+  const openedAssetsMap: Record<number, string[]> = Object.fromEntries(
+    allPartProgress.map((p) => {
       try {
-        const openedAssets = p.openedAssets ? JSON.parse(p.openedAssets as string) : [];
-        return openedAssets.includes(assetType);
+        return [p.partNumber, p.openedAssets ? JSON.parse(p.openedAssets as string) : []];
       } catch {
-        return false;
+        return [p.partNumber, []];
       }
-    }).length;
-  };
+    })
+  );
+
+  const getAssetProgressMap = (assetType: string) =>
+    Object.fromEntries(
+      allPartProgress.map((p) => [p.partNumber, (openedAssetsMap[p.partNumber] ?? []).includes(assetType)])
+    );
+
+  const getAssetCompletedCount = (assetType: string) =>
+    allPartProgress.filter((p) => (openedAssetsMap[p.partNumber] ?? []).includes(assetType)).length;
 
   // Video stats for resource tabs
   const videoCompletedCount = allPartProgress.filter((p) => p.status === "completed" || p.videoWatchPercent >= 85).length;
@@ -156,15 +175,9 @@ export default async function LearnIndexPage() {
   // Show all parts (plan-locked parts are shown for upsell purposes)
   const accessibleParts = PARTS;
 
-  // Get current part details
+  // Get current part details — already in progressMap, no extra DB query needed.
   const currentPartData = PARTS.find(p => p.partNumber === currentPart);
-  
-  // Get actual progress for current part
-  const currentPartProgressRecord = await prisma.partProgress.findUnique({
-    where: { userId_partNumber: { userId: user.id, partNumber: currentPart } },
-    select: { videoWatchPercent: true },
-  });
-  const currentPartProgress = currentPartProgressRecord?.videoWatchPercent || 0;
+  const currentPartProgress = progressMap[currentPart]?.videoWatchPercent ?? 0;
 
   const totalParts = accessibleParts.length;
   const completedCount = completedParts.length;
@@ -208,7 +221,13 @@ export default async function LearnIndexPage() {
   };
 
   // Get user's first name for header
-  const userFirstName = user.fullName.split(" ")[0];
+  // Show the active learner profile's name on the dashboard.
+  // For family plans this will be "Ahmad", "Maryam" etc.
+  // For individual plans it will be the account owner's first name.
+  const userFirstName =
+    user.activeProfileName ??
+    user.fullName.split(" ")[0] ??
+    user.email.split("@")[0];
 
   // Build stagesData for home dashboard
   const stagesData = Object.values(partsByEra).map((era, idx) => ({
@@ -243,10 +262,9 @@ export default async function LearnIndexPage() {
   // Title map for progress tab activity list
   const partTitleMap = Object.fromEntries(PARTS.map(p => [p.partNumber, p.title]));
 
-  // Helper: asset indicator row for each lesson card
-  function partAssetBadges(p: typeof progressMap[number] | undefined) {
-    let opened: string[] = [];
-    try { opened = JSON.parse((p?.openedAssets as string) ?? "[]"); } catch {}
+  // Helper: asset indicator row for each lesson card — uses pre-parsed openedAssetsMap.
+  function partAssetBadges(p: (typeof allPartProgress)[number] | undefined) {
+    const opened: string[] = p ? (openedAssetsMap[p.partNumber] ?? []) : [];
     const vp = p?.videoWatchPercent ?? 0;
     const assets = [
       { key: "video",       label: vp >= 85 ? "✓ Video" : vp > 0 ? `Video ${vp}%` : "Video",                               done: vp >= 85,              partial: vp > 0 && vp < 85 },
@@ -374,118 +392,57 @@ export default async function LearnIndexPage() {
                 {/* Chapter lessons */}
                 <div className="mt-3 ml-4 pl-4 border-l-2" style={{ borderColor: `${era.color}50` }}>
                   <div className="space-y-2">
-                  {era.parts.slice(0, 5).map((part) => {
-                    const status = getPartStatus(part.partNumber);
-                    const isCompleted = status === "completed";
-                    const isInProgress = status === "in_progress";
-                    const pProgress = progressMap[part.partNumber];
-                    const dbStatus = pProgress?.status ?? "not_started";
-                    const isMastered = dbStatus === "mastered";
-
-                    return (
-                      <Link
-                        key={part.id}
-                        href={`/seerah/part-${part.partNumber}`}
-                        className="group block p-4 rounded-xl border transition-all bg-zinc-900/50 border-zinc-800 hover:border-amber-500/30 hover:bg-zinc-900"
-                      >
-                        <div className="flex items-center gap-4">
-                          {/* Icon */}
-                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                            isMastered   ? "bg-yellow-500/15 border border-yellow-500/30" :
-                            isCompleted  ? "bg-green-500/10  border border-green-500/20"  :
-                            isInProgress ? "bg-amber-500/10  border border-amber-500/20"  :
-                            "bg-zinc-800 border border-zinc-700"
-                          }`}>
-                            {isMastered ? (
-                              <span className="text-base">✦</span>
-                            ) : isCompleted ? (
-                              <CheckCircle2 className="w-5 h-5 text-green-400" />
-                            ) : (
-                              <Play className={`w-5 h-5 ${isInProgress ? "text-amber-500" : "text-zinc-500"}`} />
-                            )}
-                          </div>
-
-                          {/* Content */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="text-xs font-medium text-amber-500">
-                                Part {part.partNumber}
-                              </span>
-                              {isMastered && (
-                                <span className="px-2 py-0.5 bg-yellow-500/10 border border-yellow-500/25 text-yellow-400 text-xs font-semibold rounded">
-                                  Mastered
-                                </span>
-                              )}
-                              {isCompleted && !isMastered && (
-                                <span className="px-2 py-0.5 bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium rounded">
-                                  Completed
-                                </span>
-                              )}
-                              {isInProgress && (
-                                <span className="px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-medium rounded">
-                                  In Progress
-                                </span>
-                              )}
+                    {era.parts.map((part) => {
+                      const status = getPartStatus(part.partNumber);
+                      const isCompleted = status === "completed";
+                      const isInProgress = status === "in_progress";
+                      const pProgress = progressMap[part.partNumber];
+                      const isMastered = (pProgress?.status ?? "") === "mastered";
+                      return (
+                        <Link
+                          key={part.id}
+                          href={`/seerah/part-${part.partNumber}`}
+                          className="group block p-4 rounded-xl border transition-all bg-zinc-900/50 border-zinc-800 hover:border-amber-500/30 hover:bg-zinc-900"
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                              isMastered   ? "bg-yellow-500/15 border border-yellow-500/30" :
+                              isCompleted  ? "bg-green-500/10  border border-green-500/20"  :
+                              isInProgress ? "bg-amber-500/10  border border-amber-500/20"  :
+                              "bg-zinc-800 border border-zinc-700"
+                            }`}>
+                              {isMastered
+                                ? <span className="text-base">✦</span>
+                                : isCompleted
+                                  ? <CheckCircle2 className="w-5 h-5 text-green-400" />
+                                  : <Play className={`w-5 h-5 ${isInProgress ? "text-amber-500" : "text-zinc-500"}`} />
+                              }
                             </div>
-                            <p className="font-medium mb-1 truncate text-white group-hover:text-amber-400">
-                              {part.title}
-                            </p>
-                            {part.subtitle && (
-                              <p className="text-sm text-zinc-500 truncate mb-2">
-                                {part.subtitle}
-                              </p>
-                            )}
-
-                            {/* Resources — green=done, amber=in-progress, zinc=untouched */}
-                            {partAssetBadges(pProgress)}
-                          </div>
-
-                          <ChevronRight className="w-5 h-5 text-zinc-600 group-hover:text-amber-500 transition-colors flex-shrink-0" />
-                        </div>
-                      </Link>
-                    );
-                  })}
-                  </div>
-                  {era.parts.length > 5 && (
-                    <div className="space-y-2 mt-2">
-                        {era.parts.slice(5).map((part) => {
-                          const status = getPartStatus(part.partNumber);
-                          const isCompleted2 = status === "completed";
-                          const isInProgress2 = status === "in_progress";
-                          const pProgress2 = progressMap[part.partNumber];
-                          const isMastered2 = (pProgress2?.status ?? "") === "mastered";
-                          return (
-                            <Link
-                              key={part.id}
-                              href={`/seerah/part-${part.partNumber}`}
-                              className="group block p-4 rounded-xl border transition-all bg-zinc-900/50 border-zinc-800 hover:border-amber-500/30 hover:bg-zinc-900"
-                            >
-                              <div className="flex items-center gap-4">
-                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                                  isMastered2   ? "bg-yellow-500/15 border border-yellow-500/30" :
-                                  isCompleted2  ? "bg-green-500/10  border border-green-500/20"  :
-                                  isInProgress2 ? "bg-amber-500/10  border border-amber-500/20"  :
-                                  "bg-zinc-800 border border-zinc-700"
-                                }`}>
-                                  {isMastered2 ? <span className="text-base">✦</span> : isCompleted2 ? <CheckCircle2 className="w-5 h-5 text-green-400" /> : <Play className={`w-5 h-5 ${isInProgress2 ? "text-amber-500" : "text-zinc-500"}`} />}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-xs font-medium text-amber-500">Part {part.partNumber}</span>
-                                    {isCompleted2 && !isMastered2 && <span className="px-2 py-0.5 bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium rounded">Completed</span>}
-                                    {isInProgress2 && <span className="px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-medium rounded">In Progress</span>}
-                                  </div>
-                                  <p className="font-medium mb-0.5 truncate text-white group-hover:text-amber-400">{part.title}</p>
-                                  {part.subtitle && <p className="text-sm text-zinc-500 truncate mb-1">{part.subtitle}</p>}
-                                  {partAssetBadges(pProgress2)}
-                                </div>
-                                <ChevronRight className="w-5 h-5 text-zinc-600 group-hover:text-amber-500 transition-colors flex-shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-xs font-medium text-amber-500">Part {part.partNumber}</span>
+                                {isMastered && (
+                                  <span className="px-2 py-0.5 bg-yellow-500/10 border border-yellow-500/25 text-yellow-400 text-xs font-semibold rounded">Mastered</span>
+                                )}
+                                {isCompleted && !isMastered && (
+                                  <span className="px-2 py-0.5 bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium rounded">Completed</span>
+                                )}
+                                {isInProgress && (
+                                  <span className="px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-medium rounded">In Progress</span>
+                                )}
                               </div>
-                            </Link>
-                          );
-                        })}
-                    </div>
-                  )}
+                              <p className="font-medium mb-0.5 truncate text-white group-hover:text-amber-400">{part.title}</p>
+                              {part.subtitle && (
+                                <p className="text-sm text-zinc-500 truncate mb-1">{part.subtitle}</p>
+                              )}
+                              {partAssetBadges(pProgress)}
+                            </div>
+                            <ChevronRight className="w-5 h-5 text-zinc-600 group-hover:text-amber-500 transition-colors flex-shrink-0" />
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
                 </div>
               </details>
             );
@@ -496,7 +453,12 @@ export default async function LearnIndexPage() {
   );
 
   return (
-    <StudentLayout userPlan={userPlan} userName={user.fullName}>
+    <StudentLayout
+      userPlan={userPlan}
+      userName={user.fullName}
+      activeProfileName={user.activeProfileName}
+      planType={user.planType}
+    >
       <CourseDashboardTabs
         homeContent={
           <CourseHomeContent 
@@ -650,42 +612,3 @@ function getEraDescription(era: string): string {
   return descriptions[era] || "Journey through this important period";
 }
 
-// Get real progress from database
-async function getProgress(userId: string) {
-  const partProgress = await prisma.partProgress.findMany({
-    where: { userId },
-    orderBy: { partNumber: 'asc' },
-    select: {
-      partNumber:        true,
-      status:            true,
-      videoWatchPercent: true,
-      briefingOpened:    true,
-    },
-  });
-
-  // A part is "unlocked-next" (can proceed past it) when video>=85% + briefing opened
-  // A part is "completed" per DB status field (set by recomputeAndSave server action)
-  const completedParts = partProgress
-    .filter(p => p.status === 'completed' || p.status === 'mastered')
-    .map(p => p.partNumber);
-
-  const unlockedParts = partProgress
-    .filter(p => p.videoWatchPercent >= 85 && p.briefingOpened)
-    .map(p => p.partNumber);
-
-  const startedParts = partProgress
-    .filter(p => p.status === 'started' || p.status === 'in_progress')
-    .map(p => p.partNumber);
-
-  // Current part: lowest started/in-progress part, else highest unlocked+1, else 1
-  const currentPart = startedParts.length > 0
-    ? Math.min(...startedParts)
-    : (unlockedParts.length > 0 ? Math.max(...unlockedParts) + 1 : 1);
-
-  return {
-    currentPart,
-    completedParts,
-    unlockedParts, // video>=85 + briefing: used for unlock gate
-    inProgressParts: startedParts,
-  };
-}

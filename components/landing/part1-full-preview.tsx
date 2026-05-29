@@ -6,7 +6,6 @@ import {
   readReport,
   getSlideFiles,
   getInfographicFilename,
-  mindmapExists,
   readQuiz,
   readFlashcards,
   getPartAssetUrls,
@@ -15,30 +14,27 @@ import { generateSignedR2Url, IMAGE_URL_EXPIRY } from "@/lib/r2";
 import { PartTabs } from "@/components/part/part-tabs";
 import { Badge } from "@/components/ui/badge";
 
-export async function Part1FullPreview() {
-  try {
-    const partBase = getPartById("part-1");
-    if (!partBase) return null;
+async function loadPart1Data() {
+  const partBase = getPartById("part-1");
+  if (!partBase) return null;
 
-    const n = partBase.partNumber;
-    
-    // Fetch all Part 1 data
-    const [
-      slidesPresented,
-      slidesDetailed,
-      slidesFacts,
-      briefingText,
-      statementOfFactsText,
-      studyGuideText,
-      reportText,
-      hasMindmap,
-      quiz,
-      flashcards,
-      infConcise,
-      infStandard,
-      infBento,
-      assetUrls,
-    ] = await Promise.all([
+  const n = partBase.partNumber;
+
+  const [
+    slidesPresented,
+    slidesDetailed,
+    slidesFacts,
+    briefingText,
+    statementOfFactsText,
+    studyGuideText,
+    reportText,
+    quiz,
+    flashcards,
+    infConcise,
+    infStandard,
+    infBento,
+    assetUrls,
+  ] = await Promise.all([
     getSlideFiles(n, "presented"),
     getSlideFiles(n, "detailed"),
     getSlideFiles(n, "facts"),
@@ -46,7 +42,6 @@ export async function Part1FullPreview() {
     readStatementOfFacts(n),
     readStudyGuide(n),
     readReport(n),
-    mindmapExists(n),
     readQuiz(n),
     readFlashcards(n),
     getInfographicFilename(n, "Concise"),
@@ -55,13 +50,21 @@ export async function Part1FullPreview() {
     getPartAssetUrls(n),
   ]);
 
-  const slideFiles = {
-    presented: slidesPresented,
-    detailed: slidesDetailed,
-    facts: slidesFacts,
-  };
+  // R2 keys always contain "/"; local filenames never do
+  const sign = (key: string | null, localFolder: string) =>
+    key
+      ? key.includes("/")
+        ? generateSignedR2Url(key, IMAGE_URL_EXPIRY)
+        : Promise.resolve(`/seerah-media/Infographics/${localFolder}/${key}`)
+      : Promise.resolve(undefined);
 
-  const part = {
+  const [infConciseSigned, infStandardSigned, infBentoSigned] = await Promise.all([
+    sign(infConcise, "Concise"),
+    sign(infStandard, "Standard"),
+    sign(infBento, "Bento Grid"),
+  ]);
+
+  return {
     ...partBase,
     assets: {
       ...partBase.assets,
@@ -74,25 +77,32 @@ export async function Part1FullPreview() {
       mindmapUrl: assetUrls.mindmapUrl ?? undefined,
       quiz: quiz ?? undefined,
       flashcards: flashcards ?? undefined,
-      slides: slideFiles,
-      infographics: await (async () => {
-        // R2 keys always contain "/"; local filenames never do
-        const sign = (key: string | null, localFolder: string) =>
-          key
-            ? key.includes("/")
-              ? generateSignedR2Url(key, IMAGE_URL_EXPIRY)
-              : Promise.resolve(`/seerah-media/Infographics/${localFolder}/${key}`)
-            : Promise.resolve(undefined);
-
-        const [concise, standard, bentoGrid] = await Promise.all([
-          sign(infConcise, "Concise"),
-          sign(infStandard, "Standard"),
-          sign(infBento, "Bento Grid"),
-        ]);
-        return { concise, standard, bentoGrid };
-      })(),
+      slides: { presented: slidesPresented, detailed: slidesDetailed, facts: slidesFacts },
+      infographics: {
+        concise: infConciseSigned,
+        standard: infStandardSigned,
+        bentoGrid: infBentoSigned,
+      },
     },
   };
+}
+
+export async function Part1FullPreview() {
+  let part: Awaited<ReturnType<typeof loadPart1Data>>;
+  try {
+    part = await loadPart1Data();
+  } catch (error) {
+    console.error("Failed to load Part 1 preview:", error);
+    part = null;
+  }
+
+  if (!part) {
+    return (
+      <div className="rounded-2xl border border-border bg-surface p-8 text-center">
+        <p className="text-text-secondary">Part 1 preview is temporarily unavailable. Please try again later.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-2xl border border-gold/20 bg-surface overflow-hidden">
@@ -139,12 +149,4 @@ export async function Part1FullPreview() {
       </div>
     </div>
   );
-  } catch (error) {
-    console.error("Failed to load Part 1 preview:", error);
-    return (
-      <div className="rounded-2xl border border-border bg-surface p-8 text-center">
-        <p className="text-text-secondary">Part 1 preview is temporarily unavailable. Please try again later.</p>
-      </div>
-    );
-  }
 }

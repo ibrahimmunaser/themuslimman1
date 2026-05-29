@@ -5,7 +5,7 @@ import { buttonClass } from "@/components/ui/button";
 import { NavbarUserButton } from "./navbar-user-button";
 
 interface NavbarUserMenuProps {
-  user: any;
+  user: { fullName: string } | null;
   firstName: string | null;
 }
 

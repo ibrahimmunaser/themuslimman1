@@ -51,7 +51,11 @@ export function ContactSupportForm() {
 
   if (status === "success") {
     return (
-      <div className="p-6 rounded-xl bg-gradient-to-b from-green-500/15 to-green-500/5 border border-green-500/30">
+      <div
+        className="p-6 rounded-xl bg-gradient-to-b from-green-500/15 to-green-500/5 border border-green-500/30"
+        role="alert"
+        aria-live="polite"
+      >
         <div className="flex items-start gap-4">
           <div className="w-12 h-12 rounded-lg bg-green-500/20 border border-green-500/30 flex items-center justify-center flex-shrink-0">
             <MessageCircle className="w-6 h-6 text-green-400" />
@@ -59,7 +63,7 @@ export function ContactSupportForm() {
           <div>
             <h3 className="text-lg font-semibold text-text mb-2">Message Sent!</h3>
             <p className="text-text-secondary">
-              We've received your message and will get back to you as soon as possible.
+              We&apos;ve received your message and will get back to you as soon as possible.
             </p>
           </div>
         </div>
@@ -113,7 +117,11 @@ export function ContactSupportForm() {
         </div>
 
         {status === "error" && errorMessage && (
-          <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30">
+          <div
+            className="p-3 rounded-lg bg-red-500/10 border border-red-500/30"
+            role="alert"
+            aria-live="assertive"
+          >
             <p className="text-sm text-red-400">{errorMessage}</p>
           </div>
         )}

@@ -1,15 +1,31 @@
+import { redirect } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight, BookOpen, Check } from "lucide-react";
+import type { Metadata } from "next";
+import { ArrowRight, BookOpen, Check, LayoutDashboard } from "lucide-react";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
 import { buttonClass } from "@/components/ui/button";
+import { getCurrentUser } from "@/lib/auth";
+import { hasActiveCourseAccess } from "@/lib/access";
+
+export const metadata: Metadata = {
+  title: "Get Started | Complete Seerah",
+  description: "Begin your structured journey through the life of the Prophet ﷺ with 100 parts — video, audio, reading, quizzes, and more.",
+};
 
 interface GetStartedPageProps {
-  searchParams: { plan?: string };
+  searchParams: Promise<{ plan?: string }>;
 }
 
-export default function GetStartedPage({ searchParams }: GetStartedPageProps) {
-  const plan = searchParams.plan || "complete";
+export default async function GetStartedPage({ searchParams }: GetStartedPageProps) {
+  const { plan = "complete" } = await searchParams;
+
+  // Check auth state to show appropriate CTA
+  const user = await getCurrentUser();
+  const hasAccess = user ? await hasActiveCourseAccess(user.id, user.hasPaid) : false;
+
+  // Already enrolled → send straight to the course
+  if (hasAccess) redirect("/seerah");
 
   return (
     <div className="flex flex-col min-h-screen bg-ink text-text">
@@ -37,7 +53,7 @@ export default function GetStartedPage({ searchParams }: GetStartedPageProps) {
           <div className="group relative flex flex-col p-10 rounded-2xl border border-gold/40 bg-surface gold-glow-sm">
             {/* Icon */}
             <div className="w-16 h-16 rounded-2xl bg-gold/10 border border-gold/25 flex items-center justify-center mb-6">
-              <BookOpen className="w-8 h-8 text-gold" />
+              <BookOpen className="w-8 h-8 text-gold" aria-hidden />
             </div>
 
             <div className="flex-1 mb-8">
@@ -59,28 +75,51 @@ export default function GetStartedPage({ searchParams }: GetStartedPageProps) {
                   "Access from any device, anytime",
                 ].map((item) => (
                   <li key={item} className="flex items-center gap-3 text-sm text-text">
-                    <Check className="w-4 h-4 text-gold flex-shrink-0" />
+                    <Check className="w-4 h-4 text-gold flex-shrink-0" aria-hidden />
                     {item}
                   </li>
                 ))}
               </ul>
             </div>
 
-            {/* CTA */}
+            {/* CTA — varies by auth state */}
             <div className="space-y-3">
-              <Link
-                href={`/signup-checkout?plan=${plan}`}
-                className={buttonClass("primary", "lg", "w-full justify-center")}
-              >
-                Create Account & Start Learning
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-              <Link
-                href="/login"
-                className={buttonClass("ghost", "md", "w-full justify-center text-text-secondary")}
-              >
-                Already have an account? Sign in
-              </Link>
+              {user ? (
+                // Logged in but no access yet → go to checkout
+                <>
+                  <Link
+                    href={`/checkout?plan=${plan}`}
+                    className={buttonClass("primary", "lg", "w-full justify-center")}
+                  >
+                    <LayoutDashboard className="w-4 h-4" />
+                    Unlock Full Access
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                  <Link
+                    href="/pricing"
+                    className={buttonClass("ghost", "md", "w-full justify-center text-text-secondary")}
+                  >
+                    View pricing options
+                  </Link>
+                </>
+              ) : (
+                // Guest → normal signup flow
+                <>
+                  <Link
+                    href={`/signup-checkout?plan=${plan}`}
+                    className={buttonClass("primary", "lg", "w-full justify-center")}
+                  >
+                    Create Account &amp; Start Learning
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                  <Link
+                    href="/login"
+                    className={buttonClass("ghost", "md", "w-full justify-center text-text-secondary")}
+                  >
+                    Already have an account? Sign in
+                  </Link>
+                </>
+              )}
             </div>
           </div>
 
@@ -93,7 +132,7 @@ export default function GetStartedPage({ searchParams }: GetStartedPageProps) {
               </Link>
               {" "}or{" "}
               <Link href="/" className="text-gold hover:text-gold-light transition-colors">
-                learn more
+                Learn more
               </Link>
             </p>
           </div>

@@ -15,6 +15,14 @@ export function ContactForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Reject whitespace-only fields
+    if (!formData.name.trim() || !formData.subject.trim() || !formData.message.trim()) {
+      setStatus("error");
+      setErrorMessage("Please fill in all fields with actual content.");
+      return;
+    }
+
     setStatus("sending");
     setErrorMessage("");
 
@@ -22,7 +30,12 @@ export function ContactForm() {
       const response = await fetch("/api/support/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          name: formData.name.trim(),
+          email: formData.email.trim(),
+          subject: formData.subject.trim(),
+          message: formData.message.trim(),
+        }),
       });
 
       if (!response.ok) {
@@ -31,14 +44,40 @@ export function ContactForm() {
 
       setStatus("success");
       setFormData({ name: "", email: "", subject: "", message: "" });
-      
-      // Reset success message after 5 seconds
-      setTimeout(() => setStatus("idle"), 5000);
-    } catch (error) {
+      // No auto-reset — let the user read the confirmation at their own pace.
+    } catch {
       setStatus("error");
       setErrorMessage("Failed to send message. Please try again or email us directly.");
     }
   };
+
+  // Replace the whole card with a clear confirmation so users can't miss it.
+  if (status === "success") {
+    return (
+      <section className="py-16 border-t border-border bg-surface/30">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6">
+          <div
+            className="bg-surface border border-green-500/30 rounded-2xl p-8 text-center"
+            role="alert"
+            aria-live="polite"
+          >
+            <CheckCircle2 className="w-12 h-12 text-green-400 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-text mb-2">Message Sent!</h2>
+            <p className="text-text-secondary mb-1">
+              We&apos;ve received your message and will respond within 24–48 hours.
+            </p>
+            <p className="text-sm text-text-muted">
+              Didn&apos;t get a confirmation email?{" "}
+              <a href="mailto:themuslimman77@gmail.com" className="text-gold hover:underline">
+                Email us directly
+              </a>
+              .
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-16 border-t border-border bg-surface/30">
@@ -49,29 +88,26 @@ export function ContactForm() {
             Still Need Help?
           </h2>
           <p className="text-text-secondary">
-            Send us a message and we'll get back to you as soon as possible.
+            Send us a message and we&apos;ll get back to you as soon as possible.
           </p>
         </div>
 
         <div className="bg-surface border border-border rounded-2xl p-8">
-          {status === "success" && (
-            <div className="mb-6 p-4 rounded-lg bg-green-500/10 border border-green-500/30 flex items-start gap-3">
-              <CheckCircle2 className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="text-green-400 font-medium mb-1">Message sent successfully!</p>
-                <p className="text-sm text-text-secondary">We'll respond to your email within 24-48 hours.</p>
-              </div>
-            </div>
-          )}
-
           {status === "error" && (
-            <div className="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500/30 flex items-start gap-3">
+            <div
+              className="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500/30 flex items-start gap-3"
+              role="alert"
+              aria-live="assertive"
+            >
               <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-red-400 font-medium mb-1">Failed to send message</p>
+                <p className="text-red-400 font-medium mb-1">Couldn&apos;t send message</p>
                 <p className="text-sm text-text-secondary">{errorMessage}</p>
                 <p className="text-sm text-text-muted mt-2">
-                  Or email us directly at: <a href="mailto:themuslimman77@gmail.com" className="text-gold hover:underline">themuslimman77@gmail.com</a>
+                  Or email us directly at:{" "}
+                  <a href="mailto:themuslimman77@gmail.com" className="text-gold hover:underline">
+                    themuslimman77@gmail.com
+                  </a>
                 </p>
               </div>
             </div>

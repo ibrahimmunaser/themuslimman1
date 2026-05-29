@@ -13,7 +13,7 @@ export default async function SettingsPage() {
   const user = await requireStudent();
   if (!user.studentProfileId) redirect("/");
 
-  const hasAccess = await hasActiveCourseAccess(user.id);
+  const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
   if (!hasAccess) redirect("/pricing");
 
   const userPlan = "complete" as const;

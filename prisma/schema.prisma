@@ -41,7 +41,10 @@ model User {
   hasPaid               Boolean   @default(false)
   stripePaymentIntentId String?
   stripeCustomerId      String?   @unique
-  
+
+  // Plan type: "individual" (1 profile) | "family" (up to 5 profiles)
+  planType              String    @default("individual")
+
   // Parent Progress Report Fields
   studentName             String?   // If course is for a child, this is the child's name
   parentEmail             String?   // Parent/Guardian email for progress reports
@@ -53,15 +56,16 @@ model User {
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
-  student       StudentProfile?
-  sessions      Session[]
-  activityLogs  ActivityLog[]
-  purchases     Purchase[]
-  partProgress  PartProgress[]
-  studySessions StudySession[]
-  giftsMade     GiftPurchase[] @relation("GiftPurchasesMade")
-  giftsClaimed  GiftPurchase[] @relation("GiftPurchasesClaimed")
-  subscriptions Subscription[]
+  student         StudentProfile?
+  sessions        Session[]
+  activityLogs    ActivityLog[]
+  purchases       Purchase[]
+  partProgress    PartProgress[]
+  studySessions   StudySession[]
+  learnerProfiles LearnerProfile[]
+  giftsMade       GiftPurchase[] @relation("GiftPurchasesMade")
+  giftsClaimed    GiftPurchase[] @relation("GiftPurchasesClaimed")
+  subscriptions   Subscription[]
 
   @@index([role])
   @@index([email])
@@ -79,6 +83,26 @@ model Session {
 
   @@index([userId])
   @@index([expiresAt])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Learner profiles — family members inside one paid account
+// ─────────────────────────────────────────────────────────────
+
+model LearnerProfile {
+  id          String   @id @default(cuid())
+  userId      String
+  displayName String
+  avatar      String?  // emoji or small identifier, e.g. "👦" or "star"
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  partProgress  PartProgress[]
+  studySessions StudySession[]
+
+  @@index([userId])
 }
 
 model StudentProfile {
@@ -571,10 +595,12 @@ model Purchase {
 }
 
 // Progress tracking for direct-to-consumer purchases
+// Scoped per learner profile so each family member has separate progress.
 model PartProgress {
-  id         String @id @default(cuid())
-  userId     String
-  partNumber Int
+  id               String @id @default(cuid())
+  userId           String // account owner — kept for ownership validation and cascade
+  learnerProfileId String // which profile this progress belongs to
+  partNumber       Int
 
   // Computed status: not_started | started | completed | mastered
   status String @default("not_started")
@@ -609,27 +635,32 @@ model PartProgress {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  learnerProfile LearnerProfile @relation(fields: [learnerProfileId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, partNumber])
+  @@unique([learnerProfileId, partNumber])
   @@index([userId])
+  @@index([learnerProfileId])
   @@index([status])
 }
 
 // Study time tracking for accurate progress reports
 model StudySession {
-  id             String   @id @default(cuid())
-  userId         String
-  partNumber     Int
-  secondsTracked Int      @default(0) // Total seconds of active study time
-  startedAt      DateTime @default(now())
-  lastUpdatedAt  DateTime @default(now())
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id               String   @id @default(cuid())
+  userId           String
+  learnerProfileId String?  // optional — backfilled for existing records
+  partNumber       Int
+  secondsTracked   Int      @default(0) // Total seconds of active study time
+  startedAt        DateTime @default(now())
+  lastUpdatedAt    DateTime @default(now())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  learnerProfile LearnerProfile? @relation(fields: [learnerProfileId], references: [id], onDelete: SetNull)
 
   @@index([userId])
+  @@index([learnerProfileId])
   @@index([partNumber])
   @@index([startedAt])
 }

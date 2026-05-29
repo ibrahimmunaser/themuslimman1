@@ -3,29 +3,21 @@ import { Suspense } from "react";
 import {
   CheckCircle2,
   Video,
-  Headphones,
-  FileText,
-  Map,
-  Image,
-  Layers,
-  BookOpen,
-  ChevronRight,
+  ChevronDown,
   Star,
   ArrowRight,
   Lock,
-  Zap,
-  LayoutDashboard,
-  CircleCheck,
   RefreshCw,
   Infinity,
 } from "lucide-react";
+import { FadeUp, StaggerChildren, AnimatedCard, FloatingGlow, IslamicPatternBackground } from "@/components/motion";
 import { MonthlyCheckoutButton } from "@/components/pricing/monthly-checkout-button";
+import { PricingSection } from "@/components/pricing/pricing-section";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
 import { TestimonialsSection } from "@/components/landing/testimonials";
 import { Part1FullPreview } from "@/components/landing/part1-full-preview";
 import { buttonClass } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { getCurrentUser } from "@/lib/auth";
 import { getStudentDashboardData } from "@/lib/queries/student";
 import { EmailVerificationBanner } from "@/components/auth/email-verification-banner";
@@ -73,9 +65,11 @@ export default async function LandingPage() {
       {/* ============================================
           HERO SECTION
       ============================================ */}
-      <section className="relative pt-16 pb-20 md:pt-24 md:pb-28 overflow-hidden">
-        {/* Background effects — using radial gradients instead of filter:blur for better performance */}
+      <section className="relative pt-16 pb-16 md:pt-20 md:pb-20 overflow-hidden">
+        {/* Background effects */}
         <div className="absolute inset-0 geo-pattern opacity-40" />
+        <IslamicPatternBackground className="absolute inset-0" opacity={0.025} />
+        <FloatingGlow className="absolute -top-20 left-1/2 -translate-x-1/2" width={700} height={400} duration={10} />
         <div
           className="absolute inset-0 pointer-events-none"
           style={{ background: "radial-gradient(ellipse 800px 400px at 50% 0%, rgba(200,169,110,0.06) 0%, transparent 70%)" }}
@@ -87,35 +81,210 @@ export default async function LandingPage() {
           aria-hidden
         />
 
-        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 text-center">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight mb-6">
-            Most Muslims only know fragments of the Seerah.{" "}
-            <span className="text-gradient-gold">Learn it as one connected story.</span>
-          </h1>
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* 2-column on xl+, stacked below */}
+          <div className="xl:grid xl:grid-cols-[1fr_420px] xl:gap-16 xl:items-center">
 
-          <p className="text-lg sm:text-xl text-text-secondary max-w-2xl mx-auto mb-10 leading-relaxed">
-            A guided Seerah course that helps you understand the Prophet's ﷺ life in order, remember the major events, and explain them with confidence.
-          </p>
+            {/* Left: headline + CTAs */}
+            <div className="text-center xl:text-left py-4 xl:py-10">
+              <FadeUp delay={0}>
+                <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-6xl xl:text-5xl 2xl:text-6xl font-bold tracking-tight leading-tight mb-6">
+                  Most Muslims only know fragments of the Seerah.{" "}
+                  <span className="text-gradient-gold">Learn it as one connected story.</span>
+                </h1>
+              </FadeUp>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
-            <Link
-              href="#preview"
-              className={buttonClass("primary", "xl", "shadow-2xl shadow-gold/20")}
-            >
-              Start Free Preview
-            </Link>
-            <Link
-              href="#pricing"
-              className={buttonClass("secondary", "xl")}
-            >
-              View Pricing
-            </Link>
+              <FadeUp delay={0.1}>
+                <p className="text-lg sm:text-xl text-text-secondary max-w-2xl mx-auto xl:mx-0 mb-10 leading-relaxed">
+                  A guided Seerah course that helps you understand the Prophet&apos;s ﷺ life in order, remember the major events, and explain them with confidence.
+                </p>
+              </FadeUp>
+
+              <FadeUp delay={0.2}>
+                <div className="flex flex-col sm:flex-row items-center justify-center xl:justify-start gap-4 mb-8">
+                  <Link
+                    href="#preview"
+                    className={buttonClass("primary", "xl", "shadow-2xl shadow-gold/20")}
+                  >
+                    Start Free Preview
+                  </Link>
+                  <Link
+                    href="#pricing"
+                    className={buttonClass("secondary", "xl")}
+                  >
+                    View Pricing
+                  </Link>
+                </div>
+              </FadeUp>
+
+              {/* Trust pills — xl+ only */}
+              <FadeUp delay={0.3}>
+                <div className="hidden xl:flex items-center gap-3 flex-wrap text-xs text-text-muted/70">
+                  <span>100 parts</span>
+                  <span aria-hidden>·</span>
+                  <span>7 chronological stages</span>
+                  <span aria-hidden>·</span>
+                  <span>Video, quiz, flashcard, mind map</span>
+                </div>
+              </FadeUp>
+            </div>
+
+            {/* Right: product visual — xl+ only */}
+            <div className="hidden xl:block">
+              {user && userProgress ? (
+                /* Dashboard progress card for logged-in users */
+                <div className="rounded-2xl overflow-hidden border border-border/50 shadow-2xl shadow-black/40">
+                  <div className="bg-surface border-b border-border px-4 py-3 flex items-center gap-2">
+                    <div className="flex gap-1.5">
+                      <div className="w-2.5 h-2.5 rounded-full bg-red-500/60" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/60" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-green-500/60" />
+                    </div>
+                    <span className="text-xs text-text-muted ml-1">themuslimman.com/seerah</span>
+                  </div>
+                  <div className="bg-surface-raised p-6">
+                    <p className="text-xs text-text-muted uppercase tracking-wider mb-1">Continue where you left off</p>
+                    <h3 className="text-text font-semibold mb-4">
+                      Part {userProgress.classCourseItem.seerahPart?.partNumber}: {userProgress.classCourseItem.seerahPart?.title || ""}
+                    </h3>
+                    <div className="w-full bg-surface rounded-full h-1.5 mb-2">
+                      <div
+                        className="bg-gold h-1.5 rounded-full"
+                        style={{ width: `${userProgress.completionPercentage || 0}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-text-muted">{userProgress.completionPercentage || 0}% complete</p>
+                  </div>
+                </div>
+              ) : (
+                /* Static course preview card for visitors */
+                <div className="rounded-2xl border border-border/60 bg-surface shadow-2xl shadow-black/50 overflow-hidden">
+                  {/* Browser chrome */}
+                  <div className="bg-surface-raised border-b border-border px-4 py-2.5 flex items-center gap-2">
+                    <div className="flex gap-1.5">
+                      <div className="w-2.5 h-2.5 rounded-full bg-red-500/50" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/50" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-green-500/50" />
+                    </div>
+                    <div className="flex-1 flex justify-center">
+                      <span className="text-[10px] text-text-muted bg-surface px-2.5 py-0.5 rounded border border-border/50">
+                        themuslimman.com/seerah/part-1
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="p-4">
+                    {/* Mode tabs */}
+                    <div className="flex gap-1.5 mb-3">
+                      {[
+                        { label: "Video",     active: true  },
+                        { label: "Read",      active: false },
+                        { label: "Slides",    active: false },
+                        { label: "Quiz",      active: false },
+                        { label: "Flashcards",active: false },
+                      ].map(({ label, active }) => (
+                        <span
+                          key={label}
+                          className={`text-[10px] px-2 py-1 rounded-md border ${
+                            active
+                              ? "bg-gold/15 text-gold border-gold/30 font-semibold"
+                              : "text-text-muted border-border/30"
+                          }`}
+                        >
+                          {label}
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Mock video player */}
+                    <div className="relative aspect-video rounded-xl overflow-hidden mb-3 group">
+                      {/* Cinematic gradient background */}
+                      <div
+                        className="absolute inset-0"
+                        style={{
+                          background:
+                            "radial-gradient(ellipse 80% 60% at 50% 40%, #2a1f0a 0%, #130e04 50%, #0a0804 100%)",
+                        }}
+                      />
+                      {/* Subtle geometric pattern overlay */}
+                      <div
+                        className="absolute inset-0 opacity-[0.06]"
+                        style={{
+                          backgroundImage:
+                            "repeating-linear-gradient(45deg, #c9a84c 0, #c9a84c 1px, transparent 0, transparent 50%)",
+                          backgroundSize: "20px 20px",
+                        }}
+                      />
+                      {/* Top bar — part label + HD badge */}
+                      <div className="absolute top-0 inset-x-0 flex items-center justify-between px-3 pt-2.5 pb-6"
+                           style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, transparent 100%)" }}>
+                        <span className="text-[9px] font-semibold text-gold/80 uppercase tracking-widest">
+                          Part 1 of 100
+                        </span>
+                        <span className="text-[9px] font-bold text-text-muted/70 border border-border/50 px-1 rounded">
+                          HD
+                        </span>
+                      </div>
+                      {/* Centered play button */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-14 h-14 rounded-full bg-gold/20 border-2 border-gold/50 flex items-center justify-center shadow-lg shadow-gold/20 backdrop-blur-sm">
+                          <div className="w-0 h-0 ml-1"
+                               style={{ borderTop: "8px solid transparent", borderBottom: "8px solid transparent", borderLeft: "14px solid #c9a84c" }} />
+                        </div>
+                      </div>
+                      {/* Bottom overlay — title + progress bar */}
+                      <div className="absolute bottom-0 inset-x-0 px-3 pb-2.5 pt-6"
+                           style={{ background: "linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%)" }}>
+                        <p className="text-[10px] font-semibold text-white/90 mb-1.5 truncate">
+                          The World Before the Prophet ﷺ
+                        </p>
+                        {/* Scrub bar */}
+                        <div className="relative h-[3px] bg-white/20 rounded-full">
+                          <div className="absolute left-0 top-0 h-full w-[38%] bg-gold rounded-full" />
+                          <div className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-gold shadow shadow-gold/40"
+                               style={{ left: "calc(38% - 5px)" }} />
+                        </div>
+                        {/* Time display */}
+                        <div className="flex justify-between mt-1">
+                          <span className="text-[9px] text-white/50">4:53</span>
+                          <span className="text-[9px] text-white/40">12:47</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Stats row */}
+                    <div className="grid grid-cols-3 gap-2 mb-3 px-0.5">
+                      {[
+                        { val: "100", sub: "Lessons"  },
+                        { val: "7",   sub: "Modes"    },
+                        { val: "8",   sub: "Eras"     },
+                      ].map(({ val, sub }) => (
+                        <div key={sub} className="text-center py-2 rounded-lg bg-surface-raised border border-border/40">
+                          <p className="text-sm font-bold text-gold leading-none">{val}</p>
+                          <p className="text-[10px] text-text-muted mt-0.5">{sub}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Feature pills */}
+                    <div className="flex flex-wrap gap-1.5">
+                      {["Video", "Reading", "Slides", "Audio", "Quiz", "Flashcards", "Mind maps"].map((f) => (
+                        <span key={f} className="flex items-center gap-1 text-[10px] text-text-secondary bg-surface-raised border border-border/40 px-2 py-0.5 rounded-full">
+                          <CheckCircle2 className="w-2.5 h-2.5 text-gold/60 flex-shrink-0" aria-hidden />
+                          {f}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Dashboard preview - only show for logged-in users with progress */}
+        {/* Dashboard preview for mobile/tablet (xl: hidden since shown in right column above) */}
         {user && userProgress && (
-          <div className="relative max-w-5xl mx-auto px-4 sm:px-6 mt-16">
+          <div className="xl:hidden relative max-w-5xl mx-auto px-4 sm:px-6 mt-10">
             <div className="relative rounded-2xl overflow-hidden border border-border/50 shadow-2xl shadow-black/50">
               <div className="bg-surface border-b border-border px-4 py-3 flex items-center gap-2">
                 <div className="flex gap-1.5">
@@ -124,17 +293,16 @@ export default async function LandingPage() {
                   <div className="w-3 h-3 rounded-full bg-green-500/60" />
                 </div>
                 <div className="flex-1 text-center">
-                  <span className="text-xs text-text-muted">themuslimman.com/dashboard</span>
+                  <span className="text-xs text-text-muted">themuslimman.com/seerah</span>
                 </div>
               </div>
               <div className="bg-surface-raised p-6 md:p-8">
                 <div className="flex flex-col gap-4">
-                  {/* User's actual progress */}
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs text-text-muted uppercase tracking-wider">Continue where you left off</p>
                       <h3 className="text-text font-semibold mt-1">
-                        Part {userProgress.classCourseItem.seerahPart?.partNumber}: {userProgress.classCourseItem.seerahPart?.title || "Loading..."}
+                        Part {userProgress.classCourseItem.seerahPart?.partNumber}: {userProgress.classCourseItem.seerahPart?.title || ""}
                       </h3>
                     </div>
                     <div className="w-10 h-10 rounded-full bg-gold/20 border border-gold/30 flex items-center justify-center">
@@ -142,9 +310,9 @@ export default async function LandingPage() {
                     </div>
                   </div>
                   <div className="w-full bg-surface rounded-full h-1.5">
-                    <div 
-                      className="bg-gold h-1.5 rounded-full" 
-                      style={{ width: `${userProgress.completionPercentage || 0}%` }} 
+                    <div
+                      className="bg-gold h-1.5 rounded-full"
+                      style={{ width: `${userProgress.completionPercentage || 0}%` }}
                     />
                   </div>
                   <div className="text-xs text-text-muted">
@@ -157,12 +325,33 @@ export default async function LandingPage() {
         )}
       </section>
 
+      {/* Sticky CTA strip — sticks after user scrolls past hero */}
+      {!user && (
+        <div className="sticky top-16 sm:top-20 z-40 bg-ink border-b border-border/60 hidden sm:block">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-4">
+            <p className="text-sm text-text-secondary truncate hidden md:block">
+              Complete Seerah — 100 parts, all formats included
+            </p>
+            <div className="flex items-center gap-3 ml-auto shrink-0">
+              <span className="text-xs text-text-muted hidden lg:block">Instant access · Lifetime option available</span>
+              <Link
+                href="/signup-checkout?plan=complete"
+                className="inline-flex items-center gap-2 px-4 py-1.5 min-h-[36px] bg-gold hover:bg-gold-light text-ink text-xs font-semibold rounded-lg transition-colors"
+              >
+                Get Started
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ============================================
           PREVIEW BEFORE BUYING
       ============================================ */}
       <section id="preview" className="py-16 border-t border-border">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-10">
+          <FadeUp className="text-center mb-10">
             <p className="text-gold text-sm font-medium uppercase tracking-widest mb-3">
               Experience Part 1 For Free
             </p>
@@ -170,9 +359,9 @@ export default async function LandingPage() {
               The Complete Part 1 — Right Here, Right Now
             </h2>
             <p className="text-text-secondary max-w-2xl mx-auto">
-              No signup. No trial. No limits. This is the exact same quality and format you'll get with all 100 parts. Watch the video, read the briefing, explore the study guide, view the mindmap — everything.
+              No signup. No trial. No limits. This is the exact same quality and format you&apos;ll get with all 100 parts. Watch the video, read the briefing, explore the study guide, view the mindmap — everything.
             </p>
-          </div>
+          </FadeUp>
 
           <Suspense fallback={
             <div className="rounded-2xl border border-border bg-surface overflow-hidden" style={{ minHeight: 580 }}>
@@ -203,7 +392,7 @@ export default async function LandingPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-10">
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              Why scattered videos don't work
+              Why scattered videos don&apos;t work
             </h2>
             <p className="text-lg text-text-secondary max-w-2xl mx-auto leading-relaxed">
               Most Seerah content gives you isolated stories. This course gives you the full timeline. You do not just learn what happened. You learn what came before, what came after, and why each event mattered.
@@ -217,15 +406,15 @@ export default async function LandingPage() {
       ============================================ */}
       <section className="py-16 border-t border-border bg-surface/30">
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-10">
+          <FadeUp className="text-center mb-10">
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">
               You are getting the full Seerah.
             </h2>
             <p className="text-lg text-text-secondary max-w-2xl mx-auto leading-relaxed">
               One complete package. The full 100-part story, with everything you need to learn, review, and retain it.
             </p>
-          </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
+          </FadeUp>
+          <StaggerChildren className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto" stagger={0.07}>
             {[
               { label: "All 100 video lessons" },
               { label: "Summaries and briefings" },
@@ -237,125 +426,42 @@ export default async function LandingPage() {
               { label: "Guided progress tracking" },
               { label: "Lifetime access" },
             ].map(({ label }) => (
-              <div key={label} className="flex items-center gap-3 p-4 rounded-xl border border-border bg-surface">
+              <AnimatedCard key={label} lift className="flex items-center gap-3 p-4 rounded-xl border border-border bg-surface hover:border-gold/20 transition-colors">
                 <CheckCircle2 className="w-5 h-5 text-gold flex-shrink-0" />
                 <span className="text-sm text-text">{label}</span>
-              </div>
+              </AnimatedCard>
             ))}
-          </div>
+          </StaggerChildren>
         </div>
       </section>
 
       {/* ============================================
           PRICING
       ============================================ */}
-      <section id="pricing" className="py-16 border-t border-border bg-surface/30">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-3">
-              Choose your plan
-            </h2>
-            <p className="text-text-secondary max-w-lg mx-auto">
-              Full access to all 100 parts — monthly or own it forever.
-            </p>
-          </div>
-
-          {/* Creator promo banner — only visible if a creator promo is stored */}
-          <div className="max-w-3xl mx-auto mb-6">
-            <CreatorPromoTracker showBanner />
-          </div>
-
-          <div className="grid sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
-
-            {/* Monthly */}
-            <div className="p-7 rounded-2xl border border-border bg-surface flex flex-col">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-9 h-9 rounded-lg bg-surface-raised border border-border flex items-center justify-center">
-                  <RefreshCw className="w-4 h-4 text-text-secondary" />
-                </div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-text-secondary">Monthly Access</p>
-              </div>
-              <div className="mb-5">
-                <div className="flex items-baseline gap-1.5 mb-1">
-                  <span className="text-4xl font-bold text-text">$9</span>
-                  <span className="text-text-muted text-sm">/month</span>
-                </div>
-                <p className="text-sm text-text-secondary">Full access while subscribed · Cancel anytime</p>
-              </div>
-              <ul className="space-y-2 mb-7 flex-1">
-                {["All 100 Seerah parts", "Videos, briefings, flashcards, quizzes", "Progress tracking", "Cancel anytime"].map((f) => (
-                  <li key={f} className="flex items-start gap-2.5">
-                    <CheckCircle2 className="w-4 h-4 text-text-secondary flex-shrink-0 mt-0.5" />
-                    <span className="text-sm text-text-secondary">{f}</span>
-                  </li>
-                ))}
-              </ul>
-              <MonthlyCheckoutButton isLoggedIn={false} />
-            </div>
-
-            {/* Lifetime — Best Value */}
-            <div className="relative p-7 rounded-2xl border-2 border-gold bg-gradient-to-b from-gold/8 to-surface flex flex-col gold-glow">
-              <div className="absolute -top-3 right-5 px-3 py-1 rounded-full bg-gold text-ink text-xs font-bold flex items-center gap-1 shadow-lg">
-                <Star className="w-3 h-3 fill-current" />
-                BEST VALUE
-              </div>
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-9 h-9 rounded-lg bg-gold/15 border border-gold/25 flex items-center justify-center">
-                  <Infinity className="w-4 h-4 text-gold" />
-                </div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-gold">Lifetime Access</p>
-              </div>
-              <div className="mb-5">
-                <div className="flex items-baseline gap-2 mb-1">
-                  <span className="text-4xl font-bold text-text">$99</span>
-                </div>
-                <p className="text-sm text-gold font-medium">One-time payment · Pay once. Keep it forever.</p>
-              </div>
-              <ul className="space-y-2 mb-7 flex-1">
-                {["All 100 Seerah parts", "Videos, briefings, flashcards, quizzes", "Progress tracking", "Lifetime access — no recurring charges", "7-Day Clarity Guarantee"].map((f) => (
-                  <li key={f} className="flex items-start gap-2.5">
-                    <CheckCircle2 className="w-4 h-4 text-gold flex-shrink-0 mt-0.5" />
-                    <span className="text-sm text-text">{f}</span>
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href="/signup-checkout?plan=complete"
-                className={buttonClass("primary", "lg", "w-full justify-center shadow-lg shadow-gold/20")}
-              >
-                Get Lifetime Access
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-              <div className="mt-4 flex items-center justify-center gap-2 text-xs text-text-muted">
-                <Lock className="w-3.5 h-3.5" />
-                <span>Secure payment · Instant access</span>
-              </div>
-            </div>
-          </div>
-
-          <p className="text-center text-xs text-text-muted mt-5">
-            At $9/month, lifetime access pays for itself in 11 months.
-          </p>
-        </div>
-      </section>
+      <PricingSection
+        hasLifetime={!!(user?.hasPaid)}
+        hasMonthly={false}
+        hasFamily={user?.planType === "family"}
+        isLoggedIn={!!user}
+      />
 
       {/* ============================================
           PARENT ACCOUNTABILITY
       ============================================ */}
       <section className="py-16 border-t border-border bg-surface/30">
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-10">
+          <FadeUp className="text-center mb-10">
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">
               For parents: know your child is actually learning
             </h2>
             <p className="text-lg text-text-secondary max-w-2xl mx-auto leading-relaxed">
               Weekly parent progress reports help you see whether your child is watching, reading, and moving forward.
             </p>
-          </div>
+          </FadeUp>
 
           <div className="grid sm:grid-cols-2 gap-8 max-w-3xl mx-auto">
             {/* Progress Reports */}
-            <div className="p-6 rounded-xl border border-border bg-surface">
+            <AnimatedCard delay={0} lift className="p-6 rounded-xl border border-border bg-surface">
               <h3 className="font-bold text-text mb-4">Progress Reports Include:</h3>
               <ul className="space-y-2.5">
                 {[
@@ -371,10 +477,10 @@ export default async function LandingPage() {
                   </li>
                 ))}
               </ul>
-            </div>
+            </AnimatedCard>
 
             {/* Advanced Reports */}
-            <div className="p-6 rounded-xl border-2 border-gold/30 bg-gold/5">
+            <AnimatedCard delay={0.1} lift className="p-6 rounded-xl border-2 border-gold/30 bg-gold/5">
               <h3 className="font-bold text-gold mb-4">Reports Also Include:</h3>
               <ul className="space-y-2.5">
                 {[
@@ -390,7 +496,7 @@ export default async function LandingPage() {
                   </li>
                 ))}
               </ul>
-            </div>
+            </AnimatedCard>
           </div>
         </div>
       </section>
@@ -399,14 +505,14 @@ export default async function LandingPage() {
           7-DAY CLARITY GUARANTEE
       ============================================ */}
       <section className="py-16 border-t border-border bg-surface/30">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
+        <FadeUp className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
           <h2 className="text-3xl sm:text-4xl font-bold mb-4">
             7-Day Clarity Guarantee
           </h2>
           <p className="text-lg text-text-secondary leading-relaxed max-w-xl mx-auto">
             Try the course for 7 days. If you do not feel the Seerah is becoming clearer and more connected, email us for a refund.
           </p>
-        </div>
+        </FadeUp>
       </section>
 
       {/* ============================================
@@ -420,7 +526,7 @@ export default async function LandingPage() {
             </h2>
           </div>
 
-          <div className="space-y-4 mb-8">
+          <StaggerChildren className="space-y-4 mb-8" stagger={0.08}>
             {[
               { step: "1", text: "Create your student account" },
               { step: "2", text: "Start with Part 1" },
@@ -429,17 +535,18 @@ export default async function LandingPage() {
               { step: "5", text: "Unlock the next lesson" },
               { step: "6", text: "Track your progress as you move through the Seerah" },
             ].map((item) => (
-              <div
+              <AnimatedCard
                 key={item.step}
+                lift
                 className="flex items-center gap-4 p-4 rounded-xl border border-border bg-surface"
               >
                 <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gold/10 border border-gold/25 flex items-center justify-center">
                   <span className="text-gold font-bold">{item.step}</span>
                 </div>
                 <p className="text-text">{item.text}</p>
-              </div>
+              </AnimatedCard>
             ))}
-          </div>
+          </StaggerChildren>
 
           <div className="p-5 rounded-xl border border-gold/20 bg-gold-bg text-center">
             <p className="text-text-secondary leading-relaxed">
@@ -500,7 +607,7 @@ export default async function LandingPage() {
             </h2>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-2">
             {[
               {
                 q: "What does Complete Seerah include?",
@@ -534,14 +641,23 @@ export default async function LandingPage() {
                 q: "What if I do not feel the course helps me?",
                 a: "We offer a 7-Day Clarity Guarantee. If you do not feel the Seerah is becoming clearer and more connected, email us within 7 days for a full refund.",
               },
-            ].map((item) => (
-              <div
+            ].map((item, i) => (
+              <details
                 key={item.q}
-                className="p-5 rounded-xl border border-border bg-surface"
+                className="group rounded-xl border border-border bg-surface overflow-hidden"
+                open={i === 0}
               >
-                <h3 className="font-semibold text-text mb-2">{item.q}</h3>
-                <p className="text-sm text-text-secondary leading-relaxed">{item.a}</p>
-              </div>
+                <summary className="flex items-center justify-between gap-4 px-5 py-4 cursor-pointer list-none rounded-xl font-semibold text-text hover:bg-surface-raised transition-colors">
+                  <span>{item.q}</span>
+                  <ChevronDown
+                    className="w-4 h-4 text-text-muted flex-shrink-0 transition-transform group-open:rotate-180"
+                    aria-hidden
+                  />
+                </summary>
+                <div className="px-5 pb-5 pt-1 text-sm text-text-secondary leading-relaxed border-t border-border/50">
+                  {item.a}
+                </div>
+              </details>
             ))}
           </div>
         </div>

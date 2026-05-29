@@ -26,7 +26,7 @@ const SESSION_COOKIE = "seerah_session";
 
 export function proxy(request: NextRequest) {
   const token = request.cookies.get(SESSION_COOKIE)?.value;
-  const { pathname } = request.nextUrl;
+  const { pathname, search } = request.nextUrl;
 
   const isProtected = PROTECTED_PREFIXES.some(
     (r) => pathname === r || pathname.startsWith(r + "/")
@@ -40,11 +40,19 @@ export function proxy(request: NextRequest) {
   // whenever the session is invalid, so we intentionally skip that redirect.
   if (isProtected && !token) {
     const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("redirect", pathname);
+    // Preserve the full path + query so the user returns to their destination.
+    loginUrl.searchParams.set("redirect", pathname + search);
     return NextResponse.redirect(loginUrl);
   }
 
-  return NextResponse.next();
+  // Forward the current pathname as a request header so server components can
+  // read it via `headers()` — used by requireAuth() to build return URLs for
+  // stale-session edge cases.
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-pathname", pathname);
+  if (search) requestHeaders.set("x-search", search);
+
+  return NextResponse.next({ request: { headers: requestHeaders } });
 }
 
 export const config = {

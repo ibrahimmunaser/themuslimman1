@@ -3,28 +3,26 @@
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Eye, EyeOff, ArrowRight, Mail, Check } from "lucide-react";
+import { Eye, EyeOff, ArrowRight, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 function SignupPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const plan = searchParams.get("plan") || "complete";
   const hintEmail = searchParams.get("email") ?? "";
   const redirectAfter = searchParams.get("redirect") ?? "";
 
-  const [step, setStep] = useState<"signup" | "verification">("signup");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [pendingVerification, setPendingVerification] = useState(false);
   const [form, setForm] = useState({
     fullName: "",
     email: hintEmail,
     password: "",
     confirmPassword: "",
   });
-  const [sentToEmail, setSentToEmail] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -70,64 +68,47 @@ function SignupPageContent() {
         return;
       }
 
-      // Success — redirect to gift claim page if we came from there, else dashboard
-      const destination = redirectAfter || "/my-courses";
+      // In production, email verification is required before accessing the course.
+      // Show a "check your email" screen instead of silently redirecting.
+      if (data.requiresVerification) {
+        setPendingVerification(true);
+        return;
+      }
+
+      // Dev mode (auto-verified) or gift claim flow — go to destination.
+      const destination = redirectAfter || "/get-started";
       router.push(destination);
-    } catch (err) {
+    } catch {
       setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
   }
 
-  if (step === "verification") {
+  if (pendingVerification) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
-        <div className="w-full max-w-md">
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 mx-auto rounded-full bg-green-500/10 border border-green-500/30 flex items-center justify-center mb-4">
-              <Check className="w-8 h-8 text-green-400" />
+        <div className="w-full max-w-md text-center">
+          <div className="flex justify-center mb-6">
+            <div className="w-16 h-16 rounded-full bg-gold/10 border border-gold/30 flex items-center justify-center">
+              <Mail className="w-8 h-8 text-gold" />
             </div>
-            <h1 className="text-2xl font-bold text-text mb-2">Check your email</h1>
-            <p className="text-text-secondary text-sm">
-              We sent a verification link to:
-            </p>
-            <p className="text-gold font-medium mt-1">{sentToEmail}</p>
           </div>
-
-          <div className="bg-surface border border-border rounded-2xl p-6 space-y-4">
-          <div className="space-y-3 text-sm text-text-secondary">
-            <p className="flex items-start gap-2">
-              <Mail className="w-4 h-4 mt-0.5 text-gold flex-shrink-0" />
-              <span>Click the link in the email to verify your account</span>
-            </p>
-            <p className="flex items-start gap-2">
-              <Mail className="w-4 h-4 mt-0.5 text-gold flex-shrink-0" />
-              <span>After verification, use your email to sign in and complete your purchase</span>
-            </p>
+          <h1 className="text-2xl font-bold text-text mb-3">Check your email</h1>
+          <p className="text-text-secondary mb-6">
+            We sent a verification link to <span className="text-text font-medium">{form.email}</span>.
+            Click the link to verify your account, then come back to log in.
+          </p>
+          <div className="bg-surface border border-border rounded-2xl p-5 text-sm text-text-muted mb-6">
+            Didn&apos;t get it? Check your spam folder, or{" "}
+            <Link href="/login" className="text-gold hover:text-gold-light transition-colors">
+              sign in
+            </Link>{" "}
+            to resend the verification email.
           </div>
-
-          <div className="pt-4 border-t border-border">
-            <Button
-              variant="primary"
-              size="lg"
-              className="w-full"
-              onClick={() => router.push(`/checkout?plan=${plan}`)}
-            >
-              Go to Checkout Now
-              <ArrowRight className="w-4 h-4" />
-            </Button>
-            <p className="text-xs text-text-muted text-center mt-3">
-              Or wait for the verification email
-            </p>
-          </div>
-          </div>
-
-          <div className="mt-6 text-center">
-            <Link href="/login" className="text-sm text-gold hover:text-gold-light">
-              Back to sign in
-            </Link>
-          </div>
+          <Link href="/login" className="text-gold hover:text-gold-light text-sm font-medium transition-colors">
+            Back to sign in →
+          </Link>
         </div>
       </div>
     );
@@ -228,7 +209,7 @@ function SignupPageContent() {
 
             {/* Error */}
             {error && (
-              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+              <div role="alert" aria-live="assertive" className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
                 {error}
               </div>
             )}

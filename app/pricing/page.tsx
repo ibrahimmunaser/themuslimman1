@@ -3,15 +3,13 @@ import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
 import { buttonClass } from "@/components/ui/button";
 import {
-  CheckCircle2, ArrowRight, Sparkles, Star, BookOpen, Brain, Users,
-  Layers, Target, Lock, Gift, RefreshCw, Infinity,
+  ArrowRight, Sparkles, BookOpen, Brain, Users,
+  Layers, Target, Lock, Gift, CheckCircle2, ChevronDown,
 } from "lucide-react";
-import { PLANS, formatPrice } from "@/lib/stripe-config";
 import { getCurrentUser } from "@/lib/auth";
 import { getUserAccessInfo } from "@/lib/access";
-import { MonthlyCheckoutButton } from "@/components/pricing/monthly-checkout-button";
 import { CreatorPromoTracker } from "@/components/promo/creator-promo-tracker";
-import { LifetimePriceDisplay } from "@/components/pricing/lifetime-price-display";
+import { PricingSection } from "@/components/pricing/pricing-section";
 
 export const metadata = {
   title: "Pricing — Complete Seerah",
@@ -26,15 +24,13 @@ export default async function PricingPage() {
 
   let accessInfo: Awaited<ReturnType<typeof getUserAccessInfo>> | null = null;
   if (user) {
-    accessInfo = await getUserAccessInfo(user.id);
+    accessInfo = await getUserAccessInfo(user.id, user.hasPaid);
   }
 
   const hasLifetime = accessInfo?.hasLifetime ?? false;
-  const hasMonthly = !hasLifetime && (accessInfo?.hasActiveSubscription ?? false);
-  const isLoggedIn = !!user;
-
-  const monthly = PLANS.monthly;
-  const lifetime = PLANS.complete;
+  const hasMonthly  = !hasLifetime && (accessInfo?.hasActiveSubscription ?? false);
+  const hasFamily   = user?.planType === "family";
+  const isLoggedIn  = !!user;
 
   return (
     <div className="flex flex-col min-h-screen bg-ink text-text">
@@ -42,6 +38,7 @@ export default async function PricingPage() {
 
       {/* Capture ?promo= URL param and persist; show banner if creator promo active */}
       <CreatorPromoTracker showBanner />
+
 
       {/* Hero */}
       <section className="relative pt-16 pb-12 overflow-hidden">
@@ -60,132 +57,12 @@ export default async function PricingPage() {
         </div>
       </section>
 
-      {/* Pricing cards */}
-      <section className="py-8 border-t border-border">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6">
-          <div className="grid sm:grid-cols-2 gap-6 max-w-3xl mx-auto sm:items-start">
-
-            {/* ── Monthly ──────────────────────────────────────────────── */}
-            <div className="relative p-7 rounded-2xl border border-border bg-surface flex flex-col">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-9 h-9 rounded-lg bg-surface-raised border border-border flex items-center justify-center">
-                  <RefreshCw className="w-4 h-4 text-text-secondary" />
-                </div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-text-secondary">
-                  {monthly.name}
-                </p>
-              </div>
-
-              <div className="mb-5">
-                <div className="flex items-baseline gap-1.5 mb-1">
-                  <span className="text-4xl font-bold text-text">{formatPrice(monthly.price)}</span>
-                  <span className="text-text-muted text-sm">/month</span>
-                </div>
-                <p className="text-sm text-text-secondary">Full access while subscribed · Cancel anytime</p>
-              </div>
-
-              <ul className="space-y-2.5 mb-7 flex-1">
-                {monthly.features.map((f) => (
-                  <li key={f} className="flex items-start gap-2.5">
-                    <CheckCircle2 className="w-4 h-4 text-text-secondary flex-shrink-0 mt-0.5" />
-                    <span className="text-sm text-text-secondary">{f}</span>
-                  </li>
-                ))}
-              </ul>
-
-              {hasMonthly ? (
-                <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-center">
-                  <p className="text-sm text-green-400 font-medium">✓ Monthly Access Active</p>
-                  <Link href="/seerah" className="text-xs text-gold mt-1 hover:underline block">Go to course →</Link>
-                </div>
-              ) : hasLifetime ? (
-                <div className="p-3 rounded-lg bg-gold/5 border border-gold/15 text-center">
-                  <p className="text-xs text-gold">You have lifetime access</p>
-                </div>
-              ) : (
-                <>
-                  <MonthlyCheckoutButton isLoggedIn={isLoggedIn} />
-                  <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] text-text-muted/60">
-                    <Lock className="w-3 h-3 flex-shrink-0" />
-                    <span>Secure checkout · Cancel anytime</span>
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* ── Lifetime (Best Value) ─────────────────────────────────── */}
-            <div className="relative p-7 rounded-2xl border-2 border-gold bg-gradient-to-b from-gold/8 to-surface flex flex-col gold-glow sm:scale-[1.03] sm:origin-center">
-              <div className="absolute -top-3 right-5 px-3 py-1 rounded-full bg-gold text-ink text-xs font-bold flex items-center gap-1 shadow-lg z-10">
-                <Star className="w-3 h-3 fill-current" />
-                BEST VALUE
-              </div>
-
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-9 h-9 rounded-lg bg-gold/15 border border-gold/25 flex items-center justify-center">
-                  <Infinity className="w-4 h-4 text-gold" />
-                </div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-gold">
-                  {lifetime.name}
-                </p>
-              </div>
-
-              <LifetimePriceDisplay basePrice={lifetime.price} />
-
-              <ul className="space-y-2.5 mb-7 flex-1">
-                {lifetime.features.map((f) => (
-                  <li key={f} className="flex items-start gap-2.5">
-                    <CheckCircle2 className="w-4 h-4 text-gold flex-shrink-0 mt-0.5" />
-                    <span className="text-sm text-text">{f}</span>
-                  </li>
-                ))}
-              </ul>
-
-              {hasLifetime ? (
-                <div className="space-y-3">
-                  <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-center">
-                    <p className="text-sm text-green-400 font-medium">✓ Lifetime Access Active</p>
-                    <Link href="/seerah" className="text-xs text-gold mt-1 hover:underline block">Go to course →</Link>
-                  </div>
-                  <Link
-                    href="/gift-checkout"
-                    className={buttonClass("ghost", "md", "w-full justify-center border border-gold/30 text-gold hover:bg-gold/5")}
-                  >
-                    <Gift className="w-4 h-4" />
-                    Gift Lifetime Access
-                  </Link>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <Link
-                    href="/signup-checkout?plan=complete"
-                    className={buttonClass("primary", "lg", "w-full justify-center shadow-lg shadow-gold/20")}
-                  >
-                    Get Lifetime Access
-                    <ArrowRight className="w-4 h-4" />
-                  </Link>
-                  <Link
-                    href="/gift-checkout"
-                    className={buttonClass("ghost", "sm", "w-full justify-center border border-gold/20 text-gold/80 hover:bg-gold/5 text-xs min-h-[44px]")}
-                  >
-                    <Gift className="w-3.5 h-3.5" />
-                    Gift This Course
-                  </Link>
-                </div>
-              )}
-
-              <div className="mt-4 flex items-center justify-center gap-2 text-xs text-text-muted">
-                <Lock className="w-3.5 h-3.5" />
-                <span>Secure payment · Instant access · 7-day guarantee</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Monthly vs Lifetime comparison note */}
-          <p className="text-center text-xs text-text-muted mt-6">
-            Choose lifetime access once, and it pays for itself in 11 months.
-          </p>
-        </div>
-      </section>
+      <PricingSection
+        hasLifetime={hasLifetime}
+        hasMonthly={hasMonthly}
+        hasFamily={hasFamily}
+        isLoggedIn={isLoggedIn}
+      />
 
       {/* What You'll Walk Away With */}
       <section className="py-16 border-t border-border">
@@ -272,7 +149,7 @@ export default async function PricingPage() {
       <section className="py-16 border-t border-border">
         <div className="max-w-3xl mx-auto px-4 sm:px-6">
           <h2 className="text-2xl font-bold text-text text-center mb-10">Frequently Asked Questions</h2>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {[
               {
                 q: "What is the difference between monthly and lifetime?",
@@ -284,7 +161,7 @@ export default async function PricingPage() {
               },
               {
                 q: "Can I upgrade from monthly to lifetime?",
-                a: "Yes — contact support and we'll help you make the switch. We can credit your recent monthly payment toward the lifetime price.",
+                a: "Yes — contact support and we&apos;ll help you make the switch. We can credit your recent monthly payment toward the lifetime price.",
               },
               {
                 q: "What does Complete Seerah include?",
@@ -292,21 +169,33 @@ export default async function PricingPage() {
               },
               {
                 q: "Is there a free option?",
-                a: "Yes — Part 1 is completely free with no account required. Visit /part-1 to access it.",
+                a: "Yes — Part 1 is completely free with no account required. You can access it from the homepage.",
               },
               {
                 q: "What is the 7-Day Clarity Guarantee?",
-                a: "If you start the course and feel it isn't what you expected, contact us within 7 days for a full refund — no questions asked.",
+                a: "If you start the course and feel it isn&apos;t what you expected, contact us within 7 days for a full refund — no questions asked.",
               },
               {
                 q: "Will more content be added?",
                 a: "Yes. All future content and improvements are included at no extra cost for both monthly and lifetime members.",
               },
-            ].map(({ q, a }) => (
-              <div key={q} className="bg-surface border border-border rounded-xl p-6">
-                <h3 className="text-base font-semibold text-text mb-2">{q}</h3>
-                <p className="text-text-secondary text-sm leading-relaxed">{a}</p>
-              </div>
+            ].map(({ q, a }, i) => (
+              <details
+                key={q}
+                className="group rounded-xl border border-border bg-surface overflow-hidden"
+                open={i === 0}
+              >
+                <summary className="flex items-center justify-between gap-4 px-5 py-4 cursor-pointer list-none font-semibold text-text hover:bg-surface-raised transition-colors">
+                  <span>{q}</span>
+                  <ChevronDown
+                    className="w-4 h-4 text-text-muted flex-shrink-0 transition-transform group-open:rotate-180"
+                    aria-hidden
+                  />
+                </summary>
+                <div className="px-5 pb-5 pt-1 text-sm text-text-secondary leading-relaxed border-t border-border/50">
+                  {a}
+                </div>
+              </details>
             ))}
           </div>
         </div>
@@ -318,7 +207,7 @@ export default async function PricingPage() {
           <div className="max-w-xl mx-auto px-4 sm:px-6 text-center">
             <h2 className="text-2xl sm:text-3xl font-bold mb-4">Ready to start?</h2>
             <p className="text-text-secondary mb-8">
-              $9/month or $99 lifetime. Full access. 7-Day Clarity Guarantee.
+              Individual from $9/month or $99 lifetime. Family from $19/month or $199 lifetime. 7-Day Clarity Guarantee.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link

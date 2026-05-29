@@ -16,6 +16,10 @@ import {
 import { getR2PublicUrl, getR2AssetUrl } from "@/lib/r2";
 
 export async function GET(req: NextRequest) {
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json({ error: "Not available" }, { status: 403 });
+  }
+
   try {
     const user = await requireStudent();
     

@@ -16,7 +16,7 @@ export default async function MyCoursesPage() {
     redirect("/login?redirect=/my-courses");
   }
 
-  const accessInfo = await getUserAccessInfo(user.id);
+  const accessInfo = await getUserAccessInfo(user.id, user.hasPaid);
 
   if (!accessInfo.hasAccess) {
     redirect("/pricing");

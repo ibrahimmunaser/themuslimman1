@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react";
 import { clsx } from "clsx";
 import { CheckCircle2, XCircle, ChevronRight, RotateCcw, Trophy } from "lucide-react";
+import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
 import type { Quiz, QuizQuestion } from "@/lib/types";
 import { trackQuizCompleted } from "@/app/actions/progress";
+import { AnimatedProgressBar } from "@/components/motion";
 
 interface QuizViewerProps {
   quiz: Quiz;
@@ -158,8 +160,10 @@ function ScoreScreen({
   partNumber?: number;
   previewMode?: boolean;
 }) {
+  const prefersReduced = useReducedMotion();
   const score = results.filter((r) => r.correct).length;
   const pct   = Math.round((score / total) * 100);
+  const passed = pct >= 80;
 
   useEffect(() => {
     if (partNumber && !previewMode) {
@@ -177,9 +181,14 @@ function ScoreScreen({
 
   return (
     <div className="flex flex-col items-center gap-8 py-6">
-      {/* Completion celebration — shown for passing scores (≥80%) */}
-      {pct >= 80 && (
-        <div className="w-full max-w-md px-4 py-3.5 rounded-xl bg-gradient-to-r from-gold/8 to-green-500/5 border border-gold/25 flex items-center gap-3">
+      {/* Completion banner — passing scores */}
+      {passed && (
+        <motion.div
+          initial={{ opacity: 0, y: prefersReduced ? 0 : -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: [0, 0, 0.2, 1] }}
+          className="w-full max-w-md px-4 py-3.5 rounded-xl bg-gradient-to-r from-gold/8 to-green-500/5 border border-gold/25 flex items-center gap-3"
+        >
           <CheckCircle2 className="w-5 h-5 text-gold flex-shrink-0" />
           <div className="min-w-0">
             <p className="text-sm font-semibold text-gold leading-snug">
@@ -189,29 +198,56 @@ function ScoreScreen({
               Your understanding of this lesson has been confirmed. Keep going.
             </p>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* Trophy Card */}
-      <div className={`w-full max-w-md p-8 rounded-2xl bg-gradient-to-br ${grade.bg} border border-zinc-800 shadow-2xl`}>
+      <motion.div
+        initial={{ opacity: 0, scale: prefersReduced ? 1 : 0.9, y: prefersReduced ? 0 : 16 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: prefersReduced ? 0 : 0.55, ease: [0, 0, 0.2, 1], delay: 0.1 }}
+        className={`w-full max-w-md p-8 rounded-2xl bg-gradient-to-br ${grade.bg} border border-zinc-800 shadow-2xl`}
+      >
         <div className="flex flex-col items-center gap-4">
-          <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-amber-500/20 to-amber-600/10 border-2 border-amber-500/30 flex items-center justify-center shadow-lg shadow-amber-500/20">
+          <motion.div
+            initial={{ rotate: prefersReduced ? 0 : -15, scale: prefersReduced ? 1 : 0.5 }}
+            animate={{ rotate: 0, scale: 1 }}
+            transition={{ duration: prefersReduced ? 0 : 0.5, delay: 0.25, type: "spring", stiffness: 200, damping: 16 }}
+            className="w-24 h-24 rounded-2xl bg-gradient-to-br from-amber-500/20 to-amber-600/10 border-2 border-amber-500/30 flex items-center justify-center shadow-lg shadow-amber-500/20"
+          >
             <Trophy className="w-12 h-12 text-amber-400" />
-          </div>
-          <div className="text-center">
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: prefersReduced ? 0 : 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.35 }}
+            className="text-center"
+          >
             <p className={clsx("text-5xl font-bold tabular-nums mb-2", grade.color)}>{pct}%</p>
             <p className={clsx("text-lg font-semibold mb-1", grade.color)}>{grade.label}</p>
             <p className="text-base text-zinc-400">{score} out of {total} correct</p>
-          </div>
+          </motion.div>
+          {/* Animated score bar */}
+          <AnimatedProgressBar
+            percent={pct}
+            height={6}
+            fillClassName={passed ? "bg-gradient-to-r from-emerald-500 to-emerald-400" : "bg-gradient-to-r from-amber-500 to-amber-400"}
+            trackClassName="bg-zinc-800"
+            className="w-full"
+            delay={0.5}
+          />
         </div>
-      </div>
+      </motion.div>
 
       {/* Per-question summary */}
       <div className="w-full flex flex-col gap-3">
         <h3 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">Question Review</h3>
         {results.map((r, i) => (
-          <div
+          <motion.div
             key={i}
+            initial={{ opacity: 0, x: prefersReduced ? 0 : -12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.35, delay: 0.05 * i + 0.4, ease: [0, 0, 0.2, 1] }}
             className={clsx(
               "group relative overflow-hidden flex items-start gap-4 px-5 py-4 rounded-xl border transition-all",
               r.correct
@@ -241,18 +277,23 @@ function ScoreScreen({
                 </div>
               )}
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
 
       {/* Retry */}
-      <button
+      <motion.button
         onClick={onRetry}
-        className="flex items-center gap-2 px-6 py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 border border-amber-400/30 text-black text-base font-bold hover:from-amber-400 hover:to-amber-500 transition-all shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30 hover:scale-105"
+        whileHover={prefersReduced ? undefined : { scale: 1.04 }}
+        whileTap={prefersReduced ? undefined : { scale: 0.97 }}
+        initial={{ opacity: 0, y: prefersReduced ? 0 : 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, delay: 0.5 + results.length * 0.05 }}
+        className="flex items-center gap-2 px-6 py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 border border-amber-400/30 text-black text-base font-bold hover:from-amber-400 hover:to-amber-500 transition-all shadow-lg shadow-amber-500/20"
       >
         <RotateCcw className="w-5 h-5" />
         Retake Quiz
-      </button>
+      </motion.button>
     </div>
   );
 }
@@ -301,25 +342,44 @@ export function QuizViewer({ quiz, partNumber, previewMode }: QuizViewerProps) {
 
   return (
     <div className="flex flex-col gap-5">
-      <QuestionCard
-        key={current}
-        question={quiz.questions[current]}
-        index={current}
-        total={quiz.questions.length}
-        onAnswer={handleAnswer}
-      />
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={current}
+          initial={{ opacity: 0, x: 24 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -24 }}
+          transition={{ duration: 0.25, ease: [0, 0, 0.2, 1] }}
+        >
+          <QuestionCard
+            question={quiz.questions[current]}
+            index={current}
+            total={quiz.questions.length}
+            onAnswer={handleAnswer}
+          />
+        </motion.div>
+      </AnimatePresence>
 
-      {pendingResult && (
-        <div className="flex justify-end">
-          <button
-            onClick={handleNext}
-            className="flex items-center gap-2 px-6 py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 border border-amber-400/30 text-black text-base font-bold hover:from-amber-400 hover:to-amber-500 transition-all shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30 hover:scale-105"
+      <AnimatePresence>
+        {pendingResult && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            transition={{ duration: 0.2 }}
+            className="flex justify-end"
           >
-            {current + 1 >= quiz.questions.length ? "See Results" : "Next Question"}
-            <ChevronRight className="w-5 h-5" />
-          </button>
-        </div>
-      )}
+            <motion.button
+              onClick={handleNext}
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.97 }}
+              className="flex items-center gap-2 px-6 py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 border border-amber-400/30 text-black text-base font-bold hover:from-amber-400 hover:to-amber-500 transition-all shadow-lg shadow-amber-500/20"
+            >
+              {current + 1 >= quiz.questions.length ? "See Results" : "Next Question"}
+              <ChevronRight className="w-5 h-5" />
+            </motion.button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -12,13 +12,14 @@ export default async function CertificatePage() {
   const user = await requireStudent();
   if (!user.studentProfileId) redirect("/");
 
-  const purchases = await prisma.purchase.findMany({
-    where: { userId: user.id, status: "succeeded" },
-  });
-
-  if (purchases.length === 0) redirect("/pricing");
-
-  const hasCompletePlan = purchases.some(p => p.planId === "complete");
+  let hasCompletePlan = user.hasPaid;
+  if (!user.hasPaid) {
+    const purchases = await prisma.purchase.findMany({
+      where: { userId: user.id, status: "succeeded" },
+    });
+    if (purchases.length === 0) redirect("/pricing");
+    hasCompletePlan = purchases.some(p => p.planId === "complete");
+  }
   const userPlan = "complete" as const;
 
   const requiredLessons = userPlan === "complete" ? 100 : 75;

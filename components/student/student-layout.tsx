@@ -5,16 +5,32 @@ interface StudentLayoutProps {
   children: React.ReactNode;
   userPlan: "essentials" | "complete";
   userName: string;
+  activeProfileName?: string | null;
+  planType?: string;
 }
 
-export function StudentLayout({ children, userPlan, userName }: StudentLayoutProps) {
+export function StudentLayout({
+  children,
+  userPlan,
+  userName,
+  activeProfileName,
+  planType = "individual",
+}: StudentLayoutProps) {
   return (
-    <div className="flex min-h-screen bg-background items-start">
+    <div className="flex min-h-screen bg-background items-start w-full">
       <Suspense fallback={<div className="w-64 bg-surface border-r border-border shrink-0" />}>
-        <StudentSidebar userPlan={userPlan} userName={userName} />
+        <StudentSidebar
+          userPlan={userPlan}
+          userName={userName}
+          activeProfileName={activeProfileName ?? null}
+          planType={planType}
+        />
       </Suspense>
       
-      <main className="flex-1 min-w-0 overflow-x-hidden">
+      {/* overflow-x:clip prevents horizontal overflow without creating a scroll
+          container — unlike overflow-x:hidden, it does not break position:sticky
+          on child elements like the resource tab strip. */}
+      <main className="flex-1 min-w-0 overflow-x-clip">
         <div className="h-full">
           {children}
         </div>

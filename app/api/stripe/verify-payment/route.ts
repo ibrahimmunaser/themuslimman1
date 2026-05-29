@@ -103,12 +103,18 @@ export async function GET(request: NextRequest) {
       },
     });
 
+    // Set hasPaid and, for family purchases, planType=family.
+    // This mirrors the webhook so access is granted immediately even if the
+    // webhook is delayed. The upsert above already wrote the Purchase row.
     await prisma.user.update({
       where: { id: userId },
-      data: { hasPaid: true },
+      data: {
+        hasPaid: true,
+        ...(planId === "family" ? { planType: "family" } : {}),
+      },
     });
 
-    console.log(`[VERIFY-PAYMENT] Access granted for user ${currentUser.id}`);
+    console.log(`[VERIFY-PAYMENT] Access granted for user ${currentUser.id}${planId === "family" ? " (planType=family set)" : ""}`);
 
     return NextResponse.json({
       status: paymentIntent.status,

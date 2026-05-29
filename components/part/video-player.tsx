@@ -97,9 +97,12 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode }: Vid
 
   const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!videoRef.current) return;
+    const duration = videoRef.current.duration;
+    // duration is NaN until metadata loads and Infinity on live streams — skip both
+    if (!isFinite(duration) || duration <= 0) return;
     const rect = e.currentTarget.getBoundingClientRect();
-    const pct  = (e.clientX - rect.left) / rect.width;
-    videoRef.current.currentTime = pct * videoRef.current.duration;
+    const pct  = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+    videoRef.current.currentTime = pct * duration;
   };
 
   const toggleMute = () => {

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireStudent } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { getActiveProfileId } from "@/app/actions/profiles";
 import { generateParentProgressReport } from "@/lib/emails/parent-progress-report";
 import { Resend } from "resend";
 
@@ -16,9 +17,12 @@ export async function POST() {
       );
     }
 
+    // Scope progress report to the active learner profile.
+    const learnerProfileId = await getActiveProfileId(user.id);
+
     // Get user's progress data
     const progressData = await prisma.partProgress.findMany({
-      where: { userId: user.id },
+      where: { learnerProfileId },
       orderBy: { partNumber: "asc" },
       select: {
         partNumber:        true,

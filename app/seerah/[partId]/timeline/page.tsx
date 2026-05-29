@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { requireStudent } from "@/lib/auth";
+import { getActiveProfileId } from "@/app/actions/profiles";
 import { getPartById, PARTS } from "@/lib/content";
 import { ERA_MAP } from "@/lib/types";
 import { getTimelineForPart } from "@/lib/timeline-data";
@@ -30,16 +31,21 @@ export default async function TimelinePage(props: Props) {
   const partBase = getPartById(partId);
   if (!partBase) notFound();
 
-  const purchase = await prisma.purchase.findFirst({
-    where: { userId: user.id, status: "succeeded" },
-  });
-  if (!purchase) redirect("/pricing");
+  if (!user.hasPaid) {
+    const purchase = await prisma.purchase.findFirst({
+      where: { userId: user.id, status: "succeeded" },
+    });
+    if (!purchase) redirect("/pricing");
+  }
 
   const userPlan = "complete" as const;
 
-  // Get user's progress to check completion status
+  // Scope progress to the active learner profile.
+  const learnerProfileId = user.activeProfileId ?? await getActiveProfileId(user.id);
+
+  // Get progress to check completion status
   const partProgress = await prisma.partProgress.findMany({
-    where: { userId: user.id },
+    where: { learnerProfileId },
     orderBy: { partNumber: 'asc' },
     select: { partNumber: true, status: true },
   });
@@ -72,7 +78,7 @@ export default async function TimelinePage(props: Props) {
   const isNextPartAccessible = !!nextPart;
 
   return (
-    <StudentLayout userPlan={userPlan} userName={user.fullName}>
+    <StudentLayout userPlan={userPlan} userName={user.fullName} activeProfileName={user.activeProfileName} planType={user.planType}>
       <div className="min-h-screen bg-[#0a0a0a]">
 
         {/* ── Top bar ─────────────────────────────────────────────────────── */}

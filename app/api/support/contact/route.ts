@@ -1,8 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { Resend } from "resend";
+import { checkRateLimit, getIP } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
+  // Rate limit: 3 submissions per 15 minutes per IP to prevent email flooding.
+  const ip = getIP(req);
+  const rl = checkRateLimit(`contact:${ip}`, 3, 15 * 60 * 1000);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests. Please wait before submitting again." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSeconds) } }
+    );
+  }
+
   const resend = new Resend(process.env.RESEND_API_KEY);
   try {
     const body = await req.json();

@@ -39,8 +39,6 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    console.log(`[API] /api/auth/signup-student: Request body parsed, email: ${body.email}`);
-    
     const parsed = SignupSchema.safeParse(body);
 
     if (!parsed.success) {
@@ -53,7 +51,6 @@ export async function POST(request: NextRequest) {
     }
 
     const { fullName, email, password } = parsed.data;
-    console.log(`[API] /api/auth/signup-student: Validated data - fullName: ${fullName}, email: ${email}`);
 
     // Check if email already exists
     const existingEmail = await prisma.user.findUnique({
@@ -61,17 +58,15 @@ export async function POST(request: NextRequest) {
     });
 
     if (existingEmail) {
-      console.log(`[API] /api/auth/signup-student: Email ${email} already exists (user id: ${existingEmail.id})`);
+      console.log(`[API] /api/auth/signup-student: Email already registered`);
       return NextResponse.json(
         { error: "An account with this email already exists" },
         { status: 400 }
       );
     }
 
-    console.log(`[API] /api/auth/signup-student: Email ${email} available, hashing password...`);
     // Hash password
     const passwordHash = await bcrypt.hash(password, 12);
-    console.log(`[API] /api/auth/signup-student: Password hashed`);
 
     // In development, auto-verify emails. In production, require verification.
     const isDevelopment = process.env.NODE_ENV !== "production";
@@ -80,7 +75,6 @@ export async function POST(request: NextRequest) {
     console.log(`[API] /api/auth/signup-student: Mode: ${isDevelopment ? "development" : "production"}, auto-verify: ${isDevelopment}`);
 
     // Create user and student profile in transaction
-    console.log(`[API] /api/auth/signup-student: Creating user and student profile for ${email}...`);
     const user = await prisma.$transaction(async (tx) => {
       const newUser = await tx.user.create({
         data: {
@@ -102,7 +96,7 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      console.log(`[API] /api/auth/signup-student: User created: ${newUser.email} (id: ${newUser.id}, studentProfileId: ${newUser.student?.id})`);
+      console.log(`[API] /api/auth/signup-student: User created (id: ${newUser.id}, studentProfileId: ${newUser.student?.id})`);
       return newUser;
     });
 
@@ -135,12 +129,9 @@ export async function POST(request: NextRequest) {
       expires: sessionExpiresAt,
       path: "/",
     });
-    console.log(`[API] /api/auth/signup-student: Session cookies set for ${user.email}`);
-
     // Send verification email (only in production)
     if (!isDevelopment && verificationToken) {
       const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify-email?token=${verificationToken}`;
-      console.log(`[API] /api/auth/signup-student: Sending verification email to ${email}...`);
 
       try {
         const resend = new Resend(process.env.RESEND_API_KEY);
@@ -156,19 +147,17 @@ export async function POST(request: NextRequest) {
         });
 
         if (emailError) {
-          console.error(`[API] /api/auth/signup-student: Failed to send verification email to ${email}:`, emailError);
+          console.error(`[API] /api/auth/signup-student: Failed to send verification email:`, emailError);
         } else {
-          console.log(`[API] /api/auth/signup-student: Verification email sent successfully to ${email}`);
+          console.log(`[API] /api/auth/signup-student: Verification email sent`);
         }
       } catch (emailError) {
-        console.error(`[API] /api/auth/signup-student: Exception sending verification email to ${email}:`, emailError);
+        console.error(`[API] /api/auth/signup-student: Exception sending verification email:`, emailError);
       }
-    } else {
-      console.log(`[API] /api/auth/signup-student: Skipping verification email (development mode)`);
     }
 
     const elapsed = Date.now() - startTime;
-    console.log(`[API] /api/auth/signup-student: SUCCESS - User ${email} created and logged in [${elapsed}ms]`);
+    console.log(`[API] /api/auth/signup-student: SUCCESS - User created and logged in [${elapsed}ms]`);
 
     return NextResponse.json({
       success: true,

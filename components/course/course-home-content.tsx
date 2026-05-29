@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import {
   Play, ArrowRight,
@@ -5,7 +7,9 @@ import {
   BookOpen, Clock, Milestone, HelpCircle, Mail,
   Image as ImageIcon, Info, CheckCircle2,
 } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 import { PrefetchPartLink } from "@/components/course/prefetch-part-link";
+import { FadeUp, StaggerChildren, AnimatedCounter, AnimatedProgressBar, AnimatedCard } from "@/components/motion";
 
 export interface StageData {
   label: string;
@@ -43,19 +47,20 @@ export function CourseHomeContent({
 }: CourseHomeContentProps) {
   const isNewUser = completedLessons === 0;
   const currentStage = stagesData[currentStageNumber - 1];
+  const prefersReduced = useReducedMotion();
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
 
       {/* ── Welcome header ─────────────────────────────────────────────────── */}
-      <div>
+      <FadeUp>
         <p className="text-text-muted text-sm mb-1">Welcome back</p>
         <h1 className="text-2xl sm:text-3xl font-bold text-text">{userName}</h1>
-      </div>
+      </FadeUp>
 
       {/* ── Start Here / Continue ─────────────────────────────────────────── */}
-      <section id="start-here">
-        <div className="relative rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-gold/5 to-transparent overflow-hidden">
+      <FadeUp delay={0.05} as="section">
+        <div id="start-here" className="relative rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-gold/5 to-transparent overflow-hidden">
           {/* Decorative glow */}
           <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/50 to-transparent" />
 
@@ -106,12 +111,12 @@ export function CourseHomeContent({
                     <span>Lesson progress</span>
                     <span className="text-gold font-medium">{currentPartVideoProgress}%</span>
                   </div>
-                  <div className="h-2 bg-surface-raised rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-gold to-amber-400 rounded-full transition-all"
-                      style={{ width: `${currentPartVideoProgress}%` }}
-                    />
-                  </div>
+                  <AnimatedProgressBar
+                    percent={currentPartVideoProgress}
+                    height={8}
+                    fillClassName="bg-gradient-to-r from-gold to-amber-400"
+                    trackClassName="bg-surface-raised"
+                  />
                 </div>
               )}
 
@@ -122,7 +127,7 @@ export function CourseHomeContent({
                   className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[44px] bg-gold hover:bg-gold-light text-ink font-semibold rounded-xl text-sm transition-colors shadow-lg shadow-gold/20"
                 >
                   <Play className="w-4 h-4" />
-                  {isNewUser ? "Start Part 1" : "Continue Lesson"}
+                  {isNewUser ? `Start Part ${currentPart}` : "Continue Lesson"}
                 </PrefetchPartLink>
                 <a
                   href="#roadmap"
@@ -154,16 +159,15 @@ export function CourseHomeContent({
             </div>
           </div>
         </div>
-      </section>
+      </FadeUp>
 
       {/* ── Stats Grid ────────────────────────────────────────────────────── */}
-      <section>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <StaggerChildren className="grid grid-cols-1 sm:grid-cols-3 gap-4" stagger={0.1} as="section">
           {/* Parts completed */}
-          <div className="p-5 rounded-2xl border border-border bg-surface">
+          <AnimatedCard lift className="p-5 rounded-2xl border border-border bg-surface hover:border-gold/20 transition-colors">
             <p className="text-xs font-semibold uppercase tracking-widest text-text-muted mb-3">Completed</p>
             <p className="text-3xl font-bold text-text tabular-nums">
-              {completedLessons}
+              <AnimatedCounter to={completedLessons} duration={800} />
               <span className="text-text-muted font-normal text-xl"> / {totalLessons}</span>
             </p>
             <p className="text-xs text-text-muted mt-1">Parts fully completed</p>
@@ -172,27 +176,29 @@ export function CourseHomeContent({
               Requires video + briefing + quiz (80%+)
             </p>
             {completedLessons > 0 && (
-              <div className="mt-3 h-1.5 bg-surface-raised rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-gold to-amber-400 rounded-full"
-                  style={{ width: `${Math.round((completedLessons / totalLessons) * 100)}%` }}
-                />
-              </div>
+              <AnimatedProgressBar
+                percent={Math.round((completedLessons / totalLessons) * 100)}
+                height={6}
+                fillClassName="bg-gradient-to-r from-gold to-amber-400"
+                trackClassName="bg-surface-raised"
+                className="mt-3"
+                delay={0.2}
+              />
             )}
-          </div>
+          </AnimatedCard>
 
           {/* Current stage */}
-          <div className="p-5 rounded-2xl border border-border bg-surface">
+          <AnimatedCard lift className="p-5 rounded-2xl border border-border bg-surface hover:border-gold/20 transition-colors">
             <p className="text-xs font-semibold uppercase tracking-widest text-text-muted mb-3">Current Stage</p>
             <p className="text-3xl font-bold text-text tabular-nums">
-              {currentStageNumber}
+              <AnimatedCounter to={currentStageNumber} duration={600} />
               <span className="text-text-muted font-normal text-xl"> of {stagesData.length}</span>
             </p>
             <p className="text-xs text-text-muted mt-1 truncate">{currentStage?.label ?? "Arabia Before Revelation"}</p>
-          </div>
+          </AnimatedCard>
 
           {/* Next Lesson */}
-          <div className="p-5 rounded-2xl border border-border bg-surface">
+          <AnimatedCard lift className="p-5 rounded-2xl border border-border bg-surface hover:border-gold/20 transition-colors">
             <p className="text-xs font-semibold uppercase tracking-widest text-text-muted mb-3">Next Lesson</p>
             <p className="text-sm font-bold text-text">Part {currentPart}</p>
             <p className="text-xs text-text-muted mt-0.5 line-clamp-2 leading-relaxed">{currentPartTitle}</p>
@@ -201,24 +207,36 @@ export function CourseHomeContent({
               label={isNewUser ? "Start now" : "Continue"}
               className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-gold hover:text-gold/80 transition-colors min-h-[44px]"
             />
-          </div>
-        </div>
-      </section>
+          </AnimatedCard>
+      </StaggerChildren>
 
       {/* ── Course Roadmap ────────────────────────────────────────────────── */}
       <section id="roadmap">
-        <div className="mb-6">
+        <FadeUp className="mb-6">
           <h2 className="text-xl font-bold text-text mb-1.5">Course Roadmap</h2>
           <p className="text-sm text-text-secondary">
             The Seerah in {stagesData.length} stages — from pre-Islamic Arabia to the Prophet's ﷺ final years.
             All parts are unlocked; follow the order for the full picture.
           </p>
-        </div>
+        </FadeUp>
 
         {/* Desktop: horizontal timeline */}
         <div className="hidden sm:block relative">
-          {/* Background connector line — spans between first and last circle centers */}
-          <div className="absolute top-[13px] left-[8%] right-[8%] h-px bg-border/60" aria-hidden />
+          {/* Background connector line */}
+          <div className="absolute top-[13px] left-[8%] right-[8%] h-px bg-border/40" aria-hidden />
+
+          {/* Progress overlay line — gold/green gradient from start to current stage */}
+          {stagesData.length > 1 && currentStageNumber > 1 && (
+            <div
+              className="absolute top-[13px] h-px"
+              aria-hidden
+              style={{
+                left: "8%",
+                width: `${((currentStageNumber - 1) / (stagesData.length - 1)) * 84}%`,
+                background: "linear-gradient(to right, rgba(74,222,128,0.5), rgba(200,169,110,0.6))",
+              }}
+            />
+          )}
 
           <div className="flex overflow-x-auto pb-6">
             {stagesData.map((stage) => {
@@ -233,12 +251,12 @@ export function CourseHomeContent({
                 >
                   {/* Circle node */}
                   <div
-                    className={`relative z-10 w-7 h-7 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                    className={`relative z-10 w-7 h-7 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-shadow ${
                       isDone
                         ? "border-green-500/60 bg-green-500/10 text-green-400"
                         : isCurrent
-                        ? "border-gold bg-gold/10 text-gold"
-                        : "border-border bg-surface-raised text-text-muted/50"
+                        ? "border-gold bg-gold/15 text-gold shadow-[0_0_0_3px_rgba(200,169,110,0.15)]"
+                        : "border-border/50 bg-surface-raised text-text-muted/40"
                     }`}
                   >
                     {isDone
@@ -249,27 +267,32 @@ export function CourseHomeContent({
                   {/* Stage info */}
                   <div className="text-center w-full">
                     <p className={`text-[9px] font-bold uppercase tracking-wider mb-0.5 ${
-                      isCurrent ? "text-gold" : isDone ? "text-green-400/70" : "text-text-muted/50"
+                      isCurrent ? "text-gold" : isDone ? "text-green-400/70" : "text-text-muted/40"
                     }`}>
-                      {isCurrent ? "Current · " : ""}Stage {stage.stageNumber}
+                      {isCurrent ? "▸ Current" : `Stage ${stage.stageNumber}`}
                     </p>
-                    <p className="text-[11px] font-medium text-text leading-tight line-clamp-2">
+                    <p className={`text-[11px] font-medium leading-tight line-clamp-2 ${
+                      isCurrent ? "text-text" : isDone ? "text-text-secondary" : "text-text-muted/60"
+                    }`}>
                       {stage.label}
                     </p>
-                    <p className="text-[10px] text-text-muted mt-0.5 tabular-nums">
+                    <p className="text-[10px] text-text-muted/50 mt-0.5 tabular-nums">
                       {stage.completedCount}/{stage.totalCount}
                     </p>
                     {/* Mini progress bar */}
-                    <div className="mt-1.5 h-[3px] bg-surface-raised rounded-full overflow-hidden w-full">
-                      <div
-                        className={`h-full rounded-full ${isDone ? "bg-green-500/70" : "bg-gold/60"}`}
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
+                    <AnimatedProgressBar
+                      percent={pct}
+                      height={3}
+                      fillClassName={isDone ? "bg-green-500/70" : isCurrent ? "bg-gold/70" : "bg-gold/30"}
+                      trackClassName="bg-surface-raised"
+                      className="mt-1.5 w-full"
+                    />
                     <PrefetchPartLink
                       partNumber={stage.firstPartNumber}
                       label={isDone ? "Review" : stage.completedCount > 0 ? "Continue" : "Start"}
-                      className="mt-2 inline-flex items-center gap-1 text-[10px] font-medium text-gold/70 hover:text-gold transition-colors min-h-[32px]"
+                      className={`mt-2 inline-flex items-center gap-1 text-[10px] font-medium transition-colors min-h-[32px] ${
+                        isCurrent ? "text-gold hover:text-gold/80" : "text-text-muted/50 hover:text-gold/70"
+                      }`}
                     />
                   </div>
                 </div>
@@ -308,12 +331,13 @@ export function CourseHomeContent({
                   {isDone && <CheckCircle2 className="w-3 h-3 text-green-400 ml-auto" />}
                 </div>
                 <h3 className="font-semibold text-text text-xs leading-snug line-clamp-2 mb-2">{stage.label}</h3>
-                <div className="h-1.5 bg-surface-raised rounded-full overflow-hidden mb-2">
-                  <div
-                    className={`h-full rounded-full ${isDone ? "bg-green-500" : "bg-gradient-to-r from-gold to-amber-400"}`}
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
+                <AnimatedProgressBar
+                  percent={pct}
+                  height={6}
+                  fillClassName={isDone ? "bg-green-500" : "bg-gradient-to-r from-gold to-amber-400"}
+                  trackClassName="bg-surface-raised"
+                  className="mb-2"
+                />
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] text-text-muted tabular-nums">{stage.completedCount}/{stage.totalCount}</span>
                   <PrefetchPartLink
@@ -331,14 +355,14 @@ export function CourseHomeContent({
 
       {/* ── Quick Access Resources ────────────────────────────────────────── */}
       <section>
-        <div className="mb-5">
+        <FadeUp className="mb-5">
           <h2 className="text-xl font-bold text-text mb-1.5">Quick Access to Course Tools</h2>
           <p className="text-sm text-text-secondary">
             Every part includes all of these formats. Use them in any order.
           </p>
-        </div>
+        </FadeUp>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <StaggerChildren className="grid grid-cols-2 sm:grid-cols-4 gap-3" stagger={0.06}>
           {[
             { icon: Video, label: "Watch Lessons", href: "/seerah" },
             { icon: FileText, label: "Read Briefings", href: "/seerah/resources" },
@@ -349,20 +373,21 @@ export function CourseHomeContent({
             { icon: Brain, label: "Flashcards", href: "/seerah/resources" },
             { icon: ClipboardCheck, label: "Quizzes", href: "/seerah/resources" },
           ].map(({ icon: Icon, label, href }) => (
-            <Link
-              key={label}
-              href={href}
-              className="flex flex-col items-center gap-2 p-4 rounded-xl border border-border bg-surface hover:border-gold/30 hover:bg-gold/5 transition-all group text-center"
-            >
-              <div className="w-10 h-10 rounded-lg bg-surface-raised border border-border flex items-center justify-center group-hover:border-gold/30 transition-colors">
-                <Icon className="w-[18px] h-[18px] text-text-secondary group-hover:text-gold transition-colors" />
-              </div>
-              <span className="text-xs font-medium text-text-secondary group-hover:text-text transition-colors leading-tight">
-                {label}
-              </span>
-            </Link>
+            <AnimatedCard key={label} lift className="group">
+              <Link
+                href={href}
+                className="flex flex-col items-center gap-2 p-4 rounded-xl border border-border bg-surface hover:border-gold/30 hover:bg-gold/5 transition-all text-center"
+              >
+                <div className="w-10 h-10 rounded-lg bg-surface-raised border border-border flex items-center justify-center group-hover:border-gold/30 transition-colors">
+                  <Icon className="w-[18px] h-[18px] text-text-secondary group-hover:text-gold transition-colors" />
+                </div>
+                <span className="text-xs font-medium text-text-secondary group-hover:text-text transition-colors leading-tight">
+                  {label}
+                </span>
+              </Link>
+            </AnimatedCard>
           ))}
-        </div>
+        </StaggerChildren>
       </section>
 
       {/* ── Support Card ──────────────────────────────────────────────────── */}

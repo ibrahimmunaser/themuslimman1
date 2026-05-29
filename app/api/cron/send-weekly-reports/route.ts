@@ -55,15 +55,23 @@ export async function GET(request: NextRequest) {
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
+    // For each user, load their default profile so we can scope progress correctly.
+    const defaultProfiles = await prisma.learnerProfile.findMany({
+      where: { userId: { in: userIds }, isDefault: true },
+      select: { id: true, userId: true },
+    });
+    const defaultProfileMap = Object.fromEntries(defaultProfiles.map((p) => [p.userId, p.id]));
+    const defaultProfileIds = defaultProfiles.map((p) => p.id);
+
     const [allProgress, allPurchases, allStudySessions, allQuizAttempts] = await Promise.all([
       prisma.partProgress.findMany({
-        where: { userId: { in: userIds } },
+        where: { learnerProfileId: { in: defaultProfileIds } },
         orderBy: { partNumber: "asc" },
         select: {
-          userId: true, partNumber: true, status: true, videoWatchPercent: true,
-          briefingOpened: true, quizBestScore: true, updatedAt: true, quizPassed: true,
-          flashcardsReviewed: true, startedAt: true, completedAt: true, masteredAt: true,
-          lastAccessedAt: true,
+          userId: true, learnerProfileId: true, partNumber: true, status: true,
+          videoWatchPercent: true, briefingOpened: true, quizBestScore: true,
+          updatedAt: true, quizPassed: true, flashcardsReviewed: true, startedAt: true,
+          completedAt: true, masteredAt: true, lastAccessedAt: true,
         },
       }),
       prisma.purchase.findMany({
@@ -82,12 +90,19 @@ export async function GET(request: NextRequest) {
         : Promise.resolve([]),
     ]);
 
-    // Index everything by userId / studentId for O(1) lookup
+    // Index everything by userId / learnerProfileId / studentId for O(1) lookup.
+    // For weekly reports we use the default profile's progress for each user.
     const progressByUser = new Map<string, typeof allProgress>();
     for (const p of allProgress) {
-      const arr = progressByUser.get(p.userId) ?? [];
+      const profileId = p.learnerProfileId;
+      // Map this progress row back to the owning user via defaultProfileMap
+      const ownerUserId = Object.entries(defaultProfileMap).find(
+        ([, pid]) => pid === profileId
+      )?.[0];
+      if (!ownerUserId) continue;
+      const arr = progressByUser.get(ownerUserId) ?? [];
       arr.push(p);
-      progressByUser.set(p.userId, arr);
+      progressByUser.set(ownerUserId, arr);
     }
     const paidUserIds = new Set(allPurchases.map((p) => p.userId));
     const sessionsByUser = new Map<string, typeof allStudySessions>();

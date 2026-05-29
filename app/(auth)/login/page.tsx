@@ -38,10 +38,21 @@ function LoginContent() {
         // router.push() + router.refresh() discard the RSC payload mid-flight
         // and leave the page black.
         let destination: string;
-        if (returnUrl) {
+        // Only allow safe internal relative paths to prevent open redirect attacks.
+        const isSafeReturn =
+          returnUrl && returnUrl.startsWith("/") && !returnUrl.startsWith("//");
+        if (isSafeReturn) {
           destination = returnUrl;
         } else if (result.role === "student") {
-          destination = result.hasPurchase ? "/my-courses" : "/pricing";
+          if (!result.hasPurchase) {
+            destination = "/pricing";
+          } else if (result.isFamily) {
+            // Family plan → always go through the profile picker
+            destination = "/profiles";
+          } else {
+            // Individual plan → go straight to course (picker auto-skips for 1 profile)
+            destination = "/seerah";
+          }
         } else {
           destination = roleHome(result.role);
         }
@@ -113,7 +124,7 @@ function LoginContent() {
             </div>
 
             {error && (
-              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+              <div role="alert" aria-live="assertive" className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
                 {error}
               </div>
             )}
@@ -141,7 +152,7 @@ function LoginContent() {
 
           <div className="mt-6 pt-5 border-t border-border text-center">
             <p className="text-sm text-text-secondary">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <Link href="/signup" className="text-gold hover:text-gold-light font-medium transition-colors">
                 Create an account
               </Link>

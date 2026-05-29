@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { Suspense } from "react";
 import { getCurrentUser } from "@/lib/auth";
 import { NavbarUserMenu } from "./navbar-user-menu";
 import { NavbarMobileMenu } from "./navbar-mobile-menu";
+import { NavLinks } from "./nav-links";
 
 export async function Navbar() {
   let user = null;
@@ -18,7 +18,7 @@ export async function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-[90] w-full bg-ink overflow-x-hidden">
+    <header className="sticky top-0 z-[90] w-full bg-ink">
       <div className="border-b border-white/5">
         <nav className="max-w-6xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
           {/* Logo */}
@@ -34,15 +34,7 @@ export async function Navbar() {
 
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-6">
-            <Link href="/" className="text-sm text-text-secondary hover:text-text transition-colors">
-              Home
-            </Link>
-            <Link href="/pricing" className="text-sm text-text-secondary hover:text-text transition-colors">
-              Pricing
-            </Link>
-            <Link href={user ? "/help" : "/contact"} className="text-sm text-text-secondary hover:text-text transition-colors">
-              Help
-            </Link>
+            <NavLinks isLoggedIn={!!user} />
             <NavbarUserMenu user={user} firstName={firstName} />
           </div>
 

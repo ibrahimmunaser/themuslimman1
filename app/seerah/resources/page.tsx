@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { requireStudent } from "@/lib/auth";
+import { getActiveProfileId } from "@/app/actions/profiles";
 import { StudentLayout } from "@/components/student/student-layout";
 import { prisma } from "@/lib/db";
 import { ResourcesTabs } from "@/components/resources/resources-tabs";
@@ -28,10 +29,12 @@ export default async function SeerahResourcesPage() {
 
   const userPlan = "complete" as const;
 
-  // Fetch progress and thumbnail URLs in parallel
+  const learnerProfileId = user.activeProfileId ?? await getActiveProfileId(user.id);
+
+  // Fetch progress and thumbnail URLs in parallel, scoped to active profile.
   const [progress, thumbnails] = await Promise.all([
     prisma.partProgress.findMany({
-      where: { userId: user.id },
+      where: { learnerProfileId },
       select: {
         partNumber: true,
         videoWatchPercent: true,
@@ -128,7 +131,7 @@ export default async function SeerahResourcesPage() {
   const factsCompletedCount = getAssetCompletedCount("statement-of-facts");
 
   return (
-    <StudentLayout userPlan={userPlan} userName={user.fullName}>
+    <StudentLayout userPlan={userPlan} userName={user.fullName} activeProfileName={user.activeProfileName} planType={user.planType}>
       <ResourcesTabs
         videosContent={
           <VideoResourceContent

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useTransition, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { LayoutDashboard, BookOpen, FolderOpen, TrendingUp, CircleUser } from "lucide-react";
 import { clsx } from "clsx";
@@ -22,10 +22,10 @@ interface Tab {
 }
 
 const TABS: Tab[] = [
-  { id: "home",      label: "Dashboard", shortLabel: "Home",     icon: LayoutDashboard },
-  { id: "lessons",   label: "Lessons",   shortLabel: "Lessons",  icon: BookOpen },
-  { id: "resources", label: "Resources", shortLabel: "Library",  icon: FolderOpen },
-  { id: "progress",  label: "Progress",  shortLabel: "Progress", icon: TrendingUp },
+  { id: "home",      label: "Dashboard", shortLabel: "Home",    icon: LayoutDashboard },
+  { id: "lessons",   label: "Lessons",   shortLabel: "Lessons", icon: BookOpen },
+  { id: "resources", label: "Resources", shortLabel: "Media",   icon: FolderOpen },
+  { id: "progress",  label: "Progress",  shortLabel: "Stats",   icon: TrendingUp },
 ];
 
 export function CourseDashboardTabs({
@@ -42,6 +42,10 @@ export function CourseDashboardTabs({
     tabParam && TABS.some((t) => t.id === tabParam) ? tabParam : "home";
 
   const [activeTab, setActiveTab] = useState<TabId>(resolvedInitial);
+  const [, startTransition] = useTransition();
+  // Tracks whether the current seerah:switchTab event was dispatched by us so
+  // we can skip it in our own listener and avoid double-routing.
+  const isSelfDispatch = useRef(false);
 
   // Sync tab state when URL changes (browser back / forward / direct link)
   useEffect(() => {
@@ -51,21 +55,38 @@ export function CourseDashboardTabs({
   }, [tabParam]);
 
   const switchTab = useCallback((id: TabId) => {
+    // 1. Highlight the tab bar immediately.
     setActiveTab(id);
-    const url = id === "home" ? "/seerah" : `/seerah?tab=${id}`;
-    router.replace(url, { scroll: false });
-  }, [router]);
+    // 2. Notify the sidebar so its active indicator also updates on this frame.
+    //    dispatchEvent is synchronous, so the flag prevents our own listener
+    //    from re-entering (and double-routing) when it receives the event.
+    isSelfDispatch.current = true;
+    window.dispatchEvent(new CustomEvent("seerah:switchTab", { detail: id }));
+    isSelfDispatch.current = false;
+    // 3. Route in the background — marked non-urgent so React commits the
+    //    visual update above before waiting on the navigation.
+    startTransition(() => {
+      const url = id === "home" ? "/seerah" : `/seerah?tab=${id}`;
+      router.replace(url, { scroll: false });
+    });
+  }, [router, startTransition]);
 
-  // Listen for tab-switch events dispatched by the sidebar so it can switch
-  // tabs instantly without triggering a full server-side navigation.
+  // Listen for tab-switch events dispatched by the sidebar (not by us) so the
+  // tab bar stays in sync when the user clicks a sidebar nav item.
   useEffect(() => {
     const handler = (e: Event) => {
+      if (isSelfDispatch.current) return; // ignore events we dispatched
       const tabId = (e as CustomEvent<TabId>).detail;
-      if (TABS.some((t) => t.id === tabId)) switchTab(tabId);
+      if (!TABS.some((t) => t.id === tabId)) return;
+      setActiveTab(tabId);
+      startTransition(() => {
+        const url = tabId === "home" ? "/seerah" : `/seerah?tab=${tabId}`;
+        router.replace(url, { scroll: false });
+      });
     };
     window.addEventListener("seerah:switchTab", handler);
     return () => window.removeEventListener("seerah:switchTab", handler);
-  }, [switchTab]);
+  }, [router, startTransition]);
 
   const content: Record<TabId, React.ReactNode> = {
     home:      homeContent,
@@ -101,8 +122,8 @@ export function CourseDashboardTabs({
                 >
                   <Icon className="w-4 h-4 flex-shrink-0" />
                   <span className="truncate">
-                    <span className="min-[360px]:hidden">{tab.shortLabel}</span>
-                    <span className="hidden min-[360px]:inline">{tab.label}</span>
+                    <span className="min-[480px]:hidden">{tab.shortLabel}</span>
+                    <span className="hidden min-[480px]:inline">{tab.label}</span>
                   </span>
                 </button>
               );

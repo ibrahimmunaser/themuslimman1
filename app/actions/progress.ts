@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/db";
 import { requireStudent } from "@/lib/auth";
+import { getActiveProfileId } from "@/app/actions/profiles";
 import {
   computeStatus,
   parseProgressRow,
@@ -16,9 +17,6 @@ type UserPlan = "essentials" | "complete";
 async function getUserPlan(userId: string): Promise<UserPlan | null> {
   console.log(`[PROGRESS] getUserPlan: Fetching plan for user ${userId}`);
 
-  // Check all three access signals in parallel: hasPaid flag, lifetime purchase, active subscription.
-  // Monthly subscribers have no Purchase row — they would silently fail progress tracking
-  // if we only checked purchases.
   const [user, purchases, subscription] = await Promise.all([
     prisma.user.findUnique({ where: { id: userId }, select: { hasPaid: true } }),
     prisma.purchase.findMany({ where: { userId, status: "succeeded" }, select: { planId: true } }),
@@ -41,58 +39,54 @@ async function getUserPlan(userId: string): Promise<UserPlan | null> {
   return null;
 }
 
-async function getOrCreateProgress(userId: string, partNumber: number) {
-  console.log(`[PROGRESS] getOrCreateProgress: User ${userId}, part ${partNumber}`);
+async function getOrCreateProgress(userId: string, learnerProfileId: string, partNumber: number) {
+  console.log(`[PROGRESS] getOrCreateProgress: Profile ${learnerProfileId}, part ${partNumber}`);
   return prisma.partProgress.upsert({
-    where:  { userId_partNumber: { userId, partNumber } },
-    create: { userId, partNumber },
+    where:  { learnerProfileId_partNumber: { learnerProfileId, partNumber } },
+    create: { userId, learnerProfileId, partNumber },
     update: {},
   });
 }
 
 async function recomputeAndSave(
-  userId: string,
+  learnerProfileId: string,
   partNumber: number,
   userPlan: UserPlan,
 ) {
-  console.log(`[PROGRESS] recomputeAndSave: User ${userId}, part ${partNumber}, plan ${userPlan}`);
+  console.log(`[PROGRESS] recomputeAndSave: Profile ${learnerProfileId}, part ${partNumber}, plan ${userPlan}`);
   const row = await prisma.partProgress.findUniqueOrThrow({
-    where: { userId_partNumber: { userId, partNumber } },
+    where: { learnerProfileId_partNumber: { learnerProfileId, partNumber } },
     select: {
-      videoWatchPercent: true,
-      videoCompleted:    true,
-      briefingOpened:    true,
-      quizCompleted:     true,
-      quizBestScore:     true,
-      quizPassed:        true,
-      flashcardsReviewed:true,
-      openedAssets:      true,
-      startedAt:         true,
-      completedAt:       true,
-      masteredAt:        true,
+      videoWatchPercent:  true,
+      videoCompleted:     true,
+      briefingOpened:     true,
+      quizCompleted:      true,
+      quizBestScore:      true,
+      quizPassed:         true,
+      flashcardsReviewed: true,
+      openedAssets:       true,
+      startedAt:          true,
+      completedAt:        true,
+      masteredAt:         true,
     },
   });
   const snap = parseProgressRow(row);
   const newStatus = computeStatus(snap, userPlan);
 
-  console.log(`[PROGRESS] recomputeAndSave: Computed status "${newStatus}" for user ${userId}, part ${partNumber} (video: ${row.videoWatchPercent}%, briefing: ${row.briefingOpened}, quiz: ${row.quizPassed})`);
+  console.log(`[PROGRESS] recomputeAndSave: Computed status "${newStatus}" for profile ${learnerProfileId}, part ${partNumber}`);
 
   const update: Record<string, unknown> = { status: newStatus };
   if (newStatus === "completed" && !row.completedAt) {
     update.completedAt = new Date();
-    console.log(`[PROGRESS] recomputeAndSave: Setting completedAt for user ${userId}, part ${partNumber}`);
   }
-  if (newStatus === "mastered"  && !row.masteredAt) {
-    update.masteredAt  = new Date();
-    console.log(`[PROGRESS] recomputeAndSave: Setting masteredAt for user ${userId}, part ${partNumber}`);
+  if (newStatus === "mastered" && !row.masteredAt) {
+    update.masteredAt = new Date();
   }
 
   await prisma.partProgress.update({
-    where: { userId_partNumber: { userId, partNumber } },
+    where: { learnerProfileId_partNumber: { learnerProfileId, partNumber } },
     data:  update,
   });
-  
-  console.log(`[PROGRESS] recomputeAndSave: Status updated to "${newStatus}" for user ${userId}, part ${partNumber}`);
 }
 
 // ── Public server actions ─────────────────────────────────────────────────────
@@ -112,7 +106,9 @@ export async function trackVideoProgress(partNumber: number, watchPercent: numbe
   }
 
   const userId = user.id;
-  console.log(`[PROGRESS] trackVideoProgress: User ${userId} (${user.email}), part ${partNumber}, ${watchPercent}%`);
+  const learnerProfileId = await getActiveProfileId(userId);
+
+  console.log(`[PROGRESS] trackVideoProgress: User ${userId}, profile ${learnerProfileId}, part ${partNumber}, ${watchPercent}%`);
   
   const userPlan = await getUserPlan(userId);
   if (!userPlan) {
@@ -121,13 +117,12 @@ export async function trackVideoProgress(partNumber: number, watchPercent: numbe
   }
 
   const clamped = Math.min(100, Math.max(0, Math.round(watchPercent)));
-  console.log(`[PROGRESS] trackVideoProgress: Clamped watchPercent to ${clamped}%`);
 
-  // Single upsert: create the row if missing, then advance the percent only if higher
   await prisma.partProgress.upsert({
-    where:  { userId_partNumber: { userId, partNumber } },
+    where:  { learnerProfileId_partNumber: { learnerProfileId, partNumber } },
     create: {
       userId,
+      learnerProfileId,
       partNumber,
       videoWatchPercent: clamped,
       videoCompleted:    clamped >= VIDEO_COMPLETION_THRESHOLD,
@@ -136,32 +131,29 @@ export async function trackVideoProgress(partNumber: number, watchPercent: numbe
       lastAccessedAt:    new Date(),
     },
     update: {
-      // MAX(existing, clamped) via raw SQL expression
       videoWatchPercent: { set: clamped },
       videoCompleted:    clamped >= VIDEO_COMPLETION_THRESHOLD ? true : undefined,
       lastAccessedAt:    new Date(),
     },
   });
 
-  // Re-fetch to check if we actually need to keep the higher value
-  // (Prisma doesn't support MAX(...) on update directly — guard with a read)
+  // Guard: only keep the higher value (Prisma doesn't support MAX on update)
   const existing = await prisma.partProgress.findUnique({
-    where:  { userId_partNumber: { userId, partNumber } },
+    where:  { learnerProfileId_partNumber: { learnerProfileId, partNumber } },
     select: { videoWatchPercent: true },
   });
 
   if (existing && existing.videoWatchPercent < clamped) {
-    console.log(`[PROGRESS] trackVideoProgress: Correcting to ${clamped}% (was ${existing.videoWatchPercent}%) for user ${userId}, part ${partNumber}`);
     await prisma.partProgress.update({
-      where: { userId_partNumber: { userId, partNumber } },
+      where: { learnerProfileId_partNumber: { learnerProfileId, partNumber } },
       data:  { videoWatchPercent: clamped, videoCompleted: clamped >= VIDEO_COMPLETION_THRESHOLD },
     });
   }
 
-  await recomputeAndSave(userId, partNumber, userPlan);
+  await recomputeAndSave(learnerProfileId, partNumber, userPlan);
   
   const elapsed = Date.now() - startTime;
-  console.log(`[PROGRESS] trackVideoProgress: Complete for user ${userId}, part ${partNumber} [${elapsed}ms]`);
+  console.log(`[PROGRESS] trackVideoProgress: Complete for profile ${learnerProfileId}, part ${partNumber} [${elapsed}ms]`);
 }
 
 /** Called when the user opens/views the briefing for a part. */
@@ -169,28 +161,21 @@ export async function trackBriefingOpened(partNumber: number) {
   console.log(`[PROGRESS] trackBriefingOpened: Part ${partNumber}`);
   
   const user = await requireStudent();
-  if (!user) {
-    console.log(`[PROGRESS] trackBriefingOpened: No authenticated student`);
-    return;
-  }
+  if (!user) return;
 
-  const userId  = user.id;
-  console.log(`[PROGRESS] trackBriefingOpened: User ${userId} (${user.email}), part ${partNumber}`);
+  const userId          = user.id;
+  const learnerProfileId = await getActiveProfileId(userId);
   
   const userPlan = await getUserPlan(userId);
-  if (!userPlan) {
-    console.log(`[PROGRESS] trackBriefingOpened: User ${userId} has no valid plan, skipping`);
-    return;
-  }
+  if (!userPlan) return;
 
-  await getOrCreateProgress(userId, partNumber);
+  await getOrCreateProgress(userId, learnerProfileId, partNumber);
   await prisma.partProgress.update({
-    where: { userId_partNumber: { userId, partNumber } },
+    where: { learnerProfileId_partNumber: { learnerProfileId, partNumber } },
     data:  { briefingOpened: true, lastAccessedAt: new Date() },
   });
 
-  console.log(`[PROGRESS] trackBriefingOpened: Briefing marked as opened for user ${userId}, part ${partNumber}`);
-  await recomputeAndSave(userId, partNumber, userPlan);
+  await recomputeAndSave(learnerProfileId, partNumber, userPlan);
 }
 
 /** Called when the quiz is completed with a final score (0-100). */
@@ -198,34 +183,26 @@ export async function trackQuizCompleted(partNumber: number, score: number) {
   console.log(`[PROGRESS] trackQuizCompleted: Part ${partNumber}, score ${score}`);
   
   const user = await requireStudent();
-  if (!user) {
-    console.log(`[PROGRESS] trackQuizCompleted: No authenticated student`);
-    return;
-  }
+  if (!user) return;
 
-  const userId  = user.id;
-  console.log(`[PROGRESS] trackQuizCompleted: User ${userId} (${user.email}), part ${partNumber}, score ${score}`);
+  const userId          = user.id;
+  const learnerProfileId = await getActiveProfileId(userId);
   
   const userPlan = await getUserPlan(userId);
-  if (!userPlan) {
-    console.log(`[PROGRESS] trackQuizCompleted: User ${userId} has no valid plan, skipping`);
-    return;
-  }
+  if (!userPlan) return;
 
   const clamped = Math.min(100, Math.max(0, Math.round(score)));
   const passed  = clamped >= QUIZ_PASS_SCORE;
-  console.log(`[PROGRESS] trackQuizCompleted: Clamped score ${clamped}, passed: ${passed} (threshold: ${QUIZ_PASS_SCORE})`);
 
-  await getOrCreateProgress(userId, partNumber);
+  await getOrCreateProgress(userId, learnerProfileId, partNumber);
   const existing = await prisma.partProgress.findUnique({
-    where: { userId_partNumber: { userId, partNumber } },
+    where: { learnerProfileId_partNumber: { learnerProfileId, partNumber } },
     select: { quizBestScore: true },
   });
   const bestScore = Math.max(existing?.quizBestScore ?? 0, clamped);
-  console.log(`[PROGRESS] trackQuizCompleted: Best score updated from ${existing?.quizBestScore ?? 0} to ${bestScore}`);
 
   await prisma.partProgress.update({
-    where: { userId_partNumber: { userId, partNumber } },
+    where: { learnerProfileId_partNumber: { learnerProfileId, partNumber } },
     data: {
       quizCompleted:  true,
       quizScore:      clamped,
@@ -236,67 +213,52 @@ export async function trackQuizCompleted(partNumber: number, score: number) {
     },
   });
 
-  await recomputeAndSave(userId, partNumber, userPlan);
+  await recomputeAndSave(learnerProfileId, partNumber, userPlan);
 
-  console.log(`[PROGRESS] trackQuizCompleted: Quiz tracked for user ${userId}, part ${partNumber} (score: ${clamped}, best: ${bestScore}, passed: ${bestScore >= QUIZ_PASS_SCORE})`);
+  console.log(`[PROGRESS] trackQuizCompleted: Profile ${learnerProfileId}, part ${partNumber}, score ${clamped}, passed: ${passed}`);
   return { score: clamped, passed, bestScore };
 }
 
 /** Called when flashcards session is started/reviewed. */
 export async function trackFlashcardsReviewed(partNumber: number) {
-  console.log(`[PROGRESS] trackFlashcardsReviewed: Part ${partNumber}`);
-  
   const user = await requireStudent();
-  if (!user) {
-    console.log(`[PROGRESS] trackFlashcardsReviewed: No authenticated student`);
-    return;
-  }
+  if (!user) return;
 
-  const userId  = user.id;
-  console.log(`[PROGRESS] trackFlashcardsReviewed: User ${userId} (${user.email}), part ${partNumber}`);
+  const userId          = user.id;
+  const learnerProfileId = await getActiveProfileId(userId);
   
   const userPlan = await getUserPlan(userId);
-  if (!userPlan) {
-    console.log(`[PROGRESS] trackFlashcardsReviewed: User ${userId} has no valid plan, skipping`);
-    return;
-  }
+  if (!userPlan) return;
 
-  await getOrCreateProgress(userId, partNumber);
+  await getOrCreateProgress(userId, learnerProfileId, partNumber);
   await prisma.partProgress.update({
-    where: { userId_partNumber: { userId, partNumber } },
+    where: { learnerProfileId_partNumber: { learnerProfileId, partNumber } },
     data: { flashcardsReviewed: true, lastAccessedAt: new Date() },
   });
 
-  console.log(`[PROGRESS] trackFlashcardsReviewed: Flashcards marked as reviewed for user ${userId}, part ${partNumber}`);
-  await recomputeAndSave(userId, partNumber, userPlan);
+  await recomputeAndSave(learnerProfileId, partNumber, userPlan);
 }
 
 /**
  * Called when any optional asset is opened.
  * assetId examples: "slides", "mindmap", "infographic", "study_guide",
- *                   "report", "statement_of_facts", "timeline"
+ *                   "report", "statement-of-facts", "timeline", "audio"
  */
 export async function trackAssetOpened(partNumber: number, assetId: string) {
   console.log(`[PROGRESS] trackAssetOpened: Part ${partNumber}, assetId "${assetId}"`);
   
   const user = await requireStudent();
-  if (!user) {
-    console.log(`[PROGRESS] trackAssetOpened: No authenticated student`);
-    return;
-  }
+  if (!user) return;
 
-  const userId = user.id;
-  console.log(`[PROGRESS] trackAssetOpened: User ${userId} (${user.email}), part ${partNumber}, asset "${assetId}"`);
+  const userId          = user.id;
+  const learnerProfileId = await getActiveProfileId(userId);
   
   const userPlan = await getUserPlan(userId);
-  if (!userPlan) {
-    console.log(`[PROGRESS] trackAssetOpened: User ${userId} has no valid plan, skipping`);
-    return;
-  }
+  if (!userPlan) return;
 
-  await getOrCreateProgress(userId, partNumber);
+  await getOrCreateProgress(userId, learnerProfileId, partNumber);
   const row = await prisma.partProgress.findUnique({
-    where: { userId_partNumber: { userId, partNumber } },
+    where: { learnerProfileId_partNumber: { learnerProfileId, partNumber } },
     select: { openedAssets: true },
   });
   let opened: string[] = [];
@@ -304,38 +266,30 @@ export async function trackAssetOpened(partNumber: number, assetId: string) {
   
   if (!opened.includes(assetId)) {
     opened.push(assetId);
-    console.log(`[PROGRESS] trackAssetOpened: Adding "${assetId}" to opened assets (now: [${opened.join(", ")}])`);
-  } else {
-    console.log(`[PROGRESS] trackAssetOpened: Asset "${assetId}" already opened, no update`);
   }
 
   await prisma.partProgress.update({
-    where: { userId_partNumber: { userId, partNumber } },
+    where: { learnerProfileId_partNumber: { learnerProfileId, partNumber } },
     data: { openedAssets: JSON.stringify(opened), lastAccessedAt: new Date() },
   });
 
-  await recomputeAndSave(userId, partNumber, userPlan);
-  console.log(`[PROGRESS] trackAssetOpened: Asset tracked for user ${userId}, part ${partNumber}, asset "${assetId}"`);
+  await recomputeAndSave(learnerProfileId, partNumber, userPlan);
+  console.log(`[PROGRESS] trackAssetOpened: Profile ${learnerProfileId}, part ${partNumber}, asset "${assetId}"`);
 }
 
 /** Mark a part as started (called when user opens the part page). */
 export async function trackPartOpened(partNumber: number) {
-  console.log(`[PROGRESS] trackPartOpened: Part ${partNumber}`);
-  
   const user = await requireStudent();
-  if (!user) {
-    console.log(`[PROGRESS] trackPartOpened: No authenticated student`);
-    return;
-  }
+  if (!user) return;
 
-  const userId = user.id;
-  console.log(`[PROGRESS] trackPartOpened: User ${userId} (${user.email}), part ${partNumber}`);
+  const userId          = user.id;
+  const learnerProfileId = await getActiveProfileId(userId);
 
   await prisma.partProgress.upsert({
-    where:  { userId_partNumber: { userId, partNumber } },
-    create: { userId, partNumber, status: "started", startedAt: new Date(), lastAccessedAt: new Date() },
+    where:  { learnerProfileId_partNumber: { learnerProfileId, partNumber } },
+    create: { userId, learnerProfileId, partNumber, status: "started", startedAt: new Date(), lastAccessedAt: new Date() },
     update: { lastAccessedAt: new Date() },
   });
   
-  console.log(`[PROGRESS] trackPartOpened: Part ${partNumber} marked as opened/accessed for user ${userId}`);
+  console.log(`[PROGRESS] trackPartOpened: Part ${partNumber} opened for profile ${learnerProfileId}`);
 }

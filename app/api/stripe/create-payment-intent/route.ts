@@ -46,9 +46,9 @@ export async function POST(request: NextRequest) {
 
     const plan = PLANS[planId];
 
-    // Server decides the price — always $99, client cannot override.
+    // Server decides the price — always $99 (9900 cents), client cannot override.
     const earlyAccessActive = isEarlyAccessActive(); // always false
-    const baseAmount: number = getBasePrice(); // always 4900
+    const baseAmount: number = getBasePrice(); // always 9900
 
     // ── Apply promo code if provided ──
     let finalAmount: number = baseAmount;

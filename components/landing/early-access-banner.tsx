@@ -23,11 +23,17 @@ function computeTimeLeft(): TimeLeft {
  * so every user sees the same remaining days — no per-visitor resets.
  */
 export function EarlyAccessBanner() {
-  const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(null);
+  // Initialize from client immediately; null only during SSR to avoid hydration mismatch.
+  const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(
+    typeof window === "undefined" ? null : computeTimeLeft()
+  );
 
   useEffect(() => {
+    // Set the initial value on mount — intentionally in the effect so the server
+    // renders a neutral placeholder (null) without a hydration mismatch.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTimeLeft(computeTimeLeft());
-    // Update once per minute — days don't need second-level precision
+    // Update once per minute — days don't need second-level precision.
     const id = setInterval(() => setTimeLeft(computeTimeLeft()), 60_000);
     return () => clearInterval(id);
   }, []);

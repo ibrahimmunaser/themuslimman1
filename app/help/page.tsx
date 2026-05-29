@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { StudentLayout } from "@/components/student/student-layout";
-import { prisma } from "@/lib/db";
 import { HelpCircle, BookOpen, CreditCard, Lock } from "lucide-react";
 import { ContactSupportForm } from "@/components/help/contact-support-form";
 
@@ -15,10 +14,6 @@ export default async function HelpPage() {
   if (!user) {
     redirect("/login?redirect=/help");
   }
-
-  const purchases = await prisma.purchase.findMany({
-    where: { userId: user.id, status: "succeeded" },
-  });
 
   const userPlan = "complete" as const;
 

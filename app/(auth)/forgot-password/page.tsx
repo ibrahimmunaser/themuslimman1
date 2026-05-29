@@ -51,13 +51,13 @@ export default function ForgotPasswordPage() {
             <h1 className="text-2xl font-bold text-text mb-3">Check Your Email</h1>
             
             <p className="text-text-secondary mb-6">
-              If an account exists with <span className="text-gold font-medium">{email}</span>, 
-              you'll receive an email with instructions to reset your password.
+              If an account exists with <span className="text-gold font-medium">{email}</span>,{" "}
+              you&apos;ll receive an email with instructions to reset your password.
             </p>
 
             <div className="p-4 rounded-lg bg-blue-500/5 border border-blue-500/20 text-left mb-6">
               <p className="text-sm text-text-secondary">
-                <strong className="text-text">Didn't receive an email?</strong>
+                <strong className="text-text">Didn&apos;t receive an email?</strong>
               </p>
               <ul className="text-sm text-text-muted mt-2 space-y-1">
                 <li>• Check your spam/junk folder</li>
@@ -85,7 +85,7 @@ export default function ForgotPasswordPage() {
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-text mb-2">Forgot Password?</h1>
           <p className="text-text-secondary text-sm">
-            Enter your email and we'll send you a link to reset your password
+            Enter your email and we&apos;ll send you a link to reset your password
           </p>
         </div>
 
@@ -102,7 +102,7 @@ export default function ForgotPasswordPage() {
             />
 
             {error && (
-              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+              <div role="alert" aria-live="assertive" className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
                 {error}
               </div>
             )}

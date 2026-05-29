@@ -5,11 +5,11 @@ import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 
 interface NavbarMobileMenuProps {
-  user: any;
+  user: { fullName: string } | null;
   firstName: string | null;
 }
 
-export function NavbarMobileMenu({ user, firstName }: NavbarMobileMenuProps) {
+export function NavbarMobileMenu({ user }: NavbarMobileMenuProps) {
   const [open, setOpen] = useState(false);
 
   // Lock body scroll when menu is open

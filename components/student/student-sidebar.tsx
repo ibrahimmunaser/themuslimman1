@@ -12,6 +12,7 @@ import {
   TrendingUp,
   HelpCircle,
   User,
+  Users,
   CreditCard,
   LogOut,
   ChevronRight,
@@ -19,6 +20,7 @@ import {
   X,
   PanelLeftClose,
   PanelLeftOpen,
+  UserCircle,
 } from "lucide-react";
 
 import dynamic from "next/dynamic";
@@ -43,6 +45,8 @@ const PropheciesWidget = dynamic(
 interface StudentSidebarProps {
   userPlan: "essentials" | "complete";
   userName: string;
+  activeProfileName?: string | null;
+  planType?: string;
 }
 
 interface MenuItem {
@@ -54,26 +58,34 @@ interface MenuItem {
   tabId?: string;
 }
 
-const ACCOUNT_MENU_BASE: MenuItem[] = [
-  { id: "settings", label: "Settings", href: "/student/settings", icon: User },
-];
+// ACCOUNT_MENU is built dynamically inside the component so the Profiles link
+// destination can depend on planType (family → /profiles picker, individual → /student/profiles).
 
-export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
+export function StudentSidebar({
+  userPlan,
+  userName,
+  activeProfileName,
+  planType = "individual",
+}: StudentSidebarProps) {
   const pathname     = usePathname();
   const searchParams = useSearchParams();
   const activeTabParam = searchParams.get("tab");
 
-  const [collapsed,  setCollapsed]  = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [activeTab,  setActiveTab]  = useState<string>(activeTabParam ?? "home");
+  const [collapsed,    setCollapsed]    = useState(false);
+  const [mobileOpen,   setMobileOpen]   = useState(false);
+  const [activeTab,    setActiveTab]    = useState<string>(activeTabParam ?? "home");
+  // Optimistic pending href: set on click so the link highlights before the
+  // navigation completes; cleared once the pathname actually changes.
+  const [pendingHref,  setPendingHref]  = useState<string | null>(null);
 
   const triggerRef = useRef<HTMLButtonElement>(null);
   const drawerRef  = useRef<HTMLElement>(null);
 
-  // Keep local tab state in sync with URL
+  // Keep local tab state in sync with URL; also clear any pending optimistic state.
   useEffect(() => {
     setActiveTab(activeTabParam ?? "home");
-  }, [activeTabParam]);
+    setPendingHref(null);
+  }, [activeTabParam, pathname]);
 
   // Sync when seerah:switchTab fires
   useEffect(() => {
@@ -137,10 +149,14 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
     { id: "progress",   label: "Progress",   href: "/seerah?tab=progress",  icon: TrendingUp,      tabId: "progress"  },
   ];
 
+  const isFamily = planType === "family";
   const ACCOUNT_MENU: MenuItem[] = [
     { id: "help",    label: "Help",    href: "/help",    icon: HelpCircle },
-    ...ACCOUNT_MENU_BASE,
-    { id: "billing", label: "Billing", href: "/billing", icon: CreditCard },
+    // For family plans, "Profiles" goes to the Netflix-style picker (/profiles).
+    // For individual plans, it goes to the profile management page.
+    { id: "settings", label: "Settings", href: "/student/settings", icon: User },
+    { id: "profiles", label: "Profiles", href: isFamily ? "/profiles" : "/student/profiles", icon: Users },
+    { id: "billing", label: "Billing",  href: "/billing",  icon: CreditCard },
   ];
 
   const isActive = (item: MenuItem) => {
@@ -152,10 +168,14 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
     return pathname.startsWith(item.href);
   };
 
-  const handleSignOut = async () => {
-    try {
-      await fetch("/api/auth/signout", { method: "POST" });
-    } catch {}
+  // Extends isActive with an optimistic "pending" state so nav links highlight
+  // immediately on click rather than waiting for the navigation to complete.
+  const isActiveDisplay = (item: MenuItem): boolean =>
+    (pendingHref !== null && item.href === pendingHref) || isActive(item);
+
+  const handleSignOut = () => {
+    // Fire-and-forget: don't block navigation on the API round-trip.
+    fetch("/api/auth/signout", { method: "POST" }).catch(() => {});
     window.location.href = "/login";
   };
 
@@ -165,7 +185,9 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
   };
 
   // ── Desktop sidebar content (full nav + widgets) ───────────────────────────
-  const DesktopContent = () => (
+  // Defined as a plain JSX variable (not a component) so that state changes in
+  // StudentSidebar never cause React to unmount/remount this subtree.
+  const desktopContent = (
     <>
       {/* Logo + collapse toggle (desktop only) */}
       {!collapsed && (
@@ -193,7 +215,7 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
         </div>
       )}
 
-      {/* User Info */}
+      {/* User Info + Active Profile */}
       <div className="p-3 border-b border-border">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full bg-gold/10 border border-gold/30 flex items-center justify-center flex-shrink-0">
@@ -208,6 +230,24 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
             </div>
           )}
         </div>
+
+        {/* Active learner profile indicator */}
+        {!collapsed && activeProfileName && (
+          <div className="mt-2 pt-2 border-t border-border/60">
+            <div className="flex items-center justify-between gap-1">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <UserCircle className="w-3.5 h-3.5 text-text-muted flex-shrink-0" />
+                <span className="text-[11px] text-text-muted truncate">{activeProfileName}</span>
+              </div>
+              <Link
+                href="/profiles"
+                className="flex-shrink-0 text-[10px] font-semibold text-gold/70 hover:text-gold transition-colors whitespace-nowrap"
+              >
+                Switch
+              </Link>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Course Navigation — scrollable middle */}
@@ -219,12 +259,12 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
           <div className="space-y-1">
             {MAIN_MENU.map((item) => {
               const Icon   = item.icon;
-              const active = isActive(item);
+              const active = isActiveDisplay(item);
               const cls    = clsx(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all w-full text-left",
+                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all w-full text-left border",
                 active
-                  ? "bg-gold/10 text-gold border border-gold/25"
-                  : "text-text-secondary hover:text-text hover:bg-surface-raised"
+                  ? "bg-gold/10 text-gold border-gold/25"
+                  : "border-transparent text-text-secondary hover:text-text hover:bg-surface-raised"
               );
 
               if (isOnDashboard && item.tabId !== undefined) {
@@ -236,7 +276,7 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
                 );
               }
               return (
-                <Link key={item.id} href={item.href} className={cls}>
+                <Link key={item.id} href={item.href} onClick={() => setPendingHref(item.href)} className={cls}>
                   <Icon className="w-5 h-5 flex-shrink-0" />
                   {!collapsed && <span className="flex-1">{item.label}</span>}
                 </Link>
@@ -246,11 +286,16 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
         </nav>
 
         {!collapsed && (
-          <WidgetCycleProvider>
-            <DidYouKnowWidget />
-            <MiraclesWidget />
-            <PropheciesWidget />
-          </WidgetCycleProvider>
+          <>
+            <div className="px-4 pt-3 pb-1">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted/50">Explore</p>
+            </div>
+            <WidgetCycleProvider>
+              <DidYouKnowWidget />
+              <MiraclesWidget />
+              <PropheciesWidget />
+            </WidgetCycleProvider>
+          </>
         )}
       </div>
 
@@ -263,16 +308,17 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
           <div className="space-y-0.5">
             {ACCOUNT_MENU.map((item) => {
               const Icon   = item.icon;
-              const active = isActive(item);
+              const active = isActiveDisplay(item);
               return (
                 <Link
                   key={item.id}
                   href={item.href}
+                  onClick={() => setPendingHref(item.href)}
                   className={clsx(
-                    "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all",
+                    "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all border",
                     active
-                      ? "bg-gold/10 text-gold border border-gold/25"
-                      : "text-text-secondary hover:text-text hover:bg-surface-raised"
+                      ? "bg-gold/10 text-gold border-gold/25"
+                      : "border-transparent text-text-secondary hover:text-text hover:bg-surface-raised"
                   )}
                 >
                   <Icon className="w-5 h-5 flex-shrink-0" />
@@ -296,7 +342,7 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
   );
 
   // ── Mobile drawer content (account-focused; no primary nav duplication) ────
-  const MobileDrawerContent = () => (
+  const mobileDrawerContent = (
     <>
       {/* Drawer header — logo + close — always visible immediately */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border flex-shrink-0">
@@ -336,6 +382,24 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
               </span>
             </div>
           </div>
+          {/* Active learner profile */}
+          {activeProfileName && (
+            <div className="mt-2.5 pt-2.5 border-t border-border/50 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <UserCircle className="w-3.5 h-3.5 text-text-muted flex-shrink-0" />
+                <span className="text-xs text-text-muted truncate">
+                  Learning as <span className="text-text font-medium">{activeProfileName}</span>
+                </span>
+              </div>
+              <Link
+                href="/profiles"
+                onClick={closeDrawer}
+                className="flex-shrink-0 text-xs font-semibold text-gold/70 hover:text-gold transition-colors whitespace-nowrap"
+              >
+                Switch
+              </Link>
+            </div>
+          )}
         </div>
 
         {/* Course nav — only when top tabs are NOT visible (i.e. not on /seerah dashboard) */}
@@ -347,17 +411,17 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
             <div className="space-y-0.5">
               {MAIN_MENU.map((item) => {
                 const Icon   = item.icon;
-                const active = isActive(item);
+                const active = isActiveDisplay(item);
                 return (
                   <Link
                     key={item.id}
                     href={item.href}
-                    onClick={closeDrawer}
+                    onClick={() => { setPendingHref(item.href); closeDrawer(); }}
                     className={clsx(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all min-h-[44px]",
+                      "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all min-h-[44px] border",
                       active
-                        ? "bg-gold/10 text-gold border border-gold/20"
-                        : "text-text-secondary hover:text-text hover:bg-surface-raised"
+                        ? "bg-gold/10 text-gold border-gold/20"
+                        : "border-transparent text-text-secondary hover:text-text hover:bg-surface-raised"
                     )}
                   >
                     <Icon className="w-4 h-4 flex-shrink-0" />
@@ -378,17 +442,17 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
           <div className="space-y-0.5">
             {ACCOUNT_MENU.map((item) => {
               const Icon   = item.icon;
-              const active = isActive(item);
+              const active = isActiveDisplay(item);
               return (
                 <Link
                   key={item.id}
                   href={item.href}
-                  onClick={closeDrawer}
+                  onClick={() => { setPendingHref(item.href); closeDrawer(); }}
                   className={clsx(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all min-h-[44px]",
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all min-h-[44px] border",
                     active
-                      ? "bg-gold/10 text-gold border border-gold/20"
-                      : "text-text-secondary hover:text-text hover:bg-surface-raised"
+                      ? "bg-gold/10 text-gold border-gold/20"
+                      : "border-transparent text-text-secondary hover:text-text hover:bg-surface-raised"
                   )}
                 >
                   <Icon className="w-4 h-4 flex-shrink-0" />
@@ -500,10 +564,10 @@ export function StudentSidebar({ userPlan, userName }: StudentSidebarProps) {
 
         {/* Render mobile drawer content on mobile, desktop content on desktop */}
         <div className="lg:hidden flex flex-col flex-1 min-h-0">
-          <MobileDrawerContent />
+          {mobileDrawerContent}
         </div>
         <div className="hidden lg:flex flex-col flex-1 min-h-0">
-          <DesktopContent />
+          {desktopContent}
         </div>
       </aside>
     </>

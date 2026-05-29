@@ -163,14 +163,25 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
     
     console.log(`[WEBHOOK] handlePaymentSuccess: Purchase record upserted for payment ${paymentIntent.id}`);
 
-    // Update user's hasPaid flag and save stripeCustomerId if present
-    const updateData: { hasPaid: boolean; stripeCustomerId?: string } = { hasPaid: true };
+    // Update user's hasPaid flag, planType, and stripeCustomerId if present.
+    // If this is a Family plan purchase, set planType = "family" so the user
+    // gets up to 5 learner profiles. Individual plan leaves planType unchanged.
+    const updateData: {
+      hasPaid: boolean;
+      planType?: string;
+      stripeCustomerId?: string;
+    } = { hasPaid: true };
+
+    if (planId === "family") {
+      updateData.planType = "family";
+      console.log(`[WEBHOOK] handlePaymentSuccess: Setting planType=family for user ${userId}`);
+    }
+
     if (paymentIntent.customer && typeof paymentIntent.customer === "string") {
       updateData.stripeCustomerId = paymentIntent.customer;
-      console.log(`[WEBHOOK] handlePaymentSuccess: Updating user ${userId} with stripeCustomerId ${paymentIntent.customer}`);
     }
     await prisma.user.update({ where: { id: userId }, data: updateData });
-    console.log(`[WEBHOOK] handlePaymentSuccess: User ${userId} updated with hasPaid=true`);
+    console.log(`[WEBHOOK] handlePaymentSuccess: User ${userId} updated - hasPaid=true, planType=${updateData.planType ?? "unchanged"}`);
 
     // Attach payment method to Stripe customer for saved cards
     if (paymentIntent.payment_method && paymentIntent.customer) {
@@ -277,6 +288,54 @@ async function handleSubscriptionDeleted(sub: Stripe.Subscription) {
     data: { status: "canceled", updatedAt: new Date() },
   });
   console.log(`[WEBHOOK] Subscription ${sub.id} marked canceled`);
+
+  // If this was a Family Monthly subscription, downgrade the user's planType
+  // back to "individual" — unless they also hold a lifetime Family purchase.
+  //
+  // Detection order:
+  //   1. metadata.planType === "family"  (set by create-family-subscription-intent)
+  //   2. price ID matches STRIPE_FAMILY_MONTHLY_PRICE_ID  (fallback for subs created
+  //      before we added metadata, or if Stripe drops metadata on retries)
+  const cancelledPriceId = sub.items.data[0]?.price?.id;
+  const isFamilySub =
+    sub.metadata?.planType === "family" ||
+    (!!cancelledPriceId && cancelledPriceId === process.env.STRIPE_FAMILY_MONTHLY_PRICE_ID);
+
+  if (!isFamilySub) {
+    console.log(`[WEBHOOK] handleSubscriptionDeleted: sub ${sub.id} is not a family sub — no planType change`);
+    return;
+  }
+
+  // Resolve userId: prefer subscription metadata, fall back to Stripe customer lookup.
+  let userId: string | null = sub.metadata?.userId ?? null;
+  if (!userId) {
+    const customerId = typeof sub.customer === "string" ? sub.customer : (sub.customer as Stripe.Customer)?.id;
+    if (customerId) {
+      const u = await prisma.user.findFirst({ where: { stripeCustomerId: customerId }, select: { id: true } });
+      userId = u?.id ?? null;
+    }
+  }
+
+  if (!userId) {
+    console.error("[WEBHOOK] handleSubscriptionDeleted: Could not resolve userId for family sub", sub.id);
+    return;
+  }
+
+  // Keep planType=family if they own a lifetime family purchase
+  const lifetimeFamilyPurchase = await prisma.purchase.findFirst({
+    where: { userId, planId: "family", status: "succeeded" },
+    select: { id: true },
+  });
+
+  if (!lifetimeFamilyPurchase) {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { planType: "individual" },
+    }).catch((e) => console.error("[WEBHOOK] handleSubscriptionDeleted: Failed to reset planType:", e));
+    console.log(`[WEBHOOK] Downgraded user ${userId} to planType=individual after family sub ${sub.id} cancelled`);
+  } else {
+    console.log(`[WEBHOOK] User ${userId} retains planType=family (has lifetime purchase) after sub ${sub.id} cancelled`);
+  }
 }
 
 async function syncSubscriptionStatus(subscriptionId: string) {
@@ -289,8 +348,11 @@ async function syncSubscriptionStatus(subscriptionId: string) {
       where: { stripeSubscriptionId: subscriptionId },
       data: {
         status: sub.status,
-        currentPeriodStart: periods.start,
-        currentPeriodEnd: periods.end,
+        // Only overwrite period dates when Stripe provides real values.
+        ...(periods ? {
+          currentPeriodStart: periods.start,
+          currentPeriodEnd: periods.end,
+        } : {}),
         cancelAtPeriodEnd: sub.cancel_at_period_end,
         updatedAt: new Date(),
       },
@@ -302,28 +364,44 @@ async function syncSubscriptionStatus(subscriptionId: string) {
 
 /**
  * In Stripe API 2026-04-22.dahlia, period dates moved from Subscription to SubscriptionItem.
- * This helper reads from SubscriptionItem first, falling back to created date.
+ * Returns the real period dates when available, or null when they cannot be determined safely.
+ *
+ * The old fallback using `sub.created + 30 days` was removed because it writes stale dates
+ * for any webhook fired after the subscription's first billing cycle (e.g. a renewal event
+ * on a 6-month-old subscription would store a currentPeriodEnd 6 months in the past).
+ * Callers must handle null: skip updating period columns on UPDATE; use a logged approximate
+ * on CREATE (since the DB columns are non-nullable).
  */
-function getSubPeriod(sub: Stripe.Subscription): { start: Date; end: Date } {
+function getSubPeriod(sub: Stripe.Subscription): { start: Date; end: Date } | null {
   const item = sub.items?.data?.[0];
-  if (item && item.current_period_start && item.current_period_end) {
+  if (item?.current_period_start && item?.current_period_end) {
     return {
       start: new Date(item.current_period_start * 1000),
       end: new Date(item.current_period_end * 1000),
     };
   }
-  // Fallback: approximate 30-day period from subscription creation
-  const startMs = sub.created * 1000;
-  return {
-    start: new Date(startMs),
-    end: new Date(startMs + 30 * 24 * 60 * 60 * 1000),
-  };
+  console.warn(
+    `[WEBHOOK] getSubPeriod: No SubscriptionItem period dates for sub ${sub.id}. ` +
+    `Period columns will not be overwritten on existing records.`
+  );
+  return null;
 }
 
 async function upsertSubscription(userId: string, sub: Stripe.Subscription) {
   const customerId = typeof sub.customer === "string" ? sub.customer : (sub.customer as Stripe.Customer)?.id ?? "";
   const priceId = sub.items.data[0]?.price?.id ?? "";
   const periods = getSubPeriod(sub);
+
+  // On CREATE the schema requires non-nullable period columns.
+  // If Stripe didn't provide real dates, approximate now→+30d and log — this
+  // only affects brand-new subscriptions where we have no prior data to preserve.
+  const createPeriodStart = periods?.start ?? new Date();
+  const createPeriodEnd   = periods?.end   ?? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+  if (!periods) {
+    console.warn(
+      `[WEBHOOK] upsertSubscription: Using approximate period dates for CREATE of sub ${sub.id}`
+    );
+  }
 
   await prisma.subscription.upsert({
     where: { stripeSubscriptionId: sub.id },
@@ -333,19 +411,35 @@ async function upsertSubscription(userId: string, sub: Stripe.Subscription) {
       stripeSubscriptionId: sub.id,
       stripePriceId: priceId,
       status: sub.status,
-      currentPeriodStart: periods.start,
-      currentPeriodEnd: periods.end,
+      currentPeriodStart: createPeriodStart,
+      currentPeriodEnd: createPeriodEnd,
       cancelAtPeriodEnd: sub.cancel_at_period_end,
     },
     update: {
       status: sub.status,
       stripePriceId: priceId,
-      currentPeriodStart: periods.start,
-      currentPeriodEnd: periods.end,
+      // Only overwrite period dates when Stripe provides real values.
+      // Leaving them untouched is always safer than writing stale dates.
+      ...(periods ? {
+        currentPeriodStart: periods.start,
+        currentPeriodEnd: periods.end,
+      } : {}),
       cancelAtPeriodEnd: sub.cancel_at_period_end,
       updatedAt: new Date(),
     },
   });
+
+  // If this is a Family plan subscription that just became active or trialing,
+  // upgrade the user's planType to "family" so they get the 5-profile limit.
+  const isFamilySub = sub.metadata?.planType === "family";
+  const isActiveOrTrialing = sub.status === "active" || sub.status === "trialing";
+  if (isFamilySub && isActiveOrTrialing) {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { planType: "family" },
+    }).catch((e) => console.error("[WEBHOOK] upsertSubscription: Failed to set planType=family:", e));
+    console.log(`[WEBHOOK] upsertSubscription: Set planType=family for user ${userId} (sub ${sub.id})`);
+  }
 }
 
 // ── Gift payment ──────────────────────────────────────────────────────────────

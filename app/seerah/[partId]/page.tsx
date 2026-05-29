@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { requireStudent } from "@/lib/auth";
 import { hasActiveCourseAccess } from "@/lib/access";
+import { getActiveProfileId } from "@/app/actions/profiles";
 import { getPartById, PARTS } from "@/lib/content";
 import { ERA_MAP } from "@/lib/types";
 import type { Part } from "@/lib/types";
@@ -146,10 +147,12 @@ export default async function SeerahPartPage(props: Props) {
   const user = await requireStudent();
   if (!user.studentProfileId) notFound();
 
+  const learnerProfileId = user.activeProfileId ?? await getActiveProfileId(user.id);
+
   const [accessOk, partProgress] = await Promise.all([
-    n !== 1 ? hasActiveCourseAccess(user.id) : Promise.resolve(true),
+    n !== 1 ? hasActiveCourseAccess(user.id, user.hasPaid) : Promise.resolve(true),
     prisma.partProgress.findUnique({
-      where: { userId_partNumber: { userId: user.id, partNumber: n } },
+      where: { learnerProfileId_partNumber: { learnerProfileId, partNumber: n } },
       select: {
         videoWatchPercent:  true,
         briefingOpened:     true,
@@ -183,7 +186,7 @@ export default async function SeerahPartPage(props: Props) {
   // ④ Shell renders immediately after auth (~400-800ms TTFB).
   //    PartTabsContent is inside <Suspense> — it streams in when R2 is ready.
   return (
-    <StudentLayout userPlan={userPlan} userName={user.fullName}>
+    <StudentLayout userPlan={userPlan} userName={user.fullName} activeProfileName={user.activeProfileName} planType={user.planType}>
       <StudyTimeTracker partNumber={n} />
 
       <div className="min-h-screen bg-background">
