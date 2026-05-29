@@ -13,7 +13,7 @@ export function NavLinks({ isLoggedIn }: NavLinksProps) {
   const links = [
     { href: "/", label: "Home" },
     { href: "/pricing", label: "Pricing" },
-    { href: isLoggedIn ? "/help" : "/contact", label: "Help" },
+    { href: "/contact", label: "Help" },
   ];
 
   return (

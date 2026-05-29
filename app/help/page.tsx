@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
+import { hasActiveCourseAccess } from "@/lib/access";
 import { StudentLayout } from "@/components/student/student-layout";
 import { HelpCircle, BookOpen, CreditCard, Lock } from "lucide-react";
 import { ContactSupportForm } from "@/components/help/contact-support-form";
@@ -9,11 +10,11 @@ export const dynamic = "force-dynamic";
 
 export default async function HelpPage() {
   const user = await getCurrentUser();
-  
-  // If not logged in, redirect to login
-  if (!user) {
-    redirect("/login?redirect=/help");
-  }
+
+  // Unpaid or logged-out users → public contact page
+  if (!user) redirect("/contact");
+  const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
+  if (!hasAccess) redirect("/contact");
 
   const userPlan = "complete" as const;
 

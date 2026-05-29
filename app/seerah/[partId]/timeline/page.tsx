@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { requireStudent } from "@/lib/auth";
+import { hasActiveCourseAccess } from "@/lib/access";
 import { getActiveProfileId } from "@/app/actions/profiles";
 import { getPartById, PARTS } from "@/lib/content";
 import { ERA_MAP } from "@/lib/types";
@@ -31,12 +32,8 @@ export default async function TimelinePage(props: Props) {
   const partBase = getPartById(partId);
   if (!partBase) notFound();
 
-  if (!user.hasPaid) {
-    const purchase = await prisma.purchase.findFirst({
-      where: { userId: user.id, status: "succeeded" },
-    });
-    if (!purchase) redirect("/pricing");
-  }
+  const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
+  if (!hasAccess) redirect("/pricing");
 
   const userPlan = "complete" as const;
 

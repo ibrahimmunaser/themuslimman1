@@ -76,7 +76,7 @@ function SignupPageContent() {
       }
 
       // Dev mode (auto-verified) or gift claim flow — go to destination.
-      const destination = redirectAfter || "/get-started";
+      const destination = redirectAfter || "/pricing";
       router.push(destination);
     } catch {
       setError("Something went wrong. Please try again.");
@@ -96,8 +96,9 @@ function SignupPageContent() {
           </div>
           <h1 className="text-2xl font-bold text-text mb-3">Check your email</h1>
           <p className="text-text-secondary mb-6">
-            We sent a verification link to <span className="text-text font-medium">{form.email}</span>.
-            Click the link to verify your account, then come back to log in.
+            We sent a verification link to{" "}
+            <span className="text-text font-medium">{form.email}</span>.
+            Click the link to verify your account, then come back to sign in.
           </p>
           <div className="bg-surface border border-border rounded-2xl p-5 text-sm text-text-muted mb-6">
             Didn&apos;t get it? Check your spam folder, or{" "}

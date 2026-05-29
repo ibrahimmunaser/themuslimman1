@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Settings, Check } from "lucide-react";
+import { Plus, Settings, Check, LogOut } from "lucide-react";
 import { switchProfile } from "@/app/actions/profiles";
 import { IslamicPatternBackground } from "@/components/motion";
 
@@ -62,6 +62,11 @@ export function ProfilePickerClient({
   // Build slots: existing profiles first, then empty "Add Profile" slots
   const slots = Array.from({ length: profileLimit }, (_, i) => profiles[i] ?? null);
 
+  async function handleSignOut() {
+    try { await fetch("/api/auth/signout", { method: "POST" }); } catch {}
+    window.location.href = "/login";
+  }
+
   return (
     <div className="relative min-h-screen bg-zinc-950 flex flex-col items-center justify-center px-4 py-16 overflow-hidden">
       {/* Subtle Islamic pattern */}
@@ -69,6 +74,7 @@ export function ProfilePickerClient({
 
       {/* Top edge gold line */}
       <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
+
 
       {/* Header */}
       <motion.div
@@ -122,14 +128,14 @@ export function ProfilePickerClient({
         )}
       </motion.div>
 
-      {/* Manage profiles link */}
-      {isFamily && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.4, delay: 0.35 }}
-          className="mt-12 sm:mt-16"
-        >
+      {/* Bottom actions */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4, delay: 0.35 }}
+        className="mt-12 sm:mt-16 flex items-center gap-2"
+      >
+        {isFamily && (
           <a
             href="/student/profiles"
             className="inline-flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-300 transition-colors px-4 py-2 rounded-lg hover:bg-zinc-800/60"
@@ -137,8 +143,16 @@ export function ProfilePickerClient({
             <Settings className="w-4 h-4" />
             Manage profiles
           </a>
-        </motion.div>
-      )}
+        )}
+        {isFamily && <span className="text-zinc-700 text-xs">·</span>}
+        <button
+          onClick={handleSignOut}
+          className="inline-flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-300 transition-colors px-4 py-2 rounded-lg hover:bg-zinc-800/60"
+        >
+          <LogOut className="w-4 h-4" />
+          Sign out
+        </button>
+      </motion.div>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { requireStudent } from "@/lib/auth";
+import { hasActiveCourseAccess } from "@/lib/access";
 import { getActiveProfileId } from "@/app/actions/profiles";
 import { StudentLayout } from "@/components/student/student-layout";
 import { prisma } from "@/lib/db";
@@ -19,13 +20,8 @@ export default async function SeerahResourcesPage() {
   const user = await requireStudent();
   if (!user.studentProfileId) redirect("/");
 
-  const purchases = await prisma.purchase.findMany({
-    where: { userId: user.id, status: "succeeded" },
-  });
-
-  if (purchases.length === 0) {
-    redirect("/pricing");
-  }
+  const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
+  if (!hasAccess) redirect("/pricing");
 
   const userPlan = "complete" as const;
 
