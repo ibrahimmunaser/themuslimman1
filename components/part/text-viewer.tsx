@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { BookOpen, Clock, Layers, ClipboardCheck, ArrowRight } from "lucide-react";
 import { trackBriefingOpened, trackAssetOpened } from "@/app/actions/progress";
 import { formatSeerahContent } from "@/lib/text-formatter";
@@ -229,13 +230,13 @@ export function TextViewer({
                 Take the Quiz
               </a>
             ) : (
-              <a
+              <Link
                 href="/seerah"
                 className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[44px] border border-border hover:border-gold/40 text-text-secondary hover:text-text rounded-xl text-sm font-medium transition-colors"
               >
                 Continue Learning
                 <ArrowRight className="w-4 h-4" />
-              </a>
+              </Link>
             )}
             <p className="text-[11px] text-text-muted/60">
               {onSwitchToQuiz || (hasQuiz !== false && partNumber)

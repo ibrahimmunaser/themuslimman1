@@ -134,7 +134,7 @@ export async function GET(request: NextRequest) {
         );
 
         const weeklyLessons = weeklyProgress.filter((p) => p.status === "completed").length;
-        const weeklyBriefings = weeklyLessons;
+        const weeklyBriefings = weeklyProgress.filter((p) => p.briefingOpened).length;
 
         const userSessions = sessionsByUser.get(user.id) ?? [];
         const weeklyStudySessions = userSessions.filter((s) => s.startedAt >= oneWeekAgo);
@@ -161,7 +161,7 @@ export async function GET(request: NextRequest) {
         let quizScore: number | undefined;
         let quizAttempts = 0;
         let weeklyQuizzes = 0;
-        const weeklyFlashcards = 0;
+        const weeklyFlashcards = weeklyProgress.filter((p) => p.flashcardsReviewed).length;
 
         if (userPlan === "complete" && user.student?.id) {
           const studentQuizzes = quizByStudent.get(user.student.id) ?? [];

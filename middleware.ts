@@ -24,7 +24,7 @@ const PROTECTED_PREFIXES = [
 
 const SESSION_COOKIE = "seerah_session";
 
-export function proxy(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const token = request.cookies.get(SESSION_COOKIE)?.value;
   const { pathname, search } = request.nextUrl;
 
@@ -32,7 +32,7 @@ export function proxy(request: NextRequest) {
     (r) => pathname === r || pathname.startsWith(r + "/")
   );
 
-  // Only gate protected routes — proxy cannot verify session validity against
+  // Only gate protected routes — middleware cannot verify session validity against
   // the DB (edge runtime has no DB access). If the cookie exists but the
   // session is stale, the page server-component will call getCurrentUser(),
   // get null, and redirect to /login itself. Redirecting auth routes (like

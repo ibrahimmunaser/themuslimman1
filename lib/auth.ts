@@ -3,10 +3,16 @@
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
+import { createHash } from "crypto";
 import { nanoid } from "nanoid";
 import { prisma } from "./db";
 import type { SessionUser } from "./session";
 import { ROLES, type Role, isRole } from "./roles";
+
+/** SHA-256 hash a short token for safe DB storage (same pattern as gift tokens). */
+function hashToken(raw: string): string {
+  return createHash("sha256").update(raw).digest("hex");
+}
 
 const COOKIE_NAME    = "seerah_session";
 const ROLE_COOKIE    = "seerah_role";    // readable by middleware (not httpOnly)
@@ -354,12 +360,13 @@ export async function requestPasswordReset(email: string): Promise<{ success: bo
   console.log(`[PASSWORD_RESET] Processing reset request`);
 
   const resetToken = nanoid(32);
+  const resetTokenHash = hashToken(resetToken);
   const resetExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
   await prisma.user.update({
     where: { id: user.id },
     data: {
-      passwordResetToken: resetToken,
+      passwordResetToken: resetTokenHash, // Store hash — raw token only in email
       passwordResetExpiry: resetExpiry,
     },
   });
@@ -435,8 +442,9 @@ export async function resetPassword(
 ): Promise<{ success: boolean; error?: string }> {
   if (newPassword.length < 8) return { success: false, error: "Password must be at least 8 characters" };
 
+  const tokenHash = hashToken(token);
   const user = await prisma.user.findFirst({
-    where: { passwordResetToken: token, passwordResetExpiry: { gt: new Date() } },
+    where: { passwordResetToken: tokenHash, passwordResetExpiry: { gt: new Date() } },
   });
 
   if (!user) return { success: false, error: "Invalid or expired reset link" };

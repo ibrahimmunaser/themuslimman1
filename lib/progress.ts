@@ -33,8 +33,11 @@ export interface ProgressSnapshot {
 
 // ── Core helpers ──────────────────────────────────────────────────────────────
 
-export function videoReachedThreshold(snap: Pick<ProgressSnapshot, "videoWatchPercent">) {
-  return snap.videoWatchPercent >= VIDEO_COMPLETION_THRESHOLD;
+export function videoReachedThreshold(snap: Pick<ProgressSnapshot, "videoWatchPercent" | "videoCompleted">) {
+  // videoCompleted is a sticky flag — once set it is never cleared, so treat it
+  // as permanently reaching threshold even if videoWatchPercent has regressed
+  // (e.g. user reloads the page and re-watches from the beginning).
+  return snap.videoCompleted || snap.videoWatchPercent >= VIDEO_COMPLETION_THRESHOLD;
 }
 
 /** Softer unlock: video 85% + briefing opened. Applies to both plans. */

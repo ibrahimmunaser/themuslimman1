@@ -59,7 +59,7 @@ export async function POST() {
     );
     
     const weeklyLessons = weeklyProgress.filter((p) => p.status === "completed").length;
-    const weeklyBriefings = weeklyLessons; // Use completed lessons as proxy for briefings
+    const weeklyBriefings = weeklyProgress.filter((p) => p.briefingOpened).length;
     
     // Get actual tracked study time
     const allStudySessions = await prisma.studySession.findMany({
@@ -125,9 +125,8 @@ export async function POST() {
         }
       }
 
-      // Placeholder for flashcards (would need actual implementation)
-      flashcardsReviewed = 0;
-      weeklyFlashcards = 0;
+      flashcardsReviewed = progressData.filter((p) => p.flashcardsReviewed).length;
+      weeklyFlashcards = weeklyProgress.filter((p) => p.flashcardsReviewed).length;
     }
     
     // For MVP, use completed lessons as proxy for briefings read

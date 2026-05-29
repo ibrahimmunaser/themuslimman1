@@ -20,7 +20,7 @@ export async function POST() {
   const stripe = new Stripe(key, { typescript: true });
 
   // Find or create customer
-  let dbUser = await prisma.user.findUnique({ where: { id: user.id }, select: { stripeCustomerId: true, email: true, fullName: true } });
+  const dbUser = await prisma.user.findUnique({ where: { id: user.id }, select: { stripeCustomerId: true, email: true, fullName: true } });
   let customerId = dbUser?.stripeCustomerId;
   if (!customerId) {
     const customer = await stripe.customers.create({ email: user.email, name: user.fullName ?? "", metadata: { userId: user.id } });

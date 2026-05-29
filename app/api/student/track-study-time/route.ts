@@ -2,8 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireStudent } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getActiveProfileId } from "@/app/actions/profiles";
+import { checkRateLimit, getIP } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
+  // Rate limit: 30 updates per minute per IP (1 update per 2 s is plenty for 60-second intervals)
+  const ip = getIP(request);
+  const rl = checkRateLimit(`study-time:${ip}`, 30, 60 * 1000);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSeconds) } }
+    );
+  }
+
   try {
     const user = await requireStudent();
     const body = await request.json();

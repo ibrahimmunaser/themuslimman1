@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { hasActiveCourseAccess } from "@/lib/access";
 import { StudentLayout } from "@/components/student/student-layout";
@@ -125,13 +126,13 @@ export default async function HelpPage() {
           <div className="mt-8 p-6 rounded-xl border border-border bg-surface">
             <h2 className="text-lg font-semibold text-text mb-4">Quick Links</h2>
             <div className="grid sm:grid-cols-2 gap-3">
-              <a
+              <Link
                 href="/seerah"
                 className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-raised hover:bg-surface-high text-text-secondary hover:text-text transition-colors"
               >
                 <BookOpen className="w-4 h-4" />
                 <span>Back to Dashboard</span>
-              </a>
+              </Link>
               <a
                 href="/student/progress"
                 className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-raised hover:bg-surface-high text-text-secondary hover:text-text transition-colors"

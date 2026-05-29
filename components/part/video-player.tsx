@@ -52,6 +52,25 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode }: Vid
     showControlsTemporarily();
   }, [started, showControlsTemporarily]);
 
+  // Must be declared before any early return to satisfy the Rules of Hooks.
+  const handleTimeUpdate = useCallback(() => {
+    if (!videoRef.current) return;
+    const pct = (videoRef.current.currentTime / videoRef.current.duration) * 100;
+    const rounded = isNaN(pct) ? 0 : Math.round(pct);
+    setProgress(rounded);
+
+    // Report to server at each threshold (once per session)
+    if (partNumber && !previewMode) {
+      for (const threshold of REPORT_THRESHOLDS) {
+        if (rounded >= threshold && !reportedRef.current.has(threshold)) {
+          reportedRef.current.add(threshold);
+          // Fire-and-forget — don't block the UI
+          trackVideoProgress(partNumber, rounded).catch(() => {});
+        }
+      }
+    }
+  }, [partNumber, previewMode]);
+
   if (!src) {
     return (
       <div className="aspect-video rounded-2xl bg-surface border border-border flex flex-col items-center justify-center gap-3">
@@ -76,24 +95,6 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode }: Vid
     }
     setPlaying(!playing);
   };
-
-  const handleTimeUpdate = useCallback(() => {
-    if (!videoRef.current) return;
-    const pct = (videoRef.current.currentTime / videoRef.current.duration) * 100;
-    const rounded = isNaN(pct) ? 0 : Math.round(pct);
-    setProgress(rounded);
-
-    // Report to server at each threshold (once per session)
-    if (partNumber && !previewMode) {
-      for (const threshold of REPORT_THRESHOLDS) {
-        if (rounded >= threshold && !reportedRef.current.has(threshold)) {
-          reportedRef.current.add(threshold);
-          // Fire-and-forget — don't block the UI
-          trackVideoProgress(partNumber, rounded).catch(() => {});
-        }
-      }
-    }
-  }, [partNumber]);
 
   const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!videoRef.current) return;

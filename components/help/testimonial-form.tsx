@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 type DisplayPref = "full-name" | "first-name" | "initials" | "anonymous";
 
@@ -65,12 +66,12 @@ export function TestimonialForm() {
           Your feedback has been received. We review every submission before publishing anything publicly.
           We appreciate you taking the time to share your experience.
         </p>
-        <a
+        <Link
           href="/seerah"
           className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-gold text-ink font-semibold hover:bg-gold/90 transition-colors"
         >
           Back to the Course
-        </a>
+        </Link>
       </div>
     );
   }

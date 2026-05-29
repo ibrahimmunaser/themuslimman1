@@ -118,6 +118,9 @@ export async function trackVideoProgress(partNumber: number, watchPercent: numbe
 
   const clamped = Math.min(100, Math.max(0, Math.round(watchPercent)));
 
+  // Step 1: ensure the row exists (create on first visit).
+  // The UPDATE branch intentionally does NOT write videoWatchPercent here —
+  // that is handled atomically in step 2 to avoid ever regressing the value.
   await prisma.partProgress.upsert({
     where:  { learnerProfileId_partNumber: { learnerProfileId, partNumber } },
     create: {
@@ -131,24 +134,24 @@ export async function trackVideoProgress(partNumber: number, watchPercent: numbe
       lastAccessedAt:    new Date(),
     },
     update: {
-      videoWatchPercent: { set: clamped },
-      videoCompleted:    clamped >= VIDEO_COMPLETION_THRESHOLD ? true : undefined,
-      lastAccessedAt:    new Date(),
+      lastAccessedAt: new Date(),
     },
   });
 
-  // Guard: only keep the higher value (Prisma doesn't support MAX on update)
-  const existing = await prisma.partProgress.findUnique({
-    where:  { learnerProfileId_partNumber: { learnerProfileId, partNumber } },
-    select: { videoWatchPercent: true },
+  // Step 2: advance the high-water mark atomically.
+  // The WHERE clause `videoWatchPercent < clamped` ensures this is a no-op
+  // when the stored value is already equal or higher, preventing any regression.
+  await prisma.partProgress.updateMany({
+    where: {
+      learnerProfileId,
+      partNumber,
+      videoWatchPercent: { lt: clamped },
+    },
+    data: {
+      videoWatchPercent: clamped,
+      videoCompleted:    clamped >= VIDEO_COMPLETION_THRESHOLD,
+    },
   });
-
-  if (existing && existing.videoWatchPercent < clamped) {
-    await prisma.partProgress.update({
-      where: { learnerProfileId_partNumber: { learnerProfileId, partNumber } },
-      data:  { videoWatchPercent: clamped, videoCompleted: clamped >= VIDEO_COMPLETION_THRESHOLD },
-    });
-  }
 
   await recomputeAndSave(learnerProfileId, partNumber, userPlan);
   
