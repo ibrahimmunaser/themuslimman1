@@ -778,8 +778,6 @@ export default async function TimelinePage(props: Props) {
           </div>
         </div>
 
-      </div>
-
     </div>
   );
 }
