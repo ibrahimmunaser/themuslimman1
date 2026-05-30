@@ -17,6 +17,8 @@ import {
   HelpCircle,
   Layers2,
   Clock,
+  List,
+  LayoutGrid,
 } from "lucide-react";
 import NextImage from "next/image";
 import { LazyVideoPlayer } from "./lazy-video-player";
@@ -346,6 +348,7 @@ export function SlidesPanel({ part, previewMode }: { part: Part; previewMode?: b
 }
 
 import { fetchPartAssets, type PartAssets as PartAssetUrls } from "@/lib/part-asset-cache";
+import { LessonGalleryView } from "./lesson-gallery-view";
 
 function SubTabContent({ id, part, previewMode, assetUrls, onSwitchMode }: {
   id: SubTabId;
@@ -414,6 +417,47 @@ function SubTabContent({ id, part, previewMode, assetUrls, onSwitchMode }: {
 }
 
 
+
+// ─── View toggle ──────────────────────────────────────────────────────────────
+
+type ViewMode = "focus" | "gallery";
+
+function LessonViewToggle({ viewMode, onToggle }: { viewMode: ViewMode; onToggle: (mode: ViewMode) => void }) {
+  return (
+    <div
+      className="flex items-center gap-0.5 bg-surface-raised/50 rounded-lg p-0.5 border border-border/25"
+      role="group"
+      aria-label="Choose layout"
+    >
+      <button
+        onClick={() => onToggle("focus")}
+        aria-pressed={viewMode === "focus"}
+        className={clsx(
+          "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all duration-150",
+          viewMode === "focus"
+            ? "bg-surface-high text-text shadow-sm border border-border/35"
+            : "text-text-muted/60 hover:text-text-secondary"
+        )}
+      >
+        <List className="w-3 h-3" />
+        Focus
+      </button>
+      <button
+        onClick={() => onToggle("gallery")}
+        aria-pressed={viewMode === "gallery"}
+        className={clsx(
+          "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all duration-150",
+          viewMode === "gallery"
+            ? "bg-surface-high text-text shadow-sm border border-border/35"
+            : "text-text-muted/60 hover:text-text-secondary"
+        )}
+      >
+        <LayoutGrid className="w-3 h-3" />
+        Gallery
+      </button>
+    </div>
+  );
+}
 
 // ─── Timeline button ──────────────────────────────────────────────────────────
 
@@ -548,6 +592,35 @@ export function PartTabs({ part, userPlan, previewMode = false, initialAssetUrls
   const searchParams = useSearchParams();
   const router = useRouter();
 
+  // View mode toggle: "focus" = tab layout, "gallery" = all assets inline
+  // Priority: URL param > localStorage > "focus"
+  const VIEW_STORAGE_KEY = "seerah:lessonViewMode";
+  const viewParam = searchParams.get("view") as ViewMode | null;
+  const [viewMode, setViewMode] = useState<ViewMode>(
+    viewParam === "gallery" ? "gallery" : "focus"
+  );
+
+  useEffect(() => {
+    if (viewParam) return;
+    try {
+      const stored = localStorage.getItem(VIEW_STORAGE_KEY) as ViewMode | null;
+      if (stored === "gallery" || stored === "focus") setViewMode(stored);
+    } catch {}
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleViewToggle = useCallback((mode: ViewMode) => {
+    setViewMode(mode);
+    try { localStorage.setItem(VIEW_STORAGE_KEY, mode); } catch {}
+    const params = new URLSearchParams(searchParams.toString());
+    if (mode === "gallery") {
+      params.set("view", "gallery");
+    } else {
+      params.delete("view");
+    }
+    router.replace(`?${params.toString()}`, { scroll: false });
+  }, [searchParams, router]);
+
   // Initialise from ?mode= URL param so deep links and browser back/fwd work
   const modeParam = searchParams.get("mode") as ModeId | null;
   const resolvedInitialMode: ModeId =
@@ -608,12 +681,26 @@ export function PartTabs({ part, userPlan, previewMode = false, initialAssetUrls
   return (
     <div className="space-y-5">
 
-      {/* ── Learning Mode header ─────────────────────────────────────────── */}
-      <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-text-muted/35">
-        Learning Mode
-      </p>
+      {/* ── View toggle header ────────────────────────────────────────────── */}
+      <div className="flex items-center justify-between gap-4">
+        <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-text-muted/35">
+          {viewMode === "gallery" ? "All Assets" : "Learning Mode"}
+        </p>
+        <LessonViewToggle viewMode={viewMode} onToggle={handleViewToggle} />
+      </div>
 
-      <div className="space-y-6">
+      {/* ── Gallery view ─────────────────────────────────────────────────── */}
+      {viewMode === "gallery" && (
+        <LessonGalleryView
+          part={part}
+          assetUrls={assetUrls}
+          previewMode={previewMode}
+        />
+      )}
+
+      {/* ── Focus view — existing tab layout ─────────────────────────────── */}
+      {viewMode === "focus" && (
+        <div className="space-y-6">
 
           {/* Mode selector strip */}
           <div className="space-y-1.5 sm:space-y-0">
@@ -728,6 +815,7 @@ export function PartTabs({ part, userPlan, previewMode = false, initialAssetUrls
           </div>
 
         </div>
+      )}
 
     </div>
   );
