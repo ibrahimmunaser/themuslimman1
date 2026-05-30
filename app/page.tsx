@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Suspense } from "react";
 import {
@@ -33,7 +34,12 @@ export default async function LandingPage() {
 
   try {
     user = await getCurrentUser();
-    
+
+    // If the user has paid (has the course), send them straight to their courses.
+    if (user?.hasPaid) {
+      redirect("/my-courses");
+    }
+
     if (user?.studentProfileId) {
       try {
         const dashboardData = await getStudentDashboardData(user.studentProfileId);
