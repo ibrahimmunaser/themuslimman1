@@ -63,6 +63,18 @@ export async function POST(request: NextRequest) {
       appliedPromoCode = promoCode.trim().toUpperCase();
     }
 
+    // Free access: skip Stripe entirely when code makes it $0
+    if (finalAmount === 0) {
+      return NextResponse.json({
+        freeAccess: true,
+        appliedPromoCode,
+        baseAmount,
+        promoDiscountAmount,
+        finalAmount: 0,
+        isUpgrade: isEligibleForUpgradePrice,
+      });
+    }
+
     // Create Stripe PaymentIntent
     const paymentIntent = await stripe.paymentIntents.create({
       amount: finalAmount,

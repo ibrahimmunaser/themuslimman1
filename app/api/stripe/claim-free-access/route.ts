@@ -4,6 +4,7 @@ import { validatePromoCode, applyDiscount } from "@/lib/promo-codes";
 import { getBasePrice } from "@/lib/early-access";
 import { prisma } from "@/lib/db";
 import { PLANS, type PlanId } from "@/lib/stripe";
+import { PLANS as STRIPE_CONFIG_PLANS } from "@/lib/stripe-config";
 
 /**
  * POST /api/stripe/claim-free-access
@@ -28,7 +29,8 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { promoCode } = body as { promoCode?: string };
+    const { promoCode, planType } = body as { promoCode?: string; planType?: string };
+    const isFamily = planType === "family";
 
     if (!promoCode) {
       return NextResponse.json({ error: "No promo code provided" }, { status: 400 });
@@ -39,7 +41,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid promo code" }, { status: 400 });
     }
 
-    const baseAmount = getBasePrice();
+    // For family, use family price; for individual, use individual base price
+    const baseAmount = isFamily ? STRIPE_CONFIG_PLANS.family.price : getBasePrice();
     const finalAmount = applyDiscount(baseAmount, promo);
 
     if (finalAmount !== 0) {
@@ -58,7 +61,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, alreadyHasAccess: true });
     }
 
-    const planId: PlanId = "complete";
+    const planId: PlanId = isFamily ? "family" : "complete";
     const plan = PLANS[planId];
 
     // Create purchase record + grant access in a transaction
@@ -76,7 +79,10 @@ export async function POST(request: NextRequest) {
       }),
       prisma.user.update({
         where: { id: user.id },
-        data: { hasPaid: true },
+        data: {
+          hasPaid: true,
+          ...(isFamily ? { planType: "family" } : {}),
+        },
       }),
     ]);
 

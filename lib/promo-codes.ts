@@ -34,8 +34,9 @@ const BUILT_IN_CODES: Record<string, PromoCode> = {
   ITACHI20:   { type: "fixed", value: 2000, label: "$20 off (Itachi)",            creatorOnly: true },
   DEEN20:     { type: "fixed", value: 2000, label: "$20 off (Deen Responds)",     creatorOnly: true },
   ORTHODOX20: { type: "fixed", value: 2000, label: "$20 off (The Orthodox Muslim)", creatorOnly: true },
-  // Private codes (AMS49, FAMILY, DEEN) are no longer hardcoded in source.
-  // Add them via the PROMO_CODES environment variable:
+  // Family code — grants free access to Individual or Family Lifetime plans.
+  FAMILY:     { type: "absolute", value: 0, label: "Free Access (FAMILY)" },
+  // Additional private codes can be added via the PROMO_CODES environment variable:
   //   PROMO_CODES={"AMS49":{"type":"absolute","value":4900,"label":"community discount"}}
 };
 

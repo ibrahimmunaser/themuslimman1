@@ -3,23 +3,40 @@
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { loadStripe } from "@stripe/stripe-js";
-import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
-import { Check, Lock, ArrowLeft, Tag, X, ChevronDown, Gift } from "lucide-react";
+import {
+  Elements,
+  PaymentElement,
+  useStripe,
+  useElements,
+} from "@stripe/react-stripe-js";
+import {
+  Check,
+  Lock,
+  Users,
+  User,
+  ArrowLeft,
+  Shield,
+  Star,
+  Tag,
+  X,
+  Gift,
+} from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { PLANS, formatPrice, type PlanId } from "@/lib/stripe-config";
+import { PLANS, formatPrice } from "@/lib/stripe-config";
 import { clearCreatorPromo, getCreatorPromo } from "@/lib/creator-promos";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
+type PlanChoice = "complete" | "family";
+
+// ── Stripe payment form ───────────────────────────────────────────────────────
+
 function CheckoutForm({
-  plan,
+  planChoice,
   finalPrice,
-  isSubscription = false,
 }: {
-  plan: typeof PLANS[PlanId];
+  planChoice: PlanChoice;
   finalPrice: number;
-  isSubscription?: boolean;
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -31,262 +48,297 @@ function CheckoutForm({
     if (!stripe || !elements) return;
     setProcessing(true);
     setError(null);
+
     const { error: submitError } = await elements.submit();
-    if (submitError) { setError(submitError.message || "An error occurred"); setProcessing(false); return; }
-    const returnUrl = isSubscription
-      ? `${window.location.origin}/payment/success?type=subscription`
-      : `${window.location.origin}/payment/success`;
+    if (submitError) {
+      setError(submitError.message ?? "An error occurred");
+      setProcessing(false);
+      return;
+    }
+
+    const returnUrl =
+      planChoice === "family"
+        ? `${window.location.origin}/payment/success?type=family`
+        : `${window.location.origin}/payment/success`;
+
     const { error: confirmError } = await stripe.confirmPayment({
       elements,
       confirmParams: { return_url: returnUrl },
     });
-    if (confirmError) { setError(confirmError.message || "Payment failed"); setProcessing(false); }
+
+    if (confirmError) {
+      setError(confirmError.message ?? "Payment failed. Please try again.");
+      setProcessing(false);
+    }
   };
 
-  const buttonLabel = isSubscription
-    ? `Start Monthly — ${formatPrice(finalPrice)}/mo`
-    : `Get Lifetime Access — ${formatPrice(finalPrice)}`;
+  const label =
+    planChoice === "family"
+      ? `Get Family Access — ${formatPrice(finalPrice)}`
+      : `Get Lifetime Access — ${formatPrice(finalPrice)}`;
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-5">
       <PaymentElement options={{ wallets: { link: "never" } }} />
+
       {error && (
-        <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">{error}</div>
+        <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+          {error}
+        </div>
       )}
-      <Button type="submit" variant="primary" size="lg" disabled={!stripe || processing} loading={processing} className="w-full justify-center">
+
+      <button
+        type="submit"
+        disabled={!stripe || processing}
+        className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-60 text-black font-bold text-base transition-colors shadow-lg shadow-amber-500/20"
+      >
         <Lock className="w-4 h-4" />
-        {buttonLabel}
-      </Button>
-      <p className="text-xs text-text-muted text-center">Secure payment powered by Stripe · Your information is encrypted</p>
-      <p className="text-xs text-text-muted text-center leading-relaxed">
-        By purchasing, you agree to our{" "}
-        <a href="/terms" className="underline hover:text-text-secondary transition-colors">Terms of Service</a>
+        {processing ? "Processing…" : label}
+      </button>
+
+      <p className="text-xs text-zinc-500 text-center">
+        Secure payment powered by Stripe · Your information is encrypted
+      </p>
+      <p className="text-xs text-zinc-600 text-center leading-relaxed">
+        By purchasing you agree to our{" "}
+        <a href="/terms" className="underline hover:text-zinc-400 transition-colors">
+          Terms of Service
+        </a>
         {", "}
-        <a href="/privacy" className="underline hover:text-text-secondary transition-colors">Privacy Policy</a>
+        <a href="/privacy" className="underline hover:text-zinc-400 transition-colors">
+          Privacy Policy
+        </a>
         {", and "}
-        <a href="/refund" className="underline hover:text-text-secondary transition-colors">Refund Policy</a>.
+        <a href="/refund" className="underline hover:text-zinc-400 transition-colors">
+          Refund Policy
+        </a>
+        .
       </p>
     </form>
   );
 }
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// ── Applied coupon pill ───────────────────────────────────────────────────────
 
-interface AppliedPromo {
+interface AppliedCoupon {
   code: string;
   label: string;
-  promoDiscountAmount: number; // vs. current base price
+  discount: number;
   finalPrice: number;
 }
 
-interface PricingState {
-  earlyAccessActive: boolean;
-  serverBasePrice: number;   // always 4900
-  earlyAccessDiscount: number; // always 0
+// ── Main checkout content ─────────────────────────────────────────────────────
+
+interface CheckoutPageClientProps {
+  userEmail?: string;
+  initialPlan?: PlanChoice;
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
-
-export function CheckoutPageContent() {
+function CheckoutPageContent({
+  userEmail = "",
+  initialPlan = "complete",
+}: CheckoutPageClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const planParam = searchParams.get("plan");
-  const isMonthly = planParam === "monthly";
-  const planId: PlanId = "complete"; // for the lifetime plan display
-  const plan = PLANS[planId];
+  const planParam = searchParams.get("plan") as PlanChoice | null;
 
+  const [planChoice, setPlanChoice] = useState<PlanChoice>(
+    planParam === "family" ? "family" : initialPlan
+  );
+
+  // Payment intent
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [requiresVerification, setRequiresVerification] = useState(false);
-  const [resendLoading, setResendLoading] = useState(false);
-  const [resendSuccess, setResendSuccess] = useState(false);
-  const [justVerified, setJustVerified] = useState(false);
 
-  // Pricing driven entirely by server response (lifetime only)
-  const [pricing, setPricing] = useState<PricingState>({
-    earlyAccessActive: false,
-    serverBasePrice: plan.price,
-    earlyAccessDiscount: 0,
-  });
+  // Pricing (filled from API response)
+  const [basePrice, setBasePrice] = useState<number>(
+    planChoice === "family" ? PLANS.family.price : PLANS.complete.price
+  );
+  const [finalPrice, setFinalPrice] = useState<number>(basePrice);
+  const [discountAmount, setDiscountAmount] = useState(0);
 
+  // Coupon
+  const [couponInput, setCouponInput] = useState("");
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
+
+  // Free access (promo code gives $0)
   const [freeAccess, setFreeAccess] = useState(false);
   const [freeClaimLoading, setFreeClaimLoading] = useState(false);
   const [freeClaimError, setFreeClaimError] = useState<string | null>(null);
 
-  // Promo code state (lifetime only)
-  const [showPromo, setShowPromo] = useState(false);
-  const [promoInput, setPromoInput] = useState("");
-  const [promoLoading, setPromoLoading] = useState(false);
-  const [promoError, setPromoError] = useState<string | null>(null);
-  const [appliedPromo, setAppliedPromo] = useState<AppliedPromo | null>(null);
-  // true when monthly checkout is shown and a creator promo is stored (for hint text)
-  const [monthlyHasStoredPromo, setMonthlyHasStoredPromo] = useState(false);
+  // ── Create payment intent ──────────────────────────────────────────────────
 
-  const displayPrice = isMonthly ? 900 : (appliedPromo ? appliedPromo.finalPrice : pricing.serverBasePrice);
-
-  // ── Intent creation ────────────────────────────────────────────────────────
-
-  const createSubscriptionIntent = async () => {
+  const createIntent = async (
+    plan: PlanChoice,
+    promoCode?: string
+  ): Promise<{ discountAmount: number; finalPrice: number } | null> => {
     setLoading(true);
-    setError(null);
     setClientSecret(null);
-    try {
-      const res = await fetch("/api/stripe/create-subscription-intent", { method: "POST" });
-      const data = await res.json();
-      if (!res.ok) {
-        if (res.status === 401) { router.push("/signup-checkout?plan=monthly"); return; }
-        if (res.status === 403 && data.requiresVerification) { setRequiresVerification(true); setError(data.error); return; }
-        if (res.status === 409 && data.hasLifetime) { router.push("/my-courses"); return; }
-        throw new Error(data.error || "Failed to create subscription");
-      }
-      setClientSecret(data.clientSecret);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-    } finally {
-      setLoading(false);
-    }
-  };
+    setFreeAccess(false);
+    setError(null);
 
-  const createPaymentIntent = async (promoCode?: string) => {
-    setLoading(true);
-    setError(null);
-    setClientSecret(null);
+    const endpoint =
+      plan === "family"
+        ? "/api/stripe/create-family-payment-intent"
+        : "/api/stripe/create-payment-intent";
+
     try {
-      const res = await fetch("/api/stripe/create-payment-intent", {
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planId, promoCode }),
+        body: JSON.stringify({ planId: "complete", promoCode }),
       });
       const data = await res.json();
+
       if (!res.ok) {
-        if (res.status === 401) { router.push(`/signup-checkout?plan=${planId}`); return; }
-        if (res.status === 403 && data.requiresVerification) { setRequiresVerification(true); setError(data.error); return; }
-        if (res.status === 409 && data.hasLifetime) { router.push("/my-courses"); return; }
-        throw new Error(data.error || "Failed to create payment intent");
+        if (res.status === 401) {
+          router.push(
+            `/signup-checkout?plan=${plan === "family" ? "family" : "complete"}`
+          );
+          return null;
+        }
+        if (res.status === 409 && (data.hasLifetime || data.hasFamily)) {
+          router.push("/my-courses");
+          return null;
+        }
+        throw new Error(data.error || "Failed to initialize checkout");
       }
-      setPricing({
-        earlyAccessActive: data.earlyAccessActive,
-        serverBasePrice: data.baseAmount,
-        earlyAccessDiscount: data.earlyAccessDiscount,
-      });
+
+      const discount: number = data.promoDiscountAmount ?? 0;
+      const price: number = data.finalAmount;
+
+      setBasePrice(data.baseAmount);
+      setFinalPrice(price);
+      setDiscountAmount(discount);
+
       if (data.freeAccess) {
         setFreeAccess(true);
       } else {
         setClientSecret(data.clientSecret);
       }
+      return { discountAmount: discount, finalPrice: price };
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
+      return null;
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    if (isMonthly) {
-      // Check if a creator promo is stored so we can show the hint text
-      setMonthlyHasStoredPromo(getCreatorPromo() !== null);
-      createSubscriptionIntent();
-      return;
-    }
-
-    // Auto-apply a stored creator promo for lifetime checkout.
-    // Monthly checkout is intentionally excluded — it has no promo support.
-    const storedPromo = getCreatorPromo();
-
-    if (storedPromo) {
-      fetch(`/api/stripe/validate-promo?code=${encodeURIComponent(storedPromo)}`)
-        .then((r) => r.json())
-        .then((data) => {
-          if (data.valid) {
-            setAppliedPromo({
-              code: data.code,
-              label: data.label,
-              promoDiscountAmount: data.promoDiscountAmount,
-              finalPrice: data.finalPrice,
-            });
-            setPromoInput(data.code);
-            return createPaymentIntent(data.code);
-          }
-          // Stored code no longer valid — clear it and proceed normally
-          clearCreatorPromo();
-          return createPaymentIntent();
-        })
-        .catch(() => createPaymentIntent());
-    } else {
-      createPaymentIntent();
-    }
+  // ── On plan change: recreate intent (reuse applied coupon if any) ──────────
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isMonthly]);
-
-  // Poll for email verification every 3 seconds while waiting
   useEffect(() => {
-    if (!requiresVerification) return;
-    const interval = setInterval(async () => {
-      try {
-        const res = await fetch("/api/auth/check-verification");
-        const data = await res.json();
-        if (data.verified) {
-          clearInterval(interval);
-          setJustVerified(true);
-          setRequiresVerification(false);
-          setError(null);
-          // Small delay so user sees the success flash before the form loads
-          setTimeout(() => {
-            if (isMonthly) createSubscriptionIntent();
-            else createPaymentIntent();
-          }, 800);
-        }
-      } catch {
-        // silent — keep polling
+    // Auto-apply stored creator promo for individual plans
+    if (planChoice === "complete") {
+      const stored = getCreatorPromo();
+      if (stored && !appliedCoupon) {
+        fetch(`/api/stripe/validate-promo?code=${encodeURIComponent(stored)}`)
+          .then((r) => r.json())
+          .then((data) => {
+            if (data.valid) {
+              setAppliedCoupon({
+                code: data.code,
+                label: data.label,
+                discount: data.promoDiscountAmount,
+                finalPrice: data.finalPrice,
+              });
+              setCouponInput(data.code);
+              return createIntent(planChoice, data.code);
+            }
+            clearCreatorPromo();
+            return createIntent(planChoice, undefined);
+          })
+          .catch(() => createIntent(planChoice, undefined));
+        return;
       }
-    }, 3000);
-    return () => clearInterval(interval);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [requiresVerification, isMonthly]);
+    }
+    createIntent(planChoice, appliedCoupon?.code);
+    // Intentionally omit appliedCoupon from deps — we want the current value
+    // at the time planChoice changes, not to re-run every time coupon changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [planChoice]);
 
-  // ── Promo ──────────────────────────────────────────────────────────────────
+  // ── Coupon handlers ───────────────────────────────────────────────────────
 
-  const handleApplyPromo = async () => {
-    const code = promoInput.trim();
+  const handleApplyCoupon = async () => {
+    const code = couponInput.trim();
     if (!code) return;
-    setPromoLoading(true);
-    setPromoError(null);
+    setCouponLoading(true);
+    setCouponError(null);
+
     try {
-      const res = await fetch(`/api/stripe/validate-promo?code=${encodeURIComponent(code)}`);
+      // For family, go straight to the intent (validate-promo uses individual base price)
+      if (planChoice === "family") {
+        const result = await createIntent("family", code);
+        if (result) {
+          setAppliedCoupon({
+            code: code.toUpperCase(),
+            label: "Promo applied",
+            discount: result.discountAmount,
+            finalPrice: result.finalPrice,
+          });
+        } else {
+          setCouponError("Invalid promo code");
+        }
+        return;
+      }
+
+      // For individual, use validate-promo for a clean discount preview
+      const res = await fetch(
+        `/api/stripe/validate-promo?code=${encodeURIComponent(code)}`
+      );
       const data = await res.json();
-      if (!res.ok || !data.valid) { setPromoError(data.error || "Invalid promo code"); return; }
-      setAppliedPromo({ code: data.code, label: data.label, promoDiscountAmount: data.promoDiscountAmount, finalPrice: data.finalPrice });
-      setPromoError(null);
-      await createPaymentIntent(data.code);
+      if (!res.ok || !data.valid) {
+        setCouponError(data.error || "Invalid promo code");
+        return;
+      }
+      setAppliedCoupon({
+        code: data.code,
+        label: data.label,
+        discount: data.promoDiscountAmount,
+        finalPrice: data.finalPrice,
+      });
+      setCouponError(null);
+      await createIntent("complete", data.code);
     } catch {
-      setPromoError("Could not validate code. Please try again.");
+      setCouponError("Could not validate code. Please try again.");
     } finally {
-      setPromoLoading(false);
+      setCouponLoading(false);
     }
   };
 
-  const handleRemovePromo = async () => {
-    // Clear from localStorage so refresh / return visits don't re-apply
+  const handleRemoveCoupon = async () => {
     clearCreatorPromo();
-    setAppliedPromo(null);
-    setPromoInput("");
-    setPromoError(null);
-    await createPaymentIntent();
+    setAppliedCoupon(null);
+    setCouponInput("");
+    setCouponError(null);
+    await createIntent(planChoice);
   };
+
+  // ── Free access claim ─────────────────────────────────────────────────────
 
   const handleClaimFreeAccess = async () => {
-    if (!appliedPromo) return;
+    const code = appliedCoupon?.code ?? couponInput.trim();
+    if (!code) return;
     setFreeClaimLoading(true);
     setFreeClaimError(null);
     try {
       const res = await fetch("/api/stripe/claim-free-access", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ promoCode: appliedPromo.code }),
+        body: JSON.stringify({
+          promoCode: code,
+          planType: planChoice === "family" ? "family" : "individual",
+        }),
       });
       const data = await res.json();
-      if (!res.ok) { setFreeClaimError(data.error || "Something went wrong"); return; }
+      if (!res.ok) {
+        setFreeClaimError(data.error || "Something went wrong");
+        return;
+      }
       router.push("/my-courses");
     } catch {
       setFreeClaimError("Something went wrong. Please try again.");
@@ -295,293 +347,327 @@ export function CheckoutPageContent() {
     }
   };
 
-  const handleResendVerification = async () => {
-    setResendLoading(true);
-    setResendSuccess(false);
-    try {
-      const res = await fetch("/api/auth/resend-verification", { method: "POST" });
-      const data = await res.json();
-      if (res.ok) setResendSuccess(true);
-      else alert(data.error || "Failed to resend verification email");
-    } catch { alert("Something went wrong. Please try again."); }
-    finally { setResendLoading(false); }
-  };
+  // ── Derived display values ────────────────────────────────────────────────
 
-  if (!plan) { router.push("/"); return null; }
-
-  // ── Order summary helpers ──────────────────────────────────────────────────
-
-  const { serverBasePrice } = pricing;
+  const currentPlan = planChoice === "family" ? PLANS.family : PLANS.complete;
+  const displayPrice = appliedCoupon ? appliedCoupon.finalPrice : finalPrice;
+  const displayDiscount = appliedCoupon ? appliedCoupon.discount : discountAmount;
+  const displayBase = appliedCoupon ? currentPlan.price : basePrice;
 
   return (
-    <div className="min-h-screen bg-ink text-text">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12">
-        {/* Header */}
-        <div className="mb-8">
-          <Link href="/pricing" className="inline-flex items-center gap-2 text-text-secondary hover:text-text transition-colors text-sm mb-4">
-            <ArrowLeft className="w-4 h-4" />
-            Back to pricing
-          </Link>
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2">
-            {isMonthly ? "Start Monthly Access" : "Complete Your Purchase"}
-          </h1>
-          <p className="text-text-secondary">
-            {isMonthly
-              ? "Full access to Complete Seerah · $9/month · Cancel anytime"
-              : `You're one step away from accessing the ${plan.name}`}
-          </p>
+    <div className="min-h-screen bg-zinc-950 flex flex-col lg:flex-row">
+      {/* ── Left column — plan details ─────────────────────────────────────── */}
+      <div className="lg:w-1/2 bg-zinc-900/50 border-r border-zinc-800 px-6 sm:px-12 py-12 flex flex-col justify-center">
+        <Link
+          href="/pricing"
+          className="inline-flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-300 transition-colors mb-10"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to pricing
+        </Link>
+
+        <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3">
+          Complete Seerah
+          <br />
+          <span className="text-amber-400">Lifetime Access</span>
+        </h1>
+
+        <p className="text-zinc-400 text-base mb-8 leading-relaxed">
+          One-time payment. Lifetime access to all 100 parts, every asset, every
+          learner.
+        </p>
+
+        {/* Plan selector */}
+        <div className="grid grid-cols-2 gap-3 mb-8">
+          <button
+            onClick={() => setPlanChoice("complete")}
+            className={`flex flex-col p-4 rounded-xl border transition-all text-left ${
+              planChoice === "complete"
+                ? "border-amber-500/50 bg-amber-500/8 text-white ring-1 ring-amber-500/30"
+                : "border-zinc-700 bg-zinc-800/50 text-zinc-400 hover:border-zinc-600"
+            }`}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <User className="w-4 h-4 flex-shrink-0" />
+              <span className="font-semibold text-sm">Individual</span>
+              {planChoice === "complete" && (
+                <div className="ml-auto w-2 h-2 rounded-full bg-amber-400" />
+              )}
+            </div>
+            <span className="text-2xl font-bold text-white">
+              {formatPrice(PLANS.complete.price)}
+            </span>
+            <span className="text-xs text-zinc-500 mt-0.5">
+              1 learner · one-time
+            </span>
+          </button>
+
+          <button
+            onClick={() => setPlanChoice("family")}
+            className={`flex flex-col p-4 rounded-xl border transition-all text-left ${
+              planChoice === "family"
+                ? "border-amber-500/50 bg-amber-500/8 text-white ring-1 ring-amber-500/30"
+                : "border-zinc-700 bg-zinc-800/50 text-zinc-400 hover:border-zinc-600"
+            }`}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <Users className="w-4 h-4 flex-shrink-0" />
+              <span className="font-semibold text-sm">Family</span>
+              {planChoice === "family" && (
+                <div className="ml-auto w-2 h-2 rounded-full bg-amber-400" />
+              )}
+            </div>
+            <span className="text-2xl font-bold text-white">
+              {formatPrice(PLANS.family.price)}
+            </span>
+            <span className="text-xs text-zinc-500 mt-0.5">
+              Up to 5 learners · one-time
+            </span>
+          </button>
         </div>
 
-        <div className="grid lg:grid-cols-5 gap-8">
-          {/* ── Order Summary ──────────────────────────────────────────────── */}
-          <div className="lg:col-span-2">
-            <div className="bg-surface border border-border rounded-2xl p-6 sticky top-6">
-              <h2 className="text-lg font-semibold mb-4">Order Summary</h2>
-
-              {/* Features */}
-              <div className="mb-6">
-                <h3 className="font-medium text-text mb-2">
-                  {isMonthly ? "Monthly Access" : plan.name}
-                </h3>
-                <p className="text-sm text-text-secondary mb-3">
-                  {isMonthly ? "Active while subscribed · Cancel anytime" : "One-time payment · Lifetime access"}
-                </p>
-                <ul className="space-y-2">
-                  {(isMonthly ? PLANS.monthly.features : plan.features).slice(0, 4).map((f) => (
-                    <li key={f} className="flex items-center gap-2 text-sm text-text-secondary">
-                      <Check className="w-4 h-4 text-gold flex-shrink-0" />{f}
-                    </li>
-                  ))}
-                </ul>
+        {/* Feature list */}
+        <ul className="space-y-3">
+          {currentPlan.features.map((feature) => (
+            <li key={feature} className="flex items-start gap-3">
+              <div className="w-5 h-5 rounded-full bg-amber-500/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <Check className="w-3 h-3 text-amber-400" />
               </div>
+              <span className="text-sm text-zinc-300">{feature}</span>
+            </li>
+          ))}
+        </ul>
 
-              {/* Pricing — lifetime only */}
-              {!isMonthly && (
-                <div className="pt-4 border-t border-border">
-                  {/* Promo code input */}
-                  <div className="mb-3">
-                    {appliedPromo ? (
-                      <div className="flex items-center justify-between p-2.5 rounded-lg bg-green-500/10 border border-green-500/20 mb-3">
-                        <div className="flex items-center gap-2 text-green-400 text-sm">
-                          <Tag className="w-3.5 h-3.5 flex-shrink-0" />
-                          <span className="font-medium">{appliedPromo.code}</span>
-                          <span className="text-green-400/70 text-xs">{appliedPromo.label}</span>
-                        </div>
-                        <button onClick={handleRemovePromo} className="text-green-400/60 hover:text-green-400 transition-colors" aria-label="Remove promo code">
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ) : (
-                      <>
-                        {!showPromo ? (
-                          <button onClick={() => setShowPromo(true)} className="flex items-center gap-1.5 text-sm text-text-secondary hover:text-text transition-colors">
-                            <Tag className="w-3.5 h-3.5" />
-                            Have a promo code?
-                            <ChevronDown className="w-3 h-3" />
-                          </button>
-                        ) : (
-                          <div className="space-y-2">
-                            <div className="flex gap-2">
-                              <input
-                                type="text"
-                                value={promoInput}
-                                onChange={(e) => { setPromoInput(e.target.value.toUpperCase()); setPromoError(null); }}
-                                onKeyDown={(e) => e.key === "Enter" && handleApplyPromo()}
-                                placeholder="Enter code"
-                                className="flex-1 px-3 py-2 text-sm rounded-lg border border-border bg-surface-raised text-text placeholder-text-muted focus:outline-none focus:border-gold/50 uppercase"
-                                autoFocus
-                              />
-                              <button onClick={handleApplyPromo} disabled={promoLoading || !promoInput.trim()}
-                                className="px-4 py-2 text-sm font-medium rounded-lg bg-gold/10 border border-gold/30 text-gold hover:bg-gold/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap">
-                                {promoLoading ? "…" : "Apply"}
-                              </button>
-                            </div>
-                            {promoError && <p className="text-xs text-red-400">{promoError}</p>}
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </div>
+        {/* Trust badges */}
+        <div className="mt-8 pt-6 border-t border-zinc-800 flex flex-wrap gap-4">
+          <div className="flex items-center gap-2 text-xs text-zinc-500">
+            <Shield className="w-4 h-4 text-zinc-600" />
+            7-day refund guarantee
+          </div>
+          <div className="flex items-center gap-2 text-xs text-zinc-500">
+            <Lock className="w-4 h-4 text-zinc-600" />
+            Secure payment
+          </div>
+          <div className="flex items-center gap-2 text-xs text-zinc-500">
+            <Star className="w-4 h-4 text-zinc-600" />
+            Lifetime access
+          </div>
+        </div>
+      </div>
 
-                  {/* Price rows */}
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-text-secondary text-sm">Lifetime Access</span>
-                    <span className="text-sm text-text">{formatPrice(serverBasePrice)} one-time</span>
-                  </div>
-                  {appliedPromo && (
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-text-secondary text-sm flex items-center gap-1.5">
-                        <Tag className="w-3 h-3" />{appliedPromo.code}
-                      </span>
-                      <span className="text-green-400 text-sm font-medium">−{formatPrice(appliedPromo.promoDiscountAmount)}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center justify-between font-semibold text-lg border-t border-border pt-2 mt-2">
-                    <span>Total</span>
-                    <span className="text-gold">{formatPrice(displayPrice)}</span>
-                  </div>
-                </div>
-              )}
+      {/* ── Right column — order summary + payment ──────────────────────────── */}
+      <div className="lg:w-1/2 px-6 sm:px-12 py-12 flex flex-col justify-center">
+        <div className="max-w-md w-full mx-auto">
+          <h2 className="text-xl font-bold text-white mb-1">
+            Complete your order
+          </h2>
+          {userEmail && (
+            <p className="text-sm text-zinc-500 mb-7">
+              Purchasing as{" "}
+              <span className="text-zinc-300">{userEmail}</span>
+            </p>
+          )}
+          {!userEmail && <div className="mb-7" />}
 
-              {/* Monthly pricing summary */}
-              {isMonthly && (
-                <div className="pt-4 border-t border-border">
-                  <div className="flex items-center justify-between font-semibold text-lg">
-                    <span>Per month</span>
-                    <span className="text-gold">$9</span>
-                  </div>
-                  <p className="text-xs text-text-muted mt-1">Billed monthly · Cancel anytime</p>
-                  {/* Show contextual hint only when a creator promo is stored */}
-                  {monthlyHasStoredPromo && (
-                    <p className="text-xs text-text-muted mt-2 border-t border-border/50 pt-2">
-                      <span className="text-gold/70">Creator codes apply to lifetime access only.</span>
-                    </p>
-                  )}
-                </div>
-              )}
-
-              <div className="mt-4 p-3 rounded-lg bg-gold/5 border border-gold/20">
-                <p className="text-xs text-text-secondary">
-                  {isMonthly ? (
-                    <>✓ Instant access after payment<br />✓ Full access while subscribed<br />✓ Cancel anytime, no questions</>
-                  ) : (
-                    <>✓ Instant access after payment<br />✓ Lifetime ownership<br />✓ No recurring charges<br />✓ Monthly subscription cancelled automatically if active</>
-                  )}
+          {/* Order summary card */}
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 mb-6 space-y-3">
+            {/* Plan row */}
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm font-semibold text-white">
+                  {currentPlan.name}
+                </p>
+                <p className="text-xs text-zinc-500 mt-0.5">
+                  {planChoice === "family"
+                    ? "Up to 5 learner profiles · "
+                    : ""}
+                  Lifetime access
                 </p>
               </div>
+              <p className="text-sm font-bold text-white whitespace-nowrap ml-4">
+                {formatPrice(displayBase)}
+              </p>
+            </div>
 
-              {/* Gift toggle — lifetime only */}
-              {!isMonthly && (
-                <div className="mt-4 pt-4 border-t border-border text-center">
-                  <p className="text-xs text-text-muted mb-1">Buying for someone else?</p>
-                  <a href="/gift-checkout" className="inline-flex items-center gap-1.5 text-xs text-gold hover:text-gold-light transition-colors font-medium">
-                    <Gift className="w-3.5 h-3.5" />
-                    Gift Lifetime Access instead →
-                  </a>
+            {/* Discount row */}
+            {displayDiscount > 0 && (
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-green-400 flex items-center gap-1.5">
+                  <Tag className="w-3.5 h-3.5" />
+                  {appliedCoupon?.code ?? "Promo"} discount
+                </span>
+                <span className="text-green-400 font-medium">
+                  −{formatPrice(displayDiscount)}
+                </span>
+              </div>
+            )}
+
+            {/* Total row */}
+            <div className="flex items-center justify-between pt-2 border-t border-zinc-800">
+              <span className="text-sm font-semibold text-white">Total</span>
+              <span className="text-lg font-bold text-amber-400">
+                {formatPrice(displayPrice)}
+              </span>
+            </div>
+          </div>
+
+          {/* Coupon input */}
+          <div className="mb-6">
+            {appliedCoupon ? (
+              <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-green-500/10 border border-green-500/20">
+                <div className="flex items-center gap-2 text-green-400 text-sm">
+                  <Tag className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span className="font-medium">{appliedCoupon.code}</span>
+                  <span className="text-green-400/60 text-xs">
+                    {appliedCoupon.label}
+                  </span>
                 </div>
-              )}
-
-              {/* Switch plan toggle */}
-              <div className="mt-4 pt-4 border-t border-border text-center">
-                {isMonthly ? (
-                  <Link href="/checkout?plan=complete" className="text-xs text-text-muted hover:text-gold transition-colors">
-                    Switch to Lifetime ($99 one-time) →
-                  </Link>
-                ) : (
-                  <Link href="/checkout?plan=monthly" className="text-xs text-text-muted hover:text-gold transition-colors">
-                    Switch to Monthly ($9/mo) →
-                  </Link>
+                <button
+                  onClick={handleRemoveCoupon}
+                  className="text-green-400/60 hover:text-green-400 transition-colors ml-2"
+                  aria-label="Remove promo code"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={couponInput}
+                    onChange={(e) => {
+                      setCouponInput(e.target.value.toUpperCase());
+                      setCouponError(null);
+                    }}
+                    onKeyDown={(e) => e.key === "Enter" && handleApplyCoupon()}
+                    placeholder="Promo code"
+                    className="flex-1 px-3.5 py-2.5 text-sm rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500/50 transition-colors uppercase"
+                  />
+                  <button
+                    onClick={handleApplyCoupon}
+                    disabled={couponLoading || !couponInput.trim()}
+                    className="px-4 py-2.5 text-sm font-medium rounded-xl border border-zinc-700 bg-zinc-800 text-zinc-300 hover:border-amber-500/40 hover:text-amber-400 transition-colors disabled:opacity-40 whitespace-nowrap"
+                  >
+                    {couponLoading ? "…" : "Apply"}
+                  </button>
+                </div>
+                {couponError && (
+                  <p className="text-xs text-red-400">{couponError}</p>
                 )}
               </div>
-            </div>
+            )}
           </div>
 
-          {/* ── Payment Form ──────────────────────────────────────────────── */}
-          <div className="lg:col-span-3">
-            <div className="bg-surface border border-border rounded-2xl p-6 sm:p-8">
-              <h2 className="text-lg font-semibold mb-6">Payment Details</h2>
-
-              {loading && (
-                <div className="py-12 text-center">
-                  <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-                  <p className="text-sm text-text-secondary">Loading payment form…</p>
-                </div>
-              )}
-
-              {justVerified && !loading && (
-                <div className="py-8 text-center">
-                  <div className="w-16 h-16 rounded-full bg-green-500/20 border-2 border-green-500/40 flex items-center justify-center mx-auto mb-4">
-                    <Check className="w-8 h-8 text-green-400" />
-                  </div>
-                  <h3 className="text-xl font-bold text-text mb-2">Email Verified!</h3>
-                  <p className="text-text-secondary">Loading your payment form…</p>
-                </div>
-              )}
-
-              {requiresVerification && !loading && (
-                <div className="py-8">
-                  <div className="p-6 rounded-xl bg-gold/10 border border-gold/30 text-center">
-                    <div className="w-16 h-16 rounded-full bg-gold/20 border-2 border-gold/40 flex items-center justify-center mx-auto mb-4">
-                      <Lock className="w-8 h-8 text-gold" />
-                    </div>
-                    <h3 className="text-xl font-bold text-text mb-2">Email Verification Required</h3>
-                    <p className="text-text-secondary mb-6">Please verify your email address before making a purchase.</p>
-                    {resendSuccess ? (
-                      <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/30 mb-4">
-                        <p className="text-green-400 text-sm">✓ Verification email sent! Check your inbox.</p>
-                      </div>
-                    ) : (
-                      <Button variant="primary" size="lg" onClick={handleResendVerification} loading={resendLoading} className="mx-auto">
-                        Resend Verification Email
-                      </Button>
-                    )}
-                    <div className="flex items-center justify-center gap-2 mt-4">
-                      <div className="w-2 h-2 rounded-full bg-gold/60 animate-pulse" />
-                      <p className="text-xs text-text-muted">Waiting for verification — this page will update automatically</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {error && !loading && !requiresVerification && (
-                <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm mb-4">
-                  {error}
-                  <button onClick={() => window.location.reload()} className="block mt-2 text-red-300 underline hover:text-red-200">Try again</button>
-                </div>
-              )}
-
-              {/* Free access claim (promo code gives $0 total) */}
-              {freeAccess && !loading && !requiresVerification && (
-                <div className="space-y-6">
-                  <div className="p-5 rounded-xl bg-gold/10 border border-gold/30 text-center">
-                    <div className="text-3xl mb-3">🎁</div>
-                    <h3 className="text-lg font-bold text-text mb-1">Free Access Applied</h3>
-                    <p className="text-text-secondary text-sm">Your promo code gives you full access at no charge.</p>
-                  </div>
-                  {freeClaimError && (
-                    <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">{freeClaimError}</div>
-                  )}
-                  <Button variant="primary" size="lg" onClick={handleClaimFreeAccess} loading={freeClaimLoading} disabled={freeClaimLoading} className="w-full justify-center">
-                    <Lock className="w-4 h-4" />
-                    Claim Free Access
-                  </Button>
-                  <p className="text-xs text-text-muted text-center">Your access will be activated immediately.</p>
-                </div>
-              )}
-
-              {clientSecret && !loading && !requiresVerification && (
-                <Elements
-                  stripe={stripePromise}
-                  options={{
-                    clientSecret,
-                    appearance: {
-                      theme: "night",
-                      variables: { colorPrimary: "#d4af37", colorBackground: "#1a1a1a", colorText: "#e0e0e0", colorDanger: "#ef4444", fontFamily: "system-ui, sans-serif", borderRadius: "8px" },
-                    },
-                  }}
-                >
-                  <CheckoutForm plan={plan} finalPrice={displayPrice} isSubscription={isMonthly} />
-                </Elements>
-              )}
+          {/* Loading spinner */}
+          {loading && (
+            <div className="flex items-center justify-center py-12">
+              <div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
             </div>
-          </div>
+          )}
+
+          {/* Error state */}
+          {error && !loading && (
+            <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm mb-4">
+              {error}
+              <button
+                onClick={() => window.location.reload()}
+                className="block mt-2 text-red-300 underline hover:text-red-200"
+              >
+                Try again
+              </button>
+            </div>
+          )}
+
+          {/* Free access claim */}
+          {freeAccess && !loading && (
+            <div className="space-y-4">
+              <div className="p-5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-center">
+                <div className="text-3xl mb-3">🎁</div>
+                <h3 className="text-lg font-bold text-white mb-1">
+                  Free Access Applied
+                </h3>
+                <p className="text-zinc-400 text-sm">
+                  Your promo code gives you full{" "}
+                  {planChoice === "family" ? "family " : ""}
+                  access at no charge.
+                </p>
+              </div>
+              {freeClaimError && (
+                <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+                  {freeClaimError}
+                </div>
+              )}
+              <button
+                onClick={handleClaimFreeAccess}
+                disabled={freeClaimLoading}
+                className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-60 text-black font-bold text-base transition-colors shadow-lg shadow-amber-500/20"
+              >
+                <Lock className="w-4 h-4" />
+                {freeClaimLoading ? "Activating…" : "Claim Free Access"}
+              </button>
+              <p className="text-xs text-zinc-500 text-center">
+                Your access will be activated immediately.
+              </p>
+            </div>
+          )}
+
+          {/* Stripe payment form */}
+          {clientSecret && !loading && (
+            <Elements
+              stripe={stripePromise}
+              options={{
+                clientSecret,
+                appearance: {
+                  theme: "night",
+                  variables: {
+                    colorPrimary: "#f59e0b",
+                    colorBackground: "#18181b",
+                    colorText: "#ffffff",
+                    colorDanger: "#ef4444",
+                    borderRadius: "12px",
+                    fontFamily: "system-ui, sans-serif",
+                  },
+                },
+              }}
+            >
+              <CheckoutForm planChoice={planChoice} finalPrice={displayPrice} />
+            </Elements>
+          )}
+
+          {/* Gift link */}
+          {!freeAccess && !loading && planChoice === "complete" && (
+            <div className="mt-6 pt-5 border-t border-zinc-800 text-center">
+              <p className="text-xs text-zinc-600 mb-1">
+                Buying for someone else?
+              </p>
+              <a
+                href="/gift-checkout"
+                className="inline-flex items-center gap-1.5 text-xs text-amber-500/70 hover:text-amber-400 transition-colors font-medium"
+              >
+                <Gift className="w-3.5 h-3.5" />
+                Gift Lifetime Access instead →
+              </a>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-export default function CheckoutPage() {
+// ── Exported page component (wrapped in Suspense for useSearchParams) ─────────
+
+export default function CheckoutClientPage(props: CheckoutPageClientProps) {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-ink text-text flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-sm text-text-secondary">Loading checkout…</p>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+          <div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
         </div>
-      </div>
-    }>
-      <CheckoutPageContent />
+      }
+    >
+      <CheckoutPageContent {...props} />
     </Suspense>
   );
 }
