@@ -17,6 +17,8 @@ import {
   HelpCircle,
   Layers2,
   Clock,
+  List,
+  LayoutGrid,
 } from "lucide-react";
 import NextImage from "next/image";
 import { LazyVideoPlayer } from "./lazy-video-player";
@@ -156,7 +158,7 @@ function infographicWebp(url: string, suffix: "-medium" | "-large" | ""): string
     : url.replace(/\.png(\?|$)/i, `${suffix}.webp$1`);
 }
 
-function InfographicPanel({ part, previewMode }: { part: Part; previewMode?: boolean }) {
+export function InfographicPanel({ part, previewMode }: { part: Part; previewMode?: boolean }) {
   const [style, setStyle] = useState<"concise" | "standard" | "bentoGrid">("standard");
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -300,7 +302,7 @@ const SLIDE_TYPES = [
   { key: "facts"     as const, label: "Facts" },
 ];
 
-function SlidesPanel({ part, previewMode }: { part: Part; previewMode?: boolean }) {
+export function SlidesPanel({ part, previewMode }: { part: Part; previewMode?: boolean }) {
   const slides = part.assets.slides;
   const available = SLIDE_TYPES.filter((t) => (slides?.[t.key]?.length ?? 0) > 0);
   const [type, setType] = useState<"presented" | "detailed" | "facts">(available[0]?.key ?? "presented");
@@ -346,6 +348,7 @@ function SlidesPanel({ part, previewMode }: { part: Part; previewMode?: boolean 
 }
 
 import { fetchPartAssets, type PartAssets as PartAssetUrls } from "@/lib/part-asset-cache";
+import { LessonGalleryView } from "./lesson-gallery-view";
 
 function SubTabContent({ id, part, previewMode, assetUrls, onSwitchMode }: {
   id: SubTabId;
@@ -413,6 +416,53 @@ function SubTabContent({ id, part, previewMode, assetUrls, onSwitchMode }: {
   }
 }
 
+
+// ─── View toggle ──────────────────────────────────────────────────────────────
+
+type ViewMode = "focus" | "gallery";
+
+function LessonViewToggle({
+  viewMode,
+  onToggle,
+}: {
+  viewMode: ViewMode;
+  onToggle: (mode: ViewMode) => void;
+}) {
+  return (
+    <div
+      className="flex items-center gap-0.5 bg-surface-raised/50 rounded-lg p-0.5 border border-border/25"
+      role="group"
+      aria-label="Choose layout"
+    >
+      <button
+        onClick={() => onToggle("focus")}
+        aria-pressed={viewMode === "focus"}
+        className={clsx(
+          "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all duration-150",
+          viewMode === "focus"
+            ? "bg-surface-high text-text shadow-sm border border-border/35"
+            : "text-text-muted/60 hover:text-text-secondary"
+        )}
+      >
+        <List className="w-3 h-3" />
+        Focus
+      </button>
+      <button
+        onClick={() => onToggle("gallery")}
+        aria-pressed={viewMode === "gallery"}
+        className={clsx(
+          "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all duration-150",
+          viewMode === "gallery"
+            ? "bg-surface-high text-text shadow-sm border border-border/35"
+            : "text-text-muted/60 hover:text-text-secondary"
+        )}
+      >
+        <LayoutGrid className="w-3 h-3" />
+        Gallery
+      </button>
+    </div>
+  );
+}
 
 // ─── Timeline button ──────────────────────────────────────────────────────────
 
@@ -547,6 +597,36 @@ export function PartTabs({ part, userPlan, previewMode = false, initialAssetUrls
   const searchParams = useSearchParams();
   const router = useRouter();
 
+  // View mode toggle: "focus" = current tab layout, "gallery" = all assets on one page
+  // Priority: URL param > localStorage > "focus"
+  const VIEW_STORAGE_KEY = "seerah:lessonViewMode";
+  const viewParam = searchParams.get("view") as ViewMode | null;
+  const [viewMode, setViewMode] = useState<ViewMode>(
+    viewParam === "gallery" ? "gallery" : "focus"
+  );
+
+  // On mount: if no URL param, restore last-used preference from localStorage
+  useEffect(() => {
+    if (viewParam) return;
+    try {
+      const stored = localStorage.getItem(VIEW_STORAGE_KEY) as ViewMode | null;
+      if (stored === "gallery" || stored === "focus") setViewMode(stored);
+    } catch {}
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleViewToggle = useCallback((mode: ViewMode) => {
+    setViewMode(mode);
+    try { localStorage.setItem(VIEW_STORAGE_KEY, mode); } catch {}
+    const params = new URLSearchParams(searchParams.toString());
+    if (mode === "gallery") {
+      params.set("view", "gallery");
+    } else {
+      params.delete("view");
+    }
+    router.replace(`?${params.toString()}`, { scroll: false });
+  }, [searchParams, router]);
+
   // Initialise from ?mode= URL param so deep links and browser back/fwd work
   const modeParam = searchParams.get("mode") as ModeId | null;
   const resolvedInitialMode: ModeId =
@@ -598,125 +678,150 @@ export function PartTabs({ part, userPlan, previewMode = false, initialAssetUrls
     setRenderedPanels((prev) => new Set([...prev, `${activeMode}::${tabId}`]));
   };
 
+
   const currentSubTab = subTabs.find((t) => t.id === activeSubTab)?.id ?? subTabs[0]?.id;
 
   // All panels that should ever be rendered (visited at least once)
   const allPanels = [...renderedPanels];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
 
-      {/* ── Mode selector strip ─────────────────────────────────────────── */}
-      <div className="space-y-1.5 sm:space-y-0">
-        {/* Mobile: two rows — primary (Watch/Read/Slides) then secondary */}
-        {/* Desktop: single row with all tabs */}
-        <div className="sm:hidden space-y-2">
-          {/* LEARN group */}
-          <div className="space-y-1">
-            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-text-muted/35 px-0.5">Learn</p>
-            <div className="flex gap-1.5">
-              {MODES.filter((m) => m.primary).map((mode) => {
-                const available = getModeSubTabs(mode, part).length > 0;
-                return (
-                  <ModeButton
-                    key={mode.id}
-                    mode={mode}
-                    isActive={activeMode === mode.id}
-                    isAvailable={available}
-                    isLocked={false}
-                    onClick={() => available ? handleModeChange(mode.id) : undefined}
-                  />
-                );
-              })}
-            </div>
-          </div>
-          {/* REVIEW group */}
-          <div className="space-y-1">
-            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-text-muted/35 px-0.5">Review</p>
-            <div className="flex gap-1">
-              {MODES.filter((m) => !m.primary).map((mode) => {
-                const available = getModeSubTabs(mode, part).length > 0;
-                return (
-                  <ModeButton
-                    key={mode.id}
-                    mode={mode}
-                    isActive={activeMode === mode.id}
-                    isAvailable={available}
-                    isLocked={false}
-                    onClick={() => available ? handleModeChange(mode.id) : undefined}
-                  />
-                );
-              })}
-            </div>
-          </div>
-        </div>
-        {/* Desktop: all in one row — lg:justify-center prevents giant buttons at ultrawide */}
-        <div className="hidden sm:flex gap-2 lg:justify-center lg:flex-wrap">
-          {MODES.map((mode) => {
-            const available = getModeSubTabs(mode, part).length > 0;
-            return (
-              <ModeButton
-                key={mode.id}
-                mode={mode}
-                isActive={activeMode === mode.id}
-                isAvailable={available}
-                isLocked={false}
-                onClick={() => available ? handleModeChange(mode.id) : undefined}
-              />
-            );
-          })}
-          <TimelineButton partNumber={part.partNumber} era={part.era} previewMode={previewMode} />
-        </div>
+      {/* ── View toggle header ────────────────────────────────────────────── */}
+      <div className="flex items-center justify-between gap-4">
+        <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-text-muted/35">
+          {viewMode === "gallery" ? "All Assets" : "Learning Mode"}
+        </p>
+        <LessonViewToggle viewMode={viewMode} onToggle={handleViewToggle} />
       </div>
 
-      {/* ── Sub-tab bar (only when mode has multiple content items) ────── */}
-      {subTabs.length > 1 && (
-        <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
-          {subTabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = currentSubTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => handleSubTabChange(tab.id)}
-                className={clsx(
-                  "flex items-center gap-1.5 px-3 rounded-lg text-xs font-medium",
-                  "transition-all duration-150 active:scale-95 flex-shrink-0 whitespace-nowrap",
-                  "min-h-[44px]",
-                  isActive
-                    ? "bg-gold/12 text-gold ring-1 ring-gold/20"
-                    : "bg-surface-raised/50 text-text-muted/75 hover:text-text-secondary hover:bg-surface-raised"
-                )}
-              >
-                <Icon className={clsx("w-3 h-3 transition-opacity", isActive ? "opacity-100" : "opacity-55")} />
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
+      {/* ── Gallery view ─────────────────────────────────────────────────── */}
+      {viewMode === "gallery" && (
+        <LessonGalleryView
+          part={part}
+          assetUrls={assetUrls}
+          previewMode={previewMode}
+        />
       )}
 
-      {/* ── Content — panels stay mounted after first visit, hidden via CSS ── */}
-      <div className="pt-0.5">
-        {allPanels.map((panelKey) => {
-          const [modeId, subTabId] = panelKey.split("::");
-          const isVisible = activeMode === modeId && currentSubTab === subTabId;
-          return (
-            <div
-              key={panelKey}
-              className={isVisible ? "animate-in fade-in-0 duration-200" : "hidden"}
-            >
-              <SubTabContent
-                id={subTabId as SubTabId}
-                part={part}
-                previewMode={previewMode}
-                assetUrls={assetUrls}
-                onSwitchMode={handleModeChange}
-              />
+      {/* ── Focus view — existing tab layout ─────────────────────────────── */}
+      {viewMode === "focus" && (
+        <div className="space-y-6">
+
+          {/* Mode selector strip */}
+          <div className="space-y-1.5 sm:space-y-0">
+            {/* Mobile: two rows — primary (Watch/Read/Slides) then secondary */}
+            {/* Desktop: single row with all tabs */}
+            <div className="sm:hidden space-y-2">
+              {/* LEARN group */}
+              <div className="space-y-1">
+                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-text-muted/35 px-0.5">Learn</p>
+                <div className="flex gap-1.5">
+                  {MODES.filter((m) => m.primary).map((mode) => {
+                    const available = getModeSubTabs(mode, part).length > 0;
+                    return (
+                      <ModeButton
+                        key={mode.id}
+                        mode={mode}
+                        isActive={activeMode === mode.id}
+                        isAvailable={available}
+                        isLocked={false}
+                        onClick={() => available ? handleModeChange(mode.id) : undefined}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+              {/* REVIEW group */}
+              <div className="space-y-1">
+                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-text-muted/35 px-0.5">Review</p>
+                <div className="flex gap-1">
+                  {MODES.filter((m) => !m.primary).map((mode) => {
+                    const available = getModeSubTabs(mode, part).length > 0;
+                    return (
+                      <ModeButton
+                        key={mode.id}
+                        mode={mode}
+                        isActive={activeMode === mode.id}
+                        isAvailable={available}
+                        isLocked={false}
+                        onClick={() => available ? handleModeChange(mode.id) : undefined}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
             </div>
-          );
-        })}
-      </div>
+            {/* Desktop: all in one row — lg:justify-center prevents giant buttons at ultrawide */}
+            <div className="hidden sm:flex gap-2 lg:justify-center lg:flex-wrap">
+              {MODES.map((mode) => {
+                const available = getModeSubTabs(mode, part).length > 0;
+                return (
+                  <ModeButton
+                    key={mode.id}
+                    mode={mode}
+                    isActive={activeMode === mode.id}
+                    isAvailable={available}
+                    isLocked={false}
+                    onClick={() => available ? handleModeChange(mode.id) : undefined}
+                  />
+                );
+              })}
+              <TimelineButton partNumber={part.partNumber} era={part.era} previewMode={previewMode} />
+            </div>
+          </div>
+
+          {/* Sub-tab bar (only when mode has multiple content items) */}
+          {subTabs.length > 1 && (
+            <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
+              {subTabs.map((tab) => {
+                const Icon = tab.icon;
+                const isActive = currentSubTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => handleSubTabChange(tab.id)}
+                    className={clsx(
+                      "flex items-center gap-1.5 px-3 rounded-lg text-xs font-medium",
+                      "transition-all duration-150 active:scale-95 flex-shrink-0 whitespace-nowrap",
+                      "min-h-[44px]",
+                      isActive
+                        ? "bg-gold/12 text-gold ring-1 ring-gold/20"
+                        : "bg-surface-raised/50 text-text-muted/75 hover:text-text-secondary hover:bg-surface-raised"
+                    )}
+                  >
+                    <Icon className={clsx("w-3 h-3 transition-opacity", isActive ? "opacity-100" : "opacity-55")} />
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Content — panels stay mounted after first visit, hidden via CSS */}
+          <div className="pt-0.5">
+            {allPanels.map((panelKey) => {
+              const [modeId, subTabId] = panelKey.split("::");
+              const isVisible = activeMode === modeId && currentSubTab === subTabId;
+              return (
+                <div
+                  key={panelKey}
+                  className={isVisible ? "animate-in fade-in-0 duration-200" : "hidden"}
+                >
+                  <SubTabContent
+                    id={subTabId as SubTabId}
+                    part={part}
+                    previewMode={previewMode}
+                    assetUrls={assetUrls}
+                    onSwitchMode={handleModeChange}
+                  />
+                </div>
+              );
+            })}
+          </div>
+
+        </div>
+      )}
 
     </div>
   );
