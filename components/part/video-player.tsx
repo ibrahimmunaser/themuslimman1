@@ -64,8 +64,11 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode }: Vid
       for (const threshold of REPORT_THRESHOLDS) {
         if (rounded >= threshold && !reportedRef.current.has(threshold)) {
           reportedRef.current.add(threshold);
-          // Fire-and-forget — don't block the UI
           trackVideoProgress(partNumber, rounded).catch(() => {});
+          // Update progress badge in real-time without a page refresh
+          window.dispatchEvent(new CustomEvent("seerah:progressUpdate", {
+            detail: { videoWatchPercent: rounded },
+          }));
         }
       }
     }
@@ -177,9 +180,15 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode }: Vid
         onEnded={() => {
           setPlaying(false);
           setStarted(false);
-          if (partNumber && !previewMode && !reportedRef.current.has(100)) {
-            reportedRef.current.add(100);
-            trackVideoProgress(partNumber, 100).catch(() => {});
+          if (partNumber && !previewMode) {
+            if (!reportedRef.current.has(100)) {
+              reportedRef.current.add(100);
+              trackVideoProgress(partNumber, 100).catch(() => {});
+            }
+            // Always fire the badge update on end (covers skipping to the end)
+            window.dispatchEvent(new CustomEvent("seerah:progressUpdate", {
+              detail: { videoWatchPercent: 100 },
+            }));
           }
         }}
         onPlay={() => { setPlaying(true); window.dispatchEvent(new CustomEvent("seerah:videoPlaying")); }}
