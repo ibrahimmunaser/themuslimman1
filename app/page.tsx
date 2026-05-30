@@ -24,8 +24,9 @@ import { getStudentDashboardData } from "@/lib/queries/student";
 import { EmailVerificationBanner } from "@/components/auth/email-verification-banner";
 import { CreatorPromoTracker } from "@/components/promo/creator-promo-tracker";
 
-// Revalidate every 60 seconds to reduce database load
-export const revalidate = 60;
+// Must be dynamic so the per-user auth check + redirect runs on every request.
+// A cached ISR response would serve the same HTML to everyone and skip the redirect.
+export const dynamic = "force-dynamic";
 
 export default async function LandingPage() {
   // Check if user is logged in and get their progress
