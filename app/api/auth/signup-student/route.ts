@@ -85,18 +85,20 @@ export async function POST(request: NextRequest) {
           emailVerified: isDevelopment,
           verificationToken,
           verificationExpires,
-          student: {
+          studentProfile: {
             create: {
+              id: crypto.randomUUID(),
               isActive: true,
+              updatedAt: new Date(),
             },
           },
         },
         include: {
-          student: true,
+          studentProfile: true,
         },
       });
 
-      console.log(`[API] /api/auth/signup-student: User created (id: ${newUser.id}, studentProfileId: ${newUser.student?.id})`);
+      console.log(`[API] /api/auth/signup-student: User created (id: ${newUser.id}, studentProfileId: ${newUser.studentProfile?.id})`);
       return newUser;
     });
 
@@ -107,6 +109,7 @@ export async function POST(request: NextRequest) {
     
     await prisma.session.create({
       data: {
+        id: crypto.randomUUID(),
         userId: user.id,
         token: sessionToken,
         expiresAt: sessionExpiresAt,
