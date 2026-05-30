@@ -279,13 +279,15 @@ export async function login(
   }
 
   // Run lastLoginAt stamp and purchase check in parallel — they are independent.
-  // NOTE: Cannot replace userHasPurchases with user.hasPaid — monthly subscribers
-  // have hasPaid=false (only lifetime purchases set it), so the full check is required
-  // to correctly redirect monthly subscribers to the dashboard instead of /pricing.
-  const [, hasPurchase] = await Promise.all([
+  // NOTE: hasPaid alone is insufficient — monthly subscribers have hasPaid=false
+  // (only lifetime purchases set it), so the DB check is still required for them.
+  // However, hasPaid=true is always authoritative: admin grants, promo-code free
+  // access, and any other path that sets it directly must also be honoured here.
+  const [, dbHasPurchase] = await Promise.all([
     prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } }),
     userHasPurchases(user.id),
   ]);
+  const hasPurchase = user.hasPaid || dbHasPurchase;
 
   const elapsed = Date.now() - startTime;
   if (elapsed > 3000) console.warn(`[AUTH] login: Slow login for ${lowerEmail} [${elapsed}ms]`);
