@@ -3,6 +3,7 @@ import { stripe } from "@/lib/stripe";
 import { getCurrentUser } from "@/lib/auth";
 import { PLANS } from "@/lib/stripe-config";
 import { validatePromoCode, applyDiscount } from "@/lib/promo-codes";
+import { getUserAccessInfo } from "@/lib/access";
 
 // Source of truth: STRIPE_FAMILY_LIFETIME_PRICE_ID env var (used only for metadata / Stripe dashboard linkage).
 const FAMILY_LIFETIME_PRICE_ID = process.env.STRIPE_FAMILY_LIFETIME_PRICE_ID ?? "";
@@ -26,10 +27,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Block users who are already on Family Access — nothing to upgrade to.
-    if (user.planType === "family") {
+    // Block only users who already hold a Family Lifetime purchase — they have nothing to buy.
+    //
+    // OLD (wrong):  user.planType === "family"
+    //   → caught Family Monthly users too, because upsertSubscription sets planType=family
+    //     when a family monthly sub activates. Those users have hasPaid=false and should
+    //     be allowed to upgrade to Family Lifetime.
+    //
+    // NEW (correct): hasLifetime && user.planType === "family"
+    //   → hasLifetime = user.hasPaid || has a succeeded Purchase row, which is true only
+    //     for actual lifetime buyers. Family Monthly users have hasPaid=false and no Purchase
+    //     row, so they pass through and can buy Family Lifetime at $199.
+    const accessInfo = await getUserAccessInfo(user.id, user.hasPaid);
+    if (accessInfo.hasLifetime && user.planType === "family") {
       return NextResponse.json(
-        { error: "You already have Family Access", hasFamily: true },
+        { error: "You already have Family Lifetime Access", hasFamily: true },
         { status: 409 }
       );
     }

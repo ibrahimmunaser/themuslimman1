@@ -208,17 +208,26 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
       }
     }
 
-    // If the user was on a monthly subscription, cancel it now — lifetime replaces it
+    // If the user was on a monthly subscription, mark it to cancel at period end.
+    // We do NOT cancel immediately — the user already paid for the current billing period
+    // and lifetime access is now active, so there is no harm letting the monthly sub
+    // expire naturally. Immediate cancellation would forfeit days they already paid for.
+    //
+    // When the subscription eventually expires, customer.subscription.deleted fires and
+    // handleSubscriptionDeleted runs. That handler checks for a lifetime family purchase
+    // before resetting planType, so family lifetime holders keep planType=family. ✓
     const activeSub = await prisma.subscription.findFirst({
       where: { userId, status: { in: ["active", "trialing"] } },
       select: { stripeSubscriptionId: true },
     });
     if (activeSub) {
       try {
-        await stripe.subscriptions.cancel(activeSub.stripeSubscriptionId);
-        console.log(`[WEBHOOK] handlePaymentSuccess: Cancelled monthly subscription ${activeSub.stripeSubscriptionId} after lifetime purchase for user ${userId}`);
+        await stripe.subscriptions.update(activeSub.stripeSubscriptionId, {
+          cancel_at_period_end: true,
+        });
+        console.log(`[WEBHOOK] handlePaymentSuccess: Marked monthly subscription ${activeSub.stripeSubscriptionId} to cancel at period end after lifetime purchase for user ${userId}`);
       } catch (cancelErr) {
-        console.error(`[WEBHOOK] handlePaymentSuccess: Failed to cancel subscription ${activeSub.stripeSubscriptionId}:`, cancelErr);
+        console.error(`[WEBHOOK] handlePaymentSuccess: Failed to mark subscription ${activeSub.stripeSubscriptionId} for cancellation:`, cancelErr);
       }
     }
 
