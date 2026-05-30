@@ -72,6 +72,8 @@ export async function POST(request: NextRequest) {
     } else {
       await prisma.studySession.create({
         data: {
+          id: crypto.randomUUID(),
+          updatedAt: new Date(),
           userId: user.id,
           learnerProfileId,
           partNumber,

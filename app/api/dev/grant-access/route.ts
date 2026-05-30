@@ -17,6 +17,8 @@ export async function POST(request: NextRequest) {
     await prisma.purchase.upsert({
       where: { stripePaymentIntentId: `dev_lifetime_${user.id}` },
       create: {
+        id: crypto.randomUUID(),
+        updatedAt: new Date(),
         userId: user.id,
         planId: "complete",
         planName: "Complete Seerah (dev test)",
@@ -37,6 +39,8 @@ export async function POST(request: NextRequest) {
     await prisma.subscription.upsert({
       where: { stripeSubscriptionId: `dev_sub_${user.id}` },
       create: {
+        id: crypto.randomUUID(),
+        updatedAt: new Date(),
         userId: user.id,
         stripeCustomerId: `dev_cus_${user.id}`,
         stripeSubscriptionId: `dev_sub_${user.id}`,

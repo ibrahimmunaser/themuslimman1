@@ -100,6 +100,7 @@ export async function POST(request: NextRequest) {
     // Create a pending gift record so we have it before payment completes
     await prisma.giftPurchase.create({
       data: {
+        id: crypto.randomUUID(),
         stripePaymentIntentId: paymentIntent.id,
         purchaserUserId: user.id,
         purchaserEmail: user.email,

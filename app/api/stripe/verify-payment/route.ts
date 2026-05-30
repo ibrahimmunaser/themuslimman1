@@ -91,6 +91,8 @@ export async function GET(request: NextRequest) {
         ...(creator   ? { creator }   : {}),
       },
       create: {
+        id: crypto.randomUUID(),
+        updatedAt: new Date(),
         userId,
         planId,
         planName: planName ?? planId,

@@ -108,6 +108,8 @@ export async function POST(request: NextRequest) {
     prisma.purchase.upsert({
       where: { stripePaymentIntentId: gift.stripePaymentIntentId },
       create: {
+        id: crypto.randomUUID(),
+        updatedAt: new Date(),
         userId: user.id,
         stripePaymentIntentId: gift.stripePaymentIntentId,
         planId: "complete",

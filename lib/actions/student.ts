@@ -32,7 +32,7 @@ export async function joinClassByCode(
 
   await prisma.classEnrollment.upsert({
     where: { classId_studentId: { classId: cls.id, studentId: user.studentProfileId } },
-    create: { classId: cls.id, studentId: user.studentProfileId, status: "active" },
+    create: { id: crypto.randomUUID(), classId: cls.id, studentId: user.studentProfileId, status: "active" },
     update: { status: "active", removedAt: null, joinedAt: new Date() },
   });
 
@@ -67,6 +67,8 @@ export async function markItemComplete(
       },
     },
     create: {
+      id: crypto.randomUUID(),
+      updatedAt: new Date(),
       classId,
       studentId: user.studentProfileId,
       classCourseItemId,
@@ -131,7 +133,7 @@ export async function startOrResumeQuiz(
 
   // Create a new attempt
   const attempt = await prisma.quizAttempt.create({
-    data: { quizId, classId, studentId: user.studentProfileId, status: "in_progress" },
+    data: { id: crypto.randomUUID(), updatedAt: new Date(), quizId, classId, studentId: user.studentProfileId, status: "in_progress" },
   });
 
   return { success: true, attemptId: attempt.id };
@@ -162,6 +164,8 @@ export async function submitQuizAttempt(
       if (isCorrect) correct++;
     }
     return {
+      id: crypto.randomUUID(),
+      updatedAt: new Date(),
       quizAttemptId: attemptId,
       questionId: a.questionId,
       selectedOptionId: a.selectedOptionId ?? null,

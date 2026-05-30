@@ -144,6 +144,8 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
     await prisma.purchase.upsert({
       where: { stripePaymentIntentId: paymentIntent.id },
       create: {
+        id: crypto.randomUUID(),
+        updatedAt: new Date(),
         userId,
         planId,
         planName,
@@ -406,6 +408,8 @@ async function upsertSubscription(userId: string, sub: Stripe.Subscription) {
   await prisma.subscription.upsert({
     where: { stripeSubscriptionId: sub.id },
     create: {
+      id: crypto.randomUUID(),
+      updatedAt: new Date(),
       userId,
       stripeCustomerId: customerId,
       stripeSubscriptionId: sub.id,
@@ -460,6 +464,7 @@ async function handleGiftPaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
     await prisma.giftPurchase.upsert({
       where: { stripePaymentIntentId: paymentIntent.id },
       create: {
+        id: crypto.randomUUID(),
         stripePaymentIntentId: paymentIntent.id,
         purchaserUserId: purchaserUserId || null,
         purchaserEmail,

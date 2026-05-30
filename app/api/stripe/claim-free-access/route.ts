@@ -68,6 +68,8 @@ export async function POST(request: NextRequest) {
     await prisma.$transaction([
       prisma.purchase.create({
         data: {
+          id: crypto.randomUUID(),
+          updatedAt: new Date(),
           userId: user.id,
           planId: plan.id,
           planName: plan.name,
