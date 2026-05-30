@@ -421,6 +421,17 @@ async function upsertSubscription(userId: string, sub: Stripe.Subscription) {
     );
   }
 
+  // Check if this subscription was previously non-active (incomplete/null) — used below
+  // to send a welcome email on first activation only.
+  const ACTIVE_STATUSES = ["active", "trialing"];
+  const existing = await prisma.subscription.findUnique({
+    where: { stripeSubscriptionId: sub.id },
+    select: { status: true },
+  });
+  const isFirstActivation =
+    ACTIVE_STATUSES.includes(sub.status) &&
+    (!existing || !ACTIVE_STATUSES.includes(existing.status));
+
   await prisma.subscription.upsert({
     where: { stripeSubscriptionId: sub.id },
     create: {
@@ -452,13 +463,23 @@ async function upsertSubscription(userId: string, sub: Stripe.Subscription) {
   // If this is a Family plan subscription that just became active or trialing,
   // upgrade the user's planType to "family" so they get the 5-profile limit.
   const isFamilySub = sub.metadata?.planType === "family";
-  const isActiveOrTrialing = sub.status === "active" || sub.status === "trialing";
+  const isActiveOrTrialing = ACTIVE_STATUSES.includes(sub.status);
   if (isFamilySub && isActiveOrTrialing) {
     await prisma.user.update({
       where: { id: userId },
       data: { planType: "family" },
     }).catch((e) => console.error("[WEBHOOK] upsertSubscription: Failed to set planType=family:", e));
     console.log(`[WEBHOOK] upsertSubscription: Set planType=family for user ${userId} (sub ${sub.id})`);
+  }
+
+  // Send a welcome email the first time a subscription becomes active/trialing.
+  // Monthly buyers would otherwise get no confirmation after checkout.
+  if (isFirstActivation) {
+    const planLabel = isFamilySub ? "Family Monthly Access" : "Monthly Access";
+    sendPurchaseConfirmationEmail(userId, planLabel).catch((err) =>
+      console.error("[WEBHOOK] upsertSubscription: Failed to send subscription welcome email:", err)
+    );
+    console.log(`[WEBHOOK] upsertSubscription: Welcome email queued for user ${userId} (sub ${sub.id})`);
   }
 }
 

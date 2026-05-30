@@ -3,6 +3,7 @@ import { stripe } from "@/lib/stripe";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getUserAccessInfo, getActiveSubscription } from "@/lib/access";
+import { PLANS } from "@/lib/stripe-config";
 
 const MONTHLY_PRICE_ID = process.env.STRIPE_MONTHLY_PRICE_ID;
 
@@ -24,7 +25,7 @@ export async function POST() {
 
     // Block lifetime users — they already have permanent access, no need to subscribe
     const [accessInfo, activeSub] = await Promise.all([
-      getUserAccessInfo(user.id),
+      getUserAccessInfo(user.id, user.hasPaid),
       getActiveSubscription(user.id),
     ]);
 
@@ -110,7 +111,7 @@ export async function POST() {
       }).catch((e) => console.warn("[CREATE-SUBSCRIPTION-INTENT] Could not update PI metadata:", e));
     }
 
-    return NextResponse.json({ clientSecret, amount: 900 });
+    return NextResponse.json({ clientSecret, amount: PLANS.monthly.price });
   } catch (error) {
     console.error("[CREATE-SUBSCRIPTION-INTENT] Error:", error);
     const message = error instanceof Error ? error.message : "Unknown error";
