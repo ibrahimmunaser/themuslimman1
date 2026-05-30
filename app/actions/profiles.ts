@@ -132,8 +132,17 @@ export async function getProfilesWithProgress() {
     // JSON for every part independently — 5 asset types × 100 parts = 500
     // JSON.parse calls per profile. Now it is exactly 100 per profile.
     type ProgressRow = (typeof progress)[number];
+    // Normalize legacy asset IDs at parse time so old DB records are counted
+    // correctly: "facts" and "statement_of_facts" → "statement-of-facts".
+    const normalizeAssetId = (id: string): string => {
+      if (id === "facts" || id === "statement_of_facts") return "statement-of-facts";
+      return id;
+    };
     const openedAssetsPerPart: string[][] = progress.map((p: ProgressRow) => {
-      try { return JSON.parse(p.openedAssets) as string[]; }
+      try {
+        const raw = JSON.parse(p.openedAssets) as string[];
+        return raw.map(normalizeAssetId);
+      }
       catch { return []; }
     });
 

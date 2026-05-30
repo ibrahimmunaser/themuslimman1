@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { requireStudent } from "@/lib/auth";
+import { getCachedStudent } from "@/lib/auth-cache";
 import { hasActiveCourseAccess } from "@/lib/access";
 import { getActiveProfileId } from "@/app/actions/profiles";
 import { prisma } from "@/lib/db";
@@ -16,15 +16,21 @@ export const metadata = { title: "Resource Library | Complete Seerah" };
 export const dynamic = "force-dynamic";
 
 export default async function SeerahResourcesPage() {
-  const user = await requireStudent();
+  // getCachedStudent() deduplicates this call with the parent layout's auth
+  // query — no extra DB round-trip on this page.
+  const user = await getCachedStudent();
   if (!user.studentProfileId) redirect("/");
 
-  const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
+  // Run access check and profile ID lookup in parallel — both only need user.id.
+  const [hasAccess, learnerProfileId] = await Promise.all([
+    hasActiveCourseAccess(user.id, user.hasPaid),
+    user.activeProfileId
+      ? Promise.resolve(user.activeProfileId)
+      : getActiveProfileId(user.id),
+  ]);
   if (!hasAccess) redirect("/pricing");
 
   const userPlan = "complete" as const;
-
-  const learnerProfileId = user.activeProfileId ?? await getActiveProfileId(user.id);
 
   // Fetch progress and thumbnail URLs in parallel, scoped to active profile.
   const [progress, thumbnails] = await Promise.all([
@@ -49,30 +55,32 @@ export default async function SeerahResourcesPage() {
     progress.map((p) => [p.partNumber, p])
   );
 
-  // Helper function to check if asset was opened
-  const getAssetProgressMap = (assetType: string) => {
-    return Object.fromEntries(
-      progress.map((p) => {
-        try {
-          const openedAssets = p.openedAssets ? JSON.parse(p.openedAssets as string) : [];
-          return [p.partNumber, openedAssets.includes(assetType)];
-        } catch {
-          return [p.partNumber, false];
-        }
-      })
-    );
+  // Normalize legacy asset IDs at parse time so old DB records are counted
+  // correctly: "facts" and "statement_of_facts" → "statement-of-facts".
+  const normalizeAssetId = (id: string): string => {
+    if (id === "facts" || id === "statement_of_facts") return "statement-of-facts";
+    return id;
   };
 
-  const getAssetCompletedCount = (assetType: string) => {
-    return progress.filter((p) => {
+  // Pre-parse openedAssets once per row to avoid repeated JSON.parse calls.
+  const parsedOpenedAssets: Map<number, string[]> = new Map(
+    progress.map((p) => {
       try {
-        const openedAssets = p.openedAssets ? JSON.parse(p.openedAssets as string) : [];
-        return openedAssets.includes(assetType);
+        const raw: string[] = p.openedAssets ? JSON.parse(p.openedAssets as string) : [];
+        return [p.partNumber, raw.map(normalizeAssetId)];
       } catch {
-        return false;
+        return [p.partNumber, []];
       }
-    }).length;
-  };
+    })
+  );
+
+  const getAssetProgressMap = (assetType: string) =>
+    Object.fromEntries(
+      progress.map((p) => [p.partNumber, (parsedOpenedAssets.get(p.partNumber) ?? []).includes(assetType)])
+    );
+
+  const getAssetCompletedCount = (assetType: string) =>
+    progress.filter((p) => (parsedOpenedAssets.get(p.partNumber) ?? []).includes(assetType)).length;
 
   // Video stats
   const videoCompletedCount = progress.filter((p) => p.videoCompleted).length;

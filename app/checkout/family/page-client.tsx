@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -82,7 +82,7 @@ function FamilyCheckoutForm({
       <button
         type="submit"
         disabled={!stripe || processing}
-        className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-60 text-black font-bold text-base transition-colors shadow-lg shadow-amber-500/20"
+        className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-gold hover:bg-gold-light disabled:opacity-60 text-ink font-bold text-base transition-colors shadow-lg shadow-gold/20"
       >
         <Lock className="w-4 h-4" />
         {processing ? "Processing…" : label}
@@ -126,6 +126,7 @@ export default function FamilyCheckoutClient({
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hasActiveSub, setHasActiveSub] = useState(false);
 
   // Pricing state
   const [basePrice, setBasePrice] = useState<number>(
@@ -179,7 +180,11 @@ export default function FamilyCheckoutClient({
       const data = await r.json();
 
       if (data.error) {
-        setError(data.error);
+        if (data.hasActiveSubscription) {
+          setHasActiveSub(true);
+        } else {
+          setError(data.error);
+        }
         return null;
       }
 
@@ -292,7 +297,7 @@ export default function FamilyCheckoutClient({
         </Link>
 
         {/* Plan badge */}
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-400 text-xs font-semibold mb-5 w-fit">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gold/10 border border-gold/25 text-gold text-xs font-semibold mb-5 w-fit">
           <Users className="w-3.5 h-3.5" />
           Family Access
         </div>
@@ -300,7 +305,7 @@ export default function FamilyCheckoutClient({
         <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3">
           Complete Seerah
           <br />
-          <span className="text-amber-400">Family Access</span>
+          <span className="text-gold">Family Access</span>
         </h1>
 
         <p className="text-zinc-400 text-base mb-8 leading-relaxed">
@@ -316,7 +321,7 @@ export default function FamilyCheckoutClient({
               onClick={() => setCycle("lifetime")}
               className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
                 cycle === "lifetime"
-                  ? "bg-amber-500 text-black shadow"
+                  ? "bg-gold text-black shadow"
                   : "text-zinc-400 hover:text-zinc-200"
               }`}
             >
@@ -327,7 +332,7 @@ export default function FamilyCheckoutClient({
               onClick={() => setCycle("monthly")}
               className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
                 cycle === "monthly"
-                  ? "bg-amber-500 text-black shadow"
+                  ? "bg-gold text-black shadow"
                   : "text-zinc-400 hover:text-zinc-200"
               }`}
             >
@@ -350,7 +355,7 @@ export default function FamilyCheckoutClient({
                 </span>
                 <span className="text-zinc-500 text-sm">one-time</span>
               </div>
-              <p className="text-xs text-amber-500/80 mt-2 flex items-center gap-1.5">
+              <p className="text-xs text-gold/80 mt-2 flex items-center gap-1.5">
                 <ArrowUpCircle className="w-3.5 h-3.5 flex-shrink-0" />
                 You&apos;ve already paid $99 for Individual Lifetime — you&apos;re
                 only paying the $100 difference.
@@ -382,7 +387,7 @@ export default function FamilyCheckoutClient({
               </div>
               <p className="text-xs text-zinc-600 mt-1">
                 Full family access while subscribed.{" "}
-                <span className="text-amber-600/70">
+                <span className="text-gold-dim/70">
                   Upgrade to lifetime anytime for {formatPrice(LIFETIME_PLAN.price)}.
                 </span>
               </p>
@@ -394,8 +399,8 @@ export default function FamilyCheckoutClient({
         <ul className="space-y-3">
           {activeFeatures.map((feature) => (
             <li key={feature} className="flex items-start gap-3">
-              <div className="w-5 h-5 rounded-full bg-amber-500/15 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <Check className="w-3 h-3 text-amber-400" />
+              <div className="w-5 h-5 rounded-full bg-gold/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <Check className="w-3 h-3 text-gold" />
               </div>
               <span className="text-sm text-zinc-300">{feature}</span>
             </li>
@@ -499,7 +504,7 @@ export default function FamilyCheckoutClient({
             {cycle === "lifetime" && (
               <div className="flex items-center justify-between pt-2 border-t border-zinc-800">
                 <span className="text-sm font-semibold text-white">Total</span>
-                <span className="text-lg font-bold text-amber-400">
+                <span className="text-lg font-bold text-gold">
                   {formatPrice(displayPrice)}
                 </span>
               </div>
@@ -540,12 +545,12 @@ export default function FamilyCheckoutClient({
                         e.key === "Enter" && handleApplyCoupon()
                       }
                       placeholder="Promo code"
-                      className="flex-1 px-3.5 py-2.5 text-sm rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500/50 transition-colors uppercase"
+                      className="flex-1 px-3.5 py-2.5 text-sm rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors uppercase"
                     />
                     <button
                       onClick={handleApplyCoupon}
                       disabled={couponLoading || !couponInput.trim()}
-                      className="px-4 py-2.5 text-sm font-medium rounded-xl border border-zinc-700 bg-zinc-800 text-zinc-300 hover:border-amber-500/40 hover:text-amber-400 transition-colors disabled:opacity-40 whitespace-nowrap"
+                      className="px-4 py-2.5 text-sm font-medium rounded-xl border border-zinc-700 bg-zinc-800 text-zinc-300 hover:border-gold/40 hover:text-gold transition-colors disabled:opacity-40 whitespace-nowrap"
                     >
                       {couponLoading ? "…" : "Apply"}
                     </button>
@@ -561,7 +566,25 @@ export default function FamilyCheckoutClient({
           {/* Loading spinner */}
           {loading && (
             <div className="flex items-center justify-center py-12">
-              <div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
+              <div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
+            </div>
+          )}
+
+          {/* Already subscribed — billing link */}
+          {hasActiveSub && !loading && (
+            <div className="p-5 rounded-xl bg-gold/10 border border-gold/25 text-center space-y-4">
+              <p className="text-sm font-semibold text-white">
+                You already have an active monthly subscription.
+              </p>
+              <p className="text-xs text-zinc-400">
+                You cannot start a second subscription while one is active.
+              </p>
+              <a
+                href="/billing"
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-sm transition-colors"
+              >
+                Manage your subscription
+              </a>
             </div>
           )}
 
@@ -575,7 +598,7 @@ export default function FamilyCheckoutClient({
           {/* Free access claim */}
           {freeAccess && !loading && (
             <div className="space-y-4">
-              <div className="p-5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-center">
+              <div className="p-5 rounded-xl bg-gold/10 border border-gold/25 text-center">
                 <div className="text-3xl mb-3">🎁</div>
                 <h3 className="text-lg font-bold text-white mb-1">
                   Free Access Applied
@@ -592,7 +615,7 @@ export default function FamilyCheckoutClient({
               <button
                 onClick={handleClaimFreeAccess}
                 disabled={freeClaimLoading}
-                className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-60 text-black font-bold text-base transition-colors shadow-lg shadow-amber-500/20"
+                className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-gold hover:bg-gold-light disabled:opacity-60 text-ink font-bold text-base transition-colors shadow-lg shadow-gold/20"
               >
                 <Lock className="w-4 h-4" />
                 {freeClaimLoading ? "Activating…" : "Claim Free Family Access"}
@@ -612,7 +635,7 @@ export default function FamilyCheckoutClient({
                 appearance: {
                   theme: "night",
                   variables: {
-                    colorPrimary: "#f59e0b",
+                    colorPrimary: "#C8A96E",
                     colorBackground: "#18181b",
                     colorText: "#ffffff",
                     colorDanger: "#ef4444",

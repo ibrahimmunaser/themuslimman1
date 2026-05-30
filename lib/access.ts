@@ -37,6 +37,11 @@ export async function hasActiveCourseAccess(
       where: {
         userId,
         status: { in: [...ACTIVE_SUBSCRIPTION_STATUSES] },
+        // Require a non-expired billing period. This guards against stale
+        // "active" rows when Stripe fails to deliver the deletion webhook.
+        // New subscriptions are safe: upsertSubscription always writes a
+        // future currentPeriodEnd (either from Stripe or +30d approximation).
+        currentPeriodEnd: { gte: new Date() },
       },
       select: { id: true },
     }),
@@ -86,6 +91,29 @@ export async function getUserAccessInfo(userId: string, sessionHasPaid?: boolean
     subscription: subscription ?? null,
     lifetimePurchase: purchase ?? null,
   };
+}
+
+/**
+ * Returns the user's current active subscription row if one exists,
+ * or null if there is no active/trialing subscription with a non-expired period.
+ *
+ * Used as the server-side gate in subscription checkout APIs to prevent
+ * users from creating a second concurrent monthly subscription.
+ */
+export async function getActiveSubscription(userId: string) {
+  return prisma.subscription.findFirst({
+    where: {
+      userId,
+      status: { in: [...ACTIVE_SUBSCRIPTION_STATUSES] },
+      currentPeriodEnd: { gte: new Date() },
+    },
+    select: {
+      id: true,
+      stripeSubscriptionId: true,
+      status: true,
+      currentPeriodEnd: true,
+    },
+  });
 }
 
 /**

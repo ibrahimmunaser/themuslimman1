@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import { PARTS } from "@/lib/content";
@@ -79,7 +79,7 @@ export function TextResourceContent({
     briefing: "briefing",
     "study-guide": "study_guide",
     report: "report",
-    "statement-of-facts": "statement_of_facts",
+    "statement-of-facts": "statement-of-facts",
   }[type] ?? type);
 
   const handleOpenContent = (part: (typeof PARTS)[0]) => {

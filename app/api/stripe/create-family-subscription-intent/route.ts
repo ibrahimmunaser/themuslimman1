@@ -3,6 +3,7 @@ import { stripe } from "@/lib/stripe";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { PLANS } from "@/lib/stripe-config";
+import { getUserAccessInfo, getActiveSubscription } from "@/lib/access";
 
 // Source of truth: STRIPE_FAMILY_MONTHLY_PRICE_ID env var.
 // Must start with "price_" — fail loudly at request time if misconfigured.
@@ -29,10 +30,41 @@ export async function POST() {
       );
     }
 
-    // Already on Family Access (lifetime) — nothing to subscribe to.
-    if (user.planType === "family" && user.hasPaid) {
+    // Fetch access info and active subscription in parallel.
+    const [accessInfo, activeSub] = await Promise.all([
+      getUserAccessInfo(user.id, user.hasPaid),
+      getActiveSubscription(user.id),
+    ]);
+
+    // Block family lifetime holders — nothing to subscribe to.
+    if (accessInfo.hasLifetime && user.planType === "family") {
       return NextResponse.json(
         { error: "You already have lifetime Family Access.", hasFamily: true },
+        { status: 409 }
+      );
+    }
+
+    // Block individual lifetime holders — they should upgrade to Family Lifetime, not subscribe.
+    if (accessInfo.hasLifetime) {
+      return NextResponse.json(
+        {
+          error:
+            "You already have lifetime Individual access. Upgrade to Family Lifetime instead.",
+          hasLifetime: true,
+        },
+        { status: 409 }
+      );
+    }
+
+    // Block users who already have any active monthly subscription (individual or family).
+    // Switching between monthly plans requires canceling the current subscription first.
+    if (activeSub) {
+      return NextResponse.json(
+        {
+          error:
+            "You already have an active monthly subscription. Manage your subscription from billing.",
+          hasActiveSubscription: true,
+        },
         { status: 409 }
       );
     }

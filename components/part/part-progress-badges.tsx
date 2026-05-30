@@ -25,6 +25,13 @@ export function PartProgressBadges({ initial }: PartProgressBadgesProps) {
       setState((prev) => ({
         ...prev,
         ...update,
+        // Never allow the displayed watch percent to go backwards; events from
+        // seek/scrub can arrive out of order and a lower value must not overwrite
+        // a higher one that was already shown.
+        videoWatchPercent:
+          update.videoWatchPercent !== undefined
+            ? Math.max(prev.videoWatchPercent, update.videoWatchPercent)
+            : prev.videoWatchPercent,
         openedAssets: update.openedAssets
           ? Array.from(new Set([...prev.openedAssets, ...update.openedAssets]))
           : prev.openedAssets,

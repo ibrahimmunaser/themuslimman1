@@ -681,16 +681,18 @@ export function PartTabs({ part, userPlan, previewMode = false, initialAssetUrls
   return (
     <div className="space-y-5">
 
-      {/* ── View toggle header ────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between gap-4">
-        <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-text-muted/35">
-          {viewMode === "gallery" ? "All Assets" : "Learning Mode"}
-        </p>
-        <LessonViewToggle viewMode={viewMode} onToggle={handleViewToggle} />
-      </div>
+      {/* ── View toggle header (hidden in preview/homepage) ──────────────── */}
+      {!previewMode && (
+        <div className="flex items-center justify-between gap-4">
+          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-text-muted/35">
+            {viewMode === "gallery" ? "All Assets" : "Learning Mode"}
+          </p>
+          <LessonViewToggle viewMode={viewMode} onToggle={handleViewToggle} />
+        </div>
+      )}
 
       {/* ── Gallery view ─────────────────────────────────────────────────── */}
-      {viewMode === "gallery" && (
+      {!previewMode && viewMode === "gallery" && (
         <LessonGalleryView
           part={part}
           assetUrls={assetUrls}
@@ -699,7 +701,7 @@ export function PartTabs({ part, userPlan, previewMode = false, initialAssetUrls
       )}
 
       {/* ── Focus view — existing tab layout ─────────────────────────────── */}
-      {viewMode === "focus" && (
+      {(previewMode || viewMode === "focus") && (
         <div className="space-y-6">
 
           {/* Mode selector strip */}

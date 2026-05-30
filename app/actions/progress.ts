@@ -12,10 +12,16 @@ import {
 
 type UserPlan = "essentials" | "complete";
 
+// Verbose trace logs are active in development only to avoid spamming
+// production logs on every video-threshold tick (up to 6× per viewing session).
+const isDev = process.env.NODE_ENV !== "production";
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const devLog = isDev ? (...args: any[]) => console.log(...args) : () => {};
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 async function getUserPlan(userId: string): Promise<UserPlan | null> {
-  console.log(`[PROGRESS] getUserPlan: Fetching plan for user ${userId}`);
+  devLog(`[PROGRESS] getUserPlan: Fetching plan for user ${userId}`);
 
   const [user, purchases, subscription] = await Promise.all([
     prisma.user.findUnique({ where: { id: userId }, select: { hasPaid: true } }),
@@ -27,20 +33,20 @@ async function getUserPlan(userId: string): Promise<UserPlan | null> {
   ]);
 
   if (purchases.some((p) => p.planId === "complete") || user?.hasPaid || subscription) {
-    console.log(`[PROGRESS] getUserPlan: User ${userId} has "complete" plan`);
+    devLog(`[PROGRESS] getUserPlan: User ${userId} has "complete" plan`);
     return "complete";
   }
   if (purchases.some((p) => p.planId === "essentials")) {
-    console.log(`[PROGRESS] getUserPlan: User ${userId} has "essentials" plan`);
+    devLog(`[PROGRESS] getUserPlan: User ${userId} has "essentials" plan`);
     return "essentials";
   }
 
-  console.log(`[PROGRESS] getUserPlan: User ${userId} has no valid plan`);
+  devLog(`[PROGRESS] getUserPlan: User ${userId} has no valid plan`);
   return null;
 }
 
 async function getOrCreateProgress(userId: string, learnerProfileId: string, partNumber: number) {
-  console.log(`[PROGRESS] getOrCreateProgress: Profile ${learnerProfileId}, part ${partNumber}`);
+  devLog(`[PROGRESS] getOrCreateProgress: Profile ${learnerProfileId}, part ${partNumber}`);
   return prisma.partProgress.upsert({
     where:  { learnerProfileId_partNumber: { learnerProfileId, partNumber } },
     create: { id: crypto.randomUUID(), userId, learnerProfileId, partNumber, updatedAt: new Date() },
@@ -53,7 +59,7 @@ async function recomputeAndSave(
   partNumber: number,
   userPlan: UserPlan,
 ) {
-  console.log(`[PROGRESS] recomputeAndSave: Profile ${learnerProfileId}, part ${partNumber}, plan ${userPlan}`);
+  devLog(`[PROGRESS] recomputeAndSave: Profile ${learnerProfileId}, part ${partNumber}, plan ${userPlan}`);
   const row = await prisma.partProgress.findUniqueOrThrow({
     where: { learnerProfileId_partNumber: { learnerProfileId, partNumber } },
     select: {
@@ -73,7 +79,7 @@ async function recomputeAndSave(
   const snap = parseProgressRow(row);
   const newStatus = computeStatus(snap, userPlan);
 
-  console.log(`[PROGRESS] recomputeAndSave: Computed status "${newStatus}" for profile ${learnerProfileId}, part ${partNumber}`);
+  devLog(`[PROGRESS] recomputeAndSave: Computed status "${newStatus}" for profile ${learnerProfileId}, part ${partNumber}`);
 
   const update: Record<string, unknown> = { status: newStatus };
   if (newStatus === "completed" && !row.completedAt) {
@@ -97,22 +103,22 @@ async function recomputeAndSave(
  */
 export async function trackVideoProgress(partNumber: number, watchPercent: number) {
   const startTime = Date.now();
-  console.log(`[PROGRESS] trackVideoProgress: Part ${partNumber}, watchPercent ${watchPercent}%`);
-  
+  devLog(`[PROGRESS] trackVideoProgress: Part ${partNumber}, watchPercent ${watchPercent}%`);
+
   const user = await requireStudent();
   if (!user) {
-    console.log(`[PROGRESS] trackVideoProgress: No authenticated student`);
+    devLog(`[PROGRESS] trackVideoProgress: No authenticated student`);
     return;
   }
 
   const userId = user.id;
   const learnerProfileId = await getActiveProfileId(userId);
 
-  console.log(`[PROGRESS] trackVideoProgress: User ${userId}, profile ${learnerProfileId}, part ${partNumber}, ${watchPercent}%`);
-  
+  devLog(`[PROGRESS] trackVideoProgress: User ${userId}, profile ${learnerProfileId}, part ${partNumber}, ${watchPercent}%`);
+
   const userPlan = await getUserPlan(userId);
   if (!userPlan) {
-    console.log(`[PROGRESS] trackVideoProgress: User ${userId} has no valid plan, skipping`);
+    devLog(`[PROGRESS] trackVideoProgress: User ${userId} has no valid plan, skipping`);
     return;
   }
 
@@ -158,12 +164,12 @@ export async function trackVideoProgress(partNumber: number, watchPercent: numbe
   await recomputeAndSave(learnerProfileId, partNumber, userPlan);
   
   const elapsed = Date.now() - startTime;
-  console.log(`[PROGRESS] trackVideoProgress: Complete for profile ${learnerProfileId}, part ${partNumber} [${elapsed}ms]`);
+  devLog(`[PROGRESS] trackVideoProgress: Complete for profile ${learnerProfileId}, part ${partNumber} [${elapsed}ms]`);
 }
 
 /** Called when the user opens/views the briefing for a part. */
 export async function trackBriefingOpened(partNumber: number) {
-  console.log(`[PROGRESS] trackBriefingOpened: Part ${partNumber}`);
+  devLog(`[PROGRESS] trackBriefingOpened: Part ${partNumber}`);
   
   const user = await requireStudent();
   if (!user) return;
@@ -185,7 +191,7 @@ export async function trackBriefingOpened(partNumber: number) {
 
 /** Called when the quiz is completed with a final score (0-100). */
 export async function trackQuizCompleted(partNumber: number, score: number) {
-  console.log(`[PROGRESS] trackQuizCompleted: Part ${partNumber}, score ${score}`);
+  devLog(`[PROGRESS] trackQuizCompleted: Part ${partNumber}, score ${score}`);
   
   const user = await requireStudent();
   if (!user) return;
@@ -220,7 +226,7 @@ export async function trackQuizCompleted(partNumber: number, score: number) {
 
   await recomputeAndSave(learnerProfileId, partNumber, userPlan);
 
-  console.log(`[PROGRESS] trackQuizCompleted: Profile ${learnerProfileId}, part ${partNumber}, score ${clamped}, passed: ${passed}`);
+  devLog(`[PROGRESS] trackQuizCompleted: Profile ${learnerProfileId}, part ${partNumber}, score ${clamped}, passed: ${passed}`);
   return { score: clamped, passed, bestScore };
 }
 
@@ -250,7 +256,7 @@ export async function trackFlashcardsReviewed(partNumber: number) {
  *                   "report", "statement-of-facts", "timeline", "audio"
  */
 export async function trackAssetOpened(partNumber: number, assetId: string) {
-  console.log(`[PROGRESS] trackAssetOpened: Part ${partNumber}, assetId "${assetId}"`);
+  devLog(`[PROGRESS] trackAssetOpened: Part ${partNumber}, assetId "${assetId}"`);
   
   const user = await requireStudent();
   if (!user) return;
@@ -279,7 +285,7 @@ export async function trackAssetOpened(partNumber: number, assetId: string) {
   });
 
   await recomputeAndSave(learnerProfileId, partNumber, userPlan);
-  console.log(`[PROGRESS] trackAssetOpened: Profile ${learnerProfileId}, part ${partNumber}, asset "${assetId}"`);
+  devLog(`[PROGRESS] trackAssetOpened: Profile ${learnerProfileId}, part ${partNumber}, asset "${assetId}"`);
 }
 
 /** Mark a part as started (called when user opens the part page). */
@@ -296,5 +302,5 @@ export async function trackPartOpened(partNumber: number) {
     update: { lastAccessedAt: new Date() },
   });
   
-  console.log(`[PROGRESS] trackPartOpened: Part ${partNumber} opened for profile ${learnerProfileId}`);
+  devLog(`[PROGRESS] trackPartOpened: Part ${partNumber} opened for profile ${learnerProfileId}`);
 }

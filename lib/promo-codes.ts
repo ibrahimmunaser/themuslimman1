@@ -30,18 +30,26 @@ export interface PromoCode {
 /** Built-in codes that are always active (no env var required). */
 const BUILT_IN_CODES: Record<string, PromoCode> = {
   // Creator / influencer codes — lifetime access only. $20 off the $99 base price = $79.
-  KORRA20:    { type: "fixed", value: 2000, label: "$20 off (Korra)",             creatorOnly: true },
-  ITACHI20:   { type: "fixed", value: 2000, label: "$20 off (Itachi)",            creatorOnly: true },
-  DEEN20:     { type: "fixed", value: 2000, label: "$20 off (Deen Responds)",     creatorOnly: true },
+  KORRA20:    { type: "fixed", value: 2000, label: "$20 off (Korra)",               creatorOnly: true },
+  ITACHI20:   { type: "fixed", value: 2000, label: "$20 off (Itachi)",              creatorOnly: true },
+  DEEN20:     { type: "fixed", value: 2000, label: "$20 off (Deen Responds)",       creatorOnly: true },
   ORTHODOX20: { type: "fixed", value: 2000, label: "$20 off (The Orthodox Muslim)", creatorOnly: true },
-  // Family code — grants free access to Individual or Family Lifetime plans.
-  FAMILY:     { type: "absolute", value: 0, label: "Free Access (FAMILY)" },
-  // Additional private codes can be added via the PROMO_CODES environment variable:
+  // Free-access codes are NOT hardcoded here. Configure them via two env vars:
+  //   FREE_ACCESS_CODE=YOURCODE          (the promo code string — treated as absolute $0)
+  //   FREE_ACCESS_PLAN=complete|family   (the plan to grant; defaults to "complete")
+  //
+  // Additional discount codes can be added via the PROMO_CODES environment variable:
   //   PROMO_CODES={"AMS49":{"type":"absolute","value":4900,"label":"community discount"}}
 };
 
 function loadCodes(): Record<string, PromoCode> {
   const codes: Record<string, PromoCode> = { ...BUILT_IN_CODES };
+
+  // Inject the free-access code from env if configured.
+  const freeCode = process.env.FREE_ACCESS_CODE?.trim().toUpperCase();
+  if (freeCode) {
+    codes[freeCode] = { type: "absolute", value: 0, label: "Free Access" };
+  }
 
   const raw = process.env.PROMO_CODES;
   if (raw) {
@@ -56,6 +64,25 @@ function loadCodes(): Record<string, PromoCode> {
   }
 
   return codes;
+}
+
+/**
+ * Returns the plan to grant for a free-access code, or null if the code is
+ * not configured as a free-access code in this environment.
+ *
+ * This is the authoritative server-side source for which plan a $0 promo
+ * code should grant. The client is never trusted to supply a planType.
+ *
+ * Configure via env vars:
+ *   FREE_ACCESS_CODE=YOURCODE        (the code string)
+ *   FREE_ACCESS_PLAN=complete|family (defaults to "complete")
+ */
+export function getFreeAccessPlan(code: string): string | null {
+  const freeCode = process.env.FREE_ACCESS_CODE?.trim().toUpperCase();
+  if (!freeCode) return null;
+  if (code.trim().toUpperCase() !== freeCode) return null;
+  const plan = process.env.FREE_ACCESS_PLAN?.trim().toLowerCase();
+  return plan === "family" ? "family" : "complete";
 }
 
 /** Returns the matching promo code or null if invalid / not found. */

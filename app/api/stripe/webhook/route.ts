@@ -49,74 +49,84 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  switch (event.type) {
-    case "payment_intent.succeeded": {
-      const paymentIntent = event.data.object as Stripe.PaymentIntent;
-      console.log(`[WEBHOOK] payment_intent.succeeded: ${paymentIntent.id}, amount: ${paymentIntent.amount} ${paymentIntent.currency}, customer: ${paymentIntent.customer}`);
-      if (paymentIntent.metadata?.type === "gift") {
-        await handleGiftPaymentSuccess(paymentIntent);
-      } else if (paymentIntent.metadata?.type === "subscription") {
-        // Subscription payment — access is handled by customer.subscription.* events
-        console.log(`[WEBHOOK] payment_intent.succeeded: subscription PI ${paymentIntent.id}, skipping Purchase creation`);
-      } else {
-        await handlePaymentSuccess(paymentIntent);
+  try {
+    switch (event.type) {
+      case "payment_intent.succeeded": {
+        const paymentIntent = event.data.object as Stripe.PaymentIntent;
+        console.log(`[WEBHOOK] payment_intent.succeeded: ${paymentIntent.id}, amount: ${paymentIntent.amount} ${paymentIntent.currency}, customer: ${paymentIntent.customer}`);
+        if (paymentIntent.metadata?.type === "gift") {
+          await handleGiftPaymentSuccess(paymentIntent);
+        } else if (paymentIntent.metadata?.type === "subscription") {
+          // Subscription payment — access is handled by customer.subscription.* events
+          console.log(`[WEBHOOK] payment_intent.succeeded: subscription PI ${paymentIntent.id}, skipping Purchase creation`);
+        } else {
+          await handlePaymentSuccess(paymentIntent);
+        }
+        break;
       }
-      break;
-    }
 
-    case "payment_intent.payment_failed": {
-      const failedPayment = event.data.object as Stripe.PaymentIntent;
-      console.error(`[WEBHOOK] payment_intent.payment_failed: ${failedPayment.id}, reason: ${failedPayment.last_payment_error?.message}`);
-      break;
-    }
-
-    case "checkout.session.completed": {
-      const session = event.data.object as Stripe.Checkout.Session;
-      console.log(`[WEBHOOK] checkout.session.completed: ${session.id}, mode: ${session.mode}`);
-      if (session.mode === "subscription") {
-        await handleSubscriptionCheckoutCompleted(session);
+      case "payment_intent.payment_failed": {
+        const failedPayment = event.data.object as Stripe.PaymentIntent;
+        console.error(`[WEBHOOK] payment_intent.payment_failed: ${failedPayment.id}, reason: ${failedPayment.last_payment_error?.message}`);
+        break;
       }
-      break;
-    }
 
-    case "customer.subscription.created":
-    case "customer.subscription.updated": {
-      const sub = event.data.object as Stripe.Subscription;
-      console.log(`[WEBHOOK] ${event.type}: ${sub.id}, status: ${sub.status}`);
-      await handleSubscriptionUpsert(sub);
-      break;
-    }
-
-    case "customer.subscription.deleted": {
-      const sub = event.data.object as Stripe.Subscription;
-      console.log(`[WEBHOOK] customer.subscription.deleted: ${sub.id}`);
-      await handleSubscriptionDeleted(sub);
-      break;
-    }
-
-    case "invoice.payment_succeeded": {
-      const invoice = event.data.object as Stripe.Invoice;
-      // subscription_id is at invoice.parent?.subscription_details?.subscription in API v2
-      const invoiceSubId = getInvoiceSubscriptionId(invoice);
-      console.log(`[WEBHOOK] invoice.payment_succeeded: ${invoice.id}, subscription: ${invoiceSubId}`);
-      if (invoiceSubId) {
-        await syncSubscriptionStatus(invoiceSubId);
+      case "checkout.session.completed": {
+        const session = event.data.object as Stripe.Checkout.Session;
+        console.log(`[WEBHOOK] checkout.session.completed: ${session.id}, mode: ${session.mode}`);
+        if (session.mode === "subscription") {
+          await handleSubscriptionCheckoutCompleted(session);
+        }
+        break;
       }
-      break;
-    }
 
-    case "invoice.payment_failed": {
-      const invoice = event.data.object as Stripe.Invoice;
-      const invoiceSubId2 = getInvoiceSubscriptionId(invoice);
-      console.error(`[WEBHOOK] invoice.payment_failed: ${invoice.id}, subscription: ${invoiceSubId2}`);
-      if (invoiceSubId2) {
-        await syncSubscriptionStatus(invoiceSubId2);
+      case "customer.subscription.created":
+      case "customer.subscription.updated": {
+        const sub = event.data.object as Stripe.Subscription;
+        console.log(`[WEBHOOK] ${event.type}: ${sub.id}, status: ${sub.status}`);
+        await handleSubscriptionUpsert(sub);
+        break;
       }
-      break;
-    }
 
-    default:
-      console.log(`[WEBHOOK] Unhandled event type: ${event.type} (id: ${event.id})`);
+      case "customer.subscription.deleted": {
+        const sub = event.data.object as Stripe.Subscription;
+        console.log(`[WEBHOOK] customer.subscription.deleted: ${sub.id}`);
+        await handleSubscriptionDeleted(sub);
+        break;
+      }
+
+      case "invoice.payment_succeeded": {
+        const invoice = event.data.object as Stripe.Invoice;
+        // subscription_id is at invoice.parent?.subscription_details?.subscription in API v2
+        const invoiceSubId = getInvoiceSubscriptionId(invoice);
+        console.log(`[WEBHOOK] invoice.payment_succeeded: ${invoice.id}, subscription: ${invoiceSubId}`);
+        if (invoiceSubId) {
+          await syncSubscriptionStatus(invoiceSubId);
+        }
+        break;
+      }
+
+      case "invoice.payment_failed": {
+        const invoice = event.data.object as Stripe.Invoice;
+        const invoiceSubId2 = getInvoiceSubscriptionId(invoice);
+        console.error(`[WEBHOOK] invoice.payment_failed: ${invoice.id}, subscription: ${invoiceSubId2}`);
+        if (invoiceSubId2) {
+          await syncSubscriptionStatus(invoiceSubId2);
+        }
+        break;
+      }
+
+      default:
+        console.log(`[WEBHOOK] Unhandled event type: ${event.type} (id: ${event.id})`);
+    }
+  } catch (handlerError) {
+    const elapsed = Date.now() - startTime;
+    console.error(
+      `[WEBHOOK] Handler failed for event ${event.type} (id: ${event.id}) [${elapsed}ms]:`,
+      handlerError
+    );
+    // Return 500 so Stripe retries the webhook delivery.
+    return NextResponse.json({ error: "Handler failed" }, { status: 500 });
   }
 
   const elapsed = Date.now() - startTime;
@@ -222,6 +232,8 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
   } catch (error) {
     const elapsed = Date.now() - startTime;
     console.error(`[WEBHOOK] handlePaymentSuccess: ERROR recording purchase for payment ${paymentIntent.id} [${elapsed}ms]:`, error);
+    // Re-throw so the webhook route returns 500 and Stripe retries.
+    throw error;
   }
 }
 
@@ -259,6 +271,8 @@ async function handleSubscriptionCheckoutCompleted(session: Stripe.Checkout.Sess
     console.log(`[WEBHOOK] Subscription ${subscriptionId} created for user ${userId}`);
   } catch (err) {
     console.error("[WEBHOOK] handleSubscriptionCheckoutCompleted error:", err);
+    // Re-throw so Stripe retries if subscription creation couldn't be persisted.
+    throw err;
   }
 }
 
@@ -361,6 +375,8 @@ async function syncSubscriptionStatus(subscriptionId: string) {
     });
   } catch (err) {
     console.error("[WEBHOOK] syncSubscriptionStatus error:", err);
+    // Re-throw so Stripe retries if subscription status update fails.
+    throw err;
   }
 }
 

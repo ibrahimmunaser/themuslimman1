@@ -3,6 +3,9 @@ import { login } from "@/lib/auth";
 import { checkRateLimit, getIP } from "@/lib/rate-limit";
 import { prisma } from "@/lib/db";
 
+// Allow up to 30s for bcrypt + DB + transient retry before Vercel times out.
+export const maxDuration = 30;
+
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
   console.log(`[API] POST /api/auth/signin: Request received`);

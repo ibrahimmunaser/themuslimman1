@@ -77,8 +77,10 @@ export default async function LearnIndexPage() {
   const unlockedParts   = allPartProgress
     .filter(p => p.videoWatchPercent >= 85 && p.briefingOpened)
     .map(p => p.partNumber);
+  // "started" is the only real DB status for in-progress parts.
+  // "in_progress" is a UI-derived display label and is never written to the DB.
   const inProgressParts = allPartProgress
-    .filter(p => p.status === "started" || p.status === "in_progress")
+    .filter(p => p.status === "started")
     .map(p => p.partNumber);
   const currentPart     = inProgressParts.length > 0
     ? Math.min(...inProgressParts)
@@ -93,10 +95,17 @@ export default async function LearnIndexPage() {
   );
 
   // Parse openedAssets JSON once per part — reused by all helper functions below.
+  // Normalize legacy asset IDs to canonical values so old DB records are counted
+  // correctly: "facts" and "statement_of_facts" → "statement-of-facts".
+  const normalizeAssetId = (id: string): string => {
+    if (id === "facts" || id === "statement_of_facts") return "statement-of-facts";
+    return id;
+  };
   const openedAssetsMap: Record<number, string[]> = Object.fromEntries(
     allPartProgress.map((p) => {
       try {
-        return [p.partNumber, p.openedAssets ? JSON.parse(p.openedAssets as string) : []];
+        const raw: string[] = p.openedAssets ? JSON.parse(p.openedAssets as string) : [];
+        return [p.partNumber, raw.map(normalizeAssetId)];
       } catch {
         return [p.partNumber, []];
       }

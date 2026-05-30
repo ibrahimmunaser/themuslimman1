@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { getUserAccessInfo } from "@/lib/access";
+import { getUserAccessInfo, getActiveSubscription } from "@/lib/access";
 
 const MONTHLY_PRICE_ID = process.env.STRIPE_MONTHLY_PRICE_ID;
 
@@ -23,10 +23,27 @@ export async function POST() {
     }
 
     // Block lifetime users — they already have permanent access, no need to subscribe
-    const accessInfo = await getUserAccessInfo(user.id);
+    const [accessInfo, activeSub] = await Promise.all([
+      getUserAccessInfo(user.id),
+      getActiveSubscription(user.id),
+    ]);
+
     if (accessInfo.hasLifetime) {
       return NextResponse.json(
         { error: "You already have lifetime access to Complete Seerah.", hasLifetime: true },
+        { status: 409 }
+      );
+    }
+
+    // Block users who already have any active monthly subscription (individual or family).
+    // Switching between monthly plans requires canceling the current subscription first.
+    if (activeSub) {
+      return NextResponse.json(
+        {
+          error:
+            "You already have an active monthly subscription. Manage your subscription from billing.",
+          hasActiveSubscription: true,
+        },
         { status: 409 }
       );
     }

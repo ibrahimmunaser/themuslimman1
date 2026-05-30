@@ -168,6 +168,12 @@ function ScoreScreen({
   useEffect(() => {
     if (partNumber && !previewMode) {
       trackQuizCompleted(partNumber, pct).catch(() => {});
+      // Immediately update the header progress badges without waiting for a reload.
+      window.dispatchEvent(
+        new CustomEvent("seerah:progressUpdate", {
+          detail: { quizPassed: passed, quizBestScore: pct },
+        })
+      );
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

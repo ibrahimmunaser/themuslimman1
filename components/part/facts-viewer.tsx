@@ -48,7 +48,7 @@ export function FactsViewer({ content, partNumber, previewMode }: FactsViewerPro
 
   useEffect(() => {
     if (!partNumber || previewMode) return;
-    trackAssetOpened(partNumber, "facts").catch(() => {});
+    trackAssetOpened(partNumber, "statement-of-facts").catch(() => {});
   // Run once on mount
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

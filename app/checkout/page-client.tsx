@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -90,7 +90,7 @@ function CheckoutForm({
       <button
         type="submit"
         disabled={!stripe || processing}
-        className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-60 text-black font-bold text-base transition-colors shadow-lg shadow-amber-500/20"
+        className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-gold hover:bg-gold-light disabled:opacity-60 text-ink font-bold text-base transition-colors shadow-lg shadow-gold/20"
       >
         <Lock className="w-4 h-4" />
         {processing ? "Processing…" : label}
@@ -369,7 +369,7 @@ function CheckoutPageContent({
         <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3">
           Complete Seerah
           <br />
-          <span className="text-amber-400">Lifetime Access</span>
+          <span className="text-gold">Lifetime Access</span>
         </h1>
 
         <p className="text-zinc-400 text-base mb-8 leading-relaxed">
@@ -383,7 +383,7 @@ function CheckoutPageContent({
             onClick={() => setPlanChoice("complete")}
             className={`flex flex-col p-4 rounded-xl border transition-all text-left ${
               planChoice === "complete"
-                ? "border-amber-500/50 bg-amber-500/8 text-white ring-1 ring-amber-500/30"
+                ? "border-gold/50 bg-gold/8 text-white ring-1 ring-gold/30"
                 : "border-zinc-700 bg-zinc-800/50 text-zinc-400 hover:border-zinc-600"
             }`}
           >
@@ -391,7 +391,7 @@ function CheckoutPageContent({
               <User className="w-4 h-4 flex-shrink-0" />
               <span className="font-semibold text-sm">Individual</span>
               {planChoice === "complete" && (
-                <div className="ml-auto w-2 h-2 rounded-full bg-amber-400" />
+                <div className="ml-auto w-2 h-2 rounded-full bg-gold-light" />
               )}
             </div>
             <span className="text-2xl font-bold text-white">
@@ -406,7 +406,7 @@ function CheckoutPageContent({
             onClick={() => setPlanChoice("family")}
             className={`flex flex-col p-4 rounded-xl border transition-all text-left ${
               planChoice === "family"
-                ? "border-amber-500/50 bg-amber-500/8 text-white ring-1 ring-amber-500/30"
+                ? "border-gold/50 bg-gold/8 text-white ring-1 ring-gold/30"
                 : "border-zinc-700 bg-zinc-800/50 text-zinc-400 hover:border-zinc-600"
             }`}
           >
@@ -414,7 +414,7 @@ function CheckoutPageContent({
               <Users className="w-4 h-4 flex-shrink-0" />
               <span className="font-semibold text-sm">Family</span>
               {planChoice === "family" && (
-                <div className="ml-auto w-2 h-2 rounded-full bg-amber-400" />
+                <div className="ml-auto w-2 h-2 rounded-full bg-gold-light" />
               )}
             </div>
             <span className="text-2xl font-bold text-white">
@@ -430,8 +430,8 @@ function CheckoutPageContent({
         <ul className="space-y-3">
           {currentPlan.features.map((feature) => (
             <li key={feature} className="flex items-start gap-3">
-              <div className="w-5 h-5 rounded-full bg-amber-500/15 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <Check className="w-3 h-3 text-amber-400" />
+              <div className="w-5 h-5 rounded-full bg-gold/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <Check className="w-3 h-3 text-gold" />
               </div>
               <span className="text-sm text-zinc-300">{feature}</span>
             </li>
@@ -505,7 +505,7 @@ function CheckoutPageContent({
             {/* Total row */}
             <div className="flex items-center justify-between pt-2 border-t border-zinc-800">
               <span className="text-sm font-semibold text-white">Total</span>
-              <span className="text-lg font-bold text-amber-400">
+              <span className="text-lg font-bold text-gold">
                 {formatPrice(displayPrice)}
               </span>
             </div>
@@ -542,12 +542,12 @@ function CheckoutPageContent({
                     }}
                     onKeyDown={(e) => e.key === "Enter" && handleApplyCoupon()}
                     placeholder="Promo code"
-                    className="flex-1 px-3.5 py-2.5 text-sm rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500/50 transition-colors uppercase"
+                    className="flex-1 px-3.5 py-2.5 text-sm rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors uppercase"
                   />
                   <button
                     onClick={handleApplyCoupon}
                     disabled={couponLoading || !couponInput.trim()}
-                    className="px-4 py-2.5 text-sm font-medium rounded-xl border border-zinc-700 bg-zinc-800 text-zinc-300 hover:border-amber-500/40 hover:text-amber-400 transition-colors disabled:opacity-40 whitespace-nowrap"
+                    className="px-4 py-2.5 text-sm font-medium rounded-xl border border-zinc-700 bg-zinc-800 text-zinc-300 hover:border-gold/40 hover:text-gold transition-colors disabled:opacity-40 whitespace-nowrap"
                   >
                     {couponLoading ? "…" : "Apply"}
                   </button>
@@ -562,7 +562,7 @@ function CheckoutPageContent({
           {/* Loading spinner */}
           {loading && (
             <div className="flex items-center justify-center py-12">
-              <div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
+              <div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
             </div>
           )}
 
@@ -582,7 +582,7 @@ function CheckoutPageContent({
           {/* Free access claim */}
           {freeAccess && !loading && (
             <div className="space-y-4">
-              <div className="p-5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-center">
+              <div className="p-5 rounded-xl bg-gold/10 border border-gold/25 text-center">
                 <div className="text-3xl mb-3">🎁</div>
                 <h3 className="text-lg font-bold text-white mb-1">
                   Free Access Applied
@@ -601,7 +601,7 @@ function CheckoutPageContent({
               <button
                 onClick={handleClaimFreeAccess}
                 disabled={freeClaimLoading}
-                className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-60 text-black font-bold text-base transition-colors shadow-lg shadow-amber-500/20"
+                className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-gold hover:bg-gold-light disabled:opacity-60 text-ink font-bold text-base transition-colors shadow-lg shadow-gold/20"
               >
                 <Lock className="w-4 h-4" />
                 {freeClaimLoading ? "Activating…" : "Claim Free Access"}
@@ -621,7 +621,7 @@ function CheckoutPageContent({
                 appearance: {
                   theme: "night",
                   variables: {
-                    colorPrimary: "#f59e0b",
+                    colorPrimary: "#C8A96E",
                     colorBackground: "#18181b",
                     colorText: "#ffffff",
                     colorDanger: "#ef4444",
@@ -643,7 +643,7 @@ function CheckoutPageContent({
               </p>
               <a
                 href="/gift-checkout"
-                className="inline-flex items-center gap-1.5 text-xs text-amber-500/70 hover:text-amber-400 transition-colors font-medium"
+                className="inline-flex items-center gap-1.5 text-xs text-gold/70 hover:text-gold transition-colors font-medium"
               >
                 <Gift className="w-3.5 h-3.5" />
                 Gift Lifetime Access instead →
@@ -663,7 +663,7 @@ export default function CheckoutClientPage(props: CheckoutPageClientProps) {
     <Suspense
       fallback={
         <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-          <div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
+          <div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
         </div>
       }
     >
