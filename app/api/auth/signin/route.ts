@@ -67,11 +67,11 @@ export async function POST(request: NextRequest) {
           where: { id: result.userId },
           select: {
             planType: true,
-            _count: { select: { learnerProfile: true } },
+            _count: { select: { LearnerProfile: true } },
           },
         });
         isFamily = userData?.planType === "family";
-        profileCount = userData?._count?.learnerProfile ?? 0;
+        profileCount = userData?._count?.LearnerProfile ?? 0;
       } catch (err) {
         // Non-fatal: can't determine family status, default to individual routing.
         console.error(`[API] POST /api/auth/signin: family-check DB query failed:`, err);

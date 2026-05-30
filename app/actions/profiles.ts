@@ -87,7 +87,7 @@ export async function getProfiles() {
       isDefault: true,
       createdAt: true,
       _count: {
-        select: { partProgress: true },
+        select: { PartProgress: true },
       },
     },
   });
@@ -103,7 +103,7 @@ export async function getProfilesWithProgress() {
     where: { userId: user.id },
     orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
     include: {
-      partProgress: {
+      PartProgress: {
         select: {
           partNumber: true,
           status: true,
@@ -124,7 +124,7 @@ export async function getProfilesWithProgress() {
   });
 
   return profiles.map((profile) => {
-    const progress = profile.partProgress;
+    const progress = profile.PartProgress;
     const totalParts = 100;
 
     // Parse openedAssets JSON once per part and reuse the result for all
