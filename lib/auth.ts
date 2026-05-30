@@ -103,8 +103,8 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
   const session = await prisma.session.findUnique({
     where: { token },
     include: {
-      // Relation fields use the capitalized model names (Prisma schema convention).
-      User: {
+      // Prisma v6 generates camelCase field names regardless of schema naming.
+      user: {
         select: {
           id: true,
           fullName: true,
@@ -121,8 +121,8 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
           parentEmail: true,
           parentEmailVerified: true,
           sendWeeklyReports: true,
-          StudentProfile: { select: { id: true } },
-          LearnerProfile: {
+          studentProfile: { select: { id: true } },
+          learnerProfile: {
             select: { id: true, displayName: true, isDefault: true },
             orderBy: { createdAt: "asc" },
           },
@@ -140,7 +140,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
     return null;
   }
 
-  const user = session.User;
+  const user = session.user;
   
   if (!isRole(user.role)) {
     console.error(`[AUTH] Invalid role "${user.role}" for user ${user.id}`);
@@ -154,14 +154,14 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
   let activeProfile: { id: string; displayName: string } | null = null;
 
   if (profileCookieId) {
-    activeProfile = user.LearnerProfile.find((p) => p.id === profileCookieId) ?? null;
+    activeProfile = user.learnerProfile.find((p) => p.id === profileCookieId) ?? null;
   }
 
   // Fallback to default profile (or first profile if no default is set).
   if (!activeProfile) {
     activeProfile =
-      user.LearnerProfile.find((p) => p.isDefault) ??
-      user.LearnerProfile[0] ??
+      user.learnerProfile.find((p) => p.isDefault) ??
+      user.learnerProfile[0] ??
       null;
   }
 
@@ -173,7 +173,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
     isActive: user.isActive,
     profileImage: user.profileImage,
     timezone: user.timezone,
-    studentProfileId: user.StudentProfile?.id ?? null,
+    studentProfileId: user.studentProfile?.id ?? null,
     emailVerified: user.emailVerified,
     hasPaid: user.hasPaid,
     planType: user.planType,
@@ -252,7 +252,7 @@ export async function login(
 
   const user = await prisma.user.findUnique({
     where: { email: lowerEmail },
-    include: { StudentProfile: true },
+    include: { studentProfile: true },
   });
 
   if (!user) return { success: false, error: "Invalid credentials" };
