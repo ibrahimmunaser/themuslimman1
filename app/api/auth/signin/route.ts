@@ -27,7 +27,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = await login(email, password);
+    // Attempt login — retry once on transient DB connection errors (Vercel cold start).
+    let result = await login(email, password).catch(async (firstErr: unknown) => {
+      const msg = firstErr instanceof Error ? firstErr.message : String(firstErr);
+      const isTransient =
+        msg.includes("Can't reach database") ||
+        msg.includes("Connection refused") ||
+        msg.includes("pool timeout") ||
+        msg.includes("ECONNREFUSED") ||
+        msg.includes("P1001") ||
+        msg.includes("P1008") ||
+        msg.includes("P2024");
+      console.error(`[API] signin: first attempt failed${isTransient ? " (transient, retrying)" : ""}:`, msg);
+      if (isTransient) {
+        await new Promise((r) => setTimeout(r, 600));
+        return login(email, password);
+      }
+      throw firstErr;
+    });
 
     if (!result.success) {
       const elapsed = Date.now() - startTime;
@@ -45,15 +62,20 @@ export async function POST(request: NextRequest) {
     let isFamily = false;
     let profileCount = 0;
     if (result.userId && result.role === "student") {
-      const userData = await prisma.user.findUnique({
-        where: { id: result.userId },
-        select: {
-          planType: true,
-          _count: { select: { learnerProfiles: true } },
-        },
-      });
-      isFamily = userData?.planType === "family";
-      profileCount = userData?._count?.learnerProfiles ?? 0;
+      try {
+        const userData = await prisma.user.findUnique({
+          where: { id: result.userId },
+          select: {
+            planType: true,
+            _count: { select: { LearnerProfile: true } },
+          },
+        });
+        isFamily = userData?.planType === "family";
+        profileCount = userData?._count?.LearnerProfile ?? 0;
+      } catch (err) {
+        // Non-fatal: can't determine family status, default to individual routing.
+        console.error(`[API] POST /api/auth/signin: family-check DB query failed:`, err);
+      }
     }
 
     return NextResponse.json({
@@ -65,7 +87,10 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     const elapsed = Date.now() - startTime;
-    console.error(`[API] POST /api/auth/signin: ERROR [${elapsed}ms]:`, error);
+    const msg   = error instanceof Error ? error.message : String(error);
+    const code  = (error as { code?: string }).code ?? "unknown";
+    const meta  = (error as { meta?: unknown }).meta;
+    console.error(`[API] POST /api/auth/signin: UNHANDLED ERROR [${elapsed}ms] code=${code}:`, msg, meta ?? "");
     return NextResponse.json(
       { error: "Something went wrong. Please try again." },
       { status: 500 }

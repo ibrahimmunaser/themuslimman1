@@ -58,6 +58,7 @@ async function createDefaultProfileForUser(userId: string): Promise<string> {
 
   const profile = await prisma.learnerProfile.create({
     data: {
+      id: crypto.randomUUID(),
       userId,
       displayName: user?.fullName ?? "Learner",
       isDefault: true,
@@ -86,7 +87,7 @@ export async function getProfiles() {
       isDefault: true,
       createdAt: true,
       _count: {
-        select: { partProgress: true },
+        select: { PartProgress: true },
       },
     },
   });
@@ -102,7 +103,7 @@ export async function getProfilesWithProgress() {
     where: { userId: user.id },
     orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
     include: {
-      partProgress: {
+      PartProgress: {
         select: {
           partNumber: true,
           status: true,
@@ -123,26 +124,27 @@ export async function getProfilesWithProgress() {
   });
 
   return profiles.map((profile) => {
-    const progress = profile.partProgress;
+    const progress = profile.PartProgress;
     const totalParts = 100;
 
     // Parse openedAssets JSON once per part and reuse the result for all
     // asset-type lookups below. Previously each getAssetCount() call parsed
     // JSON for every part independently — 5 asset types × 100 parts = 500
     // JSON.parse calls per profile. Now it is exactly 100 per profile.
-    const openedAssetsPerPart: string[][] = progress.map((p) => {
+    type ProgressRow = (typeof progress)[number];
+    const openedAssetsPerPart: string[][] = progress.map((p: ProgressRow) => {
       try { return JSON.parse(p.openedAssets) as string[]; }
       catch { return []; }
     });
 
     const completedParts = progress.filter(
-      (p) => p.status === "completed" || p.status === "mastered"
+      (p: ProgressRow) => p.status === "completed" || p.status === "mastered"
     ).length;
 
-    const videosCompleted = progress.filter((p) => p.videoCompleted || p.videoWatchPercent >= 85).length;
-    const briefingsOpened = progress.filter((p) => p.briefingOpened).length;
-    const quizzesPassed   = progress.filter((p) => p.quizPassed).length;
-    const flashcardsStudied = progress.filter((p) => p.flashcardsReviewed).length;
+    const videosCompleted = progress.filter((p: ProgressRow) => p.videoCompleted || p.videoWatchPercent >= 85).length;
+    const briefingsOpened = progress.filter((p: ProgressRow) => p.briefingOpened).length;
+    const quizzesPassed   = progress.filter((p: ProgressRow) => p.quizPassed).length;
+    const flashcardsStudied = progress.filter((p: ProgressRow) => p.flashcardsReviewed).length;
 
     const getAssetCount = (assetType: string) =>
       openedAssetsPerPart.filter((assets) => assets.includes(assetType)).length;
@@ -201,6 +203,7 @@ export async function createProfile(displayName: string, avatar?: string) {
 
   const profile = await prisma.learnerProfile.create({
     data: {
+      id: crypto.randomUUID(),
       userId: user.id,
       displayName: trimmedName,
       avatar: avatar ?? null,
@@ -371,6 +374,7 @@ export async function ensureFamilyProfiles() {
 
   await prisma.learnerProfile.createMany({
     data: slots.map((name, i) => ({
+      id: crypto.randomUUID(),
       userId: user.id,
       displayName: name,
       avatar: avatarSlots[i] ?? null,

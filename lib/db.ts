@@ -4,13 +4,17 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-// In serverless (Vercel), add connection_limit=1 to avoid exhausting the pool
+// In serverless (Vercel), limit connections and set aggressive timeouts so that
+// transient cold-start failures surface quickly and can be retried by the caller.
+//   connection_limit=1  – one connection per function instance (standard for serverless)
+//   connect_timeout=10  – TCP connection establishment limit (seconds)
+//   pool_timeout=10     – max wait for a connection from the pool (seconds)
+//                         Lower than the old 20 s so users get a fast error + retry
 function buildDatabaseUrl() {
   const url = process.env.DATABASE_URL;
   if (!url) return url;
-  // Add connection_limit=1 and pool_timeout for serverless environments
   const separator = url.includes("?") ? "&" : "?";
-  return `${url}${separator}connection_limit=1&pool_timeout=20`;
+  return `${url}${separator}connection_limit=1&connect_timeout=10&pool_timeout=10`;
 }
 
 export const prisma =

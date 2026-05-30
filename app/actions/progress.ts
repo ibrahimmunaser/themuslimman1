@@ -43,7 +43,7 @@ async function getOrCreateProgress(userId: string, learnerProfileId: string, par
   console.log(`[PROGRESS] getOrCreateProgress: Profile ${learnerProfileId}, part ${partNumber}`);
   return prisma.partProgress.upsert({
     where:  { learnerProfileId_partNumber: { learnerProfileId, partNumber } },
-    create: { userId, learnerProfileId, partNumber },
+    create: { id: crypto.randomUUID(), userId, learnerProfileId, partNumber, updatedAt: new Date() },
     update: {},
   });
 }
@@ -124,6 +124,7 @@ export async function trackVideoProgress(partNumber: number, watchPercent: numbe
   await prisma.partProgress.upsert({
     where:  { learnerProfileId_partNumber: { learnerProfileId, partNumber } },
     create: {
+      id: crypto.randomUUID(),
       userId,
       learnerProfileId,
       partNumber,
@@ -132,6 +133,7 @@ export async function trackVideoProgress(partNumber: number, watchPercent: numbe
       status:            "started",
       startedAt:         new Date(),
       lastAccessedAt:    new Date(),
+      updatedAt:         new Date(),
     },
     update: {
       lastAccessedAt: new Date(),
@@ -290,7 +292,7 @@ export async function trackPartOpened(partNumber: number) {
 
   await prisma.partProgress.upsert({
     where:  { learnerProfileId_partNumber: { learnerProfileId, partNumber } },
-    create: { userId, learnerProfileId, partNumber, status: "started", startedAt: new Date(), lastAccessedAt: new Date() },
+    create: { id: crypto.randomUUID(), userId, learnerProfileId, partNumber, status: "started", startedAt: new Date(), lastAccessedAt: new Date(), updatedAt: new Date() },
     update: { lastAccessedAt: new Date() },
   });
   

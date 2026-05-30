@@ -79,7 +79,8 @@ async function createSession(userId: string, role: string): Promise<string> {
   const expiresAt = new Date(Date.now() + COOKIE_MAX_AGE * 1000);
   
   try {
-    await prisma.session.create({ data: { userId, token, expiresAt } });
+    // Session.id has no @default in the schema — must be provided explicitly.
+    await prisma.session.create({ data: { id: nanoid(24), userId, token, expiresAt } });
     await setSessionCookie(token, expiresAt);
     await setRoleCookie(role, expiresAt);
     return token;
@@ -102,10 +103,8 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
   const session = await prisma.session.findUnique({
     where: { token },
     include: {
-      // Use select to load only the fields we need, including hasPaid so
-      // downstream access checks can short-circuit for lifetime buyers without
-      // an extra DB round-trip.
-      user: {
+      // Relation fields use the capitalized model names (Prisma schema convention).
+      User: {
         select: {
           id: true,
           fullName: true,
@@ -122,8 +121,8 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
           parentEmail: true,
           parentEmailVerified: true,
           sendWeeklyReports: true,
-          student: { select: { id: true } },
-          learnerProfiles: {
+          StudentProfile: { select: { id: true } },
+          LearnerProfile: {
             select: { id: true, displayName: true, isDefault: true },
             orderBy: { createdAt: "asc" },
           },
@@ -141,7 +140,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
     return null;
   }
 
-  const { user } = session;
+  const user = session.User;
   
   if (!isRole(user.role)) {
     console.error(`[AUTH] Invalid role "${user.role}" for user ${user.id}`);
@@ -155,15 +154,14 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
   let activeProfile: { id: string; displayName: string } | null = null;
 
   if (profileCookieId) {
-    // Validate: the profile must belong to this user.
-    activeProfile = user.learnerProfiles.find((p) => p.id === profileCookieId) ?? null;
+    activeProfile = user.LearnerProfile.find((p) => p.id === profileCookieId) ?? null;
   }
 
   // Fallback to default profile (or first profile if no default is set).
   if (!activeProfile) {
     activeProfile =
-      user.learnerProfiles.find((p) => p.isDefault) ??
-      user.learnerProfiles[0] ??
+      user.LearnerProfile.find((p) => p.isDefault) ??
+      user.LearnerProfile[0] ??
       null;
   }
 
@@ -175,7 +173,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
     isActive: user.isActive,
     profileImage: user.profileImage,
     timezone: user.timezone,
-    studentProfileId: user.student?.id ?? null,
+    studentProfileId: user.StudentProfile?.id ?? null,
     emailVerified: user.emailVerified,
     hasPaid: user.hasPaid,
     planType: user.planType,
@@ -254,7 +252,7 @@ export async function login(
 
   const user = await prisma.user.findUnique({
     where: { email: lowerEmail },
-    include: { student: true },
+    include: { StudentProfile: true },
   });
 
   if (!user) return { success: false, error: "Invalid credentials" };
