@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
-import { requireStudent } from "@/lib/auth";
+import { getCachedStudent } from "@/lib/auth-cache";
 import { hasActiveCourseAccess } from "@/lib/access";
 import { getActiveProfileId } from "@/app/actions/profiles";
 import { getPartById, PARTS } from "@/lib/content";
@@ -16,7 +16,6 @@ import {
   Clock,
 } from "lucide-react";
 import { PartTabs } from "@/components/part/part-tabs";
-import { StudentLayout } from "@/components/student/student-layout";
 import { StudyTimeTracker } from "@/components/study-time-tracker";
 import { trackPartOpened } from "@/app/actions/progress";
 import { PartProgressBadges } from "@/components/part/part-progress-badges";
@@ -144,7 +143,8 @@ export default async function SeerahPartPage(props: Props) {
   getPartPageData(n).catch(() => {});
 
   // ② Auth + access check + progress fetch (parallel where possible)
-  const user = await requireStudent();
+  // getCachedStudent() deduplicates with the seerah/layout.tsx call in the same request.
+  const user = await getCachedStudent();
   if (!user.studentProfileId) notFound();
 
   const learnerProfileId = user.activeProfileId ?? await getActiveProfileId(user.id);
@@ -186,7 +186,7 @@ export default async function SeerahPartPage(props: Props) {
   // ④ Shell renders immediately after auth (~400-800ms TTFB).
   //    PartTabsContent is inside <Suspense> — it streams in when R2 is ready.
   return (
-    <StudentLayout userPlan={userPlan} userName={user.fullName} activeProfileName={user.activeProfileName} planType={user.planType}>
+    <>
       <StudyTimeTracker partNumber={n} />
 
       <div className="min-h-screen bg-background">
@@ -319,6 +319,6 @@ export default async function SeerahPartPage(props: Props) {
           </div>
         </div>
       </div>
-    </StudentLayout>
+    </>
   );
 }

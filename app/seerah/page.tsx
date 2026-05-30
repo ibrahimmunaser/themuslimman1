@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { requireStudent } from "@/lib/auth";
+import { getCachedStudent } from "@/lib/auth-cache";
 import { hasActiveCourseAccess } from "@/lib/access";
 import { getActiveProfileId } from "@/app/actions/profiles";
 import { PARTS } from "@/lib/content";
@@ -9,7 +9,6 @@ import { getPartPageData } from "@/lib/part-content-cache";
 import { ERA_MAP } from "@/lib/types";
 import { ChevronRight, ChevronDown, Play, CheckCircle2, BookOpen, Clock, Video, FileText, Brain, ClipboardCheck, Headphones, Map, Image, Layers, BarChart2, GraduationCap } from "lucide-react";
 import { prisma } from "@/lib/db";
-import { StudentLayout } from "@/components/student/student-layout";
 import { CourseDashboardTabs } from "@/components/course/course-dashboard-tabs";
 import { CourseHomeContent } from "@/components/course/course-home-content";
 import { CourseProgressContent } from "@/components/course/course-progress-content";
@@ -25,7 +24,8 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function LearnIndexPage() {
-  const user = await requireStudent();
+  // getCachedStudent() deduplicates with the seerah/layout.tsx call in the same request.
+  const user = await getCachedStudent();
   if (!user.studentProfileId) redirect("/");
 
   // Run access check, thumbnail fetch, and profile-ID resolution in parallel.
@@ -452,14 +452,9 @@ export default async function LearnIndexPage() {
     </div>
   );
 
+  // StudentLayout is provided by app/seerah/layout.tsx — no wrapper needed here.
   return (
-    <StudentLayout
-      userPlan={userPlan}
-      userName={user.fullName}
-      activeProfileName={user.activeProfileName}
-      planType={user.planType}
-    >
-      <CourseDashboardTabs
+    <CourseDashboardTabs
         homeContent={
           <CourseHomeContent 
             userPlan={userPlan} 
@@ -590,10 +585,9 @@ export default async function LearnIndexPage() {
             quizTotalAttempts={quizTotalAttempts}
             activeParts={activeParts}
             partTitleMap={partTitleMap}
-          />
-        }
-      />
-    </StudentLayout>
+        />
+      }
+    />
   );
 }
 
