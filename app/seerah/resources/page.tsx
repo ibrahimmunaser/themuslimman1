@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import { requireStudent } from "@/lib/auth";
 import { hasActiveCourseAccess } from "@/lib/access";
 import { getActiveProfileId } from "@/app/actions/profiles";
-import { StudentLayout } from "@/components/student/student-layout";
 import { prisma } from "@/lib/db";
 import { ResourcesTabs } from "@/components/resources/resources-tabs";
 import { VideoResourceContent } from "@/components/resources/video-resource-content";
@@ -127,8 +126,7 @@ export default async function SeerahResourcesPage() {
   const factsCompletedCount = getAssetCompletedCount("statement-of-facts");
 
   return (
-    <StudentLayout userPlan={userPlan} userName={user.fullName} activeProfileName={user.activeProfileName} planType={user.planType}>
-      <ResourcesTabs
+    <ResourcesTabs
         videosContent={
           <VideoResourceContent
             progressMap={progressMap}
@@ -223,7 +221,6 @@ export default async function SeerahResourcesPage() {
             thumbnails={thumbnails}
           />
         }
-      />
-    </StudentLayout>
+    />
   );
 }

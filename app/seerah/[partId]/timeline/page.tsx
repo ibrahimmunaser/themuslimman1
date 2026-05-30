@@ -8,7 +8,6 @@ import { ERA_MAP } from "@/lib/types";
 import { getTimelineForPart } from "@/lib/timeline-data";
 import { getEraVisual } from "@/lib/era-visuals";
 import { prisma } from "@/lib/db";
-import { StudentLayout } from "@/components/student/student-layout";
 import { ArrowLeft, ChevronRight, Lock, Play } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -75,8 +74,7 @@ export default async function TimelinePage(props: Props) {
   const isNextPartAccessible = !!nextPart;
 
   return (
-    <StudentLayout userPlan={userPlan} userName={user.fullName} activeProfileName={user.activeProfileName} planType={user.planType}>
-      <div className="min-h-screen bg-[#0a0a0a]">
+    <div className="min-h-screen bg-[#0a0a0a]">
 
         {/* ── Top bar ─────────────────────────────────────────────────────── */}
         <div className="sticky top-0 z-30 border-b border-white/10 bg-[#0a0a0a]/95 backdrop-blur-lg">
@@ -792,6 +790,6 @@ export default async function TimelinePage(props: Props) {
           100% { left: 100%; }
         }
       `}</style>
-    </StudentLayout>
+    </div>
   );
 }
