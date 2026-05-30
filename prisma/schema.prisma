@@ -1,14 +1,3 @@
-// Seerah LMS — Simplified Direct-to-Consumer Platform
-//
-// Database: Supabase PostgreSQL (session pooler, aws-1-us-west-2)
-//
-// Platform model:
-// - Platform admins (you) manage content
-// - Students sign up directly and learn
-// - No organizations, teachers, or institutional features
-// - Usernames auto-generated from names: firstname initial + lastname
-// - Email-based signup with automatic welcome email
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -19,329 +8,26 @@ datasource db {
   directUrl = env("DATABASE_URL")
 }
 
-// ─────────────────────────────────────────────────────────────
-// User accounts - platform admins and students only
-// ─────────────────────────────────────────────────────────────
-
-model User {
-  id                    String    @id @default(cuid())
-  fullName              String
-  email                 String    @unique
-  passwordHash          String?
-  role                  String // "platform_admin" | "student"
-  emailVerified         Boolean   @default(false)
-  verificationToken     String?   @unique
-  verificationExpires   DateTime?
-  passwordResetToken    String?   @unique
-  passwordResetExpiry   DateTime?
-  lastLoginAt           DateTime?
-  isActive              Boolean   @default(true)
-  profileImage          String?
-  timezone              String    @default("UTC")
-  hasPaid               Boolean   @default(false)
-  stripePaymentIntentId String?
-  stripeCustomerId      String?   @unique
-
-  // Plan type: "individual" (1 profile) | "family" (up to 5 profiles)
-  planType              String    @default("individual")
-
-  // Parent Progress Report Fields
-  studentName             String?   // If course is for a child, this is the child's name
-  parentEmail             String?   // Parent/Guardian email for progress reports
-  parentEmailVerified     Boolean   @default(false) // Parent email verification status
-  parentVerificationToken String?   @unique // Token for parent email verification
-  sendWeeklyReports       Boolean   @default(false) // Toggle for weekly progress emails
-  courseFor               String    @default("myself") // "myself" | "my_child" | "my_family"
-  
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
-
-  student         StudentProfile?
-  sessions        Session[]
-  activityLogs    ActivityLog[]
-  purchases       Purchase[]
-  partProgress    PartProgress[]
-  studySessions   StudySession[]
-  learnerProfiles LearnerProfile[]
-  giftsMade       GiftPurchase[] @relation("GiftPurchasesMade")
-  giftsClaimed    GiftPurchase[] @relation("GiftPurchasesClaimed")
-  subscriptions   Subscription[]
-
-  @@index([role])
-  @@index([email])
-  @@index([verificationToken])
-  @@index([passwordResetToken])
-}
-
-model Session {
-  id        String   @id @default(cuid())
-  userId    String
-  token     String   @unique
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([expiresAt])
-}
-
-// ─────────────────────────────────────────────────────────────
-// Learner profiles — family members inside one paid account
-// ─────────────────────────────────────────────────────────────
-
-model LearnerProfile {
-  id          String   @id @default(cuid())
-  userId      String
-  displayName String
-  avatar      String?  // emoji or small identifier, e.g. "👦" or "star"
-  isDefault   Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  partProgress  PartProgress[]
-  studySessions StudySession[]
-
-  @@index([userId])
-}
-
-model StudentProfile {
-  id          String    @id @default(cuid())
-  userId      String    @unique
-  dateOfBirth DateTime?
-  isActive    Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  user             User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  enrollments      ClassEnrollment[]
-  progress         StudentProgress[]
-  quizAttempts     QuizAttempt[]
-  examAttempts     ExamAttempt[]
-  releaseOverrides StudentReleaseOverride[]
-}
-
-// ─────────────────────────────────────────────────────────────
-// Master Seerah content library
-// ─────────────────────────────────────────────────────────────
-
-model SeerahPart {
-  id                   String   @id @default(cuid())
-  partNumber           Int      @unique
-  title                String
-  slug                 String   @unique
-  subtitle             String?
-  era                  String
-  shortDescription     String?
-  longDescription      String?
-  orderIndex           Int
-  durationMinutes      Int?
-  includedInEssentials Boolean  @default(false)
-  isPublished          Boolean  @default(true)
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-
-  assets              SeerahPartAsset[]
-  courseTemplateItems CourseTemplateItem[]
-  classCourseItems    ClassCourseItem[]
-  quizzes             Quiz[]
-  examLinks           ExamPartLink[]
-
-  @@index([era])
-  @@index([orderIndex])
-}
-
-model SeerahPartAsset {
-  id           String   @id @default(cuid())
-  seerahPartId String
-  assetType    String
-  title        String?
-  url          String?
-  filePath     String?
-  assetOrder   Int      @default(0)
+model ActivityLog {
+  id           String   @id
+  userId       String?
+  classId      String?
+  activityType String
+  entityType   String?
+  entityId     String?
   metadataJson String?
-  isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  Class        Class?   @relation(fields: [classId], references: [id])
+  user         User?    @relation(fields: [userId], references: [id])
 
-  seerahPart SeerahPart @relation(fields: [seerahPartId], references: [id], onDelete: Cascade)
-
-  @@index([seerahPartId])
-  @@index([assetType])
-}
-
-// ─────────────────────────────────────────────────────────────
-// Course templates (admin-created learning paths)
-// ─────────────────────────────────────────────────────────────
-
-model CourseTemplate {
-  id          String   @id @default(cuid())
-  title       String
-  slug        String   @unique
-  description String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  items        CourseTemplateItem[]
-  classCourses ClassCourse[]
-}
-
-model CourseTemplateItem {
-  id               String   @id @default(cuid())
-  courseTemplateId String
-  seerahPartId     String
-  moduleName       String?
-  itemOrder        Int
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  courseTemplate CourseTemplate @relation(fields: [courseTemplateId], references: [id], onDelete: Cascade)
-  seerahPart     SeerahPart     @relation(fields: [seerahPartId], references: [id])
-
-  @@index([courseTemplateId])
-  @@index([itemOrder])
-}
-
-// ─────────────────────────────────────────────────────────────
-// Classes (self-paced courses students can enroll in)
-// ─────────────────────────────────────────────────────────────
-
-model Class {
-  id                String    @id @default(cuid())
-  title             String
-  slug              String    @unique
-  description       String?
-  bannerImage       String?
-  startDate         DateTime?
-  endDate           DateTime?
-  status            String    @default("active")
-  visibility        String    @default("public")
-  allowSelfEnroll   Boolean   @default(true)
-  lockSequence      Boolean   @default(false)
-  showLockedContent Boolean   @default(true)
-  capacity          Int?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-
-  enrollments  ClassEnrollment[]
-  classCourse  ClassCourse?
-  releaseRules ReleaseRule[]
-  assignments  Assignment[]
-  progress     StudentProgress[]
-  quizzes      Quiz[]
-  quizAttempts QuizAttempt[]
-  exams        Exam[]
-  examAttempts ExamAttempt[]
-  activityLogs ActivityLog[]
-
-  @@index([status])
-  @@index([visibility])
-}
-
-model ClassEnrollment {
-  id        String    @id @default(cuid())
-  classId   String
-  studentId String
-  status    String    @default("active")
-  joinedAt  DateTime  @default(now())
-  removedAt DateTime?
-
-  class   Class          @relation(fields: [classId], references: [id], onDelete: Cascade)
-  student StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
-
-  @@unique([classId, studentId])
+  @@index([activityType])
   @@index([classId])
-  @@index([studentId])
+  @@index([createdAt])
+  @@index([userId])
 }
-
-model ClassCourse {
-  id               String   @id @default(cuid())
-  classId          String   @unique
-  courseTemplateId String?
-  title            String
-  description      String?
-  isCustom         Boolean  @default(false)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  class          Class             @relation(fields: [classId], references: [id], onDelete: Cascade)
-  courseTemplate CourseTemplate?   @relation(fields: [courseTemplateId], references: [id])
-  items          ClassCourseItem[]
-}
-
-model ClassCourseItem {
-  id            String   @id @default(cuid())
-  classCourseId String
-  seerahPartId  String
-  moduleName    String?
-  itemOrder     Int
-  isRequired    Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  classCourse  ClassCourse       @relation(fields: [classCourseId], references: [id], onDelete: Cascade)
-  seerahPart   SeerahPart        @relation(fields: [seerahPartId], references: [id])
-  releaseRules ReleaseRule[]
-  assignments  Assignment[]
-  progress     StudentProgress[]
-
-  @@index([classCourseId])
-  @@index([itemOrder])
-}
-
-// ─────────────────────────────────────────────────────────────
-// Release engine
-// ─────────────────────────────────────────────────────────────
-
-model ReleaseRule {
-  id                String    @id @default(cuid())
-  classId           String
-  classCourseItemId String?
-  targetType        String
-  targetId          String?
-  releaseMode       String
-  scheduledAt       DateTime?
-  conditionType     String?
-  conditionValue    String?
-  isReleased        Boolean   @default(false)
-  releasedAt        DateTime?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-
-  class           Class                    @relation(fields: [classId], references: [id], onDelete: Cascade)
-  classCourseItem ClassCourseItem?         @relation(fields: [classCourseItemId], references: [id])
-  overrides       StudentReleaseOverride[]
-
-  @@index([classId])
-  @@index([targetType])
-  @@index([isReleased])
-}
-
-model StudentReleaseOverride {
-  id             String    @id @default(cuid())
-  releaseRuleId  String
-  studentId      String
-  isVisible      Boolean   @default(true)
-  isUnlocked     Boolean   @default(false)
-  availableFrom  DateTime?
-  availableUntil DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-
-  releaseRule ReleaseRule    @relation(fields: [releaseRuleId], references: [id], onDelete: Cascade)
-  student     StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
-
-  @@unique([releaseRuleId, studentId])
-  @@index([studentId])
-}
-
-// ─────────────────────────────────────────────────────────────
-// Assignments
-// ─────────────────────────────────────────────────────────────
 
 model Assignment {
-  id                String    @id @default(cuid())
+  id                String           @id
   classId           String
   classCourseItemId String?
   assignmentType    String
@@ -350,229 +36,254 @@ model Assignment {
   dueAt             DateTime?
   availableFrom     DateTime?
   availableUntil    DateTime?
-  isRequired        Boolean   @default(true)
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-
-  class           Class            @relation(fields: [classId], references: [id], onDelete: Cascade)
-  classCourseItem ClassCourseItem? @relation(fields: [classCourseItemId], references: [id])
+  isRequired        Boolean          @default(true)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime
+  ClassCourseItem   ClassCourseItem? @relation(fields: [classCourseItemId], references: [id])
+  Class             Class            @relation(fields: [classId], references: [id], onDelete: Cascade)
 
   @@index([classId])
   @@index([dueAt])
 }
 
-// ─────────────────────────────────────────────────────────────
-// Progress tracking
-// ─────────────────────────────────────────────────────────────
+model Class {
+  id                String            @id
+  title             String
+  slug              String            @unique
+  description       String?
+  bannerImage       String?
+  startDate         DateTime?
+  endDate           DateTime?
+  status            String            @default("active")
+  visibility        String            @default("public")
+  allowSelfEnroll   Boolean           @default(true)
+  lockSequence      Boolean           @default(false)
+  showLockedContent Boolean           @default(true)
+  capacity          Int?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime
+  ActivityLog       ActivityLog[]
+  Assignment        Assignment[]
+  ClassCourse       ClassCourse?
+  ClassEnrollment   ClassEnrollment[]
+  Exam              Exam[]
+  ExamAttempt       ExamAttempt[]
+  Quiz              Quiz[]
+  QuizAttempt       QuizAttempt[]
+  ReleaseRule       ReleaseRule[]
+  StudentProgress   StudentProgress[]
 
-model StudentProgress {
-  id                   String    @id @default(cuid())
-  classId              String
-  studentId            String
-  classCourseItemId    String
-  status               String    @default("locked")
-  startedAt            DateTime?
-  completedAt          DateTime?
-  lastAccessedAt       DateTime?
-  completionPercentage Int       @default(0)
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
-
-  class           Class           @relation(fields: [classId], references: [id], onDelete: Cascade)
-  student         StudentProfile  @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  classCourseItem ClassCourseItem @relation(fields: [classCourseItemId], references: [id], onDelete: Cascade)
-
-  @@unique([studentId, classCourseItemId])
-  @@index([classId])
   @@index([status])
+  @@index([visibility])
 }
 
-// ─────────────────────────────────────────────────────────────
-// Quizzes
-// ─────────────────────────────────────────────────────────────
-
-model Quiz {
-  id               String   @id @default(cuid())
-  seerahPartId     String?
-  classId          String?
+model ClassCourse {
+  id               String            @id
+  classId          String            @unique
+  courseTemplateId String?
   title            String
   description      String?
-  quizType         String   @default("part_quiz")
-  passingScore     Int      @default(70)
-  maxAttempts      Int?
-  timeLimitMinutes Int?
-  isActive         Boolean  @default(true)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  isCustom         Boolean           @default(false)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime
+  Class            Class             @relation(fields: [classId], references: [id], onDelete: Cascade)
+  CourseTemplate   CourseTemplate?   @relation(fields: [courseTemplateId], references: [id])
+  ClassCourseItem  ClassCourseItem[]
+}
 
-  seerahPart SeerahPart?    @relation(fields: [seerahPartId], references: [id])
-  class      Class?         @relation(fields: [classId], references: [id], onDelete: Cascade)
-  questions  QuizQuestion[]
-  attempts   QuizAttempt[]
+model ClassCourseItem {
+  id              String            @id
+  classCourseId   String
+  seerahPartId    String
+  moduleName      String?
+  itemOrder       Int
+  isRequired      Boolean           @default(true)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime
+  Assignment      Assignment[]
+  ClassCourse     ClassCourse       @relation(fields: [classCourseId], references: [id], onDelete: Cascade)
+  SeerahPart      SeerahPart        @relation(fields: [seerahPartId], references: [id])
+  ReleaseRule     ReleaseRule[]
+  StudentProgress StudentProgress[]
 
-  @@index([seerahPartId])
+  @@index([classCourseId])
+  @@index([itemOrder])
+}
+
+model ClassEnrollment {
+  id             String         @id
+  classId        String
+  studentId      String
+  status         String         @default("active")
+  joinedAt       DateTime       @default(now())
+  removedAt      DateTime?
+  Class          Class          @relation(fields: [classId], references: [id], onDelete: Cascade)
+  StudentProfile StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([classId, studentId])
   @@index([classId])
-}
-
-model QuizQuestion {
-  id           String   @id @default(cuid())
-  quizId       String
-  questionText String
-  questionType String   @default("multiple_choice")
-  explanation  String?
-  orderIndex   Int
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  quiz    Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  options QuizOption[]
-  answers QuizAnswer[]
-
-  @@index([quizId])
-}
-
-model QuizOption {
-  id         String   @id @default(cuid())
-  questionId String
-  optionText String
-  isCorrect  Boolean  @default(false)
-  orderIndex Int
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  question QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  answers  QuizAnswer[]
-
-  @@index([questionId])
-}
-
-model QuizAttempt {
-  id          String    @id @default(cuid())
-  quizId      String
-  classId     String?
-  studentId   String
-  startedAt   DateTime  @default(now())
-  submittedAt DateTime?
-  score       Int?
-  passed      Boolean?
-  status      String    @default("in_progress")
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  quiz    Quiz           @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  class   Class?         @relation(fields: [classId], references: [id])
-  student StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  answers QuizAnswer[]
-
-  @@index([quizId])
   @@index([studentId])
 }
 
-model QuizAnswer {
-  id               String   @id @default(cuid())
-  quizAttemptId    String
-  questionId       String
-  selectedOptionId String?
-  answerText       String?
-  isCorrect        Boolean?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  attempt        QuizAttempt  @relation(fields: [quizAttemptId], references: [id], onDelete: Cascade)
-  question       QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  selectedOption QuizOption?  @relation(fields: [selectedOptionId], references: [id])
-
-  @@index([quizAttemptId])
+model CourseTemplate {
+  id                 String               @id
+  title              String
+  slug               String               @unique
+  description        String?
+  isActive           Boolean              @default(true)
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime
+  ClassCourse        ClassCourse[]
+  CourseTemplateItem CourseTemplateItem[]
 }
 
-// ─────────────────────────────────────────────────────────────
-// Exams
-// ─────────────────────────────────────────────────────────────
+model CourseTemplateItem {
+  id               String         @id
+  courseTemplateId String
+  seerahPartId     String
+  moduleName       String?
+  itemOrder        Int
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime
+  CourseTemplate   CourseTemplate @relation(fields: [courseTemplateId], references: [id], onDelete: Cascade)
+  SeerahPart       SeerahPart     @relation(fields: [seerahPartId], references: [id])
+
+  @@index([courseTemplateId])
+  @@index([itemOrder])
+}
 
 model Exam {
-  id             String    @id @default(cuid())
+  id             String         @id
   classId        String
   title          String
   description    String?
-  examScope      String    @default("module")
-  passingScore   Int       @default(70)
+  examScope      String         @default("module")
+  passingScore   Int            @default(70)
   availableFrom  DateTime?
   availableUntil DateTime?
   maxAttempts    Int?
-  isActive       Boolean   @default(true)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-
-  class     Class          @relation(fields: [classId], references: [id], onDelete: Cascade)
-  partLinks ExamPartLink[]
-  attempts  ExamAttempt[]
+  isActive       Boolean        @default(true)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime
+  Class          Class          @relation(fields: [classId], references: [id], onDelete: Cascade)
+  ExamAttempt    ExamAttempt[]
+  ExamPartLink   ExamPartLink[]
 
   @@index([classId])
 }
 
+model ExamAttempt {
+  id             String         @id
+  examId         String
+  classId        String
+  studentId      String
+  startedAt      DateTime       @default(now())
+  submittedAt    DateTime?
+  score          Int?
+  passed         Boolean?
+  status         String         @default("in_progress")
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime
+  Class          Class          @relation(fields: [classId], references: [id])
+  Exam           Exam           @relation(fields: [examId], references: [id], onDelete: Cascade)
+  StudentProfile StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([examId])
+  @@index([studentId])
+}
+
 model ExamPartLink {
-  id           String   @id @default(cuid())
+  id           String     @id
   examId       String
   seerahPartId String
-  createdAt    DateTime @default(now())
-
-  exam       Exam       @relation(fields: [examId], references: [id], onDelete: Cascade)
-  seerahPart SeerahPart @relation(fields: [seerahPartId], references: [id])
+  createdAt    DateTime   @default(now())
+  Exam         Exam       @relation(fields: [examId], references: [id], onDelete: Cascade)
+  SeerahPart   SeerahPart @relation(fields: [seerahPartId], references: [id])
 
   @@unique([examId, seerahPartId])
   @@index([examId])
 }
 
-model ExamAttempt {
-  id          String    @id @default(cuid())
-  examId      String
-  classId     String
-  studentId   String
-  startedAt   DateTime  @default(now())
-  submittedAt DateTime?
-  score       Int?
-  passed      Boolean?
-  status      String    @default("in_progress")
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+model GiftPurchase {
+  id                                      String    @id
+  stripePaymentIntentId                   String    @unique
+  purchaserUserId                         String?
+  purchaserEmail                          String
+  recipientEmail                          String
+  recipientName                           String?
+  giftMessage                             String?
+  claimTokenHash                          String?   @unique
+  claimedByUserId                         String?
+  claimedAt                               DateTime?
+  emailSentAt                             DateTime?
+  createdAt                               DateTime  @default(now())
+  expiresAt                               DateTime?
+  status                                  String    @default("pending")
+  User_GiftPurchase_claimedByUserIdToUser User?     @relation("GiftPurchase_claimedByUserIdToUser", fields: [claimedByUserId], references: [id])
+  User_GiftPurchase_purchaserUserIdToUser User?     @relation("GiftPurchase_purchaserUserIdToUser", fields: [purchaserUserId], references: [id])
 
-  exam    Exam           @relation(fields: [examId], references: [id], onDelete: Cascade)
-  class   Class          @relation(fields: [classId], references: [id])
-  student StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
-
-  @@index([examId])
-  @@index([studentId])
+  @@index([purchaserUserId])
+  @@index([recipientEmail])
+  @@index([status])
 }
 
-// ─────────────────────────────────────────────────────────────
-// Activity logs
-// ─────────────────────────────────────────────────────────────
+model InfluencerClick {
+  id        String   @id
+  creator   String
+  clickedAt DateTime @default(now())
 
-model ActivityLog {
-  id           String   @id @default(cuid())
-  userId       String?
-  classId      String?
-  activityType String
-  entityType   String?
-  entityId     String?
-  metadataJson String?
-  createdAt    DateTime @default(now())
+  @@index([clickedAt])
+  @@index([creator])
+}
 
-  user  User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
-  class Class? @relation(fields: [classId], references: [id], onDelete: SetNull)
+model LearnerProfile {
+  id           String         @id
+  userId       String
+  displayName  String
+  avatar       String?
+  isDefault    Boolean        @default(false)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @default(now())
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  partProgress PartProgress[]
+  studySessions StudySession[]
 
   @@index([userId])
-  @@index([classId])
-  @@index([activityType])
-  @@index([createdAt])
 }
 
-// ─────────────────────────────────────────────────────────────
-// Purchases & Payments
-// ─────────────────────────────────────────────────────────────
+model PartProgress {
+  id                 String         @id
+  userId             String
+  partNumber         Int
+  status             String         @default("not_started")
+  lastAccessedAt     DateTime?
+  startedAt          DateTime?
+  completedAt        DateTime?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime
+  briefingOpened     Boolean        @default(false)
+  flashcardsReviewed Boolean        @default(false)
+  masteredAt         DateTime?
+  openedAssets       String         @default("[]")
+  quizAttempts       Int            @default(0)
+  quizBestScore      Int?
+  quizCompleted      Boolean        @default(false)
+  quizPassed         Boolean        @default(false)
+  quizScore          Int?
+  videoCompleted     Boolean        @default(false)
+  videoWatchPercent  Int            @default(0)
+  learnerProfileId   String
+  learnerProfile     LearnerProfile @relation(fields: [learnerProfileId], references: [id], onDelete: Cascade)
+  user               User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([learnerProfileId, partNumber])
+  @@index([learnerProfileId])
+  @@index([status])
+  @@index([userId])
+}
 
 model Purchase {
-  id                    String   @id @default(cuid())
+  id                    String   @id
   userId                String
   planId                String
   planName              String
@@ -580,168 +291,331 @@ model Purchase {
   currency              String   @default("usd")
   status                String   @default("pending")
   stripePaymentIntentId String   @unique
-  promoCode             String?  // promo code used, if any
-  creator               String?  // influencer creator slug, if via creator link
   createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  updatedAt             DateTime
+  creator               String?
+  promoCode             String?
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([status])
   @@index([createdAt])
   @@index([creator])
   @@index([promoCode])
+  @@index([status])
+  @@index([userId])
 }
 
-// Progress tracking for direct-to-consumer purchases
-// Scoped per learner profile so each family member has separate progress.
-model PartProgress {
-  id               String @id @default(cuid())
-  userId           String // account owner — kept for ownership validation and cascade
-  learnerProfileId String // which profile this progress belongs to
-  partNumber       Int
+model Quiz {
+  id               String         @id
+  seerahPartId     String?
+  classId          String?
+  title            String
+  description      String?
+  quizType         String         @default("part_quiz")
+  passingScore     Int            @default(70)
+  maxAttempts      Int?
+  timeLimitMinutes Int?
+  isActive         Boolean        @default(true)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime
+  Class            Class?         @relation(fields: [classId], references: [id], onDelete: Cascade)
+  SeerahPart       SeerahPart?    @relation(fields: [seerahPartId], references: [id])
+  QuizAttempt      QuizAttempt[]
+  QuizQuestion     QuizQuestion[]
 
-  // Computed status: not_started | started | completed | mastered
-  status String @default("not_started")
+  @@index([classId])
+  @@index([seerahPartId])
+}
 
-  // ── Video ────────────────────────────────────────────────────
-  videoWatchPercent Int     @default(0) // highest percent reached (0-100)
-  videoCompleted    Boolean @default(false) // reached >= 85%
+model QuizAnswer {
+  id               String       @id
+  quizAttemptId    String
+  questionId       String
+  selectedOptionId String?
+  answerText       String?
+  isCorrect        Boolean?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime
+  QuizQuestion     QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  QuizAttempt      QuizAttempt  @relation(fields: [quizAttemptId], references: [id], onDelete: Cascade)
+  QuizOption       QuizOption?  @relation(fields: [selectedOptionId], references: [id])
 
-  // ── Briefing ─────────────────────────────────────────────────
-  briefingOpened Boolean @default(false)
+  @@index([quizAttemptId])
+}
 
-  // ── Quiz (Complete users) ─────────────────────────────────────
-  quizAttempts   Int     @default(0)
-  quizCompleted  Boolean @default(false)
-  quizScore      Int?    // most recent score (0-100)
-  quizBestScore  Int?    // best score across all attempts
-  quizPassed     Boolean @default(false) // best score >= 80
+model QuizAttempt {
+  id             String         @id
+  quizId         String
+  classId        String?
+  studentId      String
+  startedAt      DateTime       @default(now())
+  submittedAt    DateTime?
+  score          Int?
+  passed         Boolean?
+  status         String         @default("in_progress")
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime
+  QuizAnswer     QuizAnswer[]
+  Class          Class?         @relation(fields: [classId], references: [id])
+  Quiz           Quiz           @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  StudentProfile StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
-  // ── Flashcards ────────────────────────────────────────────────
-  flashcardsReviewed Boolean @default(false)
+  @@index([quizId])
+  @@index([studentId])
+}
 
-  // ── Optional assets opened ────────────────────────────────────
-  // JSON array of asset IDs e.g. ["slides","mindmap","infographic","study_guide"]
-  openedAssets String @default("[]")
+model QuizOption {
+  id           String       @id
+  questionId   String
+  optionText   String
+  isCorrect    Boolean      @default(false)
+  orderIndex   Int
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime
+  QuizAnswer   QuizAnswer[]
+  QuizQuestion QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
-  // ── Timestamps ───────────────────────────────────────────────
-  startedAt      DateTime?
-  completedAt    DateTime?
-  masteredAt     DateTime?
-  lastAccessedAt DateTime?
+  @@index([questionId])
+}
 
+model QuizQuestion {
+  id           String       @id
+  quizId       String
+  questionText String
+  questionType String       @default("multiple_choice")
+  explanation  String?
+  orderIndex   Int
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime
+  QuizAnswer   QuizAnswer[]
+  QuizOption   QuizOption[]
+  Quiz         Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@index([quizId])
+}
+
+model ReleaseRule {
+  id                     String                   @id
+  classId                String
+  classCourseItemId      String?
+  targetType             String
+  targetId               String?
+  releaseMode            String
+  scheduledAt            DateTime?
+  conditionType          String?
+  conditionValue         String?
+  isReleased             Boolean                  @default(false)
+  releasedAt             DateTime?
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime
+  ClassCourseItem        ClassCourseItem?         @relation(fields: [classCourseItemId], references: [id])
+  Class                  Class                    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  StudentReleaseOverride StudentReleaseOverride[]
+
+  @@index([classId])
+  @@index([isReleased])
+  @@index([targetType])
+}
+
+model SeerahPart {
+  id                   String               @id
+  partNumber           Int                  @unique
+  title                String
+  slug                 String               @unique
+  subtitle             String?
+  era                  String
+  shortDescription     String?
+  longDescription      String?
+  orderIndex           Int
+  durationMinutes      Int?
+  includedInEssentials Boolean              @default(false)
+  isPublished          Boolean              @default(true)
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime
+  ClassCourseItem      ClassCourseItem[]
+  CourseTemplateItem   CourseTemplateItem[]
+  ExamPartLink         ExamPartLink[]
+  Quiz                 Quiz[]
+  SeerahPartAsset      SeerahPartAsset[]
+
+  @@index([era])
+  @@index([orderIndex])
+}
+
+model SeerahPartAsset {
+  id           String     @id
+  seerahPartId String
+  assetType    String
+  title        String?
+  url          String?
+  filePath     String?
+  assetOrder   Int        @default(0)
+  metadataJson String?
+  isActive     Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime
+  SeerahPart   SeerahPart @relation(fields: [seerahPartId], references: [id], onDelete: Cascade)
+
+  @@index([assetType])
+  @@index([seerahPartId])
+}
+
+model Session {
+  id        String   @id
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  learnerProfile LearnerProfile @relation(fields: [learnerProfileId], references: [id], onDelete: Cascade)
-
-  @@unique([learnerProfileId, partNumber])
+  @@index([expiresAt])
   @@index([userId])
-  @@index([learnerProfileId])
+}
+
+model StudentProfile {
+  id                     String                   @id
+  userId                 String                   @unique
+  dateOfBirth            DateTime?
+  isActive               Boolean                  @default(true)
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime
+  ClassEnrollment        ClassEnrollment[]
+  ExamAttempt            ExamAttempt[]
+  QuizAttempt            QuizAttempt[]
+  user                   User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  StudentProgress        StudentProgress[]
+  StudentReleaseOverride StudentReleaseOverride[]
+}
+
+model StudentProgress {
+  id                   String          @id
+  classId              String
+  studentId            String
+  classCourseItemId    String
+  status               String          @default("locked")
+  startedAt            DateTime?
+  completedAt          DateTime?
+  lastAccessedAt       DateTime?
+  completionPercentage Int             @default(0)
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime
+  ClassCourseItem      ClassCourseItem @relation(fields: [classCourseItemId], references: [id], onDelete: Cascade)
+  Class                Class           @relation(fields: [classId], references: [id], onDelete: Cascade)
+  StudentProfile       StudentProfile  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, classCourseItemId])
+  @@index([classId])
   @@index([status])
 }
 
-// Study time tracking for accurate progress reports
+model StudentReleaseOverride {
+  id             String         @id
+  releaseRuleId  String
+  studentId      String
+  isVisible      Boolean        @default(true)
+  isUnlocked     Boolean        @default(false)
+  availableFrom  DateTime?
+  availableUntil DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime
+  ReleaseRule    ReleaseRule    @relation(fields: [releaseRuleId], references: [id], onDelete: Cascade)
+  StudentProfile StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([releaseRuleId, studentId])
+  @@index([studentId])
+}
+
 model StudySession {
-  id               String   @id @default(cuid())
+  id               String          @id
   userId           String
-  learnerProfileId String?  // optional — backfilled for existing records
   partNumber       Int
-  secondsTracked   Int      @default(0) // Total seconds of active study time
-  startedAt        DateTime @default(now())
-  lastUpdatedAt    DateTime @default(now())
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  secondsTracked   Int             @default(0)
+  startedAt        DateTime        @default(now())
+  lastUpdatedAt    DateTime        @default(now())
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime
+  learnerProfileId String?
+  learnerProfile   LearnerProfile? @relation(fields: [learnerProfileId], references: [id])
+  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  learnerProfile LearnerProfile? @relation(fields: [learnerProfileId], references: [id], onDelete: SetNull)
-
-  @@index([userId])
   @@index([learnerProfileId])
   @@index([partNumber])
   @@index([startedAt])
+  @@index([userId])
 }
 
-// ─────────────────────────────────────────────────────────────
-// Monthly Subscriptions
-// ─────────────────────────────────────────────────────────────
-
 model Subscription {
-  id                   String   @id @default(cuid())
+  id                   String   @id
   userId               String
   stripeCustomerId     String
   stripeSubscriptionId String   @unique
   stripePriceId        String
-  // active | trialing | past_due | canceled | unpaid | incomplete | incomplete_expired
   status               String
   currentPeriodStart   DateTime
   currentPeriodEnd     DateTime
   cancelAtPeriodEnd    Boolean  @default(false)
   createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  updatedAt            DateTime
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
   @@index([status])
+  @@index([userId])
 }
 
 model SupportTicket {
-  id        String   @id @default(cuid())
+  id        String   @id
   name      String
   email     String
   subject   String
-  message   String   @db.Text
-  status    String   @default("open") // open, in_progress, resolved, closed
+  message   String
+  status    String   @default("open")
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime
 
-  @@index([status])
-  @@index([email])
   @@index([createdAt])
-}
-
-// ─────────────────────────────────────────────────────────────
-// Influencer link click tracking
-// ─────────────────────────────────────────────────────────────
-
-model InfluencerClick {
-  id        String   @id @default(cuid())
-  creator   String   // e.g. "korra", "itachi", "deenresponds", "theorthodoxmuslim"
-  clickedAt DateTime @default(now())
-
-  @@index([creator])
-  @@index([clickedAt])
-}
-
-// ─────────────────────────────────────────────────────────────
-// Gift Purchases — buyer gifts lifetime access to a recipient
-// ─────────────────────────────────────────────────────────────
-
-model GiftPurchase {
-  id                    String    @id @default(cuid())
-  stripePaymentIntentId String    @unique
-  purchaserUserId       String?
-  purchaserEmail        String
-  recipientEmail        String
-  recipientName         String?
-  giftMessage           String?
-  claimTokenHash        String?   @unique // SHA-256 of raw token; null until payment confirmed
-  claimedByUserId       String?
-  claimedAt             DateTime?
-  emailSentAt           DateTime? // set once gift email sent to recipient
-  createdAt             DateTime  @default(now())
-  expiresAt             DateTime?
-  // pending → paid → claimed | expired | refunded
-  status                String    @default("pending")
-
-  purchaser User? @relation("GiftPurchasesMade",    fields: [purchaserUserId],  references: [id])
-  claimedBy User? @relation("GiftPurchasesClaimed", fields: [claimedByUserId], references: [id])
-
-  @@index([recipientEmail])
+  @@index([email])
   @@index([status])
-  @@index([purchaserUserId])
+}
+
+model User {
+  id                                              String           @id
+  fullName                                        String
+  email                                           String           @unique
+  passwordHash                                    String?
+  role                                            String
+  emailVerified                                   Boolean          @default(false)
+  verificationToken                               String?          @unique
+  passwordResetToken                              String?          @unique
+  passwordResetExpiry                             DateTime?
+  lastLoginAt                                     DateTime?
+  isActive                                        Boolean          @default(true)
+  profileImage                                    String?
+  timezone                                        String           @default("UTC")
+  createdAt                                       DateTime         @default(now())
+  updatedAt                                       DateTime
+  hasPaid                                         Boolean          @default(false)
+  stripePaymentIntentId                           String?
+  verificationExpires                             DateTime?
+  courseFor                                       String           @default("myself")
+  parentEmail                                     String?
+  sendWeeklyReports                               Boolean          @default(false)
+  studentName                                     String?
+  parentEmailVerified                             Boolean          @default(false)
+  parentVerificationToken                         String?          @unique
+  stripeCustomerId                                String?          @unique
+  planType                                        String           @default("individual")
+  ActivityLog                                     ActivityLog[]
+  GiftPurchase_GiftPurchase_claimedByUserIdToUser GiftPurchase[]   @relation("GiftPurchase_claimedByUserIdToUser")
+  GiftPurchase_GiftPurchase_purchaserUserIdToUser GiftPurchase[]   @relation("GiftPurchase_purchaserUserIdToUser")
+  learnerProfiles                                 LearnerProfile[]
+  partProgress                                    PartProgress[]
+  purchases                                       Purchase[]
+  sessions                                        Session[]
+  studentProfile                                  StudentProfile?
+  studySessions                                   StudySession[]
+  subscriptions                                   Subscription[]
+
+  @@index([email])
+  @@index([passwordResetToken])
+  @@index([role])
+  @@index([verificationToken])
 }

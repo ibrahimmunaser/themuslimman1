@@ -103,7 +103,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
   const session = await prisma.session.findUnique({
     where: { token },
     include: {
-      User: {
+      user: {
         select: {
           id: true,
           fullName: true,
@@ -139,7 +139,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
     return null;
   }
 
-  const user = session.User;
+  const user = session.user;
   
   if (!isRole(user.role)) {
     console.error(`[AUTH] Invalid role "${user.role}" for user ${user.id}`);
