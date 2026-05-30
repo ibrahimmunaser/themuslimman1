@@ -6,7 +6,7 @@ const APP_URL =
 
 export async function GET() {
   // Fire-and-forget click tracking — never block the redirect
-  prisma.influencerClick.create({ data: { creator: "itachi" } }).catch(() => {});
+  prisma.influencerClick.create({ data: { id: crypto.randomUUID(), creator: "itachi" } }).catch(() => {});
 
   return NextResponse.redirect(
     `${APP_URL}/signup-checkout?plan=complete&promo=ITACHI20&utm_source=tiktok&utm_medium=influencer&utm_campaign=seerah_launch&utm_content=itachi`,

@@ -6,7 +6,7 @@ const APP_URL =
 
 export async function GET() {
   // Fire-and-forget click tracking — never block the redirect
-  prisma.influencerClick.create({ data: { creator: "deenresponds" } }).catch(() => {});
+  prisma.influencerClick.create({ data: { id: crypto.randomUUID(), creator: "deenresponds" } }).catch(() => {});
 
   return NextResponse.redirect(
     `${APP_URL}/signup-checkout?plan=complete&promo=DEEN20&utm_source=youtube&utm_medium=influencer&utm_campaign=seerah_launch&utm_content=deenresponds`,

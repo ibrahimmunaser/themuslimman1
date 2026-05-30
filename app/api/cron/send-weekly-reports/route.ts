@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
         fullName: true,
         studentName: true,
         parentEmail: true,
-        student: {
+        studentProfile: {
           select: {
             id: true,
           },
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
 
     // Batch-load all data upfront — 4 queries total regardless of user count
     const userIds = usersWithReports.map((u) => u.id);
-    const studentIds = usersWithReports.map((u) => u.student?.id).filter(Boolean) as string[];
+    const studentIds = usersWithReports.map((u) => u.studentProfile?.id).filter(Boolean) as string[];
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
@@ -163,8 +163,8 @@ export async function GET(request: NextRequest) {
         let weeklyQuizzes = 0;
         const weeklyFlashcards = weeklyProgress.filter((p) => p.flashcardsReviewed).length;
 
-        if (userPlan === "complete" && user.student?.id) {
-          const studentQuizzes = quizByStudent.get(user.student.id) ?? [];
+        if (userPlan === "complete" && user.studentProfile?.id) {
+          const studentQuizzes = quizByStudent.get(user.studentProfile.id) ?? [];
           quizAttempts = studentQuizzes.length;
           weeklyQuizzes = studentQuizzes.filter(
             (q) => q.submittedAt && q.submittedAt >= oneWeekAgo
