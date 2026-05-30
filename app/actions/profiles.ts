@@ -87,7 +87,7 @@ export async function getProfiles() {
       isDefault: true,
       createdAt: true,
       _count: {
-        select: { PartProgress: true },
+        select: { partProgress: true },
       },
     },
   });
