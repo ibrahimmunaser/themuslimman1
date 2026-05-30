@@ -78,6 +78,8 @@ export async function POST(request: NextRequest) {
     const user = await prisma.$transaction(async (tx) => {
       const newUser = await tx.user.create({
         data: {
+          id: crypto.randomUUID(),
+          updatedAt: new Date(),
           fullName: fullName.trim(),
           email: email.toLowerCase(),
           passwordHash,
