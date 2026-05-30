@@ -17,7 +17,7 @@ model ActivityLog {
   entityId     String?
   metadataJson String?
   createdAt    DateTime @default(now())
-  Class        Class?   @relation(fields: [classId], references: [id])
+  class        Class?   @relation(fields: [classId], references: [id])
   user         User?    @relation(fields: [userId], references: [id])
 
   @@index([activityType])
@@ -39,8 +39,8 @@ model Assignment {
   isRequired        Boolean          @default(true)
   createdAt         DateTime         @default(now())
   updatedAt         DateTime
-  ClassCourseItem   ClassCourseItem? @relation(fields: [classCourseItemId], references: [id])
-  Class             Class            @relation(fields: [classId], references: [id], onDelete: Cascade)
+  classCourseItem   ClassCourseItem? @relation(fields: [classCourseItemId], references: [id])
+  class             Class            @relation(fields: [classId], references: [id], onDelete: Cascade)
 
   @@index([classId])
   @@index([dueAt])
@@ -62,16 +62,16 @@ model Class {
   capacity          Int?
   createdAt         DateTime          @default(now())
   updatedAt         DateTime
-  ActivityLog       ActivityLog[]
-  Assignment        Assignment[]
-  ClassCourse       ClassCourse?
-  ClassEnrollment   ClassEnrollment[]
-  Exam              Exam[]
-  ExamAttempt       ExamAttempt[]
-  Quiz              Quiz[]
-  QuizAttempt       QuizAttempt[]
-  ReleaseRule       ReleaseRule[]
-  StudentProgress   StudentProgress[]
+  activityLogs      ActivityLog[]
+  assignments       Assignment[]
+  classCourse       ClassCourse?
+  enrollments       ClassEnrollment[]
+  exams             Exam[]
+  examAttempts      ExamAttempt[]
+  quizzes           Quiz[]
+  quizAttempts      QuizAttempt[]
+  releaseRules      ReleaseRule[]
+  studentProgress   StudentProgress[]
 
   @@index([status])
   @@index([visibility])
@@ -86,9 +86,9 @@ model ClassCourse {
   isCustom         Boolean           @default(false)
   createdAt        DateTime          @default(now())
   updatedAt        DateTime
-  Class            Class             @relation(fields: [classId], references: [id], onDelete: Cascade)
-  CourseTemplate   CourseTemplate?   @relation(fields: [courseTemplateId], references: [id])
-  ClassCourseItem  ClassCourseItem[]
+  class            Class             @relation(fields: [classId], references: [id], onDelete: Cascade)
+  courseTemplate   CourseTemplate?   @relation(fields: [courseTemplateId], references: [id])
+  items            ClassCourseItem[]
 }
 
 model ClassCourseItem {
@@ -100,11 +100,11 @@ model ClassCourseItem {
   isRequired      Boolean           @default(true)
   createdAt       DateTime          @default(now())
   updatedAt       DateTime
-  Assignment      Assignment[]
-  ClassCourse     ClassCourse       @relation(fields: [classCourseId], references: [id], onDelete: Cascade)
-  SeerahPart      SeerahPart        @relation(fields: [seerahPartId], references: [id])
-  ReleaseRule     ReleaseRule[]
-  StudentProgress StudentProgress[]
+  assignments     Assignment[]
+  classCourse     ClassCourse       @relation(fields: [classCourseId], references: [id], onDelete: Cascade)
+  seerahPart      SeerahPart        @relation(fields: [seerahPartId], references: [id])
+  releaseRules    ReleaseRule[]
+  studentProgress StudentProgress[]
 
   @@index([classCourseId])
   @@index([itemOrder])
@@ -117,8 +117,8 @@ model ClassEnrollment {
   status         String         @default("active")
   joinedAt       DateTime       @default(now())
   removedAt      DateTime?
-  Class          Class          @relation(fields: [classId], references: [id], onDelete: Cascade)
-  StudentProfile StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  class          Class          @relation(fields: [classId], references: [id], onDelete: Cascade)
+  studentProfile StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@unique([classId, studentId])
   @@index([classId])
@@ -126,15 +126,15 @@ model ClassEnrollment {
 }
 
 model CourseTemplate {
-  id                 String               @id
-  title              String
-  slug               String               @unique
-  description        String?
-  isActive           Boolean              @default(true)
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime
-  ClassCourse        ClassCourse[]
-  CourseTemplateItem CourseTemplateItem[]
+  id          String               @id
+  title       String
+  slug        String               @unique
+  description String?
+  isActive    Boolean              @default(true)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime
+  classCourses ClassCourse[]
+  items        CourseTemplateItem[]
 }
 
 model CourseTemplateItem {
@@ -145,8 +145,8 @@ model CourseTemplateItem {
   itemOrder        Int
   createdAt        DateTime       @default(now())
   updatedAt        DateTime
-  CourseTemplate   CourseTemplate @relation(fields: [courseTemplateId], references: [id], onDelete: Cascade)
-  SeerahPart       SeerahPart     @relation(fields: [seerahPartId], references: [id])
+  courseTemplate   CourseTemplate @relation(fields: [courseTemplateId], references: [id], onDelete: Cascade)
+  seerahPart       SeerahPart     @relation(fields: [seerahPartId], references: [id])
 
   @@index([courseTemplateId])
   @@index([itemOrder])
@@ -165,9 +165,9 @@ model Exam {
   isActive       Boolean        @default(true)
   createdAt      DateTime       @default(now())
   updatedAt      DateTime
-  Class          Class          @relation(fields: [classId], references: [id], onDelete: Cascade)
-  ExamAttempt    ExamAttempt[]
-  ExamPartLink   ExamPartLink[]
+  class          Class          @relation(fields: [classId], references: [id], onDelete: Cascade)
+  examAttempts   ExamAttempt[]
+  examPartLinks  ExamPartLink[]
 
   @@index([classId])
 }
@@ -184,9 +184,9 @@ model ExamAttempt {
   status         String         @default("in_progress")
   createdAt      DateTime       @default(now())
   updatedAt      DateTime
-  Class          Class          @relation(fields: [classId], references: [id])
-  Exam           Exam           @relation(fields: [examId], references: [id], onDelete: Cascade)
-  StudentProfile StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  class          Class          @relation(fields: [classId], references: [id])
+  exam           Exam           @relation(fields: [examId], references: [id], onDelete: Cascade)
+  studentProfile StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@index([examId])
   @@index([studentId])
@@ -197,8 +197,8 @@ model ExamPartLink {
   examId       String
   seerahPartId String
   createdAt    DateTime   @default(now())
-  Exam         Exam       @relation(fields: [examId], references: [id], onDelete: Cascade)
-  SeerahPart   SeerahPart @relation(fields: [seerahPartId], references: [id])
+  exam         Exam       @relation(fields: [examId], references: [id], onDelete: Cascade)
+  seerahPart   SeerahPart @relation(fields: [seerahPartId], references: [id])
 
   @@unique([examId, seerahPartId])
   @@index([examId])
@@ -317,10 +317,10 @@ model Quiz {
   isActive         Boolean        @default(true)
   createdAt        DateTime       @default(now())
   updatedAt        DateTime
-  Class            Class?         @relation(fields: [classId], references: [id], onDelete: Cascade)
-  SeerahPart       SeerahPart?    @relation(fields: [seerahPartId], references: [id])
-  QuizAttempt      QuizAttempt[]
-  QuizQuestion     QuizQuestion[]
+  class            Class?         @relation(fields: [classId], references: [id], onDelete: Cascade)
+  seerahPart       SeerahPart?    @relation(fields: [seerahPartId], references: [id])
+  quizAttempts     QuizAttempt[]
+  questions        QuizQuestion[]
 
   @@index([classId])
   @@index([seerahPartId])
@@ -335,9 +335,9 @@ model QuizAnswer {
   isCorrect        Boolean?
   createdAt        DateTime     @default(now())
   updatedAt        DateTime
-  QuizQuestion     QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  QuizAttempt      QuizAttempt  @relation(fields: [quizAttemptId], references: [id], onDelete: Cascade)
-  QuizOption       QuizOption?  @relation(fields: [selectedOptionId], references: [id])
+  question         QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  quizAttempt      QuizAttempt  @relation(fields: [quizAttemptId], references: [id], onDelete: Cascade)
+  selectedOption   QuizOption?  @relation(fields: [selectedOptionId], references: [id])
 
   @@index([quizAttemptId])
 }
@@ -354,10 +354,10 @@ model QuizAttempt {
   status         String         @default("in_progress")
   createdAt      DateTime       @default(now())
   updatedAt      DateTime
-  QuizAnswer     QuizAnswer[]
-  Class          Class?         @relation(fields: [classId], references: [id])
-  Quiz           Quiz           @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  StudentProfile StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  answers        QuizAnswer[]
+  class          Class?         @relation(fields: [classId], references: [id])
+  quiz           Quiz           @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  studentProfile StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@index([quizId])
   @@index([studentId])
@@ -371,8 +371,8 @@ model QuizOption {
   orderIndex   Int
   createdAt    DateTime     @default(now())
   updatedAt    DateTime
-  QuizAnswer   QuizAnswer[]
-  QuizQuestion QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  quizAnswers  QuizAnswer[]
+  quizQuestion QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
   @@index([questionId])
 }
@@ -386,9 +386,9 @@ model QuizQuestion {
   orderIndex   Int
   createdAt    DateTime     @default(now())
   updatedAt    DateTime
-  QuizAnswer   QuizAnswer[]
-  QuizOption   QuizOption[]
-  Quiz         Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  quizAnswers  QuizAnswer[]
+  options      QuizOption[]
+  quiz         Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
 
   @@index([quizId])
 }
@@ -407,9 +407,9 @@ model ReleaseRule {
   releasedAt             DateTime?
   createdAt              DateTime                 @default(now())
   updatedAt              DateTime
-  ClassCourseItem        ClassCourseItem?         @relation(fields: [classCourseItemId], references: [id])
-  Class                  Class                    @relation(fields: [classId], references: [id], onDelete: Cascade)
-  StudentReleaseOverride StudentReleaseOverride[]
+  classCourseItem        ClassCourseItem?         @relation(fields: [classCourseItemId], references: [id])
+  class                  Class                    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  studentReleaseOverrides StudentReleaseOverride[]
 
   @@index([classId])
   @@index([isReleased])
@@ -431,11 +431,11 @@ model SeerahPart {
   isPublished          Boolean              @default(true)
   createdAt            DateTime             @default(now())
   updatedAt            DateTime
-  ClassCourseItem      ClassCourseItem[]
-  CourseTemplateItem   CourseTemplateItem[]
-  ExamPartLink         ExamPartLink[]
-  Quiz                 Quiz[]
-  SeerahPartAsset      SeerahPartAsset[]
+  classCourseItems     ClassCourseItem[]
+  courseTemplateItems  CourseTemplateItem[]
+  examPartLinks        ExamPartLink[]
+  quizzes              Quiz[]
+  assets               SeerahPartAsset[]
 
   @@index([era])
   @@index([orderIndex])
@@ -453,7 +453,7 @@ model SeerahPartAsset {
   isActive     Boolean    @default(true)
   createdAt    DateTime   @default(now())
   updatedAt    DateTime
-  SeerahPart   SeerahPart @relation(fields: [seerahPartId], references: [id], onDelete: Cascade)
+  seerahPart   SeerahPart @relation(fields: [seerahPartId], references: [id], onDelete: Cascade)
 
   @@index([assetType])
   @@index([seerahPartId])
@@ -478,12 +478,12 @@ model StudentProfile {
   isActive               Boolean                  @default(true)
   createdAt              DateTime                 @default(now())
   updatedAt              DateTime
-  ClassEnrollment        ClassEnrollment[]
-  ExamAttempt            ExamAttempt[]
-  QuizAttempt            QuizAttempt[]
+  enrollments            ClassEnrollment[]
+  examAttempts           ExamAttempt[]
+  quizAttempts           QuizAttempt[]
   user                   User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  StudentProgress        StudentProgress[]
-  StudentReleaseOverride StudentReleaseOverride[]
+  studentProgress        StudentProgress[]
+  studentReleaseOverrides StudentReleaseOverride[]
 }
 
 model StudentProgress {
@@ -498,9 +498,9 @@ model StudentProgress {
   completionPercentage Int             @default(0)
   createdAt            DateTime        @default(now())
   updatedAt            DateTime
-  ClassCourseItem      ClassCourseItem @relation(fields: [classCourseItemId], references: [id], onDelete: Cascade)
-  Class                Class           @relation(fields: [classId], references: [id], onDelete: Cascade)
-  StudentProfile       StudentProfile  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  classCourseItem      ClassCourseItem @relation(fields: [classCourseItemId], references: [id], onDelete: Cascade)
+  class                Class           @relation(fields: [classId], references: [id], onDelete: Cascade)
+  studentProfile       StudentProfile  @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@unique([studentId, classCourseItemId])
   @@index([classId])
@@ -517,8 +517,8 @@ model StudentReleaseOverride {
   availableUntil DateTime?
   createdAt      DateTime       @default(now())
   updatedAt      DateTime
-  ReleaseRule    ReleaseRule    @relation(fields: [releaseRuleId], references: [id], onDelete: Cascade)
-  StudentProfile StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  releaseRule    ReleaseRule    @relation(fields: [releaseRuleId], references: [id], onDelete: Cascade)
+  studentProfile StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@unique([releaseRuleId, studentId])
   @@index([studentId])
@@ -603,7 +603,7 @@ model User {
   parentVerificationToken                         String?          @unique
   stripeCustomerId                                String?          @unique
   planType                                        String           @default("individual")
-  ActivityLog                                     ActivityLog[]
+  activityLogs                                    ActivityLog[]
   GiftPurchase_GiftPurchase_claimedByUserIdToUser GiftPurchase[]   @relation("GiftPurchase_claimedByUserIdToUser")
   GiftPurchase_GiftPurchase_purchaserUserIdToUser GiftPurchase[]   @relation("GiftPurchase_purchaserUserIdToUser")
   learnerProfiles                                 LearnerProfile[]
