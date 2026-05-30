@@ -120,8 +120,8 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
           parentEmail: true,
           parentEmailVerified: true,
           sendWeeklyReports: true,
-          StudentProfile: { select: { id: true } },
-          LearnerProfile: {
+          studentProfile: { select: { id: true } },
+          learnerProfiles: {
             select: { id: true, displayName: true, isDefault: true },
             orderBy: { createdAt: "asc" },
           },
@@ -153,14 +153,14 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
   let activeProfile: { id: string; displayName: string } | null = null;
 
   if (profileCookieId) {
-    activeProfile = user.LearnerProfile.find((p) => p.id === profileCookieId) ?? null;
+    activeProfile = user.learnerProfiles.find((p) => p.id === profileCookieId) ?? null;
   }
 
   // Fallback to default profile (or first profile if no default is set).
   if (!activeProfile) {
     activeProfile =
-      user.LearnerProfile.find((p) => p.isDefault) ??
-      user.LearnerProfile[0] ??
+      user.learnerProfiles.find((p) => p.isDefault) ??
+      user.learnerProfiles[0] ??
       null;
   }
 
@@ -172,7 +172,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
     isActive: user.isActive,
     profileImage: user.profileImage,
     timezone: user.timezone,
-    studentProfileId: user.StudentProfile?.id ?? null,
+    studentProfileId: user.studentProfile?.id ?? null,
     emailVerified: user.emailVerified,
     hasPaid: user.hasPaid,
     planType: user.planType,
