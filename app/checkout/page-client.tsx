@@ -448,8 +448,21 @@ function CheckoutPageContent({
           ))}
         </ul>
 
+        {/* Monthly nudge */}
+        <div className="mt-8 p-4 rounded-xl border border-zinc-700/50 bg-zinc-900/40">
+          <p className="text-sm text-zinc-400">
+            Not ready to commit?{" "}
+            <a
+              href="/checkout/monthly"
+              className="text-gold hover:text-gold-light font-medium transition-colors"
+            >
+              Try Monthly Access from $9/mo →
+            </a>
+          </p>
+        </div>
+
         {/* Trust badges */}
-        <div className="mt-8 pt-6 border-t border-zinc-800 flex flex-wrap gap-4">
+        <div className="mt-6 pt-6 border-t border-zinc-800 flex flex-wrap gap-4">
           <div className="flex items-center gap-2 text-xs text-zinc-500">
             <Shield className="w-4 h-4 text-zinc-600" />
             7-day refund guarantee
