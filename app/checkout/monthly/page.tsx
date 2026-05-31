@@ -9,21 +9,18 @@ export const dynamic = "force-dynamic";
 export default async function MonthlyCheckoutPage() {
   const user = await getCurrentUser();
 
-  if (!user) {
-    redirect("/login?redirect=/checkout/monthly");
-  }
-
-  const accessInfo = await getUserAccessInfo(user.id, user.hasPaid);
-
-  // Lifetime holders already have permanent access — no need for monthly
-  if (accessInfo.hasLifetime) {
-    redirect("/my-courses");
+  if (user) {
+    const accessInfo = await getUserAccessInfo(user.id, user.hasPaid);
+    // Lifetime holders already have permanent access — no need for monthly
+    if (accessInfo.hasLifetime) {
+      redirect("/my-courses");
+    }
   }
 
   return (
     <MonthlyCheckoutClient
-      userEmail={user.email}
-      userName={user.fullName ?? ""}
+      userEmail={user?.email ?? ""}
+      userName={user?.fullName ?? ""}
     />
   );
 }

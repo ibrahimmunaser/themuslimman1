@@ -12,9 +12,12 @@ export default async function SignupCheckoutPage(props: SignupCheckoutPageProps)
   const user = await getCurrentUser();
   const searchParams = await props.searchParams;
 
-  // If user is already logged in, redirect to regular checkout
+  // If user is already logged in, redirect to the appropriate checkout
   if (user) {
     const plan = searchParams.plan || "complete";
+    if (plan === "monthly") {
+      redirect("/checkout/monthly");
+    }
     redirect(`/checkout?plan=${plan}`);
   }
 

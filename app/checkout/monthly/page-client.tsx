@@ -120,7 +120,7 @@ export default function MonthlyCheckoutClient({ userEmail }: Props) {
 
         if (!res.ok) {
           if (res.status === 401) {
-            router.push("/login?redirect=/checkout/monthly");
+            router.push("/signup-checkout?plan=monthly");
             return;
           }
           if (res.status === 409 && data.hasLifetime) {

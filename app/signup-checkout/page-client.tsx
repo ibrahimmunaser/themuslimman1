@@ -42,7 +42,9 @@ function SignupCheckoutContent() {
   const discountAmount = !isMonthly && promoConfig ? promoConfig.discountAmount : 0;
   const displayPrice = plan.price - discountAmount;
 
-  const checkoutUrl = `/checkout?plan=${planId}${urlPromo ? `&promo=${encodeURIComponent(urlPromo)}` : ""}`;
+  const checkoutUrl = isMonthly
+    ? "/checkout/monthly"
+    : `/checkout?plan=${planId}${urlPromo ? `&promo=${encodeURIComponent(urlPromo)}` : ""}`;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
