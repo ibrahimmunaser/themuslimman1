@@ -11,7 +11,6 @@ import {
   Layers,
   HelpCircle,
   Layers2,
-  Headphones,
 } from "lucide-react";
 import type { Part } from "@/lib/types";
 import type { PartAssets as PartAssetUrls } from "@/lib/part-asset-cache";

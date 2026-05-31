@@ -62,7 +62,7 @@ interface MenuItem {
 // destination can depend on planType (family → /profiles picker, individual → /student/profiles).
 
 export function StudentSidebar({
-  userPlan,
+  userPlan: _userPlan,
   userName,
   activeProfileName,
   planType = "individual",

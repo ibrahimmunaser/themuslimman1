@@ -27,7 +27,7 @@ export async function sendGiftClaimEmail(opts: {
   const { Resend } = await import("resend");
   const resend = new Resend(process.env.RESEND_API_KEY);
 
-  const fromName = opts.purchaserEmail.split("@")[0]; // fallback display name
+  const _fromName = opts.purchaserEmail.split("@")[0]; // fallback display name
   const toName = opts.recipientName ? opts.recipientName : "there";
   const messageBlock = opts.giftMessage
     ? `<div style="background:#f9f4e8;border:1px solid #e8d88a;border-radius:8px;padding:20px;margin:24px 0;">

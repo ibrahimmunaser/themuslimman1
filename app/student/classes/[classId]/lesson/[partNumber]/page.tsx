@@ -16,7 +16,7 @@ import {
   readFlashcards,
   getPartAssetUrls,
 } from "@/lib/files";
-import { getR2AssetUrl, generateSignedR2Url, IMAGE_URL_EXPIRY } from "@/lib/r2";
+import { generateSignedR2Url, IMAGE_URL_EXPIRY } from "@/lib/r2";
 import {
   ArrowLeft,
   ChevronLeft,
@@ -81,7 +81,7 @@ export default async function StudentLessonPage({ params }: Props) {
     infConcise,
     infStandard,
     infBento,
-    hasMindmap,
+    _hasMindmap,
     assetUrls,
   ] = await Promise.all([
     readBriefing(n),

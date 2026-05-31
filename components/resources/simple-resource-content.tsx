@@ -1,12 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { PARTS } from "@/lib/content";
-import { ERA_MAP } from "@/lib/types";
 import { eraGradient } from "./era-gradient";
 import { ResourcePageClient } from "./resource-page-client";
-import { ArrowLeft, Headphones, Layers, Image as ImageIcon, Map, Brain, CheckCircle2, X, Maximize2, Minimize2 } from "lucide-react";
-import Link from "next/link";
+import { Headphones, Layers, Image as ImageIcon, Map, Brain, CheckCircle2, X, Maximize2, Minimize2 } from "lucide-react";
 import { SlidesViewer } from "@/components/part/slides-viewer";
 import { FlashcardsViewer } from "@/components/part/flashcards-viewer";
 import { trackAssetOpened } from "@/app/actions/progress";
@@ -80,6 +78,7 @@ function FastImage({ src, alt, className, style, onClick, title, onLoad, imageRe
           <div className="w-12 h-12 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
         </div>
       )}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         ref={imageRef}
         src={useFallback ? src : (webpUrl || src)}
@@ -118,7 +117,7 @@ export function SimpleResourceContent({
   resourceType,
   progressMap,
   completedCount,
-  actionLabel,
+  actionLabel: _actionLabel,
   statusLabel,
   thumbnails: thumbnailsProp = {},
 }: SimpleResourceContentProps) {
@@ -672,7 +671,7 @@ export function SimpleResourceContent({
                         src={resourceUrl} 
                         alt={`${selectedPart.title} - ${title}`}
                         className="max-w-full max-h-full object-contain transition-transform duration-100"
-                        onClick={(e) => {
+                        onClick={() => {
                           if (zoom <= 1) {
                             setIsFullscreen(!isFullscreen);
                           }
@@ -822,6 +821,7 @@ export function SimpleResourceContent({
                     >
                       {/* Slide thumbnail — rendered once batch URLs are loaded */}
                       {thumbnails[part.partNumber] && (
+                        // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={thumbnails[part.partNumber]}
                           alt=""

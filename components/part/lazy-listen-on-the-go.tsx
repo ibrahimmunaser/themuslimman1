@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { ListenOnTheGo } from "./listen-on-the-go";
-import { Headphones } from "lucide-react";
 import { fetchPartAssets } from "@/lib/part-asset-cache";
 
 interface LazyListenOnTheGoProps {

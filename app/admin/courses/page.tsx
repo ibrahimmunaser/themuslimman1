@@ -1,8 +1,6 @@
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { BookOpen, Plus } from "lucide-react";
-import Link from "next/link";
-
 export const metadata = { title: "Courses" };
 export const dynamic = "force-dynamic";
 
@@ -45,7 +43,7 @@ export default async function AdminCoursesPage() {
           <BookOpen className="w-12 h-12 text-slate-300 mx-auto mb-3" />
           <p className="text-text-muted">No courses yet</p>
           <p className="text-sm text-text-secondary mt-1">
-            Courses like "Full Seerah — All 100 Parts" will appear here
+            Courses like &quot;Full Seerah — All 100 Parts&quot; will appear here
           </p>
         </div>
       ) : (
@@ -82,7 +80,7 @@ export default async function AdminCoursesPage() {
       <div className="mt-8 p-4 rounded-xl bg-blue-50 border border-blue-200">
         <p className="text-sm text-blue-900 font-medium mb-1">About Courses</p>
         <p className="text-xs text-blue-700">
-          Courses are the core curriculum products (like "Full Seerah" or future courses). 
+          Courses are the core curriculum products (like &quot;Full Seerah&quot; or future courses). 
           Programs use courses as their curriculum and add scheduling, enrollment, and delivery rules.
         </p>
       </div>

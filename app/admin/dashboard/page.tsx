@@ -2,7 +2,6 @@ import Link from "next/link";
 import {
   Users,
   CreditCard,
-  BookOpen,
   TrendingUp,
   Library,
   ChevronRight,

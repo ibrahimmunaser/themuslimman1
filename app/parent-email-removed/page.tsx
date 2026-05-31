@@ -17,7 +17,7 @@ export default function ParentEmailRemovedPage() {
           </h1>
 
           <p className="text-text-secondary mb-6">
-            Your email has been removed from the student's progress reports. You will no longer receive progress updates.
+            Your email has been removed from the student&apos;s progress reports. You will no longer receive progress updates.
           </p>
 
           <div className="bg-surface-raised rounded-lg p-4 mb-6 text-left">

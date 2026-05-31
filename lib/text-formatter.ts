@@ -105,7 +105,7 @@ export function formatSeerahContent(text: string): string {
     closeNestedList();
     if (inList) { formatted.push('</ul>'); inList = false; }
   };
-  const closeTable = () => {
+  const _closeTable = () => {
     if (inTable) { formatted.push('</tbody></table>'); inTable = false; }
   };
 

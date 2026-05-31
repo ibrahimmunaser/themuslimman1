@@ -244,6 +244,7 @@ export function VideoResourceContent({
                   style={{ ...eraGradient(continueWatchingPart.era), aspectRatio: "16/9" }}
                 >
                   {thumbnails[continueWatchingPart.partNumber] ? (
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={thumbnails[continueWatchingPart.partNumber]}
                       alt=""
@@ -315,6 +316,7 @@ export function VideoResourceContent({
                       style={eraGradient(part.era)}
                     >
                       {thumbnails[part.partNumber] && (
+                        // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={thumbnails[part.partNumber]}
                           alt=""

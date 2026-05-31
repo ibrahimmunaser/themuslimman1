@@ -5,14 +5,10 @@ import {
   CheckCircle2,
   Video,
   ChevronDown,
-  Star,
   ArrowRight,
   Lock,
-  RefreshCw,
-  Infinity,
 } from "lucide-react";
 import { FadeUp, StaggerChildren, AnimatedCard, FloatingGlow, IslamicPatternBackground } from "@/components/motion";
-import { MonthlyCheckoutButton } from "@/components/pricing/monthly-checkout-button";
 import { PricingSection } from "@/components/pricing/pricing-section";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";

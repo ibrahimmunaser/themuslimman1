@@ -5,8 +5,7 @@ import { PARTS } from "@/lib/content";
 import { ERA_MAP } from "@/lib/types";
 import { eraGradient } from "./era-gradient";
 import { ResourcePageClient } from "./resource-page-client";
-import { ArrowLeft, Headphones, CheckCircle2, Play, Pause, X, Volume2, VolumeX, SkipBack, SkipForward } from "lucide-react";
-import Link from "next/link";
+import { Headphones, CheckCircle2, Play, Pause, X, Volume2, VolumeX, SkipBack, SkipForward } from "lucide-react";
 import { trackAssetOpened } from "@/app/actions/progress";
 
 interface AudioResourceContentProps {
@@ -427,6 +426,7 @@ export function AudioResourceContent({
                       style={eraGradient(part.era)}
                     >
                       {thumbnails[part.partNumber] && (
+                        // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={thumbnails[part.partNumber]}
                           alt=""

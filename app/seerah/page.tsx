@@ -7,7 +7,7 @@ import { PARTS } from "@/lib/content";
 import { getThumbnailUrls } from "@/lib/r2";
 import { getPartPageData } from "@/lib/part-content-cache";
 import { ERA_MAP } from "@/lib/types";
-import { ChevronRight, ChevronDown, Play, CheckCircle2, BookOpen, Clock, Video, FileText, Brain, ClipboardCheck, Headphones, Map, Image, Layers, BarChart2, GraduationCap } from "lucide-react";
+import { ChevronRight, ChevronDown, Play, CheckCircle2, BookOpen } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { CourseDashboardTabs } from "@/components/course/course-dashboard-tabs";
 import { CourseHomeContent } from "@/components/course/course-home-content";

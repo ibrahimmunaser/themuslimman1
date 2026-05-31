@@ -6,7 +6,7 @@ import { Eye, EyeOff, ArrowRight, Check } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PLANS, formatPrice, type PlanId } from "@/lib/stripe-config";
+import { PLANS, formatPrice } from "@/lib/stripe-config";
 import { CreatorPromoTracker } from "@/components/promo/creator-promo-tracker";
 import { getCreatorPromoConfig } from "@/lib/creator-promos";
 
@@ -327,7 +327,7 @@ function SignupCheckoutContent() {
 
                 <div className="pt-2">
                   <p className="text-sm text-text-muted mb-4">
-                    After creating your account, you'll be redirected to complete your payment.
+                    After creating your account, you&apos;ll be redirected to complete your payment.
                   </p>
 
                   <Button

@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Attempt login — retry once on transient DB connection errors (Vercel cold start).
-    let result = await login(email, password).catch(async (firstErr: unknown) => {
+    const result = await login(email, password).catch(async (firstErr: unknown) => {
       const msg = firstErr instanceof Error ? firstErr.message : String(firstErr);
       const isTransient =
         msg.includes("Can't reach database") ||

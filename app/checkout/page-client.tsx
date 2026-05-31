@@ -229,7 +229,7 @@ function CheckoutPageContent({
   };
 
   // ── On plan change: recreate intent (reuse applied coupon if any) ──────────
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   useEffect(() => {
     // Auto-apply stored creator promo for individual plans
     if (planChoice === "complete") {

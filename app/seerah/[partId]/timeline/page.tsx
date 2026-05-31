@@ -34,7 +34,7 @@ export default async function TimelinePage(props: Props) {
   const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
   if (!hasAccess) redirect("/pricing");
 
-  const userPlan = "complete" as const;
+  const _userPlan = "complete" as const;
 
   // Scope progress to the active learner profile.
   const learnerProfileId = user.activeProfileId ?? await getActiveProfileId(user.id);
@@ -45,7 +45,7 @@ export default async function TimelinePage(props: Props) {
     orderBy: { partNumber: 'asc' },
     select: { partNumber: true, status: true },
   });
-  const completedParts = partProgress
+  const _completedParts = partProgress
     .filter(p => p.status === 'completed' || p.status === 'mastered')
     .map(p => p.partNumber);
 

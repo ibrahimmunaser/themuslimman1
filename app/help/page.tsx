@@ -133,20 +133,20 @@ export default async function HelpPage() {
                 <BookOpen className="w-4 h-4" />
                 <span>Back to Dashboard</span>
               </Link>
-              <a
+              <Link
                 href="/student/progress"
                 className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-raised hover:bg-surface-high text-text-secondary hover:text-text transition-colors"
               >
                 <HelpCircle className="w-4 h-4" />
                 <span>View Progress</span>
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/pricing"
                 className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-raised hover:bg-surface-high text-text-secondary hover:text-text transition-colors"
               >
                 <CreditCard className="w-4 h-4" />
                 <span>Upgrade Plan</span>
-              </a>
+              </Link>
               <a
                 href="/student/settings"
                 className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-raised hover:bg-surface-high text-text-secondary hover:text-text transition-colors"

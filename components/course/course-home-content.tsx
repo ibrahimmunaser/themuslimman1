@@ -3,11 +3,10 @@
 import Link from "next/link";
 import {
   Play, ArrowRight,
-  Video, Headphones, FileText, Map, Layers, Brain, ClipboardCheck, BarChart2,
-  BookOpen, Clock, Milestone, HelpCircle, Mail,
+  Video, Headphones, FileText, Map, Layers, Brain, ClipboardCheck,
+  Clock, Milestone, HelpCircle, Mail,
   Image as ImageIcon, Info, CheckCircle2,
 } from "lucide-react";
-import { motion, useReducedMotion } from "framer-motion";
 import { PrefetchPartLink } from "@/components/course/prefetch-part-link";
 import { FadeUp, StaggerChildren, AnimatedCounter, AnimatedProgressBar, AnimatedCard } from "@/components/motion";
 
@@ -47,7 +46,6 @@ export function CourseHomeContent({
 }: CourseHomeContentProps) {
   const isNewUser = completedLessons === 0;
   const currentStage = stagesData[currentStageNumber - 1];
-  const prefersReduced = useReducedMotion();
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
@@ -215,7 +213,7 @@ export function CourseHomeContent({
         <FadeUp className="mb-6">
           <h2 className="text-xl font-bold text-text mb-1.5">Course Roadmap</h2>
           <p className="text-sm text-text-secondary">
-            The Seerah in {stagesData.length} stages — from pre-Islamic Arabia to the Prophet's ﷺ final years.
+            The Seerah in {stagesData.length} stages — from pre-Islamic Arabia to the Prophet&apos;s ﷺ final years.
             All parts are unlocked; follow the order for the full picture.
           </p>
         </FadeUp>

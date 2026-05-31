@@ -80,7 +80,7 @@ export function ContactSupportForm() {
         <div>
           <h3 className="text-lg font-semibold text-text mb-2">Need More Help?</h3>
           <p className="text-text-secondary">
-            Can't find what you're looking for? Our support team is here to help.
+            Can&apos;t find what you&apos;re looking for? Our support team is here to help.
           </p>
         </div>
       </div>

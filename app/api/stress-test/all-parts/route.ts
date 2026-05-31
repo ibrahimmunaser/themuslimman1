@@ -186,7 +186,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Not available" }, { status: 403 });
     }
 
-    const user = await requireStudent();
+    const _user = await requireStudent();
 
     const searchParams = req.nextUrl.searchParams;
     const startPart = parseInt(searchParams.get("start") || "1");

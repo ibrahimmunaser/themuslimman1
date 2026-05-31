@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Settings, Check, LogOut } from "lucide-react";
 import { switchProfile } from "@/app/actions/profiles";
@@ -36,7 +35,6 @@ export function ProfilePickerClient({
   isFamily,
   activeProfileId,
 }: ProfilePickerClientProps) {
-  const router = useRouter();
   const [selecting, setSelecting] = useState<string | null>(null);
 
   async function handleSelect(profileId: string) {

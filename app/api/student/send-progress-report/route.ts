@@ -48,7 +48,7 @@ export async function POST() {
     
     const totalLessons = 100;
     const completedLessons = progressData.filter((p) => p.status === "completed").length;
-    const inProgressLessons = progressData.filter((p) => p.status === "in_progress").length;
+    const _inProgressLessons = progressData.filter((p) => p.status === "in_progress").length;
     
     // Calculate weekly activity (past 7 days)
     const oneWeekAgo = new Date();

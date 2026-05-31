@@ -30,7 +30,7 @@ export default async function SeerahResourcesPage() {
   ]);
   if (!hasAccess) redirect("/pricing");
 
-  const userPlan = "complete" as const;
+  const _userPlan = "complete" as const;
 
   // Fetch progress and thumbnail URLs in parallel, scoped to active profile.
   const [progress, thumbnails] = await Promise.all([

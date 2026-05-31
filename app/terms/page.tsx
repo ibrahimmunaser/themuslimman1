@@ -32,7 +32,7 @@ export default function TermsPage() {
             <section>
               <h2 className="text-base font-semibold text-text mb-2">1. Acceptance</h2>
               <p>
-                By creating an account or purchasing access to Complete Seerah ("the Course"), you agree to these
+                By creating an account or purchasing access to Complete Seerah (&quot;the Course&quot;), you agree to these
                 Terms of Service. If you do not agree, do not use the service.
               </p>
             </section>
@@ -45,7 +45,7 @@ export default function TermsPage() {
                 No physical materials are shipped.
               </p>
               <p className="mt-3">
-                "Lifetime access" means access for as long as this platform operates. We reserve the right to
+                &quot;Lifetime access&quot; means access for as long as this platform operates. We reserve the right to
                 discontinue the platform with reasonable notice if we are unable to maintain it.
               </p>
             </section>
@@ -116,7 +116,7 @@ export default function TermsPage() {
             <section>
               <h2 className="text-base font-semibold text-text mb-2">9. Limitation of Liability</h2>
               <p>
-                The Course is provided "as is." We make no warranties about uninterrupted access or fitness for
+                The Course is provided &quot;as is.&quot; We make no warranties about uninterrupted access or fitness for
                 any particular purpose. Our total liability to you shall not exceed the amount you paid for
                 access to the Course.
               </p>

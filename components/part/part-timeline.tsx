@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronRight, Lock, Play } from "lucide-react";
+import { ChevronRight, Play } from "lucide-react";
 import { PARTS } from "@/lib/content";
 import { ERA_MAP } from "@/lib/types";
 import { getTimelineForPart } from "@/lib/timeline-data";
@@ -12,7 +12,7 @@ interface Props {
   userPlan: "complete" | "essentials";
 }
 
-export function PartTimeline({ partId, partNumber, era, userPlan }: Props) {
+export function PartTimeline({ partId, partNumber, era, userPlan: _userPlan }: Props) {
   const tl = getTimelineForPart(partNumber);
   if (!tl) return null;
 

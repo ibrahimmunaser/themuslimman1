@@ -18,10 +18,11 @@ function SlideImg({ src, alt, priority }: { src: string; alt: string; priority?:
           <div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
         </div>
       )}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={src}
         alt={alt}
-        // eslint-disable-next-line react/no-unknown-property
+         
         fetchPriority={priority ? "high" : "auto"}
         className={`max-w-full max-h-full object-contain transition-opacity duration-200 ${loaded ? "opacity-100" : "opacity-0"}`}
         onLoad={() => setLoaded(true)}
@@ -236,6 +237,7 @@ export function SlidesViewer({ slides, title, type = "presented", partNumber, pr
                   : "border-border/50 opacity-50 hover:opacity-100"
               }`}
             >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={slide.thumb} alt={`Slide ${i + 1}`} className="w-full h-full object-cover" />
             </button>
           ))}

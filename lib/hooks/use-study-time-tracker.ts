@@ -145,6 +145,7 @@ export function useStudyTimeTracker({ partNumber, enabled = true }: UseStudyTime
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("beforeunload", saveTime);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [partNumber, enabled]);
 
   return null;

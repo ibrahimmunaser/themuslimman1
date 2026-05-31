@@ -14,10 +14,10 @@ interface SendProgressReportButtonProps {
 const COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes cooldown
 
 export function SendProgressReportButton({
-  userPlan,
+  userPlan: _userPlan,
   hasParentEmail,
   parentEmail,
-  studentName,
+  studentName: _studentName,
   sendWeeklyReports,
 }: SendProgressReportButtonProps) {
   const [sending, setSending] = useState(false);
@@ -94,7 +94,7 @@ export function SendProgressReportButton({
           text: data.error || "Failed to send report",
         });
       }
-    } catch (error) {
+    } catch (_error) {
       setMessage({
         type: "error",
         text: "Something went wrong. Please try again.",

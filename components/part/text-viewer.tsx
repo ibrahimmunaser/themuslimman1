@@ -222,13 +222,13 @@ export function TextViewer({
                 Take the Quiz
               </button>
             ) : hasQuiz !== false && partNumber ? (
-              <a
-                href={`?mode=quiz`}
+              <Link
+                href="?mode=quiz"
                 className="inline-flex items-center gap-2 px-6 py-3 min-h-[44px] bg-gold hover:bg-gold-light text-ink font-semibold rounded-xl text-sm transition-colors shadow-md shadow-gold/20"
               >
                 <ClipboardCheck className="w-4 h-4" />
                 Take the Quiz
-              </a>
+              </Link>
             ) : (
               <Link
                 href="/seerah"

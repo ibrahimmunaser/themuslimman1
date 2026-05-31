@@ -1,7 +1,6 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
-import { fadeUp } from "@/lib/motion";
 
 interface AnimatedCardProps {
   children: React.ReactNode;

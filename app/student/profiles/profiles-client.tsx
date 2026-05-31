@@ -13,7 +13,6 @@ import {
   createProfile,
   updateProfile,
   deleteProfile,
-  setDefaultProfile,
   switchProfile,
 } from "@/app/actions/profiles";
 

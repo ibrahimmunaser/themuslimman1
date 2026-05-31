@@ -194,7 +194,7 @@ export function CourseProgressContent({
             const pct       = stage.totalCount > 0 ? Math.round((stage.completedCount / stage.totalCount) * 100) : 0;
             const isDone    = stage.completedCount === stage.totalCount && stage.totalCount > 0;
             const isActive  = !isDone && stage.completedCount > 0;
-            const isNext    = !isDone && stage.completedCount === 0 && stagesData.find(
+            const _isNext    = !isDone && stage.completedCount === 0 && stagesData.find(
               (s) => s.completedCount > 0 && s.stageNumber < stage.stageNumber
             ) !== undefined;
 

@@ -1,6 +1,4 @@
-import { redirect } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
-import { roleHome } from "@/lib/roles";
 import { ChangePasswordForm } from "./change-password-form";
 
 export const metadata = { title: "Set Your Password" };

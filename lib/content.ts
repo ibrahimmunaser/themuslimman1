@@ -1,6 +1,5 @@
 import type { Part, Era, EraInfo } from "./types";
 import { ERAS } from "./types";
-import { getPartAssetUrls } from "./files";
 import { isPartInEssentials } from "./essentials-sequence";
 
 function makePart(

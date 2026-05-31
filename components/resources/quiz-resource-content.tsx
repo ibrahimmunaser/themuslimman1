@@ -5,8 +5,7 @@ import { PARTS } from "@/lib/content";
 import { ERA_MAP } from "@/lib/types";
 import { eraGradient } from "./era-gradient";
 import { ResourcePageClient } from "./resource-page-client";
-import { ArrowLeft, ClipboardCheck, Trophy, CheckCircle2, XCircle, X } from "lucide-react";
-import Link from "next/link";
+import { ClipboardCheck, Trophy, CheckCircle2, XCircle, X } from "lucide-react";
 import { QuizViewer } from "@/components/part/quiz-viewer";
 import type { Quiz } from "@/lib/types";
 import { trackAssetOpened } from "@/app/actions/progress";
@@ -35,7 +34,7 @@ export function QuizResourceContent({
   thumbnails = {},
 }: QuizResourceContentProps) {
   const totalQuizzes = PARTS.length;
-  const notAttemptedCount = totalQuizzes - completedCount;
+  const _notAttemptedCount = totalQuizzes - completedCount;
 
   // Modal state
   const [selectedPart, setSelectedPart] = useState<typeof PARTS[0] | null>(null);
@@ -173,6 +172,7 @@ export function QuizResourceContent({
                       style={eraGradient(part.era)}
                     >
                       {thumbnails[part.partNumber] && (
+                        // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={thumbnails[part.partNumber]}
                           alt=""

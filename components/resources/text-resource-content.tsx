@@ -6,8 +6,7 @@ import { PART_CONTENT } from "@/lib/part-content-data";
 import { ERA_MAP } from "@/lib/types";
 import { eraGradient } from "./era-gradient";
 import { ResourcePageClient } from "./resource-page-client";
-import { ArrowLeft, FileText, CheckCircle2, BookOpen, GraduationCap, BarChart2, Clock, X } from "lucide-react";
-import Link from "next/link";
+import { FileText, CheckCircle2, BookOpen, GraduationCap, BarChart2, Clock, X } from "lucide-react";
 import { trackAssetOpened } from "@/app/actions/progress";
 
 // Apply semantic inline formatting to a single fact line
@@ -247,6 +246,7 @@ export function TextResourceContent({
                       style={eraGradient(part.era)}
                     >
                       {thumbnails[part.partNumber] && (
+                        // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={thumbnails[part.partNumber]}
                           alt=""

@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { requireStudent } from "@/lib/auth";
 import { getProfilesWithProgress } from "@/app/actions/profiles";
 import { isFamilyPlan, getProfileLimit } from "@/lib/access";

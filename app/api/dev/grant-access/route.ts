@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
 }
 
 // Also allow DELETE to revoke test access
-export async function DELETE(request: NextRequest) {
+export async function DELETE(_request: NextRequest) {
   if (process.env.NODE_ENV !== "development") {
     return NextResponse.json({ error: "Not available in production" }, { status: 403 });
   }

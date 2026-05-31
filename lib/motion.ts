@@ -80,7 +80,7 @@ export const hoverGlow = { scale: 1.05, transition: { duration: dur.fast } };
 // ── Progress animation ────────────────────────────────────────────────────────
 
 /** Animate a bar width from 0 to `pct` */
-export function progressBarVariants(pct: number): Variants {
+export function progressBarVariants(_pct: number): Variants {
   return {
     hidden: { scaleX: 0, originX: 0 },
     show: {

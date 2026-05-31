@@ -32,7 +32,7 @@ export default function PrivacyPage() {
             <section>
               <h2 className="text-base font-semibold text-text mb-2">1. Overview</h2>
               <p>
-                This Privacy Policy explains how Complete Seerah ("we," "our," or "the platform") collects,
+                This Privacy Policy explains how Complete Seerah (&quot;we,&quot; &quot;our,&quot; or &quot;the platform&quot;) collects,
                 uses, and protects your personal data when you use our website and course platform. We take
                 your privacy seriously.
               </p>
@@ -76,9 +76,9 @@ export default function PrivacyPage() {
                 >
                   Stripe
                 </a>
-                . When you check out, your payment information goes directly to Stripe's secure servers.
+                . When you check out, your payment information goes directly to Stripe&apos;s secure servers.
                 We receive a confirmation from Stripe once payment is complete but never handle your
-                raw payment data. Stripe's privacy policy applies to the payment process.
+                raw payment data. Stripe&apos;s privacy policy applies to the payment process.
               </p>
             </section>
 
@@ -145,7 +145,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-base font-semibold text-text mb-2">9. Children's Privacy</h2>
+              <h2 className="text-base font-semibold text-text mb-2">9. Children&apos;s Privacy</h2>
               <p>
                 This platform is not directed at children under 13. We do not knowingly collect personal
                 data from children under 13. If you believe we have done so, please contact us immediately.

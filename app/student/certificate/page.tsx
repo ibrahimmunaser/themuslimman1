@@ -3,7 +3,7 @@ import Link from "next/link";
 import { requireStudent } from "@/lib/auth";
 import { StudentLayout } from "@/components/student/student-layout";
 import { prisma } from "@/lib/db";
-import { Award, Lock, CheckCircle2 } from "lucide-react";
+import { Award, Lock } from "lucide-react";
 
 export const metadata = { title: "Certificate | Complete Seerah" };
 export const dynamic = "force-dynamic";
@@ -12,13 +12,13 @@ export default async function CertificatePage() {
   const user = await requireStudent();
   if (!user.studentProfileId) redirect("/");
 
-  let hasCompletePlan = user.hasPaid;
+  let _hasCompletePlan = user.hasPaid;
   if (!user.hasPaid) {
     const purchases = await prisma.purchase.findMany({
       where: { userId: user.id, status: "succeeded" },
     });
     if (purchases.length === 0) redirect("/pricing");
-    hasCompletePlan = purchases.some(p => p.planId === "complete");
+    _hasCompletePlan = purchases.some(p => p.planId === "complete");
   }
   const userPlan = "complete" as const;
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useReducedMotion, motion } from "framer-motion";
-import { fadeUp, safeVariants } from "@/lib/motion";
+import { safeVariants } from "@/lib/motion";
 
 interface FadeUpProps {
   children: React.ReactNode;

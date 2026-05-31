@@ -47,7 +47,7 @@ export function ParentEmailSettings({
       } else {
         setMessage({ type: "error", text: data.error || "Failed to add parent email" });
       }
-    } catch (error) {
+    } catch (_error) {
       setMessage({ type: "error", text: "Something went wrong. Please try again." });
     } finally {
       setLoading(false);
@@ -78,7 +78,7 @@ export function ParentEmailSettings({
       } else {
         setMessage({ type: "error", text: data.error || "Failed to request removal" });
       }
-    } catch (error) {
+    } catch (_error) {
       setMessage({ type: "error", text: "Something went wrong. Please try again." });
     } finally {
       setLoading(false);
@@ -99,7 +99,7 @@ export function ParentEmailSettings({
       } else {
         setMessage({ type: "error", text: "Failed to update setting" });
       }
-    } catch (error) {
+    } catch (_error) {
       setMessage({ type: "error", text: "Something went wrong" });
     } finally {
       setLoading(false);
@@ -166,7 +166,7 @@ export function ParentEmailSettings({
               {currentParentEmail && !parentEmailVerified && (
                 <p className="text-xs text-amber-400 mt-1.5 flex items-center gap-1.5">
                   <AlertCircle className="w-3.5 h-3.5" />
-                  Verification pending. Check the parent's inbox for the verification email.
+                  Verification pending. Check the parent&apos;s inbox for the verification email.
                 </p>
               )}
             </div>

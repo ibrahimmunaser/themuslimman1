@@ -4,7 +4,7 @@ import { StudentLayout } from "@/components/student/student-layout";
 import { prisma } from "@/lib/db";
 import { getActiveProfileId } from "@/app/actions/profiles";
 import { PARTS } from "@/lib/content";
-import { TrendingUp, Target, Clock, Award, BookOpen, FileText, Headphones, Brain, ChevronRight } from "lucide-react";
+import { TrendingUp, Target, Clock, Award, ChevronRight } from "lucide-react";
 import { FadeUp, StaggerChildren, AnimatedCard } from "@/components/motion";
 import Link from "next/link";
 

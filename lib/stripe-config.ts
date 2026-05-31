@@ -117,7 +117,7 @@ export const ACTIVE_PLAN_ID = "complete" as const;
  * Normalize an incoming plan ID so only "complete" is ever sold.
  * Any unknown, missing, or non-complete ID falls back to "complete".
  */
-export function normalizeToActivePlan(planId: string | null | undefined): "complete" {
+export function normalizeToActivePlan(_planId: string | null | undefined): "complete" {
   return "complete";
 }
 

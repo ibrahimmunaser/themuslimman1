@@ -4,7 +4,7 @@ import { Footer } from "@/components/landing/footer";
 import { buttonClass } from "@/components/ui/button";
 import {
   ArrowRight, Sparkles, BookOpen, Brain, Users,
-  Layers, Target, Lock, Gift, CheckCircle2, ChevronDown,
+  Layers, Target, Gift, CheckCircle2, ChevronDown,
 } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
 import { getUserAccessInfo } from "@/lib/access";

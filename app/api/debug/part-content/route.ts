@@ -11,9 +11,7 @@ import {
   mindmapExists,
   readQuiz,
   readFlashcards,
-  getPartAssetUrls,
 } from "@/lib/files";
-import { getR2PublicUrl, getR2AssetUrl } from "@/lib/r2";
 
 export async function GET(req: NextRequest) {
   if (process.env.NODE_ENV === "production") {
@@ -21,7 +19,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const user = await requireStudent();
+    const _user = await requireStudent();
     
     const searchParams = req.nextUrl.searchParams;
     const partNum = parseInt(searchParams.get("partNumber") || "1");

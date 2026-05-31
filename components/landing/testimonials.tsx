@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ArrowRight, BookOpen, Clock, BarChart3 } from "lucide-react";
 import { buttonClass } from "@/components/ui/button";
-import { FadeUp, StaggerChildren, AnimatedCard, AnimatedStatCard } from "@/components/motion";
+import { FadeUp, StaggerChildren, AnimatedCard } from "@/components/motion";
 
 export function TestimonialsSection() {
   return (

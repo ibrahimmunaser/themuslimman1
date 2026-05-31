@@ -12,7 +12,6 @@ import {
   r2GetSlideKeys,
   r2GetVideoKey,
   r2GetAudioKey,
-  getR2AssetUrl,
   generateSignedR2Url,
   VIDEO_URL_EXPIRY,
   IMAGE_URL_EXPIRY,

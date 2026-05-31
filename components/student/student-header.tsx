@@ -10,7 +10,7 @@ interface StudentHeaderProps {
   userPlan: "essentials" | "complete" | null;
 }
 
-export function StudentHeader({ userFirstName, userPlan }: StudentHeaderProps) {
+export function StudentHeader({ userFirstName, userPlan: _userPlan }: StudentHeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);

@@ -7,7 +7,7 @@ interface NavLinksProps {
   isLoggedIn: boolean;
 }
 
-export function NavLinks({ isLoggedIn }: NavLinksProps) {
+export function NavLinks({ isLoggedIn: _isLoggedIn }: NavLinksProps) {
   const pathname = usePathname();
 
   const links = [

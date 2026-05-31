@@ -2,7 +2,7 @@
 
 import { useEffect, useCallback, useState } from "react";
 import { createPortal } from "react-dom";
-import { X, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
+import { X, ZoomIn, ZoomOut } from "lucide-react";
 
 interface ImageLightboxProps {
   src: string;

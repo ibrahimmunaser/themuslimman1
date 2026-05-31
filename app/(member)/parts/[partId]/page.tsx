@@ -15,7 +15,7 @@ import {
   readFlashcards,
   getPartAssetUrls,
 } from "@/lib/files";
-import { getR2AssetUrl, generateSignedR2Url, IMAGE_URL_EXPIRY } from "@/lib/r2";
+import { generateSignedR2Url, IMAGE_URL_EXPIRY } from "@/lib/r2";
 import { ChevronLeft, ChevronRight, Clock, BookOpen, Star } from "lucide-react";
 import { PartTabs } from "@/components/part/part-tabs";
 import { CourseContentsDrawer } from "@/components/part/course-contents-drawer";
@@ -35,7 +35,7 @@ export async function generateMetadata(props: { params: Promise<{ partId: string
 }
 
 export default async function PartPage(props: { params: Promise<{ partId: string }> }) {
-  const user = await requireAuth();
+  await requireAuth();
   const { partId } = await props.params;
 
   const partBase = getPartById(partId);
@@ -60,7 +60,7 @@ export default async function PartPage(props: { params: Promise<{ partId: string
     infConcise,
     infStandard,
     infBento,
-    hasMindmap,
+    _hasMindmap,
     assetUrls,
   ] = await Promise.all([
     readBriefing(n),

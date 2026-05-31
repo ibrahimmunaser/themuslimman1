@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import {
@@ -111,7 +111,7 @@ interface GiftPricing {
   promoDiscountAmount: number;
 }
 
-export default function GiftCheckoutClient({ purchaserEmail, purchaserName }: GiftCheckoutClientProps) {
+export default function GiftCheckoutClient({ purchaserEmail, purchaserName: _purchaserName }: GiftCheckoutClientProps) {
   const plan = PLANS.complete;
 
   const [step, setStep] = useState<Step>("details");
@@ -124,7 +124,7 @@ export default function GiftCheckoutClient({ purchaserEmail, purchaserName }: Gi
 
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [paymentLoading, setPaymentLoading] = useState(false);
-  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [paymentError, _setPaymentError] = useState<string | null>(null);
   const [requiresVerification, setRequiresVerification] = useState(false);
 
   const [pricing, setPricing] = useState<GiftPricing>({

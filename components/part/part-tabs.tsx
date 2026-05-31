@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import { ImageLightbox } from "@/components/ui/image-lightbox";
@@ -8,7 +9,6 @@ import { Maximize2 } from "lucide-react";
 import {
   Video,
   BookOpen,
-  GraduationCap,
   FileText,
   BarChart2,
   Map,
@@ -29,9 +29,7 @@ import { LazyMindmapViewer } from "./lazy-mindmap-viewer";
 import { SlidesViewer } from "./slides-viewer";
 import { QuizViewer } from "./quiz-viewer";
 import { FlashcardsViewer } from "./flashcards-viewer";
-import { ResponsiveImage } from "@/components/ui/responsive-image";
 import type { Part } from "@/lib/types";
-import Link from "next/link";
 import { trackAssetOpened } from "@/app/actions/progress";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -101,11 +99,11 @@ const MODES: Mode[] = [
  * All paid users get complete access. previewMode is used only for the
  * homepage Part 1 demo (no purchase required).
  */
-function isTabAccessible(_id: SubTabId, _userPlan: UserPlan, _previewMode?: boolean): boolean {
+function _isTabAccessible(_id: SubTabId, _userPlan: UserPlan, _previewMode?: boolean): boolean {
   return true;
 }
 
-function isModeAccessible(_mode: Mode, _userPlan: UserPlan, _previewMode?: boolean): boolean {
+function _isModeAccessible(_mode: Mode, _userPlan: UserPlan, _previewMode?: boolean): boolean {
   return true;
 }
 
@@ -258,7 +256,7 @@ export function InfographicPanel({ part, previewMode }: { part: Part; previewMod
                 key={mediumSrc}
                 src={mediumSrc}
                 alt={altLabel}
-                // eslint-disable-next-line react/no-unknown-property
+                 
                 fetchPriority="high"
                 className={`w-full h-auto transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
                 onLoad={() => setLoaded(true)}
@@ -463,8 +461,8 @@ function LessonViewToggle({ viewMode, onToggle }: { viewMode: ViewMode; onToggle
 
 function TimelineButton({
   partNumber,
-  era,
-  previewMode,
+  era: _era,
+  previewMode: _previewMode,
 }: {
   partNumber: number;
   era: string;
@@ -585,7 +583,7 @@ interface PartTabsProps {
   initialAssetUrls?: PartAssetUrls;
 }
 
-export function PartTabs({ part, userPlan, previewMode = false, initialAssetUrls }: PartTabsProps) {
+export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initialAssetUrls }: PartTabsProps) {
   const availableModes = MODES.filter((m) => getModeSubTabs(m, part).length > 0);
   const defaultMode = availableModes[0] ?? MODES[0];
 

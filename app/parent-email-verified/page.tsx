@@ -17,12 +17,12 @@ export default function ParentEmailVerifiedPage() {
           </h1>
 
           <p className="text-text-secondary mb-6">
-            Your email has been verified and is now locked. You will receive progress reports about the student's Seerah learning journey.
+            Your email has been verified and is now locked. You will receive progress reports about the student&apos;s Seerah learning journey.
           </p>
 
           <div className="bg-surface-raised rounded-lg p-4 mb-6 text-left">
             <p className="text-sm text-text-secondary mb-2">
-              <strong className="text-text">What's next?</strong>
+              <strong className="text-text">What&apos;s next?</strong>
             </p>
             <ul className="text-sm text-text-secondary space-y-2">
               <li>✅ Your email is locked and secure</li>
