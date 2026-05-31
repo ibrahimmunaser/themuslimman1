@@ -34,6 +34,9 @@ const BUILT_IN_CODES: Record<string, PromoCode> = {
   ITACHI20:   { type: "fixed", value: 2000, label: "$20 off (Itachi)",              creatorOnly: true },
   DEEN20:     { type: "fixed", value: 2000, label: "$20 off (Deen Responds)",       creatorOnly: true },
   ORTHODOX20: { type: "fixed", value: 2000, label: "$20 off (The Orthodox Muslim)", creatorOnly: true },
+  // Location codes — $20 off for local community members.
+  DEARBORN20:  { type: "fixed", value: 2000, label: "$20 off (Dearborn)",  creatorOnly: true },
+  ANNARBOR20:  { type: "fixed", value: 2000, label: "$20 off (Ann Arbor)", creatorOnly: true },
   // Free-access codes are NOT hardcoded here. Configure them via two env vars:
   //   FREE_ACCESS_CODE=YOURCODE          (the promo code string — treated as absolute $0)
   //   FREE_ACCESS_PLAN=complete|family   (the plan to grant; defaults to "complete")
