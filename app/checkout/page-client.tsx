@@ -141,6 +141,7 @@ function CheckoutPageContent({
   const router = useRouter();
   const searchParams = useSearchParams();
   const planParam = searchParams.get("plan") as PlanChoice | null;
+  const promoParam = searchParams.get("promo")?.toUpperCase() ?? null;
 
   const [planChoice, setPlanChoice] = useState<PlanChoice>(
     planParam === "family" ? "family" : initialPlan
@@ -159,7 +160,7 @@ function CheckoutPageContent({
   const [discountAmount, setDiscountAmount] = useState(0);
 
   // Coupon
-  const [couponInput, setCouponInput] = useState("");
+  const [couponInput, setCouponInput] = useState(promoParam ?? "");
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponError, setCouponError] = useState<string | null>(null);
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
@@ -231,27 +232,36 @@ function CheckoutPageContent({
   // ── On plan change: recreate intent (reuse applied coupon if any) ──────────
    
   useEffect(() => {
-    // Auto-apply stored creator promo for individual plans
-    if (planChoice === "complete") {
+    const autoApply = (code: string, onInvalid?: () => void) => {
+      fetch(`/api/stripe/validate-promo?code=${encodeURIComponent(code)}`)
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.valid) {
+            setAppliedCoupon({
+              code: data.code,
+              label: data.label,
+              discount: data.promoDiscountAmount,
+              finalPrice: data.finalPrice,
+            });
+            setCouponInput(data.code);
+            return createIntent(planChoice, data.code);
+          }
+          onInvalid?.();
+          return createIntent(planChoice, undefined);
+        })
+        .catch(() => createIntent(planChoice, undefined));
+    };
+
+    if (planChoice === "complete" && !appliedCoupon) {
+      // Priority 1: ?promo= URL param (e.g. /checkout?promo=DEARBORN20)
+      if (promoParam) {
+        autoApply(promoParam);
+        return;
+      }
+      // Priority 2: stored creator promo
       const stored = getCreatorPromo();
-      if (stored && !appliedCoupon) {
-        fetch(`/api/stripe/validate-promo?code=${encodeURIComponent(stored)}`)
-          .then((r) => r.json())
-          .then((data) => {
-            if (data.valid) {
-              setAppliedCoupon({
-                code: data.code,
-                label: data.label,
-                discount: data.promoDiscountAmount,
-                finalPrice: data.finalPrice,
-              });
-              setCouponInput(data.code);
-              return createIntent(planChoice, data.code);
-            }
-            clearCreatorPromo();
-            return createIntent(planChoice, undefined);
-          })
-          .catch(() => createIntent(planChoice, undefined));
+      if (stored) {
+        autoApply(stored, clearCreatorPromo);
         return;
       }
     }
