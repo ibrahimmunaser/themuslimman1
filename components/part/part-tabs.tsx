@@ -405,7 +405,7 @@ function SubTabContent({ id, part, previewMode, assetUrls, onSwitchMode }: {
     case "facts":
       return wrap(part.assets.statementOfFactsText ? <FactsViewer content={part.assets.statementOfFactsText} partNumber={part.partNumber} previewMode={previewMode} /> : <EmptyContent label="Facts" />);
     case "flashcards":
-      return wrap(part.assets.flashcards ? <FlashcardsViewer flashcards={part.assets.flashcards} partNumber={part.partNumber} /> : <EmptyContent label="Flashcards" />);
+      return wrap(part.assets.flashcards ? <FlashcardsViewer flashcards={part.assets.flashcards} partNumber={part.partNumber} previewMode={previewMode} /> : <EmptyContent label="Flashcards" />);
     case "quiz":
       return wrap(part.assets.quiz ? <QuizViewer quiz={part.assets.quiz} partNumber={part.partNumber} previewMode={previewMode} /> : <EmptyContent label="Quiz" />);
     case "slides":      return <SlidesPanel part={part} previewMode={previewMode} />;

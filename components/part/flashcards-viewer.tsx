@@ -9,6 +9,7 @@ import { trackFlashcardsReviewed } from "@/app/actions/progress";
 interface FlashcardsViewerProps {
   flashcards: FlashcardSet;
   partNumber?: number;
+  previewMode?: boolean;
 }
 
 const LEVELS: { id: FlashcardLevel; label: string }[] = [
@@ -129,7 +130,7 @@ function FlipCard({ card, index, total }: { card: Flashcard; index: number; tota
   );
 }
 
-export function FlashcardsViewer({ flashcards, partNumber }: FlashcardsViewerProps) {
+export function FlashcardsViewer({ flashcards, partNumber, previewMode }: FlashcardsViewerProps) {
   const [level, setLevel] = useState<FlashcardLevel>("easy");
   const [index, setIndex] = useState(0);
   const [deck, setDeck] = useState<Flashcard[]>(flashcards.easy);
@@ -138,7 +139,7 @@ export function FlashcardsViewer({ flashcards, partNumber }: FlashcardsViewerPro
 
   // Track on first open (mount) and update the header badge live.
   useEffect(() => {
-    if (!partNumber || trackedRef.current) return;
+    if (!partNumber || trackedRef.current || previewMode) return;
     trackedRef.current = true;
     trackFlashcardsReviewed(partNumber).catch(() => {});
     window.dispatchEvent(
