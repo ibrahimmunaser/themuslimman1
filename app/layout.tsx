@@ -54,6 +54,13 @@ export default function RootLayout({
         <link rel="icon" type="image/png" href="/images/logodashboard.png?v=7" />
         <link rel="shortcut icon" type="image/png" href="/images/logodashboard.png?v=7" />
         <link rel="apple-touch-icon" type="image/png" href="/images/logodashboard.png?v=7" />
+        {/* Preconnect to Stripe — establishes TCP/TLS before JS runs, shaving ~300ms off checkout load */}
+        <link rel="preconnect" href="https://js.stripe.com" />
+        <link rel="preconnect" href="https://api.stripe.com" />
+        <link rel="dns-prefetch" href="https://js.stripe.com" />
+        {/* Preconnect to R2 CDN for media assets */}
+        <link rel="preconnect" href="https://pub-5e47559fbd9145a4af1f58ceb3a42c81.r2.dev" />
+        <link rel="dns-prefetch" href="https://pub-5e47559fbd9145a4af1f58ceb3a42c81.r2.dev" />
       </head>
       <body className="min-h-full bg-ink text-text antialiased">
         <ServiceWorkerRegistration />
