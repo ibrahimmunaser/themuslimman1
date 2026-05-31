@@ -7,10 +7,6 @@ import {
   ChevronDown,
   ArrowRight,
   Lock,
-  BookOpen,
-  Layers,
-  Map,
-  Trophy,
 } from "lucide-react";
 import { FadeUp, StaggerChildren, AnimatedCard, FloatingGlow, IslamicPatternBackground } from "@/components/motion";
 import { PricingSection } from "@/components/pricing/pricing-section";
@@ -169,53 +165,123 @@ export default async function LandingPage() {
                   </div>
                 </div>
               ) : (
-                /* Feature stat cards for visitors */
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Card 1 — 100 Lessons */}
-                  <div className="bg-surface border border-border/60 rounded-2xl p-5 flex flex-col gap-4 hover:border-gold/30 transition-colors group">
-                    <div className="w-10 h-10 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center group-hover:bg-gold/15 transition-colors">
-                      <Video className="w-5 h-5 text-gold" />
+                /* Static course preview card for visitors */
+                <div className="rounded-2xl border border-border/60 bg-surface shadow-2xl shadow-black/50 overflow-hidden">
+                  {/* Browser chrome */}
+                  <div className="bg-surface-raised border-b border-border px-4 py-2.5 flex items-center gap-2">
+                    <div className="flex gap-1.5">
+                      <div className="w-2.5 h-2.5 rounded-full bg-red-500/50" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/50" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-green-500/50" />
                     </div>
-                    <div>
-                      <div className="text-4xl font-bold text-text leading-none mb-1">100</div>
-                      <div className="text-sm font-semibold text-text-secondary mb-2">Video Lessons</div>
-                      <p className="text-xs text-text-muted leading-relaxed">Full chronological coverage from birth to passing ﷺ</p>
-                    </div>
-                  </div>
-
-                  {/* Card 2 — 7 Eras */}
-                  <div className="bg-surface border border-border/60 rounded-2xl p-5 flex flex-col gap-4 hover:border-gold/30 transition-colors group">
-                    <div className="w-10 h-10 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center group-hover:bg-gold/15 transition-colors">
-                      <Map className="w-5 h-5 text-gold" />
-                    </div>
-                    <div>
-                      <div className="text-4xl font-bold text-text leading-none mb-1">7</div>
-                      <div className="text-sm font-semibold text-text-secondary mb-2">Chronological Eras</div>
-                      <p className="text-xs text-text-muted leading-relaxed">Structured stages so context and sequence are never lost</p>
+                    <div className="flex-1 flex justify-center">
+                      <span className="text-[10px] text-text-muted bg-surface px-2.5 py-0.5 rounded border border-border/50">
+                        themuslimman.com/seerah/part-1
+                      </span>
                     </div>
                   </div>
 
-                  {/* Card 3 — 8 Formats */}
-                  <div className="bg-surface border border-border/60 rounded-2xl p-5 flex flex-col gap-4 hover:border-gold/30 transition-colors group">
-                    <div className="w-10 h-10 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center group-hover:bg-gold/15 transition-colors">
-                      <Layers className="w-5 h-5 text-gold" />
+                  <div className="p-4">
+                    {/* Mode tabs */}
+                    <div className="flex gap-1.5 mb-3">
+                      {[
+                        { label: "Video",     active: true  },
+                        { label: "Read",      active: false },
+                        { label: "Slides",    active: false },
+                        { label: "Quiz",      active: false },
+                        { label: "Flashcards",active: false },
+                      ].map(({ label, active }) => (
+                        <span
+                          key={label}
+                          className={`text-[10px] px-2 py-1 rounded-md border ${
+                            active
+                              ? "bg-gold/15 text-gold border-gold/30 font-semibold"
+                              : "text-text-muted border-border/30"
+                          }`}
+                        >
+                          {label}
+                        </span>
+                      ))}
                     </div>
-                    <div>
-                      <div className="text-4xl font-bold text-text leading-none mb-1">8</div>
-                      <div className="text-sm font-semibold text-text-secondary mb-2">Study Formats</div>
-                      <p className="text-xs text-text-muted leading-relaxed">Video, audio, slides, mindmaps, flashcards, quizzes &amp; more</p>
-                    </div>
-                  </div>
 
-                  {/* Card 4 — Progress tracking */}
-                  <div className="bg-surface border border-border/60 rounded-2xl p-5 flex flex-col gap-4 hover:border-gold/30 transition-colors group">
-                    <div className="w-10 h-10 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center group-hover:bg-gold/15 transition-colors">
-                      <Trophy className="w-5 h-5 text-gold" />
+                    {/* Mock video player */}
+                    <div className="relative aspect-video rounded-xl overflow-hidden mb-3 group">
+                      {/* Cinematic gradient background */}
+                      <div
+                        className="absolute inset-0"
+                        style={{
+                          background:
+                            "radial-gradient(ellipse 80% 60% at 50% 40%, #2a1f0a 0%, #130e04 50%, #0a0804 100%)",
+                        }}
+                      />
+                      {/* Subtle geometric pattern overlay */}
+                      <div
+                        className="absolute inset-0 opacity-[0.06]"
+                        style={{
+                          backgroundImage:
+                            "repeating-linear-gradient(45deg, #c9a84c 0, #c9a84c 1px, transparent 0, transparent 50%)",
+                          backgroundSize: "20px 20px",
+                        }}
+                      />
+                      {/* Top bar — part label + HD badge */}
+                      <div className="absolute top-0 inset-x-0 flex items-center justify-between px-3 pt-2.5 pb-6"
+                           style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, transparent 100%)" }}>
+                        <span className="text-[9px] font-semibold text-gold/80 uppercase tracking-widest">
+                          Part 1 of 100
+                        </span>
+                        <span className="text-[9px] font-bold text-text-muted/70 border border-border/50 px-1 rounded">
+                          HD
+                        </span>
+                      </div>
+                      {/* Centered play button */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-14 h-14 rounded-full bg-gold/20 border-2 border-gold/50 flex items-center justify-center shadow-lg shadow-gold/20 backdrop-blur-sm">
+                          <div className="w-0 h-0 ml-1"
+                               style={{ borderTop: "8px solid transparent", borderBottom: "8px solid transparent", borderLeft: "14px solid #c9a84c" }} />
+                        </div>
+                      </div>
+                      {/* Bottom overlay — title + progress bar */}
+                      <div className="absolute bottom-0 inset-x-0 px-3 pb-2.5 pt-6"
+                           style={{ background: "linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%)" }}>
+                        <p className="text-[10px] font-semibold text-white/90 mb-1.5 truncate">
+                          The World Before the Prophet ﷺ
+                        </p>
+                        {/* Scrub bar */}
+                        <div className="relative h-[3px] bg-white/20 rounded-full">
+                          <div className="absolute left-0 top-0 h-full w-[38%] bg-gold rounded-full" />
+                          <div className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-gold shadow shadow-gold/40"
+                               style={{ left: "calc(38% - 5px)" }} />
+                        </div>
+                        {/* Time display */}
+                        <div className="flex justify-between mt-1">
+                          <span className="text-[9px] text-white/50">4:53</span>
+                          <span className="text-[9px] text-white/40">12:47</span>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="text-4xl font-bold text-text leading-none mb-1">1×</div>
-                      <div className="text-sm font-semibold text-text-secondary mb-2">Lifetime Access</div>
-                      <p className="text-xs text-text-muted leading-relaxed">Pay once, keep access forever — no recurring fees</p>
+
+                    {/* Stats row */}
+                    <div className="grid grid-cols-3 gap-2 mb-3 px-0.5">
+                      {[
+                        { val: "100", sub: "Lessons"  },
+                        { val: "7",   sub: "Modes"    },
+                        { val: "8",   sub: "Eras"     },
+                      ].map(({ val, sub }) => (
+                        <div key={sub} className="text-center py-2 rounded-lg bg-surface-raised border border-border/40">
+                          <p className="text-sm font-bold text-gold leading-none">{val}</p>
+                          <p className="text-[10px] text-text-muted mt-0.5">{sub}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Feature pills */}
+                    <div className="flex flex-wrap gap-1.5">
+                      {["Video", "Reading", "Slides", "Audio", "Quiz", "Flashcards", "Mind maps"].map((f) => (
+                        <span key={f} className="flex items-center gap-1 text-[10px] text-text-secondary bg-surface-raised border border-border/40 px-2 py-0.5 rounded-full">
+                          <CheckCircle2 className="w-2.5 h-2.5 text-gold/60 flex-shrink-0" aria-hidden />
+                          {f}
+                        </span>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -267,6 +333,26 @@ export default async function LandingPage() {
         )}
       </section>
 
+      {/* Sticky CTA strip — sticks after user scrolls past hero */}
+      {!user && (
+        <div className="sticky top-16 sm:top-20 z-40 bg-ink border-b border-border/60 hidden sm:block">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-4">
+            <p className="text-sm text-text-secondary truncate hidden md:block">
+              Complete Seerah — 100 parts, all formats included
+            </p>
+            <div className="flex items-center gap-3 ml-auto shrink-0">
+              <span className="text-xs text-text-muted hidden lg:block">Instant access · Lifetime option available</span>
+              <Link
+                href="/signup-checkout?plan=complete"
+                className="inline-flex items-center gap-2 px-4 py-1.5 min-h-[36px] bg-gold hover:bg-gold-light text-ink text-xs font-semibold rounded-lg transition-colors"
+              >
+                Get Started
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ============================================
           PREVIEW BEFORE BUYING
