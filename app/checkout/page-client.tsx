@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { loadStripe } from "@stripe/stripe-js";
 import {
@@ -132,11 +132,26 @@ interface AppliedCoupon {
 interface CheckoutPageClientProps {
   userEmail?: string;
   initialPlan?: PlanChoice;
+  // Server-pre-created payment intent (eliminates client-side round trip)
+  initialClientSecret?: string | null;
+  initialBasePrice?: number;
+  initialFinalPrice?: number;
+  initialDiscountAmount?: number;
+  initialAppliedPromo?: string | null;
+  initialAppliedPromoLabel?: string | null;
+  initialFreeAccess?: boolean;
 }
 
 function CheckoutPageContent({
   userEmail = "",
   initialPlan = "complete",
+  initialClientSecret = null,
+  initialBasePrice: serverBasePrice,
+  initialFinalPrice: serverFinalPrice,
+  initialDiscountAmount: serverDiscount = 0,
+  initialAppliedPromo = null,
+  initialAppliedPromoLabel = null,
+  initialFreeAccess = false,
 }: CheckoutPageClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -147,26 +162,35 @@ function CheckoutPageContent({
     planParam === "family" ? "family" : initialPlan
   );
 
-  // Payment intent
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const defaultBase = planChoice === "family" ? PLANS.family.price : PLANS.complete.price;
+
+  // Payment intent — initialise from server-pre-created secret if available
+  const [clientSecret, setClientSecret] = useState<string | null>(initialClientSecret);
+  const [loading, setLoading] = useState(initialClientSecret == null && !initialFreeAccess);
   const [error, setError] = useState<string | null>(null);
 
-  // Pricing (filled from API response)
-  const [basePrice, setBasePrice] = useState<number>(
-    planChoice === "family" ? PLANS.family.price : PLANS.complete.price
-  );
-  const [finalPrice, setFinalPrice] = useState<number>(basePrice);
-  const [discountAmount, setDiscountAmount] = useState(0);
+  // Pricing — use server-provided values when available
+  const [basePrice, setBasePrice] = useState<number>(serverBasePrice ?? defaultBase);
+  const [finalPrice, setFinalPrice] = useState<number>(serverFinalPrice ?? defaultBase);
+  const [discountAmount, setDiscountAmount] = useState(serverDiscount);
 
-  // Coupon
-  const [couponInput, setCouponInput] = useState(promoParam ?? "");
+  // Coupon — pre-fill if server applied one
+  const [couponInput, setCouponInput] = useState(initialAppliedPromo ?? promoParam ?? "");
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponError, setCouponError] = useState<string | null>(null);
-  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(
+    initialAppliedPromo && initialAppliedPromoLabel && serverFinalPrice != null
+      ? {
+          code: initialAppliedPromo,
+          label: initialAppliedPromoLabel,
+          discount: serverDiscount,
+          finalPrice: serverFinalPrice,
+        }
+      : null
+  );
 
   // Free access (promo code gives $0)
-  const [freeAccess, setFreeAccess] = useState(false);
+  const [freeAccess, setFreeAccess] = useState(initialFreeAccess);
   const [freeClaimLoading, setFreeClaimLoading] = useState(false);
   const [freeClaimError, setFreeClaimError] = useState<string | null>(null);
 
@@ -231,6 +255,10 @@ function CheckoutPageContent({
 
   // ── On plan change: recreate intent (reuse applied coupon if any) ──────────
    
+  // Track whether this is the first mount so we can skip the fetch
+  // when the server already pre-created the intent.
+  const isFirstMount = useRef(true);
+
   useEffect(() => {
     const autoApply = (code: string, onInvalid?: () => void) => {
       fetch(`/api/stripe/validate-promo?code=${encodeURIComponent(code)}`)
@@ -251,6 +279,12 @@ function CheckoutPageContent({
         })
         .catch(() => createIntent(planChoice, undefined));
     };
+
+    // Skip the initial API call if the server already pre-created the intent.
+    if (isFirstMount.current) {
+      isFirstMount.current = false;
+      if (initialClientSecret || initialFreeAccess) return;
+    }
 
     if (planChoice === "complete" && !appliedCoupon) {
       // Priority 1: ?promo= URL param (e.g. /checkout?promo=DEARBORN20)
@@ -694,3 +728,6 @@ export default function CheckoutClientPage(props: CheckoutPageClientProps) {
     </Suspense>
   );
 }
+
+// Re-export props type for the server page
+export type { CheckoutPageClientProps };
