@@ -11,6 +11,7 @@ import {
   mindmapExists,
   readQuiz,
   readFlashcards,
+  getPartAssetUrls,
 } from "@/lib/files";
 
 export async function GET(req: NextRequest) {
