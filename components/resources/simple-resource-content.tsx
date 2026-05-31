@@ -8,7 +8,7 @@ import { Headphones, Layers, Image as ImageIcon, Map, Brain, CheckCircle2, X, Ma
 import { SlidesViewer } from "@/components/part/slides-viewer";
 import { FlashcardsViewer } from "@/components/part/flashcards-viewer";
 import { trackAssetOpened } from "@/app/actions/progress";
-import type { FlashcardSet, SlideFile } from "@/lib/types";
+import type { FlashcardSet, SlideFile, Part } from "@/lib/types";
 import { getCachedResource, setCachedResource, prefetchResource } from "@/lib/resource-cache";
 
 /**
@@ -308,7 +308,7 @@ export function SimpleResourceContent({
   const totalResources = PARTS.length;
   const notCompletedCount = totalResources - localCompletedCount;
 
-  const filterByStatus = (part: any, status: string) => {
+  const filterByStatus = (part: Part, status: string) => {
     const isCompleted = localProgressMap[part.partNumber] || false;
     if (status === "completed") return isCompleted;
     if (status === "not-started") return !isCompleted;

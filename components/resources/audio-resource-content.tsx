@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { PARTS } from "@/lib/content";
-import { ERA_MAP } from "@/lib/types";
+import { ERA_MAP, type Part } from "@/lib/types";
 import { eraGradient } from "./era-gradient";
 import { ResourcePageClient } from "./resource-page-client";
 import { Headphones, CheckCircle2, Play, Pause, X, Volume2, VolumeX, SkipBack, SkipForward } from "lucide-react";
@@ -47,7 +47,7 @@ export function AudioResourceContent({
     };
   }, [audioElement]);
 
-  const filterByStatus = (part: any, status: string) => {
+  const filterByStatus = (part: Part, status: string) => {
     const isCompleted = localProgressMap[part.partNumber] || false;
     if (status === "completed") return isCompleted;
     if (status === "not-started") return !isCompleted;

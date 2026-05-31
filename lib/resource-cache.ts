@@ -1,11 +1,11 @@
 // Resource data cache to prevent refetching
-const resourceCache = new Map<string, any>();
+const resourceCache = new Map<string, unknown>();
 
 export function getCachedResource<T>(key: string): T | null {
-  return resourceCache.get(key) || null;
+  return (resourceCache.get(key) as T) || null;
 }
 
-export function setCachedResource(key: string, data: any): void {
+export function setCachedResource(key: string, data: unknown): void {
   resourceCache.set(key, data);
 }
 

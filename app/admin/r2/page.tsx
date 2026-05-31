@@ -14,11 +14,11 @@ async function checkR2Connection() {
       folders: folders.length,
       error: null,
     };
-  } catch (error: any) {
+  } catch (error) {
     return {
       connected: false,
       folders: 0,
-      error: error.message || "Unknown error",
+      error: error instanceof Error ? error.message : "Unknown error",
     };
   }
 }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { PARTS } from "@/lib/content";
+import type { Part } from "@/lib/types";
 import { eraGradient } from "./era-gradient";
 import { ResourcePageClient } from "./resource-page-client";
 import { Video, Play, CheckCircle2, Clock, X } from "lucide-react";
@@ -50,7 +51,7 @@ export function VideoResourceContent({
     return () => { document.body.style.overflow = prev; };
   }, [selectedPart]);
 
-  const filterByStatus = (part: any, status: string) => {
+  const filterByStatus = (part: Part, status: string) => {
     const p = progressMap[part.partNumber];
     if (status === "completed")  return p?.videoCompleted || false;
     if (status === "in-progress") return !!(p && p.videoWatchPercent > 0 && !p.videoCompleted);

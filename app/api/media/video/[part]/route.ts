@@ -57,7 +57,7 @@ export async function GET(
 
       const stream = response.Body.transformToWebStream();
 
-      return new NextResponse(stream as any, {
+      return new NextResponse(stream as ReadableStream, {
         status: 200,
         headers: {
           "Content-Type": "video/mp4",
@@ -95,7 +95,7 @@ export async function GET(
 
     const stream = response.Body.transformToWebStream();
 
-    return new NextResponse(stream as any, {
+    return new NextResponse(stream as ReadableStream, {
       status: 206,
       headers: {
         "Content-Range": `bytes ${start}-${end}/${fileSize}`,

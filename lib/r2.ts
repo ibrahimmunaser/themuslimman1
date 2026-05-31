@@ -433,7 +433,7 @@ export async function r2ReadTextFile(key: string): Promise<string | null> {
 /**
  * Read JSON file from R2
  */
-export async function r2ReadJsonFile<T = any>(key: string): Promise<T | null> {
+export async function r2ReadJsonFile<T = unknown>(key: string): Promise<T | null> {
   const content = await r2ReadTextFile(key);
   if (!content) return null;
   

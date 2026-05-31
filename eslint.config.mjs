@@ -27,17 +27,17 @@ const eslintConfig = defineConfig([
     rules: {
       // ── React Hooks ───────────────────────────────────────────────────────
       // set-state-in-effect fires on many valid patterns: hydration mounts
-      // (setMounted), URL-sync (setActiveTab), eager cache reads.
-      // Downgrade to warn so the build stays clean while we track genuine issues.
-      "react-hooks/set-state-in-effect": "warn",
+      // (setMounted), URL-sync (setActiveTab), eager cache reads, and lazy
+      // loader prop-sync. All intentional — turned off to keep the output clean.
+      "react-hooks/set-state-in-effect": "off",
 
       // immutability flags DOM element property mutations (e.g. audioEl.volume = x)
-      // stored in state refs, and forward-refs captured by effects — both valid patterns.
-      "react-hooks/immutability": "warn",
+      // stored in refs and forward-refs captured by effects — both valid patterns.
+      "react-hooks/immutability": "off",
 
       // purity flags Date.now() in useRef() initializers and inside effect bodies,
       // which is a well-established idiomatic React pattern.
-      "react-hooks/purity": "warn",
+      "react-hooks/purity": "off",
 
       // ── TypeScript ────────────────────────────────────────────────────────
       // Allow `any` in the few places it is genuinely needed (streaming APIs,

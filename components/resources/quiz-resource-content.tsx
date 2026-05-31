@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { PARTS } from "@/lib/content";
-import { ERA_MAP } from "@/lib/types";
+import { ERA_MAP, type Part } from "@/lib/types";
 import { eraGradient } from "./era-gradient";
 import { ResourcePageClient } from "./resource-page-client";
 import { ClipboardCheck, Trophy, CheckCircle2, XCircle, X } from "lucide-react";
@@ -100,7 +100,7 @@ export function QuizResourceContent({
     setQuizData(null);
   };
 
-  const filterByStatus = (part: any, status: string) => {
+  const filterByStatus = (part: Part, status: string) => {
     const progress = progressMap[part.partNumber];
     if (status === "completed") return progress?.quizPassed || false;
     if (status === "in-progress") return progress && progress.quizCompleted && !progress.quizPassed;

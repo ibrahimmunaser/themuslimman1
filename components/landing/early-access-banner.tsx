@@ -31,7 +31,6 @@ export function EarlyAccessBanner() {
   useEffect(() => {
     // Set the initial value on mount — intentionally in the effect so the server
     // renders a neutral placeholder (null) without a hydration mismatch.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTimeLeft(computeTimeLeft());
     // Update once per minute — days don't need second-level precision.
     const id = setInterval(() => setTimeLeft(computeTimeLeft()), 60_000);

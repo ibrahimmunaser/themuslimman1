@@ -66,7 +66,7 @@ export async function GET(req: NextRequest) {
 
     const stream = response.Body.transformToWebStream();
 
-    return new NextResponse(stream as any, {
+    return new NextResponse(stream as ReadableStream, {
       status: 200,
       headers: {
         "Content-Type": contentType,
