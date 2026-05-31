@@ -50,6 +50,16 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily, isLoggedIn 
     <section className="py-8 border-t border-border" id="pricing">
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
 
+        {/* ── Section title ───────────────────────────────────────────── */}
+        <FadeUp className="text-center mb-6">
+          <h2 className="text-2xl sm:text-3xl font-bold text-text mb-2">
+            Choose Your Access
+          </h2>
+          <p className="text-sm text-text-secondary">
+            Individual or family · monthly or lifetime · cancel anytime.
+          </p>
+        </FadeUp>
+
         {/* ── Individual / Family toggle ──────────────────────────────── */}
         <div className="flex justify-center mb-8">
           <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-surface border border-border">
@@ -77,29 +87,21 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily, isLoggedIn 
           </div>
         </div>
 
-        {/* ── Headline ────────────────────────────────────────────────── */}
-        <FadeUp className="text-center mb-8">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={tab}
-              initial={{ opacity: 0, y: prefersReduced ? 0 : 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: prefersReduced ? 0 : -8 }}
-              transition={{ duration: 0.22, ease: [0, 0, 0.2, 1] }}
-            >
-              <h2 className="text-xl sm:text-2xl font-bold text-text mb-2">
-                {tab === "individual"
-                  ? "Choose your Individual plan"
-                  : "Choose your Family plan"}
-              </h2>
-              <p className="text-sm text-text-secondary">
-                {tab === "individual"
-                  ? "Full access to all 100 Seerah parts for one learner."
-                  : "One household account with up to 5 learner profiles."}
-              </p>
-            </motion.div>
-          </AnimatePresence>
-        </FadeUp>
+        {/* ── Plan description ─────────────────────────────────────────── */}
+        <AnimatePresence mode="wait">
+          <motion.p
+            key={tab}
+            initial={{ opacity: 0, y: prefersReduced ? 0 : 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: prefersReduced ? 0 : -6 }}
+            transition={{ duration: 0.22, ease: [0, 0, 0.2, 1] }}
+            className="text-sm text-text-secondary text-center mb-8"
+          >
+            {tab === "individual"
+              ? "Full access to all 100 Seerah parts for one learner."
+              : "One household account with up to 5 learner profiles."}
+          </motion.p>
+        </AnimatePresence>
 
         {/* ── Cards ───────────────────────────────────────────────────── */}
         <AnimatePresence mode="wait">
