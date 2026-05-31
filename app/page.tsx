@@ -33,15 +33,6 @@ export default async function LandingPage() {
   try {
     user = await getCurrentUser();
 
-    // Redirect any user with active access (lifetime OR monthly subscription)
-    // straight to their dashboard. hasPaid alone misses monthly subscribers.
-    if (user) {
-      const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
-      if (hasAccess) {
-        redirect("/my-courses");
-      }
-    }
-
     if (user?.studentProfileId) {
       try {
         const dashboardData = await getStudentDashboardData(user.studentProfileId);
@@ -56,6 +47,15 @@ export default async function LandingPage() {
     // Silently fail - landing page still works for logged-out users
     console.error("Failed to get current user:", error);
     user = null;
+  }
+
+  // Must be OUTSIDE the try/catch — Next.js redirect() works by throwing a
+  // special error, which the catch block above would silently swallow.
+  if (user) {
+    const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
+    if (hasAccess) {
+      redirect("/my-courses");
+    }
   }
 
   return (
