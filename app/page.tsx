@@ -16,6 +16,7 @@ import { TestimonialsSection } from "@/components/landing/testimonials";
 import { Part1FullPreview } from "@/components/landing/part1-full-preview";
 import { buttonClass } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth";
+import { hasActiveCourseAccess } from "@/lib/access";
 import { getStudentDashboardData } from "@/lib/queries/student";
 import { EmailVerificationBanner } from "@/components/auth/email-verification-banner";
 import { CreatorPromoTracker } from "@/components/promo/creator-promo-tracker";
@@ -32,9 +33,13 @@ export default async function LandingPage() {
   try {
     user = await getCurrentUser();
 
-    // If the user has paid (has the course), send them straight to their courses.
-    if (user?.hasPaid) {
-      redirect("/my-courses");
+    // Redirect any user with active access (lifetime OR monthly subscription)
+    // straight to their dashboard. hasPaid alone misses monthly subscribers.
+    if (user) {
+      const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
+      if (hasAccess) {
+        redirect("/my-courses");
+      }
     }
 
     if (user?.studentProfileId) {
