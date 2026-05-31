@@ -333,27 +333,6 @@ export default async function LandingPage() {
         )}
       </section>
 
-      {/* Sticky CTA strip — sticks after user scrolls past hero */}
-      {!user && (
-        <div className="sticky top-16 sm:top-20 z-40 bg-ink border-b border-border/60 hidden sm:block">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-4">
-            <p className="text-sm text-text-secondary truncate hidden md:block">
-              Complete Seerah — 100 parts, all formats included
-            </p>
-            <div className="flex items-center gap-3 ml-auto shrink-0">
-              <span className="text-xs text-text-muted hidden lg:block">Instant access · Lifetime option available</span>
-              <Link
-                href="/signup-checkout?plan=complete"
-                className="inline-flex items-center gap-2 px-4 py-1.5 min-h-[36px] bg-gold hover:bg-gold-light text-ink text-xs font-semibold rounded-lg transition-colors"
-              >
-                Get Started
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* ============================================
           PREVIEW BEFORE BUYING
       ============================================ */}
