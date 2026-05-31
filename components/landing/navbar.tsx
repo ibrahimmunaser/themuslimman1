@@ -27,8 +27,7 @@ export async function Navbar() {
             <img
               src="/images/logoicon.png"
               alt="TheMuslimMan"
-              style={{ height: "44px", width: "auto" }}
-              className="sm:h-14"
+              className="h-11 sm:h-14 w-auto"
             />
           </Link>
 
