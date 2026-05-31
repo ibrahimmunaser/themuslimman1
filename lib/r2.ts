@@ -1,5 +1,6 @@
 import { S3Client, GetObjectCommand, ListObjectsV2Command, HeadObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import type { FlashcardSet, Quiz } from "@/lib/types";
 
 // ─── R2 Client Configuration ──────────────────────────────────────────────────
 
@@ -492,7 +493,7 @@ export async function r2ReadReport(partNum: number): Promise<string | null> {
  */
 export async function r2ReadFlashcards(partNum: number) {
   const pad = partNum < 10 ? `0${partNum}` : `${partNum}`;
-  return await r2ReadJsonFile(`flashcards/Part_${pad}.json`);
+  return await r2ReadJsonFile<FlashcardSet>(`flashcards/Part_${pad}.json`);
 }
 
 /**
@@ -500,7 +501,7 @@ export async function r2ReadFlashcards(partNum: number) {
  */
 export async function r2ReadQuiz(partNum: number) {
   const pad = partNum < 10 ? `0${partNum}` : `${partNum}`;
-  return await r2ReadJsonFile(`quizzes/Part_${pad}.json`);
+  return await r2ReadJsonFile<Quiz>(`quizzes/Part_${pad}.json`);
 }
 
 // ─── Cache Utilities ───────────────────────────────────────────────────────────
