@@ -31,6 +31,17 @@ import {
 
 const TTL_MS = 90 * 60 * 1000; // 90 minutes
 
+// Use globalThis so the cache is shared across all route contexts in the same
+// Node.js process. In Next.js dev mode (Turbopack), API routes and page routes
+// load separate module instances, so module-level Maps are not shared between
+// them. globalThis is a single object per process and survives across imports.
+declare global {
+  // eslint-disable-next-line no-var
+  var __partCache: Map<number, CachedPartData> | undefined;
+  // eslint-disable-next-line no-var
+  var __partInflight: Map<number, Promise<CachedPartData>> | undefined;
+}
+
 interface CachedPartData {
   briefingText: string | null;
   statementOfFactsText: string | null;
@@ -55,9 +66,11 @@ interface CachedPartData {
   cachedAt: number;
 }
 
-const cache = new Map<number, CachedPartData>();
+const cache: Map<number, CachedPartData> =
+  (globalThis.__partCache ??= new Map<number, CachedPartData>());
 // Track in-flight fetches so concurrent requests for the same part share one Promise
-const inflight = new Map<number, Promise<CachedPartData>>();
+const inflight: Map<number, Promise<CachedPartData>> =
+  (globalThis.__partInflight ??= new Map<number, Promise<CachedPartData>>());
 
 async function loadPartData(n: number): Promise<CachedPartData> {
   const signImg = (key: string | null, localFolder: string) =>
