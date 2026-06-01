@@ -1,4 +1,6 @@
+import { redirect } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
+import { hasActiveCourseAccess } from "@/lib/access";
 import Link from "next/link";
 import { ChevronRight, Star } from "lucide-react";
 import { VideoPlayer } from "@/components/part/video-player";
@@ -11,7 +13,11 @@ export const metadata = {
 };
 
 export default async function ConclusionPage() {
-  await requireAuth();
+  const user = await requireAuth();
+
+  // Conclusion is paid content — require active access BEFORE fetching any R2 URLs.
+  const accessOk = await hasActiveCourseAccess(user.id, user.hasPaid);
+  if (!accessOk) redirect("/pricing");
 
   const assetUrls = await getPartAssetUrls(101);
   const videoUrl = assetUrls.videoUrl ?? null;

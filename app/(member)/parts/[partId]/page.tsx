@@ -1,6 +1,7 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { requireAuth } from "@/lib/auth";
+import { hasActiveCourseAccess } from "@/lib/access";
 import { getPartById, PARTS } from "@/lib/content";
 import { ERA_MAP } from "@/lib/types";
 import {
@@ -35,14 +36,22 @@ export async function generateMetadata(props: { params: Promise<{ partId: string
 }
 
 export default async function PartPage(props: { params: Promise<{ partId: string }> }) {
-  await requireAuth();
+  const user = await requireAuth();
   const { partId } = await props.params;
 
   const partBase = getPartById(partId);
   if (!partBase) notFound();
 
   const n = partBase.partNumber;
-  
+
+  // Part 1 is intentionally free. Parts 2–100 require active paid access.
+  // Access check runs BEFORE any R2 asset fetching so no signed URLs are
+  // generated for users who should not have access.
+  if (n !== 1) {
+    const accessOk = await hasActiveCourseAccess(user.id, user.hasPaid);
+    if (!accessOk) redirect("/pricing");
+  }
+
   // Legacy route - default to complete plan for backward compatibility
   const userPlan = "complete" as const;
   
