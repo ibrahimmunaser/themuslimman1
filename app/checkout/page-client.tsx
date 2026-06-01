@@ -768,6 +768,7 @@ function CheckoutPageContent({
 
           {clientSecret && !loading && (
             <Elements
+              key={clientSecret}
               stripe={stripePromise}
               options={{
                 clientSecret,
