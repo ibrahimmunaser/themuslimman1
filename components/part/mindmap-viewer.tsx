@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import { ZoomIn, ZoomOut, RotateCcw, Maximize2, Map } from "lucide-react";
+import { ZoomIn, ZoomOut, Crosshair, Maximize2, Map } from "lucide-react";
 
 interface MindmapViewerProps {
   src?: string;
@@ -204,9 +204,9 @@ export function MindmapViewer({ src, title }: MindmapViewerProps) {
       <button
         onClick={fitToContainer}
         className="min-w-[44px] min-h-[44px] rounded-lg bg-surface-raised border border-border flex items-center justify-center text-text-muted hover:text-text transition-colors"
-        aria-label="Reset and fit to view"
+        aria-label="Center and fit to view"
       >
-        <RotateCcw className="w-3.5 h-3.5" />
+        <Crosshair className="w-3.5 h-3.5" />
       </button>
       <button
         onClick={() => fullscreen ? exitFullscreenMode() : enterFullscreen()}

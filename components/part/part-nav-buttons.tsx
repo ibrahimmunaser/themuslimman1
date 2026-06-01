@@ -1,8 +1,8 @@
 "use client";
 
-import { useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { useEffect } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { PrefetchPartLink } from "@/components/course/prefetch-part-link";
 
 interface PartNavButtonsProps {
   prevPart: { id: string; partNumber: number } | null;
@@ -22,24 +22,23 @@ export function PartNavButtons({
   currentPart,
   totalParts,
 }: PartNavButtonsProps) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
-
-  function navigate(id: string) {
-    startTransition(() => {
-      router.push(`/seerah/${id}`);
-    });
-  }
+  useEffect(() => {
+    if (nextPart) {
+      fetch(`/api/part/${nextPart.partNumber}/warm`, { method: "GET" }).catch(() => {});
+    }
+    if (prevPart) {
+      fetch(`/api/part/${prevPart.partNumber}/warm`, { method: "GET" }).catch(() => {});
+    }
+  }, [nextPart?.partNumber, prevPart?.partNumber]);
 
   return (
     <>
       {/* Navigation row */}
       <div className="mt-4 pt-4 border-t border-border/50 flex items-center justify-between gap-3">
         {prevPart ? (
-          <button
-            onClick={() => navigate(prevPart.id)}
-            disabled={isPending}
-            className="inline-flex items-center gap-2 px-3 py-2.5 rounded-lg border border-border/60 hover:bg-surface-raised hover:border-border transition-all min-h-[48px] disabled:opacity-60 disabled:cursor-wait"
+          <PrefetchPartLink
+            partNumber={prevPart.partNumber}
+            className="inline-flex items-center gap-2 px-3 py-2.5 rounded-lg border border-border/60 hover:bg-surface-raised hover:border-border transition-all min-h-[48px]"
           >
             <ChevronLeft className="w-3.5 h-3.5 text-text-muted shrink-0" />
             <div className="text-left">
@@ -48,16 +47,15 @@ export function PartNavButtons({
                 Part {prevPart.partNumber}
               </p>
             </div>
-          </button>
+          </PrefetchPartLink>
         ) : (
           <div />
         )}
 
         {nextPart && (
-          <button
-            onClick={() => navigate(nextPart.id)}
-            disabled={isPending}
-            className="inline-flex items-center gap-2 px-5 sm:px-6 py-3 rounded-xl bg-gold text-ink hover:bg-gold-light transition-all font-bold ml-auto min-h-[52px] shadow-lg shadow-gold/25 text-sm disabled:opacity-70 disabled:cursor-wait"
+          <PrefetchPartLink
+            partNumber={nextPart.partNumber}
+            className="inline-flex items-center gap-2 px-5 sm:px-6 py-3 rounded-xl bg-gold text-ink hover:bg-gold-light transition-all font-bold ml-auto min-h-[52px] shadow-lg shadow-gold/25 text-sm"
           >
             <div className="text-right">
               <p className="text-[10px] text-ink/60 font-normal leading-none mb-0.5">
@@ -65,12 +63,8 @@ export function PartNavButtons({
               </p>
               <p className="font-bold leading-none">Part {nextPart.partNumber}</p>
             </div>
-            {isPending ? (
-              <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
-            ) : (
-              <ChevronRight className="w-4 h-4 shrink-0" />
-            )}
-          </button>
+            <ChevronRight className="w-4 h-4 shrink-0" />
+          </PrefetchPartLink>
         )}
       </div>
 
