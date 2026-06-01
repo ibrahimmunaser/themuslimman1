@@ -220,9 +220,9 @@ function CheckoutPageContent({
 
       if (!res.ok) {
         if (res.status === 401) {
-          router.push(
-            `/signup-checkout?plan=${plan === "family" ? "family" : "complete"}`
-          );
+          const planSlug = plan === "family" ? "family" : "complete";
+          const promoSuffix = promoCode ? `&promo=${encodeURIComponent(promoCode)}` : "";
+          router.push(`/signup-checkout?plan=${planSlug}${promoSuffix}`);
           return null;
         }
         if (res.status === 409 && (data.hasLifetime || data.hasFamily)) {
