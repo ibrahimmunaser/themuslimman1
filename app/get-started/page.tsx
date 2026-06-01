@@ -106,7 +106,7 @@ export default async function GetStartedPage({ searchParams }: GetStartedPagePro
                 // Guest → normal signup flow
                 <>
                   <Link
-                    href={`/signup-checkout?plan=${plan}`}
+                    href={plan === "monthly" ? "/checkout/monthly" : plan === "family" ? "/checkout/family" : "/checkout"}
                     className={buttonClass("primary", "lg", "w-full justify-center")}
                   >
                     Create Account &amp; Start Learning

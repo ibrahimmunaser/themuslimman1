@@ -17,7 +17,6 @@ interface PricingSectionProps {
   hasLifetime: boolean;
   hasMonthly: boolean;
   hasFamily: boolean;
-  isLoggedIn: boolean;
 }
 
 // ── Individual monthly button ──────────────────────────────────────────────────
@@ -36,11 +35,12 @@ function IndividualMonthlyButton() {
 }
 
 // ── Main section ───────────────────────────────────────────────────────────────
-export function PricingSection({ hasLifetime, hasMonthly, hasFamily, isLoggedIn }: PricingSectionProps) {
+export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSectionProps) {
   const [tab, setTab] = useState<PlanType>("individual");
   const prefersReduced = useReducedMotion();
 
-  const individualLifetimeHref = isLoggedIn ? "/checkout" : "/signup-checkout?plan=complete";
+  // All checkout pages handle inline auth for guests, so always link directly.
+  const individualLifetimeHref = "/checkout";
   const familyMonthlyHref  = "/checkout/family?cycle=monthly";
   const familyLifetimeHref = "/checkout/family?cycle=lifetime";
 

@@ -429,7 +429,6 @@ export default async function LandingPage() {
         hasLifetime={!!(user?.hasPaid)}
         hasMonthly={false}
         hasFamily={user?.planType === "family"}
-        isLoggedIn={!!user}
       />
 
       {/* ============================================
@@ -673,7 +672,7 @@ export default async function LandingPage() {
               Start Free Preview
             </Link>
             <Link
-              href="/signup-checkout?plan=complete"
+              href="/checkout"
               className={buttonClass("secondary", "xl")}
             >
               Unlock Complete Seerah

@@ -36,7 +36,7 @@ export function Footer() {
                 { label: "Pricing", href: "/#pricing" },
                 { label: "About", href: "/about" },
                 { label: "Methodology", href: "/methodology" },
-                { label: "Get Started", href: "/signup-checkout?plan=complete" },
+                { label: "Get Started", href: "/checkout" },
               ].map((link) => (
                 <li key={link.label}>
                   <Link
@@ -78,7 +78,7 @@ export function Footer() {
             <ul className="space-y-2.5">
               {[
                 { label: "Log In", href: "/login" },
-                { label: "Create Account", href: "/signup-checkout?plan=complete" },
+                { label: "Create Account", href: "/checkout" },
                 { label: "Member Dashboard", href: "/seerah" },
               ].map((link) => (
                 <li key={link.label}>

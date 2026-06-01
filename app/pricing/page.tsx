@@ -320,7 +320,6 @@ export default async function PricingPage() {
         hasLifetime={hasLifetime}
         hasMonthly={hasMonthly}
         hasFamily={hasFamily}
-        isLoggedIn={isLoggedIn}
       />
 
       {/* ════════════════════════════════════════

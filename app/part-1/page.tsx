@@ -33,7 +33,7 @@ export default function Part1PreviewPage() {
           </p>
           <div className="flex flex-wrap items-center gap-3">
             <Link
-              href="/signup-checkout?plan=complete"
+              href="/checkout"
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-gold hover:bg-gold-light text-ink text-sm font-semibold rounded-lg transition-colors"
             >
               Get Full Access
@@ -90,7 +90,7 @@ export default function Part1PreviewPage() {
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             <Link
-              href="/signup-checkout?plan=complete"
+              href="/checkout"
               className="inline-flex items-center gap-2 px-6 py-3 bg-gold hover:bg-gold-light text-ink font-semibold rounded-lg transition-colors shadow-lg shadow-gold/20"
             >
               Get Lifetime Access — $99
