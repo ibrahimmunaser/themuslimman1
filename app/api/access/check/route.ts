@@ -3,11 +3,14 @@ import { getCurrentUser } from "@/lib/auth";
 import { hasActiveCourseAccess } from "@/lib/access";
 
 /**
- * GET /api/stripe/check-access
+ * GET /api/access/check
  *
- * @deprecated Use GET /api/access/check instead.
- * Kept as a backward-compatible alias for payment success pages and older clients.
- * Now delegates to the unified access check (Stripe + Apple IAP + Google Play IAP).
+ * Unified access check for web and mobile clients.
+ * Covers Stripe purchases, Stripe subscriptions, Apple IAP, and Google Play IAP.
+ *
+ * Returns:
+ *   { hasAccess: true | false }
+ *   401 — not authenticated
  */
 export async function GET() {
   const user = await getCurrentUser();

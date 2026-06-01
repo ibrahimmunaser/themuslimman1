@@ -27,7 +27,9 @@ export async function hasActiveCourseAccess(
   // Fast path: lifetime buyer confirmed by session data — no DB needed.
   if (sessionHasPaid) return true;
 
-  const [user, purchase, subscription] = await Promise.all([
+  const now = new Date();
+
+  const [user, purchase, subscription, mobilePurchase] = await Promise.all([
     prisma.user.findUnique({ where: { id: userId }, select: { hasPaid: true } }),
     prisma.purchase.findFirst({
       where: { userId, status: "succeeded" },
@@ -37,17 +39,26 @@ export async function hasActiveCourseAccess(
       where: {
         userId,
         status: { in: [...ACTIVE_SUBSCRIPTION_STATUSES] },
-        // Require a non-expired billing period. This guards against stale
-        // "active" rows when Stripe fails to deliver the deletion webhook.
-        // New subscriptions are safe: upsertSubscription always writes a
-        // future currentPeriodEnd (either from Stripe or +30d approximation).
-        currentPeriodEnd: { gte: new Date() },
+        // Guard against stale "active" rows when Stripe fails to deliver webhooks.
+        currentPeriodEnd: { gte: now },
+      },
+      select: { id: true },
+    }),
+    // Apple / Google purchases (lifetime or active subscription)
+    prisma.mobilePurchase.findFirst({
+      where: {
+        userId,
+        status: "active",
+        OR: [
+          { purchaseType: "lifetime" },
+          { purchaseType: "subscription", currentPeriodEnd: { gte: now } },
+        ],
       },
       select: { id: true },
     }),
   ]);
 
-  return !!(user?.hasPaid || purchase || subscription);
+  return !!(user?.hasPaid || purchase || subscription || mobilePurchase);
 }
 
 /**
@@ -57,8 +68,9 @@ export async function hasActiveCourseAccess(
  * it was already loaded via getCurrentUser(), saving one DB query per request.
  */
 export async function getUserAccessInfo(userId: string, sessionHasPaid?: boolean) {
-  const [user, purchase, subscription] = await Promise.all([
-    // Skip the hasPaid query if the caller already has it from the session.
+  const now = new Date();
+
+  const [user, purchase, subscription, mobilePurchase] = await Promise.all([
     sessionHasPaid
       ? Promise.resolve({ hasPaid: true })
       : prisma.user.findUnique({ where: { id: userId }, select: { hasPaid: true } }),
@@ -77,12 +89,23 @@ export async function getUserAccessInfo(userId: string, sessionHasPaid?: boolean
         stripeSubscriptionId: true,
       },
     }),
+    prisma.mobilePurchase.findFirst({
+      where: {
+        userId,
+        status: "active",
+        OR: [
+          { purchaseType: "lifetime" },
+          { purchaseType: "subscription", currentPeriodEnd: { gte: now } },
+        ],
+      },
+      select: { id: true, platform: true, productId: true, purchaseType: true, currentPeriodEnd: true },
+    }),
   ]);
 
-  // hasPaid covers users who claimed a gift (no Purchase row) as well as normal buyers
-  const hasLifetime = !!(user?.hasPaid || purchase);
+  const hasLifetime = !!(user?.hasPaid || purchase || mobilePurchase?.purchaseType === "lifetime");
   const hasActiveSubscription =
-    !!subscription && (ACTIVE_SUBSCRIPTION_STATUSES as readonly string[]).includes(subscription.status);
+    (!!subscription && (ACTIVE_SUBSCRIPTION_STATUSES as readonly string[]).includes(subscription.status)) ||
+    (mobilePurchase?.purchaseType === "subscription");
 
   return {
     hasAccess: hasLifetime || hasActiveSubscription,
@@ -90,6 +113,7 @@ export async function getUserAccessInfo(userId: string, sessionHasPaid?: boolean
     hasActiveSubscription,
     subscription: subscription ?? null,
     lifetimePurchase: purchase ?? null,
+    mobilePurchase: mobilePurchase ?? null,
   };
 }
 
