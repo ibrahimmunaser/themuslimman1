@@ -294,6 +294,24 @@ function CheckoutPageContent({
       const stored = getCreatorPromo();
       if (stored) { autoApply(stored, clearCreatorPromo); return; }
     }
+
+    // For the family plan with no applied coupon yet, auto-apply the URL promo.
+    // The family intent endpoint validates + prices the promo in one step.
+    if (planChoice === "family" && !appliedCoupon && promoParam) {
+      createIntent("family", promoParam).then((result) => {
+        if (result && result.discountAmount > 0) {
+          setAppliedCoupon({
+            code: promoParam.toUpperCase(),
+            label: "Promo applied",
+            discount: result.discountAmount,
+            finalPrice: result.finalPrice,
+          });
+          setCouponInput(promoParam.toUpperCase());
+        }
+      });
+      return;
+    }
+
     createIntent(planChoice, appliedCoupon?.code);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [planChoice, isAuthenticated]);
@@ -435,7 +453,7 @@ function CheckoutPageContent({
     ? currentPlan.price
     : (appliedCoupon ? currentPlan.price : basePrice);
   const displayDiscount = !isAuthenticated
-    ? (guestPromo && planChoice === "complete" ? guestPromo.discount : 0)
+    ? (guestPromo ? guestPromo.discount : 0)
     : (appliedCoupon ? appliedCoupon.discount : discountAmount);
   const displayPrice = displayBase - displayDiscount;
 
