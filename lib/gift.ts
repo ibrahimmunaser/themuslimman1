@@ -12,7 +12,7 @@ export function hashGiftToken(rawToken: string): string {
 
 /** Build the full claim URL from a raw token. */
 export function buildClaimUrl(rawToken: string, appUrl?: string): string {
-  const base = appUrl ?? process.env.NEXT_PUBLIC_APP_URL ?? "https://seerah.themuslimman.com";
+  const base = appUrl ?? process.env.NEXT_PUBLIC_APP_URL ?? "https://themuslimman.com";
   return `${base}/gift/claim/${rawToken}`;
 }
 
@@ -23,12 +23,18 @@ export async function sendGiftClaimEmail(opts: {
   purchaserEmail: string;
   giftMessage: string | null;
   claimUrl: string;
+  planId?: string;
 }): Promise<void> {
   const { Resend } = await import("resend");
   const resend = new Resend(process.env.RESEND_API_KEY);
 
-  const _fromName = opts.purchaserEmail.split("@")[0]; // fallback display name
+  const isFamily = opts.planId === "family";
   const toName = opts.recipientName ? opts.recipientName : "there";
+  const planLabel = isFamily ? "Family Access to Complete Seerah" : "Complete Seerah";
+  const subject = isFamily
+    ? "You've been gifted Family Access to Complete Seerah"
+    : "You've been gifted Complete Seerah";
+
   const messageBlock = opts.giftMessage
     ? `<div style="background:#f9f4e8;border:1px solid #e8d88a;border-radius:8px;padding:20px;margin:24px 0;">
         <p style="font-size:14px;color:#555;margin:0 0 6px 0;font-weight:600;">A personal message:</p>
@@ -36,13 +42,23 @@ export async function sendGiftClaimEmail(opts: {
        </div>`
     : "";
 
+  const featuresHtml = isFamily
+    ? `<li>Up to 5 learner profiles — each with separate progress</li>
+       <li>All 100 Seerah parts for every profile</li>
+       <li>Video, audio, briefings, slides, infographics</li>
+       <li>Quizzes, flashcards, and mind maps</li>
+       <li>Lifetime access — learn at your own pace, anytime</li>`
+    : `<li>All 100 Seerah parts — videos, briefings, quizzes, flashcards, and more</li>
+       <li>Guided progress tracking</li>
+       <li>Lifetime access — learn at your own pace, anytime</li>`;
+
   const year = new Date().getFullYear();
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://seerah.themuslimman.com";
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://themuslimman.com";
 
   await resend.emails.send({
     from: process.env.EMAIL_FROM ?? "TheMuslimMan <noreply@themuslimman.com>",
     to: opts.recipientEmail,
-    subject: "You've been gifted Complete Seerah",
+    subject,
     html: `
 <!DOCTYPE html>
 <html>
@@ -53,7 +69,7 @@ export async function sendGiftClaimEmail(opts: {
   <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.6;color:#333;max-width:600px;margin:0 auto;padding:20px;">
     <div style="background:linear-gradient(135deg,#1a1a1a 0%,#2d2d2d 100%);padding:30px 20px;text-align:center;border-radius:12px 12px 0 0;">
       <div style="font-size:36px;margin-bottom:12px;">🎁</div>
-      <h1 style="color:#f4c542;margin:0 0 8px 0;font-size:24px;">You've Been Gifted Complete Seerah</h1>
+      <h1 style="color:#f4c542;margin:0 0 8px 0;font-size:24px;">You've Been Gifted ${planLabel}</h1>
       <p style="color:#ccc;margin:0;font-size:15px;">A gift from ${opts.purchaserEmail}</p>
     </div>
 
@@ -61,8 +77,8 @@ export async function sendGiftClaimEmail(opts: {
       <p style="font-size:16px;margin:0 0 16px 0;">As-salamu alaykum ${toName},</p>
 
       <p style="font-size:15px;margin:0 0 16px 0;">
-        ${opts.purchaserEmail} gifted you lifetime access to <strong>Complete Seerah</strong>,
-        a structured course teaching the life of the Prophet ﷺ as one connected story.
+        ${opts.purchaserEmail} gifted you lifetime access to <strong>${planLabel}</strong>,
+        a structured course teaching the life of the Prophet ﷺ as one connected story.${isFamily ? " Your gift includes up to 5 learner profiles so your whole household can learn together." : ""}
       </p>
 
       ${messageBlock}
@@ -85,9 +101,7 @@ export async function sendGiftClaimEmail(opts: {
       <div style="background:#f5f5f5;border:1px solid #ddd;border-radius:8px;padding:16px;margin:24px 0;font-size:13px;color:#666;">
         <strong style="color:#333;">What's included:</strong>
         <ul style="margin:8px 0 0 0;padding-left:20px;line-height:1.8;">
-          <li>All 100 Seerah parts — videos, briefings, quizzes, flashcards, and more</li>
-          <li>Guided progress tracking</li>
-          <li>Lifetime access — learn at your own pace, anytime</li>
+          ${featuresHtml}
         </ul>
       </div>
 

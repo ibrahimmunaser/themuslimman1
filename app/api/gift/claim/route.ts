@@ -87,10 +87,14 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Resolve which plan was gifted (backward-compat default: "complete")
+  const giftPlanId = gift.planId ?? "complete";
+  const isFamily = giftPlanId === "family";
+
   // Grant lifetime access to the recipient: set hasPaid flag AND create a Purchase record
   // so access.ts, billing page, and admin dashboards all see a consistent record.
   // Use the actual Stripe amount rather than a hardcoded constant.
-  let paidAmount = 4900; // fallback if Stripe lookup fails
+  let paidAmount = isFamily ? 19900 : 9900; // fallback if Stripe lookup fails
   let paidCurrency = "usd";
   try {
     const pi = await stripe.paymentIntents.retrieve(gift.stripePaymentIntentId);
@@ -103,7 +107,11 @@ export async function POST(request: NextRequest) {
   await Promise.all([
     prisma.user.update({
       where: { id: user.id },
-      data: { hasPaid: true },
+      data: {
+        hasPaid: true,
+        // Family gift grants the family plan; individual gift leaves planType as-is
+        ...(isFamily ? { planType: "family" } : {}),
+      },
     }),
     prisma.purchase.upsert({
       where: { stripePaymentIntentId: gift.stripePaymentIntentId },
@@ -112,8 +120,8 @@ export async function POST(request: NextRequest) {
         updatedAt: new Date(),
         userId: user.id,
         stripePaymentIntentId: gift.stripePaymentIntentId,
-        planId: "complete",
-        planName: "Complete Seerah (gift)",
+        planId: giftPlanId,
+        planName: isFamily ? "Family Access (gift)" : "Complete Seerah (gift)",
         amount: paidAmount,
         currency: paidCurrency,
         status: "succeeded",

@@ -116,6 +116,8 @@ export default async function GiftClaimPage({ params }: GiftClaimPageProps) {
   const toName = gift.recipientName ?? null;
   const fromEmail = gift.purchaserEmail;
   const recipientEmail = gift.recipientEmail;
+  const isFamily = (gift.planId ?? "complete") === "family";
+  const planLabel = isFamily ? "Family Access to Complete Seerah" : "Complete Seerah";
 
   // If a user is signed in with the wrong email, show a clear mismatch error
   const isWrongUser = user && user.email.toLowerCase() !== recipientEmail.toLowerCase();
@@ -129,9 +131,12 @@ export default async function GiftClaimPage({ params }: GiftClaimPageProps) {
           <div className="w-20 h-20 mx-auto rounded-full bg-gold/10 border-2 border-gold/40 flex items-center justify-center mb-6">
             <Gift className="w-10 h-10 text-gold" />
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold mb-3">You&apos;ve Been Gifted Complete Seerah</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold mb-3">
+            You&apos;ve Been Gifted {planLabel}
+          </h1>
           <p className="text-text-secondary">
             {fromEmail} has given you lifetime access to the full 100-part Seerah journey.
+            {isFamily && " Your gift includes up to 5 learner profiles."}
           </p>
         </div>
 
@@ -153,12 +158,18 @@ export default async function GiftClaimPage({ params }: GiftClaimPageProps) {
           <div>
             <p className="text-sm font-medium text-text mb-2">Your gift includes:</p>
             <ul className="text-sm text-text-secondary space-y-1.5">
-              {[
+              {(isFamily ? [
+                "Up to 5 learner profiles — each with separate progress",
+                "All 100 Seerah parts for every profile",
+                "Video, audio, briefings, slides, infographics",
+                "Quizzes, flashcards, and mind maps",
+                "Lifetime access — no expiry, no subscriptions",
+              ] : [
                 "All 100 Seerah parts — the complete story of the Prophet ﷺ",
                 "Video lessons, briefings, quizzes, flashcards, and more",
                 "Guided progress tracking",
                 "Lifetime access — no expiry, no subscriptions",
-              ].map((item) => (
+              ]).map((item) => (
                 <li key={item} className="flex items-start gap-2">
                   <span className="text-gold mt-0.5">✓</span>
                   {item}
@@ -193,7 +204,7 @@ export default async function GiftClaimPage({ params }: GiftClaimPageProps) {
                 </Link>
               </div>
             ) : user ? (
-              <GiftClaimButton token={token} userName={user.fullName} alreadyHasPaid={alreadyHasPaid} />
+              <GiftClaimButton token={token} userName={user.fullName} alreadyHasPaid={alreadyHasPaid} planLabel={planLabel} />
             ) : (
               /* Not logged in */
               <div className="space-y-4">

@@ -10,6 +10,9 @@ import {
 } from "@/lib/early-access";
 import { validatePromoCode, applyDiscount } from "@/lib/promo-codes";
 
+// Family lifetime price ID for Stripe metadata linkage
+const FAMILY_LIFETIME_PRICE_ID = process.env.STRIPE_FAMILY_LIFETIME_PRICE_ID ?? "";
+
 export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser();
@@ -29,11 +32,12 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { recipientEmail, recipientName, giftMessage, promoCode } = body as {
+    const { recipientEmail, recipientName, giftMessage, promoCode, planId: rawPlanId } = body as {
       recipientEmail: string;
       recipientName?: string;
       giftMessage?: string;
       promoCode?: string;
+      planId?: string;
     };
 
     if (!recipientEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmail)) {
@@ -50,12 +54,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const plan = PLANS.complete;
-    const earlyAccessActive = isEarlyAccessActive();
-    const baseAmount = getBasePrice();
-    const earlyAccessDiscount = earlyAccessActive ? REGULAR_PRICE - baseAmount : 0;
+    // Resolve plan — "family" or default to "complete" (individual)
+    const planId = rawPlanId === "family" ? "family" : "complete";
+    const isFamily = planId === "family";
+    const plan = isFamily ? PLANS.family : PLANS.complete;
 
-    // Apply creator/promo discount if a valid code is provided
+    // For individual plan, use the dynamic early-access price.
+    // Family lifetime has a fixed price.
+    const earlyAccessActive = isEarlyAccessActive();
+    const baseAmount = isFamily ? PLANS.family.price : getBasePrice();
+    const earlyAccessDiscount = (!isFamily && earlyAccessActive) ? REGULAR_PRICE - baseAmount : 0;
+
+    // Apply creator/promo discount if provided
     let finalAmount = baseAmount;
     let promoDiscountAmount = 0;
     let appliedPromoCode: string | null = null;
@@ -77,13 +87,13 @@ export async function POST(request: NextRequest) {
       payment_method_types: ["card"],
       metadata: {
         type: "gift",
+        planId,
+        planName: plan.name,
         purchaserUserId: user.id,
         purchaserEmail: user.email,
         recipientEmail: recipientEmail.trim().toLowerCase(),
         recipientName: recipientName?.trim() ?? "",
         giftMessage: giftMessage?.trim() ?? "",
-        planId: plan.id,
-        planName: plan.name,
         earlyAccessActive: String(earlyAccessActive),
         earlyAccessEndDate: EARLY_ACCESS_END_DATE.toISOString(),
         regularAmount: String(REGULAR_PRICE),
@@ -92,12 +102,15 @@ export async function POST(request: NextRequest) {
         promoCode: appliedPromoCode ?? "",
         promoDiscountAmount: String(promoDiscountAmount),
         finalAmount: String(finalAmount),
+        ...(isFamily && FAMILY_LIFETIME_PRICE_ID.startsWith("price_")
+          ? { stripePriceId: FAMILY_LIFETIME_PRICE_ID }
+          : {}),
       },
       description: `Gift: ${plan.name} → ${recipientEmail.trim().toLowerCase()} — TheMuslimMan`,
       receipt_email: user.email,
     });
 
-    // Create a pending gift record so we have it before payment completes
+    // Create a pending gift record
     await prisma.giftPurchase.create({
       data: {
         id: crypto.randomUUID(),
@@ -107,12 +120,14 @@ export async function POST(request: NextRequest) {
         recipientEmail: recipientEmail.trim().toLowerCase(),
         recipientName: recipientName?.trim() || null,
         giftMessage: giftMessage?.trim() || null,
+        planId,
         status: "pending",
       },
     });
 
     return NextResponse.json({
       clientSecret: paymentIntent.client_secret,
+      planId,
       earlyAccessActive,
       earlyAccessEndDate: EARLY_ACCESS_END_DATE.toISOString(),
       regularAmount: REGULAR_PRICE,

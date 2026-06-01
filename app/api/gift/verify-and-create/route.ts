@@ -64,6 +64,7 @@ export async function GET(request: NextRequest) {
           purchaserEmail: gift.purchaserEmail,
           giftMessage: gift.giftMessage,
           claimUrl,
+          planId: gift.planId ?? "complete",
         }).catch((err) =>
           console.error("[GIFT] Failed to send claim email:", err)
         );

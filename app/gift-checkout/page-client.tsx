@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import {
-  Lock, ArrowLeft, ArrowRight, Gift, Check, Mail, User, MessageSquare, Tag, X,
+  Lock, ArrowLeft, ArrowRight, Gift, Check, Mail, User, MessageSquare, Tag, X, Users,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,8 @@ import { PLANS, formatPrice } from "@/lib/stripe-config";
 import { getCreatorPromo, clearCreatorPromo, getCreatorPromoConfig } from "@/lib/creator-promos";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+
+type GiftPlanId = "complete" | "family";
 
 // ── Payment form (inner Stripe Elements) ─────────────────────────────────────
 
@@ -112,7 +114,8 @@ interface GiftPricing {
 }
 
 export default function GiftCheckoutClient({ purchaserEmail, purchaserName: _purchaserName }: GiftCheckoutClientProps) {
-  const plan = PLANS.complete;
+  const [planChoice, setPlanChoice] = useState<GiftPlanId>("complete");
+  const plan = planChoice === "family" ? PLANS.family : PLANS.complete;
 
   const [step, setStep] = useState<Step>("details");
   const [details, setDetails] = useState<GiftDetails>({
@@ -142,23 +145,33 @@ export default function GiftCheckoutClient({ purchaserEmail, purchaserName: _pur
     if (!stored) return;
     const config = getCreatorPromoConfig(stored);
     if (!config) {
-      // Stored code is no longer valid — remove it
       clearCreatorPromo();
       return;
     }
+    // Creator promos are fixed-amount discounts, so the discount applies to whichever plan is selected
     const estimatedFinal = plan.price - config.discountAmount;
     setGiftPromo({
       code: config.code,
       displayLabel: config.displayLabel,
       discountAmount: config.discountAmount,
-      estimatedFinalPrice: estimatedFinal,
+      estimatedFinalPrice: Math.max(0, estimatedFinal),
     });
-  }, [plan.price]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [planChoice]);
 
   const handleRemoveGiftPromo = () => {
-    // Full removal — localStorage cleared so re-visiting gift checkout won't re-apply
     clearCreatorPromo();
     setGiftPromo(null);
+  };
+
+  // Reset to details step when plan changes so the intent is recreated with the right price
+  const handlePlanChange = (newPlan: GiftPlanId) => {
+    if (newPlan === planChoice) return;
+    setPlanChoice(newPlan);
+    if (step === "payment") {
+      setStep("details");
+      setClientSecret(null);
+    }
   };
 
   const handleDetailsSubmit = async (e: React.FormEvent) => {
@@ -183,7 +196,7 @@ export default function GiftCheckoutClient({ purchaserEmail, purchaserName: _pur
           recipientEmail: details.recipientEmail,
           recipientName: details.recipientName,
           giftMessage: details.giftMessage,
-          // Pass promo code so server can apply the discount and include it in Stripe metadata
+          planId: planChoice,
           promoCode: giftPromo?.code ?? undefined,
         }),
       });
@@ -259,6 +272,33 @@ export default function GiftCheckoutClient({ purchaserEmail, purchaserName: _pur
           </p>
         </div>
 
+        {/* Plan selector */}
+        <div className="grid grid-cols-2 gap-3 mb-8 max-w-md">
+          {([
+            { id: "complete" as GiftPlanId, icon: User,  label: "Individual", price: PLANS.complete.price, sub: "1 learner · one-time" },
+            { id: "family"   as GiftPlanId, icon: Users, label: "Family",     price: PLANS.family.price,   sub: "Up to 5 learners · one-time" },
+          ] as const).map(({ id, icon: Icon, label, price, sub }) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => handlePlanChange(id)}
+              className={`flex flex-col p-4 rounded-xl border transition-all text-left ${
+                planChoice === id
+                  ? "border-gold/50 bg-gold/8 text-white ring-1 ring-gold/30"
+                  : "border-zinc-700 bg-zinc-800/50 text-zinc-400 hover:border-zinc-600"
+              }`}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <Icon className="w-4 h-4 flex-shrink-0" />
+                <span className="font-semibold text-sm">{label}</span>
+                {planChoice === id && <div className="ml-auto w-2 h-2 rounded-full bg-gold-light" />}
+              </div>
+              <span className="text-2xl font-bold text-white">{formatPrice(price)}</span>
+              <span className="text-xs text-zinc-500 mt-0.5">{sub}</span>
+            </button>
+          ))}
+        </div>
+
         <div className="grid lg:grid-cols-5 gap-8">
 
           {/* ── Order Summary ────────────────────────────────────────────── */}
@@ -268,9 +308,11 @@ export default function GiftCheckoutClient({ purchaserEmail, purchaserName: _pur
 
               <div className="mb-6">
                 <h3 className="font-medium text-text mb-1">{plan.name}</h3>
-                <p className="text-sm text-text-secondary mb-3">Lifetime gift access</p>
+                <p className="text-sm text-text-secondary mb-3">
+                  {planChoice === "family" ? "Lifetime gift — up to 5 learner profiles" : "Lifetime gift access"}
+                </p>
                 <ul className="space-y-2">
-                  {plan.features.map((f) => (
+                  {plan.features.slice(0, 5).map((f) => (
                     <li key={f} className="flex items-center gap-2 text-sm text-text-secondary">
                       <Check className="w-4 h-4 text-gold flex-shrink-0" />
                       {f}
@@ -279,7 +321,7 @@ export default function GiftCheckoutClient({ purchaserEmail, purchaserName: _pur
                 </ul>
               </div>
 
-              {/* Creator promo banner — allow Remove on both steps */}
+              {/* Creator promo banner */}
               {giftPromo && (
                 <div className="mb-4 flex items-start justify-between gap-2 rounded-lg bg-gold/10 border border-gold/20 px-3 py-2.5">
                   <div className="flex items-start gap-2 text-sm min-w-0">
@@ -295,7 +337,6 @@ export default function GiftCheckoutClient({ purchaserEmail, purchaserName: _pur
                       onClick={handleRemoveGiftPromo}
                       className="text-text-muted hover:text-text transition-colors flex-shrink-0 mt-0.5"
                       aria-label="Remove promo code"
-                      title="Remove this promo code"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -305,7 +346,9 @@ export default function GiftCheckoutClient({ purchaserEmail, purchaserName: _pur
 
               <div className="pt-4 border-t border-border space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-text-secondary text-sm">Lifetime Gift Access</span>
+                  <span className="text-text-secondary text-sm">
+                    {planChoice === "family" ? "Family Lifetime Gift" : "Lifetime Gift Access"}
+                  </span>
                   <span className="text-sm text-text">
                     {giftPromo ? (
                       <>
@@ -345,10 +388,9 @@ export default function GiftCheckoutClient({ purchaserEmail, purchaserName: _pur
                 </p>
               </div>
 
-              {/* Toggle back to normal checkout */}
               <div className="mt-5 pt-4 border-t border-border text-center">
                 <p className="text-xs text-text-muted mb-1">Buying for yourself?</p>
-                <Link href="/checkout?plan=complete" className="text-xs text-gold hover:text-gold-light transition-colors font-medium">
+                <Link href="/checkout" className="text-xs text-gold hover:text-gold-light transition-colors font-medium">
                   Switch to regular checkout →
                 </Link>
               </div>
@@ -380,6 +422,7 @@ export default function GiftCheckoutClient({ purchaserEmail, purchaserName: _pur
                       />
                       <p className="text-xs text-text-muted mt-1">
                         We&apos;ll send the claim link to this address.
+                        {planChoice === "family" && " They'll be the account owner and can add up to 4 more learner profiles."}
                       </p>
                     </div>
 

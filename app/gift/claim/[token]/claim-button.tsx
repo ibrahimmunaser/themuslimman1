@@ -9,9 +9,10 @@ interface GiftClaimButtonProps {
   token: string;
   userName: string;
   alreadyHasPaid: boolean;
+  planLabel?: string;
 }
 
-export default function GiftClaimButton({ token, userName, alreadyHasPaid }: GiftClaimButtonProps) {
+export default function GiftClaimButton({ token, userName, alreadyHasPaid, planLabel = "Complete Seerah" }: GiftClaimButtonProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +23,7 @@ export default function GiftClaimButton({ token, userName, alreadyHasPaid }: Gif
       <div className="space-y-4">
         <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-center">
           <Check className="w-6 h-6 text-green-400 mx-auto mb-2" />
-          <p className="text-green-400 font-medium text-sm">You already have Complete Seerah access!</p>
+          <p className="text-green-400 font-medium text-sm">You already have {planLabel} access!</p>
           <p className="text-text-muted text-xs mt-1">This gift has been registered to your account.</p>
         </div>
         <Button

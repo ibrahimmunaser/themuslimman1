@@ -219,6 +219,8 @@ model GiftPurchase {
   createdAt                               DateTime  @default(now())
   expiresAt                               DateTime?
   status                                  String    @default("pending")
+  /// "complete" (Individual Lifetime $99) | "family" (Family Lifetime $199)
+  planId                                  String    @default("complete")
   User_GiftPurchase_claimedByUserIdToUser User?     @relation("GiftPurchase_claimedByUserIdToUser", fields: [claimedByUserId], references: [id])
   User_GiftPurchase_purchaserUserIdToUser User?     @relation("GiftPurchase_purchaserUserIdToUser", fields: [purchaserUserId], references: [id])
 
@@ -280,6 +282,37 @@ model PartProgress {
   @@index([learnerProfileId])
   @@index([status])
   @@index([userId])
+}
+
+model MobilePurchase {
+  id               String    @id
+  userId           String
+  /// "apple" | "google"
+  platform         String
+  /// Exact product ID registered in App Store Connect / Play Console
+  productId        String
+  /// iOS: transactionId — Android: orderId
+  transactionId    String    @unique
+  /// Android only — the purchase token used for API verification
+  purchaseToken    String?
+  /// "individual" | "family"
+  planType         String
+  /// "lifetime" | "subscription"
+  purchaseType     String
+  /// "active" | "expired" | "cancelled" | "refunded"
+  status           String    @default("active")
+  /// null for lifetime purchases
+  currentPeriodEnd DateTime?
+  /// Full JSON response from Apple/Google stored for audit trail
+  rawResponse      String?
+  verifiedAt       DateTime  @default(now())
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([platform])
+  @@index([status])
 }
 
 model Purchase {
@@ -607,6 +640,7 @@ model User {
   GiftPurchase_GiftPurchase_claimedByUserIdToUser GiftPurchase[]   @relation("GiftPurchase_claimedByUserIdToUser")
   GiftPurchase_GiftPurchase_purchaserUserIdToUser GiftPurchase[]   @relation("GiftPurchase_purchaserUserIdToUser")
   learnerProfiles                                 LearnerProfile[]
+  mobilePurchases                                 MobilePurchase[]
   partProgress                                    PartProgress[]
   purchases                                       Purchase[]
   sessions                                        Session[]
