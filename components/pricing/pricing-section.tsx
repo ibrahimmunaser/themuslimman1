@@ -20,20 +20,16 @@ interface PricingSectionProps {
   isLoggedIn: boolean;
 }
 
-// ── Individual monthly button (needs client-side nav) ──────────────────────────
+// ── Individual monthly button ──────────────────────────────────────────────────
 function IndividualMonthlyButton({ isLoggedIn }: { isLoggedIn: boolean }) {
   return (
-    <button
-      onClick={() => {
-        window.location.href = isLoggedIn
-          ? "/checkout/monthly"
-          : "/login?redirect=/checkout/monthly";
-      }}
+    <Link
+      href={isLoggedIn ? "/checkout/monthly" : "/login?redirect=/checkout/monthly"}
       className="inline-flex items-center justify-center gap-2 w-full rounded-xl px-6 py-3.5 font-semibold text-base transition-all border border-border bg-surface hover:bg-surface-raised hover:border-gold/30 text-text cursor-pointer"
     >
       <ArrowRight className="w-4 h-4 text-gold" />
       Start Monthly
-    </button>
+    </Link>
   );
 }
 
