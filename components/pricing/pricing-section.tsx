@@ -21,10 +21,12 @@ interface PricingSectionProps {
 }
 
 // ── Individual monthly button ──────────────────────────────────────────────────
-function IndividualMonthlyButton({ isLoggedIn }: { isLoggedIn: boolean }) {
+// /checkout/monthly handles both guests and logged-in users with an inline auth form,
+// so we always go there directly — no login redirect needed.
+function IndividualMonthlyButton() {
   return (
     <Link
-      href={isLoggedIn ? "/checkout/monthly" : "/login?redirect=/checkout/monthly"}
+      href="/checkout/monthly"
       className="inline-flex items-center justify-center gap-2 w-full rounded-xl px-6 py-3.5 font-semibold text-base transition-all border border-border bg-surface hover:bg-surface-raised hover:border-gold/30 text-text cursor-pointer"
     >
       <ArrowRight className="w-4 h-4 text-gold" />
@@ -174,7 +176,7 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily, isLoggedIn 
                 </div>
               ) : (
                 <>
-                  <IndividualMonthlyButton isLoggedIn={isLoggedIn} />
+                  <IndividualMonthlyButton />
                   <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] text-text-muted/60">
                     <Lock className="w-3 h-3 flex-shrink-0" />
                     <span>Secure checkout · Cancel anytime</span>
