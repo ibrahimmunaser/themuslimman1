@@ -168,6 +168,9 @@ function CheckoutPageContent({
   const [authLoading, setAuthLoading] = useState(false);
   const [needsVerification, setNeedsVerification] = useState(false);
 
+  // Promo validated for the guest view (URL ?promo= param, before auth)
+  const [guestPromo, setGuestPromo] = useState<{ code: string; label: string; discount: number } | null>(null);
+
   // ── Payment state ──────────────────────────────────────────────────────────
   const [clientSecret, setClientSecret] = useState<string | null>(initialClientSecret);
   const [loading, setLoading] = useState(false);
@@ -243,6 +246,22 @@ function CheckoutPageContent({
     }
   };
 
+  // ── Validate URL promo for guest order summary preview ────────────────────
+
+  useEffect(() => {
+    if (isAuthenticated || !promoParam) return;
+    fetch(`/api/stripe/validate-promo?code=${encodeURIComponent(promoParam)}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.valid) {
+          setGuestPromo({ code: data.code, label: data.label, discount: data.promoDiscountAmount });
+          setCouponInput(data.code);
+        }
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // ── On mount / plan change: create intent (if authenticated) ───────────────
 
   const isFirstMount = useRef(true);
@@ -302,6 +321,11 @@ function CheckoutPageContent({
       // Session cookie is always set by the signup route.
       // emailVerified = true in dev (auto-verified), false in prod (needs email click).
       if (data.emailVerified) {
+        // Pre-load the guest promo as the applied coupon so createIntent uses it
+        if (guestPromo) {
+          setAppliedCoupon({ code: guestPromo.code, label: guestPromo.label, discount: guestPromo.discount, finalPrice: currentPlan.price - guestPromo.discount });
+          setCouponInput(guestPromo.code);
+        }
         setAuthEmail(authForm.email);
         setIsAuthenticated(true);
       } else {
@@ -329,6 +353,10 @@ function CheckoutPageContent({
       });
       const data = await res.json();
       if (!res.ok) { setAuthError(data.error || "Invalid email or password"); return; }
+      if (guestPromo) {
+        setAppliedCoupon({ code: guestPromo.code, label: guestPromo.label, discount: guestPromo.discount, finalPrice: currentPlan.price - guestPromo.discount });
+        setCouponInput(guestPromo.code);
+      }
       setAuthEmail(authForm.email);
       setIsAuthenticated(true);
     } catch {
@@ -400,9 +428,16 @@ function CheckoutPageContent({
   // ── Derived display values ─────────────────────────────────────────────────
 
   const currentPlan = planChoice === "family" ? PLANS.family : PLANS.complete;
-  const displayPrice = appliedCoupon ? appliedCoupon.finalPrice : finalPrice;
-  const displayDiscount = appliedCoupon ? appliedCoupon.discount : discountAmount;
-  const displayBase = appliedCoupon ? currentPlan.price : basePrice;
+
+  // For guests: use reactive plan price (no createIntent has run yet).
+  // For auth'd users: use server-confirmed prices from createIntent.
+  const displayBase = !isAuthenticated
+    ? currentPlan.price
+    : (appliedCoupon ? currentPlan.price : basePrice);
+  const displayDiscount = !isAuthenticated
+    ? (guestPromo && planChoice === "complete" ? guestPromo.discount : 0)
+    : (appliedCoupon ? appliedCoupon.discount : discountAmount);
+  const displayPrice = displayBase - displayDiscount;
 
   // ── Left column (shared) ───────────────────────────────────────────────────
 
@@ -487,6 +522,8 @@ function CheckoutPageContent({
 
   // ── Order summary card (reused in both guest and auth views) ───────────────
 
+  const promoCodeLabel = !isAuthenticated ? guestPromo?.code : appliedCoupon?.code;
+
   const OrderSummary = (
     <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 mb-6 space-y-3">
       <div className="flex items-start justify-between">
@@ -502,7 +539,7 @@ function CheckoutPageContent({
         <div className="flex items-center justify-between text-sm">
           <span className="text-green-400 flex items-center gap-1.5">
             <Tag className="w-3.5 h-3.5" />
-            {appliedCoupon?.code ?? "Promo"} discount
+            {promoCodeLabel ?? "Promo"} discount
           </span>
           <span className="text-green-400 font-medium">−{formatPrice(displayDiscount)}</span>
         </div>
