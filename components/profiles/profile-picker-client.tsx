@@ -212,7 +212,7 @@ function ProfileSlot({
         </AnimatePresence>
 
         <div
-          className={`relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full bg-gradient-to-br ${gradient} flex items-center justify-center overflow-hidden transition-shadow ${
+          className={`relative w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full bg-gradient-to-br ${gradient} flex items-center justify-center overflow-hidden transition-shadow ${
             hovered ? "shadow-2xl shadow-black/60" : ""
           }`}
         >
@@ -287,7 +287,7 @@ function AddProfileSlot({ anySelecting }: { anySelecting: boolean }) {
       aria-label="Add new profile"
     >
       {/* Dashed circle */}
-      <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full border-2 border-dashed border-zinc-700 group-hover:border-gold/50 group-hover:bg-zinc-800/40 flex items-center justify-center transition-all">
+      <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full border-2 border-dashed border-zinc-700 group-hover:border-gold/50 group-hover:bg-zinc-800/40 flex items-center justify-center transition-all">
         <Plus className="w-8 h-8 text-zinc-600 group-hover:text-gold/70 transition-colors" />
       </div>
       <p className="text-sm font-medium text-zinc-600 group-hover:text-zinc-400 transition-colors max-w-[96px] truncate text-center">
