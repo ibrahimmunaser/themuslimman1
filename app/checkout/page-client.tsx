@@ -575,7 +575,9 @@ function CheckoutPageContent({
 
   // ── Order summary ─────────────────────────────────────────────────────────
 
-  const promoCodeLabel = !isAuthenticated ? guestPromo?.code : appliedCoupon?.code;
+  const promoCodeLabel = !isAuthenticated
+    ? (guestPromo?.label ?? guestPromo?.code)
+    : (appliedCoupon?.label ?? appliedCoupon?.code);
 
   const OrderSummary = (
     <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 mb-6 space-y-3">
