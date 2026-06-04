@@ -88,16 +88,31 @@ export default async function LearnIndexPage() {
     .filter(p => p.status === "started")
     .map(p => p.partNumber);
 
-  // Compute "current part" in the context of the active path.
-  // For Children's path: only consider parts that belong to that path.
+  // Build a set of passed quizzes for sequential-lock checks.
+  const quizPassedSet = new Set(completedParts);
+
+  // The highest part number the user can actually reach under the sequential lock:
+  // Part 1 is always accessible; Part n (n>1) requires Part n-1 quiz passed.
+  // Walk forward from 1 until we hit the first part whose prerequisite is unmet.
+  const maxAccessiblePart = (() => {
+    for (let n = 2; n <= PARTS.length; n++) {
+      if (!quizPassedSet.has(n - 1)) return n - 1;
+    }
+    return PARTS.length;
+  })();
+
+  // Compute "current part" in the context of the active path, clamped to
+  // maxAccessiblePart so a stale "started" row for a locked part never
+  // sends the user somewhere they can't actually reach.
   let currentPart: number;
   if (activeLearningPath === "children") {
     const childrenParts = PARTS
       .filter(p => p.audiences.includes("children"))
       .map(p => p.partNumber)
       .sort((a, b) => a - b);
-    const childrenInProgress = inProgressParts.filter(n => childrenParts.includes(n));
-    const childrenCompleted  = completedParts.filter(n => childrenParts.includes(n));
+    const accessibleChildrenParts = childrenParts.filter(n => n <= maxAccessiblePart);
+    const childrenInProgress = inProgressParts.filter(n => accessibleChildrenParts.includes(n));
+    const childrenCompleted  = completedParts.filter(n => accessibleChildrenParts.includes(n));
     if (childrenInProgress.length > 0) {
       currentPart = Math.min(...childrenInProgress);
     } else if (childrenCompleted.length > 0) {
@@ -108,11 +123,13 @@ export default async function LearnIndexPage() {
       currentPart = childrenParts[0] ?? 1;
     }
   } else {
-    // Complete path: walk the full 100-part chain.
-    if (inProgressParts.length > 0) {
-      currentPart = Math.min(...inProgressParts);
-    } else if (completedParts.length > 0) {
-      currentPart = Math.min(Math.max(...completedParts) + 1, PARTS.length);
+    // Complete path: walk the full 100-part chain, clamped to what's accessible.
+    const accessibleInProgress = inProgressParts.filter(n => n <= maxAccessiblePart);
+    const accessibleCompleted  = completedParts.filter(n => n <= maxAccessiblePart);
+    if (accessibleInProgress.length > 0) {
+      currentPart = Math.min(...accessibleInProgress);
+    } else if (accessibleCompleted.length > 0) {
+      currentPart = Math.min(Math.max(...accessibleCompleted) + 1, maxAccessiblePart);
     } else {
       currentPart = 1;
     }

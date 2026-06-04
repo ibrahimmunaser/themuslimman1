@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
 import {
   LayoutDashboard,
@@ -67,25 +67,27 @@ export function StudentSidebar({
   activeProfileName,
   planType = "individual",
 }: StudentSidebarProps) {
-  const pathname     = usePathname();
-  const searchParams = useSearchParams();
-  const activeTabParam = searchParams.get("tab");
+  const pathname = usePathname();
 
-  const [collapsed,    setCollapsed]    = useState(false);
-  const [mobileOpen,   setMobileOpen]   = useState(false);
-  const [activeTab,    setActiveTab]    = useState<string>(activeTabParam ?? "home");
+  const [collapsed,   setCollapsed]   = useState(false);
+  const [mobileOpen,  setMobileOpen]  = useState(false);
+  const [activeTab,   setActiveTab]   = useState<string>("home");
   // Optimistic pending href: set on click so the link highlights before the
   // navigation completes; cleared once the pathname actually changes.
-  const [pendingHref,  setPendingHref]  = useState<string | null>(null);
+  const [pendingHref, setPendingHref] = useState<string | null>(null);
 
   const triggerRef = useRef<HTMLButtonElement>(null);
   const drawerRef  = useRef<HTMLElement>(null);
 
-  // Keep local tab state in sync with URL; also clear any pending optimistic state.
+  // Keep local tab state in sync with URL on every navigation.
+  // We read window.location.search directly (no useSearchParams) so the sidebar
+  // doesn't need to be inside a Suspense boundary — it renders with the initial
+  // HTML and never causes a layout-shift flash.
   useEffect(() => {
-    setActiveTab(activeTabParam ?? "home");
+    const tab = new URLSearchParams(window.location.search).get("tab") ?? "home";
+    setActiveTab(tab);
     setPendingHref(null);
-  }, [activeTabParam, pathname]);
+  }, [pathname]);
 
   // Sync when seerah:switchTab fires
   useEffect(() => {
@@ -526,7 +528,9 @@ export function StudentSidebar({
         aria-modal="true"
         aria-label="Account menu"
         className={clsx(
-          "fixed top-0 left-0 bottom-0 bg-surface border-r border-border flex flex-col transition-transform duration-300",
+          "fixed top-0 left-0 bottom-0 bg-surface border-r border-border flex flex-col",
+          // Smooth slide on mobile; no duration on desktop (instant collapse is fine)
+          "transition-transform duration-200 ease-out will-change-transform",
           // Desktop: sticky, always visible, collapsible width
           "lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:z-[40]",
           // Mobile: off-canvas drawer — z-[65] sits above overlay (z-[55])

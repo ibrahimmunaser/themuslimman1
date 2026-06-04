@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import { StudentSidebar } from "./student-sidebar";
 
 interface StudentLayoutProps {
@@ -18,14 +17,12 @@ export function StudentLayout({
 }: StudentLayoutProps) {
   return (
     <div className="flex min-h-screen bg-background items-start w-full">
-      <Suspense fallback={<div className="w-64 bg-surface border-r border-border shrink-0" />}>
-        <StudentSidebar
-          userPlan={userPlan}
-          userName={userName}
-          activeProfileName={activeProfileName ?? null}
-          planType={planType}
-        />
-      </Suspense>
+      <StudentSidebar
+        userPlan={userPlan}
+        userName={userName}
+        activeProfileName={activeProfileName ?? null}
+        planType={planType}
+      />
       
       {/* overflow-x:clip prevents horizontal overflow without creating a scroll
           container — unlike overflow-x:hidden, it does not break position:sticky
