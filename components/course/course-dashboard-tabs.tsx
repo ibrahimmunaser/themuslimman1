@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback, useTransition, useRef } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { LayoutDashboard, BookOpen, FolderOpen, TrendingUp, CircleUser } from "lucide-react";
 import { clsx } from "clsx";
 
@@ -35,14 +35,17 @@ export function CourseDashboardTabs({
   progressContent,
 }: CourseDashboardTabsProps) {
   const searchParams = useSearchParams();
-  const router = useRouter();
 
   const tabParam = searchParams.get("tab") as TabId | null;
   const resolvedInitial: TabId =
     tabParam && TABS.some((t) => t.id === tabParam) ? tabParam : "home";
 
   const [activeTab, setActiveTab] = useState<TabId>(resolvedInitial);
-  const [, startTransition] = useTransition();
+
+  // Track which tabs have ever been activated so we keep them mounted once rendered.
+  // Hiding with the HTML `hidden` attribute (display:none) rather than unmounting
+  // prevents FadeUp/StaggerChildren from restarting at opacity:0 on every tab switch.
+  const [everMounted, setEverMounted] = useState<Set<TabId>>(() => new Set([resolvedInitial]));
   // Tracks whether the current seerah:switchTab event was dispatched by us so
   // we can skip it in our own listener and avoid double-routing.
   const isSelfDispatch = useRef(false);
@@ -55,21 +58,20 @@ export function CourseDashboardTabs({
   }, [tabParam]);
 
   const switchTab = useCallback((id: TabId) => {
-    // 1. Highlight the tab bar immediately.
+    // 1. Mark this tab as ever-mounted so it stays in the DOM from now on.
+    setEverMounted((prev) => { if (prev.has(id)) return prev; const n = new Set(prev); n.add(id); return n; });
+    // 2. Highlight the tab bar immediately.
     setActiveTab(id);
-    // 2. Notify the sidebar so its active indicator also updates on this frame.
-    //    dispatchEvent is synchronous, so the flag prevents our own listener
-    //    from re-entering (and double-routing) when it receives the event.
+    // 3. Notify the sidebar so its active indicator also updates on this frame.
     isSelfDispatch.current = true;
     window.dispatchEvent(new CustomEvent("seerah:switchTab", { detail: id }));
     isSelfDispatch.current = false;
-    // 3. Route in the background — marked non-urgent so React commits the
-    //    visual update above before waiting on the navigation.
-    startTransition(() => {
-      const url = id === "home" ? "/seerah" : `/seerah?tab=${id}`;
-      router.replace(url, { scroll: false });
-    });
-  }, [router, startTransition]);
+    // 4. Update the URL for deep-linking WITHOUT triggering a Next.js server re-render.
+    //    Using history.replaceState keeps tab switching purely client-side — no ~1.2s
+    //    server round-trip, no React pending-transition opacity flicker.
+    const url = id === "home" ? "/seerah" : `/seerah?tab=${id}`;
+    window.history.replaceState(null, "", url);
+  }, []);
 
   // Listen for tab-switch events dispatched by the sidebar (not by us) so the
   // tab bar stays in sync when the user clicks a sidebar nav item.
@@ -78,22 +80,21 @@ export function CourseDashboardTabs({
       if (isSelfDispatch.current) return; // ignore events we dispatched
       const tabId = (e as CustomEvent<TabId>).detail;
       if (!TABS.some((t) => t.id === tabId)) return;
+      setEverMounted((prev) => { if (prev.has(tabId)) return prev; const n = new Set(prev); n.add(tabId); return n; });
       setActiveTab(tabId);
-      startTransition(() => {
-        const url = tabId === "home" ? "/seerah" : `/seerah?tab=${tabId}`;
-        router.replace(url, { scroll: false });
-      });
+      const url = tabId === "home" ? "/seerah" : `/seerah?tab=${tabId}`;
+      window.history.replaceState(null, "", url);
     };
     window.addEventListener("seerah:switchTab", handler);
     return () => window.removeEventListener("seerah:switchTab", handler);
-  }, [router, startTransition]);
+  }, []);
 
-  const content: Record<TabId, React.ReactNode> = {
+  const content: Record<TabId, React.ReactNode> = useMemo(() => ({
     home:      homeContent,
     lessons:   lessonsContent,
     resources: resourcesContent,
     progress:  progressContent,
-  };
+  }), [homeContent, lessonsContent, resourcesContent, progressContent]);
 
   return (
     <div>
@@ -144,16 +145,27 @@ export function CourseDashboardTabs({
         </div>
       </div>
 
-      {/* Tab Content — panel id matches aria-controls on each tab button */}
-      <div
-        id={`tab-panel-${activeTab}`}
-        role="tabpanel"
-        aria-labelledby={`tab-${activeTab}`}
-        tabIndex={0}
-        className="outline-none"
-      >
-        {content[activeTab]}
-      </div>
+      {/* Tab panels — keep-alive: once a tab is opened it stays mounted in the DOM
+          and is hidden via the HTML `hidden` attribute (display:none) rather than
+          unmounting. This prevents FadeUp/StaggerChildren from restarting their
+          entrance animations (opacity:0 → 1) every time you return to a tab. */}
+      {TABS.map((tab) => {
+        if (!everMounted.has(tab.id)) return null;
+        const isActive = activeTab === tab.id;
+        return (
+          <div
+            key={tab.id}
+            id={`tab-panel-${tab.id}`}
+            role="tabpanel"
+            aria-labelledby={`tab-${tab.id}`}
+            tabIndex={isActive ? 0 : -1}
+            hidden={!isActive}
+            className="outline-none"
+          >
+            {content[tab.id]}
+          </div>
+        );
+      })}
     </div>
   );
 }
