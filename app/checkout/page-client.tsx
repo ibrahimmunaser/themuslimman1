@@ -399,9 +399,13 @@ function CheckoutPageContent({
     setCouponError(null);
     try {
       if (audience === "family" && billing === "lifetime") {
+        // Validate first to get the real label, then create the intent with the code.
+        const res  = await fetch(`/api/stripe/validate-promo?code=${encodeURIComponent(code)}`);
+        const data = await res.json();
+        if (!res.ok || !data.valid) { setCouponError(data.error || "Invalid promo code"); return; }
         const result = await createIntent("family", "lifetime", code);
         if (result) {
-          setAppliedCoupon({ code: code.toUpperCase(), label: "Promo applied", discount: result.discountAmount, finalPrice: result.finalPrice });
+          setAppliedCoupon({ code: data.code, label: data.label, discount: result.discountAmount, finalPrice: result.finalPrice });
         } else {
           setCouponError("Invalid promo code");
         }

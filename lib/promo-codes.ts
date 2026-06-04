@@ -18,25 +18,20 @@ export interface PromoCode {
   type: "percent" | "fixed" | "absolute";
   value: number;
   label: string;
-  /**
-   * When true, this code is reserved for creator/influencer campaigns and
-   * must only be applied to lifetime (one-time) purchases — never to monthly
-   * subscriptions. The monthly checkout has no promo UI and no API support
-   * for promos, so this flag is primarily for documentation and auditing.
-   */
+  /** Internal label — unused at runtime, kept for auditing only. */
   creatorOnly?: boolean;
 }
 
 /** Built-in codes that are always active (no env var required). */
 const BUILT_IN_CODES: Record<string, PromoCode> = {
-  // Creator / influencer codes — lifetime access only. 20% off both lifetime packages.
-  KORRA20:    { type: "percent", value: 20, label: "20% off (Korra)",               creatorOnly: true },
-  ITACHI20:   { type: "percent", value: 20, label: "20% off (Itachi)",              creatorOnly: true },
-  DEEN20:     { type: "percent", value: 20, label: "20% off (Deen Responds)",       creatorOnly: true },
-  ORTHODOX20: { type: "percent", value: 20, label: "20% off (The Orthodox Muslim)", creatorOnly: true },
+  // Creator / influencer codes — 20% off individual AND family lifetime packages.
+  KORRA20:    { type: "percent", value: 20, label: "20% off (Korra)"               },
+  ITACHI20:   { type: "percent", value: 20, label: "20% off (Itachi)"              },
+  DEEN20:     { type: "percent", value: 20, label: "20% off (Deen Responds)"       },
+  ORTHODOX20: { type: "percent", value: 20, label: "20% off (The Orthodox Muslim)" },
   // Location codes — 20% off for local community members.
-  DEARBORN20:  { type: "percent", value: 20, label: "20% off (Dearborn)",  creatorOnly: true },
-  ANNARBOR20:  { type: "percent", value: 20, label: "20% off (Ann Arbor)", creatorOnly: true },
+  DEARBORN20:  { type: "percent", value: 20, label: "20% off (Dearborn)"  },
+  ANNARBOR20:  { type: "percent", value: 20, label: "20% off (Ann Arbor)" },
   // Free-access codes are NOT hardcoded here. Configure them via two env vars:
   //   FREE_ACCESS_CODE=YOURCODE          (the promo code string — treated as absolute $0)
   //   FREE_ACCESS_PLAN=complete|family   (the plan to grant; defaults to "complete")

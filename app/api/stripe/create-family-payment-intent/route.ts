@@ -70,13 +70,6 @@ export async function POST(request: NextRequest) {
       if (!promo) {
         return NextResponse.json({ error: "Invalid promo code" }, { status: 400 });
       }
-      // Creator/influencer codes are for individual lifetime plans only.
-      if (promo.creatorOnly) {
-        return NextResponse.json(
-          { error: "This promo code is not valid for the Family plan" },
-          { status: 400 }
-        );
-      }
       finalAmount = applyDiscount(baseAmount, promo);
       promoDiscountAmount = baseAmount - finalAmount;
       appliedPromoCode = promoCode.trim().toUpperCase();
