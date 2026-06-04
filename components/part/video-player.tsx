@@ -10,12 +10,11 @@ const REPORT_THRESHOLDS = [25, 50, 75, 85, 95, 100];
 /**
  * Time segments (in seconds) that should be automatically muted for specific parts,
  * with an optional overlay audio file to play instead.
- * The player mutes during [start, end] and restores audio outside that range,
- * without interfering with the user's own mute/volume controls.
+ * Add entries here if a video needs its audio replaced for a time range.
  */
 const MUTED_SEGMENTS: Record<number, Array<{ start: number; end: number; overlayAudio?: string }>> = {
-  // Part 7 (also "Part 1 – Children's Seerah"): mute video 11s – 17.4s, play replacement audio
-  7: [{ start: 11, end: 17.4, overlayAudio: "/part7_audio.wav" }],
+  // No active segments — add entries here as needed, e.g.:
+  // 7: [{ start: 11, end: 17.4, overlayAudio: "/part7_audio.wav" }],
 };
 
 interface VideoPlayerProps {
