@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validatePromoCode, applyDiscount } from "@/lib/promo-codes";
 import { getBasePrice, isEarlyAccessActive, REGULAR_PRICE } from "@/lib/early-access";
+import { PLANS } from "@/lib/stripe-config";
 import { checkRateLimit, getIP } from "@/lib/rate-limit";
 
 /**
- * GET /api/stripe/validate-promo?code=XXX
+ * GET /api/stripe/validate-promo?code=XXX[&plan=family]
  *
  * Validates a promo code server-side.
- * Returns discount details based on the CURRENT base price
- * (which depends on whether the early-access deadline has passed).
+ * Returns discount details based on the CURRENT base price for the requested plan.
+ *   plan=family     → uses family lifetime price ($199)
+ *   plan=individual → uses individual lifetime price (default, early-access aware)
  */
 export async function GET(request: NextRequest) {
   // Rate limit: 10 attempts per 5 minutes per IP to prevent brute-force enumeration.
@@ -22,6 +24,7 @@ export async function GET(request: NextRequest) {
   }
 
   const code = request.nextUrl.searchParams.get("code");
+  const plan = request.nextUrl.searchParams.get("plan"); // "family" | "individual" (default)
 
   if (!code || code.trim().length === 0) {
     return NextResponse.json({ valid: false, error: "Please enter a code" }, { status: 400 });
@@ -34,7 +37,8 @@ export async function GET(request: NextRequest) {
   }
 
   const earlyAccessActive = isEarlyAccessActive();
-  const basePrice = getBasePrice();
+  // Use family plan base price if requested, otherwise individual (early-access aware).
+  const basePrice = plan === "family" ? PLANS.family.price : getBasePrice();
   const finalPrice = applyDiscount(basePrice, promo);
   const promoDiscountAmount = basePrice - finalPrice;
   const earlyAccessDiscount = 0; // no early-access period active

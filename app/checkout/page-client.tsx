@@ -284,7 +284,9 @@ function CheckoutPageContent({
 
   useEffect(() => {
     if (isAuthenticated || !promoParam) return;
-    fetch(`/api/stripe/validate-promo?code=${encodeURIComponent(promoParam)}`)
+    // Pass the plan so the displayed discount matches the selected plan's base price.
+    const planParam = audience === "family" ? "&plan=family" : "";
+    fetch(`/api/stripe/validate-promo?code=${encodeURIComponent(promoParam)}${planParam}`)
       .then((r) => r.json())
       .then((data) => {
         if (data.valid) {
@@ -304,7 +306,9 @@ function CheckoutPageContent({
     if (!isAuthenticated) return;
 
     const autoApply = (code: string, onInvalid?: () => void) => {
-      fetch(`/api/stripe/validate-promo?code=${encodeURIComponent(code)}`)
+      // Pass plan so the initial discount preview is correct for the selected plan.
+      const planParam = audience === "family" ? "&plan=family" : "";
+      fetch(`/api/stripe/validate-promo?code=${encodeURIComponent(code)}${planParam}`)
         .then((r) => r.json())
         .then((data) => {
           if (data.valid) {
@@ -356,6 +360,8 @@ function CheckoutPageContent({
 
       if (data.emailVerified) {
         if (guestPromo && billing === "lifetime") {
+          // guestPromo.discount is already computed against the correct plan price
+          // (family or individual) from the validate-promo call that created it.
           setAppliedCoupon({ code: guestPromo.code, label: guestPromo.label, discount: guestPromo.discount, finalPrice: currentPlan.price - guestPromo.discount });
           setCouponInput(guestPromo.code);
         }
@@ -387,6 +393,8 @@ function CheckoutPageContent({
       const data = await res.json();
       if (!res.ok) { setAuthError(data.error || "Invalid email or password"); return; }
       if (guestPromo && billing === "lifetime") {
+        // guestPromo.discount is already computed against the correct plan price
+        // (family or individual) from the validate-promo call that created it.
         setAppliedCoupon({ code: guestPromo.code, label: guestPromo.label, discount: guestPromo.discount, finalPrice: currentPlan.price - guestPromo.discount });
         setCouponInput(guestPromo.code);
       }
@@ -408,15 +416,20 @@ function CheckoutPageContent({
     setCouponError(null);
     try {
       if (audience === "family" && billing === "lifetime") {
-        // Validate first to get the real label, then create the intent with the code.
-        const res  = await fetch(`/api/stripe/validate-promo?code=${encodeURIComponent(code)}`);
+        // Validate with the family plan base price so the displayed discount is correct.
+        const res  = await fetch(`/api/stripe/validate-promo?code=${encodeURIComponent(code)}&plan=family`);
         const data = await res.json();
         if (!res.ok || !data.valid) { setCouponError(data.error || "Invalid promo code"); return; }
-        const result = await createIntent("family", "lifetime", code);
-        if (result) {
-          setAppliedCoupon({ code: data.code, label: data.label, discount: result.discountAmount, finalPrice: result.finalPrice });
-        } else {
-          setCouponError("Invalid promo code");
+        // Always show the code as applied (correct family discount from validate-promo).
+        // If authenticated, also create/update the Stripe intent immediately.
+        setAppliedCoupon({ code: data.code, label: data.label, discount: data.promoDiscountAmount, finalPrice: data.finalPrice });
+        setCouponInput(data.code);
+        setCouponError(null);
+        if (isAuthenticated) {
+          const result = await createIntent("family", "lifetime", data.code);
+          if (result) {
+            setAppliedCoupon({ code: data.code, label: data.label, discount: result.discountAmount, finalPrice: result.finalPrice });
+          }
         }
         return;
       }
