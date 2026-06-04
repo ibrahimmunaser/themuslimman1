@@ -47,8 +47,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    // planType is intentionally NOT read from the body — plan is determined server-side only.
-    const { promoCode } = body as { promoCode?: string };
+    const { promoCode, planType } = body as { promoCode?: string; planType?: string };
 
     if (!promoCode) {
       return NextResponse.json({ error: "No promo code provided" }, { status: 400 });
@@ -60,20 +59,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid promo code" }, { status: 400 });
     }
 
-    // Require the code to be explicitly configured as a free-access code in this
-    // environment. A $0 promo code alone is not sufficient — it must also be listed
-    // in FREE_ACCESS_CODE so that no hardcoded or leaked code can grant free access.
-    const grantedPlan = getFreeAccessPlan(promoCode);
-    if (!grantedPlan) {
-      return NextResponse.json(
-        { error: "This code does not grant free access" },
-        { status: 400 }
-      );
+    // Determine the plan to grant.
+    // Priority: FREE_ACCESS_CODE env var (explicit override) → promo type absolute $0 → reject.
+    // The client sends planType ("family" | "individual") which we use when the code is a
+    // generic absolute-$0 code, but we verify server-side that the price is actually $0
+    // for that plan — the client cannot inflate the plan beyond what the code covers.
+    const envGrantedPlan = getFreeAccessPlan(promoCode);
+    let isFamily = envGrantedPlan === "family";
+
+    if (!envGrantedPlan) {
+      // Not a FREE_ACCESS_CODE env var code — accept if the promo itself is absolute $0.
+      if (promo.type !== "absolute" || promo.value !== 0) {
+        return NextResponse.json(
+          { error: "This code does not grant free access" },
+          { status: 400 }
+        );
+      }
+      // Use the plan requested by the client (already validated above that it's $0).
+      isFamily = planType === "family";
     }
 
-    const isFamily = grantedPlan === "family";
-
-    // Verify the promo actually reduces the price to $0 for the server-determined plan.
+    // Verify the promo actually reduces the price to $0 for the resolved plan.
     const baseAmount = isFamily ? STRIPE_CONFIG_PLANS.family.price : getBasePrice();
     const finalAmount = applyDiscount(baseAmount, promo);
 
