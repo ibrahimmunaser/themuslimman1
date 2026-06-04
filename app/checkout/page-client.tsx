@@ -257,6 +257,15 @@ function CheckoutPageContent({
       setFinalPrice(price);
       setDiscountAmount(discount);
 
+      // Sync appliedCoupon with the server-computed discount for the CURRENT plan.
+      // validate-promo always returns the individual price discount, so without this
+      // a Family plan user would see the wrong (individual-based) discount in the UI.
+      if (discount > 0) {
+        setAppliedCoupon((prev) =>
+          prev ? { ...prev, discount, finalPrice: price } : prev
+        );
+      }
+
       if (data.freeAccess) {
         setFreeAccess(true);
       } else {
