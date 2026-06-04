@@ -8,13 +8,14 @@ import { trackVideoProgress } from "@/app/actions/progress";
 const REPORT_THRESHOLDS = [25, 50, 75, 85, 95, 100];
 
 /**
- * Time segments (in seconds) that should be automatically muted for specific parts.
+ * Time segments (in seconds) that should be automatically muted for specific parts,
+ * with an optional overlay audio file to play instead.
  * The player mutes during [start, end] and restores audio outside that range,
  * without interfering with the user's own mute/volume controls.
  */
-const MUTED_SEGMENTS: Record<number, Array<{ start: number; end: number }>> = {
-  // Part 7 (also "Part 1 – Children's Seerah"): mute 11s – 17.4s
-  7: [{ start: 11, end: 17.4 }],
+const MUTED_SEGMENTS: Record<number, Array<{ start: number; end: number; overlayAudio?: string }>> = {
+  // Part 7 (also "Part 1 – Children's Seerah"): mute video 11s – 17.4s, play replacement audio
+  7: [{ start: 11, end: 17.4, overlayAudio: "/part7_audio.wav" }],
 };
 
 interface VideoPlayerProps {
@@ -30,14 +31,15 @@ interface VideoPlayerProps {
 }
 
 export function VideoPlayer({ src, title, poster, partNumber, previewMode, initialVideoPercent }: VideoPlayerProps) {
-  const videoRef      = useRef<HTMLVideoElement>(null);
-  const reportedRef   = useRef<Set<number>>(new Set());
+  const videoRef       = useRef<HTMLVideoElement>(null);
+  const overlayAudioRef = useRef<HTMLAudioElement | null>(null);
+  const reportedRef    = useRef<Set<number>>(new Set());
   // High-water mark of the furthest position watched (0–100). Prevents
   // forward-seeking beyond what the user has genuinely watched.
-  const maxWatchedRef = useRef<number>(initialVideoPercent ?? 0);
+  const maxWatchedRef  = useRef<number>(initialVideoPercent ?? 0);
   // Tracks whether the player auto-muted due to a MUTED_SEGMENTS rule,
   // so we can restore audio without overriding a manual user mute.
-  const autoMutedRef  = useRef<boolean>(false);
+  const autoMutedRef   = useRef<boolean>(false);
 
   // Pause video when audio starts playing elsewhere on the page
   useEffect(() => {
@@ -88,21 +90,44 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
     // Lift the seek restriction once 85 % is genuinely reached
     if (maxWatchedRef.current >= 85) setVideoFullyWatched(true);
 
-    // ── Auto-mute for defined segments ────────────────────────────────────────
+    // ── Auto-mute + overlay audio for defined segments ───────────────────────
     if (partNumber) {
       const segments = MUTED_SEGMENTS[partNumber];
       if (segments) {
-        const inSegment = segments.some(
+        const activeSegment = segments.find(
           (s) => currentTime >= s.start && currentTime <= s.end
         );
-        if (inSegment && !videoRef.current.muted) {
-          videoRef.current.muted = true;
-          autoMutedRef.current = true;
-          setMuted(true);
-        } else if (!inSegment && autoMutedRef.current) {
-          videoRef.current.muted = false;
-          autoMutedRef.current = false;
-          setMuted(false);
+
+        if (activeSegment) {
+          // Mute the video track
+          if (!videoRef.current.muted) {
+            videoRef.current.muted = true;
+            autoMutedRef.current = true;
+            setMuted(true);
+          }
+
+          // Start the overlay audio if it exists and isn't already playing
+          if (activeSegment.overlayAudio) {
+            if (!overlayAudioRef.current) {
+              const audio = new Audio(activeSegment.overlayAudio);
+              audio.volume = videoRef.current.volume || 0.5;
+              overlayAudioRef.current = audio;
+              audio.play().catch(() => {});
+            }
+          }
+        } else {
+          // Outside all segments — restore video audio if we auto-muted it
+          if (autoMutedRef.current) {
+            videoRef.current.muted = false;
+            autoMutedRef.current = false;
+            setMuted(false);
+          }
+
+          // Stop overlay audio if it's playing
+          if (overlayAudioRef.current) {
+            overlayAudioRef.current.pause();
+            overlayAudioRef.current = null;
+          }
         }
       }
     }
@@ -247,10 +272,29 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
             videoRef.current.currentTime = maxTime;
           }
         }}
+        onPause={() => {
+          setPlaying(false);
+          // Pause overlay audio in sync with the video
+          if (overlayAudioRef.current) {
+            overlayAudioRef.current.pause();
+          }
+        }}
+        onSeeked={() => {
+          // When the user seeks, stop any overlay audio — handleTimeUpdate will
+          // restart it if the new position falls inside a segment.
+          if (overlayAudioRef.current) {
+            overlayAudioRef.current.pause();
+            overlayAudioRef.current = null;
+          }
+        }}
         onEnded={() => {
           setPlaying(false);
           setStarted(false);
           setVideoFullyWatched(true);
+          if (overlayAudioRef.current) {
+            overlayAudioRef.current.pause();
+            overlayAudioRef.current = null;
+          }
           if (partNumber && !previewMode) {
             if (!reportedRef.current.has(100)) {
               reportedRef.current.add(100);
@@ -263,7 +307,6 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
           }
         }}
         onPlay={() => { setPlaying(true); window.dispatchEvent(new CustomEvent("seerah:videoPlaying")); }}
-        onPause={() => setPlaying(false)}
         title={title}
       />
 
