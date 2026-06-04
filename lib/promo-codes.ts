@@ -27,8 +27,8 @@ const BUILT_IN_CODES: Record<string, PromoCode> = {
   // Creator / influencer codes — 20% off individual AND family lifetime packages.
   KORRA20:    { type: "percent", value: 20, label: "20% off (Korra)"               },
   ITACHI20:   { type: "percent", value: 20, label: "20% off (Itachi)"              },
-  DEEN20:     { type: "percent", value: 20, label: "20% off (Deen Responds)"       },
-  ORTHODOX20: { type: "percent", value: 20, label: "20% off (The Orthodox Muslim)" },
+  DEEN:       { type: "percent", value: 20, label: "20% off (Deen Responds)"       },
+  ORTHODOX:   { type: "percent", value: 20, label: "20% off (The Orthodox Muslim)" },
   // Location codes — 20% off for local community members.
   DEARBORN20:  { type: "percent", value: 20, label: "20% off (Dearborn)"  },
   ANNARBOR20:  { type: "percent", value: 20, label: "20% off (Ann Arbor)" },
