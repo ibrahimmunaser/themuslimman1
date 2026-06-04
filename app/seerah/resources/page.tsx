@@ -135,33 +135,13 @@ export default async function SeerahResourcesPage() {
 
   // Per-part OR lock — exactly matches the part-page access check.
   // A part is unlocked if EITHER the complete-path predecessor quiz is passed
-  // OR the Children's-path predecessor quiz is passed.
-  // Part 1 and the first Children's part (Part 7) are always accessible.
-  const childrenPartsSorted = PARTS
-    .filter((p) => p.audiences.includes("children"))
-    .sort((a, b) => a.partNumber - b.partNumber);
-  const firstChildrenPartNumber = childrenPartsSorted[0]?.partNumber ?? null;
-
-  // Build a map: partNumber → predecessor partNumber in the Children's path
-  const childrenPredecessorMap = new Map<number, number>();
-  for (let i = 1; i < childrenPartsSorted.length; i++) {
-    childrenPredecessorMap.set(
-      childrenPartsSorted[i].partNumber,
-      childrenPartsSorted[i - 1].partNumber
-    );
-  }
-
+  // Sequential lock: only Part 1 is freely accessible.
+  // Every other part requires the previous part's quiz to be passed.
   const lockedPartNumbers = PARTS
     .filter((p) => {
       const n = p.partNumber;
-      if (n === 1) return false; // Part 1 always accessible
-      if (n === firstChildrenPartNumber) return false; // First children's part always accessible
-      const completePrevPassed = progressMap[n - 1]?.quizPassed ?? false;
-      const childrenPredecessor = childrenPredecessorMap.get(n);
-      const childrenPrevPassed = childrenPredecessor !== undefined
-        ? (progressMap[childrenPredecessor]?.quizPassed ?? false)
-        : false;
-      return !completePrevPassed && !childrenPrevPassed;
+      if (n === 1) return false;
+      return !(progressMap[n - 1]?.quizPassed ?? false);
     })
     .map((p) => p.partNumber);
 

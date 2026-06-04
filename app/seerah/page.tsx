@@ -215,30 +215,13 @@ export default async function LearnIndexPage() {
     }])
   );
 
-  // Per-part OR lock — matches the part-page access check exactly.
-  // Part 1 and the first Children's part (Part 7) are always accessible.
-  const childrenPartsSortedDash = PARTS
-    .filter((p) => p.audiences.includes("children"))
-    .sort((a, b) => a.partNumber - b.partNumber);
-  const firstChildrenPartNumberDash = childrenPartsSortedDash[0]?.partNumber ?? null;
-  const childrenPredecessorMapDash = new Map<number, number>();
-  for (let i = 1; i < childrenPartsSortedDash.length; i++) {
-    childrenPredecessorMapDash.set(
-      childrenPartsSortedDash[i].partNumber,
-      childrenPartsSortedDash[i - 1].partNumber
-    );
-  }
+  // Sequential lock: only Part 1 is freely accessible.
+  // Every other part requires the previous part's quiz to be passed.
   const lockedPartNumbers = PARTS
     .filter((p) => {
       const n = p.partNumber;
       if (n === 1) return false;
-      if (n === firstChildrenPartNumberDash) return false;
-      const completePrevPassed = progressMap[n - 1]?.quizPassed ?? false;
-      const childrenPredecessor = childrenPredecessorMapDash.get(n);
-      const childrenPrevPassed = childrenPredecessor !== undefined
-        ? (progressMap[childrenPredecessor]?.quizPassed ?? false)
-        : false;
-      return !completePrevPassed && !childrenPrevPassed;
+      return !(progressMap[n - 1]?.quizPassed ?? false);
     })
     .map((p) => p.partNumber);
 

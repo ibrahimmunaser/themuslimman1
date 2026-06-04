@@ -238,46 +238,18 @@ export async function trackQuizCompleted(partNumber: number, score: number) {
 
   const passed  = clamped >= QUIZ_PASS_SCORE;
 
-  // Sequential-lock check: Part 1 and first children's part (7) are always open.
-  // Any other part requires EITHER:
-  //   (a) the complete-path predecessor (partNumber - 1) to have its quiz passed, OR
-  //   (b) the children's-path predecessor (previous part in CHILDREN_PART_NUMBERS)
-  //       to have its quiz passed.
-  // This mirrors the page-level lock in app/seerah/[partId]/page.tsx and prevents
-  // a client from POST-ing a fake score to unlock arbitrary parts while also
-  // allowing users who follow the children's path to save progress correctly.
-  if (partNumber > 1 && partNumber !== 7) {
-    // Determine children's-path predecessor (null if part is not in children's path,
-    // or if it is the first part of that path — part 7).
-    const childrenIndex = CHILDREN_PART_NUMBERS.indexOf(partNumber);
-    const prevChildrenPartNumber =
-      childrenIndex > 0 ? CHILDREN_PART_NUMBERS[childrenIndex - 1] : null;
-    // Only need a separate children's query if the predecessor differs from n-1.
-    const needsChildrenQuery =
-      prevChildrenPartNumber !== null && prevChildrenPartNumber !== partNumber - 1;
+  // Sequential-lock check: only Part 1 is freely accessible.
+  // Every other part requires the previous part's quiz to be passed.
+  // This mirrors the page-level lock and prevents a client from POST-ing
+  // a fake score to unlock arbitrary parts out of order.
+  if (partNumber > 1) {
+    const prevProgress = await prisma.partProgress.findUnique({
+      where: { learnerProfileId_partNumber: { learnerProfileId, partNumber: partNumber - 1 } },
+      select: { quizPassed: true },
+    });
 
-    // Fetch both predecessors in parallel when needed.
-    const [prevCompleteProgress, prevChildrenProgress] = await Promise.all([
-      prisma.partProgress.findUnique({
-        where: { learnerProfileId_partNumber: { learnerProfileId, partNumber: partNumber - 1 } },
-        select: { quizPassed: true },
-      }),
-      needsChildrenQuery
-        ? prisma.partProgress.findUnique({
-            where: { learnerProfileId_partNumber: { learnerProfileId, partNumber: prevChildrenPartNumber! } },
-            select: { quizPassed: true },
-          })
-        : Promise.resolve(null),
-    ]);
-
-    const completePrevPassed = prevCompleteProgress?.quizPassed ?? false;
-    // If children's predecessor == n-1, reuse the already-fetched row.
-    const childrenPrevPassed = needsChildrenQuery
-      ? (prevChildrenProgress?.quizPassed ?? false)
-      : (prevChildrenPartNumber !== null && (prevCompleteProgress?.quizPassed ?? false));
-
-    if (!completePrevPassed && !childrenPrevPassed) {
-      devLog(`[PROGRESS] trackQuizCompleted: Part ${partNumber} — neither complete-path (${partNumber - 1}) nor children's-path (${prevChildrenPartNumber}) predecessor passed; ignoring score`);
+    if (!(prevProgress?.quizPassed ?? false)) {
+      devLog(`[PROGRESS] trackQuizCompleted: Part ${partNumber} — Part ${partNumber - 1} quiz not passed; ignoring score`);
       return;
     }
   }

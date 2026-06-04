@@ -168,24 +168,7 @@ export default async function SeerahPartPage(props: Props) {
 
   const learnerProfileId = user.activeProfileId ?? await getActiveProfileId(user.id);
 
-  // Determine the Children's Seerah path order so we can apply path-aware
-  // sequential locking. Part 7 is always accessible (first in Children's path).
-  // For other Children's parts, passing EITHER the complete-path predecessor
-  // (n-1) OR the Children's-path predecessor unlocks access.
-  const CHILDREN_PARTS = PARTS
-    .filter((p) => p.audiences.includes("children"))
-    .sort((a, b) => a.partNumber - b.partNumber);
-  const childrenIndex = CHILDREN_PARTS.findIndex((p) => p.partNumber === n);
-  const isFirstInChildrenPath = childrenIndex === 0;
-  // Previous part in Children's path (null if n is not in path, or is first)
-  const prevChildrenPartNumber =
-    childrenIndex > 0 ? CHILDREN_PARTS[childrenIndex - 1].partNumber : null;
-  // Only fetch children's predecessor if it's different from the complete-path
-  // predecessor (n-1) — otherwise prevProgress already covers it.
-  const needsChildrenQuery =
-    prevChildrenPartNumber !== null && prevChildrenPartNumber !== n - 1;
-
-  const [accessOk, partProgress, prevProgress, prevChildrenProgress] = await Promise.all([
+  const [accessOk, partProgress, prevProgress] = await Promise.all([
     n !== 1 ? hasActiveCourseAccess(user.id, user.hasPaid) : Promise.resolve(true),
     prisma.partProgress.findUnique({
       where: { learnerProfileId_partNumber: { learnerProfileId, partNumber: n } },
@@ -205,36 +188,14 @@ export default async function SeerahPartPage(props: Props) {
           select: { quizPassed: true },
         })
       : Promise.resolve(null),
-    needsChildrenQuery
-      ? prisma.partProgress.findUnique({
-          where: { learnerProfileId_partNumber: { learnerProfileId, partNumber: prevChildrenPartNumber! } },
-          select: { quizPassed: true },
-        })
-      : Promise.resolve(null),
   ]);
 
   if (!accessOk) redirect("/pricing");
 
-  // Sequential progression lock.
-  // Part 1 and the first Children's-path part (Part 7) are always accessible.
-  // Every other part requires the previous part in EITHER the complete path
-  // (n-1) OR the Children's path to have its quiz passed.
-  if (n > 1 && !isFirstInChildrenPath) {
-    const completePrevPassed = prevProgress?.quizPassed ?? false;
-    // If children's predecessor == n-1, reuse prevProgress (same DB row).
-    // If n is not in children's path at all (prevChildrenPartNumber === null),
-    // children's check contributes nothing (false).
-    const childrenPrevPassed = needsChildrenQuery
-      ? (prevChildrenProgress?.quizPassed ?? false)
-      : prevChildrenPartNumber !== null && (prevProgress?.quizPassed ?? false);
-    if (!completePrevPassed && !childrenPrevPassed) {
-      // Redirect to whichever predecessor applies.
-      // If the current part is in the Children's path, send them to the
-      // Children's predecessor so they know what to complete next.
-      // Otherwise fall back to the complete-path predecessor (n-1).
-      const redirectTo = prevChildrenPartNumber !== null ? prevChildrenPartNumber : n - 1;
-      redirect(`/seerah/part-${redirectTo}`);
-    }
+  // Sequential progression lock: only Part 1 is freely accessible.
+  // Every other part requires the previous part's quiz to be passed.
+  if (n > 1 && !(prevProgress?.quizPassed ?? false)) {
+    redirect(`/seerah/part-${n - 1}`);
   }
 
   const userPlan = "complete" as const;
