@@ -6,7 +6,17 @@ import { hasActiveCourseAccess } from "@/lib/access";
 import { getActiveProfileId } from "@/app/actions/profiles";
 import { getPartById, PARTS } from "@/lib/content";
 import { ERA_MAP } from "@/lib/types";
-import type { Part } from "@/lib/types";
+import type { Part, Quiz } from "@/lib/types";
+
+/** Remove correct_answer from all questions before the quiz crosses the server→client boundary.
+ *  The RSC payload is inspectable by anyone; answers are validated server-side via checkQuizAnswer. */
+function stripQuizAnswers(quiz: Quiz | null | undefined): Quiz | null | undefined {
+  if (!quiz) return quiz;
+  return {
+    ...quiz,
+    questions: quiz.questions.map(({ correct_answer: _a, ...q }) => q as Quiz["questions"][number]),
+  };
+}
 import { getPartPageData } from "@/lib/part-content-cache";
 import { prisma } from "@/lib/db";
 import {
@@ -18,6 +28,7 @@ import { PartNavButtons } from "@/components/part/part-nav-buttons";
 import { StudyTimeTracker } from "@/components/study-time-tracker";
 import { trackPartOpened } from "@/app/actions/progress";
 import { PartProgressBadges } from "@/components/part/part-progress-badges";
+import { UpNextCard } from "@/components/part/up-next-card";
 
 export const dynamic = "force-dynamic";
 
@@ -44,9 +55,12 @@ interface PartTabsContentProps {
   partNumber: number;
   partBase: NonNullable<ReturnType<typeof getPartById>>;
   userPlan: "essentials" | "complete";
+  initialVideoPercent: number;
+  initialVideoCompleted: boolean;
+  initialQuizBestScore?: number;
 }
 
-async function PartTabsContent({ partNumber, partBase, userPlan }: PartTabsContentProps) {
+async function PartTabsContent({ partNumber, partBase, userPlan, initialVideoPercent, initialVideoCompleted, initialQuizBestScore }: PartTabsContentProps) {
   const {
     briefingText,
     statementOfFactsText,
@@ -63,6 +77,7 @@ async function PartTabsContent({ partNumber, partBase, userPlan }: PartTabsConte
     videoUrl,
     audioUrl,
     mindmapUrl,
+    thumbnailUrl,
   } = await getPartPageData(partNumber);
 
   const part: Part = {
@@ -72,7 +87,7 @@ async function PartTabsContent({ partNumber, partBase, userPlan }: PartTabsConte
       statementOfFactsText: statementOfFactsText ?? undefined,
       studyGuideText:       studyGuideText ?? undefined,
       reportText:           reportText ?? undefined,
-      quiz:                 quizData as Part["assets"]["quiz"],
+      quiz:                 stripQuizAnswers(quizData as Part["assets"]["quiz"]) as Part["assets"]["quiz"],
       flashcards:           flashcards as Part["assets"]["flashcards"],
       infographics: {
         concise:   infSignedConcise,
@@ -92,7 +107,10 @@ async function PartTabsContent({ partNumber, partBase, userPlan }: PartTabsConte
       <PartTabs
         part={part}
         userPlan={userPlan}
-        initialAssetUrls={{ videoUrl, audioUrl, mindmapUrl }}
+        initialAssetUrls={{ videoUrl, audioUrl, mindmapUrl, thumbnailUrl }}
+        initialVideoPercent={initialVideoPercent}
+        initialVideoCompleted={initialVideoCompleted}
+        initialQuizBestScore={initialQuizBestScore}
       />
     </div>
   );
@@ -150,12 +168,30 @@ export default async function SeerahPartPage(props: Props) {
 
   const learnerProfileId = user.activeProfileId ?? await getActiveProfileId(user.id);
 
-  const [accessOk, partProgress] = await Promise.all([
+  // Determine the Children's Seerah path order so we can apply path-aware
+  // sequential locking. Part 7 is always accessible (first in Children's path).
+  // For other Children's parts, passing EITHER the complete-path predecessor
+  // (n-1) OR the Children's-path predecessor unlocks access.
+  const CHILDREN_PARTS = PARTS
+    .filter((p) => p.audiences.includes("children"))
+    .sort((a, b) => a.partNumber - b.partNumber);
+  const childrenIndex = CHILDREN_PARTS.findIndex((p) => p.partNumber === n);
+  const isFirstInChildrenPath = childrenIndex === 0;
+  // Previous part in Children's path (null if n is not in path, or is first)
+  const prevChildrenPartNumber =
+    childrenIndex > 0 ? CHILDREN_PARTS[childrenIndex - 1].partNumber : null;
+  // Only fetch children's predecessor if it's different from the complete-path
+  // predecessor (n-1) — otherwise prevProgress already covers it.
+  const needsChildrenQuery =
+    prevChildrenPartNumber !== null && prevChildrenPartNumber !== n - 1;
+
+  const [accessOk, partProgress, prevProgress, prevChildrenProgress] = await Promise.all([
     n !== 1 ? hasActiveCourseAccess(user.id, user.hasPaid) : Promise.resolve(true),
     prisma.partProgress.findUnique({
       where: { learnerProfileId_partNumber: { learnerProfileId, partNumber: n } },
       select: {
         videoWatchPercent:  true,
+        videoCompleted:     true,
         briefingOpened:     true,
         quizPassed:         true,
         quizBestScore:      true,
@@ -163,9 +199,43 @@ export default async function SeerahPartPage(props: Props) {
         openedAssets:       true,
       },
     }),
+    n > 1
+      ? prisma.partProgress.findUnique({
+          where: { learnerProfileId_partNumber: { learnerProfileId, partNumber: n - 1 } },
+          select: { quizPassed: true },
+        })
+      : Promise.resolve(null),
+    needsChildrenQuery
+      ? prisma.partProgress.findUnique({
+          where: { learnerProfileId_partNumber: { learnerProfileId, partNumber: prevChildrenPartNumber! } },
+          select: { quizPassed: true },
+        })
+      : Promise.resolve(null),
   ]);
 
   if (!accessOk) redirect("/pricing");
+
+  // Sequential progression lock.
+  // Part 1 and the first Children's-path part (Part 7) are always accessible.
+  // Every other part requires the previous part in EITHER the complete path
+  // (n-1) OR the Children's path to have its quiz passed.
+  if (n > 1 && !isFirstInChildrenPath) {
+    const completePrevPassed = prevProgress?.quizPassed ?? false;
+    // If children's predecessor == n-1, reuse prevProgress (same DB row).
+    // If n is not in children's path at all (prevChildrenPartNumber === null),
+    // children's check contributes nothing (false).
+    const childrenPrevPassed = needsChildrenQuery
+      ? (prevChildrenProgress?.quizPassed ?? false)
+      : prevChildrenPartNumber !== null && (prevProgress?.quizPassed ?? false);
+    if (!completePrevPassed && !childrenPrevPassed) {
+      // Redirect to whichever predecessor applies.
+      // If the current part is in the Children's path, send them to the
+      // Children's predecessor so they know what to complete next.
+      // Otherwise fall back to the complete-path predecessor (n-1).
+      const redirectTo = prevChildrenPartNumber !== null ? prevChildrenPartNumber : n - 1;
+      redirect(`/seerah/part-${redirectTo}`);
+    }
+  }
 
   const userPlan = "complete" as const;
 
@@ -183,6 +253,19 @@ export default async function SeerahPartPage(props: Props) {
   const currentIndex = allParts.findIndex((p) => p.id === partId);
   const prevPart = currentIndex > 0 ? allParts[currentIndex - 1] : null;
   const nextPart = currentIndex < allParts.length - 1 ? allParts[currentIndex + 1] : null;
+
+  // Compute Children's-path siblings so the nav buttons can switch between
+  // complete-order and children's-order based on the active path in localStorage.
+  const childrenPartsOrdered = PARTS
+    .filter((p) => p.audiences.includes("children"))
+    .sort((a, b) => a.partNumber - b.partNumber);
+  const childrenPartIndex = childrenPartsOrdered.findIndex((p) => p.id === partId);
+  const childrenPrevPart = childrenPartIndex > 0
+    ? childrenPartsOrdered[childrenPartIndex - 1]
+    : null;
+  const childrenNextPart = childrenPartIndex >= 0 && childrenPartIndex < childrenPartsOrdered.length - 1
+    ? childrenPartsOrdered[childrenPartIndex + 1]
+    : null;
 
   // ④ Shell renders immediately after auth (~400-800ms TTFB).
   //    PartTabsContent is inside <Suspense> — it streams in when R2 is ready.
@@ -261,29 +344,32 @@ export default async function SeerahPartPage(props: Props) {
               partNumber={n}
               partBase={partBase}
               userPlan={userPlan}
+              initialVideoPercent={partProgress?.videoWatchPercent ?? 0}
+              initialVideoCompleted={
+                !!(partProgress?.videoCompleted || (partProgress?.videoWatchPercent ?? 0) >= 85)
+              }
+              initialQuizBestScore={partProgress?.quizBestScore ?? undefined}
             />
           </Suspense>
 
-          {/* Up Next card — preview only, nav row handles the CTA */}
-          {nextPart && (
-            <div className="mt-8 px-4 py-3.5 sm:px-5 sm:py-4 rounded-xl bg-gold/5 border border-gold/15">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-gold/80 mb-1.5">Up Next</p>
-              <p className="text-sm font-semibold text-text leading-snug line-clamp-2" style={{ hyphens: "none" }}>
-                Part {nextPart.partNumber}: {nextPart.title}
-              </p>
-              {nextPart.subtitle && (
-                <p className="text-xs text-text-secondary/70 mt-0.5 leading-snug">{nextPart.subtitle}</p>
-              )}
-            </div>
-          )}
+          {/* Up Next card — shows Children's or Complete next part based on path cookie */}
+          <UpNextCard
+            completePath={nextPart}
+            childrenPath={childrenNextPart ?? null}
+          />
 
           {/* Navigation row — client component so startTransition keeps current page
               visible during load (no skeleton flash) */}
           <PartNavButtons
             prevPart={prevPart ? { id: prevPart.id, partNumber: prevPart.partNumber } : null}
             nextPart={nextPart ? { id: nextPart.id, partNumber: nextPart.partNumber, title: nextPart.title, subtitle: nextPart.subtitle } : null}
+            childrenPrevPart={childrenPrevPart ? { id: childrenPrevPart.id, partNumber: childrenPrevPart.partNumber } : null}
+            childrenNextPart={childrenNextPart ? { id: childrenNextPart.id, partNumber: childrenNextPart.partNumber, title: childrenNextPart.title, subtitle: childrenNextPart.subtitle } : null}
             currentPart={n}
             totalParts={allParts.length}
+            childrenTotalParts={childrenPartsOrdered.length}
+            childrenCurrentIndex={childrenPartIndex >= 0 ? childrenPartIndex + 1 : undefined}
+            initialQuizPassed={partProgress?.quizPassed ?? false}
           />
         </div>
       </div>

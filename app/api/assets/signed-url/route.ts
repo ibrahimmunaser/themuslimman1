@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateSignedR2Url, VIDEO_URL_EXPIRY, IMAGE_URL_EXPIRY } from "@/lib/r2";
-import { requirePartAccess, extractPartNumberFromR2Key } from "@/lib/part-access";
-import { getCurrentUser } from "@/lib/auth";
+import { requirePartAccess } from "@/lib/part-access";
 
 export const dynamic = "force-dynamic";
 
@@ -88,13 +87,6 @@ export async function GET(req: NextRequest) {
   // Auth + access check (Part 1 is always free; requirePartAccess handles this)
   const deny = await requirePartAccess(partNumber);
   if (deny) return deny;
-
-  // For non-part-keyed requests (shouldn't happen given validation above) require auth at minimum
-  const extractedPart = extractPartNumberFromR2Key(key);
-  if (extractedPart === null) {
-    const user = await getCurrentUser();
-    if (!user) return NextResponse.json({ error: "Authentication required" }, { status: 401 });
-  }
 
   try {
     const expiry = expiryForKey(key);

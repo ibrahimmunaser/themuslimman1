@@ -46,7 +46,10 @@ function PaymentSuccessPageContent() {
         try {
           const res = await fetch("/api/stripe/check-access");
           if (res.status === 401) {
-            // User somehow logged out — show generic success without crashing
+            // Session expired — user needs to log back in to access the course
+            setError(
+              "Payment received, but your session has expired. Please sign in to access your course."
+            );
             setLoading(false);
             return;
           }
@@ -122,6 +125,7 @@ function PaymentSuccessPageContent() {
   }
 
   if (error) {
+    const isSessionExpired = error.includes("session has expired");
     return (
       <div className="min-h-screen bg-ink text-text flex items-center justify-center px-4">
         <div className="max-w-md w-full bg-surface border border-border rounded-2xl p-8 text-center">
@@ -131,11 +135,21 @@ function PaymentSuccessPageContent() {
           <h1 className="text-xl font-bold mb-2">Almost there…</h1>
           <p className="text-text-secondary mb-6 text-sm leading-relaxed">{error}</p>
           <div className="space-y-3">
-            <Link href="/my-courses">
-              <Button variant="primary" size="lg" className="w-full">
-                Go to Dashboard
-              </Button>
-            </Link>
+            {isSessionExpired ? (
+              <Link href="/login?redirect=/seerah">
+                <Button variant="primary" size="lg" className="w-full">
+                  Sign In to Access Course
+                </Button>
+              </Link>
+            ) : (
+              <button
+                onClick={() => window.location.reload()}
+                className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold transition-colors"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Refresh Page
+              </button>
+            )}
             <Link href="/contact">
               <Button variant="ghost" size="md" className="w-full">
                 Contact Support

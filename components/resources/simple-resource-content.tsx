@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { PARTS } from "@/lib/content";
 import { eraGradient } from "./era-gradient";
 import { ResourcePageClient } from "./resource-page-client";
-import { Headphones, Layers, Image as ImageIcon, Map, Brain, CheckCircle2, X, Maximize2, Minimize2 } from "lucide-react";
+import { Headphones, Layers, Image as ImageIcon, Map, Brain, CheckCircle2, X, Maximize2, Minimize2, Lock } from "lucide-react";
 import { SlidesViewer } from "@/components/part/slides-viewer";
 import { FlashcardsViewer } from "@/components/part/flashcards-viewer";
 import { trackAssetOpened } from "@/app/actions/progress";
@@ -109,6 +109,7 @@ interface SimpleResourceContentProps {
   actionLabel: string;
   statusLabel: string;
   thumbnails?: Record<number, string>;
+  lockedPartNumbers?: number[];
 }
 
 export function SimpleResourceContent({
@@ -120,7 +121,9 @@ export function SimpleResourceContent({
   actionLabel: _actionLabel,
   statusLabel,
   thumbnails: thumbnailsProp = {},
+  lockedPartNumbers = [],
 }: SimpleResourceContentProps) {
+  const lockedSet = new Set(lockedPartNumbers);
   const [mounted, setMounted] = useState(false);
   const [selectedPart, setSelectedPart] = useState<{ partNumber: number; title: string; subtitle?: string; id: string } | null>(null);
   const [slideData, setSlideData] = useState<{ presented: SlideFile[]; detailed: SlideFile[]; facts: SlideFile[] } | null>(null);
@@ -806,19 +809,30 @@ export function SimpleResourceContent({
             <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
               {mounted && parts.map((part) => {
                 const isCompleted = localProgressMap[part.partNumber] || false;
+                const isLocked = lockedSet.has(part.partNumber);
 
                 return (
                   <div
                     key={part.id}
-                    onClick={() => handleOpenResource(part)}
-                    onMouseEnter={() => handlePrefetch(part.id)}
-                    className="group cursor-pointer rounded-xl border border-zinc-800 bg-zinc-900/50 hover:bg-zinc-900 hover:border-amber-500/30 transition-all overflow-hidden"
+                    onClick={isLocked ? undefined : () => handleOpenResource(part)}
+                    onMouseEnter={isLocked ? undefined : () => handlePrefetch(part.id)}
+                    className={`group rounded-xl border border-zinc-800 bg-zinc-900/50 transition-all overflow-hidden ${
+                      isLocked
+                        ? "cursor-not-allowed opacity-60"
+                        : "cursor-pointer hover:bg-zinc-900 hover:border-amber-500/30"
+                    }`}
                   >
                     {/* Thumbnail */}
                     <div
                       className="aspect-video relative flex items-center justify-center overflow-hidden"
                       style={eraGradient(part.era)}
                     >
+                      {/* Lock overlay */}
+                      {isLocked && (
+                        <div className="absolute inset-0 z-20 bg-black/70 flex items-center justify-center">
+                          <Lock className="w-5 h-5 text-zinc-500" />
+                        </div>
+                      )}
                       {/* Slide thumbnail — rendered once batch URLs are loaded */}
                       {thumbnails[part.partNumber] && (
                         // eslint-disable-next-line @next/next/no-img-element

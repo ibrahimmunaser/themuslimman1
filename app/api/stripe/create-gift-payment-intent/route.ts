@@ -71,14 +71,22 @@ export async function POST(request: NextRequest) {
     let appliedPromoCode: string | null = null;
     let appliedPromoLabel: string | null = null;
 
-    if (promoCode) {
+    if (promoCode?.trim()) {
       const promo = validatePromoCode(promoCode);
-      if (promo) {
-        finalAmount = applyDiscount(baseAmount, promo);
-        promoDiscountAmount = baseAmount - finalAmount;
-        appliedPromoCode = promoCode.trim().toUpperCase();
-        appliedPromoLabel = promo.label;
+      if (!promo) {
+        return NextResponse.json({ error: "Invalid promo code" }, { status: 400 });
       }
+      // Creator/influencer codes are for individual lifetime purchases only.
+      if (promo.creatorOnly && isFamily) {
+        return NextResponse.json(
+          { error: "This promo code is not valid for the Family plan" },
+          { status: 400 }
+        );
+      }
+      finalAmount = applyDiscount(baseAmount, promo);
+      promoDiscountAmount = baseAmount - finalAmount;
+      appliedPromoCode = promoCode.trim().toUpperCase();
+      appliedPromoLabel = promo.label;
     }
 
     const paymentIntent = await stripe.paymentIntents.create({

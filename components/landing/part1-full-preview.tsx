@@ -1,99 +1,68 @@
 import { getPartById } from "@/lib/content";
-import {
-  readBriefing,
-  readStatementOfFacts,
-  readStudyGuide,
-  readReport,
-  getSlideFiles,
-  getInfographicFilename,
-  readQuiz,
-  readFlashcards,
-  getPartAssetUrls,
-} from "@/lib/files";
-import { generateSignedR2Url, IMAGE_URL_EXPIRY } from "@/lib/r2";
+import { getPartPageData } from "@/lib/part-content-cache";
+import type { Part, Quiz } from "@/lib/types";
 import { PartTabs } from "@/components/part/part-tabs";
 import { Badge } from "@/components/ui/badge";
 
-async function loadPart1Data() {
-  const partBase = getPartById("part-1");
-  if (!partBase) return null;
-
-  const n = partBase.partNumber;
-
-  const [
-    slidesPresented,
-    slidesDetailed,
-    slidesFacts,
-    briefingText,
-    statementOfFactsText,
-    studyGuideText,
-    reportText,
-    quiz,
-    flashcards,
-    infConcise,
-    infStandard,
-    infBento,
-    assetUrls,
-  ] = await Promise.all([
-    getSlideFiles(n, "presented"),
-    getSlideFiles(n, "detailed"),
-    getSlideFiles(n, "facts"),
-    readBriefing(n),
-    readStatementOfFacts(n),
-    readStudyGuide(n),
-    readReport(n),
-    readQuiz(n),
-    readFlashcards(n),
-    getInfographicFilename(n, "Concise"),
-    getInfographicFilename(n, "Standard"),
-    getInfographicFilename(n, "Bento Grid"),
-    getPartAssetUrls(n),
-  ]);
-
-  // R2 keys always contain "/"; local filenames never do
-  const sign = (key: string | null, localFolder: string) =>
-    key
-      ? key.includes("/")
-        ? generateSignedR2Url(key, IMAGE_URL_EXPIRY)
-        : Promise.resolve(`/seerah-media/Infographics/${localFolder}/${key}`)
-      : Promise.resolve(undefined);
-
-  const [infConciseSigned, infStandardSigned, infBentoSigned] = await Promise.all([
-    sign(infConcise, "Concise"),
-    sign(infStandard, "Standard"),
-    sign(infBento, "Bento Grid"),
-  ]);
-
+function stripQuizAnswers(quiz: Quiz | null | undefined): Quiz | null | undefined {
+  if (!quiz) return quiz;
   return {
-    ...partBase,
-    assets: {
-      ...partBase.assets,
-      briefingText: briefingText ?? undefined,
-      statementOfFactsText: statementOfFactsText ?? undefined,
-      studyGuideText: studyGuideText ?? undefined,
-      reportText: reportText ?? undefined,
-      videoUrl: assetUrls.videoUrl ?? undefined,
-      audioUrl: assetUrls.audioUrl ?? undefined,
-      mindmapUrl: assetUrls.mindmapUrl ?? undefined,
-      quiz: quiz ?? undefined,
-      flashcards: flashcards ?? undefined,
-      slides: { presented: slidesPresented, detailed: slidesDetailed, facts: slidesFacts },
-      infographics: {
-        concise: infConciseSigned,
-        standard: infStandardSigned,
-        bentoGrid: infBentoSigned,
-      },
-    },
+    ...quiz,
+    questions: quiz.questions.map(({ correct_answer: _a, ...q }) => q as Quiz["questions"][number]),
   };
 }
 
 export async function Part1FullPreview() {
-  let part: Awaited<ReturnType<typeof loadPart1Data>>;
+  const partBase = getPartById("part-1");
+
+  let part: Part | null = null;
+  let initialAssetUrls: { videoUrl?: string; audioUrl?: string; mindmapUrl?: string; thumbnailUrl?: string } = {};
+
   try {
-    part = await loadPart1Data();
+    const {
+      briefingText,
+      statementOfFactsText,
+      studyGuideText,
+      reportText,
+      quizData,
+      flashcards,
+      slidesPresentedFiles,
+      slidesDetailedFiles,
+      slidesFactsFiles,
+      infSignedConcise,
+      infSignedStandard,
+      infSignedBento,
+      videoUrl,
+      audioUrl,
+      mindmapUrl,
+      thumbnailUrl,
+    } = await getPartPageData(1);
+
+    part = {
+      ...partBase!,
+      assets: {
+        briefingText:         briefingText ?? undefined,
+        statementOfFactsText: statementOfFactsText ?? undefined,
+        studyGuideText:       studyGuideText ?? undefined,
+        reportText:           reportText ?? undefined,
+        quiz:                 stripQuizAnswers(quizData as Part["assets"]["quiz"]) as Part["assets"]["quiz"],
+        flashcards:           flashcards as Part["assets"]["flashcards"],
+        infographics: {
+          concise:   infSignedConcise,
+          standard:  infSignedStandard,
+          bentoGrid: infSignedBento,
+        },
+        slides: {
+          presented: slidesPresentedFiles,
+          detailed:  slidesDetailedFiles,
+          facts:     slidesFactsFiles,
+        },
+      },
+    };
+
+    initialAssetUrls = { videoUrl, audioUrl, mindmapUrl, thumbnailUrl };
   } catch (error) {
     console.error("Failed to load Part 1 preview:", error);
-    part = null;
   }
 
   if (!part) {
@@ -126,7 +95,12 @@ export async function Part1FullPreview() {
 
       {/* Full Part 1 Content */}
       <div className="bg-surface px-4 sm:px-6 py-6">
-        <PartTabs part={part} userPlan="essentials" previewMode={true} />
+        <PartTabs
+          part={part}
+          userPlan="essentials"
+          previewMode={true}
+          initialAssetUrls={initialAssetUrls}
+        />
       </div>
 
       {/* Call-to-Action */}

@@ -7,12 +7,24 @@ import { generateParentProgressReport } from "@/lib/emails/parent-progress-repor
 // Vercel Cron or external cron service
 export async function GET(request: NextRequest) {
   try {
-    // Verify cron secret to prevent unauthorized access
+    // Verify cron secret to prevent unauthorized access.
+    // Vercel Cron automatically sends `Authorization: Bearer <CRON_SECRET>`.
+    // For external callers we additionally accept an optional `X-Cron-Timestamp`
+    // header and reject requests where the timestamp is more than 5 minutes old
+    // to guard against simple replay attacks.
     const authHeader = request.headers.get("authorization");
     const expectedSecret = process.env.CRON_SECRET;
 
     if (!expectedSecret || authHeader !== `Bearer ${expectedSecret}`) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const timestampHeader = request.headers.get("x-cron-timestamp");
+    if (timestampHeader) {
+      const ts = parseInt(timestampHeader, 10);
+      if (isNaN(ts) || Math.abs(Date.now() - ts) > 5 * 60 * 1000) {
+        return NextResponse.json({ error: "Timestamp expired or invalid" }, { status: 400 });
+      }
     }
 
     // Get all users with verified parent emails and weekly reports enabled
@@ -63,7 +75,7 @@ export async function GET(request: NextRequest) {
     const defaultProfileMap = Object.fromEntries(defaultProfiles.map((p) => [p.userId, p.id]));
     const defaultProfileIds = defaultProfiles.map((p) => p.id);
 
-    const [allProgress, allPurchases, allStudySessions, allQuizAttempts] = await Promise.all([
+    const [allProgress, allPurchases, allSubscriptions, allStudySessions, allQuizAttempts] = await Promise.all([
       prisma.partProgress.findMany({
         where: { learnerProfileId: { in: defaultProfileIds } },
         orderBy: { partNumber: "asc" },
@@ -76,6 +88,10 @@ export async function GET(request: NextRequest) {
       }),
       prisma.purchase.findMany({
         where: { userId: { in: userIds }, status: "succeeded" },
+        select: { userId: true },
+      }),
+      prisma.subscription.findMany({
+        where: { userId: { in: userIds }, status: { in: ["active", "trialing"] } },
         select: { userId: true },
       }),
       prisma.studySession.findMany({
@@ -104,7 +120,10 @@ export async function GET(request: NextRequest) {
       arr.push(p);
       progressByUser.set(ownerUserId, arr);
     }
-    const paidUserIds = new Set(allPurchases.map((p) => p.userId));
+    const paidUserIds = new Set([
+      ...allPurchases.map((p) => p.userId),
+      ...allSubscriptions.map((s) => s.userId),
+    ]);
     const sessionsByUser = new Map<string, typeof allStudySessions>();
     for (const s of allStudySessions) {
       const arr = sessionsByUser.get(s.userId) ?? [];
@@ -127,14 +146,18 @@ export async function GET(request: NextRequest) {
         const userPlan = paidUserIds.has(user.id) ? "complete" : "essentials";
 
         const totalLessons = 100;
-        const completedLessons = progressData.filter((p) => p.status === "completed").length;
+        // "completed" status is legacy; quiz-passed parts are the canonical completion signal.
+        const completedLessons = progressData.filter((p) => p.quizPassed).length;
 
+        // DB writes "started" for in-progress parts — "in_progress" is a UI-only label.
         const weeklyProgress = progressData.filter(
-          (p) => p.updatedAt >= oneWeekAgo && (p.status === "completed" || p.status === "in_progress")
+          (p) => p.updatedAt >= oneWeekAgo && (p.quizPassed || p.status === "started")
         );
 
-        const weeklyLessons = weeklyProgress.filter((p) => p.status === "completed").length;
-        const weeklyBriefings = weeklyProgress.filter((p) => p.briefingOpened).length;
+        const weeklyLessons = weeklyProgress.filter((p) => p.quizPassed).length;
+        const weeklyBriefings = progressData.filter(
+          (p) => p.briefingOpened && p.updatedAt >= oneWeekAgo
+        ).length;
 
         const userSessions = sessionsByUser.get(user.id) ?? [];
         const weeklyStudySessions = userSessions.filter((s) => s.startedAt >= oneWeekAgo);
@@ -177,7 +200,7 @@ export async function GET(request: NextRequest) {
           }
         }
 
-        const briefingsRead = completedLessons;
+        const briefingsRead = progressData.filter((p) => p.briefingOpened).length;
 
         // Generate email
         const emailHtml = generateParentProgressReport({
@@ -229,7 +252,7 @@ export async function GET(request: NextRequest) {
           results.failed++;
           results.errors.push(`${user.id}: ${emailError.message || "Unknown error"}`);
         } else {
-          console.log(`[CRON] Sent weekly report to ${user.parentEmail}`);
+          console.log(`[CRON] Sent weekly report for user ${user.id}`);
           results.sent++;
         }
 

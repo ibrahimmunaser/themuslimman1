@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
+import { cookies } from "next/headers";
 import { getCachedStudent } from "@/lib/auth-cache";
 import { hasActiveCourseAccess } from "@/lib/access";
 import { getActiveProfileId } from "@/app/actions/profiles";
@@ -7,11 +7,11 @@ import { PARTS } from "@/lib/content";
 import { getThumbnailUrls } from "@/lib/r2";
 import { getPartPageData } from "@/lib/part-content-cache";
 import { ERA_MAP } from "@/lib/types";
-import { ChevronRight, ChevronDown, Play, CheckCircle2, BookOpen } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { CourseDashboardTabs } from "@/components/course/course-dashboard-tabs";
 import { CourseHomeContent } from "@/components/course/course-home-content";
 import { CourseProgressContent } from "@/components/course/course-progress-content";
+import { LessonsPathView } from "@/components/course/lessons-path-view";
 import { ResourcesTabs } from "@/components/resources/resources-tabs";
 import { VideoResourceContent } from "@/components/resources/video-resource-content";
 import { AudioResourceContent } from "@/components/resources/audio-resource-content";
@@ -70,21 +70,53 @@ export default async function LearnIndexPage() {
     },
   });
 
+  // Read the active learning path from the cookie set by LessonsPathView
+  // (non-httpOnly, so JS writes it; the server reads it here to pick the right
+  // "current part" without a client round-trip).
+  const cookieStore = await cookies();
+  const pathCookie = cookieStore.get("seerah_path")?.value;
+  const activeLearningPath: "complete" | "children" =
+    pathCookie === "children" ? "children" : "complete";
+
   // Derive progress overview stats inline (replaces the old getProgress() call).
-  const completedParts  = allPartProgress
-    .filter(p => p.status === "completed" || p.status === "mastered")
+  const completedParts = allPartProgress
+    .filter(p => p.quizPassed)
     .map(p => p.partNumber);
-  const unlockedParts   = allPartProgress
-    .filter(p => p.videoWatchPercent >= 85 && p.briefingOpened)
-    .map(p => p.partNumber);
+
   // "started" is the only real DB status for in-progress parts.
-  // "in_progress" is a UI-derived display label and is never written to the DB.
   const inProgressParts = allPartProgress
     .filter(p => p.status === "started")
     .map(p => p.partNumber);
-  const currentPart     = inProgressParts.length > 0
-    ? Math.min(...inProgressParts)
-    : (unlockedParts.length > 0 ? Math.max(...unlockedParts) + 1 : 1);
+
+  // Compute "current part" in the context of the active path.
+  // For Children's path: only consider parts that belong to that path.
+  let currentPart: number;
+  if (activeLearningPath === "children") {
+    const childrenParts = PARTS
+      .filter(p => p.audiences.includes("children"))
+      .map(p => p.partNumber)
+      .sort((a, b) => a - b);
+    const childrenInProgress = inProgressParts.filter(n => childrenParts.includes(n));
+    const childrenCompleted  = completedParts.filter(n => childrenParts.includes(n));
+    if (childrenInProgress.length > 0) {
+      currentPart = Math.min(...childrenInProgress);
+    } else if (childrenCompleted.length > 0) {
+      const maxDone = Math.max(...childrenCompleted);
+      const nextIdx = childrenParts.indexOf(maxDone) + 1;
+      currentPart = childrenParts[nextIdx] ?? childrenParts[childrenParts.length - 1];
+    } else {
+      currentPart = childrenParts[0] ?? 1;
+    }
+  } else {
+    // Complete path: walk the full 100-part chain.
+    if (inProgressParts.length > 0) {
+      currentPart = Math.min(...inProgressParts);
+    } else if (completedParts.length > 0) {
+      currentPart = Math.min(Math.max(...completedParts) + 1, PARTS.length);
+    } else {
+      currentPart = 1;
+    }
+  }
 
   // Proactively warm the user's current part so clicking "Continue" / "Start stage"
   // hits a hot cache instead of waiting for cold R2 fetches.
@@ -120,13 +152,15 @@ export default async function LearnIndexPage() {
   const getAssetCompletedCount = (assetType: string) =>
     allPartProgress.filter((p) => (openedAssetsMap[p.partNumber] ?? []).includes(assetType)).length;
 
-  // Video stats for resource tabs
-  const videoCompletedCount = allPartProgress.filter((p) => p.status === "completed" || p.videoWatchPercent >= 85).length;
+  // Video stats for resource tabs — use videoWatchPercent >= 85 as the sole
+  // signal; the legacy status field is not written after the quiz-only
+  // completion change and should not be used for video-specific counts.
+  const videoCompletedCount = allPartProgress.filter((p) => p.videoWatchPercent >= 85).length;
   const videoInProgressCount = allPartProgress.filter(
-    (p) => p.videoWatchPercent > 0 && p.videoWatchPercent < 85 && p.status !== "completed"
+    (p) => p.videoWatchPercent > 0 && p.videoWatchPercent < 85
   ).length;
   const videoContinueWatching = allPartProgress
-    .filter((p) => p.videoWatchPercent > 0 && p.videoWatchPercent < 85 && p.status !== "completed")
+    .filter((p) => p.videoWatchPercent > 0 && p.videoWatchPercent < 85)
     .sort((a, b) => b.videoWatchPercent - a.videoWatchPercent)[0];
 
   // Quiz stats
@@ -181,6 +215,33 @@ export default async function LearnIndexPage() {
     }])
   );
 
+  // Per-part OR lock — matches the part-page access check exactly.
+  // Part 1 and the first Children's part (Part 7) are always accessible.
+  const childrenPartsSortedDash = PARTS
+    .filter((p) => p.audiences.includes("children"))
+    .sort((a, b) => a.partNumber - b.partNumber);
+  const firstChildrenPartNumberDash = childrenPartsSortedDash[0]?.partNumber ?? null;
+  const childrenPredecessorMapDash = new Map<number, number>();
+  for (let i = 1; i < childrenPartsSortedDash.length; i++) {
+    childrenPredecessorMapDash.set(
+      childrenPartsSortedDash[i].partNumber,
+      childrenPartsSortedDash[i - 1].partNumber
+    );
+  }
+  const lockedPartNumbers = PARTS
+    .filter((p) => {
+      const n = p.partNumber;
+      if (n === 1) return false;
+      if (n === firstChildrenPartNumberDash) return false;
+      const completePrevPassed = progressMap[n - 1]?.quizPassed ?? false;
+      const childrenPredecessor = childrenPredecessorMapDash.get(n);
+      const childrenPrevPassed = childrenPredecessor !== undefined
+        ? (progressMap[childrenPredecessor]?.quizPassed ?? false)
+        : false;
+      return !completePrevPassed && !childrenPrevPassed;
+    })
+    .map((p) => p.partNumber);
+
   // Show all parts (plan-locked parts are shown for upsell purposes)
   const accessibleParts = PARTS;
 
@@ -193,6 +254,36 @@ export default async function LearnIndexPage() {
   // Only count fully-completed parts — partial video progress does NOT inflate the %
   const progressPercentage = completedCount > 0 ? Math.round((completedCount / totalParts) * 100) : 0;
 
+  // Children's path progress % — 39-part denominator so it reads correctly
+  // when the user is on the Children's Seerah path.
+  const childrenPartNumbers = new Set(
+    PARTS.filter((p) => p.audiences.includes("children")).map((p) => p.partNumber)
+  );
+  const childrenCompletedCount = completedParts.filter((n) => childrenPartNumbers.has(n)).length;
+  const childrenTotalParts = childrenPartNumbers.size;
+  const childrenProgressPercentage = childrenCompletedCount > 0
+    ? Math.round((childrenCompletedCount / childrenTotalParts) * 100)
+    : 0;
+
+  // Build serializable progress data for LessonsPathView (client component).
+  // Re-uses openedAssetsMap already parsed above.
+  const lessonsProgressData = Object.fromEntries(
+    allPartProgress.map((p) => [
+      p.partNumber,
+      {
+        status: p.status ?? "not_started",
+        videoWatchPercent: p.videoWatchPercent ?? 0,
+        briefingOpened: p.briefingOpened ?? false,
+        quizPassed: p.quizPassed ?? false,
+        quizBestScore: p.quizBestScore ?? null,
+        quizAttempts: p.quizAttempts ?? 0,
+        flashcardsReviewed: p.flashcardsReviewed ?? false,
+        openedAssets: openedAssetsMap[p.partNumber] ?? [],
+      },
+    ])
+  );
+
+  // Era grouping — used by Home and Progress tabs (always shows all 100 parts).
   const partsByEra = accessibleParts.reduce((acc, part) => {
     const eraInfo = ERA_MAP[part.era as keyof typeof ERA_MAP];
     const era = eraInfo?.label || part.era;
@@ -213,21 +304,6 @@ export default async function LearnIndexPage() {
     }
     return acc;
   }, {} as Record<string, { label: string; description: string; color: string; parts: typeof PARTS; completedCount: number; totalCount: number }>);
-
-  // All parts are available for paid users — progress is a guide, not a gate
-  const getPartStatus = (partNumber: number) => {
-    if (completedParts.includes(partNumber)) return "completed";
-    // Only flag as in_progress if there is REAL activity, not just a DB record existing
-    const p = progressMap[partNumber];
-    const hasActivity = p && (
-      (p.videoWatchPercent > 0) ||
-      p.briefingOpened ||
-      (p.quizAttempts > 0) ||
-      p.flashcardsReviewed
-    );
-    if (hasActivity) return "in_progress";
-    return "not_started";
-  };
 
   // Get user's first name for header
   // Show the active learner profile's name on the dashboard.
@@ -271,194 +347,13 @@ export default async function LearnIndexPage() {
   // Title map for progress tab activity list
   const partTitleMap = Object.fromEntries(PARTS.map(p => [p.partNumber, p.title]));
 
-  // Helper: asset indicator row for each lesson card — uses pre-parsed openedAssetsMap.
-  function partAssetBadges(p: (typeof allPartProgress)[number] | undefined) {
-    const opened: string[] = p ? (openedAssetsMap[p.partNumber] ?? []) : [];
-    const vp = p?.videoWatchPercent ?? 0;
-    const assets = [
-      { key: "video",       label: vp >= 85 ? "✓ Video" : vp > 0 ? `Video ${vp}%` : "Video",                               done: vp >= 85,              partial: vp > 0 && vp < 85 },
-      { key: "briefing",    label: p?.briefingOpened        ? "✓ Briefing"    : "Briefing",                                   done: !!p?.briefingOpened,   partial: false },
-      { key: "slides",      label: opened.includes("slides")    ? "✓ Slides"      : "Slides",                                done: opened.includes("slides"),    partial: false },
-      { key: "audio",       label: opened.includes("audio")     ? "✓ Audio"       : "Audio",                                 done: opened.includes("audio"),     partial: false },
-      { key: "mindmap",     label: opened.includes("mindmap")   ? "✓ Mind Map"    : "Mind Map",                              done: opened.includes("mindmap"),   partial: false },
-      { key: "infographic", label: opened.includes("infographic") ? "✓ Infographic" : "Infographic",                         done: opened.includes("infographic"), partial: false },
-      { key: "flashcards",  label: p?.flashcardsReviewed    ? "✓ Flashcards"  : "Flashcards",                                done: !!p?.flashcardsReviewed, partial: false },
-      { key: "quiz",        label: p?.quizPassed ? `✓ Quiz ${p.quizBestScore}%` : p?.quizBestScore ? `Quiz ${p.quizBestScore}%` : "Quiz", done: !!p?.quizPassed, partial: !!(p?.quizBestScore && !p?.quizPassed) },
-    ];
-    return (
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1 text-xs hidden sm:flex">
-        {assets.map((a, i) => (
-          <span key={a.key} className={a.done ? "text-green-400" : a.partial ? "text-amber-400" : "text-zinc-600"}>
-            {a.label}{i < assets.length - 1 ? <span className="ml-3 text-zinc-700">·</span> : null}
-          </span>
-        ))}
-      </div>
-    );
-  }
-
-  // Lessons content
+  // Lessons content — client component handles path selector and filtering
   const lessonsContent = (
-    <div className="min-h-screen bg-ink">
-
-      {/* Course Hero */}
-      <div className="border-b border-zinc-800 bg-zinc-900/50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Lessons Header */}
-          <div className="mb-2">
-            <h1 className="text-2xl sm:text-3xl font-bold text-white">Lessons</h1>
-            <p className="text-zinc-400 text-sm mt-1">Browse all 100 lessons. All parts are unlocked.</p>
-          </div>
-
-
-
-
-
-
-
-        </div>
-      </div>
-
-      {/* Chapters */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-white mb-2">Course Roadmap</h2>
-          <p className="text-zinc-400 text-sm">
-            The life of Prophet Muhammad ﷺ in eight stages — from pre-Islamic Arabia to his final days.
-            All parts are unlocked. The course is arranged chronologically so each part adds context to the next.
-          </p>
-        </div>
-
-        <div className="space-y-4">
-          {Object.entries(partsByEra).map(([eraKey, era]) => {
-            const allCompleted = era.completedCount === era.totalCount;
-            const inProgress = era.completedCount > 0 && era.completedCount < era.totalCount;
-            const hasCurrentPart = era.parts.some(p => p.partNumber === currentPart);
-            const eraPercent = era.totalCount > 0 ? Math.round((era.completedCount / era.totalCount) * 100) : 0;
-
-            return (
-              <details
-                key={eraKey}
-                className="group"
-                open={hasCurrentPart}
-                style={{ contentVisibility: "auto", containIntrinsicBlockSize: "120px" }}
-              >
-                <summary className="cursor-pointer list-none rounded-xl">
-                  <div className="bg-zinc-900/50 rounded-xl p-5 transition-colors border" style={{ borderColor: `${era.color}40` }}>
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-4 flex-1 min-w-0">
-                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                          allCompleted ? "bg-green-500/10 border border-green-500/20" : ""
-                        }`} style={!allCompleted ? { backgroundColor: `${era.color}18`, border: `1px solid ${era.color}40` } : {}}>
-                          {allCompleted ? (
-                            <CheckCircle2 className="w-6 h-6 text-green-400" />
-                          ) : (
-                            <BookOpen className="w-6 h-6" style={{ color: era.color }} />
-                          )}
-                        </div>
-
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-3 mb-1 flex-wrap">
-                            <h3 className="text-base sm:text-lg font-semibold truncate min-w-0" style={{ color: era.color }}>{era.label}</h3>
-                            {allCompleted && (
-                              <span className="px-2 py-0.5 bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium rounded">
-                                Completed
-                              </span>
-                            )}
-                            {inProgress && !allCompleted && (
-                              <span className="px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-medium rounded">
-                                In Progress
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-sm text-zinc-400 mb-3">{era.description}</p>
-                          {/* Era progress bar */}
-                          <div className="flex items-center gap-3">
-                            <div className="flex-1 h-1.5 bg-zinc-800 rounded-full overflow-hidden max-w-[180px]">
-                              <div
-                                className={`h-full rounded-full transition-all duration-300 ${
-                                  allCompleted ? "bg-green-500" : "bg-amber-500"
-                                }`}
-                                style={{ width: `${eraPercent}%` }}
-                              />
-                            </div>
-                            <span className="text-xs text-zinc-500">
-                              {era.completedCount}/{era.totalCount} parts
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-                        <div className={`text-sm font-bold tabular-nums ${allCompleted ? "text-green-400" : inProgress ? "text-amber-400" : "text-zinc-600"}`}>
-                          {eraPercent}%
-                        </div>
-                        <ChevronDown className="w-5 h-5 text-zinc-500 group-open:rotate-180 transition-transform flex-shrink-0" />
-                      </div>
-                    </div>
-                  </div>
-                </summary>
-
-                {/* Chapter lessons */}
-                <div className="mt-3 ml-4 pl-4 border-l-2" style={{ borderColor: `${era.color}50` }}>
-                  <div className="space-y-2">
-                    {era.parts.map((part) => {
-                      const status = getPartStatus(part.partNumber);
-                      const isCompleted = status === "completed";
-                      const isInProgress = status === "in_progress";
-                      const pProgress = progressMap[part.partNumber];
-                      const isMastered = (pProgress?.status ?? "") === "mastered";
-                      return (
-                        <Link
-                          key={part.id}
-                          href={`/seerah/part-${part.partNumber}`}
-                          className="group block p-4 rounded-xl border transition-all bg-zinc-900/50 border-zinc-800 hover:border-amber-500/30 hover:bg-zinc-900"
-                        >
-                          <div className="flex items-center gap-4">
-                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                              isMastered   ? "bg-yellow-500/15 border border-yellow-500/30" :
-                              isCompleted  ? "bg-green-500/10  border border-green-500/20"  :
-                              isInProgress ? "bg-amber-500/10  border border-amber-500/20"  :
-                              "bg-zinc-800 border border-zinc-700"
-                            }`}>
-                              {isMastered
-                                ? <span className="text-base">✦</span>
-                                : isCompleted
-                                  ? <CheckCircle2 className="w-5 h-5 text-green-400" />
-                                  : <Play className={`w-5 h-5 ${isInProgress ? "text-amber-500" : "text-zinc-500"}`} />
-                              }
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="text-xs font-medium text-amber-500">Part {part.partNumber}</span>
-                                {isMastered && (
-                                  <span className="px-2 py-0.5 bg-yellow-500/10 border border-yellow-500/25 text-yellow-400 text-xs font-semibold rounded">Mastered</span>
-                                )}
-                                {isCompleted && !isMastered && (
-                                  <span className="px-2 py-0.5 bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium rounded">Completed</span>
-                                )}
-                                {isInProgress && (
-                                  <span className="px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-medium rounded">In Progress</span>
-                                )}
-                              </div>
-                              <p className="font-medium mb-0.5 truncate text-white group-hover:text-amber-400">{part.title}</p>
-                              {part.subtitle && (
-                                <p className="text-sm text-zinc-500 truncate mb-1">{part.subtitle}</p>
-                              )}
-                              {partAssetBadges(pProgress)}
-                            </div>
-                            <ChevronRight className="w-5 h-5 text-zinc-600 group-hover:text-amber-500 transition-colors flex-shrink-0" />
-                          </div>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
-              </details>
-            );
-          })}
-        </div>
-      </div>
-    </div>
+    <LessonsPathView
+      parts={PARTS}
+      progressData={lessonsProgressData}
+      currentPart={currentPart}
+    />
   );
 
   // StudentLayout is provided by app/seerah/layout.tsx — no wrapper needed here.
@@ -468,6 +363,7 @@ export default async function LearnIndexPage() {
           <CourseHomeContent 
             userPlan={userPlan} 
             completionPercentage={progressPercentage}
+            childrenCompletionPercentage={childrenProgressPercentage}
             completedLessons={completedCount}
             totalLessons={totalParts}
             userName={userFirstName}
@@ -489,6 +385,7 @@ export default async function LearnIndexPage() {
                 inProgressCount={videoInProgressCount}
                 continueWatching={videoContinueWatching}
                 thumbnails={thumbnails}
+                lockedPartNumbers={lockedPartNumbers}
               />
             }
             audioContent={
@@ -496,6 +393,7 @@ export default async function LearnIndexPage() {
                 progressMap={audioProgressMap}
                 completedCount={audioCompletedCount}
                 thumbnails={thumbnails}
+                lockedPartNumbers={lockedPartNumbers}
               />
             }
             briefingsContent={
@@ -506,6 +404,7 @@ export default async function LearnIndexPage() {
                 progressMap={briefingsProgressMap}
                 completedCount={briefingsCompletedCount}
                 thumbnails={thumbnails}
+                lockedPartNumbers={lockedPartNumbers}
               />
             }
             slidesContent={
@@ -518,6 +417,7 @@ export default async function LearnIndexPage() {
                 actionLabel="View"
                 statusLabel="Viewed"
                 thumbnails={thumbnails}
+                lockedPartNumbers={lockedPartNumbers}
               />
             }
             infographicsContent={
@@ -530,6 +430,7 @@ export default async function LearnIndexPage() {
                 actionLabel="View"
                 statusLabel="Viewed"
                 thumbnails={thumbnails}
+                lockedPartNumbers={lockedPartNumbers}
               />
             }
             mindmapsContent={
@@ -542,6 +443,7 @@ export default async function LearnIndexPage() {
                 actionLabel="View"
                 statusLabel="Viewed"
                 thumbnails={thumbnails}
+                lockedPartNumbers={lockedPartNumbers}
               />
             }
             flashcardsContent={
@@ -554,16 +456,19 @@ export default async function LearnIndexPage() {
                 actionLabel="Study"
                 statusLabel="Studied"
                 thumbnails={thumbnails}
+                lockedPartNumbers={lockedPartNumbers}
               />
             }
             quizzesContent={
               <QuizResourceContent
                 progressMap={quizProgressMap}
+                videoProgressMap={videoProgressMap}
                 completedCount={quizCompletedCount}
                 passedCount={quizPassedCount}
                 avgScore={quizAvgScore}
                 totalAttempts={quizTotalAttempts}
                 thumbnails={thumbnails}
+                lockedPartNumbers={lockedPartNumbers}
               />
             }
             factsContent={
@@ -574,6 +479,7 @@ export default async function LearnIndexPage() {
                 progressMap={factsProgressMap}
                 completedCount={factsCompletedCount}
                 thumbnails={thumbnails}
+                lockedPartNumbers={lockedPartNumbers}
               />
             }
           />
@@ -585,9 +491,10 @@ export default async function LearnIndexPage() {
             parentEmail={user.parentEmail || undefined}
             studentName={user.studentName || undefined}
             sendWeeklyReports={user.sendWeeklyReports}
-            completedLessons={completedCount}
-            totalLessons={totalParts}
-            progressPercentage={progressPercentage}
+            completedLessons={activeLearningPath === "children" ? childrenCompletedCount : completedCount}
+            totalLessons={activeLearningPath === "children" ? childrenTotalParts : totalParts}
+            progressPercentage={activeLearningPath === "children" ? childrenProgressPercentage : progressPercentage}
+            childrenProgressPercentage={childrenProgressPercentage}
             currentPart={currentPart}
             stagesData={stagesData}
             quizAvgScore={quizAvgScore}
@@ -614,4 +521,3 @@ function getEraDescription(era: string): string {
   };
   return descriptions[era] || "Journey through this important period";
 }
-

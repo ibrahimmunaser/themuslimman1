@@ -67,7 +67,7 @@ export function ContactForm() {
               We&apos;ve received your message and will respond within 24–48 hours.
             </p>
             <p className="text-sm text-text-muted">
-              Didn&apos;t get a confirmation email?{" "}
+              Need to follow up?{" "}
               <a href="mailto:themuslimman77@gmail.com" className="text-gold hover:underline">
                 Email us directly
               </a>

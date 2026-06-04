@@ -95,6 +95,8 @@ export interface EraInfo {
   color: string;
 }
 
+export type AudiencePath = "children" | "complete";
+
 export interface Part {
   id: string;
   partNumber: number;
@@ -104,6 +106,7 @@ export interface Part {
   description: string;
   duration?: string;
   includedInEssentials: boolean;
+  audiences: AudiencePath[];
   assets: PartAssets;
 }
 

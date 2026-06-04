@@ -1,0 +1,37 @@
+import { redirect } from "next/navigation";
+import { Suspense } from "react";
+import GiftSignupForm from "./gift-form";
+
+interface Props {
+  searchParams: Promise<{ email?: string; redirect?: string }>;
+}
+
+// /signup is only used for the gift-claim flow, where the recipient needs to
+// create a free account (no payment) before claiming a gift that was already
+// purchased for them.  That flow passes ?email=...&redirect=/gift/claim/TOKEN.
+//
+// Every other "sign up" entry point (navbar, login page, pricing CTAs) links
+// directly to /pricing so the user picks a plan and signs up + pays in one step.
+export default async function SignupPage({ searchParams }: Props) {
+  const { email, redirect: redirectTo } = await searchParams;
+
+  const isGiftFlow =
+    !!email && !!redirectTo && redirectTo.includes("/gift/claim/");
+
+  if (!isGiftFlow) {
+    redirect("/pricing");
+  }
+
+  // Gift-claim flow: show the account-creation form.
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <div className="animate-pulse text-text-secondary">Loading…</div>
+        </div>
+      }
+    >
+      <GiftSignupForm />
+    </Suspense>
+  );
+}

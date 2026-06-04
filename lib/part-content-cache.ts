@@ -22,6 +22,7 @@ import {
 import type { SlideFile } from "@/lib/types";
 import {
   generateSignedR2Url,
+  getThumbnailUrl,
   IMAGE_URL_EXPIRY,
   VIDEO_URL_EXPIRY,
   r2GetVideoKey,
@@ -36,9 +37,7 @@ const TTL_MS = 90 * 60 * 1000; // 90 minutes
 // load separate module instances, so module-level Maps are not shared between
 // them. globalThis is a single object per process and survives across imports.
 declare global {
-  // eslint-disable-next-line no-var
   var __partCache: Map<number, CachedPartData> | undefined;
-  // eslint-disable-next-line no-var
   var __partInflight: Map<number, Promise<CachedPartData>> | undefined;
 }
 
@@ -63,6 +62,8 @@ interface CachedPartData {
   videoUrl: string | undefined;
   audioUrl: string | undefined;
   mindmapUrl: string | undefined;
+  // Thumbnail URL — used as video poster so the browser doesn't load a full slide image
+  thumbnailUrl: string | undefined;
   cachedAt: number;
 }
 
@@ -123,7 +124,7 @@ async function loadPartData(n: number): Promise<CachedPartData> {
   ]);
 
   // Batch C — URL signing (depends on Batch A infographic keys + Batch B media keys)
-  const [infSignedConcise, infSignedStandard, infSignedBento, videoUrl, audioUrl, mindmapUrl] =
+  const [infSignedConcise, infSignedStandard, infSignedBento, videoUrl, audioUrl, mindmapUrl, thumbnailUrl] =
     await Promise.all([
       signImg(infConcise, "Concise"),
       signImg(infStandard, "Standard"),
@@ -131,6 +132,8 @@ async function loadPartData(n: number): Promise<CachedPartData> {
       videoKey   ? generateSignedR2Url(videoKey,   VIDEO_URL_EXPIRY) : Promise.resolve(undefined),
       audioKey   ? generateSignedR2Url(audioKey,   VIDEO_URL_EXPIRY) : Promise.resolve(undefined),
       mindmapKey ? generateSignedR2Url(mindmapKey, IMAGE_URL_EXPIRY) : Promise.resolve(undefined),
+      // Thumbnail — reuses the shared 1-hour thumbnail cache; pure HMAC if cold.
+      getThumbnailUrl(n).catch(() => undefined),
     ]);
 
   return {
@@ -153,6 +156,7 @@ async function loadPartData(n: number): Promise<CachedPartData> {
     videoUrl,
     audioUrl,
     mindmapUrl,
+    thumbnailUrl,
     cachedAt: Date.now(),
   };
 }

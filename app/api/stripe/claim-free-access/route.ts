@@ -96,29 +96,42 @@ export async function POST(request: NextRequest) {
     const planId: PlanId = isFamily ? "family" : "complete";
     const plan = PLANS[planId];
 
-    // Create purchase record + grant access in a transaction
-    await prisma.$transaction([
-      prisma.purchase.create({
-        data: {
-          id: crypto.randomUUID(),
-          updatedAt: new Date(),
-          userId: user.id,
-          planId: plan.id,
-          planName: plan.name,
-          amount: 0,
-          currency: "usd",
-          status: "succeeded",
-          stripePaymentIntentId: `free_${promoCode.toUpperCase()}_${user.id}_${Date.now()}`,
-        },
-      }),
-      prisma.user.update({
-        where: { id: user.id },
-        data: {
-          hasPaid: true,
-          ...(isFamily ? { planType: "family" } : {}),
-        },
-      }),
-    ]);
+    // Deterministic ID: removing Date.now() prevents duplicate rows if the same
+    // request races (TOCTOU between the findFirst check above and the create below).
+    // A unique-constraint violation from a concurrent claim is treated as success.
+    const deterministicId = `free_${promoCode.toUpperCase()}_${user.id}`;
+
+    try {
+      await prisma.$transaction([
+        prisma.purchase.create({
+          data: {
+            id: crypto.randomUUID(),
+            updatedAt: new Date(),
+            userId: user.id,
+            planId: plan.id,
+            planName: plan.name,
+            amount: 0,
+            currency: "usd",
+            status: "succeeded",
+            stripePaymentIntentId: deterministicId,
+          },
+        }),
+        prisma.user.update({
+          where: { id: user.id },
+          data: {
+            hasPaid: true,
+            ...(isFamily ? { planType: "family" } : {}),
+          },
+        }),
+      ]);
+    } catch (txErr) {
+      const msg = txErr instanceof Error ? txErr.message : "";
+      if (msg.includes("Unique constraint") || msg.includes("P2002")) {
+        // Concurrent claim — idempotent, access was already granted
+        return NextResponse.json({ success: true, alreadyHasAccess: true });
+      }
+      throw txErr;
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

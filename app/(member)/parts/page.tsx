@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { requireAuth } from "@/lib/auth";
 import { PARTS } from "@/lib/content";
-import { ERAS } from "@/lib/types";
-import { CurriculumView } from "@/components/parts/curriculum-view";
+import { CurriculumPathSelector } from "@/components/parts/curriculum-path-selector";
 import { Star } from "lucide-react";
 
 export const metadata = {
@@ -12,11 +11,6 @@ export const metadata = {
 export default async function PartsPage() {
   await requireAuth();
   const parts = PARTS;
-
-  const eraGroups = ERAS.map((era) => ({
-    era,
-    parts: parts.filter((p) => p.era === era.id),
-  })).filter((g) => g.parts.length > 0);
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto">
@@ -29,7 +23,7 @@ export default async function PartsPage() {
             </h1>
             <p className="text-text-secondary mt-1.5 text-sm leading-relaxed max-w-xl">
               A complete journey through the life of the Prophet Muhammad ﷺ — from pre-Islamic Arabia
-              to the final years of his prophethood.
+              to the final years of his prophethood. Choose a learning path below.
             </p>
           </div>
           <div className="hidden sm:flex flex-col items-end gap-1 flex-shrink-0 pt-1">
@@ -42,8 +36,8 @@ export default async function PartsPage() {
         <div className="mt-6 h-px bg-gradient-to-r from-gold/30 via-border to-transparent" />
       </div>
 
-      {/* Curriculum */}
-      <CurriculumView eraGroups={eraGroups} totalParts={parts.length} />
+      {/* Curriculum with path selector */}
+      <CurriculumPathSelector allParts={parts} />
 
       {/* Conclusion video card */}
       <div className="mt-6">

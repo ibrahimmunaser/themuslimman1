@@ -17,7 +17,7 @@ export function NavbarUserMenu({ user, firstName }: NavbarUserMenuProps) {
         <Link href="/login" className="hidden md:block text-sm text-text-secondary hover:text-text transition-colors">
           Login
         </Link>
-        <Link href="/signup" className={`hidden md:inline-flex ${buttonClass("primary", "sm")}`}>
+        <Link href="/checkout" className={`hidden md:inline-flex ${buttonClass("primary", "sm")}`}>
           Get Started
         </Link>
       </>

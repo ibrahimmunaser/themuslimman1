@@ -8,7 +8,7 @@ I've updated the email system to use your **existing MailerSend** configuration 
 
 Your `.env` file already has:
 ```bash
-MAILERSEND_API_KEY="mlsn.c48d41ae6f2990d0ab9ad4155f5fab2af80df59d0fe76aa455ed2d11cda3d26b"
+MAILERSEND_API_KEY="mlsn.xxxxxxxxxxxx_DO_NOT_COMMIT_REAL_KEY"
 EMAIL_FROM="The Muslim Man Academy <noreply@themuslimman.com>"
 ADMIN_NOTIFICATION_EMAIL="imunaser@themuslimman.com"
 ```

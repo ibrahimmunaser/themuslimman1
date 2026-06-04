@@ -7,16 +7,28 @@ import Stripe from "stripe";
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
-/** Extract subscription ID from Invoice across old and new Stripe API versions. */
+/**
+ * Extract subscription ID from Invoice across old and new Stripe API versions.
+ *
+ * Stripe API v2025+: invoice.parent.subscription_details.subscription
+ * Stripe API v2024 and older: invoice.subscription (direct string field)
+ *
+ * Both fields are typed as unknown here because the Stripe SDK types do not
+ * expose both shapes simultaneously. We narrow them safely rather than using
+ * `as any`.
+ */
 function getInvoiceSubscriptionId(invoice: Stripe.Invoice): string | null {
-  // New API (v2025+): invoice.parent.subscription_details.subscription
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const inv = invoice as any;
+  type InvoiceWithLegacy = typeof invoice & {
+    parent?: { subscription_details?: { subscription?: string } };
+    subscription?: string;
+  };
+  const inv = invoice as InvoiceWithLegacy;
   const fromParent: string | null =
-    inv?.parent?.subscription_details?.subscription ?? null;
-  // Old API fallback
+    typeof inv.parent?.subscription_details?.subscription === "string"
+      ? inv.parent.subscription_details.subscription
+      : null;
   const fromRoot: string | null =
-    typeof inv?.subscription === "string" ? inv.subscription : null;
+    typeof inv.subscription === "string" ? inv.subscription : null;
   return fromParent ?? fromRoot;
 }
 
@@ -68,6 +80,12 @@ export async function POST(request: NextRequest) {
       case "payment_intent.payment_failed": {
         const failedPayment = event.data.object as Stripe.PaymentIntent;
         console.error(`[WEBHOOK] payment_intent.payment_failed: ${failedPayment.id}, reason: ${failedPayment.last_payment_error?.message}`);
+        // Mark any existing Purchase row as failed so the billing page and access
+        // checks reflect the correct state (prevents a stuck "processing" record).
+        await prisma.purchase.updateMany({
+          where: { stripePaymentIntentId: failedPayment.id, status: { not: "succeeded" } },
+          data: { status: "failed", updatedAt: new Date() },
+        });
         break;
       }
 
@@ -142,13 +160,20 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
   console.log(`[WEBHOOK] handlePaymentSuccess: Processing payment ${paymentIntent.id} - userId: ${userId}, planId: ${planId}, planName: ${planName}`);
 
   if (!userId || !planId) {
-    console.error(`[WEBHOOK] handlePaymentSuccess: Missing metadata in payment intent ${paymentIntent.id} - userId: ${userId}, planId: ${planId}`);
-    return;
+    // Throw so Stripe retries this event rather than silently losing the access grant.
+    throw new Error(`[WEBHOOK] handlePaymentSuccess: Missing required metadata (userId=${userId}, planId=${planId}) in payment intent ${paymentIntent.id}`);
   }
 
   try {
     console.log(`[WEBHOOK] handlePaymentSuccess: Upserting purchase record for payment ${paymentIntent.id}...`);
-    
+
+    // Check if the purchase row already existed — used to gate the confirmation
+    // email so Stripe webhook retries don't send duplicate emails.
+    const existingPurchase = await prisma.purchase.findUnique({
+      where: { stripePaymentIntentId: paymentIntent.id },
+      select: { id: true },
+    });
+
     // Upsert purchase — idempotent so webhook retries and the verify-payment
     // route don't create duplicate records for the same PaymentIntent.
     await prisma.purchase.upsert({
@@ -234,10 +259,15 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
     const elapsed = Date.now() - startTime;
     console.log(`[WEBHOOK] handlePaymentSuccess: Purchase recorded for user ${userId}: ${planName ?? planId} [${elapsed}ms]`);
 
-    // Send purchase confirmation email — non-blocking
-    sendPurchaseConfirmationEmail(userId, planName ?? planId).catch((err) =>
-      console.error("[WEBHOOK] [PURCHASE_EMAIL] Failed to send confirmation email:", err)
-    );
+    // Send purchase confirmation email — non-blocking, only on first processing
+    // to avoid duplicate emails when Stripe retries the webhook.
+    if (!existingPurchase) {
+      sendPurchaseConfirmationEmail(userId, planName ?? planId).catch((err) =>
+        console.error("[WEBHOOK] [PURCHASE_EMAIL] Failed to send confirmation email:", err)
+      );
+    } else {
+      console.log(`[WEBHOOK] [PURCHASE_EMAIL] Skipping duplicate confirmation email for ${paymentIntent.id}`);
+    }
   } catch (error) {
     const elapsed = Date.now() - startTime;
     console.error(`[WEBHOOK] handlePaymentSuccess: ERROR recording purchase for payment ${paymentIntent.id} [${elapsed}ms]:`, error);
@@ -251,8 +281,8 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
 async function handleSubscriptionCheckoutCompleted(session: Stripe.Checkout.Session) {
   const userId = session.metadata?.userId;
   if (!userId) {
-    console.error("[WEBHOOK] handleSubscriptionCheckoutCompleted: No userId in session metadata", session.id);
-    return;
+    // Throw so Stripe retries the event rather than silently losing the subscription grant.
+    throw new Error(`[WEBHOOK] handleSubscriptionCheckoutCompleted: Missing userId in session metadata (session=${session.id})`);
   }
 
   const subscriptionId =
@@ -261,8 +291,7 @@ async function handleSubscriptionCheckoutCompleted(session: Stripe.Checkout.Sess
       : session.subscription?.id;
 
   if (!subscriptionId) {
-    console.error("[WEBHOOK] handleSubscriptionCheckoutCompleted: No subscription in session", session.id);
-    return;
+    throw new Error(`[WEBHOOK] handleSubscriptionCheckoutCompleted: No subscription attached to session (session=${session.id})`);
   }
 
   try {
@@ -301,8 +330,9 @@ async function handleSubscriptionUpsert(sub: Stripe.Subscription) {
         return;
       }
     }
-    console.error("[WEBHOOK] handleSubscriptionUpsert: Cannot resolve userId for sub", sub.id);
-    return;
+    // Throw so Stripe retries and we get another chance to link the subscription
+    // once the customer lookup resolves (e.g. after stripeCustomerId is written).
+    throw new Error(`[WEBHOOK] handleSubscriptionUpsert: Cannot resolve userId for sub ${sub.id}`);
   }
   await upsertSubscription(userId, sub);
 }
@@ -313,6 +343,13 @@ async function handleSubscriptionDeleted(sub: Stripe.Subscription) {
     data: { status: "canceled", updatedAt: new Date() },
   });
   console.log(`[WEBHOOK] Subscription ${sub.id} marked canceled`);
+
+  // Guard: Stripe may send a deletion event with no items (e.g. a sub that was
+  // cancelled before its first billing cycle). Skip planType detection in that case.
+  if (!sub.items?.data?.length) {
+    console.log(`[WEBHOOK] handleSubscriptionDeleted: sub ${sub.id} has no items — skipping planType downgrade`);
+    return;
+  }
 
   // If this was a Family Monthly subscription, downgrade the user's planType
   // back to "individual" — unless they also hold a lifetime Family purchase.
@@ -342,8 +379,9 @@ async function handleSubscriptionDeleted(sub: Stripe.Subscription) {
   }
 
   if (!userId) {
-    console.error("[WEBHOOK] handleSubscriptionDeleted: Could not resolve userId for family sub", sub.id);
-    return;
+    // Throw so Stripe retries once stripeCustomerId is populated, preventing
+    // a cancelled Family sub from silently leaving planType stuck as "family".
+    throw new Error(`[WEBHOOK] handleSubscriptionDeleted: Could not resolve userId for family sub ${sub.id}`);
   }
 
   // Keep planType=family if they own a lifetime family purchase
@@ -369,7 +407,7 @@ async function syncSubscriptionStatus(subscriptionId: string) {
       expand: ["items.data"],
     });
     const periods = getSubPeriod(sub);
-    await prisma.subscription.updateMany({
+    const result = await prisma.subscription.updateMany({
       where: { stripeSubscriptionId: subscriptionId },
       data: {
         status: sub.status,
@@ -382,6 +420,14 @@ async function syncSubscriptionStatus(subscriptionId: string) {
         updatedAt: new Date(),
       },
     });
+
+    // If 0 rows updated, the subscription row hasn't been created yet
+    // (e.g. invoice event arrives before customer.subscription.created).
+    // Upsert so the state is correct regardless of event ordering.
+    if (result.count === 0) {
+      console.warn(`[WEBHOOK] syncSubscriptionStatus: No row for sub ${subscriptionId} — upserting via handleSubscriptionUpsert`);
+      await handleSubscriptionUpsert(sub);
+    }
   } catch (err) {
     console.error("[WEBHOOK] syncSubscriptionStatus error:", err);
     // Re-throw so Stripe retries if subscription status update fails.
@@ -501,12 +547,14 @@ async function handleGiftPaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
   console.log(`[WEBHOOK] handleGiftPaymentSuccess: ${paymentIntent.id} purchaser: ${purchaserEmail} → recipient: ${recipientEmail}`);
 
   if (!purchaserEmail || !recipientEmail) {
-    console.error(`[WEBHOOK] handleGiftPaymentSuccess: Missing metadata in ${paymentIntent.id}`);
-    return;
+    // Throw so Stripe retries rather than silently dropping gift fulfillment.
+    throw new Error(`[WEBHOOK] handleGiftPaymentSuccess: Missing purchaserEmail/recipientEmail metadata in payment intent ${paymentIntent.id}`);
   }
 
   try {
-    // Ensure a GiftPurchase record exists (create if webhook fires before verify-and-create)
+    // Ensure a GiftPurchase record exists (create if webhook fires before verify-and-create).
+    // planId must come from metadata — "complete" is the safe fallback for individual gifts.
+    const giftPlanId = paymentIntent.metadata.planId ?? "complete";
     await prisma.giftPurchase.upsert({
       where: { stripePaymentIntentId: paymentIntent.id },
       create: {
@@ -517,23 +565,45 @@ async function handleGiftPaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
         recipientEmail,
         recipientName: recipientName || null,
         giftMessage: giftMessage || null,
+        planId: giftPlanId,
         status: "pending",
       },
-      update: {},
+      update: {
+        // Ensure planId is set if the row was created without it by an earlier webhook
+        planId: giftPlanId,
+      },
     });
 
     // Atomically transition pending → paid and generate claim token
     const rawToken = generateGiftToken();
     const tokenHash = hashGiftToken(rawToken);
 
-    const updated = await prisma.giftPurchase.updateMany({
+    // Transition pending → paid (idempotent; noop if already paid)
+    await prisma.giftPurchase.updateMany({
       where: { stripePaymentIntentId: paymentIntent.id, status: "pending" },
       data: { status: "paid", claimTokenHash: tokenHash },
     });
 
-    if (updated.count > 0) {
-      // We own this transition — send the email
-      const claimUrl = buildClaimUrl(rawToken);
+    // Send email whenever it hasn't been sent yet — this is the retry-safe guard.
+    // Checking emailSentAt (not the status transition count) means a failed send
+    // on a previous webhook attempt is retried correctly on the next one.
+    const giftRecord = await prisma.giftPurchase.findUnique({
+      where: { stripePaymentIntentId: paymentIntent.id },
+      select: { emailSentAt: true, claimTokenHash: true },
+    });
+
+    if (giftRecord && !giftRecord.emailSentAt) {
+      // Generate a fresh token on every email attempt (including retries) so the
+      // stored hash and the emailed URL always match. The transition updateMany
+      // above may have been a no-op on retries (status already "paid"), so we
+      // must explicitly overwrite the stored hash here before sending.
+      const freshRawToken = generateGiftToken();
+      const freshHash = hashGiftToken(freshRawToken);
+      await prisma.giftPurchase.update({
+        where: { stripePaymentIntentId: paymentIntent.id },
+        data: { claimTokenHash: freshHash },
+      });
+      const claimUrl = buildClaimUrl(freshRawToken);
       try {
         await sendGiftClaimEmail({
           recipientEmail,
@@ -541,20 +611,24 @@ async function handleGiftPaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
           purchaserEmail,
           giftMessage: giftMessage || null,
           claimUrl,
+          planId: giftPlanId,
         });
         await prisma.giftPurchase.update({
           where: { stripePaymentIntentId: paymentIntent.id },
           data: { emailSentAt: new Date() },
         });
-        console.log(`[WEBHOOK] handleGiftPaymentSuccess: Gift email sent to ${recipientEmail}`);
+        console.log(`[WEBHOOK] handleGiftPaymentSuccess: Gift email sent`);
       } catch (emailErr) {
-        console.error(`[WEBHOOK] handleGiftPaymentSuccess: Email failed for ${recipientEmail}:`, emailErr);
+        // Throw so Stripe retries and the email is attempted again.
+        throw new Error(`[WEBHOOK] handleGiftPaymentSuccess: Email send failed — will retry: ${emailErr}`);
       }
     } else {
-      console.log(`[WEBHOOK] handleGiftPaymentSuccess: Gift ${paymentIntent.id} already processed, skipping`);
+      console.log(`[WEBHOOK] handleGiftPaymentSuccess: Gift email already sent for ${paymentIntent.id}, skipping`);
     }
   } catch (error) {
     console.error(`[WEBHOOK] handleGiftPaymentSuccess: ERROR for ${paymentIntent.id}:`, error);
+    // Re-throw so the webhook route returns 500 and Stripe retries this event.
+    throw error;
   }
 }
 
@@ -592,7 +666,7 @@ async function sendPurchaseConfirmationEmail(userId: string, planName: string) {
           </div>
 
           <div style="background: #ffffff; padding: 40px 30px; border: 1px solid #e5e5e5; border-top: none;">
-            <p style="font-size: 16px; margin: 0 0 16px 0;">Assalamu Alaykum ${user.fullName ?? ""},</p>
+            <p style="font-size: 16px; margin: 0 0 16px 0;">Assalamu Alaykum ${user.fullName ? user.fullName : "dear student"},</p>
 
             <p style="font-size: 15px; margin: 0 0 16px 0;">
               Thank you for your purchase. Your <strong>${planName}</strong> is now active and ready to use.
@@ -651,5 +725,5 @@ async function sendPurchaseConfirmationEmail(userId: string, planName: string) {
     `,
   });
 
-  console.log(`[PURCHASE_EMAIL] Confirmation sent to ${user.email}`);
+  console.log(`[PURCHASE_EMAIL] Confirmation sent to user ${userId}`);
 }

@@ -5,7 +5,7 @@ import { PARTS } from "@/lib/content";
 import type { Part } from "@/lib/types";
 import { eraGradient } from "./era-gradient";
 import { ResourcePageClient } from "./resource-page-client";
-import { Video, Play, CheckCircle2, Clock, X } from "lucide-react";
+import { Video, Play, CheckCircle2, Clock, X, Lock } from "lucide-react";
 import { VideoPlayer } from "@/components/part/video-player";
 import { getCachedResource, setCachedResource, prefetchResource } from "@/lib/resource-cache";
 
@@ -15,6 +15,7 @@ interface VideoResourceContentProps {
   inProgressCount: number;
   continueWatching?: { partNumber: number; videoWatchPercent: number };
   thumbnails?: Record<number, string>;
+  lockedPartNumbers?: number[];
 }
 
 export function VideoResourceContent({
@@ -23,7 +24,9 @@ export function VideoResourceContent({
   inProgressCount,
   continueWatching,
   thumbnails = {},
+  lockedPartNumbers = [],
 }: VideoResourceContentProps) {
+  const lockedSet = new Set(lockedPartNumbers);
   const [mounted, setMounted] = useState(false);
   const [selectedPart, setSelectedPart] = useState<{
     partNumber: number;
@@ -132,7 +135,7 @@ export function VideoResourceContent({
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [selectedPart, handleClose]);
 
-  const continueWatchingPart = continueWatching
+  const continueWatchingPart = continueWatching && !lockedSet.has(continueWatching.partNumber)
     ? PARTS.find((p) => p.partNumber === continueWatching.partNumber)
     : null;
 
@@ -303,19 +306,30 @@ export function VideoResourceContent({
                 const progress    = progressMap[part.partNumber];
                 const watchPct    = progress?.videoWatchPercent || 0;
                 const isCompleted = progress?.videoCompleted || watchPct >= 85;
+                const isLocked    = lockedSet.has(part.partNumber);
 
                 return (
                   <div
                     key={part.id}
-                    onClick={() => handleOpenVideo(part)}
-                    onMouseEnter={() => handlePrefetch(part.partNumber)}
-                    className="group cursor-pointer rounded-xl border border-zinc-800 bg-zinc-900/50 hover:bg-zinc-900 hover:border-amber-500/25 transition-all overflow-hidden"
+                    onClick={isLocked ? undefined : () => handleOpenVideo(part)}
+                    onMouseEnter={isLocked ? undefined : () => handlePrefetch(part.partNumber)}
+                    className={`group rounded-xl border border-zinc-800 bg-zinc-900/50 transition-all overflow-hidden ${
+                      isLocked
+                        ? "cursor-not-allowed opacity-60"
+                        : "cursor-pointer hover:bg-zinc-900 hover:border-amber-500/25"
+                    }`}
                   >
                     {/* Thumbnail */}
                     <div
                       className="aspect-video relative overflow-hidden"
                       style={eraGradient(part.era)}
                     >
+                      {/* Lock overlay — covers all other thumbnail children */}
+                      {isLocked && (
+                        <div className="absolute inset-0 z-20 bg-black/70 flex items-center justify-center">
+                          <Lock className="w-5 h-5 text-zinc-500" />
+                        </div>
+                      )}
                       {thumbnails[part.partNumber] && (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
@@ -438,6 +452,7 @@ export function VideoResourceContent({
                   src={videoUrl}
                   partNumber={selectedPart.partNumber}
                   title={selectedPart.title}
+                  initialVideoPercent={progressMap[selectedPart.partNumber]?.videoWatchPercent ?? 0}
                 />
               )}
             </div>

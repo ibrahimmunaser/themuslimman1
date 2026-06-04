@@ -5,7 +5,10 @@ import { prisma } from "@/lib/db";
 import Stripe from "stripe";
 
 export async function POST() {
-  if (process.env.NODE_ENV !== "development") {
+  if (
+    process.env.NODE_ENV !== "development" ||
+    process.env.ALLOW_DEBUG_ENDPOINTS !== "true"
+  ) {
     return NextResponse.json({ error: "Not available" }, { status: 403 });
   }
 

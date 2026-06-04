@@ -28,7 +28,8 @@ export async function requirePartAccess(partNumber: number): Promise<NextRespons
     );
   }
 
-  const hasAccess = await hasActiveCourseAccess(user.id);
+  // Pass sessionHasPaid so lifetime buyers short-circuit without any DB queries.
+  const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
   if (!hasAccess) {
     return NextResponse.json(
       { error: "Active subscription or lifetime purchase required" },

@@ -14,11 +14,17 @@ interface VideoPlayerProps {
   partNumber?: number;
   /** When true (free preview), skip progress tracking — user is not logged in */
   previewMode?: boolean;
+  /** Server-fetched watch percent — initialises the max-watched high-water mark
+   *  so users can seek within already-watched range on reload */
+  initialVideoPercent?: number;
 }
 
-export function VideoPlayer({ src, title, poster, partNumber, previewMode }: VideoPlayerProps) {
-  const videoRef   = useRef<HTMLVideoElement>(null);
+export function VideoPlayer({ src, title, poster, partNumber, previewMode, initialVideoPercent }: VideoPlayerProps) {
+  const videoRef    = useRef<HTMLVideoElement>(null);
   const reportedRef = useRef<Set<number>>(new Set());
+  // High-water mark of the furthest position watched (0–100). Prevents
+  // forward-seeking beyond what the user has genuinely watched.
+  const maxWatchedRef = useRef<number>(initialVideoPercent ?? 0);
 
   // Pause video when audio starts playing elsewhere on the page
   useEffect(() => {
@@ -39,6 +45,9 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode }: Vid
   const [progress, setProgress] = useState(0);
   const [controlsVisible, setControlsVisible] = useState(false);
   const [videoError, setVideoError] = useState(false);
+  // Once 85 % of the video has been watched the seeking lock is lifted and the
+  // forward-10s button is restored so users can re-watch freely.
+  const [videoFullyWatched, setVideoFullyWatched] = useState(() => (initialVideoPercent ?? 0) >= 85);
   const controlsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const showControlsTemporarily = useCallback(() => {
@@ -58,6 +67,12 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode }: Vid
     const pct = (videoRef.current.currentTime / videoRef.current.duration) * 100;
     const rounded = isNaN(pct) ? 0 : Math.round(pct);
     setProgress(rounded);
+
+    // Advance the high-water mark as the user watches further
+    maxWatchedRef.current = Math.max(maxWatchedRef.current, rounded);
+
+    // Lift the seek restriction once 85 % is genuinely reached
+    if (maxWatchedRef.current >= 85) setVideoFullyWatched(true);
 
     // Report to server at each threshold (once per session)
     if (partNumber && !previewMode) {
@@ -105,8 +120,15 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode }: Vid
     // duration is NaN until metadata loads and Infinity on live streams — skip both
     if (!isFinite(duration) || duration <= 0) return;
     const rect = e.currentTarget.getBoundingClientRect();
-    const pct  = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
-    videoRef.current.currentTime = pct * duration;
+    const clickedPct = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+    if (videoFullyWatched) {
+      // Seek lock is lifted after the video is fully watched
+      videoRef.current.currentTime = clickedPct * duration;
+    } else {
+      // Clamp to max watched — users cannot seek beyond where they have watched
+      const maxPct = maxWatchedRef.current / 100;
+      videoRef.current.currentTime = Math.min(clickedPct, maxPct) * duration;
+    }
   };
 
   const toggleMute = () => {
@@ -177,9 +199,23 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode }: Vid
         }}
         onTimeUpdate={handleTimeUpdate}
         onError={() => setVideoError(true)}
+        onSeeking={() => {
+          // Once the video is fully watched, seeking is unrestricted.
+          if (videoFullyWatched) return;
+          // Catch native seeks (keyboard shortcuts, touch scrubbing) and clamp
+          // them to the max-watched position so users cannot skip ahead.
+          if (!videoRef.current) return;
+          const duration = videoRef.current.duration;
+          if (!isFinite(duration) || duration <= 0) return;
+          const maxTime = (maxWatchedRef.current / 100) * duration;
+          if (videoRef.current.currentTime > maxTime + 0.5) {
+            videoRef.current.currentTime = maxTime;
+          }
+        }}
         onEnded={() => {
           setPlaying(false);
           setStarted(false);
+          setVideoFullyWatched(true);
           if (partNumber && !previewMode) {
             if (!reportedRef.current.has(100)) {
               reportedRef.current.add(100);
@@ -258,15 +294,17 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode }: Vid
             <span className="absolute text-[7px] font-bold leading-none" aria-hidden>10</span>
           </button>
 
-          {/* Forward 10s — 44px */}
-          <button
-            onClick={() => { if (videoRef.current) videoRef.current.currentTime = Math.min(videoRef.current.duration || Infinity, videoRef.current.currentTime + 10); }}
-            className="relative min-w-[44px] min-h-[44px] flex items-center justify-center text-white/70 hover:text-white transition-colors"
-            aria-label="Forward 10 seconds"
-          >
-            <RotateCw className="w-5 h-5" />
-            <span className="absolute text-[7px] font-bold leading-none" aria-hidden>10</span>
-          </button>
+          {/* Forward 10s — shown only after the video has been fully watched */}
+          {videoFullyWatched && (
+            <button
+              onClick={() => { if (videoRef.current) videoRef.current.currentTime = Math.min(videoRef.current.duration, videoRef.current.currentTime + 10); }}
+              className="relative min-w-[44px] min-h-[44px] flex items-center justify-center text-white/70 hover:text-white transition-colors"
+              aria-label="Forward 10 seconds"
+            >
+              <RotateCw className="w-5 h-5" />
+              <span className="absolute text-[7px] font-bold leading-none" aria-hidden>10</span>
+            </button>
+          )}
 
           <div className="relative flex items-center gap-1">
             {/* Mute — 44px */}

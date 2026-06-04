@@ -8,6 +8,7 @@ import {
   Image as ImageIcon, Info, CheckCircle2,
 } from "lucide-react";
 import { PrefetchPartLink } from "@/components/course/prefetch-part-link";
+import { useState, useEffect } from "react";
 import { FadeUp, StaggerChildren, AnimatedCounter, AnimatedProgressBar, AnimatedCard } from "@/components/motion";
 
 export interface StageData {
@@ -22,6 +23,7 @@ export interface StageData {
 interface CourseHomeContentProps {
   userPlan: "essentials" | "complete";
   completionPercentage: number;
+  childrenCompletionPercentage?: number;
   completedLessons: number;
   totalLessons: number;
   userName: string;
@@ -36,6 +38,8 @@ interface CourseHomeContentProps {
 export function CourseHomeContent({
   completedLessons,
   totalLessons,
+  completionPercentage,
+  childrenCompletionPercentage,
   userName,
   currentPart,
   currentPartTitle,
@@ -46,6 +50,16 @@ export function CourseHomeContent({
 }: CourseHomeContentProps) {
   const isNewUser = completedLessons === 0;
   const currentStage = stagesData[currentStageNumber - 1];
+
+  // Read the active path from localStorage to show the right progress %.
+  const [displayPercentage, setDisplayPercentage] = useState(completionPercentage);
+  useEffect(() => {
+    if (localStorage.getItem("seerah:lessons-path") === "children" && childrenCompletionPercentage !== undefined) {
+      setDisplayPercentage(childrenCompletionPercentage);
+    } else {
+      setDisplayPercentage(completionPercentage);
+    }
+  }, [completionPercentage, childrenCompletionPercentage]);
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
@@ -171,11 +185,11 @@ export function CourseHomeContent({
             <p className="text-xs text-text-muted mt-1">Parts fully completed</p>
             <p className="flex items-center gap-1 text-xs text-text-muted/70 mt-1.5">
               <Info className="w-3 h-3 shrink-0" />
-              Requires video + briefing + quiz (80%+)
+              Requires passing the quiz (80%+)
             </p>
             {completedLessons > 0 && (
               <AnimatedProgressBar
-                percent={Math.round((completedLessons / totalLessons) * 100)}
+                percent={displayPercentage}
                 height={6}
                 fillClassName="bg-gradient-to-r from-gold to-amber-400"
                 trackClassName="bg-surface-raised"
@@ -214,7 +228,7 @@ export function CourseHomeContent({
           <h2 className="text-xl font-bold text-text mb-1.5">Course Roadmap</h2>
           <p className="text-sm text-text-secondary">
             The Seerah in {stagesData.length} stages — from pre-Islamic Arabia to the Prophet&apos;s ﷺ final years.
-            All parts are unlocked; follow the order for the full picture.
+            Each part unlocks after you complete the previous lesson&apos;s quiz. Follow the order for the full picture.
           </p>
         </FadeUp>
 

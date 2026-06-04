@@ -5,7 +5,7 @@ import { PARTS } from "@/lib/content";
 import { ERA_MAP, type Part } from "@/lib/types";
 import { eraGradient } from "./era-gradient";
 import { ResourcePageClient } from "./resource-page-client";
-import { ClipboardCheck, Trophy, CheckCircle2, XCircle, X } from "lucide-react";
+import { ClipboardCheck, Trophy, CheckCircle2, XCircle, X, Lock } from "lucide-react";
 import { QuizViewer } from "@/components/part/quiz-viewer";
 import type { Quiz } from "@/lib/types";
 import { trackAssetOpened } from "@/app/actions/progress";
@@ -18,21 +18,27 @@ interface QuizResourceContentProps {
     quizPassed: boolean;
     quizAttempts: number;
   }>;
+  /** Video progress map — quiz is locked until video reaches 85% */
+  videoProgressMap?: Record<number, { videoWatchPercent: number; videoCompleted: boolean }>;
   completedCount: number;
   passedCount: number;
   avgScore: number;
   totalAttempts: number;
   thumbnails?: Record<number, string>;
+  lockedPartNumbers?: number[];
 }
 
 export function QuizResourceContent({
   progressMap,
+  videoProgressMap = {},
   completedCount,
   passedCount,
   avgScore,
   totalAttempts,
   thumbnails = {},
+  lockedPartNumbers = [],
 }: QuizResourceContentProps) {
+  const lockedSet = new Set(lockedPartNumbers);
   const totalQuizzes = PARTS.length;
   const _notAttemptedCount = totalQuizzes - completedCount;
 
@@ -63,8 +69,16 @@ export function QuizResourceContent({
   }, []);
 
   const handleOpenQuiz = async (part: typeof PARTS[0]) => {
+    // Mirror the part page: quiz is locked until video reaches 85%
+    const videoProgress = videoProgressMap[part.partNumber];
+    const videoCompleted = videoProgress?.videoCompleted || (videoProgress?.videoWatchPercent ?? 0) >= 85;
+    if (!videoCompleted) {
+      alert(`Watch the Part ${part.partNumber} video to at least 85% before taking the quiz.`);
+      return;
+    }
+
     setSelectedPart(part);
-    
+
     // Check cache first
     const cacheKey = `quiz-${part.id}`;
     const cached = getCachedResource<Quiz>(cacheKey);
@@ -158,19 +172,30 @@ export function QuizResourceContent({
                 const isPassed = progress?.quizPassed || false;
                 const attempts = progress?.quizAttempts || 0;
                 const isPerfect = bestScore === 100;
+                const isLocked = lockedSet.has(part.partNumber);
 
                 return (
                   <div
                     key={part.id}
-                    onClick={mounted ? () => handleOpenQuiz(part) : undefined}
-                    onMouseEnter={mounted ? () => handlePrefetch(part.id) : undefined}
-                    className="group cursor-pointer rounded-xl border border-zinc-800 bg-zinc-900/50 hover:bg-zinc-900 hover:border-amber-500/30 transition-all overflow-hidden"
+                    onClick={mounted && !isLocked ? () => handleOpenQuiz(part) : undefined}
+                    onMouseEnter={mounted && !isLocked ? () => handlePrefetch(part.id) : undefined}
+                    className={`group rounded-xl border border-zinc-800 bg-zinc-900/50 transition-all overflow-hidden ${
+                      isLocked
+                        ? "cursor-not-allowed opacity-60"
+                        : "cursor-pointer hover:bg-zinc-900 hover:border-amber-500/30"
+                    }`}
                   >
                     {/* Thumbnail */}
                     <div
                       className="aspect-video relative flex items-center justify-center overflow-hidden"
                       style={eraGradient(part.era)}
                     >
+                      {/* Lock overlay */}
+                      {isLocked && (
+                        <div className="absolute inset-0 z-20 bg-black/70 flex items-center justify-center">
+                          <Lock className="w-5 h-5 text-zinc-500" />
+                        </div>
+                      )}
                       {thumbnails[part.partNumber] && (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
@@ -298,6 +323,7 @@ export function QuizResourceContent({
                   quiz={quizData}
                   partNumber={selectedPart.partNumber}
                   previewMode={false}
+                  initialBestScore={progressMap[selectedPart.partNumber]?.quizBestScore ?? undefined}
                 />
               )}
               {!isLoadingQuiz && !quizData && (

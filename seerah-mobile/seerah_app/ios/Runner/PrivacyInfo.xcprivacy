@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	  Required Reason APIs accessed by this app or its Flutter plugins.
+	  See: https://developer.apple.com/documentation/bundleresources/privacy_manifest_files/describing_use_of_required_reason_api
+	-->
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<!--
+		  NSUserDefaults — used by flutter/shared_preferences to persist
+		  auth state (isLoggedIn, userEmail, hasAccess, etc.) local to this app.
+		  Reason CA92.1: Accessed to read and write information that is only
+		  accessible to the app itself.
+		-->
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>CA92.1</string>
+			</array>
+		</dict>
+		<!--
+		  File timestamp APIs — accessed indirectly by Flutter engine internals
+		  and the video_player plugin.
+		  Reason C617.1: Inside an app or app extension, accessed to manage
+		  file timestamps in their own app container.
+		-->
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>C617.1</string>
+			</array>
+		</dict>
+		<!--
+		  Disk space APIs — accessed by the Flutter engine to decide on
+		  cache eviction policy.
+		  Reason E174.1: To check whether there is sufficient disk space to
+		  write files required for the normal operation of the app.
+		-->
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryDiskSpace</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>E174.1</string>
+			</array>
+		</dict>
+		<!--
+		  System boot time — accessed by the Flutter engine for frame scheduling
+		  and animation timing.
+		  Reason 35F9.1: To measure the time between events within the app.
+		-->
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategorySystemBootTime</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>35F9.1</string>
+			</array>
+		</dict>
+	</array>
+
+	<!--
+	  This app does not track users across apps or websites.
+	  No data is shared with third-party data brokers or advertisers.
+	-->
+	<key>NSPrivacyTracking</key>
+	<false/>
+
+	<!--
+	  Data collected by this app:
+	  - Email address: used to authenticate the user's account (not for tracking).
+	  - Name: displayed in the profile screen (not shared, not used for tracking).
+	  - Purchase history: checked server-side via Stripe to unlock paid content.
+	  No data is collected for analytics, advertising, or third-party sharing.
+	-->
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypeEmailAddress</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<true/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypeName</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<true/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>

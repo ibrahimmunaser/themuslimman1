@@ -70,12 +70,33 @@ export async function generateSignedR2Url(
 const thumbnailCache = new Map<string, { url: string; expiresAt: number }>();
 const THUMBNAIL_CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 
+function thumbnailKey(n: number): string {
+  return `thumbnails/part-${String(n).padStart(2, "0")}-thumb.jpg`;
+}
+
+/**
+ * Get the signed thumbnail URL for a single part number.
+ * Reuses the shared thumbnail cache so concurrent callers share one signed URL.
+ */
+export async function getThumbnailUrl(partNumber: number): Promise<string | undefined> {
+  const key = thumbnailKey(partNumber);
+  const now = Date.now();
+  const cached = thumbnailCache.get(key);
+  if (cached && cached.expiresAt > now) return cached.url;
+  try {
+    const url = await generateSignedR2Url(key, IMAGE_URL_EXPIRY);
+    thumbnailCache.set(key, { url, expiresAt: now + THUMBNAIL_CACHE_TTL_MS });
+    return url;
+  } catch {
+    return undefined;
+  }
+}
+
 export async function getThumbnailUrls(
   partNumbers: number[]
 ): Promise<Record<number, string>> {
   function firstSlideKey(n: number): string {
-    const p = String(n).padStart(2, "0");
-    return `thumbnails/part-${p}-thumb.jpg`;
+    return thumbnailKey(n);
   }
 
   const now = Date.now();

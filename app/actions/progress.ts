@@ -9,6 +9,16 @@ import {
   VIDEO_COMPLETION_THRESHOLD,
   QUIZ_PASS_SCORE,
 } from "@/lib/progress";
+import { PARTS } from "@/lib/content";
+
+// Sorted list of part numbers in the Children's Seerah path.
+// Used by trackQuizCompleted to allow progression when a user follows the
+// children's path (e.g. Part 7 → 11 → 13) and has only passed the children's
+// predecessor, not the complete-path predecessor (n-1).
+const CHILDREN_PART_NUMBERS: number[] = PARTS
+  .filter((p) => p.audiences.includes("children"))
+  .sort((a, b) => a.partNumber - b.partNumber)
+  .map((p) => p.partNumber);
 
 type UserPlan = "essentials" | "complete";
 
@@ -20,14 +30,31 @@ const devLog = isDev ? (...args: any[]) => console.log(...args) : () => {};
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-async function getUserPlan(userId: string): Promise<UserPlan | null> {
+/**
+ * Determines the user's active plan.
+ *
+ * @param sessionHasPaid - if true (from the session cookie), short-circuits all
+ *   DB queries and immediately returns "complete". This avoids 3 round-trips on
+ *   every video-progress heartbeat for lifetime/one-time buyers.
+ */
+async function getUserPlan(userId: string, sessionHasPaid?: boolean): Promise<UserPlan | null> {
+  // Fast path: the session already knows the user has paid. No DB queries needed.
+  if (sessionHasPaid) {
+    devLog(`[PROGRESS] getUserPlan: User ${userId} short-circuited via sessionHasPaid`);
+    return "complete";
+  }
+
   devLog(`[PROGRESS] getUserPlan: Fetching plan for user ${userId}`);
 
   const [user, purchases, subscription] = await Promise.all([
     prisma.user.findUnique({ where: { id: userId }, select: { hasPaid: true } }),
     prisma.purchase.findMany({ where: { userId, status: "succeeded" }, select: { planId: true } }),
     prisma.subscription.findFirst({
-      where: { userId, status: { in: ["active", "trialing"] } },
+      where: {
+        userId,
+        status: { in: ["active", "trialing"] },
+        currentPeriodEnd: { gt: new Date() },
+      },
       select: { id: true },
     }),
   ]);
@@ -116,7 +143,7 @@ export async function trackVideoProgress(partNumber: number, watchPercent: numbe
 
   devLog(`[PROGRESS] trackVideoProgress: User ${userId}, profile ${learnerProfileId}, part ${partNumber}, ${watchPercent}%`);
 
-  const userPlan = await getUserPlan(userId);
+  const userPlan = await getUserPlan(userId, user.hasPaid);
   if (!userPlan) {
     devLog(`[PROGRESS] trackVideoProgress: User ${userId} has no valid plan, skipping`);
     return;
@@ -177,7 +204,7 @@ export async function trackBriefingOpened(partNumber: number) {
   const userId          = user.id;
   const learnerProfileId = await getActiveProfileId(userId);
   
-  const userPlan = await getUserPlan(userId);
+  const userPlan = await getUserPlan(userId, user.hasPaid);
   if (!userPlan) return;
 
   await getOrCreateProgress(userId, learnerProfileId, partNumber);
@@ -199,30 +226,103 @@ export async function trackQuizCompleted(partNumber: number, score: number) {
   const userId          = user.id;
   const learnerProfileId = await getActiveProfileId(userId);
   
-  const userPlan = await getUserPlan(userId);
+  const userPlan = await getUserPlan(userId, user.hasPaid);
   if (!userPlan) return;
 
-  const clamped = Math.min(100, Math.max(0, Math.round(score)));
+  // Clamp score to [0, 100] — never trust a raw client value.
+  // isFinite check BEFORE clamp: Math.min/max convert Infinity → 100/0 so
+  // checking afterwards is always true and misses the Infinity/NaN case.
+  const raw = Number(score);
+  if (!Number.isFinite(raw)) return; // reject NaN, Infinity, -Infinity
+  const clamped = Math.min(100, Math.max(0, Math.round(raw)));
+
   const passed  = clamped >= QUIZ_PASS_SCORE;
 
-  await getOrCreateProgress(userId, learnerProfileId, partNumber);
-  const existing = await prisma.partProgress.findUnique({
-    where: { learnerProfileId_partNumber: { learnerProfileId, partNumber } },
-    select: { quizBestScore: true },
-  });
-  const bestScore = Math.max(existing?.quizBestScore ?? 0, clamped);
+  // Sequential-lock check: Part 1 and first children's part (7) are always open.
+  // Any other part requires EITHER:
+  //   (a) the complete-path predecessor (partNumber - 1) to have its quiz passed, OR
+  //   (b) the children's-path predecessor (previous part in CHILDREN_PART_NUMBERS)
+  //       to have its quiz passed.
+  // This mirrors the page-level lock in app/seerah/[partId]/page.tsx and prevents
+  // a client from POST-ing a fake score to unlock arbitrary parts while also
+  // allowing users who follow the children's path to save progress correctly.
+  if (partNumber > 1 && partNumber !== 7) {
+    // Determine children's-path predecessor (null if part is not in children's path,
+    // or if it is the first part of that path — part 7).
+    const childrenIndex = CHILDREN_PART_NUMBERS.indexOf(partNumber);
+    const prevChildrenPartNumber =
+      childrenIndex > 0 ? CHILDREN_PART_NUMBERS[childrenIndex - 1] : null;
+    // Only need a separate children's query if the predecessor differs from n-1.
+    const needsChildrenQuery =
+      prevChildrenPartNumber !== null && prevChildrenPartNumber !== partNumber - 1;
 
-  await prisma.partProgress.update({
-    where: { learnerProfileId_partNumber: { learnerProfileId, partNumber } },
+    // Fetch both predecessors in parallel when needed.
+    const [prevCompleteProgress, prevChildrenProgress] = await Promise.all([
+      prisma.partProgress.findUnique({
+        where: { learnerProfileId_partNumber: { learnerProfileId, partNumber: partNumber - 1 } },
+        select: { quizPassed: true },
+      }),
+      needsChildrenQuery
+        ? prisma.partProgress.findUnique({
+            where: { learnerProfileId_partNumber: { learnerProfileId, partNumber: prevChildrenPartNumber! } },
+            select: { quizPassed: true },
+          })
+        : Promise.resolve(null),
+    ]);
+
+    const completePrevPassed = prevCompleteProgress?.quizPassed ?? false;
+    // If children's predecessor == n-1, reuse the already-fetched row.
+    const childrenPrevPassed = needsChildrenQuery
+      ? (prevChildrenProgress?.quizPassed ?? false)
+      : (prevChildrenPartNumber !== null && (prevCompleteProgress?.quizPassed ?? false));
+
+    if (!completePrevPassed && !childrenPrevPassed) {
+      devLog(`[PROGRESS] trackQuizCompleted: Part ${partNumber} — neither complete-path (${partNumber - 1}) nor children's-path (${prevChildrenPartNumber}) predecessor passed; ignoring score`);
+      return;
+    }
+  }
+
+  await getOrCreateProgress(userId, learnerProfileId, partNumber);
+
+  // Atomic best-score update: only raise quizBestScore, never lower it.
+  // Using updateMany with a WHERE condition (quizBestScore IS NULL OR < clamped)
+  // eliminates the read-then-write race condition from concurrent quiz submissions.
+  const alwaysFields = {
+    quizCompleted:  true,
+    quizScore:      clamped,
+    quizAttempts:   { increment: 1 as const },
+    lastAccessedAt: new Date(),
+  };
+  const updatedHigh = await prisma.partProgress.updateMany({
+    where: {
+      learnerProfileId,
+      partNumber,
+      OR: [
+        { quizBestScore: null },
+        { quizBestScore: { lt: clamped } },
+      ],
+    },
     data: {
-      quizCompleted:  true,
-      quizScore:      clamped,
-      quizBestScore:  bestScore,
-      quizPassed:     bestScore >= QUIZ_PASS_SCORE,
-      quizAttempts:   { increment: 1 },
-      lastAccessedAt: new Date(),
+      ...alwaysFields,
+      quizBestScore: clamped,
+      quizPassed:    clamped >= QUIZ_PASS_SCORE,
     },
   });
+
+  if (updatedHigh.count === 0) {
+    // Score is not higher than existing best — still record the attempt metadata.
+    await prisma.partProgress.update({
+      where: { learnerProfileId_partNumber: { learnerProfileId, partNumber } },
+      data: alwaysFields,
+    });
+  }
+
+  // Re-read final bestScore for the return value.
+  const saved = await prisma.partProgress.findUnique({
+    where: { learnerProfileId_partNumber: { learnerProfileId, partNumber } },
+    select: { quizBestScore: true, quizPassed: true },
+  });
+  const bestScore = saved?.quizBestScore ?? clamped;
 
   await recomputeAndSave(learnerProfileId, partNumber, userPlan);
 
@@ -238,7 +338,7 @@ export async function trackFlashcardsReviewed(partNumber: number) {
   const userId          = user.id;
   const learnerProfileId = await getActiveProfileId(userId);
   
-  const userPlan = await getUserPlan(userId);
+  const userPlan = await getUserPlan(userId, user.hasPaid);
   if (!userPlan) return;
 
   await getOrCreateProgress(userId, learnerProfileId, partNumber);
@@ -254,6 +354,10 @@ export async function trackFlashcardsReviewed(partNumber: number) {
  * Called when any optional asset is opened.
  * assetId examples: "slides", "mindmap", "infographic", "study_guide",
  *                   "report", "statement-of-facts", "timeline", "audio"
+ *
+ * NOTE: openedAssets is stored as a JSON string in the DB (e.g. '["slides","audio"]').
+ * The max realistic size is ~20 assets × ~30 chars each ≈ 600 bytes, well within
+ * the varchar limit. Avoid storing unbounded user input as assetId values here.
  */
 export async function trackAssetOpened(partNumber: number, assetId: string) {
   devLog(`[PROGRESS] trackAssetOpened: Part ${partNumber}, assetId "${assetId}"`);
@@ -264,31 +368,40 @@ export async function trackAssetOpened(partNumber: number, assetId: string) {
   const userId          = user.id;
   const learnerProfileId = await getActiveProfileId(userId);
   
-  const userPlan = await getUserPlan(userId);
+  const userPlan = await getUserPlan(userId, user.hasPaid);
   if (!userPlan) return;
 
   await getOrCreateProgress(userId, learnerProfileId, partNumber);
-  const row = await prisma.partProgress.findUnique({
-    where: { learnerProfileId_partNumber: { learnerProfileId, partNumber } },
-    select: { openedAssets: true },
-  });
-  let opened: string[] = [];
-  try { opened = JSON.parse(row?.openedAssets ?? "[]"); } catch {}
-  
-  if (!opened.includes(assetId)) {
-    opened.push(assetId);
-  }
 
-  await prisma.partProgress.update({
-    where: { learnerProfileId_partNumber: { learnerProfileId, partNumber } },
-    data: { openedAssets: JSON.stringify(opened), lastAccessedAt: new Date() },
-  });
+  // Atomic JSON-array append via a single UPDATE statement.
+  // The CASE expression is a no-op when assetId is already present,
+  // preventing duplicates without a separate read-then-write race.
+  await prisma.$executeRaw`
+    UPDATE "PartProgress"
+    SET
+      "openedAssets" = CASE
+        WHEN COALESCE("openedAssets", '[]')::jsonb ? ${assetId}
+        THEN COALESCE("openedAssets", '[]')
+        ELSE (COALESCE("openedAssets", '[]')::jsonb || jsonb_build_array(${assetId}::text))::text
+      END,
+      "lastAccessedAt" = NOW(),
+      "updatedAt" = NOW()
+    WHERE "learnerProfileId" = ${learnerProfileId}
+      AND "partNumber" = ${partNumber}
+  `;
 
   await recomputeAndSave(learnerProfileId, partNumber, userPlan);
   devLog(`[PROGRESS] trackAssetOpened: Profile ${learnerProfileId}, part ${partNumber}, asset "${assetId}"`);
 }
 
-/** Mark a part as started (called when user opens the part page). */
+/**
+ * Mark a part as started (called when user opens the part page).
+ *
+ * Intentionally skips the plan check — Part 1 is freely accessible without a
+ * purchase, and we want to record that even free/unverified users have opened it
+ * so future analytics can track free-to-paid conversion rates. For all other
+ * parts the page-level lock prevents non-paying users from reaching this point.
+ */
 export async function trackPartOpened(partNumber: number) {
   const user = await requireStudent();
   if (!user) return;

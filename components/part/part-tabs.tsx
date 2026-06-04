@@ -17,8 +17,7 @@ import {
   HelpCircle,
   Layers2,
   Clock,
-  List,
-  LayoutGrid,
+  Lock,
 } from "lucide-react";
 import NextImage from "next/image";
 import { LazyVideoPlayer } from "./lazy-video-player";
@@ -166,7 +165,7 @@ export function InfographicPanel({ part, previewMode }: { part: Part; previewMod
   const styles = [
     { id: "concise"   as const, label: "Concise" },
     { id: "standard"  as const, label: "Standard" },
-    { id: "bentoGrid" as const, label: "Gallery View" },
+    { id: "bentoGrid" as const, label: "Bento Grid" },
   ].filter((s) => inf?.[s.id]);
   const currentSrc = inf?.[style] ?? inf?.[styles[0]?.id];
   const mediumSrc = currentSrc ? infographicWebp(currentSrc, "-medium") : null;
@@ -174,13 +173,17 @@ export function InfographicPanel({ part, previewMode }: { part: Part; previewMod
   const lightboxSrc = currentSrc;
   const altLabel = `Part ${part.partNumber} Infographic — ${style}`;
 
-  // Track when infographic is viewed (loaded)
+  // Track when infographic is viewed — require 1.5s dwell after image loads
+  // so that a URL-param (?mode=infographic) auto-open does not count unless
+  // the user actually stays on the tab long enough to view it.
   useEffect(() => {
-    if (loaded && !hasTrackedView && !previewMode && part.partNumber) {
+    if (!loaded || hasTrackedView || previewMode || !part.partNumber) return;
+    const timer = setTimeout(() => {
       trackAssetOpened(part.partNumber, "infographic").catch(() => {});
       window.dispatchEvent(new CustomEvent("seerah:progressUpdate", { detail: { openedAssets: ["infographic"] } }));
       setHasTrackedView(true);
-    }
+    }, 1500);
+    return () => clearTimeout(timer);
   }, [loaded, hasTrackedView, previewMode, part.partNumber]);
 
   // Reset loading state when style changes
@@ -346,14 +349,16 @@ export function SlidesPanel({ part, previewMode }: { part: Part; previewMode?: b
 }
 
 import { fetchPartAssets, type PartAssets as PartAssetUrls } from "@/lib/part-asset-cache";
-import { LessonGalleryView } from "./lesson-gallery-view";
 
-function SubTabContent({ id, part, previewMode, assetUrls, onSwitchMode }: {
+function SubTabContent({ id, part, previewMode, assetUrls, onSwitchMode, videoCompleted, initialVideoPercent, initialQuizBestScore }: {
   id: SubTabId;
   part: Part;
   previewMode?: boolean;
   assetUrls: PartAssetUrls;
   onSwitchMode?: (mode: ModeId) => void;
+  videoCompleted?: boolean;
+  initialVideoPercent?: number;
+  initialQuizBestScore?: number;
 }) {
   const wrap = (child: React.ReactNode) => (
     <div className="rounded-xl bg-surface/60 p-4 sm:p-6">{child}</div>
@@ -368,15 +373,17 @@ function SubTabContent({ id, part, previewMode, assetUrls, onSwitchMode }: {
           <LazyVideoPlayer
             partNumber={part.partNumber}
             title={part.title}
-            poster={part.assets.slides?.presented[0]?.medium}
+            poster={assetUrls.thumbnailUrl ?? part.assets.slides?.presented[0]?.medium}
             previewMode={previewMode}
             videoUrl={assetUrls.videoUrl}
+            initialVideoPercent={initialVideoPercent}
           />
           <LazyListenOnTheGo
             partNumber={part.partNumber}
             title={part.title}
             previewMode={previewMode}
             audioUrl={assetUrls.audioUrl}
+            videoCompleted={videoCompleted}
           />
         </div>
       );
@@ -407,7 +414,14 @@ function SubTabContent({ id, part, previewMode, assetUrls, onSwitchMode }: {
     case "flashcards":
       return wrap(part.assets.flashcards ? <FlashcardsViewer flashcards={part.assets.flashcards} partNumber={part.partNumber} previewMode={previewMode} /> : <EmptyContent label="Flashcards" />);
     case "quiz":
-      return wrap(part.assets.quiz ? <QuizViewer quiz={part.assets.quiz} partNumber={part.partNumber} previewMode={previewMode} /> : <EmptyContent label="Quiz" />);
+      if (!previewMode && !videoCompleted) return wrap(
+        <div className="py-10 text-center space-y-2">
+          <Lock className="w-5 h-5 text-text-muted/50 mx-auto mb-3" />
+          <p className="text-text-secondary text-sm font-medium">Quiz is locked</p>
+          <p className="text-xs text-text-muted">Watch the full video to unlock the quiz.</p>
+        </div>
+      );
+      return wrap(part.assets.quiz ? <QuizViewer quiz={part.assets.quiz} partNumber={part.partNumber} previewMode={previewMode} initialBestScore={initialQuizBestScore} /> : <EmptyContent label="Quiz" />);
     case "slides":      return <SlidesPanel part={part} previewMode={previewMode} />;
     case "mindmap":     return <LazyMindmapViewer partNumber={part.partNumber} title={`Part ${part.partNumber} — Mindmap`} previewMode={previewMode} mindmapUrl={assetUrls.mindmapUrl} />;
     case "infographic": return <InfographicPanel part={part} previewMode={previewMode} />;
@@ -415,47 +429,6 @@ function SubTabContent({ id, part, previewMode, assetUrls, onSwitchMode }: {
 }
 
 
-
-// ─── View toggle ──────────────────────────────────────────────────────────────
-
-type ViewMode = "focus" | "gallery";
-
-function LessonViewToggle({ viewMode, onToggle }: { viewMode: ViewMode; onToggle: (mode: ViewMode) => void }) {
-  return (
-    <div
-      className="flex items-center gap-0.5 bg-surface-raised/50 rounded-lg p-0.5 border border-border/25"
-      role="group"
-      aria-label="Choose layout"
-    >
-      <button
-        onClick={() => onToggle("focus")}
-        aria-pressed={viewMode === "focus"}
-        className={clsx(
-          "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all duration-150",
-          viewMode === "focus"
-            ? "bg-surface-high text-text shadow-sm border border-border/35"
-            : "text-text-muted/60 hover:text-text-secondary"
-        )}
-      >
-        <List className="w-3 h-3" />
-        Focus
-      </button>
-      <button
-        onClick={() => onToggle("gallery")}
-        aria-pressed={viewMode === "gallery"}
-        className={clsx(
-          "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all duration-150",
-          viewMode === "gallery"
-            ? "bg-surface-high text-text shadow-sm border border-border/35"
-            : "text-text-muted/60 hover:text-text-secondary"
-        )}
-      >
-        <LayoutGrid className="w-3 h-3" />
-        Gallery
-      </button>
-    </div>
-  );
-}
 
 // ─── Timeline button ──────────────────────────────────────────────────────────
 
@@ -581,43 +554,17 @@ interface PartTabsProps {
   userPlan: UserPlan;
   previewMode?: boolean;
   initialAssetUrls?: PartAssetUrls;
+  initialVideoCompleted?: boolean;
+  initialVideoPercent?: number;
+  initialQuizBestScore?: number;
 }
 
-export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initialAssetUrls }: PartTabsProps) {
+export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initialAssetUrls, initialVideoCompleted, initialVideoPercent, initialQuizBestScore }: PartTabsProps) {
   const availableModes = MODES.filter((m) => getModeSubTabs(m, part).length > 0);
   const defaultMode = availableModes[0] ?? MODES[0];
 
   const searchParams = useSearchParams();
   const router = useRouter();
-
-  // View mode toggle: "focus" = tab layout, "gallery" = all assets inline
-  // Priority: URL param > localStorage > "focus"
-  const VIEW_STORAGE_KEY = "seerah:lessonViewMode";
-  const viewParam = searchParams.get("view") as ViewMode | null;
-  const [viewMode, setViewMode] = useState<ViewMode>(
-    viewParam === "gallery" ? "gallery" : "focus"
-  );
-
-  useEffect(() => {
-    if (viewParam) return;
-    try {
-      const stored = localStorage.getItem(VIEW_STORAGE_KEY) as ViewMode | null;
-      if (stored === "gallery" || stored === "focus") setViewMode(stored);
-    } catch {}
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const handleViewToggle = useCallback((mode: ViewMode) => {
-    setViewMode(mode);
-    try { localStorage.setItem(VIEW_STORAGE_KEY, mode); } catch {}
-    const params = new URLSearchParams(searchParams.toString());
-    if (mode === "gallery") {
-      params.set("view", "gallery");
-    } else {
-      params.delete("view");
-    }
-    router.replace(`?${params.toString()}`, { scroll: false });
-  }, [searchParams, router]);
 
   // Initialise from ?mode= URL param so deep links and browser back/fwd work
   const modeParam = searchParams.get("mode") as ModeId | null;
@@ -647,6 +594,17 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
     if (initialAssetUrls?.videoUrl || initialAssetUrls?.audioUrl || initialAssetUrls?.mindmapUrl) return;
     fetchPartAssets(part.partNumber).then(setAssetUrls);
   }, [part.partNumber, initialAssetUrls]);
+
+  // Track video completion — unlocks the quiz tab
+  const [videoCompleted, setVideoCompleted] = useState(initialVideoCompleted ?? false);
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if ((detail.videoWatchPercent ?? 0) >= 85) setVideoCompleted(true);
+    };
+    window.addEventListener("seerah:progressUpdate", handler);
+    return () => window.removeEventListener("seerah:progressUpdate", handler);
+  }, []);
 
   // Track which panels have been rendered at least once — never unmount after first visit
   const [renderedPanels, setRenderedPanels] = useState<Set<string>>(
@@ -679,28 +637,7 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
   return (
     <div className="space-y-5">
 
-      {/* ── View toggle header (hidden in preview/homepage) ──────────────── */}
-      {!previewMode && (
-        <div className="flex items-center justify-between gap-4">
-          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-text-muted/35">
-            {viewMode === "gallery" ? "All Assets" : "Learning Mode"}
-          </p>
-          <LessonViewToggle viewMode={viewMode} onToggle={handleViewToggle} />
-        </div>
-      )}
-
-      {/* ── Gallery view ─────────────────────────────────────────────────── */}
-      {!previewMode && viewMode === "gallery" && (
-        <LessonGalleryView
-          part={part}
-          assetUrls={assetUrls}
-          previewMode={previewMode}
-        />
-      )}
-
-      {/* ── Focus view — existing tab layout ─────────────────────────────── */}
-      {(previewMode || viewMode === "focus") && (
-        <div className="space-y-6">
+      <div className="space-y-6">
 
           {/* Mode selector strip */}
           <div className="space-y-1.5 sm:space-y-0">
@@ -732,13 +669,14 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
                 <div className="flex gap-1">
                   {MODES.filter((m) => !m.primary).map((mode) => {
                     const available = getModeSubTabs(mode, part).length > 0;
+                    const quizLocked = !previewMode && mode.id === "quiz" && !videoCompleted;
                     return (
                       <ModeButton
                         key={mode.id}
                         mode={mode}
                         isActive={activeMode === mode.id}
                         isAvailable={available}
-                        isLocked={false}
+                        isLocked={quizLocked}
                         onClick={() => available ? handleModeChange(mode.id) : undefined}
                       />
                     );
@@ -750,13 +688,14 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
             <div className="hidden sm:flex gap-2 lg:justify-center lg:flex-wrap">
               {MODES.map((mode) => {
                 const available = getModeSubTabs(mode, part).length > 0;
+                const quizLocked = !previewMode && mode.id === "quiz" && !videoCompleted;
                 return (
                   <ModeButton
                     key={mode.id}
                     mode={mode}
                     isActive={activeMode === mode.id}
                     isAvailable={available}
-                    isLocked={false}
+                    isLocked={quizLocked}
                     onClick={() => available ? handleModeChange(mode.id) : undefined}
                   />
                 );
@@ -808,6 +747,9 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
                     previewMode={previewMode}
                     assetUrls={assetUrls}
                     onSwitchMode={handleModeChange}
+                    videoCompleted={videoCompleted}
+                    initialVideoPercent={initialVideoPercent}
+                    initialQuizBestScore={initialQuizBestScore}
                   />
                 </div>
               );
@@ -815,8 +757,8 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
           </div>
 
         </div>
-      )}
 
     </div>
   );
 }
+

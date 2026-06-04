@@ -8,8 +8,8 @@
 
 export interface CreatorPromoConfig {
   code: string;
-  /** Fixed discount amount in cents (e.g. 2000 = $20 off). */
-  discountAmount: number;
+  /** Percentage discount (e.g. 20 = 20% off). Applied to both lifetime packages. */
+  discountPercent: number;
   /** Human-readable label shown in the UI banner. */
   displayLabel: string;
   /** Creator name used for Stripe metadata / analytics. */
@@ -23,8 +23,8 @@ export interface CreatorPromoConfig {
 export const CREATOR_PROMO_CODES: Record<string, CreatorPromoConfig> = {
   KORRA20: {
     code: "KORRA20",
-    discountAmount: 2000,
-    displayLabel: "KORRA20 — $20 off lifetime access",
+    discountPercent: 20,
+    displayLabel: "KORRA20 — 20% off lifetime access",
     creator: "korra",
     utm_source: "tiktok",
     utm_medium: "influencer",
@@ -33,18 +33,18 @@ export const CREATOR_PROMO_CODES: Record<string, CreatorPromoConfig> = {
   },
   ITACHI20: {
     code: "ITACHI20",
-    discountAmount: 2000,
-    displayLabel: "ITACHI20 — $20 off lifetime access",
+    discountPercent: 20,
+    displayLabel: "ITACHI20 — 20% off lifetime access",
     creator: "itachi",
     utm_source: "tiktok",
     utm_medium: "influencer",
     utm_campaign: "seerah_launch",
     utm_content: "itachi",
   },
-  DEEN20: {
-    code: "DEEN20",
-    discountAmount: 2000,
-    displayLabel: "DEEN20 — $20 off lifetime access",
+  DEEN: {
+    code: "DEEN",
+    discountPercent: 20,
+    displayLabel: "DEEN — 20% off lifetime access",
     creator: "deenresponds",
     utm_source: "youtube",
     utm_medium: "influencer",
@@ -53,8 +53,8 @@ export const CREATOR_PROMO_CODES: Record<string, CreatorPromoConfig> = {
   },
   ORTHODOX20: {
     code: "ORTHODOX20",
-    discountAmount: 2000,
-    displayLabel: "ORTHODOX20 — $20 off lifetime access",
+    discountPercent: 20,
+    displayLabel: "ORTHODOX20 — 20% off lifetime access",
     creator: "theorthodoxmuslim",
     utm_source: "youtube",
     utm_medium: "influencer",
@@ -63,8 +63,8 @@ export const CREATOR_PROMO_CODES: Record<string, CreatorPromoConfig> = {
   },
   DEARBORN20: {
     code: "DEARBORN20",
-    discountAmount: 2000,
-    displayLabel: "DEARBORN20 — $20 off lifetime access",
+    discountPercent: 20,
+    displayLabel: "DEARBORN20 — 20% off lifetime access",
     creator: "dearborn",
     utm_source: "direct",
     utm_medium: "promo",
@@ -73,8 +73,8 @@ export const CREATOR_PROMO_CODES: Record<string, CreatorPromoConfig> = {
   },
   ANNARBOR20: {
     code: "ANNARBOR20",
-    discountAmount: 2000,
-    displayLabel: "ANNARBOR20 — $20 off lifetime access",
+    discountPercent: 20,
+    displayLabel: "ANNARBOR20 — 20% off lifetime access",
     creator: "annarbor",
     utm_source: "direct",
     utm_medium: "promo",
@@ -87,7 +87,7 @@ export const CREATOR_PROMO_CODES: Record<string, CreatorPromoConfig> = {
 export const CREATOR_PROMO_STORAGE_KEY = "creator_promo";
 
 /**
- * Promos expire after 48 hours. This prevents codes stored during a previous
+ * Promos expire after 30 minutes. This prevents codes stored during a previous
  * browser session (e.g. a test visit to ?promo=X) from bleeding into a new
  * user's signup flow on the same device.
  */

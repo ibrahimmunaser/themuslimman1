@@ -36,16 +36,19 @@ export function ProfilePickerClient({
   activeProfileId,
 }: ProfilePickerClientProps) {
   const [selecting, setSelecting] = useState<string | null>(null);
+  const [switchError, setSwitchError] = useState<string | null>(null);
 
   async function handleSelect(profileId: string) {
     if (selecting) return;
     // Don't attempt to switch mock/preview profiles
     if (profileId.startsWith("mock-")) return;
     setSelecting(profileId);
+    setSwitchError(null);
     try {
       const result = await switchProfile(profileId);
       if (!result.success) {
         setSelecting(null);
+        setSwitchError("Could not switch profile. Please try again.");
         return;
       }
       // Small delay so the selection animation plays before navigation
@@ -54,6 +57,7 @@ export function ProfilePickerClient({
       window.location.href = "/seerah";
     } catch {
       setSelecting(null);
+      setSwitchError("Something went wrong. Please try again.");
     }
   }
 
@@ -90,6 +94,11 @@ export function ProfilePickerClient({
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight">
           Who is learning today?
         </h1>
+        {switchError && (
+          <p className="mt-3 text-sm text-red-400 bg-red-950/40 border border-red-800/50 rounded-lg px-4 py-2">
+            {switchError}
+          </p>
+        )}
         {isFamily && (
           <p className="text-zinc-500 text-sm mt-2">
             Select your learner profile — each one keeps its own progress.

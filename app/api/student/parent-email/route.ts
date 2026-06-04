@@ -3,13 +3,34 @@ import { requireStudent } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { Resend } from "resend";
 import { customAlphabet } from "nanoid";
+import { checkRateLimit } from "@/lib/rate-limit";
+import { hashToken } from "@/lib/hash-token";
 
 const generateToken = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 32);
+
+
+function escapeHtml(str: string): string {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;");
+}
 
 export async function POST(request: Request) {
   try {
     const user = await requireStudent();
     const { parentEmail } = await request.json();
+
+    // Rate-limit to prevent spamming arbitrary parent addresses
+    const limit = checkRateLimit(`parent-email:${user.id}`, 5, 60 * 60 * 1000);
+    if (!limit.allowed) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { status: 429 }
+      );
+    }
 
     if (!parentEmail || !parentEmail.includes("@")) {
       return NextResponse.json(
@@ -18,30 +39,33 @@ export async function POST(request: Request) {
       );
     }
 
-    // Generate verification token
-    const verificationToken = generateToken();
-    const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/student/parent-email/verify?token=${verificationToken}`;
+    // Generate verification token — store only the hash in DB, send raw token in email.
+    const rawToken = generateToken();
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://seerah.themuslimman.com";
+    const verificationUrl = `${appUrl}/api/student/parent-email/verify?token=${rawToken}`;
 
-    // Update user with parent email and verification token
+    // Update user with parent email and hashed verification token
     await prisma.user.update({
       where: { id: user.id },
       data: {
         parentEmail: parentEmail.trim().toLowerCase(),
         parentEmailVerified: false,
-        parentVerificationToken: verificationToken,
+        parentVerificationToken: hashToken(rawToken),
       },
     });
 
-    // Send verification email to parent
+    // Send verification email to parent — escape all user-supplied values in HTML.
     const resend = new Resend(process.env.RESEND_API_KEY);
+    const safeStudentName = escapeHtml(user.studentName || user.fullName);
+    const safeParentEmail = escapeHtml(parentEmail.trim());
 
     const { error: emailError } = await resend.emails.send({
       from: process.env.EMAIL_FROM || "Complete Seerah <noreply@themuslimman.com>",
       to: parentEmail.trim(),
-      subject: `Verify Your Email for ${user.studentName || user.fullName}'s Progress Reports`,
+      subject: `Verify Your Email for ${safeStudentName}'s Progress Reports`,
       html: generateVerificationEmail({
-        studentName: user.studentName || user.fullName,
-        parentEmail: parentEmail.trim(),
+        studentName: safeStudentName,
+        parentEmail: safeParentEmail,
         verificationUrl,
       }),
     });
@@ -54,7 +78,7 @@ export async function POST(request: Request) {
       );
     }
 
-    console.log(`[EMAIL] Parent verification email sent to ${parentEmail}`);
+    console.log(`[EMAIL] Parent verification email sent for user ${user.id}`);
 
     return NextResponse.json({
       success: true,

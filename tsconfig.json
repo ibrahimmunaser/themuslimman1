@@ -37,6 +37,8 @@
     "prisma/seed-assets.ts",
     "prisma/seed-slides.ts",
     "scripts/**",
-    "lib/test-email.ts"
+    "lib/test-email.ts",
+    "tests/**",
+    "vitest.config.ts"
   ]
 }

@@ -9,6 +9,12 @@ export async function POST(request: NextRequest) {
   if (!user) {
     return NextResponse.json({ error: "You must be signed in to claim a gift" }, { status: 401 });
   }
+  if (!user.emailVerified) {
+    return NextResponse.json(
+      { error: "Please verify your email address before claiming a gift.", requiresVerification: true },
+      { status: 403 }
+    );
+  }
 
   const { token } = (await request.json()) as { token?: string };
   if (!token || typeof token !== "string" || token.trim().length === 0) {
@@ -47,13 +53,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "This gift link has expired." }, { status: 410 });
   }
 
-  // Enforce recipient email — only the intended recipient can claim
+  // Enforce recipient email — only the intended recipient can claim.
+  // Do NOT include the recipient email in the response to prevent leaking it
+  // to a logged-in user who is probing gift tokens they don't own.
   if (user.email.toLowerCase() !== gift.recipientEmail.toLowerCase()) {
     return NextResponse.json(
       {
-        error: `This gift was sent to ${gift.recipientEmail}. Please sign in with that email address to claim it.`,
+        error: "This gift was sent to a different email address. Please sign in with the email that received the gift link.",
         wrongEmail: true,
-        recipientEmail: gift.recipientEmail,
       },
       { status: 403 }
     );
@@ -104,34 +111,49 @@ export async function POST(request: NextRequest) {
     console.error("[GIFT CLAIM] Could not fetch PaymentIntent for amount — using fallback:", piErr);
   }
 
-  await Promise.all([
-    prisma.user.update({
-      where: { id: user.id },
-      data: {
-        hasPaid: true,
-        // Family gift grants the family plan; individual gift leaves planType as-is
-        ...(isFamily ? { planType: "family" } : {}),
-      },
-    }),
-    prisma.purchase.upsert({
-      where: { stripePaymentIntentId: gift.stripePaymentIntentId },
-      create: {
-        id: crypto.randomUUID(),
-        updatedAt: new Date(),
-        userId: user.id,
-        stripePaymentIntentId: gift.stripePaymentIntentId,
-        planId: giftPlanId,
-        planName: isFamily ? "Family Access (gift)" : "Complete Seerah (gift)",
-        amount: paidAmount,
-        currency: paidCurrency,
-        status: "succeeded",
-      },
-      update: {
-        userId: user.id,
-        status: "succeeded",
-      },
-    }),
-  ]);
+  // Grant access atomically — both the user flag and the purchase record must
+  // succeed together. If either fails the transaction rolls back so the gift
+  // cannot be consumed without access being granted.
+  try {
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: user.id },
+        data: {
+          hasPaid: true,
+          ...(isFamily ? { planType: "family" } : {}),
+        },
+      }),
+      prisma.purchase.upsert({
+        where: { stripePaymentIntentId: gift.stripePaymentIntentId },
+        create: {
+          id: crypto.randomUUID(),
+          updatedAt: new Date(),
+          userId: user.id,
+          stripePaymentIntentId: gift.stripePaymentIntentId,
+          planId: giftPlanId,
+          planName: isFamily ? "Family Access (gift)" : "Complete Seerah (gift)",
+          amount: paidAmount,
+          currency: paidCurrency,
+          status: "succeeded",
+        },
+        update: {
+          userId: user.id,
+          status: "succeeded",
+        },
+      }),
+    ]);
+  } catch (txError) {
+    console.error("[GIFT CLAIM] Transaction failed — rolling back access grant:", txError);
+    // Reverse the claimed status so the recipient can retry
+    await prisma.giftPurchase.update({
+      where: { id: gift.id },
+      data: { status: "paid", claimedByUserId: null, claimedAt: null },
+    }).catch(() => {});
+    return NextResponse.json(
+      { error: "Failed to grant access. Please try again or contact support." },
+      { status: 500 }
+    );
+  }
 
   return NextResponse.json({ success: true });
 }

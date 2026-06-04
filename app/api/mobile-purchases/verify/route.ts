@@ -3,6 +3,10 @@ import { nanoid } from "nanoid";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { hasActiveCourseAccess } from "@/lib/access";
+import { checkRateLimit, getIP } from "@/lib/rate-limit";
+
+/** Max bytes to store from the Apple/Google raw response. */
+const MAX_RAW_RESPONSE_BYTES = 4096;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Product catalogue — must match App Store Connect / Play Console product IDs
@@ -67,7 +71,8 @@ async function verifyApple(
     data = await attempt("https://sandbox.itunes.apple.com/verifyReceipt");
   }
 
-  const raw = JSON.stringify(data);
+  // Truncate to avoid storing huge Apple receipts (latest_receipt can be kilobytes).
+  const raw = JSON.stringify(data).slice(0, MAX_RAW_RESPONSE_BYTES);
 
   // Any non-zero status from Apple's API means the receipt is invalid.
   if (data.status !== 0) {
@@ -183,7 +188,7 @@ async function verifyAndroid(
 
   const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
   const data = (await res.json()) as Record<string, unknown>;
-  const raw = JSON.stringify(data);
+  const raw = JSON.stringify(data).slice(0, MAX_RAW_RESPONSE_BYTES);
 
   if (!res.ok) {
     return { valid: false, transactionId: "", currentPeriodEnd: null, rawResponse: raw };
@@ -252,6 +257,16 @@ async function verifyAndroid(
  *   422                                  — store verification failed
  */
 export async function POST(req: NextRequest) {
+  // Rate limit: 10 verifications per 5 minutes per IP — prevent replay/brute-force.
+  const ip = getIP(req);
+  const rl = checkRateLimit(`mobile-verify:${ip}`, 10, 5 * 60 * 1000);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { success: false, error: "Too many verification attempts. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSeconds) } }
+    );
+  }
+
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });

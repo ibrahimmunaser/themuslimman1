@@ -15,6 +15,16 @@ export async function POST(req: NextRequest) {
   }
 
   const resend = new Resend(process.env.RESEND_API_KEY);
+
+  function escapeHtml(str: string): string {
+    return str
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#x27;");
+  }
+
   try {
     const body = await req.json();
     const { name: bodyName, email: bodyEmail, subject, message } = body;
@@ -47,7 +57,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    await resend.emails.send({
+    const { error: sendError } = await resend.emails.send({
       from: process.env.EMAIL_FROM ?? "Seerah Support <noreply@themuslimman.com>",
       to: process.env.SUPPORT_EMAIL ?? "themuslimman77@gmail.com",
       replyTo: senderEmail,
@@ -77,12 +87,12 @@ export async function POST(req: NextRequest) {
                           <tr>
                             <td style="padding: 16px; background-color: #0a0a0a; border: 1px solid #2a2a2a; border-radius: 8px;">
                               <p style="margin: 0 0 8px; font-size: 14px; color: #a3a3a3;">
-                                <strong style="color: #e5e5e5;">From:</strong> ${senderName}
+                                <strong style="color: #e5e5e5;">From:</strong> ${escapeHtml(senderName)}
                               </p>
                               <p style="margin: 0 0 8px; font-size: 14px; color: #a3a3a3;">
-                                <strong style="color: #e5e5e5;">Email:</strong> ${senderEmail}
+                                <strong style="color: #e5e5e5;">Email:</strong> ${escapeHtml(senderEmail)}
                               </p>
-                              ${userId ? `<p style="margin: 0; font-size: 14px; color: #a3a3a3;"><strong style="color: #e5e5e5;">User ID:</strong> ${userId}</p>` : '<p style="margin: 0; font-size: 14px; color: #a3a3a3;"><em>Pre-purchase visitor</em></p>'}
+                              ${userId ? `<p style="margin: 0; font-size: 14px; color: #a3a3a3;"><strong style="color: #e5e5e5;">User ID:</strong> ${escapeHtml(userId)}</p>` : '<p style="margin: 0; font-size: 14px; color: #a3a3a3;"><em>Pre-purchase visitor</em></p>'}
                             </td>
                           </tr>
                         </table>
@@ -91,7 +101,7 @@ export async function POST(req: NextRequest) {
                             Subject
                           </p>
                           <p style="margin: 0; font-size: 16px; font-weight: 600; color: #e5e5e5;">
-                            ${subject}
+                            ${escapeHtml(subject)}
                           </p>
                         </div>
                         <div>
@@ -99,7 +109,7 @@ export async function POST(req: NextRequest) {
                             Message
                           </p>
                           <div style="padding: 16px; background-color: #0a0a0a; border: 1px solid #2a2a2a; border-radius: 8px;">
-                            <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #e5e5e5; white-space: pre-wrap;">${message}</p>
+                            <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #e5e5e5; white-space: pre-wrap;">${escapeHtml(message)}</p>
                           </div>
                         </div>
                       </td>
@@ -119,6 +129,11 @@ export async function POST(req: NextRequest) {
         </html>
       `,
     });
+
+    if (sendError) {
+      console.error("Support contact email failed to send:", sendError);
+      return NextResponse.json({ error: "Failed to send message" }, { status: 500 });
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

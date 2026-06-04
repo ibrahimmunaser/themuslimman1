@@ -92,7 +92,7 @@ export default async function SeerahResourcesPage() {
     .sort((a, b) => b.videoWatchPercent - a.videoWatchPercent)[0];
 
   // Quiz stats
-  const quizCompletedCount = progress.filter((p) => p.quizCompleted).length;
+  const quizCompletedCount = progress.filter((p) => p.quizPassed).length;
   const quizPassedCount = progress.filter((p) => p.quizPassed).length;
   const quizTotalAttempts = progress.reduce((sum, p) => sum + (p.quizAttempts || 0), 0);
   // Average only rows where the user has a recorded best score.
@@ -133,6 +133,38 @@ export default async function SeerahResourcesPage() {
   const factsProgressMap = getAssetProgressMap("statement-of-facts");
   const factsCompletedCount = getAssetCompletedCount("statement-of-facts");
 
+  // Per-part OR lock — exactly matches the part-page access check.
+  // A part is unlocked if EITHER the complete-path predecessor quiz is passed
+  // OR the Children's-path predecessor quiz is passed.
+  // Part 1 and the first Children's part (Part 7) are always accessible.
+  const childrenPartsSorted = PARTS
+    .filter((p) => p.audiences.includes("children"))
+    .sort((a, b) => a.partNumber - b.partNumber);
+  const firstChildrenPartNumber = childrenPartsSorted[0]?.partNumber ?? null;
+
+  // Build a map: partNumber → predecessor partNumber in the Children's path
+  const childrenPredecessorMap = new Map<number, number>();
+  for (let i = 1; i < childrenPartsSorted.length; i++) {
+    childrenPredecessorMap.set(
+      childrenPartsSorted[i].partNumber,
+      childrenPartsSorted[i - 1].partNumber
+    );
+  }
+
+  const lockedPartNumbers = PARTS
+    .filter((p) => {
+      const n = p.partNumber;
+      if (n === 1) return false; // Part 1 always accessible
+      if (n === firstChildrenPartNumber) return false; // First children's part always accessible
+      const completePrevPassed = progressMap[n - 1]?.quizPassed ?? false;
+      const childrenPredecessor = childrenPredecessorMap.get(n);
+      const childrenPrevPassed = childrenPredecessor !== undefined
+        ? (progressMap[childrenPredecessor]?.quizPassed ?? false)
+        : false;
+      return !completePrevPassed && !childrenPrevPassed;
+    })
+    .map((p) => p.partNumber);
+
   return (
     <ResourcesTabs
         videosContent={
@@ -142,6 +174,7 @@ export default async function SeerahResourcesPage() {
             inProgressCount={videoInProgressCount}
             continueWatching={videoContinueWatching}
             thumbnails={thumbnails}
+            lockedPartNumbers={lockedPartNumbers}
           />
         }
         audioContent={
@@ -149,6 +182,7 @@ export default async function SeerahResourcesPage() {
             progressMap={audioProgressMap}
             completedCount={audioCompletedCount}
             thumbnails={thumbnails}
+            lockedPartNumbers={lockedPartNumbers}
           />
         }
         briefingsContent={
@@ -159,6 +193,7 @@ export default async function SeerahResourcesPage() {
             progressMap={briefingsProgressMap}
             completedCount={briefingsCompletedCount}
             thumbnails={thumbnails}
+            lockedPartNumbers={lockedPartNumbers}
           />
         }
         slidesContent={
@@ -171,6 +206,7 @@ export default async function SeerahResourcesPage() {
             actionLabel="View"
             statusLabel="Viewed"
             thumbnails={thumbnails}
+            lockedPartNumbers={lockedPartNumbers}
           />
         }
         infographicsContent={
@@ -183,6 +219,7 @@ export default async function SeerahResourcesPage() {
             actionLabel="View"
             statusLabel="Viewed"
             thumbnails={thumbnails}
+            lockedPartNumbers={lockedPartNumbers}
           />
         }
         mindmapsContent={
@@ -195,6 +232,7 @@ export default async function SeerahResourcesPage() {
             actionLabel="View"
             statusLabel="Viewed"
             thumbnails={thumbnails}
+            lockedPartNumbers={lockedPartNumbers}
           />
         }
         flashcardsContent={
@@ -207,16 +245,19 @@ export default async function SeerahResourcesPage() {
             actionLabel="Study"
             statusLabel="Studied"
             thumbnails={thumbnails}
+            lockedPartNumbers={lockedPartNumbers}
           />
         }
         quizzesContent={
           <QuizResourceContent
             progressMap={quizProgressMap}
+            videoProgressMap={progressMap}
             completedCount={quizCompletedCount}
             passedCount={quizPassedCount}
             avgScore={quizAvgScore}
             totalAttempts={quizTotalAttempts}
             thumbnails={thumbnails}
+            lockedPartNumbers={lockedPartNumbers}
           />
         }
         factsContent={
@@ -227,6 +268,7 @@ export default async function SeerahResourcesPage() {
             progressMap={factsProgressMap}
             completedCount={factsCompletedCount}
             thumbnails={thumbnails}
+            lockedPartNumbers={lockedPartNumbers}
           />
         }
     />

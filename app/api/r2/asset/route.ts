@@ -5,6 +5,13 @@ import { requirePartAccess, extractPartNumberFromR2Key } from "@/lib/part-access
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+// NOTE: This route proxies binary content through the Next.js server rather than
+// issuing signed R2 URLs directly. This is intentional for cases where the client
+// cannot receive a redirect (e.g. <img src> in certain WebViews, Safari range
+// requests). The trade-off is higher server bandwidth and latency compared to
+// direct signed URLs. For the primary video/audio player, prefer the
+// /api/part/[partNumber]/assets route which returns pre-signed URLs instead.
+
 const MIME_TYPES: Record<string, string> = {
   ".mp4": "video/mp4",
   ".wav": "audio/wav",

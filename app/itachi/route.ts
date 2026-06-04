@@ -9,7 +9,7 @@ export async function GET() {
   prisma.influencerClick.create({ data: { id: crypto.randomUUID(), creator: "itachi" } }).catch(() => {});
 
   return NextResponse.redirect(
-    `${APP_URL}/signup-checkout?plan=complete&promo=ITACHI20&utm_source=tiktok&utm_medium=influencer&utm_campaign=seerah_launch&utm_content=itachi`,
+    `${APP_URL}/checkout?plan=individual&billing=lifetime&promo=ITACHI20&utm_source=tiktok&utm_medium=influencer&utm_campaign=seerah_launch&utm_content=itachi`,
     { status: 302 }
   );
 }

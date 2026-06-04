@@ -3,19 +3,17 @@
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
-import { createHash } from "crypto";
 import { nanoid } from "nanoid";
 import { prisma } from "./db";
+import { hashToken } from "./hash-token";
 import type { SessionUser } from "./session";
 import { ROLES, type Role, isRole } from "./roles";
 
-/** SHA-256 hash a short token for safe DB storage (same pattern as gift tokens). */
-function hashToken(raw: string): string {
-  return createHash("sha256").update(raw).digest("hex");
-}
-
 const COOKIE_NAME    = "seerah_session";
-const ROLE_COOKIE    = "seerah_role";    // readable by middleware (not httpOnly)
+// seerah_role is a UI-hint cookie (now httpOnly). It is NEVER used for access
+// control decisions on the server — all authorization uses the DB session lookup
+// in getCurrentUser(). This cookie only informs client-side UI like nav items.
+const ROLE_COOKIE    = "seerah_role";
 const PROFILE_COOKIE = "seerah_profile"; // active learner profile ID (non-httpOnly for client reads)
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 const BCRYPT_ROUNDS  = 12;
@@ -38,7 +36,7 @@ async function setSessionCookie(token: string, expiresAt: Date) {
 async function setRoleCookie(role: string, expiresAt: Date) {
   const cookieStore = await cookies();
   cookieStore.set(ROLE_COOKIE, role, {
-    httpOnly: false, // must be readable by middleware on the edge
+    httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     expires: expiresAt,
@@ -76,11 +74,13 @@ export async function clearActiveProfileCookie() {
 
 async function createSession(userId: string, role: string): Promise<string> {
   const token = nanoid(48);
+  const tokenHash = hashToken(token);
   const expiresAt = new Date(Date.now() + COOKIE_MAX_AGE * 1000);
   
   try {
-    // Session.id has no @default in the schema — must be provided explicitly.
-    await prisma.session.create({ data: { id: nanoid(24), userId, token, expiresAt } });
+    // Store only the SHA-256 hash in the DB so a DB leak cannot be used to
+    // hijack sessions. The raw token lives exclusively in the user's cookie.
+    await prisma.session.create({ data: { id: nanoid(24), userId, token: tokenHash, expiresAt } });
     await setSessionCookie(token, expiresAt);
     await setRoleCookie(role, expiresAt);
     return token;
@@ -100,8 +100,9 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
   
   if (!token) return null;
 
+  // Hash the cookie token before DB lookup — only hashes are stored in the DB.
   const session = await prisma.session.findUnique({
-    where: { token },
+    where: { token: hashToken(token) },
     include: {
       user: {
         select: {
@@ -215,6 +216,13 @@ export async function requireAuth(): Promise<SessionUser> {
     }
     redirect(loginUrl);
   }
+
+  // In production, unverified users must complete email verification before
+  // accessing any protected route. Dev mode skips this so local dev still works.
+  if (process.env.NODE_ENV === "production" && !user.emailVerified) {
+    redirect("/verify-email-pending");
+  }
+
   return user;
 }
 
@@ -253,11 +261,19 @@ export async function login(
     where: { email: lowerEmail },
   });
 
-  if (!user) return { success: false, error: "Invalid credentials" };
+  if (!user) {
+    // Run a dummy bcrypt comparison so "user not found" takes the same wall-clock
+    // time as "wrong password", preventing timing-based user enumeration.
+    await bcrypt.compare(password, "$2a$12$dummyhashfortimingequalityXXXXXXXXXXXXXXX");
+    return { success: false, error: "Invalid credentials" };
+  }
 
   if (!user.isActive) return { success: false, error: "Account is deactivated" };
 
-  if (!user.passwordHash) return { success: false, error: "Please set up your password first" };
+  if (!user.passwordHash) {
+    await bcrypt.compare(password, "$2a$12$dummyhashfortimingequalityXXXXXXXXXXXXXXX");
+    return { success: false, error: "Please set up your password first" };
+  }
 
   const valid = await bcrypt.compare(password, user.passwordHash);
   if (!valid) return { success: false, error: "Invalid email or password" };
@@ -300,7 +316,7 @@ export async function logout(): Promise<void> {
   const token = cookieStore.get(COOKIE_NAME)?.value;
 
   if (token) {
-    await prisma.session.delete({ where: { token } }).catch((err) => {
+    await prisma.session.delete({ where: { token: hashToken(token) } }).catch((err) => {
       console.error(`[AUTH] logout: Failed to delete session:`, err);
     });
   }
@@ -325,7 +341,8 @@ export async function userHasPurchases(userId: string): Promise<boolean> {
 // ─────────────────────────────────────────────────────────────
 
 export async function verifyEmail(token: string): Promise<{ success: boolean; error?: string }> {
-  const user = await prisma.user.findFirst({ where: { verificationToken: token } });
+  // The DB stores the hash; hash the incoming token before lookup.
+  const user = await prisma.user.findFirst({ where: { verificationToken: hashToken(token) } });
 
   if (!user) return { success: false, error: "Invalid or expired verification link" };
 
@@ -392,7 +409,7 @@ export async function requestPasswordReset(email: string): Promise<{ success: bo
             </div>
             
             <div style="background: #ffffff; padding: 40px 30px; border: 1px solid #e5e5e5; border-top: none;">
-              <p style="font-size: 16px; margin: 0 0 20px 0;">Hello ${user.fullName},</p>
+              <p style="font-size: 16px; margin: 0 0 20px 0;">Hello ${user.fullName ?? "there"},</p>
               
               <p style="font-size: 16px; margin: 0 0 20px 0;">
                 We received a request to reset your password. Click the button below to create a new password:
@@ -428,7 +445,9 @@ export async function requestPasswordReset(email: string): Promise<{ success: bo
     console.log(`[PASSWORD_RESET] Email sent successfully:`, result);
   } catch (emailError) {
     console.error("[PASSWORD_RESET] Failed to send password reset email:", emailError);
-    // Don't fail the request if email fails
+    // Return failure so the UI can inform the user rather than saying "email sent"
+    // when it wasn't. The token in the DB is harmless to leave (it expires in 1 h).
+    return { success: false, error: "Failed to send reset email. Please try again." };
   }
 
   return { success: true };
@@ -449,10 +468,15 @@ export async function resetPassword(
 
   const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
 
-  await prisma.user.update({
-    where: { id: user.id },
-    data: { passwordHash, passwordResetToken: null, passwordResetExpiry: null, emailVerified: true },
-  });
+  // Update password and revoke ALL existing sessions so any attacker
+  // who had a stolen session is kicked out immediately.
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash, passwordResetToken: null, passwordResetExpiry: null, emailVerified: true },
+    }),
+    prisma.session.deleteMany({ where: { userId: user.id } }),
+  ]);
 
   return { success: true };
 }
@@ -479,7 +503,12 @@ export async function changePassword(
 
   const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
 
-  await prisma.user.update({ where: { id: user.id }, data: { passwordHash } });
+  // Update password and revoke ALL other sessions so any stolen session
+  // is immediately invalidated (same behaviour as resetPassword).
+  await prisma.$transaction([
+    prisma.user.update({ where: { id: user.id }, data: { passwordHash } }),
+    prisma.session.deleteMany({ where: { userId: user.id } }),
+  ]);
 
   return { success: true };
 }

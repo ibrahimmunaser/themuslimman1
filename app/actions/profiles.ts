@@ -41,8 +41,18 @@ export async function getActiveProfileId(userId: string): Promise<string> {
   });
   if (defaultProfile) return defaultProfile.id;
 
-  // No profile at all (should only happen for brand-new users or edge cases).
-  // Create one lazily so progress never crashes.
+  // No default profile — use the first existing profile rather than creating a
+  // new one. This prevents a phantom 6th profile being created for family users
+  // who have 5 profiles (all isDefault: false) but have not yet selected one.
+  const firstExisting = await prisma.learnerProfile.findFirst({
+    where: { userId },
+    orderBy: { createdAt: "asc" },
+    select: { id: true },
+  });
+  if (firstExisting) return firstExisting.id;
+
+  // Truly no profiles at all (brand-new user) — create one lazily so progress
+  // never crashes.
   return createDefaultProfileForUser(userId);
 }
 
@@ -147,7 +157,7 @@ export async function getProfilesWithProgress() {
     });
 
     const completedParts = progress.filter(
-      (p: ProgressRow) => p.status === "completed" || p.status === "mastered"
+      (p: ProgressRow) => p.quizPassed
     ).length;
 
     const videosCompleted = progress.filter((p: ProgressRow) => p.videoCompleted || p.videoWatchPercent >= 85).length;
@@ -321,7 +331,9 @@ export async function switchProfile(profileId: string) {
 
   await setActiveProfileCookie(profile.id);
 
-  revalidatePath("/seerah");
+  // Revalidate the entire /seerah subtree so any cached part pages, the
+  // dashboard, and the resource library all reflect the new profile's progress.
+  revalidatePath("/seerah", "layout");
   revalidatePath("/profiles");
   return { success: true, profile };
 }
@@ -364,11 +376,17 @@ export async function setDefaultProfile(profileId: string) {
 export async function ensureFamilyProfiles() {
   const user = await requireStudent();
 
-  const existing = await prisma.learnerProfile.findMany({
-    where: { userId: user.id },
-    select: { id: true },
-    orderBy: { createdAt: "asc" },
-  });
+  const [existing, hasDefault] = await Promise.all([
+    prisma.learnerProfile.findMany({
+      where: { userId: user.id },
+      select: { id: true },
+      orderBy: { createdAt: "asc" },
+    }),
+    prisma.learnerProfile.findFirst({
+      where: { userId: user.id, isDefault: true },
+      select: { id: true },
+    }),
+  ]);
 
   const FAMILY_LIMIT = 5;
   const needed = FAMILY_LIMIT - existing.length;
@@ -387,7 +405,9 @@ export async function ensureFamilyProfiles() {
       userId: user.id,
       displayName: name,
       avatar: avatarSlots[i] ?? null,
-      isDefault: false,
+      // If no default profile exists yet, mark the first slot as the default
+      // so getActiveProfileId never needs to create a phantom 6th profile.
+      isDefault: !hasDefault && existing.length === 0 && i === 0,
     })),
   });
 

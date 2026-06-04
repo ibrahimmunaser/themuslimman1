@@ -5,7 +5,7 @@ import { InfluencerStatsPage } from "@/components/influencer/influencer-stats-pa
 export const dynamic = "force-dynamic";
 
 const CREATOR = "deenresponds";
-const PROMO_CODE = "DEEN20";
+const PROMO_CODE = "DEEN";
 const DISPLAY_NAME = "Deen Responds";
 
 export default async function DeenRespondsStatsPage({

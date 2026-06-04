@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { requireStudent } from "@/lib/auth";
+import { hasActiveCourseAccess } from "@/lib/access";
 import { StudentLayout } from "@/components/student/student-layout";
 import { prisma } from "@/lib/db";
 import { getActiveProfileId } from "@/app/actions/profiles";
@@ -14,12 +15,8 @@ export default async function QuizzesPage() {
   const user = await requireStudent();
   if (!user.studentProfileId) redirect("/");
 
-  if (!user.hasPaid) {
-    const purchases = await prisma.purchase.findMany({
-      where: { userId: user.id, status: "succeeded" },
-    });
-    if (purchases.length === 0) redirect("/pricing");
-  }
+  const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
+  if (!hasAccess) redirect("/pricing");
 
   const userPlan = "complete" as const;
 

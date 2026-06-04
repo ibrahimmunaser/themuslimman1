@@ -6,7 +6,7 @@ import { PART_CONTENT } from "@/lib/part-content-data";
 import { ERA_MAP } from "@/lib/types";
 import { eraGradient } from "./era-gradient";
 import { ResourcePageClient } from "./resource-page-client";
-import { FileText, CheckCircle2, BookOpen, GraduationCap, BarChart2, Clock, X } from "lucide-react";
+import { FileText, CheckCircle2, BookOpen, GraduationCap, BarChart2, Clock, X, Lock } from "lucide-react";
 import { trackAssetOpened } from "@/app/actions/progress";
 
 // Apply semantic inline formatting to a single fact line
@@ -34,6 +34,7 @@ interface TextResourceContentProps {
   progressMap: Record<number, boolean>;
   completedCount: number;
   thumbnails?: Record<number, string>;
+  lockedPartNumbers?: number[];
 }
 
 export function TextResourceContent({
@@ -43,7 +44,9 @@ export function TextResourceContent({
   progressMap,
   completedCount,
   thumbnails = {},
+  lockedPartNumbers = [],
 }: TextResourceContentProps) {
+  const lockedSet = new Set(lockedPartNumbers);
   const [selectedPart, setSelectedPart] = useState<{ partNumber: number; title: string; subtitle?: string } | null>(null);
   const [localProgressMap, setLocalProgressMap] = useState(progressMap);
   const [localReadCount, setLocalReadCount] = useState(completedCount);
@@ -235,16 +238,27 @@ export function TextResourceContent({
             <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
               {parts.map((part) => {
                 const isRead = localProgressMap[part.partNumber] || false;
+                const isLocked = lockedSet.has(part.partNumber);
                 return (
                   <div
                     key={part.id}
-                    onClick={() => handleOpenContent(part)}
-                    className="group cursor-pointer rounded-xl border border-zinc-800 bg-zinc-900/50 hover:bg-zinc-900 hover:border-amber-500/30 transition-all overflow-hidden"
+                    onClick={isLocked ? undefined : () => handleOpenContent(part)}
+                    className={`group rounded-xl border border-zinc-800 bg-zinc-900/50 transition-all overflow-hidden ${
+                      isLocked
+                        ? "cursor-not-allowed opacity-60"
+                        : "cursor-pointer hover:bg-zinc-900 hover:border-amber-500/30"
+                    }`}
                   >
                     <div
                       className="aspect-video relative flex items-center justify-center overflow-hidden"
                       style={eraGradient(part.era)}
                     >
+                      {/* Lock overlay */}
+                      {isLocked && (
+                        <div className="absolute inset-0 z-20 bg-black/70 flex items-center justify-center">
+                          <Lock className="w-5 h-5 text-zinc-500" />
+                        </div>
+                      )}
                       {thumbnails[part.partNumber] && (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img

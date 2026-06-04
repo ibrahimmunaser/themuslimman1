@@ -1,12 +1,9 @@
 /**
  * Progress calculation logic for Seerah lesson parts.
  *
- * Unlock rule (softer — applies to ALL plans):
- *   video >= 85% AND briefing opened
- *
  * Completion rules:
  *   Essentials: video >= 85% + briefing opened
- *   Complete:   video >= 85% + briefing opened + quiz passed >= 80%
+ *   Complete:   quiz passed >= 80%
  *
  * Mastery (Complete only):
  *   quiz best score >= 90% + flashcards reviewed + 2+ optional assets opened
@@ -46,9 +43,8 @@ export function canUnlockNextPart(snap: ProgressSnapshot): boolean {
 }
 
 export function isCompleted(snap: ProgressSnapshot, userPlan: "essentials" | "complete"): boolean {
-  const base = videoReachedThreshold(snap) && snap.briefingOpened;
-  if (userPlan === "essentials") return base;
-  return base && snap.quizPassed;
+  if (userPlan === "essentials") return videoReachedThreshold(snap) && snap.briefingOpened;
+  return snap.quizPassed;
 }
 
 export function isMastered(snap: ProgressSnapshot, userPlan: "essentials" | "complete"): boolean {

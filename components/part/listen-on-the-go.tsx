@@ -8,9 +8,10 @@ interface ListenOnTheGoProps {
   title?: string;
   partNumber?: number;
   previewMode?: boolean;
+  videoCompleted?: boolean;
 }
 
-export function ListenOnTheGo({ audioUrl, title, partNumber, previewMode }: ListenOnTheGoProps) {
+export function ListenOnTheGo({ audioUrl, title, partNumber, previewMode, videoCompleted }: ListenOnTheGoProps) {
   if (!audioUrl) return null;
 
   return (
@@ -20,7 +21,7 @@ export function ListenOnTheGo({ audioUrl, title, partNumber, previewMode }: List
         <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider">Listen on the Go</p>
         <span className="text-[10px] text-text-muted/60">· Perfect for commutes and repetition</span>
       </div>
-      <AudioPlayer src={audioUrl} title={title} partNumber={partNumber} compact previewMode={previewMode} />
+      <AudioPlayer src={audioUrl} title={title} partNumber={partNumber} compact previewMode={previewMode} videoCompleted={videoCompleted} />
     </div>
   );
 }

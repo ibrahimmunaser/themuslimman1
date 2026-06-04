@@ -149,7 +149,6 @@ export default async function PricingPage() {
   const hasLifetime = accessInfo?.hasLifetime ?? false;
   const hasMonthly  = !hasLifetime && (accessInfo?.hasActiveSubscription ?? false);
   const hasFamily   = user?.planType === "family";
-  const isLoggedIn  = !!user;
 
   return (
     <div className="flex flex-col min-h-screen bg-ink text-text">

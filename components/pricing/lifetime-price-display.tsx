@@ -20,9 +20,10 @@ export function LifetimePriceDisplay({ basePrice }: LifetimePriceDisplayProps) {
     if (!stored) return;
     const config = getCreatorPromoConfig(stored);
     if (config) {
-      setDiscount({ amount: config.discountAmount, code: config.code });
+      const amount = Math.round(basePrice * config.discountPercent / 100);
+      setDiscount({ amount, code: config.code });
     }
-  }, []);
+  }, [basePrice]);
 
   if (discount) {
     const finalPrice = basePrice - discount.amount;

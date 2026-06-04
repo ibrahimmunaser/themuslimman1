@@ -3,7 +3,6 @@ import Link from "next/link";
 import { Suspense } from "react";
 import {
   CheckCircle2,
-  Video,
   ChevronDown,
   ArrowRight,
   Lock,
@@ -17,7 +16,6 @@ import { Part1FullPreview } from "@/components/landing/part1-full-preview";
 import { buttonClass } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth";
 import { hasActiveCourseAccess } from "@/lib/access";
-import { getStudentDashboardData } from "@/lib/queries/student";
 import { EmailVerificationBanner } from "@/components/auth/email-verification-banner";
 import { CreatorPromoTracker } from "@/components/promo/creator-promo-tracker";
 
@@ -25,38 +23,39 @@ import { CreatorPromoTracker } from "@/components/promo/creator-promo-tracker";
 // A cached ISR response would serve the same HTML to everyone and skip the redirect.
 export const dynamic = "force-dynamic";
 
+export const metadata = {
+  title: "Complete Seerah | Learn the Life of Prophet Muhammad ﷺ",
+  description:
+    "Master the life of Prophet Muhammad ﷺ through video lessons, guided audio, quizzes, and interactive resources — for individuals and families.",
+  openGraph: {
+    title: "Complete Seerah | Learn the Life of Prophet Muhammad ﷺ",
+    description:
+      "Master the life of Prophet Muhammad ﷺ through video lessons, guided audio, quizzes, and interactive resources.",
+    url: process.env.NEXT_PUBLIC_APP_URL ?? "https://themuslimman.com",
+    siteName: "Complete Seerah",
+  },
+};
+
 export default async function LandingPage() {
-  // Check if user is logged in and get their progress
   let user = null;
-  let userProgress = null;
 
   try {
     user = await getCurrentUser();
-
-    if (user?.studentProfileId) {
-      try {
-        const dashboardData = await getStudentDashboardData(user.studentProfileId);
-        userProgress = dashboardData.recentProgress[0] || null;
-      } catch (error) {
-        // Silently fail - user experience not affected
-        console.error("Failed to fetch user progress:", error);
-        userProgress = null;
-      }
-    }
-  } catch (error) {
-    // Silently fail - landing page still works for logged-out users
-    console.error("Failed to get current user:", error);
+  } catch {
+    // Silently fail — landing page still works for logged-out users
     user = null;
   }
 
   // Must be OUTSIDE the try/catch — Next.js redirect() works by throwing a
   // special error, which the catch block above would silently swallow.
+  // For paid users this short-circuits instantly (hasPaid fast-path, ~5ms).
   if (user) {
     const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
     if (hasAccess) {
       redirect("/my-courses");
     }
   }
+
 
   return (
     <div className="flex flex-col min-h-screen bg-ink text-text">
@@ -139,33 +138,8 @@ export default async function LandingPage() {
 
             {/* Right: product visual — xl+ only */}
             <div className="hidden xl:block">
-              {user && userProgress ? (
-                /* Dashboard progress card for logged-in users */
-                <div className="rounded-2xl overflow-hidden border border-border/50 shadow-2xl shadow-black/40">
-                  <div className="bg-surface border-b border-border px-4 py-3 flex items-center gap-2">
-                    <div className="flex gap-1.5">
-                      <div className="w-2.5 h-2.5 rounded-full bg-red-500/60" />
-                      <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/60" />
-                      <div className="w-2.5 h-2.5 rounded-full bg-green-500/60" />
-                    </div>
-                    <span className="text-xs text-text-muted ml-1">themuslimman.com/seerah</span>
-                  </div>
-                  <div className="bg-surface-raised p-6">
-                    <p className="text-xs text-text-muted uppercase tracking-wider mb-1">Continue where you left off</p>
-                    <h3 className="text-text font-semibold mb-4">
-                      Part {userProgress.classCourseItem.seerahPart?.partNumber}: {userProgress.classCourseItem.seerahPart?.title || ""}
-                    </h3>
-                    <div className="w-full bg-surface rounded-full h-1.5 mb-2">
-                      <div
-                        className="bg-gold h-1.5 rounded-full"
-                        style={{ width: `${userProgress.completionPercentage || 0}%` }}
-                      />
-                    </div>
-                    <p className="text-xs text-text-muted">{userProgress.completionPercentage || 0}% complete</p>
-                  </div>
-                </div>
-              ) : (
-                /* Static course preview card for visitors */
+              {/* Static course preview card */}
+              {(
                 <div className="rounded-2xl border border-border/60 bg-surface shadow-2xl shadow-black/50 overflow-hidden">
                   {/* Browser chrome */}
                   <div className="bg-surface-raised border-b border-border px-4 py-2.5 flex items-center gap-2">
@@ -290,47 +264,8 @@ export default async function LandingPage() {
           </div>
         </div>
 
-        {/* Dashboard preview for mobile/tablet (xl: hidden since shown in right column above) */}
-        {user && userProgress && (
-          <div className="xl:hidden relative max-w-5xl mx-auto px-4 sm:px-6 mt-10">
-            <div className="relative rounded-2xl overflow-hidden border border-border/50 shadow-2xl shadow-black/50">
-              <div className="bg-surface border-b border-border px-4 py-3 flex items-center gap-2">
-                <div className="flex gap-1.5">
-                  <div className="w-3 h-3 rounded-full bg-red-500/60" />
-                  <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
-                  <div className="w-3 h-3 rounded-full bg-green-500/60" />
-                </div>
-                <div className="flex-1 text-center">
-                  <span className="text-xs text-text-muted">themuslimman.com/seerah</span>
-                </div>
-              </div>
-              <div className="bg-surface-raised p-6 md:p-8">
-                <div className="flex flex-col gap-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs text-text-muted uppercase tracking-wider">Continue where you left off</p>
-                      <h3 className="text-text font-semibold mt-1">
-                        Part {userProgress.classCourseItem.seerahPart?.partNumber}: {userProgress.classCourseItem.seerahPart?.title || ""}
-                      </h3>
-                    </div>
-                    <div className="w-10 h-10 rounded-full bg-gold/20 border border-gold/30 flex items-center justify-center">
-                      <Video className="w-4 h-4 text-gold" />
-                    </div>
-                  </div>
-                  <div className="w-full bg-surface rounded-full h-1.5">
-                    <div
-                      className="bg-gold h-1.5 rounded-full"
-                      style={{ width: `${userProgress.completionPercentage || 0}%` }}
-                    />
-                  </div>
-                  <div className="text-xs text-text-muted">
-                    {userProgress.completionPercentage || 0}% complete
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Dashboard preview for mobile/tablet — only shown when class-based progress exists */}
+        {false && null}
       </section>
 
       {/* ============================================
@@ -470,11 +405,11 @@ export default async function LandingPage() {
               <h3 className="font-bold text-gold mb-4">Reports Also Include:</h3>
               <ul className="space-y-2.5">
                 {[
-                  "Quiz scores",
-                  "Flashcard activity",
-                  "Weak areas",
-                  "Strong areas",
-                  "Mastery progress",
+                  "Quiz scores & attempts",
+                  "Flashcard sessions",
+                  "Weekly activity breakdown",
+                  "Total study time",
+                  "Next recommended lesson",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-3 text-sm text-text">
                     <CheckCircle2 className="w-4 h-4 text-gold flex-shrink-0 mt-0.5" />
@@ -609,7 +544,7 @@ export default async function LandingPage() {
               },
               {
                 q: "Can I access any part in any order?",
-                a: "Yes. Once you purchase, you can open any of the 100 parts directly. Progress tracking is a guide, not a gate.",
+                a: "The course is designed to be taken in order — each part builds on the one before it. You unlock the next part by completing the short quiz at the end of each lesson. Part 1 is always open, and progress tracking keeps your place automatically.",
               },
               {
                 q: "Do I get lifetime access?",

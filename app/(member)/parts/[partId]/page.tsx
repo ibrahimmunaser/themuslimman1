@@ -2,8 +2,15 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { requireAuth } from "@/lib/auth";
 import { hasActiveCourseAccess } from "@/lib/access";
+import { getActiveProfileId } from "@/app/actions/profiles";
 import { getPartById, PARTS } from "@/lib/content";
 import { ERA_MAP } from "@/lib/types";
+import type { Quiz } from "@/lib/types";
+
+function stripQuizAnswers(q: Quiz | null | undefined): Quiz | null | undefined {
+  if (!q) return q;
+  return { ...q, questions: q.questions.map(({ correct_answer: _a, ...rest }) => rest as Quiz["questions"][number]) };
+}
 import {
   readBriefing,
   readStatementOfFacts,
@@ -17,7 +24,8 @@ import {
   getPartAssetUrls,
 } from "@/lib/files";
 import { generateSignedR2Url, IMAGE_URL_EXPIRY } from "@/lib/r2";
-import { ChevronLeft, ChevronRight, Clock, BookOpen, Star } from "lucide-react";
+import { prisma } from "@/lib/db";
+import { ChevronLeft, ChevronRight, Clock, BookOpen, Star, Lock } from "lucide-react";
 import { PartTabs } from "@/components/part/part-tabs";
 import { CourseContentsDrawer } from "@/components/part/course-contents-drawer";
 
@@ -51,6 +59,23 @@ export default async function PartPage(props: { params: Promise<{ partId: string
     const accessOk = await hasActiveCourseAccess(user.id, user.hasPaid);
     if (!accessOk) redirect("/pricing");
   }
+
+  // Sequential progression check — fetch this part's progress + previous part's quiz status
+  const learnerProfileId = user.activeProfileId ?? await getActiveProfileId(user.id);
+  const [partProgress, prevProgress] = await Promise.all([
+    prisma.partProgress.findUnique({
+      where: { learnerProfileId_partNumber: { learnerProfileId, partNumber: n } },
+      select: { videoWatchPercent: true, quizPassed: true },
+    }),
+    n > 1
+      ? prisma.partProgress.findUnique({
+          where: { learnerProfileId_partNumber: { learnerProfileId, partNumber: n - 1 } },
+          select: { quizPassed: true },
+        })
+      : Promise.resolve(null),
+  ]);
+
+  const isPartLocked = n > 1 && !prevProgress?.quizPassed;
 
   // Legacy route - default to complete plan for backward compatibility
   const userPlan = "complete" as const;
@@ -105,7 +130,7 @@ export default async function PartPage(props: { params: Promise<{ partId: string
       studyGuideText: studyGuideText ?? undefined,
       reportText: reportText ?? undefined,
       mindmapUrl: assetUrls.mindmapUrl ?? undefined,
-      quiz: quiz ?? undefined,
+      quiz: stripQuizAnswers(quiz) ?? undefined,
       flashcards: flashcards ?? undefined,
       slides: slideFiles,
       infographics: await (async () => {
@@ -228,7 +253,33 @@ export default async function PartPage(props: { params: Promise<{ partId: string
 
       {/* ── Learning modes + content ──────────────────────────────────────── */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <PartTabs part={part} userPlan={userPlan} />
+        {isPartLocked ? (
+          <div className="flex flex-col items-center justify-center gap-5 py-16 px-6 rounded-2xl border border-border bg-surface text-center">
+            <div className="w-14 h-14 rounded-full bg-surface-raised border border-border flex items-center justify-center">
+              <Lock className="w-6 h-6 text-text-muted/50" />
+            </div>
+            <div className="space-y-1.5 max-w-sm">
+              <p className="text-base font-semibold text-text">Part {n} is locked</p>
+              <p className="text-sm text-text-secondary leading-relaxed">
+                Complete Part {n - 1}&apos;s quiz to unlock this part&apos;s content.
+              </p>
+            </div>
+            <Link
+              href={`/parts/part-${n - 1}`}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gold text-ink font-semibold text-sm hover:bg-gold-light transition-colors min-h-[44px]"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Go to Part {n - 1}
+            </Link>
+          </div>
+        ) : (
+          <PartTabs
+            part={part}
+            userPlan={userPlan}
+            initialVideoPercent={partProgress?.videoWatchPercent ?? 0}
+            initialVideoCompleted={(partProgress?.videoWatchPercent ?? 0) >= 85}
+          />
+        )}
       </div>
 
       {/* ── Continue learning ─────────────────────────────────────────────── */}

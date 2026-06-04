@@ -1,7 +1,7 @@
 // Service Worker for Advanced Caching
 // Implements intelligent caching strategies for different asset types
 
-const CACHE_VERSION = "v7";
+const CACHE_VERSION = "v8";
 const CACHE_NAME = `seerah-${CACHE_VERSION}`;
 
 // Cache strategies by asset type
@@ -28,11 +28,10 @@ const CACHE_STRATEGIES = {
   },
 };
 
-// Assets to precache on install
+// Assets to precache on install — keep small; only URLs guaranteed to exist.
+// cache.addAll() is atomic: one 404 aborts the entire install.
 const PRECACHE_URLS = [
   "/",
-  "/manifest.json",
-  "/offline",
 ];
 
 /**
@@ -117,12 +116,7 @@ async function networkFirstStrategy(request, strategy) {
     if (cachedResponse) {
       return cachedResponse;
     }
-    
-    // Return offline page for navigation requests
-    if (request.mode === "navigate") {
-      return caches.match("/offline");
-    }
-    
+
     throw error;
   }
 }

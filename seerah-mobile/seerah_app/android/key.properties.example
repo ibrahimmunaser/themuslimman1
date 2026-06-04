@@ -1,0 +1,24 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Android Release Signing — key.properties template
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# 1. Copy this file to android/key.properties (same directory as this file).
+# 2. Fill in the four values below with your production keystore details.
+# 3. DO NOT commit key.properties to version control.
+#    It is already listed in android/.gitignore.
+#
+# To generate a new keystore (run once, store the file somewhere safe):
+#
+#   keytool -genkey -v \
+#     -keystore ~/keys/themuslimman.jks \
+#     -keyalg RSA -keysize 2048 -validity 10000 \
+#     -alias themuslimman \
+#     -dname "CN=The Muslim Man, OU=Mobile, O=The Muslim Man, L=Unknown, ST=Unknown, C=US"
+#
+# Then fill in the values below:
+# ─────────────────────────────────────────────────────────────────────────────
+
+storeFile=/absolute/path/to/your/themuslimman.jks
+storePassword=YOUR_KEYSTORE_PASSWORD
+keyAlias=themuslimman
+keyPassword=YOUR_KEY_PASSWORD

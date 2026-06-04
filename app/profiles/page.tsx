@@ -39,8 +39,8 @@ export default async function ProfilePickerPage({ searchParams }: Props) {
       ].slice(0, 5)
     : profiles;
 
-  // Individual plan with exactly 1 profile → skip picker, go straight to course
-  if (!isFamily && profiles.length === 1) {
+  // Individual plan: skip picker when 0 or 1 profiles — /seerah lazily creates a default profile
+  if (!isFamily && profiles.length <= 1) {
     redirect("/seerah");
   }
 

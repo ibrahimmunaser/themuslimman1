@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /seerah/
+Disallow: /student/
+Disallow: /admin/
+Disallow: /checkout/
+Disallow: /checkout
+Disallow: /gift/
+Disallow: /signup
+Disallow: /signup-checkout
+Disallow: /verify-email
+Disallow: /verify-email-pending
+
+Sitemap: https://themuslimman.com/sitemap.xml

@@ -13,6 +13,7 @@ import {
   r2GetVideoKey,
   r2GetAudioKey,
   generateSignedR2Url,
+  getThumbnailUrl,
   VIDEO_URL_EXPIRY,
   IMAGE_URL_EXPIRY,
 } from "./r2";
@@ -316,6 +317,7 @@ export async function getPartAssetUrls(partNum: number) {
       mindmapUrl: (await mindmapExists(partNum))
         ? `/seerah-media/Mindmaps/Part ${partNum} - Mindmap.png`
         : undefined,
+      thumbnailUrl: undefined as string | undefined,
     };
   }
 
@@ -327,11 +329,12 @@ export async function getPartAssetUrls(partNum: number) {
 
   // All parts — including free Part 1 — use short-lived signed URLs.
   // Access control (free vs paid) is enforced at the page/API level, not via permanent URLs.
-  const [videoUrl, audioUrl, mindmapUrl] = await Promise.all([
+  const [videoUrl, audioUrl, mindmapUrl, thumbnailUrl] = await Promise.all([
     videoKey ? generateSignedR2Url(videoKey, VIDEO_URL_EXPIRY) : Promise.resolve(undefined),
     audioKey ? generateSignedR2Url(audioKey, VIDEO_URL_EXPIRY) : Promise.resolve(undefined),
     mindmapKey ? generateSignedR2Url(mindmapKey, IMAGE_URL_EXPIRY) : Promise.resolve(undefined),
+    getThumbnailUrl(partNum).catch(() => undefined),
   ]);
 
-  return { videoUrl, audioUrl, mindmapUrl };
+  return { videoUrl, audioUrl, mindmapUrl, thumbnailUrl };
 }

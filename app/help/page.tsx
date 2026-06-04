@@ -43,8 +43,8 @@ export default async function HelpPage() {
       icon: CreditCard,
       questions: [
         {
-          q: "Is this a subscription or one-time payment?",
-          a: "It's a one-time payment with lifetime access. No recurring charges, no subscriptions.",
+          q: "What payment options are available?",
+          a: "You can pay once for lifetime access, or choose a monthly plan. The lifetime option gives you permanent access with no recurring charges. The monthly plan keeps you subscribed as long as it's active.",
         },
         {
           q: "What's your refund policy?",
@@ -58,7 +58,7 @@ export default async function HelpPage() {
       questions: [
         {
           q: "Can I access parts in any order?",
-          a: "Yes. Once you purchase, you can open any of the 100 parts directly. Progress tracking is shown as a guide to help you, not as a gate.",
+          a: "The course is designed to be taken in order — each part unlocks after you pass the short quiz at the end of the previous lesson. Part 1 is always open. This keeps the Seerah connected and builds naturally from one event to the next.",
         },
         {
           q: "Can I access lessons on mobile?",
@@ -147,13 +147,13 @@ export default async function HelpPage() {
                 <CreditCard className="w-4 h-4" />
                 <span>Upgrade Plan</span>
               </Link>
-              <a
+              <Link
                 href="/student/settings"
                 className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-raised hover:bg-surface-high text-text-secondary hover:text-text transition-colors"
               >
                 <Lock className="w-4 h-4" />
                 <span>Account Settings</span>
-              </a>
+              </Link>
             </div>
           </div>
         </div>

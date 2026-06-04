@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { BookOpen, Clock, Layers, ClipboardCheck, ArrowRight } from "lucide-react";
+import { BookOpen, Clock, Layers, ClipboardCheck } from "lucide-react";
 import { trackBriefingOpened, trackAssetOpened } from "@/app/actions/progress";
 import { formatSeerahContent } from "@/lib/text-formatter";
 import { PART_CONTENT } from "@/lib/part-content-data";
@@ -86,8 +86,13 @@ export function TextViewer({
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // Track asset as "opened" only after the user has scrolled at least 10% through
+  // the content. This prevents auto-tracking when the tab is opened via a URL
+  // param (?mode=read) without actual reading engagement.
+  const trackedRef = useRef(false);
   useEffect(() => {
-    if (!partNumber || previewMode) return;
+    if (trackedRef.current || !partNumber || previewMode || readProgress < 10) return;
+    trackedRef.current = true;
     if (assetId === "briefing") {
       trackBriefingOpened(partNumber).catch(() => {});
       window.dispatchEvent(
@@ -99,8 +104,7 @@ export function TextViewer({
         new CustomEvent("seerah:progressUpdate", { detail: { openedAssets: [assetId] } })
       );
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [readProgress, partNumber, previewMode, assetId]);
 
   return (
     <div className={`article-shell ${className ?? ""}`} ref={articleRef}>
@@ -229,20 +233,12 @@ export function TextViewer({
                 <ClipboardCheck className="w-4 h-4" />
                 Take the Quiz
               </Link>
-            ) : (
-              <Link
-                href="/seerah"
-                className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[44px] border border-border hover:border-gold/40 text-text-secondary hover:text-text rounded-xl text-sm font-medium transition-colors"
-              >
-                Continue Learning
-                <ArrowRight className="w-4 h-4" />
-              </Link>
+            ) : null}
+            {(onSwitchToQuiz || (hasQuiz !== false && partNumber)) && (
+              <p className="text-[11px] text-text-muted/60">
+                Test your understanding of this lesson
+              </p>
             )}
-            <p className="text-[11px] text-text-muted/60">
-              {onSwitchToQuiz || (hasQuiz !== false && partNumber)
-                ? "Test your understanding of this lesson"
-                : "Return to the lesson list"}
-            </p>
           </div>
         )}
       </div>

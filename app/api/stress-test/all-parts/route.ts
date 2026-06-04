@@ -181,8 +181,12 @@ async function testPart(partNum: number): Promise<AssetTestResult> {
 
 export async function GET(req: NextRequest) {
   try {
-    // Only available in development — never expose R2 URLs to unauthenticated/unpaid users in prod
-    if (process.env.NODE_ENV !== "development") {
+    // Double-guard: NODE_ENV check AND an explicit opt-in env var.
+    // This prevents accidental exposure if NODE_ENV is misconfigured.
+    if (
+      process.env.NODE_ENV !== "development" ||
+      process.env.ALLOW_DEBUG_ENDPOINTS !== "true"
+    ) {
       return NextResponse.json({ error: "Not available" }, { status: 403 });
     }
 

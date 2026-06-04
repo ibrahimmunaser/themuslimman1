@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { customAlphabet } from "nanoid";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { hashToken } from "@/lib/hash-token";
 import { Resend } from "resend";
 import { checkRateLimit, getIP } from "@/lib/rate-limit";
 
 const generateToken = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 32);
+
 
 export async function POST(request: NextRequest) {
   // Rate limit: 3 attempts per 15 minutes per IP
@@ -35,21 +37,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate new verification token
-    const verificationToken = generateToken();
+    // Generate new verification token — send raw token in email, store only hash in DB.
+    const rawToken = generateToken();
     const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-    // Update user with new token
     await prisma.user.update({
       where: { id: user.id },
       data: {
-        verificationToken,
+        verificationToken: hashToken(rawToken),
         verificationExpires,
       },
     });
 
-    // Send verification email
-    const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify-email?token=${verificationToken}`;
+    // Email link contains the raw token; the verify route will hash it on receipt.
+    const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify-email?token=${rawToken}`;
 
     try {
       const resend = new Resend(process.env.RESEND_API_KEY);
@@ -112,7 +113,7 @@ function generateVerificationEmail(data: {
         </div>
 
         <div style="background: #ffffff; padding: 40px 30px; border-left: 1px solid #e5e5e5; border-right: 1px solid #e5e5e5;">
-          <p style="font-size: 16px; margin: 0 0 20px 0;">As-salamu alaykum ${data.fullName},</p>
+          <p style="font-size: 16px; margin: 0 0 20px 0;">As-salamu alaykum ${data.fullName || "there"},</p>
           
           <p style="font-size: 16px; margin: 0 0 20px 0;">
             You're almost ready to start learning! Click the button below to verify your email address and unlock full access to your account.

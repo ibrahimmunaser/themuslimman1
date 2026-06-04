@@ -16,6 +16,7 @@ const PROTECTED_PREFIXES = [
   "/my-courses",
   "/billing",
   "/upgrade",
+  "/profiles",
   // Legacy member routes kept for backwards compatibility
   "/dashboard",
   "/parts",
@@ -67,6 +68,7 @@ export const config = {
     "/my-courses",
     "/billing",
     "/upgrade",
+    "/profiles",
     "/dashboard/:path*",
     "/parts/:path*",
     "/conclusion/:path*",

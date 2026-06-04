@@ -11,6 +11,7 @@ export interface PartAssets {
   videoUrl?: string;
   audioUrl?: string;
   mindmapUrl?: string;
+  thumbnailUrl?: string;
 }
 
 const cache = new Map<number, Promise<PartAssets>>();
@@ -21,9 +22,10 @@ export function fetchPartAssets(partNumber: number): Promise<PartAssets> {
   const promise = fetch(`/api/part/${partNumber}/assets`)
     .then((r) => (r.ok ? r.json() : {}))
     .then((data: Partial<PartAssets>): PartAssets => ({
-      videoUrl:   data.videoUrl,
-      audioUrl:   data.audioUrl,
-      mindmapUrl: data.mindmapUrl,
+      videoUrl:    data.videoUrl,
+      audioUrl:    data.audioUrl,
+      mindmapUrl:  data.mindmapUrl,
+      thumbnailUrl: data.thumbnailUrl,
     }))
     .catch((): PartAssets => ({}));
 

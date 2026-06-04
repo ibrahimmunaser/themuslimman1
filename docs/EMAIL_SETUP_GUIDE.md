@@ -99,7 +99,7 @@ await resend.emails.send({
 
 **Environment:** `.env`
 ```
-RESEND_API_KEY="re_7ZbxjipV_3cBknp26B92VHJ5QDMGETgt1"
+RESEND_API_KEY="re_xxxxxxxxxxxx_DO_NOT_COMMIT_REAL_KEY"
 ```
 
 ---

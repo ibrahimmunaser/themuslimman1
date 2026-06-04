@@ -17,6 +17,7 @@ interface CourseProgressContentProps {
   completedLessons: number;
   totalLessons: number;
   progressPercentage: number;
+  childrenProgressPercentage?: number;
   currentPart: number;
   stagesData: StageData[];
   quizAvgScore: number;
@@ -34,6 +35,9 @@ export function CourseProgressContent({
   completedLessons,
   totalLessons,
   progressPercentage,
+  // childrenProgressPercentage accepted for forward-compat but not yet used
+  // in this server component (client-side path detection is not available here).
+  childrenProgressPercentage: _childrenProgressPercentage,
   currentPart,
   stagesData,
   quizAvgScore,
@@ -165,14 +169,6 @@ export function CourseProgressContent({
           </summary>
           <div className="mt-2.5 flex items-start gap-3 px-3 py-3 rounded-xl border border-border/50 bg-surface/30">
             <ul className="space-y-1.5 w-full">
-              <li className="flex items-center gap-2 text-xs text-text-secondary">
-                <CheckCircle2 className="w-3 h-3 text-green-500/60 shrink-0" />
-                Watch at least <span className="font-semibold text-text mx-0.5">85%</span> of the video
-              </li>
-              <li className="flex items-center gap-2 text-xs text-text-secondary">
-                <CheckCircle2 className="w-3 h-3 text-green-500/60 shrink-0" />
-                Open and read the <span className="font-semibold text-text mx-0.5">Briefing</span>
-              </li>
               <li className="flex items-center gap-2 text-xs text-text-secondary">
                 <CheckCircle2 className="w-3 h-3 text-green-500/60 shrink-0" />
                 Pass the <span className="font-semibold text-text mx-0.5">Quiz</span> with 80% or higher

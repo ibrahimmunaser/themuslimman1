@@ -86,11 +86,14 @@ function VerifyEmailContent() {
             <X className="w-8 h-8 text-red-400" />
           </div>
           <h1 className="text-2xl font-bold text-text mb-2">Verification failed</h1>
-          <p className="text-red-400 text-sm mb-6">{message}</p>
+          <p className="text-red-400 text-sm mb-2">{message}</p>
+          <p className="text-text-muted text-xs mb-6">
+            Your link may have expired. Sign in to request a new one.
+          </p>
           <div className="space-y-3">
-            <Link href="/signup">
+            <Link href="/login?redirect=/verify-email-pending">
               <Button variant="primary" size="lg" className="w-full">
-                Create New Account
+                Sign In to Resend
               </Button>
             </Link>
             <Link href="/login">

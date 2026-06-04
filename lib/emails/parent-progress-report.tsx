@@ -1,3 +1,12 @@
+function escapeHtml(str: string): string {
+  return String(str ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;");
+}
+
 interface ProgressReportData {
   studentName: string;
   parentName: string;
@@ -70,7 +79,21 @@ function calculateWeeklyGrade(data: ProgressReportData): { grade: string; status
   }
 }
 
-export function generateParentProgressReport(data: ProgressReportData): string {
+export function generateParentProgressReport(rawData: ProgressReportData): string {
+  // Escape all user-supplied strings to prevent HTML injection in parent inboxes.
+  const data: ProgressReportData = {
+    ...rawData,
+    studentName: escapeHtml(rawData.studentName),
+    parentName:  escapeHtml(rawData.parentName),
+    currentLesson: {
+      ...rawData.currentLesson,
+      title: escapeHtml(rawData.currentLesson.title),
+    },
+    suggestedNextLesson: {
+      ...rawData.suggestedNextLesson,
+      title: escapeHtml(rawData.suggestedNextLesson.title),
+    },
+  };
   const progressPercent = Math.round((data.lessonsWatched / data.totalLessons) * 100);
   const isComplete = data.userPlan === "complete";
   const weeklyGrade = calculateWeeklyGrade(data);

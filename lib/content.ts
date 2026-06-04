@@ -1,6 +1,7 @@
-import type { Part, Era, EraInfo } from "./types";
+import type { Part, Era, EraInfo, AudiencePath } from "./types";
 import { ERAS } from "./types";
 import { isPartInEssentials } from "./essentials-sequence";
+import { PART_AUDIENCES } from "./part-audiences";
 
 function makePart(
   num: number,
@@ -19,6 +20,7 @@ function makePart(
     description,
     duration: duration || undefined,
     includedInEssentials: isPartInEssentials(num),
+    audiences: PART_AUDIENCES[num] ?? ["complete"],
     assets: {
       // Assets will be loaded dynamically
       videoUrl: undefined,
@@ -177,4 +179,17 @@ export function getEraGroups(): Array<{ era: EraInfo; parts: Part[] }> {
     era: eraInfo,
     parts: getPartsByEra(eraInfo.id),
   })).filter((g: { parts: Part[] }) => g.parts.length > 0);
+}
+
+export function getPartsByAudience(audience: AudiencePath): Part[] {
+  return PARTS.filter((p) => p.audiences.includes(audience));
+}
+
+export function getEraGroupsForAudience(
+  audience: AudiencePath
+): Array<{ era: EraInfo; parts: Part[] }> {
+  return ERAS.map((eraInfo: EraInfo) => ({
+    era: eraInfo,
+    parts: PARTS.filter((p) => p.era === eraInfo.id && p.audiences.includes(audience)),
+  })).filter((g) => g.parts.length > 0);
 }

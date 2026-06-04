@@ -5,20 +5,23 @@ import { PARTS } from "@/lib/content";
 import { ERA_MAP, type Part } from "@/lib/types";
 import { eraGradient } from "./era-gradient";
 import { ResourcePageClient } from "./resource-page-client";
-import { Headphones, CheckCircle2, Play, Pause, X, Volume2, VolumeX, SkipBack, SkipForward } from "lucide-react";
+import { Headphones, CheckCircle2, Play, Pause, X, Volume2, VolumeX, SkipBack, SkipForward, Lock } from "lucide-react";
 import { trackAssetOpened } from "@/app/actions/progress";
 
 interface AudioResourceContentProps {
   progressMap: Record<number, boolean>;
   completedCount: number;
   thumbnails?: Record<number, string>;
+  lockedPartNumbers?: number[];
 }
 
 export function AudioResourceContent({
   progressMap,
   completedCount,
   thumbnails = {},
+  lockedPartNumbers = [],
 }: AudioResourceContentProps) {
+  const lockedSet = new Set(lockedPartNumbers);
   const [mounted, setMounted] = useState(false);
   const [currentAudio, setCurrentAudio] = useState<{ partNumber: number; title: string; subtitle?: string } | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -373,7 +376,7 @@ export function AudioResourceContent({
 
         {/* ── Continue Listening ─────────────────────────────────────────── */}
         {mounted && (() => {
-          const continuePart = PARTS.find(p => !localProgressMap[p.partNumber]);
+          const continuePart = PARTS.find(p => !localProgressMap[p.partNumber] && !lockedSet.has(p.partNumber));
           if (!continuePart) return null;
           const isCurrentlyActive = currentAudio?.partNumber === continuePart.partNumber;
           return (
@@ -409,15 +412,18 @@ export function AudioResourceContent({
               {parts.map((part) => {
                 const isCompleted = localProgressMap[part.partNumber] || false;
                 const isCurrentlyPlaying = currentAudio?.partNumber === part.partNumber && isPlaying;
+                const isLocked = lockedSet.has(part.partNumber);
 
                 return (
                   <div
                     key={part.id}
-                    onClick={() => handlePlayAudio(part.partNumber, part.title, part.subtitle)}
-                    className={`group cursor-pointer rounded-xl border transition-all overflow-hidden ${
-                      currentAudio?.partNumber === part.partNumber
-                        ? "border-amber-500 bg-amber-500/5"
-                        : "border-zinc-800 bg-zinc-900/50 hover:bg-zinc-900 hover:border-amber-500/30"
+                    onClick={isLocked ? undefined : () => handlePlayAudio(part.partNumber, part.title, part.subtitle)}
+                    className={`group rounded-xl border transition-all overflow-hidden ${
+                      isLocked
+                        ? "cursor-not-allowed opacity-60 border-zinc-800 bg-zinc-900/50"
+                        : currentAudio?.partNumber === part.partNumber
+                        ? "cursor-pointer border-amber-500 bg-amber-500/5"
+                        : "cursor-pointer border-zinc-800 bg-zinc-900/50 hover:bg-zinc-900 hover:border-amber-500/30"
                     }`}
                   >
                     {/* Thumbnail */}
@@ -425,6 +431,12 @@ export function AudioResourceContent({
                       className="aspect-video relative flex items-center justify-center overflow-hidden"
                       style={eraGradient(part.era)}
                     >
+                      {/* Lock overlay */}
+                      {isLocked && (
+                        <div className="absolute inset-0 z-20 bg-black/70 flex items-center justify-center">
+                          <Lock className="w-5 h-5 text-zinc-500" />
+                        </div>
+                      )}
                       {thumbnails[part.partNumber] && (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img

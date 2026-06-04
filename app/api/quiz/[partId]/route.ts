@@ -26,10 +26,24 @@ export async function GET(
       return NextResponse.json({ error: "Quiz not found" }, { status: 404 });
     }
 
+    // Strip correct_answer from every question before sending to the client.
+    // The answer is checked server-side in trackQuizCompleted; exposing it here
+    // allows any authenticated user to read all answers from the network tab.
+    const safeQuiz = {
+      ...quiz,
+      questions: quiz.questions.map(({ correct_answer: _stripped, ...q }) => q),
+    };
+
     const elapsed = Date.now() - startTime;
     console.log(`[API] GET /api/quiz/${partId}: ${quiz.question_count} questions [${elapsed}ms]`);
 
-    return NextResponse.json(quiz);
+    return NextResponse.json(safeQuiz, {
+      headers: {
+        // Quiz JSON is static content — cache privately for 1 hour.
+        // CDN must not cache (private), browser reuses on revisit.
+        "Cache-Control": "private, max-age=3600, stale-while-revalidate=86400",
+      },
+    });
   } catch (error) {
     const elapsed = Date.now() - startTime;
     console.error(`[API] GET /api/quiz/[partId]: ERROR [${elapsed}ms]:`, error);

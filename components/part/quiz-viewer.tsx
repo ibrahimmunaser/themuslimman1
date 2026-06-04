@@ -6,21 +6,29 @@ import { CheckCircle2, XCircle, ChevronRight, RotateCcw, Trophy } from "lucide-r
 import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
 import type { Quiz, QuizQuestion } from "@/lib/types";
 import { trackQuizCompleted } from "@/app/actions/progress";
+import { checkQuizAnswer, type QuizAnswerResult } from "@/app/actions/quiz";
 import { AnimatedProgressBar } from "@/components/motion";
+
+/** QuizQuestion without correct_answer — used client-side only */
+type SafeQuizQuestion = Omit<QuizQuestion, "correct_answer">;
 
 interface QuizViewerProps {
   quiz: Quiz;
   partNumber?: number;
   /** When true (free preview), skip progress tracking — user is not logged in */
   previewMode?: boolean;
+  /** Previously recorded best score — used to ensure the progress event never lowers the displayed score */
+  initialBestScore?: number;
 }
 
 type AnswerState = "unanswered" | "correct" | "wrong";
 
 interface QuestionResult {
-  question: QuizQuestion;
+  question: SafeQuizQuestion;
   chosen: string;
   correct: boolean;
+  /** Server-confirmed correct answer — only known after server action resolves */
+  correctAnswer: string;
 }
 
 function QuestionCard({
@@ -28,24 +36,28 @@ function QuestionCard({
   index,
   total,
   onAnswer,
+  feedback,
 }: {
-  question: QuizQuestion;
+  question: SafeQuizQuestion;
   index: number;
   total: number;
-  onAnswer: (chosen: string, correct: boolean) => void;
+  onAnswer: (chosen: string) => void;
+  feedback: QuizAnswerResult | null;
 }) {
   const [chosen, setChosen] = useState<string | null>(null);
-  const answered = chosen !== null;
+  const [checking, setChecking] = useState(false);
+  const answered = feedback !== null;
 
   const handleSelect = (option: string) => {
-    if (answered) return;
+    if (answered || checking) return;
     setChosen(option);
-    onAnswer(option, option === question.correct_answer);
+    setChecking(true);
+    onAnswer(option);
   };
 
   const getOptionState = (option: string): AnswerState => {
     if (!answered) return "unanswered";
-    if (option === question.correct_answer) return "correct";
+    if (option === feedback.correctAnswer) return "correct";
     if (option === chosen) return "wrong";
     return "unanswered";
   };
@@ -87,28 +99,29 @@ function QuestionCard({
             <button
               key={i}
               onClick={() => handleSelect(option)}
-              disabled={answered}
+              disabled={answered || checking}
               role="radio"
               aria-checked={chosen === option}
               className={clsx(
                 "group relative overflow-hidden flex items-center gap-4 w-full text-left px-5 py-4 rounded-xl border transition-all text-base font-medium",
-                !answered && "hover:border-amber-500/40 hover:bg-amber-500/5 cursor-pointer hover:translate-x-1",
-                answered && "cursor-default",
-                state === "unanswered" && "border-zinc-800 bg-zinc-900/50 text-zinc-300",
+                !answered && !checking && "hover:border-amber-500/40 hover:bg-amber-500/5 cursor-pointer hover:translate-x-1",
+                (answered || checking) && "cursor-default",
+                checking && chosen === option && "border-zinc-600 bg-zinc-800/60 text-zinc-400 animate-pulse",
+                state === "unanswered" && !checking && "border-zinc-800 bg-zinc-900/50 text-zinc-300",
                 state === "correct" && "border-emerald-500/50 bg-emerald-500/10 text-emerald-300 shadow-lg shadow-emerald-500/10",
                 state === "wrong" && "border-red-500/50 bg-red-500/10 text-red-300",
               )}
             >
-              {/* Subtle glow on hover */}
-              {!answered && (
+              {!answered && !checking && (
                 <div className="absolute inset-0 bg-gradient-to-r from-amber-500/0 via-amber-500/5 to-amber-500/0 opacity-0 group-hover:opacity-100 transition-opacity" />
               )}
               
               <span className={clsx(
                 "relative flex-shrink-0 w-8 h-8 rounded-lg border flex items-center justify-center text-sm font-bold transition-all",
-                state === "unanswered" && "border-zinc-700 text-zinc-500 bg-zinc-900/50 group-hover:border-amber-500/40 group-hover:text-amber-400 group-hover:bg-amber-500/5",
+                state === "unanswered" && !checking && "border-zinc-700 text-zinc-500 bg-zinc-900/50 group-hover:border-amber-500/40 group-hover:text-amber-400 group-hover:bg-amber-500/5",
                 state === "correct" && "border-emerald-500/60 text-emerald-400 bg-emerald-500/10 scale-110",
                 state === "wrong" && "border-red-500/60 text-red-400 bg-red-500/10",
+                checking && chosen === option && "border-zinc-600 text-zinc-500",
               )}>
                 {String.fromCharCode(65 + i)}
               </span>
@@ -120,18 +133,18 @@ function QuestionCard({
         })}
       </div>
 
-      {/* Explanation */}
+      {/* Explanation — shown once server confirms the answer */}
       {answered && (
         <div className={clsx(
           "rounded-xl border px-5 py-4 text-base leading-relaxed",
-          chosen === question.correct_answer
+          feedback.correct
             ? "border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 text-emerald-200"
             : "border-red-500/30 bg-gradient-to-br from-red-500/10 to-red-500/5 text-red-200"
         )}>
           <p className="font-semibold mb-2 text-lg">
-            {chosen === question.correct_answer ? "✓ Correct!" : `✗ Correct answer: ${question.correct_answer}`}
+            {feedback.correct ? "✓ Correct!" : `✗ Correct answer: ${feedback.correctAnswer}`}
           </p>
-          <p className="text-zinc-300">{question.explanation}</p>
+          <p className="text-zinc-300">{feedback.explanation}</p>
           {question.tags.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-4">
               {question.tags.map((tag) => (
@@ -153,12 +166,14 @@ function ScoreScreen({
   onRetry,
   partNumber,
   previewMode,
+  initialBestScore,
 }: {
   results: QuestionResult[];
   total: number;
   onRetry: () => void;
   partNumber?: number;
   previewMode?: boolean;
+  initialBestScore?: number;
 }) {
   const prefersReduced = useReducedMotion();
   const score = results.filter((r) => r.correct).length;
@@ -168,10 +183,10 @@ function ScoreScreen({
   useEffect(() => {
     if (partNumber && !previewMode) {
       trackQuizCompleted(partNumber, pct).catch(() => {});
-      // Immediately update the header progress badges without waiting for a reload.
+      const bestScore = Math.max(pct, initialBestScore ?? 0);
       window.dispatchEvent(
         new CustomEvent("seerah:progressUpdate", {
-          detail: { quizPassed: passed, quizBestScore: pct },
+          detail: { quizPassed: passed || (initialBestScore ?? 0) >= 80, quizBestScore: bestScore },
         })
       );
     }
@@ -187,7 +202,6 @@ function ScoreScreen({
 
   return (
     <div className="flex flex-col items-center gap-8 py-6">
-      {/* Completion banner — passing scores */}
       {passed && (
         <motion.div
           initial={{ opacity: 0, y: prefersReduced ? 0 : -12 }}
@@ -207,7 +221,6 @@ function ScoreScreen({
         </motion.div>
       )}
 
-      {/* Trophy Card */}
       <motion.div
         initial={{ opacity: 0, scale: prefersReduced ? 1 : 0.9, y: prefersReduced ? 0 : 16 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -233,7 +246,6 @@ function ScoreScreen({
             <p className={clsx("text-lg font-semibold mb-1", grade.color)}>{grade.label}</p>
             <p className="text-base text-zinc-400">{score} out of {total} correct</p>
           </motion.div>
-          {/* Animated score bar */}
           <AnimatedProgressBar
             percent={pct}
             height={6}
@@ -245,7 +257,6 @@ function ScoreScreen({
         </div>
       </motion.div>
 
-      {/* Per-question summary */}
       <div className="w-full flex flex-col gap-3">
         <h3 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">Question Review</h3>
         {results.map((r, i) => (
@@ -261,7 +272,6 @@ function ScoreScreen({
                 : "border-red-500/30 bg-gradient-to-br from-red-500/8 to-red-500/4 hover:border-red-500/40"
             )}
           >
-            {/* Subtle glow effect */}
             <div className={clsx(
               "absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity",
               r.correct ? "bg-emerald-500/5" : "bg-red-500/5"
@@ -278,7 +288,7 @@ function ScoreScreen({
                     Your answer: <span className="font-semibold">{r.chosen}</span>
                   </p>
                   <p className="text-emerald-300">
-                    Correct answer: <span className="font-semibold">{r.question.correct_answer}</span>
+                    Correct answer: <span className="font-semibold">{r.correctAnswer}</span>
                   </p>
                 </div>
               )}
@@ -287,7 +297,6 @@ function ScoreScreen({
         ))}
       </div>
 
-      {/* Retry */}
       <motion.button
         onClick={onRetry}
         whileHover={prefersReduced ? undefined : { scale: 1.04 }}
@@ -304,21 +313,51 @@ function ScoreScreen({
   );
 }
 
-export function QuizViewer({ quiz, partNumber, previewMode }: QuizViewerProps) {
+export function QuizViewer({ quiz, partNumber, previewMode, initialBestScore }: QuizViewerProps) {
+  // Strip correct_answer immediately — it must never be used client-side.
+  // The answer is confirmed via the checkQuizAnswer server action.
+  const safeQuestions: SafeQuizQuestion[] = quiz.questions.map(
+    ({ correct_answer: _stripped, ...q }) => q
+  );
+
   const [current, setCurrent] = useState(0);
   const [results, setResults] = useState<QuestionResult[]>([]);
   const [pendingResult, setPendingResult] = useState<QuestionResult | null>(null);
+  const [currentFeedback, setCurrentFeedback] = useState<QuizAnswerResult | null>(null);
   const [done, setDone] = useState(false);
 
-  const handleAnswer = (chosen: string, correct: boolean) => {
-    setPendingResult({ question: quiz.questions[current], chosen, correct });
+  const handleAnswer = async (chosen: string) => {
+    const question = safeQuestions[current];
+
+    // For previewMode (Part 1 free), partNumber is 1 — server action still works.
+    const effectivePartNumber = partNumber ?? 1;
+
+    const result = await checkQuizAnswer(effectivePartNumber, question.id, chosen);
+
+    let feedback: QuizAnswerResult;
+    if ("error" in result) {
+      // Fallback: mark as correct if we can't reach the server (shouldn't happen in practice).
+      console.error("[QuizViewer] checkQuizAnswer error:", result.error);
+      feedback = { correct: false, correctAnswer: "Unknown", explanation: "" };
+    } else {
+      feedback = result;
+    }
+
+    setCurrentFeedback(feedback);
+    setPendingResult({
+      question,
+      chosen,
+      correct: feedback.correct,
+      correctAnswer: feedback.correctAnswer,
+    });
   };
 
   const handleNext = () => {
     if (!pendingResult) return;
     const updated = [...results, pendingResult];
     setPendingResult(null);
-    if (current + 1 >= quiz.questions.length) {
+    setCurrentFeedback(null);
+    if (current + 1 >= safeQuestions.length) {
       setResults(updated);
       setDone(true);
     } else {
@@ -331,6 +370,7 @@ export function QuizViewer({ quiz, partNumber, previewMode }: QuizViewerProps) {
     setCurrent(0);
     setResults([]);
     setPendingResult(null);
+    setCurrentFeedback(null);
     setDone(false);
   };
 
@@ -338,10 +378,11 @@ export function QuizViewer({ quiz, partNumber, previewMode }: QuizViewerProps) {
     return (
       <ScoreScreen
         results={results}
-        total={quiz.questions.length}
+        total={safeQuestions.length}
         onRetry={handleRetry}
         partNumber={partNumber}
         previewMode={previewMode}
+        initialBestScore={initialBestScore}
       />
     );
   }
@@ -357,10 +398,11 @@ export function QuizViewer({ quiz, partNumber, previewMode }: QuizViewerProps) {
           transition={{ duration: 0.25, ease: [0, 0, 0.2, 1] }}
         >
           <QuestionCard
-            question={quiz.questions[current]}
+            question={safeQuestions[current]}
             index={current}
-            total={quiz.questions.length}
+            total={safeQuestions.length}
             onAnswer={handleAnswer}
+            feedback={currentFeedback}
           />
         </motion.div>
       </AnimatePresence>
@@ -380,7 +422,7 @@ export function QuizViewer({ quiz, partNumber, previewMode }: QuizViewerProps) {
               whileTap={{ scale: 0.97 }}
               className="flex items-center gap-2 px-6 py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 border border-amber-400/30 text-black text-base font-bold hover:from-amber-400 hover:to-amber-500 transition-all shadow-lg shadow-amber-500/20"
             >
-              {current + 1 >= quiz.questions.length ? "See Results" : "Next Question"}
+              {current + 1 >= safeQuestions.length ? "See Results" : "Next Question"}
               <ChevronRight className="w-5 h-5" />
             </motion.button>
           </motion.div>

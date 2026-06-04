@@ -12,9 +12,11 @@ interface LazyVideoPlayerProps {
   previewMode?: boolean;
   /** Pre-fetched signed URL — skips the /api/part/N/assets call when provided */
   videoUrl?: string;
+  /** Server-fetched watch percent forwarded to VideoPlayer for seek clamping */
+  initialVideoPercent?: number;
 }
 
-export function LazyVideoPlayer({ partNumber, title, poster, previewMode, videoUrl: videoUrlProp }: LazyVideoPlayerProps) {
+export function LazyVideoPlayer({ partNumber, title, poster, previewMode, videoUrl: videoUrlProp, initialVideoPercent }: LazyVideoPlayerProps) {
   const [videoUrl, setVideoUrl] = useState<string | undefined>(videoUrlProp);
   const [loading, setLoading] = useState(!videoUrlProp);
   const [error, setError] = useState(false);
@@ -63,6 +65,7 @@ export function LazyVideoPlayer({ partNumber, title, poster, previewMode, videoU
       poster={poster}
       partNumber={partNumber}
       previewMode={previewMode}
+      initialVideoPercent={initialVideoPercent}
     />
   );
 }

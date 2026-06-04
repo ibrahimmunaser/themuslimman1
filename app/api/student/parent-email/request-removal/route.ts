@@ -3,12 +3,35 @@ import { requireStudent } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { Resend } from "resend";
 import { customAlphabet } from "nanoid";
+import { checkRateLimit } from "@/lib/rate-limit";
+import { hashToken } from "@/lib/hash-token";
 
 const generateToken = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 32);
+
+
+function escapeHtml(str: string): string {
+  return String(str ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;");
+}
+
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://seerah.themuslimman.com";
 
 export async function POST() {
   try {
     const user = await requireStudent();
+
+    // Rate-limit to prevent spam removal requests
+    const limit = checkRateLimit(`parent-removal:${user.id}`, 3, 60 * 60 * 1000);
+    if (!limit.allowed) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { status: 429 }
+      );
+    }
 
     if (!user.parentEmail || !user.parentEmailVerified) {
       return NextResponse.json(
@@ -17,28 +40,29 @@ export async function POST() {
       );
     }
 
-    // Generate removal confirmation token
-    const removalToken = generateToken();
-    const confirmUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/student/parent-email/confirm-removal?token=${removalToken}`;
+    // Generate removal confirmation token — store only the hash in DB.
+    const rawToken   = generateToken();
+    const confirmUrl = `${APP_URL}/api/student/parent-email/confirm-removal?token=${rawToken}`;
 
-    // Store the removal token
     await prisma.user.update({
       where: { id: user.id },
       data: {
-        parentVerificationToken: removalToken, // Reuse field for removal confirmation
+        parentVerificationToken: hashToken(rawToken),
       },
     });
 
-    // Send confirmation email to parent
-    const resend = new Resend(process.env.RESEND_API_KEY);
+    // Escape all user-supplied strings before HTML interpolation.
+    const safeStudentName = escapeHtml(user.studentName || user.fullName);
+    const safeParentEmail = escapeHtml(user.parentEmail);
 
+    const resend = new Resend(process.env.RESEND_API_KEY);
     const { error: emailError } = await resend.emails.send({
       from: process.env.EMAIL_FROM || "Complete Seerah <noreply@themuslimman.com>",
       to: user.parentEmail,
-      subject: `Confirm Removal of Your Email from ${user.studentName || user.fullName}'s Progress Reports`,
+      subject: `Confirm Removal of Your Email from ${safeStudentName}'s Progress Reports`,
       html: generateRemovalConfirmationEmail({
-        studentName: user.studentName || user.fullName,
-        parentEmail: user.parentEmail,
+        studentName: safeStudentName,
+        parentEmail: safeParentEmail,
         confirmUrl,
       }),
     });
@@ -51,7 +75,7 @@ export async function POST() {
       );
     }
 
-    console.log(`[EMAIL] Parent email removal request sent to ${user.parentEmail}`);
+    console.log(`[EMAIL] Parent email removal request sent for user ${user.id}`);
 
     return NextResponse.json({
       success: true,
@@ -95,7 +119,7 @@ function generateRemovalConfirmationEmail(data: {
 
       <div style="background: #fff3cd; border-left: 4px solid #f4c542; padding: 15px; margin: 30px 0; border-radius: 4px;">
         <p style="margin: 0; font-size: 14px; color: #856404;">
-          <strong>⚠️ Important:</strong> If you approve this removal, you will no longer receive progress reports about ${data.studentName}'s learning.
+          <strong>Important:</strong> If you approve this removal, you will no longer receive progress reports about ${data.studentName}'s learning.
         </p>
       </div>
 
@@ -125,7 +149,7 @@ function generateRemovalConfirmationEmail(data: {
 
     <div style="background: #f8f9fa; padding: 30px; text-align: center; border-radius: 0 0 12px 12px; border: 1px solid #e5e5e5; border-top: none;">
       <p style="font-size: 13px; color: #999; margin: 0;">
-        © ${new Date().getFullYear()} Complete Seerah · TheMuslimMan
+        &copy; ${new Date().getFullYear()} Complete Seerah &middot; TheMuslimMan
       </p>
       <p style="font-size: 12px; color: #999; margin: 10px 0 0 0;">
         This removal request expires in 24 hours.

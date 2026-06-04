@@ -4,7 +4,7 @@
  * Built-in codes are always active. Additional codes can be added via the
  * PROMO_CODES environment variable (JSON string):
  *
- *   PROMO_CODES={"WELCOME10":{"type":"percent","value":10,"label":"10% off"}}
+ *   PROMO_CODES={"WELCOME20":{"type":"percent","value":20,"label":"20% off"}}
  *
  * Code types:
  *   "percent"  – value is 0–100 (percentage discount off base price)
@@ -29,14 +29,14 @@ export interface PromoCode {
 
 /** Built-in codes that are always active (no env var required). */
 const BUILT_IN_CODES: Record<string, PromoCode> = {
-  // Creator / influencer codes — lifetime access only. $20 off the $99 base price = $79.
-  KORRA20:    { type: "fixed", value: 2000, label: "$20 off (Korra)",               creatorOnly: true },
-  ITACHI20:   { type: "fixed", value: 2000, label: "$20 off (Itachi)",              creatorOnly: true },
-  DEEN20:     { type: "fixed", value: 2000, label: "$20 off (Deen Responds)",       creatorOnly: true },
-  ORTHODOX20: { type: "fixed", value: 2000, label: "$20 off (The Orthodox Muslim)", creatorOnly: true },
-  // Location codes — $20 off for local community members.
-  DEARBORN20:  { type: "fixed", value: 2000, label: "$20 off (Dearborn)",  creatorOnly: true },
-  ANNARBOR20:  { type: "fixed", value: 2000, label: "$20 off (Ann Arbor)", creatorOnly: true },
+  // Creator / influencer codes — lifetime access only. 20% off both lifetime packages.
+  KORRA20:    { type: "percent", value: 20, label: "20% off (Korra)",               creatorOnly: true },
+  ITACHI20:   { type: "percent", value: 20, label: "20% off (Itachi)",              creatorOnly: true },
+  DEEN:       { type: "percent", value: 20, label: "20% off (Deen Responds)",       creatorOnly: true },
+  ORTHODOX20: { type: "percent", value: 20, label: "20% off (The Orthodox Muslim)", creatorOnly: true },
+  // Location codes — 20% off for local community members.
+  DEARBORN20:  { type: "percent", value: 20, label: "20% off (Dearborn)",  creatorOnly: true },
+  ANNARBOR20:  { type: "percent", value: 20, label: "20% off (Ann Arbor)", creatorOnly: true },
   // Free-access codes are NOT hardcoded here. Configure them via two env vars:
   //   FREE_ACCESS_CODE=YOURCODE          (the promo code string — treated as absolute $0)
   //   FREE_ACCESS_PLAN=complete|family   (the plan to grant; defaults to "complete")
@@ -99,7 +99,7 @@ export function validatePromoCode(code: string): PromoCode | null {
  * Returns the final price in cents (minimum 0).
  */
 export function applyDiscount(basePrice: number, promo: PromoCode): number {
-  if (promo.type === "absolute") return promo.value;
-  if (promo.type === "percent") return Math.round(basePrice * (1 - promo.value / 100));
+  if (promo.type === "absolute") return Math.max(0, promo.value);
+  if (promo.type === "percent") return Math.max(0, Math.round(basePrice * (1 - promo.value / 100)));
   return Math.max(0, basePrice - promo.value); // "fixed"
 }

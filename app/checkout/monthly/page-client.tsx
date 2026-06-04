@@ -189,7 +189,6 @@ function MonthlyCheckoutContent({ userEmail }: Props) {
       isFirstMount.current = false;
     }
     createIntent(planChoice);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [planChoice, isAuthenticated]);
 
   // ── Auth handlers ──────────────────────────────────────────────────────────

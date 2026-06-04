@@ -141,8 +141,9 @@ function GiftCheckoutContent({ purchaserEmail, purchaserName: _purchaserName }: 
     if (!stored) return;
     const config = getCreatorPromoConfig(stored);
     if (!config) { clearCreatorPromo(); return; }
-    const estimatedFinal = plan.price - config.discountAmount;
-    setGiftPromo({ code: config.code, displayLabel: config.displayLabel, discountAmount: config.discountAmount, estimatedFinalPrice: Math.max(0, estimatedFinal) });
+    const discountAmount = Math.round(plan.price * config.discountPercent / 100);
+    const estimatedFinal = plan.price - discountAmount;
+    setGiftPromo({ code: config.code, displayLabel: config.displayLabel, discountAmount, estimatedFinalPrice: Math.max(0, estimatedFinal) });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [planChoice]);
 

@@ -1,18 +1,34 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { requireStudent } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getActiveProfileId } from "@/app/actions/profiles";
 import { generateParentProgressReport } from "@/lib/emails/parent-progress-report";
 import { Resend } from "resend";
+import { checkRateLimit } from "@/lib/rate-limit";
 
-export async function POST() {
+export async function POST(_req: NextRequest) {
   try {
     const user = await requireStudent();
 
-    // Check if user has parent email configured
+    // Rate-limit per user: 3 reports per hour — prevents inbox flooding / Resend abuse.
+    const rl = checkRateLimit(`progress-report:${user.id}`, 3, 60 * 60 * 1000);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: "You've sent too many reports recently. Please wait before sending another." },
+        { status: 429, headers: { "Retry-After": String(rl.retryAfterSeconds) } }
+      );
+    }
+
+    // Check if user has a verified parent email configured
     if (!user.parentEmail) {
       return NextResponse.json(
         { error: "No parent email configured" },
+        { status: 400 }
+      );
+    }
+    if (!user.parentEmailVerified) {
+      return NextResponse.json(
+        { error: "Parent email is not yet verified. Please ask your parent to verify their email first." },
         { status: 400 }
       );
     }
@@ -40,30 +56,38 @@ export async function POST() {
       },
     });
 
-    // Determine user plan
-    const purchases = await prisma.purchase.findFirst({
-      where: { userId: user.id, status: "succeeded" },
-    });
-    const userPlan = purchases ? "complete" : "essentials";
+    // Determine user plan — check both lifetime purchase AND active subscription
+    // so monthly subscribers get the "complete" report template.
+    const [lifetimePurchase, activeSub] = await Promise.all([
+      prisma.purchase.findFirst({ where: { userId: user.id, status: "succeeded" } }),
+      prisma.subscription.findFirst({
+        where: { userId: user.id, status: { in: ["active", "trialing"] } },
+      }),
+    ]);
+    const userPlan = lifetimePurchase || activeSub ? "complete" : "essentials";
     
     const totalLessons = 100;
-    const completedLessons = progressData.filter((p) => p.status === "completed").length;
-    const _inProgressLessons = progressData.filter((p) => p.status === "in_progress").length;
+    // Quiz-passed is the canonical completion signal — "completed" DB status is legacy.
+    const completedLessons = progressData.filter((p) => p.quizPassed).length;
     
-    // Calculate weekly activity (past 7 days)
+    // Calculate weekly activity (past 7 days).
+    // DB writes "started" for in-progress parts — "in_progress" is a UI-only label.
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
     
     const weeklyProgress = progressData.filter(
-      (p) => p.updatedAt >= oneWeekAgo && (p.status === "completed" || p.status === "in_progress")
+      (p) => p.updatedAt >= oneWeekAgo && (p.quizPassed || p.status === "started")
     );
     
-    const weeklyLessons = weeklyProgress.filter((p) => p.status === "completed").length;
-    const weeklyBriefings = weeklyProgress.filter((p) => p.briefingOpened).length;
+    const weeklyLessons = weeklyProgress.filter((p) => p.quizPassed).length;
+    const weeklyBriefings = progressData.filter(
+      (p) => p.briefingOpened && p.updatedAt >= oneWeekAgo
+    ).length;
     
-    // Get actual tracked study time
+    // Get actual tracked study time — scoped to the active learner profile so
+    // family plan study time from other profiles is not merged in.
     const allStudySessions = await prisma.studySession.findMany({
-      where: { userId: user.id },
+      where: { userId: user.id, learnerProfileId },
     });
     
     const weeklyStudySessions = allStudySessions.filter(
@@ -129,8 +153,7 @@ export async function POST() {
       weeklyFlashcards = weeklyProgress.filter((p) => p.flashcardsReviewed).length;
     }
     
-    // For MVP, use completed lessons as proxy for briefings read
-    const briefingsRead = completedLessons;
+    const briefingsRead = progressData.filter((p) => p.briefingOpened).length;
 
     // Generate email
     const emailHtml = generateParentProgressReport({
@@ -185,7 +208,7 @@ export async function POST() {
       );
     }
 
-    console.log(`[EMAIL] Progress report sent to ${user.parentEmail}`);
+    console.log(`[EMAIL] Progress report sent to parent of user ${user.id}`);
 
     return NextResponse.json({
       success: true,

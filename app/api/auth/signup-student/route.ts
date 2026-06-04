@@ -3,6 +3,7 @@ import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { customAlphabet, nanoid } from "nanoid";
 import { prisma } from "@/lib/db";
+import { hashToken } from "@/lib/hash-token";
 import { Resend } from "resend";
 import { cookies } from "next/headers";
 import { checkRateLimit, getIP } from "@/lib/rate-limit";
@@ -14,7 +15,7 @@ const COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 const SignupSchema = z.object({
   fullName: z.string().min(2, "Name must be at least 2 characters").max(100),
   email: z.string().email("Invalid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  password: z.string().min(8, "Password must be at least 8 characters").max(1000, "Password is too long"),
 });
 
 /**
@@ -60,7 +61,7 @@ export async function POST(request: NextRequest) {
     if (existingEmail) {
       console.log(`[API] /api/auth/signup-student: Email already registered`);
       return NextResponse.json(
-        { error: "An account with this email already exists" },
+        { error: "Unable to create an account with this email. If you already have an account, please sign in." },
         { status: 400 }
       );
     }
@@ -70,7 +71,9 @@ export async function POST(request: NextRequest) {
 
     // In development, auto-verify emails. In production, require verification.
     const isDevelopment = process.env.NODE_ENV !== "production";
-    const verificationToken = isDevelopment ? null : generateToken();
+    const rawVerificationToken = isDevelopment ? null : generateToken();
+    // Store only the hash in the DB; the raw token travels to the user via email.
+    const verificationToken = rawVerificationToken ? hashToken(rawVerificationToken) : null;
     const verificationExpires = isDevelopment ? null : new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
     console.log(`[API] /api/auth/signup-student: Mode: ${isDevelopment ? "development" : "production"}, auto-verify: ${isDevelopment}`);
 
@@ -109,15 +112,16 @@ export async function POST(request: NextRequest) {
     const sessionToken = nanoid(48);
     const sessionExpiresAt = new Date(Date.now() + COOKIE_MAX_AGE * 1000);
     
+    // Store only the SHA-256 hash so a DB leak cannot be used to hijack sessions.
     await prisma.session.create({
       data: {
         id: crypto.randomUUID(),
         userId: user.id,
-        token: sessionToken,
+        token: hashToken(sessionToken),
         expiresAt: sessionExpiresAt,
       },
     });
-    console.log(`[API] /api/auth/signup-student: Session created with token ${sessionToken.substring(0, 8)}..., expires ${sessionExpiresAt.toISOString()}`);
+    console.log(`[API] /api/auth/signup-student: Session created, expires ${sessionExpiresAt.toISOString()}`);
 
     const cookieStore = await cookies();
     cookieStore.set(COOKIE_NAME, sessionToken, {
@@ -128,15 +132,16 @@ export async function POST(request: NextRequest) {
       path: "/",
     });
     cookieStore.set("seerah_role", "student", {
-      httpOnly: false,
+      httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       expires: sessionExpiresAt,
       path: "/",
     });
     // Send verification email (only in production)
-    if (!isDevelopment && verificationToken) {
-      const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify-email?token=${verificationToken}`;
+    // Use the raw (un-hashed) token in the URL — the DB stores the hash.
+    if (!isDevelopment && rawVerificationToken) {
+      const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify-email?token=${rawVerificationToken}`;
 
       try {
         const resend = new Resend(process.env.RESEND_API_KEY);
@@ -188,11 +193,11 @@ export async function POST(request: NextRequest) {
         );
       }
       
-      // Unique constraint violations (duplicate email)
+      // Unique constraint violations (duplicate email — race condition)
       if (error.message.includes("Unique constraint")) {
         console.error(`[API] /api/auth/signup-student: Unique constraint violation`);
         return NextResponse.json(
-          { error: "An account with this email already exists." },
+          { error: "Unable to create an account with this email. If you already have an account, please sign in." },
           { status: 400 }
         );
       }

@@ -26,8 +26,8 @@ export async function POST(_request: NextRequest) {
       );
     }
 
-    // If user already has lifetime access, no need to subscribe
-    const alreadyHasAccess = await hasActiveCourseAccess(user.id);
+    // Short-circuit: if the session already marks hasPaid=true skip the DB check.
+    const alreadyHasAccess = user.hasPaid || await hasActiveCourseAccess(user.id);
     if (alreadyHasAccess) {
       const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://seerah.themuslimman.com";
       return NextResponse.json({ url: `${appUrl}/seerah` });
@@ -66,7 +66,7 @@ export async function POST(_request: NextRequest) {
       },
       success_url: `${appUrl}/payment/success?session_id={CHECKOUT_SESSION_ID}&type=subscription`,
       cancel_url: `${appUrl}/pricing`,
-      allow_promotion_codes: false,
+      allow_promotion_codes: true,
     });
 
     return NextResponse.json({ url: session.url });
