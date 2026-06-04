@@ -38,7 +38,7 @@ export function NavbarUserButton({ firstName }: { firstName: string }) {
           />
           <div className="absolute right-0 mt-2 w-48 rounded-lg bg-surface border border-border shadow-xl overflow-hidden z-20">
             <Link
-              href="/my-courses"
+              href="/seerah"
               onClick={() => setOpen(false)}
               className="block px-4 py-3 text-sm text-text hover:bg-surface-raised transition-colors"
             >

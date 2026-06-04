@@ -144,6 +144,7 @@ function SignupPageContent() {
                 onChange={(e) => setForm({ ...form, fullName: e.target.value })}
                 required
                 autoComplete="name"
+                dir="ltr"
               />
             </div>
 
@@ -158,6 +159,7 @@ function SignupPageContent() {
                 readOnly={!!hintEmail}
                 required
                 autoComplete="email"
+                dir="ltr"
                 className={hintEmail ? "opacity-70 cursor-not-allowed" : ""}
               />
               {hintEmail && (
@@ -176,6 +178,7 @@ function SignupPageContent() {
                 required
                 autoComplete="new-password"
                 minLength={8}
+                dir="ltr"
               />
               <button
                 type="button"
@@ -199,6 +202,7 @@ function SignupPageContent() {
                 required
                 autoComplete="new-password"
                 minLength={8}
+                dir="ltr"
               />
               {form.confirmPassword && form.password !== form.confirmPassword && (
                 <p className="text-xs text-red-400 mt-1.5">Passwords do not match</p>

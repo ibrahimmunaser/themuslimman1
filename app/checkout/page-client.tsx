@@ -244,7 +244,7 @@ function CheckoutPageContent({
             setHasActiveSub(true);
             return null;
           }
-          window.location.href = "/my-courses";
+          window.location.href = "/seerah";
           return null;
         }
         throw new Error(data.error || "Failed to initialize checkout");
@@ -467,7 +467,7 @@ function CheckoutPageContent({
       });
       const data = await res.json();
       if (!res.ok) { setFreeClaimError(data.error || "Something went wrong"); return; }
-      window.location.href = "/my-courses";
+      window.location.href = "/seerah";
     } catch {
       setFreeClaimError("Something went wrong. Please try again.");
     } finally {

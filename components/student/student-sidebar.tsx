@@ -192,7 +192,7 @@ export function StudentSidebar({
       {/* Logo + collapse toggle (desktop only) */}
       {!collapsed && (
         <div className="p-4 border-b border-border flex items-center justify-between gap-2">
-          <Link href="/my-courses" className="flex items-center gap-2.5 min-w-0">
+          <Link href="/seerah" className="flex items-center gap-2.5 min-w-0">
             <Image
               src="/images/logodashboard.png"
               alt="Complete Seerah"
@@ -346,7 +346,7 @@ export function StudentSidebar({
     <>
       {/* Drawer header — logo + close — always visible immediately */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border flex-shrink-0">
-        <Link href="/my-courses" className="flex items-center gap-2.5" onClick={closeDrawer}>
+        <Link href="/seerah" className="flex items-center gap-2.5" onClick={closeDrawer}>
           <Image
             src="/images/logodashboard.png"
             alt="Complete Seerah"
@@ -541,7 +541,7 @@ export function StudentSidebar({
         {/* Desktop collapsed icon bar */}
         {collapsed && (
           <div className="hidden lg:flex flex-col items-center gap-2 py-3 border-b border-border">
-            <Link href="/my-courses" aria-label="Complete Seerah">
+            <Link href="/seerah" aria-label="Complete Seerah">
               <Image
                 src="/images/logodashboard.png"
                 alt="Complete Seerah"

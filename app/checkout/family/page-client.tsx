@@ -191,7 +191,7 @@ function FamilyCheckoutContent({
         if (data.hasActiveSubscription) {
           setHasActiveSub(true);
         } else if (r.status === 409 && (data.hasLifetime || data.hasFamily)) {
-          window.location.href = "/my-courses";
+          window.location.href = "/seerah";
         } else {
           setError(data.error);
         }
@@ -273,7 +273,7 @@ function FamilyCheckoutContent({
       });
       const data = await res.json();
       if (!res.ok) { setFreeClaimError(data.error || "Something went wrong"); return; }
-      router.push("/my-courses");
+      router.push("/seerah");
     } catch {
       setFreeClaimError("Something went wrong. Please try again.");
     } finally {

@@ -13,7 +13,6 @@ const PROTECTED_PREFIXES = [
   "/change-password",
   "/seerah",
   "/learn",
-  "/my-courses",
   "/billing",
   "/upgrade",
   "/profiles",
@@ -37,7 +36,7 @@ export function middleware(request: NextRequest) {
   // the DB (edge runtime has no DB access). If the cookie exists but the
   // session is stale, the page server-component will call getCurrentUser(),
   // get null, and redirect to /login itself. Redirecting auth routes (like
-  // /login) back to /my-courses when a cookie exists creates an infinite loop
+  // /login) back to /seerah when a cookie exists creates an infinite loop
   // whenever the session is invalid, so we intentionally skip that redirect.
   if (isProtected && !token) {
     const loginUrl = new URL("/login", request.url);
@@ -65,7 +64,6 @@ export const config = {
     "/change-password",
     "/seerah/:path*",
     "/learn/:path*",
-    "/my-courses",
     "/billing",
     "/upgrade",
     "/profiles",

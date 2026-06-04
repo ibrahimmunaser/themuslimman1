@@ -139,6 +139,7 @@ function ResetPasswordContent() {
                 required
                 autoComplete="new-password"
                 minLength={8}
+                dir="ltr"
               />
               <button
                 type="button"
@@ -159,6 +160,7 @@ function ResetPasswordContent() {
               required
               autoComplete="new-password"
               minLength={8}
+              dir="ltr"
             />
 
             {error && (

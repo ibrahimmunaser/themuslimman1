@@ -2,6 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   LayoutDashboard,
   Users,
+  UserCheck,
   Settings,
   Library,
   BarChart3,
@@ -29,6 +30,7 @@ export const STUDENT_NAV: NavItem[] = [
 
 export const ADMIN_NAV: NavItem[] = [
   { href: "/admin/dashboard",  label: "Dashboard",       icon: LayoutDashboard, exact: true },
+  { href: "/admin/users",      label: "Users",           icon: UserCheck },
   { href: "/admin/students",   label: "Students",        icon: Users },
   { href: "/admin/orders",     label: "Orders",          icon: ShoppingCart },
   { href: "/admin/content",    label: "Content Library", icon: Library },

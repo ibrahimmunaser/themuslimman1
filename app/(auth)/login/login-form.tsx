@@ -99,6 +99,7 @@ export function LoginForm() {
               autoComplete="email"
               autoCapitalize="none"
               autoCorrect="off"
+              dir="ltr"
             />
 
             <div className="relative">
@@ -110,6 +111,7 @@ export function LoginForm() {
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
                 required
                 autoComplete="current-password"
+                dir="ltr"
               />
               <button
                 type="button"

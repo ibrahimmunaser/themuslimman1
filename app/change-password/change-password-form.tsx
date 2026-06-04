@@ -71,6 +71,7 @@ export function ChangePasswordForm({ userName }: Props) {
               required
               autoComplete="new-password"
               autoFocus
+              dir="ltr"
             />
             <button
               type="button"
@@ -91,6 +92,7 @@ export function ChangePasswordForm({ userName }: Props) {
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
               autoComplete="new-password"
+              dir="ltr"
             />
             <button
               type="button"

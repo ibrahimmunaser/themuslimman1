@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-// Redirect /learn to /my-courses
+// Redirect /learn to /seerah
 export default function LearnRedirectPage() {
-  redirect("/my-courses");
+  redirect("/seerah");
 }

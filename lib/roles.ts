@@ -19,7 +19,7 @@ export function roleHome(role: Role): string {
     case ROLES.PLATFORM_ADMIN:
       return "/admin/dashboard";
     case ROLES.STUDENT:
-      return "/my-courses";
+      return "/seerah";
     default:
       return "/";
   }

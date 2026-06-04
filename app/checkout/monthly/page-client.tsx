@@ -161,7 +161,7 @@ function MonthlyCheckoutContent({ userEmail }: Props) {
 
       if (!res.ok) {
         if (res.status === 409 && data.hasLifetime) {
-          window.location.href = "/my-courses";
+          window.location.href = "/seerah";
           return;
         }
         if (res.status === 409 && data.hasActiveSubscription) {

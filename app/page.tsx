@@ -52,7 +52,7 @@ export default async function LandingPage() {
   if (user) {
     const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
     if (hasAccess) {
-      redirect("/my-courses");
+      redirect("/seerah");
     }
   }
 

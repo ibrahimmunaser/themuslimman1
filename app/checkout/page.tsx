@@ -22,7 +22,7 @@ export default async function CheckoutPage({ searchParams }: Props) {
 
   if (user) {
     const { hasLifetime } = await getUserAccessInfo(user.id, user.hasPaid);
-    if (hasLifetime && user.planType === "family") redirect("/my-courses");
+    if (hasLifetime && user.planType === "family") redirect("/seerah");
   }
 
   // ── Resolve audience + billing from URL params ─────────────────────────────
