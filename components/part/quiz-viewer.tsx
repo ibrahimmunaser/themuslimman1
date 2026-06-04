@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { clsx } from "clsx";
-import { CheckCircle2, XCircle, ChevronRight, RotateCcw, Trophy } from "lucide-react";
+import { CheckCircle2, XCircle, ChevronRight, RotateCcw, Trophy, Loader2 } from "lucide-react";
 import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
 import type { Quiz, QuizQuestion } from "@/lib/types";
 import { trackQuizCompleted } from "@/app/actions/progress";
-import { checkQuizAnswer, type QuizAnswerResult } from "@/app/actions/quiz";
+import { getQuizAnswerMap, type QuizAnswerMap } from "@/app/actions/quiz";
 import { AnimatedProgressBar } from "@/components/motion";
 
 /** QuizQuestion without correct_answer — used client-side only */
@@ -27,8 +27,8 @@ interface QuestionResult {
   question: SafeQuizQuestion;
   chosen: string;
   correct: boolean;
-  /** Server-confirmed correct answer — only known after server action resolves */
   correctAnswer: string;
+  explanation: string;
 }
 
 function QuestionCard({
@@ -42,18 +42,10 @@ function QuestionCard({
   index: number;
   total: number;
   onAnswer: (chosen: string) => void;
-  feedback: QuizAnswerResult | null;
+  feedback: { correctAnswer: string; explanation: string; correct: boolean; chosen: string } | null;
 }) {
-  const [chosen, setChosen] = useState<string | null>(null);
-  const [checking, setChecking] = useState(false);
   const answered = feedback !== null;
-
-  const handleSelect = (option: string) => {
-    if (answered || checking) return;
-    setChosen(option);
-    setChecking(true);
-    onAnswer(option);
-  };
+  const chosen = feedback?.chosen ?? null;
 
   const getOptionState = (option: string): AnswerState => {
     if (!answered) return "unanswered";
@@ -98,30 +90,28 @@ function QuestionCard({
           return (
             <button
               key={i}
-              onClick={() => handleSelect(option)}
-              disabled={answered || checking}
+              onClick={() => !answered && onAnswer(option)}
+              disabled={answered}
               role="radio"
               aria-checked={chosen === option}
               className={clsx(
                 "group relative overflow-hidden flex items-center gap-4 w-full text-left px-5 py-4 rounded-xl border transition-all text-base font-medium",
-                !answered && !checking && "hover:border-amber-500/40 hover:bg-amber-500/5 cursor-pointer hover:translate-x-1",
-                (answered || checking) && "cursor-default",
-                checking && chosen === option && "border-zinc-600 bg-zinc-800/60 text-zinc-400 animate-pulse",
-                state === "unanswered" && !checking && "border-zinc-800 bg-zinc-900/50 text-zinc-300",
+                !answered && "hover:border-amber-500/40 hover:bg-amber-500/5 cursor-pointer hover:translate-x-1",
+                answered && "cursor-default",
+                state === "unanswered" && "border-zinc-800 bg-zinc-900/50 text-zinc-300",
                 state === "correct" && "border-emerald-500/50 bg-emerald-500/10 text-emerald-300 shadow-lg shadow-emerald-500/10",
                 state === "wrong" && "border-red-500/50 bg-red-500/10 text-red-300",
               )}
             >
-              {!answered && !checking && (
+              {!answered && (
                 <div className="absolute inset-0 bg-gradient-to-r from-amber-500/0 via-amber-500/5 to-amber-500/0 opacity-0 group-hover:opacity-100 transition-opacity" />
               )}
               
               <span className={clsx(
                 "relative flex-shrink-0 w-8 h-8 rounded-lg border flex items-center justify-center text-sm font-bold transition-all",
-                state === "unanswered" && !checking && "border-zinc-700 text-zinc-500 bg-zinc-900/50 group-hover:border-amber-500/40 group-hover:text-amber-400 group-hover:bg-amber-500/5",
+                state === "unanswered" && "border-zinc-700 text-zinc-500 bg-zinc-900/50 group-hover:border-amber-500/40 group-hover:text-amber-400 group-hover:bg-amber-500/5",
                 state === "correct" && "border-emerald-500/60 text-emerald-400 bg-emerald-500/10 scale-110",
                 state === "wrong" && "border-red-500/60 text-red-400 bg-red-500/10",
-                checking && chosen === option && "border-zinc-600 text-zinc-500",
               )}>
                 {String.fromCharCode(65 + i)}
               </span>
@@ -133,7 +123,7 @@ function QuestionCard({
         })}
       </div>
 
-      {/* Explanation — shown once server confirms the answer */}
+      {/* Explanation — shown instantly from pre-fetched answer map */}
       {answered && (
         <div className={clsx(
           "rounded-xl border px-5 py-4 text-base leading-relaxed",
@@ -280,7 +270,7 @@ function ScoreScreen({
             {r.correct
               ? <CheckCircle2 className="relative w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
               : <XCircle className="relative w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />}
-            <div className="relative flex-1 min-w-0">
+              <div className="relative flex-1 min-w-0">
               <p className="text-base text-white leading-relaxed font-medium mb-2">{r.question.question}</p>
               {!r.correct && (
                 <div className="flex flex-col gap-1 text-sm">
@@ -290,6 +280,9 @@ function ScoreScreen({
                   <p className="text-emerald-300">
                     Correct answer: <span className="font-semibold">{r.correctAnswer}</span>
                   </p>
+                  {r.explanation && (
+                    <p className="text-zinc-400 mt-1 italic">{r.explanation}</p>
+                  )}
                 </div>
               )}
             </div>
@@ -313,49 +306,69 @@ function ScoreScreen({
   );
 }
 
+type QuizPhase = "loading" | "error" | "ready";
+type CurrentFeedback = { correctAnswer: string; explanation: string; correct: boolean; chosen: string };
+
 export function QuizViewer({ quiz, partNumber, previewMode, initialBestScore }: QuizViewerProps) {
-  // Strip correct_answer immediately — it must never be used client-side.
-  // The answer is confirmed via the checkQuizAnswer server action.
+  // Strip correct_answer — it must never be used from the RSC payload.
+  // The answer map is fetched separately once via getQuizAnswerMap.
   const safeQuestions: SafeQuizQuestion[] = quiz.questions.map(
     ({ correct_answer: _stripped, ...q }) => q
   );
 
+  const effectivePartNumber = partNumber ?? 1;
+
+  // ── Pre-fetch answer map once on quiz open ─────────────────────────────────
+  // Single server round-trip → all subsequent answer checks are instant (local).
+  const [phase, setPhase] = useState<QuizPhase>("loading");
+  const [answerMap, setAnswerMap] = useState<QuizAnswerMap>({});
+  const fetchedRef = useRef(false);
+
+  useEffect(() => {
+    if (fetchedRef.current) return;
+    fetchedRef.current = true;
+
+    getQuizAnswerMap(effectivePartNumber).then((result) => {
+      if (!result.ok) {
+        console.error("[QuizViewer] getQuizAnswerMap error:", result.error);
+        setPhase("error");
+      } else {
+        setAnswerMap(result.map);
+        setPhase("ready");
+      }
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const [current, setCurrent] = useState(0);
   const [results, setResults] = useState<QuestionResult[]>([]);
-  const [pendingResult, setPendingResult] = useState<QuestionResult | null>(null);
-  const [currentFeedback, setCurrentFeedback] = useState<QuizAnswerResult | null>(null);
+  const [currentFeedback, setCurrentFeedback] = useState<CurrentFeedback | null>(null);
   const [done, setDone] = useState(false);
 
-  const handleAnswer = async (chosen: string) => {
+  // ── Instant answer resolution from pre-fetched map ────────────────────────
+  const handleAnswer = (chosen: string) => {
     const question = safeQuestions[current];
+    const entry = answerMap[question.id];
+    if (!entry) return; // map not ready (shouldn't happen — button is disabled in loading phase)
 
-    // For previewMode (Part 1 free), partNumber is 1 — server action still works.
-    const effectivePartNumber = partNumber ?? 1;
-
-    const result = await checkQuizAnswer(effectivePartNumber, question.id, chosen);
-
-    let feedback: QuizAnswerResult;
-    if ("error" in result) {
-      // Fallback: mark as correct if we can't reach the server (shouldn't happen in practice).
-      console.error("[QuizViewer] checkQuizAnswer error:", result.error);
-      feedback = { correct: false, correctAnswer: "Unknown", explanation: "" };
-    } else {
-      feedback = result;
-    }
-
-    setCurrentFeedback(feedback);
-    setPendingResult({
-      question,
+    setCurrentFeedback({
       chosen,
-      correct: feedback.correct,
-      correctAnswer: feedback.correctAnswer,
+      correctAnswer: entry.correctAnswer,
+      explanation: entry.explanation,
+      correct: chosen === entry.correctAnswer,
     });
   };
 
   const handleNext = () => {
-    if (!pendingResult) return;
-    const updated = [...results, pendingResult];
-    setPendingResult(null);
+    if (!currentFeedback) return;
+    const question = safeQuestions[current];
+    const updated: QuestionResult[] = [...results, {
+      question,
+      chosen: currentFeedback.chosen,
+      correct: currentFeedback.correct,
+      correctAnswer: currentFeedback.correctAnswer,
+      explanation: currentFeedback.explanation,
+    }];
     setCurrentFeedback(null);
     if (current + 1 >= safeQuestions.length) {
       setResults(updated);
@@ -369,10 +382,27 @@ export function QuizViewer({ quiz, partNumber, previewMode, initialBestScore }: 
   const handleRetry = () => {
     setCurrent(0);
     setResults([]);
-    setPendingResult(null);
     setCurrentFeedback(null);
     setDone(false);
   };
+
+  // ── Loading / error states ─────────────────────────────────────────────────
+  if (phase === "loading") {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 py-16 text-zinc-400">
+        <Loader2 className="w-7 h-7 animate-spin text-amber-500" />
+        <p className="text-sm">Loading quiz…</p>
+      </div>
+    );
+  }
+
+  if (phase === "error") {
+    return (
+      <div className="flex flex-col items-center gap-3 py-12 text-zinc-400">
+        <p className="text-sm">Could not load quiz. Please refresh and try again.</p>
+      </div>
+    );
+  }
 
   if (done) {
     return (
@@ -408,7 +438,7 @@ export function QuizViewer({ quiz, partNumber, previewMode, initialBestScore }: 
       </AnimatePresence>
 
       <AnimatePresence>
-        {pendingResult && (
+        {currentFeedback && (
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}

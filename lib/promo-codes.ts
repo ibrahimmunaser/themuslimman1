@@ -32,7 +32,7 @@ const BUILT_IN_CODES: Record<string, PromoCode> = {
   // Creator / influencer codes — lifetime access only. 20% off both lifetime packages.
   KORRA20:    { type: "percent", value: 20, label: "20% off (Korra)",               creatorOnly: true },
   ITACHI20:   { type: "percent", value: 20, label: "20% off (Itachi)",              creatorOnly: true },
-  DEEN:       { type: "percent", value: 20, label: "20% off (Deen Responds)",       creatorOnly: true },
+  DEEN20:     { type: "percent", value: 20, label: "20% off (Deen Responds)",       creatorOnly: true },
   ORTHODOX20: { type: "percent", value: 20, label: "20% off (The Orthodox Muslim)", creatorOnly: true },
   // Location codes — 20% off for local community members.
   DEARBORN20:  { type: "percent", value: 20, label: "20% off (Dearborn)",  creatorOnly: true },
