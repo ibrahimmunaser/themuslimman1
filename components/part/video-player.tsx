@@ -31,15 +31,38 @@ interface VideoPlayerProps {
 }
 
 export function VideoPlayer({ src, title, poster, partNumber, previewMode, initialVideoPercent }: VideoPlayerProps) {
-  const videoRef       = useRef<HTMLVideoElement>(null);
+  const videoRef        = useRef<HTMLVideoElement>(null);
   const overlayAudioRef = useRef<HTMLAudioElement | null>(null);
-  const reportedRef    = useRef<Set<number>>(new Set());
+  const reportedRef     = useRef<Set<number>>(new Set());
   // High-water mark of the furthest position watched (0–100). Prevents
   // forward-seeking beyond what the user has genuinely watched.
-  const maxWatchedRef  = useRef<number>(initialVideoPercent ?? 0);
+  const maxWatchedRef   = useRef<number>(initialVideoPercent ?? 0);
   // Tracks whether the player auto-muted due to a MUTED_SEGMENTS rule,
   // so we can restore audio without overriding a manual user mute.
-  const autoMutedRef   = useRef<boolean>(false);
+  const autoMutedRef    = useRef<boolean>(false);
+  // Track whether the overlay audio has been started for the current segment
+  // pass-through, so we don't call .play() on every timeupdate tick.
+  const overlayPlayingRef = useRef<boolean>(false);
+
+  // Pre-create overlay audio elements on mount so they are ready to play
+  // instantly (avoids browser autoplay blocking on dynamic Audio construction).
+  useEffect(() => {
+    if (!partNumber) return;
+    const segments = MUTED_SEGMENTS[partNumber];
+    if (!segments) return;
+    const firstOverlay = segments.find((s) => s.overlayAudio)?.overlayAudio;
+    if (!firstOverlay) return;
+
+    const audio = new Audio(firstOverlay);
+    audio.preload = "auto";
+    overlayAudioRef.current = audio;
+
+    return () => {
+      audio.pause();
+      overlayAudioRef.current = null;
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [partNumber]);
 
   // Pause video when audio starts playing elsewhere on the page
   useEffect(() => {
@@ -106,14 +129,12 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
             setMuted(true);
           }
 
-          // Start the overlay audio if it exists and isn't already playing
-          if (activeSegment.overlayAudio) {
-            if (!overlayAudioRef.current) {
-              const audio = new Audio(activeSegment.overlayAudio);
-              audio.volume = videoRef.current.volume || 0.5;
-              overlayAudioRef.current = audio;
-              audio.play().catch(() => {});
-            }
+          // Play overlay audio once per segment entry (not on every tick)
+          if (activeSegment.overlayAudio && !overlayPlayingRef.current && overlayAudioRef.current) {
+            overlayAudioRef.current.volume = videoRef.current.volume || 0.5;
+            overlayAudioRef.current.currentTime = 0;
+            overlayAudioRef.current.play().catch(() => {});
+            overlayPlayingRef.current = true;
           }
         } else {
           // Outside all segments — restore video audio if we auto-muted it
@@ -123,10 +144,10 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
             setMuted(false);
           }
 
-          // Stop overlay audio if it's playing
-          if (overlayAudioRef.current) {
+          // Stop overlay audio and reset the flag so it plays again next entry
+          if (overlayPlayingRef.current && overlayAudioRef.current) {
             overlayAudioRef.current.pause();
-            overlayAudioRef.current = null;
+            overlayPlayingRef.current = false;
           }
         }
       }
@@ -212,6 +233,7 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
     const clampedVolume = Math.max(0, Math.min(1, newVolume));
     setVolume(clampedVolume);
     videoRef.current.volume = clampedVolume;
+    if (overlayAudioRef.current) overlayAudioRef.current.volume = clampedVolume;
     if (clampedVolume === 0) {
       setMuted(true);
       videoRef.current.muted = true;
@@ -284,8 +306,8 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
           // restart it if the new position falls inside a segment.
           if (overlayAudioRef.current) {
             overlayAudioRef.current.pause();
-            overlayAudioRef.current = null;
           }
+          overlayPlayingRef.current = false;
         }}
         onEnded={() => {
           setPlaying(false);
@@ -293,8 +315,8 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
           setVideoFullyWatched(true);
           if (overlayAudioRef.current) {
             overlayAudioRef.current.pause();
-            overlayAudioRef.current = null;
           }
+          overlayPlayingRef.current = false;
           if (partNumber && !previewMode) {
             if (!reportedRef.current.has(100)) {
               reportedRef.current.add(100);
