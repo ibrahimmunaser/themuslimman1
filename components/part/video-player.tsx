@@ -7,6 +7,16 @@ import { trackVideoProgress } from "@/app/actions/progress";
 // Report at these percent thresholds (once each per mount)
 const REPORT_THRESHOLDS = [25, 50, 75, 85, 95, 100];
 
+/**
+ * Time segments (in seconds) that should be automatically muted for specific parts.
+ * The player mutes during [start, end] and restores audio outside that range,
+ * without interfering with the user's own mute/volume controls.
+ */
+const MUTED_SEGMENTS: Record<number, Array<{ start: number; end: number }>> = {
+  // Part 7 (also "Part 1 – Children's Seerah"): mute 11s – 17.4s
+  7: [{ start: 11, end: 17.4 }],
+};
+
 interface VideoPlayerProps {
   src?: string;
   title?: string;
@@ -20,11 +30,14 @@ interface VideoPlayerProps {
 }
 
 export function VideoPlayer({ src, title, poster, partNumber, previewMode, initialVideoPercent }: VideoPlayerProps) {
-  const videoRef    = useRef<HTMLVideoElement>(null);
-  const reportedRef = useRef<Set<number>>(new Set());
+  const videoRef      = useRef<HTMLVideoElement>(null);
+  const reportedRef   = useRef<Set<number>>(new Set());
   // High-water mark of the furthest position watched (0–100). Prevents
   // forward-seeking beyond what the user has genuinely watched.
   const maxWatchedRef = useRef<number>(initialVideoPercent ?? 0);
+  // Tracks whether the player auto-muted due to a MUTED_SEGMENTS rule,
+  // so we can restore audio without overriding a manual user mute.
+  const autoMutedRef  = useRef<boolean>(false);
 
   // Pause video when audio starts playing elsewhere on the page
   useEffect(() => {
@@ -64,7 +77,8 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
   // Must be declared before any early return to satisfy the Rules of Hooks.
   const handleTimeUpdate = useCallback(() => {
     if (!videoRef.current) return;
-    const pct = (videoRef.current.currentTime / videoRef.current.duration) * 100;
+    const currentTime = videoRef.current.currentTime;
+    const pct = (currentTime / videoRef.current.duration) * 100;
     const rounded = isNaN(pct) ? 0 : Math.round(pct);
     setProgress(rounded);
 
@@ -73,6 +87,25 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
 
     // Lift the seek restriction once 85 % is genuinely reached
     if (maxWatchedRef.current >= 85) setVideoFullyWatched(true);
+
+    // ── Auto-mute for defined segments ────────────────────────────────────────
+    if (partNumber) {
+      const segments = MUTED_SEGMENTS[partNumber];
+      if (segments) {
+        const inSegment = segments.some(
+          (s) => currentTime >= s.start && currentTime <= s.end
+        );
+        if (inSegment && !videoRef.current.muted) {
+          videoRef.current.muted = true;
+          autoMutedRef.current = true;
+          setMuted(true);
+        } else if (!inSegment && autoMutedRef.current) {
+          videoRef.current.muted = false;
+          autoMutedRef.current = false;
+          setMuted(false);
+        }
+      }
+    }
 
     // Report to server at each threshold (once per session)
     if (partNumber && !previewMode) {
@@ -133,6 +166,8 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
 
   const toggleMute = () => {
     if (!videoRef.current) return;
+    // Clear auto-mute flag whenever the user manually changes mute state
+    autoMutedRef.current = false;
     if (muted) {
       // Unmute: restore volume (or set to 50% if it was 0)
       const newVolume = volume === 0 ? 0.5 : volume;
