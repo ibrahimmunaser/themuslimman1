@@ -74,15 +74,14 @@ export function ResourcesTabs({
         </p>
       </div>
 
-      {/* Tab Navigation — sticky below the dashboard tab bar.
-          Dashboard tabs: flex-col+py-3 on mobile ≈ 60px; flex-row+py-4 on sm+ ≈ 52px.
-          top-16 (64px) mobile / sm:top-14 (56px) sm+ ensures we clear the bar. */}
-      <div className="sticky top-16 sm:top-14 z-30 border-b border-border bg-surface shadow-sm">
+      {/* Tab Navigation — sticky below the dashboard tab bar (sticky top-0 z-50, ~60px tall).
+          top-[60px] mobile / sm:top-14 (56px) sm+ keeps it just below the dashboard tabs bar. */}
+      <div className="sticky top-[60px] sm:top-14 z-30 border-b border-border bg-surface shadow-sm">
         <div className="px-3 sm:px-6 lg:px-8 py-2 sm:py-1.5">
 
-          {/* ── Mobile: 3-column grid so all tabs are visible without scrolling ── */}
+          {/* ── Mobile: horizontal scroll strip — keeps sticky bar to ~44px ── */}
           <div
-            className="sm:hidden grid grid-cols-3 gap-1.5"
+            className="sm:hidden flex gap-1.5 overflow-x-auto scrollbar-hide py-1"
             role="tablist"
             aria-label="Resource types"
           >
@@ -96,21 +95,15 @@ export function ResourcesTabs({
                   aria-selected={isActive}
                   onClick={() => setActiveTab(tab.id)}
                   className={clsx(
-                    "flex flex-col items-center justify-center gap-1 rounded-xl border",
-                    "min-h-[52px] px-1 py-2 text-center transition-all",
+                    "flex items-center gap-1.5 flex-shrink-0 rounded-xl border",
+                    "min-h-[44px] px-3 py-2 transition-all",
                     isActive
                       ? "text-gold bg-gold/8 border-gold/20"
                       : "text-text-muted border-border/40 bg-surface/50 hover:text-text-secondary hover:bg-surface-raised"
                   )}
                 >
                   <Icon className={clsx("w-4 h-4 flex-shrink-0 transition-opacity", isActive ? "opacity-100" : "opacity-55")} />
-                  <span className={clsx(
-                    "text-[10px] font-medium leading-tight w-full text-center",
-                    // "Infographics" and "Mind Maps" are the longest — allow them to wrap cleanly
-                    "break-words hyphens-none"
-                  )}>
-                    {tab.label}
-                  </span>
+                  <span className="text-[11px] font-medium whitespace-nowrap">{tab.label}</span>
                 </button>
               );
             })}

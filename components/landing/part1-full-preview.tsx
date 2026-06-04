@@ -1,7 +1,7 @@
 import { getPartById } from "@/lib/content";
 import { getPartPageData } from "@/lib/part-content-cache";
 import type { Part, Quiz } from "@/lib/types";
-import { PartTabs } from "@/components/part/part-tabs";
+import { Part1PreviewTabs } from "@/components/landing/part1-preview-tabs";
 import { Badge } from "@/components/ui/badge";
 
 function stripQuizAnswers(quiz: Quiz | null | undefined): Quiz | null | undefined {
@@ -76,7 +76,7 @@ export async function Part1FullPreview() {
   return (
     <div className="rounded-2xl border border-gold/20 bg-surface overflow-hidden">
       <div className="p-4 bg-surface-raised border-b border-border">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div>
             <p className="text-xs text-text-muted uppercase tracking-wider mb-1">Complete Preview — No Signup Required</p>
             <h3 className="text-xl font-bold text-text">Part 1: {part.title}</h3>
@@ -84,7 +84,7 @@ export async function Part1FullPreview() {
               <p className="text-sm text-text-secondary mt-1">{part.subtitle}</p>
             )}
           </div>
-          <Badge variant="gold" size="sm">100% Free</Badge>
+          <Badge variant="gold" size="sm" className="self-start sm:self-auto flex-shrink-0">100% Free</Badge>
         </div>
         {part.description && (
           <p className="text-sm text-text-secondary mt-3 leading-relaxed">
@@ -93,14 +93,9 @@ export async function Part1FullPreview() {
         )}
       </div>
 
-      {/* Full Part 1 Content */}
+      {/* Full Part 1 Content — PartTabs is lazy-loaded in a separate JS chunk */}
       <div className="bg-surface px-4 sm:px-6 py-6">
-        <PartTabs
-          part={part}
-          userPlan="essentials"
-          previewMode={true}
-          initialAssetUrls={initialAssetUrls}
-        />
+        <Part1PreviewTabs part={part} initialAssetUrls={initialAssetUrls} />
       </div>
 
       {/* Call-to-Action */}

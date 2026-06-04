@@ -153,6 +153,16 @@ interface CheckoutPageClientProps {
 
 // ── Main checkout content ─────────────────────────────────────────────────────
 
+/** Returns true when running inside an Instagram / TikTok / Facebook in-app browser. */
+function useIsInAppBrowser() {
+  const [inApp, setInApp] = useState(false);
+  useEffect(() => {
+    const ua = navigator.userAgent;
+    setInApp(/Instagram|FBAN|FBAV|FB_IAB|BytedanceWebview|TikTok|Musical\.ly|snapchat/i.test(ua));
+  }, []);
+  return inApp;
+}
+
 function CheckoutPageContent({
   userEmail = "",
   initialAudience = "individual",
@@ -167,6 +177,7 @@ function CheckoutPageContent({
 }: CheckoutPageClientProps) {
   const searchParams = useSearchParams();
   const promoParam = searchParams.get("promo")?.toUpperCase() ?? null;
+  const isInApp = useIsInAppBrowser();
 
   // ── Audience + billing state ───────────────────────────────────────────────
   const [audience, setAudience] = useState<Audience>(initialAudience);
@@ -500,6 +511,17 @@ function CheckoutPageContent({
 
   const LeftColumn = (
     <div className="lg:w-1/2 bg-zinc-900/50 border-r border-zinc-800 px-6 sm:px-12 py-12 flex flex-col justify-center">
+      {/* In-app browser warning — Instagram/TikTok/Facebook WebViews can block Stripe.
+          Only shown when a social-app browser is detected on mobile. */}
+      {isInApp && (
+        <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-sm leading-relaxed">
+          <p className="font-semibold mb-1">⚠️ Payment may not work in this browser</p>
+          <p className="text-amber-300/80 text-xs">
+            To complete your purchase, please open this page in Safari or Chrome.{" "}
+            <span className="font-medium">Tap the ··· or share button → "Open in Browser"</span>
+          </p>
+        </div>
+      )}
       <Link href="/pricing" className="inline-flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-300 transition-colors mb-10">
         <ArrowLeft className="w-4 h-4" />
         Back to pricing
@@ -743,7 +765,7 @@ function CheckoutPageContent({
                     onChange={(e) => setAuthForm((f) => ({ ...f, password: e.target.value }))}
                     className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-sm pr-11"
                   />
-                  <button type="button" onClick={() => setShowPass((s) => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300">
+                  <button type="button" onClick={() => setShowPass((s) => !s)} className="absolute right-2 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] flex items-center justify-center text-zinc-500 hover:text-zinc-300">
                     {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
@@ -786,7 +808,7 @@ function CheckoutPageContent({
                     onChange={(e) => setAuthForm((f) => ({ ...f, password: e.target.value }))}
                     className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-sm pr-11"
                   />
-                  <button type="button" onClick={() => setShowPass((s) => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300">
+                  <button type="button" onClick={() => setShowPass((s) => !s)} className="absolute right-2 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] flex items-center justify-center text-zinc-500 hover:text-zinc-300">
                     {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>

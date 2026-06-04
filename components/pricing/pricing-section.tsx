@@ -63,7 +63,7 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
           <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-surface border border-border">
             <button
               onClick={() => setTab("individual")}
-              className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-150 ${
+              className={`px-5 py-2 min-h-[44px] rounded-lg text-sm font-semibold transition-all duration-150 ${
                 tab === "individual"
                   ? "bg-gold text-ink shadow-sm"
                   : "text-text-secondary hover:text-text"
@@ -73,7 +73,7 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
             </button>
             <button
               onClick={() => setTab("family")}
-              className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-150 flex items-center gap-1.5 ${
+              className={`px-5 py-2 min-h-[44px] rounded-lg text-sm font-semibold transition-all duration-150 flex items-center gap-1.5 ${
                 tab === "family"
                   ? "bg-gold text-ink shadow-sm"
                   : "text-text-secondary hover:text-text"

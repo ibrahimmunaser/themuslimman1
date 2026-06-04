@@ -361,7 +361,7 @@ export function StudentSidebar({
         </Link>
         <button
           onClick={closeDrawer}
-          className="min-w-[40px] min-h-[40px] flex items-center justify-center rounded-lg text-text-muted hover:text-text hover:bg-surface-raised transition-colors"
+          className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-text-muted hover:text-text hover:bg-surface-raised transition-colors"
           aria-label="Close menu"
         >
           <X className="w-4 h-4" />
@@ -504,7 +504,7 @@ export function StudentSidebar({
           aria-expanded={mobileOpen}
           aria-controls="mobile-drawer"
           // z-[70] keeps the button above the overlay (z-[55]) and drawer (z-[65])
-          className="lg:hidden fixed top-3 right-3 z-[70] flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface border border-border text-text-secondary hover:text-text hover:bg-surface-raised transition-all shadow-sm min-h-[36px]"
+          className="lg:hidden fixed top-3 right-3 z-[70] flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface border border-border text-text-secondary hover:text-text hover:bg-surface-raised transition-all shadow-sm min-h-[44px]"
         >
           {mobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
           <span className="text-xs font-semibold">{mobileOpen ? "Close" : "Menu"}</span>

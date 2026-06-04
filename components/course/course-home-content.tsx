@@ -302,7 +302,7 @@ export function CourseHomeContent({
                     <PrefetchPartLink
                       partNumber={stage.firstPartNumber}
                       label={isDone ? "Review" : stage.completedCount > 0 ? "Continue" : "Start"}
-                      className={`mt-2 inline-flex items-center gap-1 text-[10px] font-medium transition-colors min-h-[32px] ${
+                      className={`mt-2 inline-flex items-center gap-1 text-[10px] font-medium transition-colors min-h-[44px] ${
                         isCurrent ? "text-gold hover:text-gold/80" : "text-text-muted/50 hover:text-gold/70"
                       }`}
                     />
@@ -355,7 +355,7 @@ export function CourseHomeContent({
                   <PrefetchPartLink
                     partNumber={stage.firstPartNumber}
                     label={isDone ? "Review" : stage.completedCount > 0 ? "Continue" : "Start"}
-                    className="text-[10px] font-medium text-gold/70 hover:text-gold transition-colors min-h-[32px] flex items-center"
+                    className="text-[10px] font-medium text-gold/70 hover:text-gold transition-colors min-h-[44px] flex items-center"
                   />
                 </div>
               </div>

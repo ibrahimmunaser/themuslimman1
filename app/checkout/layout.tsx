@@ -7,7 +7,11 @@ export default function CheckoutLayout({
 }) {
   return (
     <>
-      <Navbar />
+      {/* Hide the global nav on mobile — checkout has its own "Back to pricing" link
+          which is sufficient. Desktop keeps it for brand trust/reassurance. */}
+      <div className="hidden sm:block">
+        <Navbar />
+      </div>
       <div>
         {children}
       </div>

@@ -132,7 +132,7 @@ export function AudioPlayer({ src, title, partNumber, compact = false, previewMo
       <audio
         ref={audioRef}
         src={src}
-        preload="metadata"
+        preload="none"
         onTimeUpdate={handleTimeUpdate}
         onEnded={() => setPlaying(false)}
         onPlay={() => { setPlaying(true); window.dispatchEvent(new CustomEvent("seerah:audioPlaying")); }}
