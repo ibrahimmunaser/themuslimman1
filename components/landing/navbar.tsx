@@ -27,8 +27,9 @@ export async function Navbar() {
             <Image
               src="/images/logoicon.png"
               alt="TheMuslimMan"
-              width={56}
-              height={56}
+              width={967}
+              height={219}
+              sizes="(max-width: 640px) 194px, 247px"
               className="h-11 sm:h-14 w-auto"
               priority
             />
