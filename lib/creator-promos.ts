@@ -51,10 +51,10 @@ export const CREATOR_PROMO_CODES: Record<string, CreatorPromoConfig> = {
     utm_campaign: "seerah_launch",
     utm_content: "deenresponds",
   },
-  ORTHODOX20: {
-    code: "ORTHODOX20",
+  ORTHODOX: {
+    code: "ORTHODOX",
     discountPercent: 20,
-    displayLabel: "ORTHODOX20 — 20% off lifetime access",
+    displayLabel: "ORTHODOX — 20% off lifetime access",
     creator: "theorthodoxmuslim",
     utm_source: "youtube",
     utm_medium: "influencer",

@@ -295,7 +295,8 @@ function CheckoutPageContent({
 
   useEffect(() => {
     if (isAuthenticated || !promoParam) return;
-    // Pass the plan so the displayed discount matches the selected plan's base price.
+    // Re-validate whenever audience changes so the displayed discount always
+    // reflects the correct plan base price (family vs individual).
     const planParam = audience === "family" ? "&plan=family" : "";
     fetch(`/api/stripe/validate-promo?code=${encodeURIComponent(promoParam)}${planParam}`)
       .then((r) => r.json())
@@ -307,7 +308,7 @@ function CheckoutPageContent({
       })
       .catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [audience]);
 
   // ── On mount / plan change: create intent (authenticated users) ────────────
 
