@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
 import { getCachedStudent } from "@/lib/auth-cache";
 import { hasActiveCourseAccess } from "@/lib/access";
 import { getActiveProfileId } from "@/app/actions/profiles";
@@ -70,13 +69,8 @@ export default async function LearnIndexPage() {
     },
   });
 
-  // Read the active learning path from the cookie set by LessonsPathView
-  // (non-httpOnly, so JS writes it; the server reads it here to pick the right
-  // "current part" without a client round-trip).
-  const cookieStore = await cookies();
-  const pathCookie = cookieStore.get("seerah_path")?.value;
-  const activeLearningPath: "complete" | "children" =
-    pathCookie === "children" ? "children" : "complete";
+  // Children's Seerah path has been removed — always use the complete path.
+  const activeLearningPath = "complete" as const;
 
   // Derive progress overview stats inline (replaces the old getProgress() call).
   const completedParts = allPartProgress
@@ -101,38 +95,18 @@ export default async function LearnIndexPage() {
     return PARTS.length;
   })();
 
-  // Compute "current part" in the context of the active path, clamped to
-  // maxAccessiblePart so a stale "started" row for a locked part never
-  // sends the user somewhere they can't actually reach.
+  // Compute current part: the lowest in-progress accessible part, or next after
+  // the highest completed, or Part 1 if nothing has started yet. Clamped to
+  // maxAccessiblePart so a stale "started" row never sends the user somewhere locked.
+  const accessibleInProgress = inProgressParts.filter(n => n <= maxAccessiblePart);
+  const accessibleCompleted  = completedParts.filter(n => n <= maxAccessiblePart);
   let currentPart: number;
-  if (activeLearningPath === "children") {
-    const childrenParts = PARTS
-      .filter(p => p.audiences.includes("children"))
-      .map(p => p.partNumber)
-      .sort((a, b) => a - b);
-    const accessibleChildrenParts = childrenParts.filter(n => n <= maxAccessiblePart);
-    const childrenInProgress = inProgressParts.filter(n => accessibleChildrenParts.includes(n));
-    const childrenCompleted  = completedParts.filter(n => accessibleChildrenParts.includes(n));
-    if (childrenInProgress.length > 0) {
-      currentPart = Math.min(...childrenInProgress);
-    } else if (childrenCompleted.length > 0) {
-      const maxDone = Math.max(...childrenCompleted);
-      const nextIdx = childrenParts.indexOf(maxDone) + 1;
-      currentPart = childrenParts[nextIdx] ?? childrenParts[childrenParts.length - 1];
-    } else {
-      currentPart = childrenParts[0] ?? 1;
-    }
+  if (accessibleInProgress.length > 0) {
+    currentPart = Math.min(...accessibleInProgress);
+  } else if (accessibleCompleted.length > 0) {
+    currentPart = Math.min(Math.max(...accessibleCompleted) + 1, maxAccessiblePart);
   } else {
-    // Complete path: walk the full 100-part chain, clamped to what's accessible.
-    const accessibleInProgress = inProgressParts.filter(n => n <= maxAccessiblePart);
-    const accessibleCompleted  = completedParts.filter(n => n <= maxAccessiblePart);
-    if (accessibleInProgress.length > 0) {
-      currentPart = Math.min(...accessibleInProgress);
-    } else if (accessibleCompleted.length > 0) {
-      currentPart = Math.min(Math.max(...accessibleCompleted) + 1, maxAccessiblePart);
-    } else {
-      currentPart = 1;
-    }
+    currentPart = 1;
   }
 
   // Proactively warm the user's current part so clicking "Continue" / "Start stage"
