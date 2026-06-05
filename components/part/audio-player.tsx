@@ -23,9 +23,6 @@ function formatTime(seconds: number): string {
 
 const PLAYBACK_SPEEDS = [0.75, 1, 1.25, 1.5, 1.75, 2];
 
-/** Seconds to skip at the start of every audio file (intro / branding trim). */
-const AUDIO_OFFSET = 9.5;
-
 export function AudioPlayer({ src, title, partNumber, compact = false, previewMode = false, videoCompleted = false }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
@@ -37,17 +34,21 @@ export function AudioPlayer({ src, title, partNumber, compact = false, previewMo
   const [showSpeedMenu, setShowSpeedMenu] = useState(false);
   const [hasTrackedPlay, setHasTrackedPlay] = useState(false);
 
+  // Crop the intro: skip the first N seconds of every audio track.
+  // Part 7 has a longer intro (9.5s); all others are 4s.
+  const startOffset = partNumber === 7 ? 9.5 : 4;
+
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
     const onLoaded = () => {
-      // Jump past the intro immediately so playback starts at the real content.
-      if (audio.currentTime < AUDIO_OFFSET) audio.currentTime = AUDIO_OFFSET;
-      setDuration(Math.max(0, audio.duration - AUDIO_OFFSET));
+      setDuration(audio.duration);
+      // Jump past the intro as soon as metadata is available.
+      if (audio.currentTime < startOffset) audio.currentTime = startOffset;
     };
     audio.addEventListener("loadedmetadata", onLoaded);
     return () => audio.removeEventListener("loadedmetadata", onLoaded);
-  }, []);
+  }, [startOffset]);
 
   // Track when audio starts playing for the first time
   useEffect(() => {
@@ -96,6 +97,10 @@ export function AudioPlayer({ src, title, partNumber, compact = false, previewMo
     if (playing) {
       audioRef.current.pause();
     } else {
+      // Guard: never start before the intro cutoff.
+      if (audioRef.current.currentTime < startOffset) {
+        audioRef.current.currentTime = startOffset;
+      }
       audioRef.current.play();
     }
     setPlaying(!playing);
@@ -103,16 +108,16 @@ export function AudioPlayer({ src, title, partNumber, compact = false, previewMo
 
   const handleTimeUpdate = () => {
     if (!audioRef.current) return;
-    // Clamp: never let playback slip behind the offset (e.g. after a rewind).
-    if (audioRef.current.currentTime < AUDIO_OFFSET) {
-      audioRef.current.currentTime = AUDIO_OFFSET;
+    // Clamp: if audio somehow drifts before the offset, snap it back.
+    if (audioRef.current.currentTime < startOffset) {
+      audioRef.current.currentTime = startOffset;
       return;
     }
-    const adjusted = audioRef.current.currentTime - AUDIO_OFFSET;
-    const effectiveDuration = audioRef.current.duration - AUDIO_OFFSET;
-    setCurrentTime(adjusted);
-    const pct = effectiveDuration > 0 ? (adjusted / effectiveDuration) * 100 : 0;
-    setProgress(isNaN(pct) ? 0 : pct);
+    setCurrentTime(audioRef.current.currentTime);
+    const playable = audioRef.current.duration - startOffset;
+    const elapsed = audioRef.current.currentTime - startOffset;
+    const pct = playable > 0 ? (elapsed / playable) * 100 : 0;
+    setProgress(isNaN(pct) ? 0 : Math.min(100, pct));
   };
 
   const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -120,17 +125,16 @@ export function AudioPlayer({ src, title, partNumber, compact = false, previewMo
     const rect = e.currentTarget.getBoundingClientRect();
     const x = Math.max(0, e.clientX - rect.left);
     const pct = x / rect.width;
-    const effectiveDuration = audioRef.current.duration - AUDIO_OFFSET;
-    // Map the seek position into the real timeline (after offset).
-    const target = pct * effectiveDuration + AUDIO_OFFSET;
+    // Map 0–100% of the bar to startOffset–duration (never before intro cutoff).
+    const target = startOffset + pct * (audioRef.current.duration - startOffset);
     // Block forward seeking until the video has been fully watched.
     if (!videoCompleted && target > audioRef.current.currentTime) return;
-    audioRef.current.currentTime = Math.max(AUDIO_OFFSET, target);
+    audioRef.current.currentTime = Math.max(startOffset, target);
   };
 
   const skip = (seconds: number) => {
     if (!audioRef.current) return;
-    audioRef.current.currentTime = Math.max(AUDIO_OFFSET, audioRef.current.currentTime + seconds);
+    audioRef.current.currentTime = Math.max(startOffset, audioRef.current.currentTime + seconds);
   };
 
   const changePlaybackRate = (rate: number) => {
@@ -213,12 +217,12 @@ export function AudioPlayer({ src, title, partNumber, compact = false, previewMo
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={Math.round(progress)}
-        aria-valuetext={`${formatTime(currentTime)} of ${formatTime(duration)}`}
+        aria-valuetext={`${formatTime(Math.max(0, currentTime - startOffset))} of ${formatTime(Math.max(0, duration - startOffset))}`}
         tabIndex={0}
         onKeyDown={(e) => {
           if (!audioRef.current) return;
           if (e.key === "ArrowRight" && videoCompleted) audioRef.current.currentTime = Math.min(audioRef.current.duration, audioRef.current.currentTime + 5);
-          if (e.key === "ArrowLeft") audioRef.current.currentTime = Math.max(AUDIO_OFFSET, audioRef.current.currentTime - 5);
+          if (e.key === "ArrowLeft") audioRef.current.currentTime = Math.max(startOffset, audioRef.current.currentTime - 5);
         }}
       >
         <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-1 bg-surface-raised rounded-full">
@@ -228,10 +232,10 @@ export function AudioPlayer({ src, title, partNumber, compact = false, previewMo
         </div>
       </div>
 
-      {/* Time */}
+      {/* Time — displayed relative to the intro cutoff so listeners see 0:00 at start */}
       <div className="flex justify-between text-[10px] text-text-muted/70 mb-2">
-        <span>{formatTime(currentTime)}</span>
-        <span>{formatTime(duration)}</span>
+        <span>{formatTime(Math.max(0, currentTime - startOffset))}</span>
+        <span>{formatTime(Math.max(0, duration - startOffset))}</span>
       </div>
 
       {/* Controls — all min 44px */}
