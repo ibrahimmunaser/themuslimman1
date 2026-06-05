@@ -23,6 +23,9 @@ function formatTime(seconds: number): string {
 
 const PLAYBACK_SPEEDS = [0.75, 1, 1.25, 1.5, 1.75, 2];
 
+/** Seconds to skip at the start of every audio file (intro / branding trim). */
+const AUDIO_OFFSET = 9.5;
+
 export function AudioPlayer({ src, title, partNumber, compact = false, previewMode = false, videoCompleted = false }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
@@ -37,7 +40,11 @@ export function AudioPlayer({ src, title, partNumber, compact = false, previewMo
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    const onLoaded = () => setDuration(audio.duration);
+    const onLoaded = () => {
+      // Jump past the intro immediately so playback starts at the real content.
+      if (audio.currentTime < AUDIO_OFFSET) audio.currentTime = AUDIO_OFFSET;
+      setDuration(Math.max(0, audio.duration - AUDIO_OFFSET));
+    };
     audio.addEventListener("loadedmetadata", onLoaded);
     return () => audio.removeEventListener("loadedmetadata", onLoaded);
   }, []);
@@ -96,8 +103,15 @@ export function AudioPlayer({ src, title, partNumber, compact = false, previewMo
 
   const handleTimeUpdate = () => {
     if (!audioRef.current) return;
-    setCurrentTime(audioRef.current.currentTime);
-    const pct = (audioRef.current.currentTime / audioRef.current.duration) * 100;
+    // Clamp: never let playback slip behind the offset (e.g. after a rewind).
+    if (audioRef.current.currentTime < AUDIO_OFFSET) {
+      audioRef.current.currentTime = AUDIO_OFFSET;
+      return;
+    }
+    const adjusted = audioRef.current.currentTime - AUDIO_OFFSET;
+    const effectiveDuration = audioRef.current.duration - AUDIO_OFFSET;
+    setCurrentTime(adjusted);
+    const pct = effectiveDuration > 0 ? (adjusted / effectiveDuration) * 100 : 0;
     setProgress(isNaN(pct) ? 0 : pct);
   };
 
@@ -106,15 +120,17 @@ export function AudioPlayer({ src, title, partNumber, compact = false, previewMo
     const rect = e.currentTarget.getBoundingClientRect();
     const x = Math.max(0, e.clientX - rect.left);
     const pct = x / rect.width;
-    const target = pct * audioRef.current.duration;
+    const effectiveDuration = audioRef.current.duration - AUDIO_OFFSET;
+    // Map the seek position into the real timeline (after offset).
+    const target = pct * effectiveDuration + AUDIO_OFFSET;
     // Block forward seeking until the video has been fully watched.
     if (!videoCompleted && target > audioRef.current.currentTime) return;
-    audioRef.current.currentTime = target;
+    audioRef.current.currentTime = Math.max(AUDIO_OFFSET, target);
   };
 
   const skip = (seconds: number) => {
     if (!audioRef.current) return;
-    audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime + seconds);
+    audioRef.current.currentTime = Math.max(AUDIO_OFFSET, audioRef.current.currentTime + seconds);
   };
 
   const changePlaybackRate = (rate: number) => {
@@ -202,7 +218,7 @@ export function AudioPlayer({ src, title, partNumber, compact = false, previewMo
         onKeyDown={(e) => {
           if (!audioRef.current) return;
           if (e.key === "ArrowRight" && videoCompleted) audioRef.current.currentTime = Math.min(audioRef.current.duration, audioRef.current.currentTime + 5);
-          if (e.key === "ArrowLeft") audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - 5);
+          if (e.key === "ArrowLeft") audioRef.current.currentTime = Math.max(AUDIO_OFFSET, audioRef.current.currentTime - 5);
         }}
       >
         <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-1 bg-surface-raised rounded-full">
