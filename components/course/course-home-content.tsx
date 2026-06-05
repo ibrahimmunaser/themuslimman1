@@ -8,7 +8,6 @@ import {
   Image as ImageIcon, Info, CheckCircle2,
 } from "lucide-react";
 import { PrefetchPartLink } from "@/components/course/prefetch-part-link";
-import { useState, useEffect } from "react";
 import { FadeUp, StaggerChildren, AnimatedCounter, AnimatedProgressBar, AnimatedCard } from "@/components/motion";
 
 export interface StageData {
@@ -23,7 +22,6 @@ export interface StageData {
 interface CourseHomeContentProps {
   userPlan: "essentials" | "complete";
   completionPercentage: number;
-  childrenCompletionPercentage?: number;
   completedLessons: number;
   totalLessons: number;
   userName: string;
@@ -39,7 +37,6 @@ export function CourseHomeContent({
   completedLessons,
   totalLessons,
   completionPercentage,
-  childrenCompletionPercentage,
   userName,
   currentPart,
   currentPartTitle,
@@ -52,14 +49,7 @@ export function CourseHomeContent({
   const currentStage = stagesData[currentStageNumber - 1];
 
   // Read the active path from localStorage to show the right progress %.
-  const [displayPercentage, setDisplayPercentage] = useState(completionPercentage);
-  useEffect(() => {
-    if (localStorage.getItem("seerah:lessons-path") === "children" && childrenCompletionPercentage !== undefined) {
-      setDisplayPercentage(childrenCompletionPercentage);
-    } else {
-      setDisplayPercentage(completionPercentage);
-    }
-  }, [completionPercentage, childrenCompletionPercentage]);
+  const displayPercentage = completionPercentage;
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">

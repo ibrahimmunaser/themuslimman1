@@ -17,7 +17,6 @@ interface CourseProgressContentProps {
   completedLessons: number;
   totalLessons: number;
   progressPercentage: number;
-  childrenProgressPercentage?: number;
   currentPart: number;
   stagesData: StageData[];
   quizAvgScore: number;
@@ -35,9 +34,6 @@ export function CourseProgressContent({
   completedLessons,
   totalLessons,
   progressPercentage,
-  // childrenProgressPercentage accepted for forward-compat but not yet used
-  // in this server component (client-side path detection is not available here).
-  childrenProgressPercentage: _childrenProgressPercentage,
   currentPart,
   stagesData,
   quizAvgScore,

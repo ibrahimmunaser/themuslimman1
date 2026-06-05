@@ -228,16 +228,6 @@ export default async function LearnIndexPage() {
   // Only count fully-completed parts — partial video progress does NOT inflate the %
   const progressPercentage = completedCount > 0 ? Math.round((completedCount / totalParts) * 100) : 0;
 
-  // Children's path progress % — 39-part denominator so it reads correctly
-  // when the user is on the Children's Seerah path.
-  const childrenPartNumbers = new Set(
-    PARTS.filter((p) => p.audiences.includes("children")).map((p) => p.partNumber)
-  );
-  const childrenCompletedCount = completedParts.filter((n) => childrenPartNumbers.has(n)).length;
-  const childrenTotalParts = childrenPartNumbers.size;
-  const childrenProgressPercentage = childrenCompletedCount > 0
-    ? Math.round((childrenCompletedCount / childrenTotalParts) * 100)
-    : 0;
 
   // Build serializable progress data for LessonsPathView (client component).
   // Re-uses openedAssetsMap already parsed above.
@@ -337,7 +327,6 @@ export default async function LearnIndexPage() {
           <CourseHomeContent 
             userPlan={userPlan} 
             completionPercentage={progressPercentage}
-            childrenCompletionPercentage={childrenProgressPercentage}
             completedLessons={completedCount}
             totalLessons={totalParts}
             userName={userFirstName}
@@ -465,10 +454,9 @@ export default async function LearnIndexPage() {
             parentEmail={user.parentEmail || undefined}
             studentName={user.studentName || undefined}
             sendWeeklyReports={user.sendWeeklyReports}
-            completedLessons={activeLearningPath === "children" ? childrenCompletedCount : completedCount}
-            totalLessons={activeLearningPath === "children" ? childrenTotalParts : totalParts}
-            progressPercentage={activeLearningPath === "children" ? childrenProgressPercentage : progressPercentage}
-            childrenProgressPercentage={childrenProgressPercentage}
+            completedLessons={completedCount}
+            totalLessons={totalParts}
+            progressPercentage={progressPercentage}
             currentPart={currentPart}
             stagesData={stagesData}
             quizAvgScore={quizAvgScore}
