@@ -41,8 +41,8 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
 
   // All checkout pages handle inline auth for guests, so always link directly.
   const individualLifetimeHref = "/checkout";
-  const familyMonthlyHref  = "/checkout/family?cycle=monthly";
-  const familyLifetimeHref = "/checkout/family?cycle=lifetime";
+  const familyMonthlyHref  = "/checkout?plan=family&billing=monthly";
+  const familyLifetimeHref = "/checkout?plan=family&billing=lifetime";
 
   return (
     <section className="py-8 border-t border-border" id="pricing">

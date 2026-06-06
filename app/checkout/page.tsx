@@ -112,6 +112,11 @@ export default async function CheckoutPage({ searchParams }: Props) {
     }
   }
 
+  // Pass the raw promo param as a server prop so the client never needs
+  // useSearchParams() — that hook returns empty during SSR, which caused a
+  // hydration mismatch between server-rendered and client-rendered HTML.
+  const promoParamProp = params.promo?.trim().toUpperCase() ?? null;
+
   return (
     <CheckoutClientPage
       userEmail={user?.email ?? ""}
@@ -124,6 +129,7 @@ export default async function CheckoutPage({ searchParams }: Props) {
       initialAppliedPromo={initialAppliedPromo}
       initialAppliedPromoLabel={initialAppliedPromoLabel}
       initialFreeAccess={initialFreeAccess}
+      initialPromoParam={promoParamProp}
     />
   );
 }

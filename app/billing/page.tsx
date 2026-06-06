@@ -167,7 +167,7 @@ export default async function BillingPage() {
                 </p>
                 <div className="mt-4 flex flex-wrap items-center gap-3">
                   <Link
-                    href="/checkout/family"
+                    href="/checkout?plan=family&billing=lifetime"
                     className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gold hover:bg-gold-light text-black font-bold text-sm transition-colors shadow-sm"
                   >
                     Upgrade for $199
@@ -200,7 +200,7 @@ export default async function BillingPage() {
                 </div>
                 <div className="mt-4 flex flex-wrap items-center gap-3">
                   <Link
-                    href="/checkout/family"
+                    href="/checkout?plan=family&billing=lifetime"
                     className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm transition-colors shadow-sm"
                   >
                     Upgrade for $100
@@ -231,14 +231,14 @@ export default async function BillingPage() {
                 </p>
                 <div className="mt-4 flex flex-wrap items-center gap-3">
                   <Link
-                    href="/checkout/family?cycle=lifetime"
+                    href="/checkout?plan=family&billing=lifetime"
                     className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm transition-colors shadow-sm"
                   >
                     Lifetime — $199
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                   <Link
-                    href="/checkout/family?cycle=monthly"
+                    href="/checkout?plan=family&billing=monthly"
                     className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-amber-500/40 hover:border-amber-500/70 text-amber-400 font-semibold text-sm transition-colors"
                   >
                     Monthly — $19/mo
