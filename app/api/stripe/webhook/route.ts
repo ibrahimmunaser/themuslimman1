@@ -133,10 +133,13 @@ export async function POST(request: NextRequest) {
         break;
       }
 
-      case "invoice.payment_failed": {
+      case "invoice.payment_failed":
+      case "invoice.payment_action_required": {
+        // payment_action_required = 3DS/SCA authentication needed on renewal.
+        // Treat the same as a failed payment: sync status (likely past_due) and log.
         const invoice = event.data.object as Stripe.Invoice;
         const invoiceSubId2 = getInvoiceSubscriptionId(invoice);
-        console.error(`[WEBHOOK] invoice.payment_failed: ${invoice.id}, subscription: ${invoiceSubId2}`);
+        console.error(`[WEBHOOK] ${event.type}: ${invoice.id}, subscription: ${invoiceSubId2}`);
         if (invoiceSubId2) {
           await syncSubscriptionStatus(invoiceSubId2);
         }

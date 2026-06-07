@@ -109,9 +109,15 @@ export default async function BillingPage() {
                       ? PLANS.monthly.name
                       : PLANS.complete.name}
                   </p>
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-gold/20 text-gold border border-gold/30">
-                    Active
-                  </span>
+                  {isPastDue ? (
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/30">
+                      Past due
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-gold/20 text-gold border border-gold/30">
+                      Active
+                    </span>
+                  )}
                 </div>
                 <p className="text-sm text-text-secondary mt-0.5">
                   {isFamilyMonthly || isFamilyLifetime

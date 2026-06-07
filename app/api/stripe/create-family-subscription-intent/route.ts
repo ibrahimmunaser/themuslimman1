@@ -85,14 +85,18 @@ export async function POST() {
       await prisma.user.update({ where: { id: user.id }, data: { stripeCustomerId: customerId } });
     }
 
-    // Cancel any existing incomplete subscriptions for this customer
-    const existingSubs = await stripe.subscriptions.list({
-      customer: customerId,
-      status: "incomplete",
-      limit: 5,
-    });
-    for (const s of existingSubs.data) {
-      await stripe.subscriptions.cancel(s.id).catch(() => {});
+    // Cancel any existing incomplete or past_due subscriptions to avoid duplicates
+    for (const statusFilter of ["incomplete", "past_due"] as const) {
+      const existingSubs = await stripe.subscriptions.list({
+        customer: customerId,
+        status: statusFilter,
+        limit: 5,
+      });
+      for (const s of existingSubs.data) {
+        await stripe.subscriptions.cancel(s.id).catch((e) =>
+          console.warn(`[CREATE-FAMILY-SUBSCRIPTION-INTENT] Could not cancel ${statusFilter} sub ${s.id}:`, e)
+        );
+      }
     }
 
     // Create subscription in incomplete state so we can confirm via Elements.
