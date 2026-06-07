@@ -18,12 +18,15 @@ export function UpNextCard({ completePath, childrenPath }: UpNextCardProps) {
 
   useEffect(() => {
     try {
+      // Children's Seerah path has been removed — clear any stale "children"
+      // value so all users see the complete 100-part path.
       if (localStorage.getItem("seerah:lessons-path") === "children") {
-        setActivePath("children");
+        localStorage.removeItem("seerah:lessons-path");
       }
     } catch {
       // localStorage unavailable
     }
+    // activePath stays "complete" — always show the complete-path Up Next card.
   }, []);
 
   const part = activePath === "children" ? (childrenPath ?? completePath) : completePath;

@@ -47,7 +47,12 @@ export function PartNavButtons({
 
   useEffect(() => {
     const stored = localStorage.getItem(PATH_STORAGE_KEY);
-    if (stored === "children") setActivePath("children");
+    if (stored === "children") {
+      // Children's Seerah path has been removed — clear the stale setting and
+      // always show the complete 100-part path so users see the correct count.
+      localStorage.removeItem(PATH_STORAGE_KEY);
+    }
+    // activePath stays "complete" (the default) — no setActivePath call needed.
   }, []);
 
   useEffect(() => {
