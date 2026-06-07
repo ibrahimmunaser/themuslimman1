@@ -5,6 +5,7 @@ import { getUserAccessInfo } from "@/lib/access";
 import { StudentLayout } from "@/components/student/student-layout";
 import { PLANS } from "@/lib/stripe-config";
 import { CardManager } from "@/components/billing/card-manager";
+import { PortalButton } from "@/components/billing/portal-button";
 import {
   CreditCard,
   CheckCircle2,
@@ -15,6 +16,7 @@ import {
   Users,
   ArrowRight,
   ArrowUpCircle,
+  AlertTriangle,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -55,6 +57,7 @@ export default async function BillingPage() {
   const isFamilyLifetime  = isFamily && !isMonthly;
   const isFamilyMonthly   = isFamily && isMonthly;
   const sub               = accessInfo.subscription;
+  const isPastDue         = sub?.status === "past_due";
 
   return (
     <StudentLayout userPlan={userPlan} userName={user.fullName} planType={user.planType}>
@@ -65,6 +68,28 @@ export default async function BillingPage() {
           <h1 className="text-2xl font-bold text-text">Billing &amp; Plan</h1>
           <p className="text-text-secondary text-sm mt-1">Your plan details and billing history.</p>
         </div>
+
+        {/* Payment failed warning — shown when monthly renewal bounces */}
+        {isPastDue && (
+          <div className="rounded-2xl border border-red-500/30 bg-red-500/5 p-5 flex items-start gap-4">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-red-500/15 mt-0.5">
+              <AlertTriangle className="w-5 h-5 text-red-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-red-400">Payment failed — please update your card</p>
+              <p className="text-sm text-text-secondary mt-1 leading-relaxed">
+                Your last monthly payment didn&apos;t go through. We&apos;re retrying automatically — you still have access.
+                To avoid losing access, please update your payment method before retries are exhausted.
+              </p>
+              <div className="mt-3 flex flex-wrap gap-3">
+                <PortalButton />
+                <Link href="/help" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-text-secondary hover:text-text text-sm transition-colors">
+                  Contact support
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Current plan card */}
         <div className="rounded-2xl border p-6 border-gold/30 bg-gold/5">

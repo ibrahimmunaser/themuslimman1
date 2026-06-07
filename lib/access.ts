@@ -7,8 +7,21 @@ import { prisma } from "./db";
 export const INDIVIDUAL_PROFILE_LIMIT = 1;
 export const FAMILY_PROFILE_LIMIT     = 5;
 
-/** Subscription statuses that grant full course access. */
-export const ACTIVE_SUBSCRIPTION_STATUSES = ["active", "trialing"] as const;
+/**
+ * Subscription statuses that grant full course access.
+ *
+ * "past_due" is included intentionally: when Stripe's Smart Retries are running
+ * (after a failed renewal payment), the subscription status is "past_due" while
+ * Stripe keeps trying to collect over several days. Revoking access immediately
+ * on the first retry would be too harsh — the user should retain access until
+ * the subscription is fully cancelled (status = "canceled") after all retries fail.
+ *
+ * The `currentPeriodEnd: { gte: now }` guard in hasActiveCourseAccess acts as a
+ * safety net: once the billing period expires and Stripe cancels the subscription
+ * (firing customer.subscription.deleted → our handler sets status = "canceled"),
+ * the past_due row will no longer match and access will be correctly denied.
+ */
+export const ACTIVE_SUBSCRIPTION_STATUSES = ["active", "trialing", "past_due"] as const;
 
 /**
  * Returns true if the user has active course access via either:
