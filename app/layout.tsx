@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import Script from "next/script";
 import { ServiceWorkerRegistration } from "@/components/service-worker";
 import "./globals.css";
@@ -59,9 +60,8 @@ export default function RootLayout({
         <link rel="preconnect" href="https://js.stripe.com" />
         <link rel="preconnect" href="https://api.stripe.com" />
         <link rel="dns-prefetch" href="https://js.stripe.com" />
-        {/* Preconnect to R2 CDN for media assets */}
-        <link rel="preconnect" href="https://pub-5e47559fbd9145a4af1f58ceb3a42c81.r2.dev" />
-        <link rel="dns-prefetch" href="https://pub-5e47559fbd9145a4af1f58ceb3a42c81.r2.dev" />
+        {/* Preconnect to R2 for signed media assets */}
+        <link rel="dns-prefetch" href="https://themuslimman1.r2.cloudflarestorage.com" />
       </head>
       <body className="min-h-full bg-ink text-text antialiased">
         <ServiceWorkerRegistration />
@@ -75,6 +75,7 @@ export default function RootLayout({
           }}
         />
         <Analytics />
+        <SpeedInsights />
         <Script id="meta-pixel" strategy="afterInteractive">{`
           !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
           n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
