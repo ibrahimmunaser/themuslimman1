@@ -25,20 +25,37 @@ export function MindmapViewer({ src, title }: MindmapViewerProps) {
   const imageRef = useRef<HTMLImageElement>(null);
   const lastPosRef = useRef({ x: 0, y: 0 });
   const lastTouchDist = useRef<number | null>(null);
+  const imgLoadedRef = useRef(false);
 
   // ── Fit image to container, centered ────────────────────────────────────
+  // Guards: skip if the image hasn't loaded yet or if the container has no
+  // real dimensions (e.g. the tab is hidden / display:none).
   const fitToContainer = useCallback(() => {
     const container = containerRef.current;
     const img = imageRef.current;
     if (!container || !img) return;
     const cw = container.clientWidth;
     const ch = container.clientHeight;
+    // Container not visible yet — ResizeObserver will call us when it gets size.
+    if (cw === 0 || ch === 0) return;
     const iw = img.naturalWidth || img.clientWidth || 1;
     const ih = img.naturalHeight || img.clientHeight || 1;
     const scale = clamp(Math.min(cw / iw, ch / ih) * 0.92, 0.05, 10);
     setT({ scale, x: (cw - iw * scale) / 2, y: (ch - ih * scale) / 2 });
     setReady(true);
   }, []);
+
+  // ── ResizeObserver: re-fit whenever the container gets real dimensions ───
+  // This fires when a hidden tab becomes visible (clientWidth 0 → actual px).
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const ro = new ResizeObserver(() => {
+      if (imgLoadedRef.current) fitToContainer();
+    });
+    ro.observe(container);
+    return () => ro.disconnect();
+  }, [fitToContainer]);
 
   // ── Atomic zoom toward a container-space point (cx, cy) ─────────────────
   // Single setT call → scale and pan always in sync, no stale-closure drift.
@@ -244,7 +261,11 @@ export function MindmapViewer({ src, title }: MindmapViewerProps) {
             src={src}
             alt={title || "Mindmap"}
             draggable={false}
-            onLoad={fitToContainer}
+            onLoad={() => {
+              imgLoadedRef.current = true;
+              // Defer one frame so the container has painted and clientWidth is real.
+              requestAnimationFrame(fitToContainer);
+            }}
             style={{
               position: "absolute",
               top: 0,
