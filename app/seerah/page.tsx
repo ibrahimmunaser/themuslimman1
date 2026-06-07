@@ -50,6 +50,15 @@ export default async function LearnIndexPage() {
 
   if (!hasAccess) redirect("/pricing");
 
+  // Check if the user's subscription is past_due — they still have access
+  // (we include past_due in ACTIVE_SUBSCRIPTION_STATUSES) but we show a
+  // persistent banner so they know to fix their payment before retries run out.
+  const pastDueSub = user.hasPaid ? null : await prisma.subscription.findFirst({
+    where: { userId: user.id, status: "past_due" },
+    select: { id: true },
+  });
+  const isPastDue = !!pastDueSub;
+
   const userPlan = "complete" as const;
 
   // Fetch all per-part progress for this profile in one query.
@@ -328,6 +337,20 @@ export default async function LearnIndexPage() {
 
   // StudentLayout is provided by app/seerah/layout.tsx — no wrapper needed here.
   return (
+    <>
+      {isPastDue && (
+        <div className="bg-red-500/10 border-b border-red-500/20 px-4 py-3 flex items-center justify-between gap-4 flex-wrap">
+          <p className="text-sm text-red-400 font-medium">
+            ⚠️ Your last payment failed. Fix your card to keep access — your progress is safe.
+          </p>
+          <a
+            href="/billing"
+            className="text-xs font-bold text-red-400 border border-red-500/30 px-3 py-1.5 rounded-lg hover:bg-red-500/10 transition-colors whitespace-nowrap"
+          >
+            Update payment →
+          </a>
+        </div>
+      )}
     <CourseDashboardTabs
         homeContent={
           <CourseHomeContent 
@@ -472,6 +495,7 @@ export default async function LearnIndexPage() {
         />
       }
     />
+    </>
   );
 }
 
