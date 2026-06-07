@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { hashToken } from "@/lib/hash-token";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://seerah.themuslimman.com";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://themuslimman.com";
 
 
 export async function GET(request: NextRequest) {

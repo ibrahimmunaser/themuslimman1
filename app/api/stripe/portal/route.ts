@@ -18,16 +18,11 @@ export async function POST() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  let customerId = user.stripeCustomerId;
-
-  // Fall back: look up stripeCustomerId from DB if not in session
-  if (!customerId) {
-    const dbUser = await prisma.user.findUnique({
-      where: { id: user.id },
-      select: { stripeCustomerId: true },
-    });
-    customerId = dbUser?.stripeCustomerId ?? null;
-  }
+  const dbUser = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { stripeCustomerId: true },
+  });
+  const customerId = dbUser?.stripeCustomerId ?? null;
 
   if (!customerId) {
     return NextResponse.json(

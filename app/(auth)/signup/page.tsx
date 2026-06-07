@@ -76,7 +76,9 @@ function SignupPageContent() {
       }
 
       // Dev mode (auto-verified) or gift claim flow — go to destination.
-      const destination = redirectAfter || "/unlock";
+      // Only allow internal relative paths to prevent open redirect attacks.
+      const isSafeRedirect = redirectAfter && redirectAfter.startsWith("/") && !redirectAfter.startsWith("//");
+      const destination = isSafeRedirect ? redirectAfter : "/pricing";
       router.push(destination);
     } catch {
       setError("Something went wrong. Please try again.");

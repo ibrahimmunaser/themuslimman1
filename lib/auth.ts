@@ -402,7 +402,7 @@ export async function requestPasswordReset(email: string): Promise<{ success: bo
     const result = await resend.emails.send({
       from: process.env.EMAIL_FROM || "TheMuslimMan <noreply@themuslimman.com>",
       to: user.email,
-      subject: "Reset Your Password - Seerah LMS",
+      subject: "Reset Your Password - Complete Seerah",
       html: `
         <!DOCTYPE html>
         <html>

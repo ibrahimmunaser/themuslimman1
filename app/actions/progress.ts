@@ -9,17 +9,6 @@ import {
   VIDEO_COMPLETION_THRESHOLD,
   QUIZ_PASS_SCORE,
 } from "@/lib/progress";
-import { PARTS } from "@/lib/content";
-
-// Sorted list of part numbers in the Children's Seerah path.
-// Used by trackQuizCompleted to allow progression when a user follows the
-// children's path (e.g. Part 7 → 11 → 13) and has only passed the children's
-// predecessor, not the complete-path predecessor (n-1).
-const CHILDREN_PART_NUMBERS: number[] = PARTS
-  .filter((p) => p.audiences.includes("children"))
-  .sort((a, b) => a.partNumber - b.partNumber)
-  .map((p) => p.partNumber);
-
 type UserPlan = "essentials" | "complete";
 
 // Verbose trace logs are active in development only to avoid spamming
@@ -52,7 +41,9 @@ async function getUserPlan(userId: string, sessionHasPaid?: boolean): Promise<Us
     prisma.subscription.findFirst({
       where: {
         userId,
-        status: { in: ["active", "trialing"] },
+        // Include "past_due" so users in Stripe's dunning window keep progress tracking.
+        // Mirrors ACTIVE_SUBSCRIPTION_STATUSES from lib/access.ts.
+        status: { in: ["active", "trialing", "past_due"] },
         currentPeriodEnd: { gt: new Date() },
       },
       select: { id: true },

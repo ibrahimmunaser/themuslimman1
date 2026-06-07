@@ -45,8 +45,7 @@ export function LessonsPathView({
   progressData,
   currentPart,
 }: LessonsPathViewProps) {
-  // Always show the complete Seerah path
-  const filteredParts = parts.filter((p) => p.audiences.includes("complete"));
+  const filteredParts = parts;
 
   // Sequential lock: first part is always accessible; each subsequent part
   // requires the previous part's quiz to be passed.

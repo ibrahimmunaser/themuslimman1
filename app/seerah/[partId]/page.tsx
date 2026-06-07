@@ -215,18 +215,6 @@ export default async function SeerahPartPage(props: Props) {
   const prevPart = currentIndex > 0 ? allParts[currentIndex - 1] : null;
   const nextPart = currentIndex < allParts.length - 1 ? allParts[currentIndex + 1] : null;
 
-  // Compute Children's-path siblings so the nav buttons can switch between
-  // complete-order and children's-order based on the active path in localStorage.
-  const childrenPartsOrdered = PARTS
-    .filter((p) => p.audiences.includes("children"))
-    .sort((a, b) => a.partNumber - b.partNumber);
-  const childrenPartIndex = childrenPartsOrdered.findIndex((p) => p.id === partId);
-  const childrenPrevPart = childrenPartIndex > 0
-    ? childrenPartsOrdered[childrenPartIndex - 1]
-    : null;
-  const childrenNextPart = childrenPartIndex >= 0 && childrenPartIndex < childrenPartsOrdered.length - 1
-    ? childrenPartsOrdered[childrenPartIndex + 1]
-    : null;
 
   // ④ Shell renders immediately after auth (~400-800ms TTFB).
   //    PartTabsContent is inside <Suspense> — it streams in when R2 is ready.
@@ -313,23 +301,16 @@ export default async function SeerahPartPage(props: Props) {
             />
           </Suspense>
 
-          {/* Up Next card — shows Children's or Complete next part based on path cookie */}
-          <UpNextCard
-            completePath={nextPart}
-            childrenPath={childrenNextPart ?? null}
-          />
+          {/* Up Next card */}
+          <UpNextCard completePath={nextPart} />
 
           {/* Navigation row — client component so startTransition keeps current page
               visible during load (no skeleton flash) */}
           <PartNavButtons
             prevPart={prevPart ? { id: prevPart.id, partNumber: prevPart.partNumber } : null}
             nextPart={nextPart ? { id: nextPart.id, partNumber: nextPart.partNumber, title: nextPart.title, subtitle: nextPart.subtitle } : null}
-            childrenPrevPart={childrenPrevPart ? { id: childrenPrevPart.id, partNumber: childrenPrevPart.partNumber } : null}
-            childrenNextPart={childrenNextPart ? { id: childrenNextPart.id, partNumber: childrenNextPart.partNumber, title: childrenNextPart.title, subtitle: childrenNextPart.subtitle } : null}
             currentPart={n}
             totalParts={allParts.length}
-            childrenTotalParts={childrenPartsOrdered.length}
-            childrenCurrentIndex={childrenPartIndex >= 0 ? childrenPartIndex + 1 : undefined}
             initialQuizPassed={partProgress?.quizPassed ?? false}
           />
         </div>

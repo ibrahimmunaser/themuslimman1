@@ -445,7 +445,7 @@ function GiftCheckoutContent({ purchaserEmail, purchaserName: _purchaserName }: 
                   value={authForm.fullName}
                   onChange={(e) => setAuthForm((f) => ({ ...f, fullName: e.target.value }))}
                   required
-                  className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-sm"
+                  className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm"
                 />
                 <input
                   type="email"
@@ -453,7 +453,7 @@ function GiftCheckoutContent({ purchaserEmail, purchaserName: _purchaserName }: 
                   value={authForm.email}
                   onChange={(e) => setAuthForm((f) => ({ ...f, email: e.target.value }))}
                   required
-                  className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-sm"
+                  className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm"
                 />
                 <div className="relative">
                   <input
@@ -463,7 +463,7 @@ function GiftCheckoutContent({ purchaserEmail, purchaserName: _purchaserName }: 
                     onChange={(e) => setAuthForm((f) => ({ ...f, password: e.target.value }))}
                     required
                     minLength={8}
-                    className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-sm pr-11"
+                    className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm pr-11"
                   />
                   <button type="button" onClick={() => setShowPassword((s) => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300">
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -475,7 +475,7 @@ function GiftCheckoutContent({ purchaserEmail, purchaserName: _purchaserName }: 
                   value={authForm.confirmPassword}
                   onChange={(e) => setAuthForm((f) => ({ ...f, confirmPassword: e.target.value }))}
                   required
-                  className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-sm"
+                  className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm"
                 />
                 {authError && <p className="text-xs text-red-400 pt-1">{authError}</p>}
                 <button
@@ -503,7 +503,7 @@ function GiftCheckoutContent({ purchaserEmail, purchaserName: _purchaserName }: 
                   value={authForm.email}
                   onChange={(e) => setAuthForm((f) => ({ ...f, email: e.target.value }))}
                   required
-                  className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-sm"
+                  className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm"
                 />
                 <div className="relative">
                   <input
@@ -512,7 +512,7 @@ function GiftCheckoutContent({ purchaserEmail, purchaserName: _purchaserName }: 
                     value={authForm.password}
                     onChange={(e) => setAuthForm((f) => ({ ...f, password: e.target.value }))}
                     required
-                    className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-sm pr-11"
+                    className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm pr-11"
                   />
                   <button type="button" onClick={() => setShowPassword((s) => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300">
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -595,7 +595,7 @@ function GiftCheckoutContent({ purchaserEmail, purchaserName: _purchaserName }: 
                   value={details.recipientEmail}
                   onChange={(e) => setDetails({ ...details, recipientEmail: e.target.value })}
                   placeholder="their@email.com"
-                  className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-sm"
+                  className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm"
                 />
                 <p className="text-xs text-zinc-600 mt-1">
                   We&apos;ll send the claim link here.
@@ -613,7 +613,7 @@ function GiftCheckoutContent({ purchaserEmail, purchaserName: _purchaserName }: 
                   value={details.recipientName}
                   onChange={(e) => setDetails({ ...details, recipientName: e.target.value })}
                   placeholder="e.g. Ibrahim"
-                  className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-sm"
+                  className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm"
                 />
               </div>
 
@@ -628,7 +628,7 @@ function GiftCheckoutContent({ purchaserEmail, purchaserName: _purchaserName }: 
                   placeholder="Write a short note to include with the gift…"
                   rows={3}
                   maxLength={500}
-                  className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-sm resize-none"
+                  className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm resize-none"
                 />
                 <p className="text-xs text-zinc-600 mt-1 text-right">{details.giftMessage.length}/500</p>
               </div>

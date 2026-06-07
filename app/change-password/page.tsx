@@ -1,7 +1,7 @@
 import { requireAuth } from "@/lib/auth";
 import { ChangePasswordForm } from "./change-password-form";
 
-export const metadata = { title: "Set Your Password" };
+export const metadata = { title: "Set Your Password", robots: { index: false, follow: false } };
 export const dynamic  = "force-dynamic";
 
 export default async function ChangePasswordPage() {

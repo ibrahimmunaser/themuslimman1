@@ -79,9 +79,6 @@ export default async function LearnIndexPage() {
     },
   });
 
-  // Children's Seerah path has been removed — always use the complete path.
-  const activeLearningPath = "complete" as const;
-
   // Derive progress overview stats inline (replaces the old getProgress() call).
   const completedParts = allPartProgress
     .filter(p => p.quizPassed)

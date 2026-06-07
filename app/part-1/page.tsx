@@ -34,14 +34,14 @@ export default function Part1PreviewPage() {
           <div className="flex flex-wrap items-center gap-3">
             <Link
               href="/checkout"
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-gold hover:bg-gold-light text-ink text-sm font-semibold rounded-lg transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-3 min-h-[44px] bg-gold hover:bg-gold-light text-ink text-sm font-semibold rounded-lg transition-colors"
             >
               Get Full Access
               <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
               href="/pricing"
-              className="inline-flex items-center gap-2 px-5 py-2.5 border border-border hover:border-gold/40 text-text-secondary hover:text-text text-sm rounded-lg transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-3 min-h-[44px] border border-border hover:border-gold/40 text-text-secondary hover:text-text text-sm rounded-lg transition-colors"
             >
               View Pricing
             </Link>

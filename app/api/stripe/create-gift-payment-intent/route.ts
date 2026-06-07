@@ -2,12 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { stripe, PLANS } from "@/lib/stripe";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import {
-  getBasePrice,
-  isEarlyAccessActive,
-  EARLY_ACCESS_END_DATE,
-  REGULAR_PRICE,
-} from "@/lib/early-access";
 import { validatePromoCode, applyDiscount } from "@/lib/promo-codes";
 
 // Family lifetime price ID for Stripe metadata linkage
@@ -59,14 +53,10 @@ export async function POST(request: NextRequest) {
     const isFamily = planId === "family";
     const plan = isFamily ? PLANS.family : PLANS.complete;
 
-    // For individual plan, use the dynamic early-access price.
-    // Family lifetime has a fixed price.
-    const earlyAccessActive = isEarlyAccessActive();
-    const baseAmount = isFamily ? PLANS.family.price : getBasePrice();
-    const earlyAccessDiscount = (!isFamily && earlyAccessActive) ? REGULAR_PRICE - baseAmount : 0;
+    const baseAmount = isFamily ? PLANS.family.price : PLANS.complete.price;
 
     // Apply creator/promo discount if provided
-    let finalAmount = baseAmount;
+    let finalAmount: number = baseAmount;
     let promoDiscountAmount = 0;
     let appliedPromoCode: string | null = null;
     let appliedPromoLabel: string | null = null;
@@ -102,11 +92,7 @@ export async function POST(request: NextRequest) {
         recipientEmail: recipientEmail.trim().toLowerCase(),
         recipientName: recipientName?.trim() ?? "",
         giftMessage: giftMessage?.trim() ?? "",
-        earlyAccessActive: String(earlyAccessActive),
-        earlyAccessEndDate: EARLY_ACCESS_END_DATE.toISOString(),
-        regularAmount: String(REGULAR_PRICE),
         baseAmount: String(baseAmount),
-        earlyAccessDiscount: String(earlyAccessDiscount),
         promoCode: appliedPromoCode ?? "",
         promoDiscountAmount: String(promoDiscountAmount),
         finalAmount: String(finalAmount),
@@ -136,11 +122,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       clientSecret: paymentIntent.client_secret,
       planId,
-      earlyAccessActive,
-      earlyAccessEndDate: EARLY_ACCESS_END_DATE.toISOString(),
-      regularAmount: REGULAR_PRICE,
       baseAmount,
-      earlyAccessDiscount,
       promoCode: appliedPromoCode,
       promoLabel: appliedPromoLabel,
       promoDiscountAmount,

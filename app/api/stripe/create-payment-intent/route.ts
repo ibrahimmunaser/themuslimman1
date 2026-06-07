@@ -3,12 +3,8 @@ import { stripe, PLANS, type PlanId } from "@/lib/stripe";
 import { getCurrentUser } from "@/lib/auth";
 import { validatePromoCode, applyDiscount } from "@/lib/promo-codes";
 import { getCreatorPromoConfig } from "@/lib/creator-promos";
-import {
-  getBasePrice,
-  isEarlyAccessActive,
-  EARLY_ACCESS_END_DATE,
-  REGULAR_PRICE,
-} from "@/lib/early-access";
+/** Individual lifetime price in cents ($99). */
+const BASE_PRICE = 9900;
 import { getUserAccessInfo } from "@/lib/access";
 
 export async function POST(request: NextRequest) {
@@ -47,8 +43,7 @@ export async function POST(request: NextRequest) {
     const plan = PLANS[planId];
 
     // Server decides the price — always $99 (9900 cents), client cannot override.
-    const earlyAccessActive = isEarlyAccessActive(); // always false
-    const baseAmount: number = getBasePrice(); // always 9900
+    const baseAmount: number = BASE_PRICE;
 
     // ── Apply promo code if provided ──
     let finalAmount: number = baseAmount;
@@ -65,8 +60,6 @@ export async function POST(request: NextRequest) {
       appliedPromoCode = promoCode.trim().toUpperCase();
     }
 
-    const earlyAccessDiscount = 0; // no early-access discount — price is flat $99
-
     // Resolve creator metadata from the promo code (if it's a creator code)
     const creatorConfig = appliedPromoCode ? getCreatorPromoConfig(appliedPromoCode) : null;
 
@@ -75,10 +68,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         freeAccess: true,
         appliedPromoCode,
-        earlyAccessActive,
-        regularAmount: REGULAR_PRICE,
         baseAmount,
-        earlyAccessDiscount,
         promoDiscountAmount,
         finalAmount: 0,
       });
@@ -93,11 +83,7 @@ export async function POST(request: NextRequest) {
         userId: user.id,
         planId: plan.id,
         planName: plan.name,
-        earlyAccessActive: String(earlyAccessActive),
-        earlyAccessEndDate: EARLY_ACCESS_END_DATE.toISOString(),
-        regularAmount: String(REGULAR_PRICE),
         baseAmount: String(baseAmount),
-        earlyAccessDiscount: String(earlyAccessDiscount),
         finalAmount: String(finalAmount),
         ...(appliedPromoCode
           ? {
@@ -122,11 +108,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       clientSecret: paymentIntent.client_secret,
       freeAccess: false,
-      earlyAccessActive,
-      earlyAccessEndDate: EARLY_ACCESS_END_DATE.toISOString(),
-      regularAmount: REGULAR_PRICE,
       baseAmount,
-      earlyAccessDiscount,
       promoDiscountAmount,
       finalAmount,
     });

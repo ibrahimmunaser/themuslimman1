@@ -18,7 +18,7 @@ function escapeHtml(str: string): string {
     .replace(/'/g, "&#x27;");
 }
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://seerah.themuslimman.com";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://themuslimman.com";
 
 export async function POST() {
   try {

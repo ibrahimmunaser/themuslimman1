@@ -28,7 +28,9 @@ export function Input({ label, error, hint, className, id, value, ...props }: In
         value={safeValue}
         className={clsx(
           "w-full px-4 py-3 rounded-lg bg-surface border transition-all duration-200",
-          "text-text placeholder:text-text-muted text-sm",
+          // text-base (16px) prevents iOS Safari from auto-zooming the viewport on focus.
+          // Anything below 16px triggers the built-in zoom behaviour which breaks layout.
+          "text-text placeholder:text-text-muted text-base sm:text-sm",
           "focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50",
           error
             ? "border-error/60 focus:ring-error/50 focus:border-error/60"

@@ -4,7 +4,7 @@ import { getProfiles, ensureFamilyProfiles } from "@/app/actions/profiles";
 import { isFamilyPlan, getProfileLimit } from "@/lib/access";
 import { ProfilePickerClient } from "@/components/profiles/profile-picker-client";
 
-export const metadata = { title: "Who is learning today? | Complete Seerah" };
+export const metadata = { title: "Who is learning today? | Complete Seerah", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
 
 interface Props {

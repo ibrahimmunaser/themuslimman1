@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-export const metadata = { title: "Billing | Complete Seerah" };
+export const metadata = { title: "Billing | Complete Seerah", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
 
 function formatDate(d: Date) {

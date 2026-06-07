@@ -4,7 +4,6 @@ import { getUserAccessInfo } from "@/lib/access";
 import { stripe } from "@/lib/stripe";
 import { validatePromoCode, applyDiscount } from "@/lib/promo-codes";
 import { getCreatorPromoConfig } from "@/lib/creator-promos";
-import { getBasePrice } from "@/lib/early-access";
 import CheckoutClientPage from "./page-client";
 
 export const dynamic = "force-dynamic";
@@ -47,7 +46,7 @@ export default async function CheckoutPage({ searchParams }: Props) {
   // Only for the most common path (individual + lifetime + logged-in).
   // Monthly/family subscription intents are always created client-side.
   let initialClientSecret: string | null = null;
-  const initialBasePrice  = getBasePrice();
+  const initialBasePrice  = 9900;
   let initialFinalPrice = initialBasePrice;
   let initialDiscountAmount  = 0;
   let initialAppliedPromo: string | null = null;

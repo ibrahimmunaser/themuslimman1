@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { validatePromoCode, applyDiscount, getFreeAccessPlan } from "@/lib/promo-codes";
-import { getBasePrice } from "@/lib/early-access";
 import { prisma } from "@/lib/db";
 import { PLANS, type PlanId } from "@/lib/stripe";
 import { PLANS as STRIPE_CONFIG_PLANS } from "@/lib/stripe-config";
@@ -80,7 +79,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify the promo actually reduces the price to $0 for the resolved plan.
-    const baseAmount = isFamily ? STRIPE_CONFIG_PLANS.family.price : getBasePrice();
+    const baseAmount = isFamily ? STRIPE_CONFIG_PLANS.family.price : 9900;
     const finalAmount = applyDiscount(baseAmount, promo);
 
     if (finalAmount !== 0) {

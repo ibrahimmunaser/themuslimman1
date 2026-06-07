@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
@@ -30,7 +30,7 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
 type PlanChoice = "monthly" | "familyMonthly";
 type AuthMode = "signup" | "login";
 
-// ── Stripe payment form ───────────────────────────────────────────────────────
+// -- Stripe payment form -------------------------------------------------------
 
 function MonthlyCheckoutForm({
   planChoice,
@@ -87,10 +87,10 @@ function MonthlyCheckoutForm({
         className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-gold hover:bg-gold-light disabled:opacity-60 text-ink font-bold text-base transition-colors shadow-lg shadow-gold/20"
       >
         <Lock className="w-4 h-4" />
-        {processing ? "Processing…" : `Subscribe — ${formatPrice(finalPrice)}/mo`}
+        {processing ? "Processing?" : `Subscribe ? ${formatPrice(finalPrice)}/mo`}
       </button>
       <p className="text-xs text-zinc-500 text-center">
-        Secure payment powered by Stripe · Your information is encrypted
+        Secure payment powered by Stripe ? Your information is encrypted
       </p>
       <p className="text-xs text-zinc-600 text-center leading-relaxed">
         By subscribing you agree to our{" "}
@@ -104,14 +104,14 @@ function MonthlyCheckoutForm({
   );
 }
 
-// ── Props ─────────────────────────────────────────────────────────────────────
+// -- Props ---------------------------------------------------------------------
 
 interface Props {
   userEmail: string;
   userName: string;
 }
 
-// ── Main checkout content ─────────────────────────────────────────────────────
+// -- Main checkout content -----------------------------------------------------
 
 function MonthlyCheckoutContent({ userEmail }: Props) {
   const searchParams = useSearchParams();
@@ -121,7 +121,7 @@ function MonthlyCheckoutContent({ userEmail }: Props) {
     planParam === "familyMonthly" ? "familyMonthly" : "monthly"
   );
 
-  // ── Auth state ─────────────────────────────────────────────────────────────
+  // -- Auth state -------------------------------------------------------------
   const [isAuthenticated, setIsAuthenticated] = useState(!!userEmail);
   const [authEmail, setAuthEmail] = useState(userEmail);
   const [authMode, setAuthMode] = useState<AuthMode>("signup");
@@ -131,7 +131,7 @@ function MonthlyCheckoutContent({ userEmail }: Props) {
   const [authLoading, setAuthLoading] = useState(false);
   const [needsVerification, setNeedsVerification] = useState(false);
 
-  // ── Payment state ──────────────────────────────────────────────────────────
+  // -- Payment state ----------------------------------------------------------
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -139,7 +139,7 @@ function MonthlyCheckoutContent({ userEmail }: Props) {
 
   const currentPlan = PLANS[planChoice];
 
-  // ── Create subscription intent ─────────────────────────────────────────────
+  // -- Create subscription intent ---------------------------------------------
 
   const createIntent = async (plan: PlanChoice) => {
     setLoading(true);
@@ -179,7 +179,7 @@ function MonthlyCheckoutContent({ userEmail }: Props) {
     }
   };
 
-  // ── On plan change: recreate intent (only when authenticated) ─────────────
+  // -- On plan change: recreate intent (only when authenticated) -------------
 
   const isFirstMount = useRef(true);
 
@@ -191,7 +191,7 @@ function MonthlyCheckoutContent({ userEmail }: Props) {
     createIntent(planChoice);
   }, [planChoice, isAuthenticated]);
 
-  // ── Auth handlers ──────────────────────────────────────────────────────────
+  // -- Auth handlers ----------------------------------------------------------
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -248,7 +248,7 @@ function MonthlyCheckoutContent({ userEmail }: Props) {
     }
   };
 
-  // ── Left column (shared) ───────────────────────────────────────────────────
+  // -- Left column (shared) ---------------------------------------------------
 
   const LeftColumn = (
     <div className="lg:w-1/2 bg-zinc-900/50 border-r border-zinc-800 px-6 sm:px-12 py-12 flex flex-col justify-center">
@@ -268,8 +268,8 @@ function MonthlyCheckoutContent({ userEmail }: Props) {
       {/* Plan selector */}
       <div className="grid grid-cols-2 gap-3 mb-8">
         {([
-          { id: "monthly" as PlanChoice,       icon: User,  label: "Individual", price: PLANS.monthly.price,       sub: "1 learner · per month" },
-          { id: "familyMonthly" as PlanChoice,  icon: Users, label: "Family",     price: PLANS.familyMonthly.price, sub: "Up to 5 learners · per month" },
+          { id: "monthly" as PlanChoice,       icon: User,  label: "Individual", price: PLANS.monthly.price,       sub: "1 learner ? per month" },
+          { id: "familyMonthly" as PlanChoice,  icon: Users, label: "Family",     price: PLANS.familyMonthly.price, sub: "Up to 5 learners ? per month" },
         ] as const).map(({ id, icon: Icon, label, price, sub }) => (
           <button
             key={id}
@@ -308,7 +308,7 @@ function MonthlyCheckoutContent({ userEmail }: Props) {
         <p className="text-sm text-zinc-400">
           Want to own it forever?{" "}
           <Link href="/checkout" className="text-gold hover:text-gold-light font-medium transition-colors">
-            Get Lifetime Access →
+            Get Lifetime Access ?
           </Link>
         </p>
       </div>
@@ -329,7 +329,7 @@ function MonthlyCheckoutContent({ userEmail }: Props) {
     </div>
   );
 
-  // ── Order summary card (shared) ────────────────────────────────────────────
+  // -- Order summary card (shared) --------------------------------------------
 
   const OrderSummary = (
     <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 mb-6 space-y-3">
@@ -337,8 +337,8 @@ function MonthlyCheckoutContent({ userEmail }: Props) {
         <div>
           <p className="text-sm font-semibold text-white">{currentPlan.name}</p>
           <p className="text-xs text-zinc-500 mt-0.5">
-            {planChoice === "familyMonthly" ? "Up to 5 learner profiles · " : ""}
-            billed monthly · cancel anytime
+            {planChoice === "familyMonthly" ? "Up to 5 learner profiles ? " : ""}
+            billed monthly ? cancel anytime
           </p>
         </div>
         <p className="text-sm font-bold text-white whitespace-nowrap ml-4">
@@ -352,7 +352,7 @@ function MonthlyCheckoutContent({ userEmail }: Props) {
     </div>
   );
 
-  // ── Guest: email verification needed ──────────────────────────────────────
+  // -- Guest: email verification needed --------------------------------------
 
   if (!isAuthenticated && needsVerification) {
     return (
@@ -380,7 +380,7 @@ function MonthlyCheckoutContent({ userEmail }: Props) {
     );
   }
 
-  // ── Guest: inline auth form ────────────────────────────────────────────────
+  // -- Guest: inline auth form ------------------------------------------------
 
   if (!isAuthenticated) {
     return (
@@ -416,7 +416,7 @@ function MonthlyCheckoutContent({ userEmail }: Props) {
                   value={authForm.fullName}
                   onChange={(e) => setAuthForm((f) => ({ ...f, fullName: e.target.value }))}
                   required
-                  className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-sm"
+                  className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm"
                 />
                 <input
                   type="email"
@@ -424,7 +424,7 @@ function MonthlyCheckoutContent({ userEmail }: Props) {
                   value={authForm.email}
                   onChange={(e) => setAuthForm((f) => ({ ...f, email: e.target.value }))}
                   required
-                  className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-sm"
+                  className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm"
                 />
                 <div className="relative">
                   <input
@@ -434,7 +434,7 @@ function MonthlyCheckoutContent({ userEmail }: Props) {
                     onChange={(e) => setAuthForm((f) => ({ ...f, password: e.target.value }))}
                     required
                     minLength={8}
-                    className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-sm pr-11"
+                    className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm pr-11"
                   />
                   <button type="button" onClick={() => setShowPassword((s) => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300">
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -446,7 +446,7 @@ function MonthlyCheckoutContent({ userEmail }: Props) {
                   value={authForm.confirmPassword}
                   onChange={(e) => setAuthForm((f) => ({ ...f, confirmPassword: e.target.value }))}
                   required
-                  className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-sm"
+                  className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm"
                 />
                 {authError && <p className="text-xs text-red-400 pt-1">{authError}</p>}
                 <button
@@ -454,7 +454,7 @@ function MonthlyCheckoutContent({ userEmail }: Props) {
                   disabled={authLoading}
                   className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-gold hover:bg-gold-light disabled:opacity-60 text-ink font-bold text-sm transition-colors"
                 >
-                  {authLoading ? "Creating account…" : "Create Account & Continue"}
+                  {authLoading ? "Creating account?" : "Create Account & Continue"}
                   {!authLoading && <ArrowRight className="w-4 h-4" />}
                 </button>
                 <p className="text-xs text-zinc-600 text-center leading-relaxed">
@@ -474,7 +474,7 @@ function MonthlyCheckoutContent({ userEmail }: Props) {
                   value={authForm.email}
                   onChange={(e) => setAuthForm((f) => ({ ...f, email: e.target.value }))}
                   required
-                  className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-sm"
+                  className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm"
                 />
                 <div className="relative">
                   <input
@@ -483,7 +483,7 @@ function MonthlyCheckoutContent({ userEmail }: Props) {
                     value={authForm.password}
                     onChange={(e) => setAuthForm((f) => ({ ...f, password: e.target.value }))}
                     required
-                    className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-sm pr-11"
+                    className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm pr-11"
                   />
                   <button type="button" onClick={() => setShowPassword((s) => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300">
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -495,7 +495,7 @@ function MonthlyCheckoutContent({ userEmail }: Props) {
                   disabled={authLoading}
                   className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-gold hover:bg-gold-light disabled:opacity-60 text-ink font-bold text-sm transition-colors"
                 >
-                  {authLoading ? "Signing in…" : "Sign In & Continue"}
+                  {authLoading ? "Signing in?" : "Sign In & Continue"}
                   {!authLoading && <ArrowRight className="w-4 h-4" />}
                 </button>
                 <div className="text-center">
@@ -511,7 +511,7 @@ function MonthlyCheckoutContent({ userEmail }: Props) {
     );
   }
 
-  // ── Authenticated: order summary + payment form ────────────────────────────
+  // -- Authenticated: order summary + payment form ----------------------------
 
   return (
     <div className="min-h-screen bg-zinc-950 flex flex-col lg:flex-row">
@@ -593,7 +593,7 @@ function MonthlyCheckoutContent({ userEmail }: Props) {
   );
 }
 
-// ── Export ────────────────────────────────────────────────────────────────────
+// -- Export --------------------------------------------------------------------
 
 export default function MonthlyCheckoutClient(props: Props) {
   return (

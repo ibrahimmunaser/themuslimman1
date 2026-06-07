@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { VideoPlayer } from "./video-player";
 import { Play } from "lucide-react";
 import { fetchPartAssets } from "@/lib/part-asset-cache";
@@ -20,16 +20,6 @@ export function LazyVideoPlayer({ partNumber, title, poster, previewMode, videoU
   const [videoUrl, setVideoUrl] = useState<string | undefined>(videoUrlProp);
   const [loading, setLoading] = useState(!videoUrlProp);
   const [error, setError] = useState(false);
-
-  // Fire-and-forget to the API route — no server-action import so this file
-  // stays free of "use server" references and won't break public page bundles.
-  const handleProgress = useCallback((pNum: number, pct: number) => {
-    fetch("/api/student/track-video-progress", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ partNumber: pNum, watchPercent: pct }),
-    }).catch(() => {});
-  }, []);
 
   useEffect(() => {
     if (videoUrlProp) {
@@ -76,7 +66,6 @@ export function LazyVideoPlayer({ partNumber, title, poster, previewMode, videoU
       partNumber={partNumber}
       previewMode={previewMode}
       initialVideoPercent={initialVideoPercent}
-      onProgress={previewMode ? undefined : handleProgress}
     />
   );
 }

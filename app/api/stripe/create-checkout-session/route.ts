@@ -29,11 +29,11 @@ export async function POST(_request: NextRequest) {
     // Short-circuit: if the session already marks hasPaid=true skip the DB check.
     const alreadyHasAccess = user.hasPaid || await hasActiveCourseAccess(user.id);
     if (alreadyHasAccess) {
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://seerah.themuslimman.com";
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://themuslimman.com";
       return NextResponse.json({ url: `${appUrl}/seerah` });
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://seerah.themuslimman.com";
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://themuslimman.com";
 
     // Ensure or create Stripe customer so subscription links to user
     const { prisma } = await import("@/lib/db");

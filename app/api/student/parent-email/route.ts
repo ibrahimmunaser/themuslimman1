@@ -42,7 +42,7 @@ export async function POST(request: Request) {
 
     // Generate verification token — store only the hash in DB, send raw token in email.
     const rawToken = generateToken();
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://seerah.themuslimman.com";
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://themuslimman.com";
     const verificationUrl = `${appUrl}/api/student/parent-email/verify?token=${rawToken}`;
 
     // Update user with parent email and hashed verification token

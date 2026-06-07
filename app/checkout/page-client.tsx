@@ -549,14 +549,6 @@ function CheckoutPageContent({
   const displayBase = (guestCreatorDiscount > 0 || !isAuthenticated)
     ? currentPlan.price
     : (appliedCoupon ? currentPlan.price : basePrice);
-  // For known creator promo codes (ORTHODOX, DEEN, etc.) we compute the guest
-  // display discount synchronously from the client-safe discountPercent so there
-  // is ZERO async-fetch race condition regardless of how fast the user toggles
-  // plans.  For manually-entered codes that aren't creator promos we fall back to
-  // the server-validated guestPromo state (with audience guard).
-  const guestDiscount = guestCreatorDiscount > 0
-    ? guestCreatorDiscount
-    : ((guestPromo?.forAudience === audience) ? (guestPromo?.discount ?? 0) : 0);
   // For known creator promo codes the discount is always computed synchronously from
   // creatorPromoConfig.discountPercent × currentPlan.price, so it is ALWAYS correct
   // for the currently selected plan — regardless of auth state, async fetch timing,
@@ -595,7 +587,7 @@ function CheckoutPageContent({
           <p className="font-semibold mb-1">⚠️ Payment may not work in this browser</p>
           <p className="text-amber-300/80 text-xs">
             To complete your purchase, please open this page in Safari or Chrome.{" "}
-            <span className="font-medium">Tap the ··· or share button → "Open in Browser"</span>
+            <span className="font-medium">Tap the ··· or share button → &ldquo;Open in Browser&rdquo;</span>
           </p>
         </div>
       )}
@@ -828,21 +820,21 @@ function CheckoutPageContent({
                   value={authForm.fullName}
                   onChange={(e) => setAuthForm((f) => ({ ...f, fullName: e.target.value }))}
                   required
-                  className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-sm"
+                  className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm"
                 />
                 <input
                   type="email" placeholder="Email address"
                   value={authForm.email}
                   onChange={(e) => setAuthForm((f) => ({ ...f, email: e.target.value }))}
                   required
-                  className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-sm"
+                  className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm"
                 />
                 <div className="relative">
                   <input
                     type={showPass ? "text" : "password"} placeholder="Password (min 8 characters)"
                     value={authForm.password} minLength={8} required
                     onChange={(e) => setAuthForm((f) => ({ ...f, password: e.target.value }))}
-                    className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-sm pr-11"
+                    className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm pr-11"
                   />
                   <button type="button" onClick={() => setShowPass((s) => !s)} className="absolute right-2 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] flex items-center justify-center text-zinc-500 hover:text-zinc-300">
                     {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -852,7 +844,7 @@ function CheckoutPageContent({
                   type={showPass ? "text" : "password"} placeholder="Confirm password" required
                   value={authForm.confirmPassword}
                   onChange={(e) => setAuthForm((f) => ({ ...f, confirmPassword: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-sm"
+                  className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm"
                 />
                 {authError && <p className="text-xs text-red-400 pt-1">{authError}</p>}
                 <button
@@ -878,14 +870,14 @@ function CheckoutPageContent({
                   type="email" placeholder="Email address" required
                   value={authForm.email}
                   onChange={(e) => setAuthForm((f) => ({ ...f, email: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-sm"
+                  className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm"
                 />
                 <div className="relative">
                   <input
                     type={showPass ? "text" : "password"} placeholder="Password" required
                     value={authForm.password}
                     onChange={(e) => setAuthForm((f) => ({ ...f, password: e.target.value }))}
-                    className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-sm pr-11"
+                    className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm pr-11"
                   />
                   <button type="button" onClick={() => setShowPass((s) => !s)} className="absolute right-2 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] flex items-center justify-center text-zinc-500 hover:text-zinc-300">
                     {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -974,7 +966,7 @@ function CheckoutPageContent({
                     value={couponInput}
                     onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
                     onKeyDown={(e) => e.key === "Enter" && handleApplyCoupon()}
-                    className="flex-1 px-4 py-2.5 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-sm"
+                    className="flex-1 px-4 py-2.5 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm"
                   />
                   <button
                     onClick={handleApplyCoupon}

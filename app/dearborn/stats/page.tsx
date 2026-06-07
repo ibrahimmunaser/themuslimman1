@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { LocationStatsPage } from "@/components/location/location-stats-page";
 
+export const metadata = { title: "Creator Stats", robots: { index: false, follow: false } };
+
 export const dynamic = "force-dynamic";
 
 const LOCATION = "dearborn";

@@ -2,7 +2,12 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import { LoginForm } from "./login-form";
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 export default async function LoginPage() {
   // If already signed in, skip the form and send them where they belong.
@@ -21,7 +26,7 @@ export default async function LoginPage() {
         where: { userId: user.id, status: "past_due" },
         select: { id: true },
       });
-      redirect(sub ? "/billing" : "/unlock");
+      redirect(sub ? "/billing" : "/pricing");
     }
 
     // Check if family plan to decide between profiles picker vs course

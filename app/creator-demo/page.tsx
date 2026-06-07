@@ -1,9 +1,9 @@
 import Link from "next/link";
 import Image from "next/image";
 import {
-  Play, CheckCircle, Star, Users, BookOpen, Brain,
-  Layers, FileText, Map, ClipboardCheck, Headphones,
-  ChevronRight, ArrowRight, Zap, Lock, Unlock, Trophy,
+  Play, CheckCircle, Star, Users, Brain,
+  Layers, FileText, Map, ClipboardCheck,
+  ChevronRight, ArrowRight, Zap, Unlock, Trophy,
   Video, Camera, ListChecks,
 } from "lucide-react";
 

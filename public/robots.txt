@@ -1,15 +1,40 @@
 User-agent: *
 Allow: /
+
+# API routes
 Disallow: /api/
+
+# Authenticated member areas
 Disallow: /seerah/
+Disallow: /learn/
 Disallow: /student/
 Disallow: /admin/
-Disallow: /checkout/
+Disallow: /billing
+Disallow: /profiles
+Disallow: /upgrade
+Disallow: /payment/
+
+# Checkout flows
 Disallow: /checkout
+Disallow: /checkout/
+Disallow: /gift-checkout
 Disallow: /gift/
+
+# Auth / account flows
+Disallow: /login
 Disallow: /signup
 Disallow: /signup-checkout
 Disallow: /verify-email
 Disallow: /verify-email-pending
+Disallow: /reset-password
+Disallow: /change-password
+
+# Private creator stats
+Disallow: /annarbor/stats
+Disallow: /dearborn/stats
+Disallow: /korra/stats
+Disallow: /itachi/stats
+Disallow: /deenresponds/stats
+Disallow: /theorthodoxmuslim/stats
 
 Sitemap: https://themuslimman.com/sitemap.xml

@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validatePromoCode, applyDiscount } from "@/lib/promo-codes";
-import { getBasePrice, isEarlyAccessActive, REGULAR_PRICE } from "@/lib/early-access";
 import { PLANS } from "@/lib/stripe-config";
+
+/** Individual lifetime price in cents ($99). */
+const INDIVIDUAL_BASE_PRICE = PLANS.complete.price;
 import { checkRateLimit, getIP } from "@/lib/rate-limit";
 
 /**
@@ -36,12 +38,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ valid: false, error: "Invalid promo code" }, { status: 400 });
   }
 
-  const earlyAccessActive = isEarlyAccessActive();
-  // Use family plan base price if requested, otherwise individual (early-access aware).
-  const basePrice = plan === "family" ? PLANS.family.price : getBasePrice();
+  const basePrice = plan === "family" ? PLANS.family.price : INDIVIDUAL_BASE_PRICE;
   const finalPrice = applyDiscount(basePrice, promo);
   const promoDiscountAmount = basePrice - finalPrice;
-  const earlyAccessDiscount = 0; // no early-access period active
 
   return NextResponse.json({
     valid: true,
@@ -50,9 +49,5 @@ export async function GET(request: NextRequest) {
     basePrice,
     promoDiscountAmount,
     finalPrice,
-    // Early-access context kept for API shape compatibility (currently always false)
-    earlyAccessActive,
-    earlyAccessDiscount,
-    regularPrice: REGULAR_PRICE,
   });
 }

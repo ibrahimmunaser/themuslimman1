@@ -48,8 +48,7 @@ export function LoginForm() {
             // "Payment failed — update your card" banner, not the pricing page.
             destination = "/billing";
           } else if (!result.hasPurchase) {
-            // Logged-in but never paid — personal "you're one step away" page.
-            destination = "/unlock";
+            destination = "/pricing";
           } else if (result.isFamily) {
             // Family plan → always go through the profile picker
             destination = "/profiles";

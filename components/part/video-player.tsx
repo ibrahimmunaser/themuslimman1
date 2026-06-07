@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Play, Pause, Volume2, VolumeX, Maximize, RotateCcw, RotateCw } from "lucide-react";
+import { trackVideoProgress } from "@/app/actions/progress";
 
 // Report at these percent thresholds (once each per mount)
 const REPORT_THRESHOLDS = [25, 50, 75, 85, 95, 100];
@@ -26,12 +27,9 @@ interface VideoPlayerProps {
   /** Server-fetched watch percent — initialises the max-watched high-water mark
    *  so users can seek within already-watched range on reload */
   initialVideoPercent?: number;
-  /** Optional progress reporter — omit for public/preview contexts to avoid
-   *  bundling server-action references in public page JS chunks */
-  onProgress?: (partNumber: number, percent: number) => void;
 }
 
-export function VideoPlayer({ src, title, poster, partNumber, previewMode, initialVideoPercent, onProgress }: VideoPlayerProps) {
+export function VideoPlayer({ src, title, poster, partNumber, previewMode, initialVideoPercent }: VideoPlayerProps) {
   const videoRef        = useRef<HTMLVideoElement>(null);
   const overlayAudioRef = useRef<HTMLAudioElement | null>(null);
   const reportedRef     = useRef<Set<number>>(new Set());
@@ -62,7 +60,6 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
       audio.pause();
       overlayAudioRef.current = null;
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [partNumber]);
 
   // Pause video when audio starts playing elsewhere on the page
@@ -80,7 +77,6 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
   const [playing,  setPlaying]  = useState(false);
   const [muted,    setMuted]    = useState(false);
   const [volume,   setVolume]   = useState(0.5);
-  const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   const [progress, setProgress] = useState(0);
   const [controlsVisible, setControlsVisible] = useState(false);
   const [videoError, setVideoError] = useState(false);
@@ -155,11 +151,11 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
     }
 
     // Report to server at each threshold (once per session)
-    if (partNumber && !previewMode && onProgress) {
+    if (partNumber && !previewMode) {
       for (const threshold of REPORT_THRESHOLDS) {
         if (rounded >= threshold && !reportedRef.current.has(threshold)) {
           reportedRef.current.add(threshold);
-          onProgress(partNumber, rounded);
+          trackVideoProgress(partNumber, rounded).catch(() => {});
           // Update progress badge in real-time without a page refresh
           window.dispatchEvent(new CustomEvent("seerah:progressUpdate", {
             detail: { videoWatchPercent: rounded },
@@ -167,7 +163,7 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
         }
       }
     }
-  }, [partNumber, previewMode, onProgress]);
+  }, [partNumber, previewMode]);
 
   if (!src) {
     return (
@@ -194,21 +190,30 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
     setPlaying(!playing);
   };
 
-  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+  const seekToClientX = (clientX: number, rect: DOMRect) => {
     if (!videoRef.current) return;
     const duration = videoRef.current.duration;
-    // duration is NaN until metadata loads and Infinity on live streams — skip both
     if (!isFinite(duration) || duration <= 0) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const clickedPct = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+    const clickedPct = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
     if (videoFullyWatched) {
-      // Seek lock is lifted after the video is fully watched
       videoRef.current.currentTime = clickedPct * duration;
     } else {
-      // Clamp to max watched — users cannot seek beyond where they have watched
       const maxPct = maxWatchedRef.current / 100;
       videoRef.current.currentTime = Math.min(clickedPct, maxPct) * duration;
     }
+  };
+
+  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+    seekToClientX(e.clientX, e.currentTarget.getBoundingClientRect());
+  };
+
+  const handleSeekTouch = (e: React.TouchEvent<HTMLDivElement>) => {
+    // Prevent page scroll while scrubbing the seek bar on mobile
+    e.preventDefault();
+    const touch = e.touches[0] ?? e.changedTouches[0];
+    if (!touch) return;
+    seekToClientX(touch.clientX, e.currentTarget.getBoundingClientRect());
+    showControlsTemporarily();
   };
 
   const toggleMute = () => {
@@ -318,10 +323,10 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
             overlayAudioRef.current.pause();
           }
           overlayPlayingRef.current = false;
-          if (partNumber && !previewMode && onProgress) {
+          if (partNumber && !previewMode) {
             if (!reportedRef.current.has(100)) {
               reportedRef.current.add(100);
-              onProgress(partNumber, 100);
+              trackVideoProgress(partNumber, 100).catch(() => {});
             }
             // Always fire the badge update on end (covers skipping to the end)
             window.dispatchEvent(new CustomEvent("seerah:progressUpdate", {
@@ -358,10 +363,13 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
         onTouchStart={showControlsTemporarily}
         onMouseMove={showControlsTemporarily}
       >
-        {/* Seek bar — tall invisible hit area wraps the thin visual bar */}
+        {/* Seek bar — tall invisible hit area wraps the thin visual bar; touch-action:none prevents
+            page scroll during scrubbing so the touchmove handler fires correctly */}
         <div
-          className="relative w-full h-8 flex items-center mb-1 cursor-pointer"
+          className="relative w-full h-8 flex items-center mb-1 cursor-pointer touch-none"
           onClick={handleSeek}
+          onTouchStart={handleSeekTouch}
+          onTouchMove={handleSeekTouch}
           aria-label="Video progress"
         >
           <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-1 bg-white/25 rounded-full">
@@ -408,40 +416,47 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
           )}
 
           <div className="relative flex items-center gap-1">
-            {/* Mute — 44px */}
+            {/* Mute toggle — single tap on mobile; on desktop also toggles slider.
+                onDoubleClick is removed because it does not fire reliably on iOS Safari. */}
             <button
-              onClick={() => setShowVolumeSlider(!showVolumeSlider)}
-              onDoubleClick={toggleMute}
+              onClick={toggleMute}
               className="min-w-[44px] min-h-[44px] flex items-center justify-center text-white/70 hover:text-white transition-colors"
               aria-label={muted || volume === 0 ? "Unmute" : "Mute"}
             >
               {muted || volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
             </button>
-            
-            {/* Volume Slider - horizontal */}
-            {showVolumeSlider && (
-              <div className="flex items-center gap-2 bg-black/90 backdrop-blur-sm rounded-lg px-3 py-1">
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={muted ? 0 : volume * 100}
-                  onChange={(e) => handleVolumeChange(parseInt(e.target.value) / 100)}
-                  className="w-20 h-1 appearance-none bg-white/25 rounded-full cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-gold [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-gold [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:cursor-pointer"
-                  style={{
-                    background: `linear-gradient(to right, rgb(212, 175, 55) 0%, rgb(212, 175, 55) ${muted ? 0 : volume * 100}%, rgba(255, 255, 255, 0.25) ${muted ? 0 : volume * 100}%, rgba(255, 255, 255, 0.25) 100%)`
-                  }}
-                />
-                <span className="text-white/70 text-xs font-medium w-8 text-right">{Math.round(muted ? 0 : volume * 100)}%</span>
-              </div>
-            )}
+
+            {/* Volume slider — desktop hover only (hidden on mobile).
+                Hardware volume buttons handle audio level on phones. */}
+            <div className="hidden sm:flex items-center gap-2">
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={muted ? 0 : volume * 100}
+                onChange={(e) => handleVolumeChange(parseInt(e.target.value) / 100)}
+                className="w-16 h-1 appearance-none bg-white/25 rounded-full cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-gold [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-gold [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:cursor-pointer"
+                style={{
+                  background: `linear-gradient(to right, rgb(212, 175, 55) 0%, rgb(212, 175, 55) ${muted ? 0 : volume * 100}%, rgba(255, 255, 255, 0.25) ${muted ? 0 : volume * 100}%, rgba(255, 255, 255, 0.25) 100%)`
+                }}
+                aria-label="Volume"
+              />
+            </div>
           </div>
 
           <div className="flex-1" />
 
-          {/* Fullscreen — 44px */}
+          {/* Fullscreen — 44px; iOS Safari requires webkitEnterFullscreen on the <video> element */}
           <button
-            onClick={() => videoRef.current?.requestFullscreen()}
+            onClick={() => {
+              const vid = videoRef.current;
+              if (!vid) return;
+              if (vid.requestFullscreen) {
+                vid.requestFullscreen();
+              } else if ((vid as HTMLVideoElement & { webkitEnterFullscreen?: () => void }).webkitEnterFullscreen) {
+                (vid as HTMLVideoElement & { webkitEnterFullscreen: () => void }).webkitEnterFullscreen();
+              }
+            }}
             className="min-w-[44px] min-h-[44px] flex items-center justify-center text-white/70 hover:text-white transition-colors"
             aria-label="Fullscreen"
           >
