@@ -76,7 +76,15 @@ async function getOrCreateProgress(userId: string, learnerProfileId: string, par
   devLog(`[PROGRESS] getOrCreateProgress: Profile ${learnerProfileId}, part ${partNumber}`);
   return prisma.partProgress.upsert({
     where:  { learnerProfileId_partNumber: { learnerProfileId, partNumber } },
-    create: { id: crypto.randomUUID(), userId, learnerProfileId, partNumber, updatedAt: new Date() },
+    create: {
+      id: crypto.randomUUID(),
+      userId,
+      learnerProfileId,
+      partNumber,
+      updatedAt: new Date(),
+      startedAt: new Date(),
+      status: "started",
+    },
     update: {},
   });
 }
@@ -348,6 +356,11 @@ export async function trackAssetOpened(partNumber: number, assetId: string) {
   // Atomic JSON-array append via a single UPDATE statement.
   // The CASE expression is a no-op when assetId is already present,
   // preventing duplicates without a separate read-then-write race.
+  // Also sync the dedicated boolean columns when "briefing" or "flashcard"
+  // are opened via the Resources tab so both write paths stay consistent.
+  const isBriefing  = assetId === "briefing";
+  const isFlashcard = assetId === "flashcard";
+
   await prisma.$executeRaw`
     UPDATE "PartProgress"
     SET
@@ -356,6 +369,8 @@ export async function trackAssetOpened(partNumber: number, assetId: string) {
         THEN COALESCE("openedAssets", '[]')
         ELSE (COALESCE("openedAssets", '[]')::jsonb || jsonb_build_array(${assetId}::text))::text
       END,
+      "briefingOpened"    = CASE WHEN ${isBriefing}  THEN true ELSE "briefingOpened"    END,
+      "flashcardsReviewed"= CASE WHEN ${isFlashcard} THEN true ELSE "flashcardsReviewed" END,
       "lastAccessedAt" = NOW(),
       "updatedAt" = NOW()
     WHERE "learnerProfileId" = ${learnerProfileId}

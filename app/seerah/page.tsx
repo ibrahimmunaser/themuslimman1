@@ -297,7 +297,8 @@ export default async function LearnIndexPage() {
     return 1;
   })();
 
-  // Parts with any real activity (for progress tab recent activity)
+  // Parts with any real activity (for progress tab recent activity),
+  // sorted by most recently accessed so the list reflects actual recency.
   const activeParts = allPartProgress
     .filter(p =>
       (p.videoWatchPercent > 0) ||
@@ -305,8 +306,12 @@ export default async function LearnIndexPage() {
       (p.quizAttempts > 0) ||
       p.flashcardsReviewed
     )
-    .map(p => p.partNumber)
-    .sort((a, b) => a - b);
+    .sort((a, b) => {
+      const ta = a.lastAccessedAt?.getTime() ?? 0;
+      const tb = b.lastAccessedAt?.getTime() ?? 0;
+      return tb - ta; // most recent first
+    })
+    .map(p => p.partNumber);
 
   // Title map for progress tab activity list
   const partTitleMap = Object.fromEntries(PARTS.map(p => [p.partNumber, p.title]));
