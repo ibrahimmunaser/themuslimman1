@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireStudent } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { Resend } from "resend";
 import { customAlphabet } from "nanoid";
@@ -20,7 +20,8 @@ function escapeHtml(str: string): string {
 
 export async function POST(request: Request) {
   try {
-    const user = await requireStudent();
+    const user = await getCurrentUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const { parentEmail } = await request.json();
 
     // Rate-limit to prevent spamming arbitrary parent addresses

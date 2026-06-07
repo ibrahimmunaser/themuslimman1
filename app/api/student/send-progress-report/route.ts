@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireStudent } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getActiveProfileId } from "@/app/actions/profiles";
 import { generateParentProgressReport } from "@/lib/emails/parent-progress-report";
@@ -8,7 +8,8 @@ import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(_req: NextRequest) {
   try {
-    const user = await requireStudent();
+    const user = await getCurrentUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     // Rate-limit per user: 3 reports per hour — prevents inbox flooding / Resend abuse.
     const rl = checkRateLimit(`progress-report:${user.id}`, 3, 60 * 60 * 1000);

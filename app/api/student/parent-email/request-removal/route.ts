@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireStudent } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { Resend } from "resend";
 import { customAlphabet } from "nanoid";
@@ -22,7 +22,8 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://seerah.themuslimman.
 
 export async function POST() {
   try {
-    const user = await requireStudent();
+    const user = await getCurrentUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     // Rate-limit to prevent spam removal requests
     const limit = checkRateLimit(`parent-removal:${user.id}`, 3, 60 * 60 * 1000);
