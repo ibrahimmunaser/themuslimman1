@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireStudent } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getActiveProfileId } from "@/app/actions/profiles";
 import { checkRateLimit, getIP } from "@/lib/rate-limit";
@@ -16,7 +16,12 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const user = await requireStudent();
+    // Use getCurrentUser() — not requireStudent() — so an expired session returns
+    // a clean 401 instead of throwing NEXT_REDIRECT which pollutes error logs.
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const body = await request.json();
     
     const { partNumber, secondsToAdd } = body;
