@@ -2,7 +2,6 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Play, Pause, Volume2, VolumeX, Maximize, RotateCcw, RotateCw } from "lucide-react";
-import { trackVideoProgress } from "@/app/actions/progress";
 
 // Report at these percent thresholds (once each per mount)
 const REPORT_THRESHOLDS = [25, 50, 75, 85, 95, 100];
@@ -27,9 +26,12 @@ interface VideoPlayerProps {
   /** Server-fetched watch percent — initialises the max-watched high-water mark
    *  so users can seek within already-watched range on reload */
   initialVideoPercent?: number;
+  /** Optional progress reporter — omit for public/preview contexts to avoid
+   *  bundling server-action references in public page JS chunks */
+  onProgress?: (partNumber: number, percent: number) => void;
 }
 
-export function VideoPlayer({ src, title, poster, partNumber, previewMode, initialVideoPercent }: VideoPlayerProps) {
+export function VideoPlayer({ src, title, poster, partNumber, previewMode, initialVideoPercent, onProgress }: VideoPlayerProps) {
   const videoRef        = useRef<HTMLVideoElement>(null);
   const overlayAudioRef = useRef<HTMLAudioElement | null>(null);
   const reportedRef     = useRef<Set<number>>(new Set());
@@ -153,11 +155,11 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
     }
 
     // Report to server at each threshold (once per session)
-    if (partNumber && !previewMode) {
+    if (partNumber && !previewMode && onProgress) {
       for (const threshold of REPORT_THRESHOLDS) {
         if (rounded >= threshold && !reportedRef.current.has(threshold)) {
           reportedRef.current.add(threshold);
-          trackVideoProgress(partNumber, rounded).catch(() => {});
+          onProgress(partNumber, rounded);
           // Update progress badge in real-time without a page refresh
           window.dispatchEvent(new CustomEvent("seerah:progressUpdate", {
             detail: { videoWatchPercent: rounded },
@@ -165,7 +167,7 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
         }
       }
     }
-  }, [partNumber, previewMode]);
+  }, [partNumber, previewMode, onProgress]);
 
   if (!src) {
     return (
@@ -316,10 +318,10 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
             overlayAudioRef.current.pause();
           }
           overlayPlayingRef.current = false;
-          if (partNumber && !previewMode) {
+          if (partNumber && !previewMode && onProgress) {
             if (!reportedRef.current.has(100)) {
               reportedRef.current.add(100);
-              trackVideoProgress(partNumber, 100).catch(() => {});
+              onProgress(partNumber, 100);
             }
             // Always fire the badge update on end (covers skipping to the end)
             window.dispatchEvent(new CustomEvent("seerah:progressUpdate", {

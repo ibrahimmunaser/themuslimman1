@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { VideoPlayer } from "./video-player";
 import { Play } from "lucide-react";
 import { fetchPartAssets } from "@/lib/part-asset-cache";
+import { trackVideoProgress } from "@/app/actions/progress";
 
 interface LazyVideoPlayerProps {
   partNumber: number;
@@ -20,6 +21,11 @@ export function LazyVideoPlayer({ partNumber, title, poster, previewMode, videoU
   const [videoUrl, setVideoUrl] = useState<string | undefined>(videoUrlProp);
   const [loading, setLoading] = useState(!videoUrlProp);
   const [error, setError] = useState(false);
+
+  // Stable reference so VideoPlayer's useCallback dep array doesn't re-run on every render
+  const handleProgress = useCallback((pNum: number, pct: number) => {
+    trackVideoProgress(pNum, pct).catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (videoUrlProp) {
@@ -66,6 +72,7 @@ export function LazyVideoPlayer({ partNumber, title, poster, previewMode, videoU
       partNumber={partNumber}
       previewMode={previewMode}
       initialVideoPercent={initialVideoPercent}
+      onProgress={previewMode ? undefined : handleProgress}
     />
   );
 }
