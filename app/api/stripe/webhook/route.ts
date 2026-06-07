@@ -71,10 +71,11 @@ export async function POST(request: NextRequest) {
         } else if (paymentIntent.metadata?.type === "subscription") {
           // Subscription payment — access is handled by customer.subscription.* events
           console.log(`[WEBHOOK] payment_intent.succeeded: subscription PI ${paymentIntent.id}, skipping Purchase creation`);
-        } else if (paymentIntent.invoice) {
+        } else if ((paymentIntent as unknown as Record<string, unknown>)["invoice"]) {
           // PI is attached to an invoice (Stripe-managed subscription payment).
           // Access is granted via customer.subscription.* / invoice.payment_succeeded.
-          console.log(`[WEBHOOK] payment_intent.succeeded: invoice-attached PI ${paymentIntent.id} (invoice: ${paymentIntent.invoice}), skipping Purchase creation`);
+          const invoiceId = (paymentIntent as unknown as Record<string, unknown>)["invoice"];
+          console.log(`[WEBHOOK] payment_intent.succeeded: invoice-attached PI ${paymentIntent.id} (invoice: ${invoiceId}), skipping Purchase creation`);
         } else if (!paymentIntent.metadata?.userId || !paymentIntent.metadata?.planId) {
           // PI has no required metadata and is not a subscription — log and skip rather
           // than throwing so Stripe does not retry indefinitely.
