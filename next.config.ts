@@ -63,10 +63,6 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  // Expose R2 public base URL to client-side code so components can build direct CDN URLs
-  env: {
-    NEXT_PUBLIC_R2_PUBLIC_URL: process.env.R2_PUBLIC_URL ?? "",
-  },
   turbopack: {
     root: path.resolve(__dirname),
   },
@@ -84,7 +80,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "pub-5e47559fbd9145a4af1f58ceb3a42c81.r2.dev",
+        hostname: "*.r2.cloudflarestorage.com",
         pathname: "/**",
       },
     ],

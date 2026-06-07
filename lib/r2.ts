@@ -8,7 +8,6 @@ const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID;
 const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID;
 const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY;
 const R2_BUCKET = process.env.R2_BUCKET;
-const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL;
 
 if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY || !R2_BUCKET) {
   console.warn("⚠️  R2 credentials not configured. Some features may not work.");
@@ -123,41 +122,6 @@ export async function getThumbnailUrls(
 
 // ─── Public URL Generation ────────────────────────────────────────────────────
 
-/**
- * Generate a public URL for an R2 object
- * @param key - The object key in R2 (e.g., "videos/Part 1.mp4")
- * @returns Public URL or null if not configured
- */
-export function getR2PublicUrl(key: string): string | null {
-  if (!R2_PUBLIC_URL || !R2_BUCKET) return null;
-  // Remove leading slash if present
-  const cleanKey = key.startsWith("/") ? key.slice(1) : key;
-  return `${R2_PUBLIC_URL}/${cleanKey}`;
-}
-
-/**
- * Generate responsive image URLs for WebP optimization
- * Automatically converts PNG keys to WebP and provides multiple sizes
- * @param key - The original image key (e.g., "Infographics-Bento-Grid/Part 1.png")
- * @returns Object with URLs for different sizes and fallback
- */
-export function getResponsiveImageUrls(key: string) {
-  if (!R2_PUBLIC_URL || !R2_BUCKET) return null;
-  
-  // Convert PNG to WebP base key
-  const webpKey = key.replace(/\.png$/i, ".webp");
-  const baseKey = key.replace(/\.png$/i, "");
-  
-  return {
-    // WebP versions (optimized, 80-95% smaller)
-    thumbnail: getR2PublicUrl(`${baseKey}-thumb.webp`),  // 400px width
-    medium: getR2PublicUrl(`${baseKey}-medium.webp`),     // 800px width
-    large: getR2PublicUrl(`${baseKey}-large.webp`),       // 1200px width
-    full: getR2PublicUrl(webpKey),                         // Original size in WebP
-    // PNG fallback for old browsers (Safari < 14, etc.)
-    fallback: getR2PublicUrl(key),
-  };
-}
 
 /**
  * Generate an asset URL (for API proxy route)
@@ -389,49 +353,6 @@ export async function r2GetSlideKeys(
     .sort();
 }
 
-/**
- * Get lesson assets for a specific part number
- */
-export async function r2GetLessonAssets(partNum: number) {
-  const [
-    videoKey,
-    audioKey,
-    mindmapKey,
-    infoConciseKey,
-    infoStandardKey,
-    infoBentoKey,
-    slidesPresented,
-    slidesDetailed,
-    slidesFacts,
-  ] = await Promise.all([
-    r2GetVideoKey(partNum),
-    r2GetAudioKey(partNum),
-    r2GetMindmapKey(partNum),
-    r2GetInfographicKey(partNum, "Concise"),
-    r2GetInfographicKey(partNum, "Standard"),
-    r2GetInfographicKey(partNum, "Bento Grid"),
-    r2GetSlideKeys(partNum, "presented"),
-    r2GetSlideKeys(partNum, "detailed"),
-    r2GetSlideKeys(partNum, "facts"),
-  ]);
-  
-  return {
-    // Use public URLs for better performance (direct CDN access)
-    video: videoKey ? getR2PublicUrl(videoKey) : undefined,
-    audio: audioKey ? getR2PublicUrl(audioKey) : undefined,
-    mindmap: mindmapKey ? getR2PublicUrl(mindmapKey) : undefined,
-    infographics: {
-      concise: infoConciseKey ? getR2PublicUrl(infoConciseKey) : undefined,
-      standard: infoStandardKey ? getR2PublicUrl(infoStandardKey) : undefined,
-      bentoGrid: infoBentoKey ? getR2PublicUrl(infoBentoKey) : undefined,
-    },
-    slides: {
-      presented: slidesPresented.map((key) => getR2PublicUrl(key) || key),
-      detailed: slidesDetailed.map((key) => getR2PublicUrl(key) || key),
-      facts: slidesFacts.map((key) => getR2PublicUrl(key) || key),
-    },
-  };
-}
 
 // ─── Text Files (Briefings, Reports, etc.) ─────────────────────────────────────
 
