@@ -104,12 +104,16 @@ export async function POST() {
       return NextResponse.json({ error: "Could not create subscription payment" }, { status: 500 });
     }
 
-    // Tag the underlying PaymentIntent so the webhook skips creating a Purchase record
+    // Tag the underlying PaymentIntent so the webhook skips creating a Purchase record.
+    // Log but don't fail if the update errors — the invoice field on the PI will still
+    // cause the webhook to recognise it as a subscription payment and skip it safely.
     const piId: string | null = invoice?.confirmation_secret?.payment_intent ?? null;
     if (piId) {
       await stripe.paymentIntents.update(piId, {
         metadata: { type: "subscription", userId: user.id, subscriptionId: subscription.id },
-      }).catch((e) => console.warn("[CREATE-SUBSCRIPTION-INTENT] Could not update PI metadata:", e));
+      }).catch((e) => console.error("[CREATE-SUBSCRIPTION-INTENT] Could not update PI metadata:", e));
+    } else {
+      console.warn("[CREATE-SUBSCRIPTION-INTENT] No payment_intent ID found on confirmation_secret — PI metadata not tagged");
     }
 
     return NextResponse.json({ clientSecret, amount: PLANS.monthly.price });
