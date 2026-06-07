@@ -66,6 +66,7 @@ export default async function LearnIndexPage() {
       quizAttempts:       true,
       flashcardsReviewed: true,
       openedAssets:       true,
+      lastAccessedAt:     true,
     },
   });
 
