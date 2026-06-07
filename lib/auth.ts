@@ -253,7 +253,7 @@ export async function requireStudent(): Promise<SessionUser> {
 export async function login(
   email: string,
   password: string
-): Promise<{ success: boolean; error?: string; role?: Role; hasPurchase?: boolean; userId?: string }> {
+): Promise<{ success: boolean; error?: string; role?: Role; hasPurchase?: boolean; isPastDue?: boolean; userId?: string }> {
   const startTime = Date.now();
   const lowerEmail = email.toLowerCase();
 
@@ -295,16 +295,18 @@ export async function login(
   // (only lifetime purchases set it), so the DB check is still required for them.
   // However, hasPaid=true is always authoritative: admin grants, promo-code free
   // access, and any other path that sets it directly must also be honoured here.
-  const [, dbHasPurchase] = await Promise.all([
+  const [, purchaseInfo] = await Promise.all([
     prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } }),
     userHasPurchases(user.id),
   ]);
-  const hasPurchase = user.hasPaid || dbHasPurchase;
+  const hasPurchase = user.hasPaid || purchaseInfo.hasPurchase;
+  // Lifetime buyers (hasPaid=true) are never "past due" — only monthly subs can be.
+  const isPastDue   = !user.hasPaid && purchaseInfo.isPastDue;
 
   const elapsed = Date.now() - startTime;
   if (elapsed > 3000) console.warn(`[AUTH] login: Slow login for ${lowerEmail} [${elapsed}ms]`);
 
-  return { success: true, role: user.role as Role, hasPurchase, userId: user.id };
+  return { success: true, role: user.role as Role, hasPurchase, isPastDue, userId: user.id };
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -328,12 +330,17 @@ export async function logout(): Promise<void> {
 // Purchase checks
 // ─────────────────────────────────────────────────────────────
 
-export async function userHasPurchases(userId: string): Promise<boolean> {
+export async function userHasPurchases(userId: string): Promise<{ hasPurchase: boolean; isPastDue: boolean }> {
   const [purchase, subscription] = await Promise.all([
     prisma.purchase.findFirst({ where: { userId, status: "succeeded" }, select: { id: true } }),
-    prisma.subscription.findFirst({ where: { userId, status: { in: ["active", "trialing"] } }, select: { id: true } }),
+    prisma.subscription.findFirst({
+      where: { userId, status: { in: ["active", "trialing", "past_due"] } },
+      select: { id: true, status: true },
+    }),
   ]);
-  return !!(purchase || subscription);
+  const hasPurchase = !!(purchase || subscription);
+  const isPastDue   = !purchase && subscription?.status === "past_due";
+  return { hasPurchase, isPastDue };
 }
 
 // ─────────────────────────────────────────────────────────────

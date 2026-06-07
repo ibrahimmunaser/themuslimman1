@@ -85,6 +85,7 @@ export async function POST(request: NextRequest) {
       success: true,
       role: result.role,
       hasPurchase: result.hasPurchase,
+      isPastDue: result.isPastDue ?? false,
       isFamily,
       profileCount,
     });

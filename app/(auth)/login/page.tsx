@@ -16,7 +16,12 @@ export default async function LoginPage() {
     }
 
     if (!user.hasPaid) {
-      redirect("/pricing");
+      // Check if they have a past_due subscription — send to billing, not pricing.
+      const sub = await prisma.subscription.findFirst({
+        where: { userId: user.id, status: "past_due" },
+        select: { id: true },
+      });
+      redirect(sub ? "/billing" : "/pricing");
     }
 
     // Check if family plan to decide between profiles picker vs course

@@ -43,7 +43,11 @@ export function LoginForm() {
         if (isSafeReturn) {
           destination = returnUrl;
         } else if (result.role === "student") {
-          if (!result.hasPurchase) {
+          if (result.isPastDue) {
+            // Subscriber with a failed payment — send to billing so they see the
+            // "Payment failed — update your card" banner, not the pricing page.
+            destination = "/billing";
+          } else if (!result.hasPurchase) {
             destination = "/pricing";
           } else if (result.isFamily) {
             // Family plan → always go through the profile picker
