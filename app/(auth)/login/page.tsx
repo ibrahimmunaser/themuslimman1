@@ -21,7 +21,7 @@ export default async function LoginPage() {
         where: { userId: user.id, status: "past_due" },
         select: { id: true },
       });
-      redirect(sub ? "/billing" : "/pricing");
+      redirect(sub ? "/billing" : "/unlock");
     }
 
     // Check if family plan to decide between profiles picker vs course

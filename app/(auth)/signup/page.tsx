@@ -76,7 +76,7 @@ function SignupPageContent() {
       }
 
       // Dev mode (auto-verified) or gift claim flow — go to destination.
-      const destination = redirectAfter || "/pricing";
+      const destination = redirectAfter || "/unlock";
       router.push(destination);
     } catch {
       setError("Something went wrong. Please try again.");
