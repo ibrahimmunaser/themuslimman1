@@ -3,12 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import {
-  CheckCircle2, ArrowRight, Star, Lock, Gift, RefreshCw, Infinity, Users,
+  CheckCircle2, ArrowRight, Star, Lock, Gift, Infinity, Users, Zap,
 } from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { buttonClass } from "@/components/ui/button";
-import { PLANS, formatPrice } from "@/lib/stripe-config";
-import { LifetimePriceDisplay } from "@/components/pricing/lifetime-price-display";
 import { FadeUp } from "@/components/motion";
 
 type PlanType = "individual" | "family";
@@ -19,46 +17,34 @@ interface PricingSectionProps {
   hasFamily: boolean;
 }
 
-// ── Individual monthly button ──────────────────────────────────────────────────
-// /checkout/monthly handles both guests and logged-in users with an inline auth form,
-// so we always go there directly — no login redirect needed.
-function IndividualMonthlyButton() {
-  return (
-    <Link
-      href="/checkout/monthly"
-      className="inline-flex items-center justify-center gap-2 w-full rounded-xl px-6 py-3.5 font-semibold text-base transition-all border border-border bg-surface hover:bg-surface-raised hover:border-gold/30 text-text cursor-pointer"
-    >
-      <ArrowRight className="w-4 h-4 text-gold" />
-      Start Monthly
-    </Link>
-  );
-}
-
-// ── Main section ───────────────────────────────────────────────────────────────
+// ── Main section ────────────────────────────────────────────────────────────────
 export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSectionProps) {
   const [tab, setTab] = useState<PlanType>("individual");
   const prefersReduced = useReducedMotion();
 
-  // All checkout pages handle inline auth for guests, so always link directly.
+  const individualTrialHref  = "/checkout/trial";
+  const familyTrialHref      = "/checkout/trial?plan=family";
   const individualLifetimeHref = "/checkout";
-  const familyMonthlyHref  = "/checkout?plan=family&billing=monthly";
-  const familyLifetimeHref = "/checkout?plan=family&billing=lifetime";
+  const familyLifetimeHref   = "/checkout?plan=family&billing=lifetime";
+
+  const hasAnyAccess  = hasLifetime || hasMonthly;
+  const hasFamilyAny  = hasFamily;
 
   return (
     <section className="py-8 border-t border-border" id="pricing">
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
 
-        {/* ── Section title ───────────────────────────────────────────── */}
+        {/* ── Section title ───────────────────────────────────────────────── */}
         <FadeUp className="text-center mb-6">
           <h2 className="text-2xl sm:text-3xl font-bold text-text mb-2">
             Choose Your Access
           </h2>
           <p className="text-sm text-text-secondary">
-            Individual or family · monthly or lifetime · cancel anytime.
+            Start for $1 · Cancel anytime · Or get lifetime access.
           </p>
         </FadeUp>
 
-        {/* ── Individual / Family toggle ──────────────────────────────── */}
+        {/* ── Individual / Family toggle ───────────────────────────────────── */}
         <div className="flex justify-center mb-8">
           <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-surface border border-border">
             <button
@@ -85,7 +71,7 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
           </div>
         </div>
 
-        {/* ── Plan description ─────────────────────────────────────────── */}
+        {/* ── Plan description ─────────────────────────────────────────────── */}
         <AnimatePresence mode="wait">
           <motion.p
             key={tab}
@@ -101,7 +87,7 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
           </motion.p>
         </AnimatePresence>
 
-        {/* ── Cards ───────────────────────────────────────────────────── */}
+        {/* ── Cards ───────────────────────────────────────────────────────── */}
         <AnimatePresence mode="wait">
           <motion.div
             key={tab}
@@ -112,71 +98,78 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
             className="grid sm:grid-cols-2 gap-6 max-w-3xl mx-auto sm:items-start"
           >
 
-          {/* ── Monthly card ──────────────────────────────────────────── */}
+          {/* ── Primary trial card (RECOMMENDED) ─────────────────────────── */}
           <motion.div
-            whileHover={prefersReduced ? undefined : { y: -4, transition: { duration: 0.18 } }}
-            className="relative p-7 rounded-2xl border border-border bg-surface flex flex-col hover:border-gold/20 hover:shadow-lg hover:shadow-gold/5 transition-shadow"
+            whileHover={prefersReduced ? undefined : { y: -5, transition: { duration: 0.18 } }}
+            className="relative p-7 rounded-2xl border-2 border-gold bg-gradient-to-b from-gold/8 to-surface flex flex-col gold-glow sm:scale-[1.03] sm:origin-center order-first"
           >
+            {/* Recommended badge */}
+            <div className="absolute -top-3 right-5 px-3 py-1 rounded-full bg-gold text-ink text-xs font-bold flex items-center gap-1 shadow-lg z-10">
+              <Star className="w-3 h-3 fill-current" />
+              RECOMMENDED
+            </div>
+
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-9 h-9 rounded-lg bg-surface-raised border border-border flex items-center justify-center">
-                <RefreshCw className="w-4 h-4 text-text-secondary" />
+              <div className="w-9 h-9 rounded-lg bg-gold/15 border border-gold/25 flex items-center justify-center">
+                <Zap className="w-4 h-4 text-gold" />
               </div>
-              <p className="text-xs font-semibold uppercase tracking-widest text-text-secondary">
-                {tab === "individual" ? "Monthly Access" : "Family Monthly"}
+              <p className="text-xs font-semibold uppercase tracking-widest text-gold">
+                {tab === "individual" ? "Start for $1" : "Start Family Access for $1"}
               </p>
             </div>
 
+            {/* Price display */}
             <div className="mb-5">
               <div className="flex items-baseline gap-1.5 mb-1">
-                <span className="text-4xl font-bold text-text">
-                  {tab === "individual" ? formatPrice(PLANS.monthly.price) : formatPrice(PLANS.familyMonthly.price)}
-                </span>
-                <span className="text-text-muted text-sm">/month</span>
+                <span className="text-4xl font-bold text-text">$1</span>
+                <span className="text-text-muted text-sm">now</span>
               </div>
               <p className="text-sm text-text-secondary">
                 {tab === "individual"
-                  ? "Full access while subscribed · Cancel anytime"
-                  : "Family access while subscribed · Cancel anytime"}
+                  ? "7 days of full access"
+                  : "7 days of family access"}
+              </p>
+              <p className="text-sm text-gold font-medium mt-1">
+                {tab === "individual" ? "Then $9/month" : "Then $19/month"}
               </p>
             </div>
 
             <ul className="space-y-2.5 mb-7 flex-1">
               {(tab === "individual"
                 ? [
-                    "All 100 Seerah parts",
-                    "Videos, briefings, flashcards, quizzes",
-                    "Progress tracking",
+                    "Unlock all 100 Seerah lessons",
+                    "Watch, read, review, and take quizzes",
                     "Cancel anytime",
                   ]
                 : [
-                    "Up to 5 learner profiles",
-                    "Separate progress for every family member",
-                    "All 100 Seerah parts",
-                    "Videos, briefings, flashcards, quizzes",
+                    "Access for the household",
+                    "Structured Seerah learning for the family",
                     "Cancel anytime",
                   ]
               ).map((f) => (
                 <li key={f} className="flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-text-secondary flex-shrink-0 mt-0.5" />
-                  <span className="text-sm text-text-secondary">{f}</span>
+                  <CheckCircle2 className="w-4 h-4 text-gold flex-shrink-0 mt-0.5" />
+                  <span className="text-sm text-text">{f}</span>
                 </li>
               ))}
             </ul>
 
-            {/* Monthly CTA */}
+            {/* Trial CTA */}
             {tab === "individual" ? (
-              hasMonthly ? (
+              hasAnyAccess ? (
                 <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-center">
-                  <p className="text-sm text-green-400 font-medium">✓ Monthly Access Active</p>
+                  <p className="text-sm text-green-400 font-medium">✓ Access Active</p>
                   <Link href="/seerah" className="text-xs text-gold mt-1 hover:underline block">Go to course →</Link>
-                </div>
-              ) : hasLifetime ? (
-                <div className="p-3 rounded-lg bg-gold/5 border border-gold/15 text-center">
-                  <p className="text-xs text-gold">You have lifetime access</p>
                 </div>
               ) : (
                 <>
-                  <IndividualMonthlyButton />
+                  <Link
+                    href={individualTrialHref}
+                    className={buttonClass("primary", "lg", "w-full justify-center shadow-lg shadow-gold/20")}
+                  >
+                    Start 7-Day Access for $1
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
                   <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] text-text-muted/60">
                     <Lock className="w-3 h-3 flex-shrink-0" />
                     <span>Secure checkout · Cancel anytime</span>
@@ -184,7 +177,7 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
                 </>
               )
             ) : (
-              hasFamily ? (
+              hasFamilyAny ? (
                 <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-center">
                   <p className="text-sm text-green-400 font-medium">✓ Family Access Active</p>
                   <Link href="/seerah" className="text-xs text-gold mt-1 hover:underline block">Go to course →</Link>
@@ -192,11 +185,11 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
               ) : (
                 <>
                   <Link
-                    href={familyMonthlyHref}
-                    className="inline-flex items-center justify-center gap-2 w-full rounded-xl px-6 py-3.5 font-semibold text-base transition-all border border-border bg-surface hover:bg-surface-raised hover:border-gold/30 text-text cursor-pointer"
+                    href={familyTrialHref}
+                    className={buttonClass("primary", "lg", "w-full justify-center shadow-lg shadow-gold/20")}
                   >
-                    <ArrowRight className="w-4 h-4 text-gold" />
-                    Start Family Monthly
+                    Start Family Access for $1
+                    <ArrowRight className="w-4 h-4" />
                   </Link>
                   <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] text-text-muted/60">
                     <Lock className="w-3 h-3 flex-shrink-0" />
@@ -205,61 +198,62 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
                 </>
               )
             )}
+
+            <div className="mt-4 flex items-center justify-center gap-2 text-xs text-text-muted">
+              <Lock className="w-3.5 h-3.5" />
+              <span>Secure payment · Instant access</span>
+            </div>
           </motion.div>
 
-          {/* ── Lifetime card ─────────────────────────────────────────── */}
+          {/* ── Secondary lifetime card ───────────────────────────────────── */}
           <motion.div
-            whileHover={prefersReduced ? undefined : { y: -5, transition: { duration: 0.18 } }}
-            className="relative p-7 rounded-2xl border-2 border-gold bg-gradient-to-b from-gold/8 to-surface flex flex-col gold-glow sm:scale-[1.03] sm:origin-center"
+            whileHover={prefersReduced ? undefined : { y: -4, transition: { duration: 0.18 } }}
+            className="relative p-7 rounded-2xl border border-border bg-surface flex flex-col hover:border-gold/20 hover:shadow-lg hover:shadow-gold/5 transition-shadow"
           >
-            <div className="absolute -top-3 right-5 px-3 py-1 rounded-full bg-gold text-ink text-xs font-bold flex items-center gap-1 shadow-lg z-10">
-              <Star className="w-3 h-3 fill-current" />
-              {tab === "individual" ? "BEST VALUE" : "BEST VALUE FOR FAMILIES"}
+            {/* Save % badge */}
+            <div className="absolute -top-3 left-5 px-3 py-1 rounded-full bg-surface-raised border border-gold/20 text-gold text-xs font-bold z-10">
+              {tab === "individual" ? "Save 27% vs monthly" : "Save 35% vs monthly"}
             </div>
 
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-9 h-9 rounded-lg bg-gold/15 border border-gold/25 flex items-center justify-center">
-                <Infinity className="w-4 h-4 text-gold" />
+              <div className="w-9 h-9 rounded-lg bg-surface-raised border border-border flex items-center justify-center">
+                <Infinity className="w-4 h-4 text-text-secondary" />
               </div>
-              <p className="text-xs font-semibold uppercase tracking-widest text-gold">
-                {tab === "individual" ? "Lifetime Access" : "Family Lifetime"}
+              <p className="text-xs font-semibold uppercase tracking-widest text-text-secondary">
+                {tab === "individual" ? "Lifetime Access" : "Family Lifetime Access"}
               </p>
             </div>
 
-            {tab === "individual" ? (
-              <LifetimePriceDisplay basePrice={PLANS.complete.price} />
-            ) : (
-              <div className="mb-5">
-                <div className="flex items-baseline gap-2 mb-1">
-                  <span className="text-4xl font-bold text-text">{formatPrice(PLANS.family.price)}</span>
-                </div>
-                <p className="text-sm text-gold font-medium">One-time payment · Lifetime access</p>
+            <div className="mb-5">
+              <div className="flex items-baseline gap-2 mb-1">
+                <span className="text-4xl font-bold text-text">
+                  {tab === "individual" ? "$79" : "$149"}
+                </span>
+                <span className="text-sm text-text-muted line-through">
+                  {tab === "individual" ? "$108/yr" : "$228/yr"}
+                </span>
               </div>
-            )}
+              <p className="text-sm text-text-secondary">
+                One-time payment · Lifetime access
+              </p>
+            </div>
 
             <ul className="space-y-2.5 mb-7 flex-1">
               {(tab === "individual"
                 ? [
-                    "Pay once. Keep it forever.",
-                    "All 100 Seerah parts",
-                    "Videos, briefings, flashcards, quizzes",
-                    "Progress tracking",
-                    "Lifetime access, no recurring charges",
-                    "7-Day Clarity Guarantee",
+                    "Pay once",
+                    "Keep access forever",
+                    "Best if you already know you want the full course",
                   ]
                 : [
-                    "Pay once. Your household keeps access forever.",
-                    "Up to 5 learner profiles",
-                    "Separate progress for every course asset",
-                    "Parent progress dashboard",
-                    "All 100 Seerah parts",
-                    "Lifetime access, no recurring charges",
-                    "7-Day Clarity Guarantee",
+                    "Pay once",
+                    "Family access forever",
+                    "Best long-term value",
                   ]
               ).map((f) => (
                 <li key={f} className="flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-gold flex-shrink-0 mt-0.5" />
-                  <span className="text-sm text-text">{f}</span>
+                  <CheckCircle2 className="w-4 h-4 text-text-secondary flex-shrink-0 mt-0.5" />
+                  <span className="text-sm text-text-secondary">{f}</span>
                 </li>
               ))}
             </ul>
@@ -284,10 +278,10 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
                 <div className="space-y-3">
                   <Link
                     href={individualLifetimeHref}
-                    className={buttonClass("primary", "lg", "w-full justify-center shadow-lg shadow-gold/20")}
+                    className="inline-flex items-center justify-center gap-2 w-full rounded-xl px-6 py-3.5 font-semibold text-base transition-all border border-border bg-surface hover:bg-surface-raised hover:border-gold/30 text-text cursor-pointer"
                   >
                     Get Lifetime Access
-                    <ArrowRight className="w-4 h-4" />
+                    <ArrowRight className="w-4 h-4 text-gold" />
                   </Link>
                   <Link
                     href="/gift-checkout"
@@ -300,38 +294,34 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
               )
             ) : (
               hasFamily ? (
-                <div className="space-y-3">
-                  <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-center">
-                    <p className="text-sm text-green-400 font-medium">✓ Family Access Active</p>
-                    <Link href="/student/profiles" className="text-xs text-gold mt-1 hover:underline block">Manage profiles →</Link>
-                  </div>
+                <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-center">
+                  <p className="text-sm text-green-400 font-medium">✓ Family Access Active</p>
+                  <Link href="/student/profiles" className="text-xs text-gold mt-1 hover:underline block">Manage profiles →</Link>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  <Link
-                    href={familyLifetimeHref}
-                    className={buttonClass("primary", "lg", "w-full justify-center shadow-lg shadow-gold/20")}
-                  >
-                    Get Family Lifetime Access
-                    <ArrowRight className="w-4 h-4" />
-                  </Link>
-                </div>
+                <Link
+                  href={familyLifetimeHref}
+                  className="inline-flex items-center justify-center gap-2 w-full rounded-xl px-6 py-3.5 font-semibold text-base transition-all border border-border bg-surface hover:bg-surface-raised hover:border-gold/30 text-text cursor-pointer"
+                >
+                  Get Family Lifetime
+                  <ArrowRight className="w-4 h-4 text-gold" />
+                </Link>
               )
             )}
 
             <div className="mt-4 flex items-center justify-center gap-2 text-xs text-text-muted">
               <Lock className="w-3.5 h-3.5" />
-              <span>Secure payment · Instant access · 7-day guarantee</span>
+              <span>Secure payment · 7-day guarantee</span>
             </div>
           </motion.div>
           </motion.div>
         </AnimatePresence>
 
-        {/* ── Comparison note ─────────────────────────────────────────── */}
+        {/* ── Comparison note ─────────────────────────────────────────────── */}
         <p className="text-center text-xs text-text-muted mt-6">
           {tab === "individual"
-            ? "At $9/month, lifetime access pays for itself in 11 months."
-            : "At $19/month, family lifetime access pays for itself in about 11 months."}
+            ? "Lifetime pays for itself in under 9 months vs $9/mo — then free forever."
+            : "Family lifetime pays for itself in under 8 months vs $19/mo — then free forever."}
         </p>
       </div>
     </section>

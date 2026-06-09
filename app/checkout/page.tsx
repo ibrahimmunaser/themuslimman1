@@ -46,7 +46,7 @@ export default async function CheckoutPage({ searchParams }: Props) {
   // Only for the most common path (individual + lifetime + logged-in).
   // Monthly/family subscription intents are always created client-side.
   let initialClientSecret: string | null = null;
-  const initialBasePrice  = 9900;
+  const initialBasePrice  = 7900; // $79.00 individual lifetime
   let initialFinalPrice = initialBasePrice;
   let initialDiscountAmount  = 0;
   let initialAppliedPromo: string | null = null;
@@ -100,7 +100,7 @@ export default async function CheckoutPage({ searchParams }: Props) {
               utm_content:  creatorConfig.utm_content  ?? "",
             } : {}),
           },
-          description:   `Complete Seerah — TheMuslimMan${appliedPromoCode ? ` (${appliedPromoCode})` : ""}`,
+          description:   `Complete Seerah Lifetime — TheMuslimMan${appliedPromoCode ? ` (${appliedPromoCode})` : ""}`,
           receipt_email: user.email,
         });
         initialClientSecret = paymentIntent.client_secret;

@@ -22,6 +22,36 @@ export const PLANS = {
       "Preview of the complete Seerah study system",
     ],
   },
+
+  // ── Trial plans (Stripe Checkout Session: $1 setup fee + monthly + 7-day trial) ──
+  individualTrial: {
+    id: "individualTrial",
+    name: "Individual Trial",
+    subtitle: "7 days of full access",
+    trialFeeAmount: 100,  // $1.00 setup fee charged at checkout
+    price: 900,           // $9.00/month after trial
+    trialDays: 7,
+    features: [
+      "Unlock all 100 Seerah lessons",
+      "Watch, read, review, and take quizzes",
+      "Cancel anytime",
+    ],
+  },
+  familyTrial: {
+    id: "familyTrial",
+    name: "Family Trial",
+    subtitle: "7 days of family access",
+    trialFeeAmount: 100,  // $1.00 setup fee charged at checkout
+    price: 1900,          // $19.00/month after trial
+    trialDays: 7,
+    features: [
+      "Access for the household",
+      "Structured Seerah learning for the family",
+      "Cancel anytime",
+    ],
+  },
+
+  // ── Monthly subscriptions (legacy direct subscription, no trial) ──
   monthly: {
     id: "monthly",
     name: "Monthly Access",
@@ -40,13 +70,16 @@ export const PLANS = {
       "Cancel anytime",
     ],
   },
+
   // Essentials kept for internal DB/legacy reference but not sold publicly
   essentials: _ESSENTIALS_INTERNAL,
+
+  // ── Lifetime plans ──────────────────────────────────────────────────────────
   complete: {
     id: "complete",
     name: "Complete Seerah",
     subtitle: "Full access to the structured 100-part Seerah journey",
-    price: 9900, // $99.00 lifetime access
+    price: 7900, // $79.00 lifetime access
     features: [
       "All 100 Seerah parts",
       "Video lessons",
@@ -66,9 +99,9 @@ export const PLANS = {
     id: "family",
     name: "Family Access",
     subtitle: "One household account with up to 5 learner profiles",
-    price: 19900, // $199.00 lifetime family access
-    upgradeFromLifetimePrice: 10000, // $100.00 — for Individual Lifetime → Family Lifetime upgrades ($199 - $99)
-    stripeProductId: "prod_UbM83Q8KLI4HX0", // env: STRIPE_FAMILY_LIFETIME_PRICE_ID
+    price: 14900, // $149.00 lifetime family access
+    upgradeFromLifetimePrice: 7000, // $70.00 — Individual Lifetime → Family Lifetime upgrade ($149 - $79)
+    stripeProductId: "prod_UbM83Q8KLI4HX0", // env: STRIPE_PRICE_FAMILY_LIFETIME
     features: [
       "One household account",
       "Up to 5 learner profiles",
@@ -90,7 +123,7 @@ export const PLANS = {
     subtitle: "One household account with up to 5 learner profiles",
     price: 1900, // $19.00/month
     interval: "month" as const,
-    stripeProductId: "prod_UbM4rARx0wZTAI", // env: STRIPE_FAMILY_MONTHLY_PRICE_ID
+    stripeProductId: "prod_UbM4rARx0wZTAI", // env: STRIPE_PRICE_FAMILY_MONTHLY
     features: [
       "One household account",
       "Up to 5 learner profiles",
@@ -110,11 +143,11 @@ export const PLANS = {
 
 export type PlanId = keyof typeof PLANS;
 
-/** The only plan sold publicly during early access launch. */
+/** The default lifetime plan sold to individuals. */
 export const ACTIVE_PLAN_ID = "complete" as const;
 
 /**
- * Normalize an incoming plan ID so only "complete" is ever sold.
+ * Normalize an incoming plan ID so only "complete" is ever sold as individual lifetime.
  * Any unknown, missing, or non-complete ID falls back to "complete".
  */
 export function normalizeToActivePlan(_planId: string | null | undefined): "complete" {

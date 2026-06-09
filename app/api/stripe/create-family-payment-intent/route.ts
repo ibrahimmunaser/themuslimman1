@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     // NEW (correct): hasLifetime && user.planType === "family"
     //   → hasLifetime = user.hasPaid || has a succeeded Purchase row, which is true only
     //     for actual lifetime buyers. Family Monthly users have hasPaid=false and no Purchase
-    //     row, so they pass through and can buy Family Lifetime at $199.
+    //     row, so they pass through and can buy Family Lifetime at $149.
     const accessInfo = await getUserAccessInfo(user.id, user.hasPaid);
     if (accessInfo.hasLifetime && user.planType === "family") {
       return NextResponse.json(
@@ -57,8 +57,8 @@ export async function POST(request: NextRequest) {
     const isEligibleForUpgradePrice = isUpgrade && user.hasPaid && user.planType !== "family";
 
     const baseAmount: number = isEligibleForUpgradePrice
-      ? FAMILY_PLAN.upgradeFromLifetimePrice  // 10000 cents = $100.00
-      : FAMILY_PLAN.price;                    // 19900 cents = $199.00
+      ? FAMILY_PLAN.upgradeFromLifetimePrice  // 7000 cents = $70.00 (upgrade: $149 - $79)
+      : FAMILY_PLAN.price;                    // 14900 cents = $149.00
 
     // Apply promo code discount if provided
     let finalAmount: number = baseAmount;

@@ -193,7 +193,7 @@ export default async function BillingPage() {
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-text">Upgrade to Family Lifetime</p>
                 <p className="text-sm text-text-secondary mt-1 leading-relaxed">
-                  Stop paying monthly. Get permanent Family Access for a one-time payment of $199 —
+                  Stop paying monthly. Get permanent Family Access for a one-time payment of $149 —
                   the same 5 learner profiles, separate progress for every course asset, lifetime access.
                 </p>
                 <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -201,7 +201,7 @@ export default async function BillingPage() {
                     href="/checkout?plan=family&billing=lifetime"
                     className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gold hover:bg-gold-light text-black font-bold text-sm transition-colors shadow-sm"
                   >
-                    Upgrade for $199
+                    Upgrade for $149
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                   <span className="text-xs text-text-muted">One-time payment · Cancel your monthly subscription after</span>
@@ -227,18 +227,18 @@ export default async function BillingPage() {
                 </p>
                 <div className="mt-3 flex items-center gap-2 text-xs text-amber-400/80">
                   <ArrowUpCircle className="w-3.5 h-3.5 flex-shrink-0" />
-                  You&apos;ve already paid $99 for Individual Lifetime — you&apos;re only paying the $100 difference.
+                  You&apos;ve already paid $79 for Individual Lifetime — you&apos;re only paying the $70 difference.
                 </div>
                 <div className="mt-4 flex flex-wrap items-center gap-3">
                   <Link
                     href="/checkout?plan=family&billing=lifetime"
                     className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm transition-colors shadow-sm"
                   >
-                    Upgrade for $100
+                    Upgrade for $70
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                   <span className="text-xs text-text-muted">
-                    <span className="line-through opacity-60 mr-1">$199</span>
+                    <span className="line-through opacity-60 mr-1">$149</span>
                     One-time · Lifetime family access
                   </span>
                 </div>
@@ -265,7 +265,7 @@ export default async function BillingPage() {
                     href="/checkout?plan=family&billing=lifetime"
                     className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm transition-colors shadow-sm"
                   >
-                    Lifetime — $199
+                    Lifetime — $149
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                   <Link

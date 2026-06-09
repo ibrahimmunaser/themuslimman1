@@ -109,11 +109,15 @@ const OUTCOMES = [
 
 const FAQ_ITEMS = [
   {
-    q: "What is the difference between monthly and lifetime?",
-    a: "Monthly gives you full access for $9/month — cancel anytime and access stops at the end of your billing period. Lifetime is a one-time $99 payment that gives you permanent access, no recurring charges ever.",
+    q: "How does the $1 trial work?",
+    a: "You pay $1 now and get 7 days of full access. After 7 days, your subscription automatically continues at $9/month (individual) or $19/month (family). You can cancel anytime before the trial ends — no charge.",
   },
   {
-    q: "What happens if I cancel monthly?",
+    q: "What is the difference between the trial and lifetime?",
+    a: "The $1 trial gives you 7 days of full access, then $9/month after that — cancel anytime. Lifetime is a one-time $79 payment (individual) or $149 (family) that gives you permanent access with no recurring charges ever.",
+  },
+  {
+    q: "What happens if I cancel?",
     a: "You keep full access until the end of your current billing period. After that, access stops. You can resubscribe anytime.",
   },
   {
@@ -230,7 +234,7 @@ export default async function PricingPage() {
               From{" "}
               <span className="text-text-secondary font-medium">$9/month</span>
               {" "}or{" "}
-              <span className="text-gold font-semibold">$99 lifetime</span>
+              <span className="text-gold font-semibold">$79 lifetime</span>
               {" "}· 7-Day Clarity Guarantee
             </p>
           </FadeUp>

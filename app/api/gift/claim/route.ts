@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
   // Grant lifetime access to the recipient: set hasPaid flag AND create a Purchase record
   // so access.ts, billing page, and admin dashboards all see a consistent record.
   // Use the actual Stripe amount rather than a hardcoded constant.
-  let paidAmount = isFamily ? 19900 : 9900; // fallback if Stripe lookup fails
+  let paidAmount = isFamily ? 14900 : 7900; // fallback if Stripe lookup fails ($149/$79)
   let paidCurrency = "usd";
   try {
     const pi = await stripe.paymentIntents.retrieve(gift.stripePaymentIntentId);

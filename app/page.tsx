@@ -536,7 +536,7 @@ export default async function LandingPage() {
               },
               {
                 q: "Is there only one plan?",
-                a: "Yes. We offer two options: Monthly Access at $9/month (cancel anytime) or Lifetime Access for a one-time $99 payment. Both give full access from day one.",
+                a: "Yes. Start for just $1 — get 7 days of full access, then $9/month (individual) or $19/month (family). Or get lifetime access for a one-time $79 (individual) or $149 (family) payment. Cancel anytime.",
               },
               {
                 q: "Is the course self-paced?",
@@ -601,26 +601,26 @@ export default async function LandingPage() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
             <Link
-              href="#preview"
+              href="/checkout/trial"
               className={buttonClass("primary", "xl", "shadow-2xl shadow-gold/20")}
             >
-              Start Free Preview
+              Start for $1 — 7-Day Trial
+              <ArrowRight className="w-5 h-5" />
             </Link>
             <Link
               href="/checkout"
               className={buttonClass("secondary", "xl")}
             >
-              Unlock Complete Seerah
-              <ArrowRight className="w-5 h-5" />
+              Get Lifetime Access — $79
             </Link>
           </div>
 
           <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-sm text-text-muted">
             <span className="flex items-center gap-1.5"><Lock className="w-3.5 h-3.5" /> Secure Payment</span>
             <span>·</span>
-            <span>Instant Access</span>
+            <span>Cancel Anytime</span>
             <span>·</span>
-            <span>Own It Forever</span>
+            <span>7-Day Guarantee</span>
           </div>
         </div>
       </section>

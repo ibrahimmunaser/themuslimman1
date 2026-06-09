@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify the promo actually reduces the price to $0 for the resolved plan.
-    const baseAmount = isFamily ? STRIPE_CONFIG_PLANS.family.price : 9900;
+    const baseAmount = isFamily ? STRIPE_CONFIG_PLANS.family.price : STRIPE_CONFIG_PLANS.complete.price;
     const finalAmount = applyDiscount(baseAmount, promo);
 
     if (finalAmount !== 0) {

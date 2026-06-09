@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
@@ -400,7 +400,7 @@ function FamilyCheckoutContent({
             </div>
             <p className="text-xs text-gold/80 mt-2 flex items-center gap-1.5">
               <ArrowUpCircle className="w-3.5 h-3.5 flex-shrink-0" />
-              You&apos;ve already paid $99 for Individual Lifetime — you&apos;re only paying the $100 difference.
+                  You&apos;ve already paid $79 for Individual Lifetime — you&apos;re only paying the $70 difference.
             </p>
           </div>
         ) : cycle === "lifetime" ? (

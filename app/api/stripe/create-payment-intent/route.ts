@@ -3,8 +3,8 @@ import { stripe, PLANS, type PlanId } from "@/lib/stripe";
 import { getCurrentUser } from "@/lib/auth";
 import { validatePromoCode, applyDiscount } from "@/lib/promo-codes";
 import { getCreatorPromoConfig } from "@/lib/creator-promos";
-/** Individual lifetime price in cents ($99). */
-const BASE_PRICE = 9900;
+/** Individual lifetime price in cents ($79). */
+const BASE_PRICE = 7900;
 import { getUserAccessInfo } from "@/lib/access";
 
 export async function POST(request: NextRequest) {
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
 
     const plan = PLANS[planId];
 
-    // Server decides the price — always $99 (9900 cents), client cannot override.
+    // Server decides the price — always $79 (7900 cents), client cannot override.
     const baseAmount: number = BASE_PRICE;
 
     // ── Apply promo code if provided ──

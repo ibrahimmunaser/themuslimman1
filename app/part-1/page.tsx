@@ -90,10 +90,10 @@ export default function Part1PreviewPage() {
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             <Link
-              href="/checkout"
+              href="/checkout/trial"
               className="inline-flex items-center gap-2 px-6 py-3 bg-gold hover:bg-gold-light text-ink font-semibold rounded-lg transition-colors shadow-lg shadow-gold/20"
             >
-              Get Lifetime Access — $99
+              Start for $1 — 7-Day Trial
               <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
