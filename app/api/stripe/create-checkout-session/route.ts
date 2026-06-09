@@ -98,6 +98,7 @@ export async function POST(request: NextRequest) {
         }
         session = await stripe.checkout.sessions.create({
           mode: "subscription",
+          payment_method_types: ["card"],
           customer: customerId,
           line_items: [
             { price: INDIVIDUAL_MONTHLY_PRICE_ID, quantity: 1 },
@@ -137,6 +138,7 @@ export async function POST(request: NextRequest) {
         }
         session = await stripe.checkout.sessions.create({
           mode: "subscription",
+          payment_method_types: ["card"],
           customer: customerId,
           line_items: [
             { price: FAMILY_MONTHLY_PRICE_ID, quantity: 1 },
@@ -168,6 +170,7 @@ export async function POST(request: NextRequest) {
         }
         session = await stripe.checkout.sessions.create({
           mode: "subscription",
+          payment_method_types: ["card"],
           customer: customerId,
           line_items: [{ price: INDIVIDUAL_MONTHLY_PRICE_ID, quantity: 1 }],
           subscription_data: {
@@ -191,6 +194,7 @@ export async function POST(request: NextRequest) {
         }
         session = await stripe.checkout.sessions.create({
           mode: "subscription",
+          payment_method_types: ["card"],
           customer: customerId,
           line_items: [{ price: FAMILY_MONTHLY_PRICE_ID, quantity: 1 }],
           subscription_data: {
