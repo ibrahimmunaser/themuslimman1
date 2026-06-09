@@ -78,8 +78,19 @@ export default async function CheckoutPage({ searchParams }: Props) {
     if (planParam === "individual")                                 initialAudience = "individual";
   }
 
+  // Base price for the selected plan — used to seed the client price state so the
+  // order summary shows the correct amount before the async createIntent responds.
+  // Trial plans show the $1 setup fee; lifetime plans show the plan's full price.
+  const planBasePrice: Record<string, number> = {
+    "individual-lifetime": 7900,
+    "family-lifetime":     14900,
+    "individual-trial":    100,
+    "family-trial":        100,
+    "individual-monthly":  900,
+    "family-monthly":      1900,
+  };
+  const initialBasePrice  = planBasePrice[normalizedPlan] ?? 7900;
   let initialClientSecret: string | null = null;
-  const initialBasePrice  = 7900;
   let initialFinalPrice = initialBasePrice;
   let initialDiscountAmount  = 0;
   let initialAppliedPromo: string | null = null;
