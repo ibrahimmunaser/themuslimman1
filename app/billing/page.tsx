@@ -6,6 +6,7 @@ import { StudentLayout } from "@/components/student/student-layout";
 import { PLANS } from "@/lib/stripe-config";
 import { CardManager } from "@/components/billing/card-manager";
 import { PortalButton } from "@/components/billing/portal-button";
+import { CancelSubscriptionButton } from "@/components/billing/cancel-subscription-button";
 import {
   CreditCard,
   CheckCircle2,
@@ -188,6 +189,16 @@ export default async function BillingPage() {
           {isMonthly && sub?.cancelAtPeriodEnd && (
             <div className="mt-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs">
               Your subscription is set to cancel on {formatDate(sub.currentPeriodEnd)}. You&apos;ll retain access until then.
+            </div>
+          )}
+
+          {/* Cancel button — shown for all active monthly/trial subscribers who haven't cancelled yet */}
+          {isMonthly && sub && !sub.cancelAtPeriodEnd && (
+            <div className="mt-5">
+              <CancelSubscriptionButton
+                cancelDate={sub.currentPeriodEnd.toISOString()}
+                isTrial={isTrial}
+              />
             </div>
           )}
 
