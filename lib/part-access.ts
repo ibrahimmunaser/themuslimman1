@@ -6,8 +6,12 @@ import { hasActiveCourseAccess } from "@/lib/access";
  * Server-side access guard for paid content/media API routes.
  *
  * Part 1 is always free — no authentication required.
- * Parts 2–100 require an authenticated user with active course access
- * (lifetime purchase OR active/trialing monthly subscription).
+ * Parts 2–100 require an authenticated user who has:
+ *   1. A verified email address (emailVerified = true)
+ *   2. Active course access (lifetime purchase OR active/trialing subscription)
+ *
+ * The emailVerified check mirrors the dashboard UI gate: a paid-but-unverified
+ * user must not be able to bypass the verification wall by calling APIs directly.
  *
  * Returns null when access is permitted.
  * Returns a NextResponse (401 or 403) when access must be denied — the
@@ -25,6 +29,14 @@ export async function requirePartAccess(partNumber: number): Promise<NextRespons
     return NextResponse.json(
       { error: "Authentication required" },
       { status: 401 }
+    );
+  }
+
+  // Email must be verified before content is unlocked, even for paid users.
+  if (!user.emailVerified) {
+    return NextResponse.json(
+      { error: "Email verification required" },
+      { status: 403 }
     );
   }
 

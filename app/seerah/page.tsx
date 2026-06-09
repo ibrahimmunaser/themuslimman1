@@ -55,8 +55,8 @@ export default async function LearnIndexPage() {
           <ResendVerificationButton />
           <p className="text-xs text-text-muted">
             Wrong email?{" "}
-            <a href="/account" className="text-gold hover:text-gold/80 underline">
-              Update your email
+            <a href="/contact" className="text-gold hover:text-gold/80 underline">
+              Contact support
             </a>
           </p>
         </div>
