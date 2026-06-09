@@ -68,6 +68,9 @@ export async function POST(request: NextRequest) {
         console.log(`[WEBHOOK] payment_intent.succeeded: ${paymentIntent.id}, amount: ${paymentIntent.amount} ${paymentIntent.currency}, customer: ${paymentIntent.customer}`);
         if (paymentIntent.metadata?.type === "gift") {
           await handleGiftPaymentSuccess(paymentIntent);
+        } else if (paymentIntent.metadata?.type === "trial_fee") {
+          // Trial fee paid — create the subscription with trial now that payment is confirmed.
+          await handleTrialFeePayment(paymentIntent);
         } else if (paymentIntent.metadata?.type === "subscription") {
           // Subscription payment — access is handled by customer.subscription.* events
           console.log(`[WEBHOOK] payment_intent.succeeded: subscription PI ${paymentIntent.id}, skipping Purchase creation`);
@@ -163,6 +166,75 @@ export async function POST(request: NextRequest) {
   console.log(`[WEBHOOK] POST /api/stripe/webhook: Complete for event ${event.type} [${elapsed}ms]`);
 
   return NextResponse.json({ received: true });
+}
+
+/**
+ * Handles a confirmed $1 trial-fee PaymentIntent.
+ *
+ * The subscription is intentionally NOT created at checkout time — doing so
+ * would cause Stripe to immediately put it in "trialing" status (before payment),
+ * granting access and sending a premature welcome email.
+ *
+ * Instead, we:
+ *  1. Create the subscription with trial_period_days here, after real payment.
+ *  2. Set hasPaid = true so the dashboard access check passes immediately.
+ *  3. Send the welcome email.
+ *  4. The resulting customer.subscription.created webhook is guarded in
+ *     upsertSubscription to skip re-sending the email for isTrial subs.
+ */
+async function handleTrialFeePayment(pi: Stripe.PaymentIntent) {
+  const { userId, monthlyPriceId, trialDays, planId } = pi.metadata;
+  console.log(`[WEBHOOK] handleTrialFeePayment: PI ${pi.id}, userId: ${userId}, planId: ${planId}`);
+
+  if (!userId || !monthlyPriceId) {
+    throw new Error(`[WEBHOOK] handleTrialFeePayment: Missing metadata in PI ${pi.id}`);
+  }
+
+  const customerId =
+    typeof pi.customer === "string" ? pi.customer : (pi.customer as Stripe.Customer)?.id ?? "";
+  const trialDaysNum = parseInt(trialDays ?? "7", 10) || 7;
+  const isFamily = planId === "familyTrial";
+
+  // Attach the payment method to the customer as default for future subscription charges
+  if (pi.payment_method && customerId) {
+    await stripe.customers
+      .update(customerId, { invoice_settings: { default_payment_method: pi.payment_method as string } })
+      .catch((e) => console.warn("[WEBHOOK] handleTrialFeePayment: Could not set default PM:", e));
+  }
+
+  // Create the subscription with trial. This fires customer.subscription.created,
+  // but upsertSubscription skips the welcome email for isTrial subs.
+  const subscription = await stripe.subscriptions.create({
+    customer: customerId,
+    items: [{ price: monthlyPriceId }],
+    trial_period_days: trialDaysNum,
+    default_payment_method: pi.payment_method as string | undefined ?? undefined,
+    metadata: {
+      userId,
+      planId,
+      type: "subscription",
+      isTrial: "true",
+    },
+  });
+  console.log(`[WEBHOOK] handleTrialFeePayment: Subscription ${subscription.id} created (status: ${subscription.status})`);
+
+  // Update user: mark as paid so dashboard access check passes immediately.
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      hasPaid: true,
+      ...(isFamily ? { planType: "family" } : {}),
+      ...(customerId ? { stripeCustomerId: customerId } : {}),
+    },
+  });
+  console.log(`[WEBHOOK] handleTrialFeePayment: User ${userId} hasPaid=true`);
+
+  // Send welcome email (only here — upsertSubscription skips it for isTrial subs)
+  const planLabel = isFamily ? "Family Trial Access" : "7-Day Trial Access";
+  sendPurchaseConfirmationEmail(userId, planLabel).catch((err) =>
+    console.error("[WEBHOOK] handleTrialFeePayment: Failed to send welcome email:", err)
+  );
+  console.log(`[WEBHOOK] handleTrialFeePayment: Welcome email queued for user ${userId}`);
 }
 
 async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
@@ -541,12 +613,20 @@ async function upsertSubscription(userId: string, sub: Stripe.Subscription) {
 
   // Send a welcome email the first time a subscription becomes active/trialing.
   // Monthly buyers would otherwise get no confirmation after checkout.
-  if (isFirstActivation) {
+  //
+  // Skip for trial subscriptions (isTrial = "true"): their welcome email is sent
+  // by handleTrialFeePayment (payment_intent.succeeded for the $1 trial fee),
+  // which runs BEFORE customer.subscription.created. Sending here would either
+  // duplicate the email or send it prematurely (before $1 is actually paid).
+  const isTrialSub = sub.metadata?.isTrial === "true";
+  if (isFirstActivation && !isTrialSub) {
     const planLabel = isFamilySub ? "Family Monthly Access" : "Monthly Access";
     sendPurchaseConfirmationEmail(userId, planLabel).catch((err) =>
       console.error("[WEBHOOK] upsertSubscription: Failed to send subscription welcome email:", err)
     );
     console.log(`[WEBHOOK] upsertSubscription: Welcome email queued for user ${userId} (sub ${sub.id})`);
+  } else if (isFirstActivation && isTrialSub) {
+    console.log(`[WEBHOOK] upsertSubscription: Skipping email for trial sub ${sub.id} — handled by handleTrialFeePayment`);
   }
 }
 
