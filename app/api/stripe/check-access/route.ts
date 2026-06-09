@@ -18,7 +18,7 @@ export async function GET() {
 
   const hasAccess = await hasActiveCourseAccess(user.id);
 
-  return NextResponse.json({ hasAccess }, {
+  return NextResponse.json({ hasAccess, emailVerified: user.emailVerified }, {
     headers: { "Cache-Control": "no-store, no-cache" },
   });
 }

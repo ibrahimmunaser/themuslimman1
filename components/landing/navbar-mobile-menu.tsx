@@ -108,7 +108,7 @@ export function NavbarMobileMenu({ user }: NavbarMobileMenuProps) {
                     Log In
                   </Link>
                   <Link
-                    href="/checkout"
+                    href="/checkout?plan=individual-trial"
                     onClick={close}
                     className="flex items-center justify-center min-h-[48px] px-4 rounded-lg bg-gold text-ink text-sm font-semibold hover:bg-gold-light transition-colors"
                   >

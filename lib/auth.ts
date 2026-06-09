@@ -217,12 +217,6 @@ export async function requireAuth(): Promise<SessionUser> {
     redirect(loginUrl);
   }
 
-  // In production, unverified users must complete email verification before
-  // accessing any protected route. Dev mode skips this so local dev still works.
-  if (process.env.NODE_ENV === "production" && !user.emailVerified) {
-    redirect("/verify-email-pending");
-  }
-
   return user;
 }
 
@@ -253,7 +247,7 @@ export async function requireStudent(): Promise<SessionUser> {
 export async function login(
   email: string,
   password: string
-): Promise<{ success: boolean; error?: string; role?: Role; hasPurchase?: boolean; isPastDue?: boolean; userId?: string }> {
+): Promise<{ success: boolean; error?: string; role?: Role; hasPurchase?: boolean; isPastDue?: boolean; userId?: string; emailVerified?: boolean }> {
   const startTime = Date.now();
   const lowerEmail = email.toLowerCase();
 
@@ -278,11 +272,6 @@ export async function login(
   const valid = await bcrypt.compare(password, user.passwordHash);
   if (!valid) return { success: false, error: "Invalid email or password" };
 
-  const isDevelopment = process.env.NODE_ENV !== "production";
-  if (!isDevelopment && !user.emailVerified) {
-    return { success: false, error: "Please verify your email before signing in" };
-  }
-
   try {
     await createSession(user.id, user.role);
   } catch (error) {
@@ -306,7 +295,7 @@ export async function login(
   const elapsed = Date.now() - startTime;
   if (elapsed > 3000) console.warn(`[AUTH] login: Slow login for ${lowerEmail} [${elapsed}ms]`);
 
-  return { success: true, role: user.role as Role, hasPurchase, isPastDue, userId: user.id };
+  return { success: true, role: user.role as Role, hasPurchase, isPastDue, userId: user.id, emailVerified: user.emailVerified };
 }
 
 // ─────────────────────────────────────────────────────────────

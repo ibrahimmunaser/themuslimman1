@@ -7,6 +7,8 @@ import { getThumbnailUrls } from "@/lib/r2";
 import { getPartPageData } from "@/lib/part-content-cache";
 import { ERA_MAP } from "@/lib/types";
 import { prisma } from "@/lib/db";
+import { Mail } from "lucide-react";
+import { ResendVerificationButton } from "@/app/verify-email-pending/resend-button";
 import { CourseDashboardTabs } from "@/components/course/course-dashboard-tabs";
 import { CourseHomeContent } from "@/components/course/course-home-content";
 import { CourseProgressContent } from "@/components/course/course-progress-content";
@@ -26,6 +28,41 @@ export default async function LearnIndexPage() {
   // getCachedStudent() deduplicates with the seerah/layout.tsx call in the same request.
   const user = await getCachedStudent();
   if (!user.studentProfileId) redirect("/");
+
+  // Gate 1: Email must be verified to access course content.
+  // Paid but unverified users land here and see the verification wall.
+  if (!user.emailVerified) {
+    const hasPaid = user.hasPaid;
+    return (
+      <div className="flex-1 flex items-center justify-center px-4 py-16 min-h-[60vh]">
+        <div className="max-w-md w-full text-center space-y-6">
+          <div className="w-16 h-16 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center mx-auto">
+            <Mail className="w-8 h-8 text-gold" />
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-2xl font-bold text-text">Verify your email to unlock access</h1>
+            <p className="text-text-secondary">
+              We sent a verification link to{" "}
+              <span className="font-semibold text-gold">{user.email}</span>.
+              Click the link in that email to unlock your course.
+            </p>
+            {hasPaid && (
+              <p className="text-sm text-emerald-400 font-medium mt-3">
+                Your payment is confirmed and saved — your access will unlock the moment you verify.
+              </p>
+            )}
+          </div>
+          <ResendVerificationButton />
+          <p className="text-xs text-text-muted">
+            Wrong email?{" "}
+            <a href="/account" className="text-gold hover:text-gold/80 underline">
+              Update your email
+            </a>
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // Run access check, thumbnail fetch, and profile-ID resolution in parallel.
   //

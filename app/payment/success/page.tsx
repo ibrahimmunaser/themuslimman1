@@ -3,10 +3,10 @@
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Check, ArrowRight, RefreshCw } from "lucide-react";
+import { Check, ArrowRight, RefreshCw, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-type SuccessType = "lifetime" | "subscription" | "family" | "family-subscription";
+type SuccessType = "lifetime" | "subscription" | "family" | "family-subscription" | "family-lifetime";
 
 const MAX_POLL_MS = 20_000;
 const POLL_INTERVAL_MS = 2_000;
@@ -16,46 +16,59 @@ function PaymentSuccessPageContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [successType, setSuccessType] = useState<SuccessType>("lifetime");
+  const [emailVerified, setEmailVerified] = useState<boolean | null>(null);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendDone, setResendDone] = useState(false);
 
   const paymentIntent = searchParams.get("payment_intent");
-  const type = searchParams.get("type"); // "subscription" | "family" | null
+  const sessionId = searchParams.get("session_id");
+  const type = searchParams.get("type"); // "subscription" | "family" | "lifetime" | "family-lifetime" | null
   const preview = searchParams.get("preview"); // dev-only: bypass payment verification
+
+  async function resendVerification() {
+    setResendLoading(true);
+    try {
+      await fetch("/api/auth/resend-verification", { method: "POST" });
+      setResendDone(true);
+    } catch {
+      // ignore
+    } finally {
+      setResendLoading(false);
+    }
+  }
 
   useEffect(() => {
     // Dev preview mode — skip all verification, show the success screen directly.
-    // Explicitly disabled in production so no one can bypass payment verification.
     if (preview === "1" && process.env.NODE_ENV !== "production") {
       setSuccessType(
         type === "family" ? "family" :
+        type === "family-lifetime" ? "family-lifetime" :
         type === "family-subscription" ? "family-subscription" :
         type === "subscription" ? "subscription" :
         "lifetime"
       );
+      setEmailVerified(true);
       setLoading(false);
       return;
     }
 
-    // Subscription payment (individual monthly or family monthly) —
-    // poll until webhook confirms access (up to MAX_POLL_MS).
-    if (type === "subscription" || type === "family-subscription") {
-      setSuccessType(type === "family-subscription" ? "family-subscription" : "subscription");
-
+    // Shared polling helper: poll check-access until confirmed, then fetch email status.
+    async function pollThenFinish(resolvedType: SuccessType) {
+      setSuccessType(resolvedType);
       const start = Date.now();
 
       async function pollAccess() {
         try {
           const res = await fetch("/api/stripe/check-access");
           if (res.status === 401) {
-            // Session expired — user needs to log back in to access the course
-            setError(
-              "Payment received, but your session has expired. Please sign in to access your course."
-            );
+            setError("Payment received, but your session has expired. Please sign in to access your course.");
             setLoading(false);
             return;
           }
           if (res.ok) {
             const data = await res.json();
             if (data.hasAccess) {
+              setEmailVerified(data.emailVerified ?? true);
               setLoading(false);
               return;
             }
@@ -65,7 +78,6 @@ function PaymentSuccessPageContent() {
         }
 
         if (Date.now() - start >= MAX_POLL_MS) {
-          // Timed out waiting for webhook — show a softer message
           setError(
             "Payment received. We're finishing setup — this usually takes a few seconds. " +
               "Refresh the page or go to the dashboard. If access is missing, contact support."
@@ -73,16 +85,27 @@ function PaymentSuccessPageContent() {
           setLoading(false);
           return;
         }
-
         setTimeout(pollAccess, POLL_INTERVAL_MS);
       }
 
       pollAccess();
+    }
+
+    // Subscription types (trial or monthly) — poll for webhook confirmation
+    if (type === "subscription" || type === "family-subscription") {
+      const resolvedType: SuccessType = type === "family-subscription" ? "family-subscription" : "subscription";
+      pollThenFinish(resolvedType);
       return;
     }
 
-    // One-time payment (Individual Lifetime or Family Lifetime) —
-    // verify the PaymentIntent then show the appropriate success screen.
+    // New Stripe Checkout Session lifetime payments (session_id in URL) — poll for access
+    if (sessionId && (type === "lifetime" || type === "family-lifetime")) {
+      const resolvedType: SuccessType = type === "family-lifetime" ? "family-lifetime" : "lifetime";
+      pollThenFinish(resolvedType);
+      return;
+    }
+
+    // Legacy: one-time payment via PaymentIntent (old Stripe Elements flow)
     async function verifyPayment() {
       if (!paymentIntent) {
         setError("No payment information found");
@@ -90,11 +113,10 @@ function PaymentSuccessPageContent() {
         return;
       }
       try {
-        const response = await fetch(
-          `/api/stripe/verify-payment?payment_intent=${paymentIntent}`
-        );
+        const response = await fetch(`/api/stripe/verify-payment?payment_intent=${paymentIntent}`);
         if (!response.ok) throw new Error("Payment verification failed");
         setSuccessType(type === "family" ? "family" : "lifetime");
+        setEmailVerified(true); // legacy flow always had email verified
         setLoading(false);
       } catch {
         setError("Failed to verify payment. If you were charged, contact support.");
@@ -161,10 +183,13 @@ function PaymentSuccessPageContent() {
     );
   }
 
-  const isSubscription      = successType === "subscription";        // individual monthly
-  const isFamilySubscription = successType === "family-subscription"; // family monthly
-  const isFamily             = successType === "family";              // family lifetime
-  const isFamilyAny          = isFamily || isFamilySubscription;      // any family plan
+  const isSubscription      = successType === "subscription";        // individual monthly/trial
+  const isFamilySubscription = successType === "family-subscription"; // family monthly/trial
+  const isFamily             = successType === "family";              // family lifetime (legacy)
+  const isFamilyLifetime     = successType === "family-lifetime";     // family lifetime (new)
+  const isFamilyAny          = isFamily || isFamilySubscription || isFamilyLifetime;
+
+  const needsVerification = emailVerified === false;
 
   return (
     <div className="min-h-screen bg-ink text-text flex items-center justify-center px-4">
@@ -185,6 +210,27 @@ function PaymentSuccessPageContent() {
             {isFamilyAny ? "Welcome to Family Access" : "Welcome to Complete Seerah"}
           </p>
         </div>
+
+        {/* Email verification banner — shown for paid-but-unverified users */}
+        {needsVerification && (
+          <div className="mb-4 bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex items-start gap-3">
+            <Mail className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+            <div className="space-y-1.5">
+              <p className="text-sm font-semibold text-amber-300">One more step — verify your email</p>
+              <p className="text-xs text-text-secondary leading-relaxed">
+                Your payment is confirmed and saved. Check your inbox for the verification link
+                to unlock your course.
+              </p>
+              <button
+                onClick={resendVerification}
+                disabled={resendLoading || resendDone}
+                className="text-xs text-gold hover:text-gold/80 underline disabled:opacity-50"
+              >
+                {resendDone ? "Email sent!" : resendLoading ? "Sending…" : "Resend verification email"}
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="bg-surface border border-border rounded-2xl p-6 sm:p-8 space-y-6">
           <div className="space-y-3">
@@ -280,7 +326,7 @@ function PaymentSuccessPageContent() {
           </div>
 
           <div className="pt-6 border-t border-border space-y-3">
-            {isFamilyAny && (
+            {isFamilyAny && !needsVerification && (
               <Link href="/profiles" className="w-full block">
                 <Button variant="primary" size="lg" className="w-full gap-2">
                   Set Up Learner Profiles
@@ -289,9 +335,17 @@ function PaymentSuccessPageContent() {
               </Link>
             )}
             <Link href="/seerah" className="w-full block">
-              <Button variant={isFamilyAny ? "ghost" : "primary"} size="lg" className="w-full gap-2">
-                {isFamilyAny ? "Go to Dashboard" : "Start Learning"}
-                {!isFamilyAny && <ArrowRight className="w-4 h-4" />}
+              <Button
+                variant={isFamilyAny && !needsVerification ? "ghost" : "primary"}
+                size="lg"
+                className="w-full gap-2"
+              >
+                {needsVerification
+                  ? "Go to Dashboard (verify first)"
+                  : isFamilyAny
+                    ? "Go to Dashboard"
+                    : "Start Learning"}
+                <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
           </div>

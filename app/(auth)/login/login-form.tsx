@@ -43,19 +43,9 @@ export function LoginForm() {
         if (isSafeReturn) {
           destination = returnUrl;
         } else if (result.role === "student") {
-          if (result.isPastDue) {
-            // Subscriber with a failed payment — send to billing so they see the
-            // "Payment failed — update your card" banner, not the pricing page.
-            destination = "/billing";
-          } else if (!result.hasPurchase) {
-            destination = "/pricing";
-          } else if (result.isFamily) {
-            // Family plan → always go through the profile picker
-            destination = "/profiles";
-          } else {
-            // Individual plan → go straight to course (picker auto-skips for 1 profile)
-            destination = "/seerah";
-          }
+          // /seerah is the single gatekeeper: it shows the verification wall,
+          // package selection, or the course depending on account state.
+          destination = "/seerah";
         } else {
           destination = roleHome(result.role);
         }
@@ -157,7 +147,7 @@ export function LoginForm() {
           <div className="mt-6 pt-5 border-t border-border text-center">
             <p className="text-sm text-text-secondary">
               Don&apos;t have an account?{" "}
-              <Link href="/checkout" className="text-gold hover:text-gold-light font-medium transition-colors">
+              <Link href="/checkout?plan=individual-trial" className="text-gold hover:text-gold-light font-medium transition-colors">
                 Get started
               </Link>
             </p>

@@ -21,10 +21,10 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
   const [tab, setTab] = useState<PlanType>("individual");
   const prefersReduced = useReducedMotion();
 
-  const individualTrialHref    = "/checkout/trial";
-  const familyTrialHref        = "/checkout/trial?plan=family";
-  const individualLifetimeHref = "/checkout";
-  const familyLifetimeHref     = "/checkout?plan=family&billing=lifetime";
+  const individualTrialHref    = "/checkout?plan=individual-trial";
+  const familyTrialHref        = "/checkout?plan=family-trial";
+  const individualLifetimeHref = "/checkout?plan=individual-lifetime";
+  const familyLifetimeHref     = "/checkout?plan=family-lifetime";
 
   const hasAnyAccess = hasLifetime || hasMonthly;
   const hasFamilyAny = hasFamily;

@@ -104,7 +104,7 @@ export async function Part1FullPreview() {
           You just experienced the full Part 1 — the exact same format and quality as all 100 parts.
         </p>
         <a
-          href="/checkout/trial"
+          href="/checkout?plan=individual-trial"
           className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-gold to-gold-light hover:from-gold-light hover:to-gold text-ink font-bold text-base shadow-lg shadow-gold/30 transition-all hover:shadow-gold/40 hover:scale-[1.02] active:scale-[0.99]"
         >
           Continue the Full Seerah — Start for $1

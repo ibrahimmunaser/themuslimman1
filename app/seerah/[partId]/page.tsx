@@ -166,6 +166,10 @@ export default async function SeerahPartPage(props: Props) {
   const user = await getCachedStudent();
   if (!user.studentProfileId) notFound();
 
+  // Unverified users cannot access individual lesson pages — send them back to
+  // the dashboard which shows the verification wall.
+  if (!user.emailVerified) redirect("/seerah");
+
   const learnerProfileId = user.activeProfileId ?? await getActiveProfileId(user.id);
 
   const [accessOk, partProgress, prevProgress] = await Promise.all([

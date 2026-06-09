@@ -1,12 +1,125 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { getUserAccessInfo } from "@/lib/access";
+import UnifiedCheckoutClient, { type UnifiedPlanInfo } from "./checkout-client";
+import CheckoutClientPage from "./page-client";
 import { stripe } from "@/lib/stripe";
 import { validatePromoCode, applyDiscount } from "@/lib/promo-codes";
 import { getCreatorPromoConfig } from "@/lib/creator-promos";
-import CheckoutClientPage from "./page-client";
 
 export const dynamic = "force-dynamic";
+
+// ── Plan definitions ──────────────────────────────────────────────────────────
+
+const PLAN_CONFIGS: Record<string, UnifiedPlanInfo> = {
+  "individual-trial": {
+    planKey: "individual-trial",
+    name: "7-Day Individual Trial",
+    subtitle: "Full access · cancel any time",
+    price: 900,          // $9/mo after trial
+    billingLabel: "/month after trial",
+    trialFee: 100,       // $1 today
+    trialDays: 7,
+    features: [
+      "All 100 Seerah video lessons",
+      "Audio lessons for every part",
+      "Briefings, slides, infographics",
+      "Quizzes, flashcards, and mind maps",
+      "Progress tracking",
+      "Cancel anytime",
+    ],
+    badge: "Most Popular",
+  },
+  "family-trial": {
+    planKey: "family-trial",
+    name: "7-Day Family Trial",
+    subtitle: "Up to 5 profiles · cancel any time",
+    price: 1900,         // $19/mo after trial
+    billingLabel: "/month after trial",
+    trialFee: 100,       // $1 today
+    trialDays: 7,
+    features: [
+      "Up to 5 learner profiles",
+      "All 100 Seerah video lessons",
+      "Audio, briefings, slides, infographics",
+      "Quizzes, flashcards, and mind maps",
+      "Separate progress per profile",
+      "Cancel anytime",
+    ],
+    isFamily: true,
+    badge: "Best for Families",
+  },
+  "individual-lifetime": {
+    planKey: "individual-lifetime",
+    name: "Lifetime Individual Access",
+    subtitle: "One-time payment · never expires",
+    price: 7900,         // $79 one-time
+    billingLabel: "one-time",
+    features: [
+      "All 100 Seerah video lessons",
+      "Audio lessons for every part",
+      "Briefings, slides, infographics",
+      "Quizzes, flashcards, and mind maps",
+      "Progress tracking",
+      "Lifetime access — no recurring fees",
+    ],
+    badge: "Best Value",
+  },
+  "family-lifetime": {
+    planKey: "family-lifetime",
+    name: "Lifetime Family Access",
+    subtitle: "Up to 5 profiles · one-time payment",
+    price: 14900,        // $149 one-time
+    billingLabel: "one-time",
+    features: [
+      "Up to 5 learner profiles",
+      "All 100 Seerah video lessons",
+      "Audio, briefings, slides, infographics",
+      "Quizzes, flashcards, and mind maps",
+      "Separate progress per profile",
+      "Lifetime access — no recurring fees",
+    ],
+    isFamily: true,
+    badge: "Best for Families",
+  },
+  "individual-monthly": {
+    planKey: "monthly",
+    name: "Monthly Individual Access",
+    subtitle: "Full access while subscribed",
+    price: 900,
+    billingLabel: "/month",
+    features: [
+      "All 100 Seerah video lessons",
+      "Audio, briefings, slides, infographics",
+      "Quizzes, flashcards, and mind maps",
+      "Progress tracking",
+      "Cancel anytime",
+    ],
+  },
+  "family-monthly": {
+    planKey: "family-monthly",
+    name: "Monthly Family Access",
+    subtitle: "Up to 5 profiles · billed monthly",
+    price: 1900,
+    billingLabel: "/month",
+    features: [
+      "Up to 5 learner profiles",
+      "All 100 Seerah video lessons",
+      "Audio, briefings, slides, infographics",
+      "Quizzes, flashcards, and mind maps",
+      "Cancel anytime",
+    ],
+    isFamily: true,
+  },
+};
+
+// Legacy plan param aliases → new format
+const LEGACY_PLAN_ALIASES: Record<string, string> = {
+  "complete":      "individual-lifetime",
+  "family":        "family-lifetime",
+  "monthly":       "individual-monthly",
+  "familymonthly": "family-monthly",
+};
 
 interface Props {
   searchParams: Promise<{ plan?: string; billing?: string; promo?: string }>;
@@ -15,18 +128,30 @@ interface Props {
 export default async function CheckoutPage({ searchParams }: Props) {
   const [user, params] = await Promise.all([getCurrentUser(), searchParams]);
 
-  if (user && !user.emailVerified && process.env.NODE_ENV === "production") {
-    redirect("/verify-email-pending");
-  }
-
+  // Redirect away if the user already has full access.
   if (user) {
     const { hasLifetime } = await getUserAccessInfo(user.id, user.hasPaid);
-    if (hasLifetime && user.planType === "family") redirect("/seerah");
+    if (hasLifetime) redirect("/seerah");
   }
 
-  // ── Resolve audience + billing from URL params ─────────────────────────────
-  // Supports both new format (?plan=individual&billing=lifetime)
-  // and legacy format (?plan=complete, ?plan=family, ?plan=monthly, etc.)
+  // ── Resolve plan from URL param ────────────────────────────────────────────
+  const rawPlan = (params.plan ?? "").toLowerCase().trim();
+  const normalizedPlan = LEGACY_PLAN_ALIASES[rawPlan] ?? rawPlan;
+  const planConfig = PLAN_CONFIGS[normalizedPlan];
+
+  // ── New unified plans: use the simpler Stripe Checkout flow ────────────────
+  if (planConfig) {
+    return (
+      <UnifiedCheckoutClient
+        plan={planConfig}
+        userEmail={user?.email ?? null}
+        userVerified={user?.emailVerified ?? false}
+      />
+    );
+  }
+
+  // ── Legacy / default: individual + lifetime → Stripe Elements flow ─────────
+  // This path handles direct /checkout, /checkout?plan=individual&billing=lifetime, etc.
   type Audience = "individual" | "family";
   type Billing  = "lifetime"  | "monthly";
 
@@ -36,17 +161,14 @@ export default async function CheckoutPage({ searchParams }: Props) {
   const planParam    = params.plan?.toLowerCase()    ?? "";
   const billingParam = params.billing?.toLowerCase() ?? "";
 
-  if (billingParam === "monthly")                          initialBilling  = "monthly";
-  if (billingParam === "lifetime")                         initialBilling  = "lifetime";
+  if (billingParam === "monthly")                               initialBilling  = "monthly";
+  if (billingParam === "lifetime")                              initialBilling  = "lifetime";
   if (planParam    === "family" || planParam === "familymonthly") initialAudience = "family";
   if (planParam    === "monthly" || planParam === "familymonthly") initialBilling = "monthly";
-  if (planParam    === "individual")                       initialAudience = "individual";
+  if (planParam    === "individual")                            initialAudience = "individual";
 
-  // ── Pre-create individual lifetime intent server-side ──────────────────────
-  // Only for the most common path (individual + lifetime + logged-in).
-  // Monthly/family subscription intents are always created client-side.
   let initialClientSecret: string | null = null;
-  const initialBasePrice  = 7900; // $79.00 individual lifetime
+  const initialBasePrice  = 7900;
   let initialFinalPrice = initialBasePrice;
   let initialDiscountAmount  = 0;
   let initialAppliedPromo: string | null = null;
@@ -111,9 +233,6 @@ export default async function CheckoutPage({ searchParams }: Props) {
     }
   }
 
-  // Pass the raw promo param as a server prop so the client never needs
-  // useSearchParams() — that hook returns empty during SSR, which caused a
-  // hydration mismatch between server-rendered and client-rendered HTML.
   const promoParamProp = params.promo?.trim().toUpperCase() ?? null;
 
   return (

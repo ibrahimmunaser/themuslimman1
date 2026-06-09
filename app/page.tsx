@@ -601,14 +601,14 @@ export default async function LandingPage() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
             <Link
-              href="/checkout/trial"
+              href="/checkout?plan=individual-trial"
               className={buttonClass("primary", "xl", "shadow-2xl shadow-gold/20")}
             >
               Start for $1 — 7-Day Trial
               <ArrowRight className="w-5 h-5" />
             </Link>
             <Link
-              href="/checkout"
+              href="/checkout?plan=individual-lifetime"
               className={buttonClass("secondary", "xl")}
             >
               Get Lifetime Access — $79
