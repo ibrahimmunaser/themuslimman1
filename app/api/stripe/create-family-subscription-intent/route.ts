@@ -16,12 +16,6 @@ export async function POST() {
     if (!user) {
       return NextResponse.json({ error: "You must be logged in to subscribe" }, { status: 401 });
     }
-    if (!user.emailVerified) {
-      return NextResponse.json(
-        { error: "Please verify your email address before subscribing", requiresVerification: true },
-        { status: 403 }
-      );
-    }
     if (!FAMILY_MONTHLY_PRICE_ID.startsWith("price_")) {
       console.error("[CREATE-FAMILY-SUB] STRIPE_FAMILY_MONTHLY_PRICE_ID is missing or invalid:", FAMILY_MONTHLY_PRICE_ID);
       return NextResponse.json(
@@ -85,17 +79,31 @@ export async function POST() {
       await prisma.user.update({ where: { id: user.id }, data: { stripeCustomerId: customerId } });
     }
 
-    // Cancel any existing incomplete or past_due subscriptions to avoid duplicates
-    for (const statusFilter of ["incomplete", "past_due"] as const) {
+    // Cancel any existing active/trialing/incomplete/past_due individual subscriptions.
+    // This handles the upgrade path: individual trial/monthly → family monthly.
+    // Without this the user would have two concurrent Stripe subscriptions and be
+    // double-charged when the individual trial period ends.
+    for (const statusFilter of ["trialing", "active", "incomplete", "past_due"] as const) {
       const existingSubs = await stripe.subscriptions.list({
         customer: customerId,
         status: statusFilter,
         limit: 5,
       });
       for (const s of existingSubs.data) {
+        // Only cancel individual-plan subscriptions — skip any family sub rows
+        // (shouldn't exist at this point since we block active family subs above,
+        // but guard defensively to avoid cancelling the subscription we just need).
+        const subPlanType = s.metadata?.planType;
+        if (subPlanType === "family") continue;
         await stripe.subscriptions.cancel(s.id).catch((e) =>
           console.warn(`[CREATE-FAMILY-SUBSCRIPTION-INTENT] Could not cancel ${statusFilter} sub ${s.id}:`, e)
         );
+        // Mirror the cancellation in our DB immediately so access checks stay in sync
+        // while we wait for the customer.subscription.deleted webhook to arrive.
+        await prisma.subscription.updateMany({
+          where: { stripeSubscriptionId: s.id },
+          data: { status: "canceled", updatedAt: new Date() },
+        }).catch(() => {});
       }
     }
 

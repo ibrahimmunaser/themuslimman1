@@ -24,10 +24,25 @@ interface Props {
 export default async function CheckoutPage({ searchParams }: Props) {
   const [user, params] = await Promise.all([getCurrentUser(), searchParams]);
 
-  // Redirect away if the user already has full access.
+  // Redirect away if the user already has full access AND is not trying to
+  // upgrade to a higher-tier plan. Individual lifetime holders can still reach
+  // this page to upgrade to Family Lifetime — block only when they already have
+  // family lifetime (nothing left to upgrade to).
   if (user) {
     const { hasLifetime } = await getUserAccessInfo(user.id, user.hasPaid);
-    if (hasLifetime) redirect("/seerah");
+    const rawPlanParam = ((await searchParams).plan ?? "").toLowerCase().trim();
+    const isFamilyLifetimeUpgrade =
+      rawPlanParam === "family-lifetime" ||
+      rawPlanParam === "family" ||
+      rawPlanParam === "family-lifetime";
+    if (hasLifetime) {
+      // Family lifetime holders have nothing left to buy — send to dashboard.
+      if (user.planType === "family") redirect("/seerah");
+      // Individual lifetime holders attempting any plan OTHER than family lifetime
+      // also have nothing to buy — send to dashboard.
+      if (!isFamilyLifetimeUpgrade) redirect("/seerah");
+      // Individual lifetime + family-lifetime plan param → allow through to upgrade.
+    }
   }
 
   // ── Resolve plan from URL param ────────────────────────────────────────────

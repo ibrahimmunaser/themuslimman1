@@ -20,13 +20,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!user.emailVerified) {
-      return NextResponse.json(
-        { error: "Please verify your email address before making a purchase", requiresVerification: true },
-        { status: 403 }
-      );
-    }
-
     // Block only users who already hold a Family Lifetime purchase — they have nothing to buy.
     //
     // OLD (wrong):  user.planType === "family"

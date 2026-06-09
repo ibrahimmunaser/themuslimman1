@@ -319,8 +319,10 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
     console.log(`[WEBHOOK] handlePaymentSuccess: Purchase record upserted for payment ${paymentIntent.id}`);
 
     // Update user's hasPaid flag, planType, and stripeCustomerId if present.
-    // If this is a Family plan purchase, set planType = "family" so the user
-    // gets up to 5 learner profiles. Individual plan leaves planType unchanged.
+    // Family plan → planType = "family" (5 profiles).
+    // Individual lifetime ("complete") → planType = "individual" to correct any
+    // stale "family" value left over if the user was previously on a family trial
+    // and then purchased individual lifetime instead of family lifetime.
     const updateData: {
       hasPaid: boolean;
       planType?: string;
@@ -330,6 +332,9 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
     if (planId === "family") {
       updateData.planType = "family";
       console.log(`[WEBHOOK] handlePaymentSuccess: Setting planType=family for user ${userId}`);
+    } else if (planId === "complete") {
+      updateData.planType = "individual";
+      console.log(`[WEBHOOK] handlePaymentSuccess: Setting planType=individual for user ${userId}`);
     }
 
     if (paymentIntent.customer && typeof paymentIntent.customer === "string") {
