@@ -24,30 +24,33 @@ interface Props {
 export default async function CheckoutPage({ searchParams }: Props) {
   const [user, params] = await Promise.all([getCurrentUser(), searchParams]);
 
-  // Redirect away if the user already has full access AND is not trying to
-  // upgrade to a higher-tier plan. Individual lifetime holders can still reach
-  // this page to upgrade to Family Lifetime — block only when they already have
-  // family lifetime (nothing left to upgrade to).
-  if (user) {
-    const { hasLifetime } = await getUserAccessInfo(user.id, user.hasPaid);
-    const rawPlanParam = ((await searchParams).plan ?? "").toLowerCase().trim();
-    const isFamilyLifetimeUpgrade =
-      rawPlanParam === "family-lifetime" ||
-      rawPlanParam === "family" ||
-      rawPlanParam === "family-lifetime";
-    if (hasLifetime) {
-      // Family lifetime holders have nothing left to buy — send to dashboard.
-      if (user.planType === "family") redirect("/seerah");
-      // Individual lifetime holders attempting any plan OTHER than family lifetime
-      // also have nothing to buy — send to dashboard.
-      if (!isFamilyLifetimeUpgrade) redirect("/seerah");
-      // Individual lifetime + family-lifetime plan param → allow through to upgrade.
-    }
-  }
-
   // ── Resolve plan from URL param ────────────────────────────────────────────
   const rawPlan = (params.plan ?? "").toLowerCase().trim();
   const normalizedPlan = LEGACY_PLAN_ALIASES[rawPlan] ?? rawPlan;
+
+  // ── Redirect gate ─────────────────────────────────────────────────────────
+  // Send users with full lifetime access back to the dashboard UNLESS they are
+  // attempting a legitimate upgrade to a family plan.
+  //
+  //  Individual lifetime holders can still:
+  //    • /checkout?plan=family-trial     — try the family plan for $1
+  //    • /checkout?plan=family-lifetime  — upgrade to family lifetime ($70 diff)
+  //    • /checkout?plan=family-monthly   — subscribe to family monthly
+  //
+  //  Family lifetime holders have nothing left to buy at all.
+  if (user) {
+    const { hasLifetime } = await getUserAccessInfo(user.id, user.hasPaid);
+    if (hasLifetime) {
+      const isFamilyPlanAttempt =
+        normalizedPlan === "family-lifetime" ||
+        normalizedPlan === "family-trial"    ||
+        normalizedPlan === "family-monthly";
+      // Family lifetime holders: nothing left to upgrade to.
+      if (user.planType === "family") redirect("/seerah");
+      // Individual lifetime holders: block unless they're upgrading to a family plan.
+      if (!isFamilyPlanAttempt) redirect("/seerah");
+    }
+  }
 
   type Audience = "individual" | "family";
   type Billing  = "lifetime"  | "monthly" | "trial";
