@@ -100,7 +100,7 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
           {/* ── LEFT: Trial card ─────────────────────────────────────────── */}
           <motion.div
             whileHover={prefersReduced ? undefined : { y: -4, transition: { duration: 0.18 } }}
-            className="relative p-7 rounded-2xl border border-border bg-surface flex flex-col hover:border-gold/20 hover:shadow-lg hover:shadow-gold/5 transition-shadow"
+            className="relative p-7 rounded-2xl border-2 border-gold bg-surface flex flex-col"
           >
             <div className="flex items-center gap-2 mb-4">
               <div className="w-9 h-9 rounded-lg bg-surface-raised border border-border flex items-center justify-center">
