@@ -98,7 +98,7 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
             className="grid sm:grid-cols-2 gap-6 max-w-3xl mx-auto sm:items-start"
           >
 
-          {/* ── Primary trial card (RECOMMENDED) ─────────────────────────── */}
+          {/* ── Primary lifetime card (RECOMMENDED) ──────────────────────── */}
           <motion.div
             whileHover={prefersReduced ? undefined : { y: -5, transition: { duration: 0.18 } }}
             className="relative p-7 rounded-2xl border-2 border-gold bg-gradient-to-b from-gold/8 to-surface flex flex-col gold-glow sm:scale-[1.03] sm:origin-center order-first"
@@ -106,119 +106,19 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
             {/* Recommended badge */}
             <div className="absolute -top-3 right-5 px-3 py-1 rounded-full bg-gold text-ink text-xs font-bold flex items-center gap-1 shadow-lg z-10">
               <Star className="w-3 h-3 fill-current" />
-              RECOMMENDED
+              BEST VALUE
             </div>
 
             <div className="flex items-center gap-2 mb-4">
               <div className="w-9 h-9 rounded-lg bg-gold/15 border border-gold/25 flex items-center justify-center">
-                <Zap className="w-4 h-4 text-gold" />
+                <Infinity className="w-4 h-4 text-gold" />
               </div>
               <p className="text-xs font-semibold uppercase tracking-widest text-gold">
-                {tab === "individual" ? "Start for $1" : "Start Family Access for $1"}
-              </p>
-            </div>
-
-            {/* Price display */}
-            <div className="mb-5">
-              <div className="flex items-baseline gap-1.5 mb-1">
-                <span className="text-4xl font-bold text-text">$1</span>
-                <span className="text-text-muted text-sm">now</span>
-              </div>
-              <p className="text-sm text-text-secondary">
-                {tab === "individual"
-                  ? "7 days of full access"
-                  : "7 days of family access"}
-              </p>
-              <p className="text-sm text-gold font-medium mt-1">
-                {tab === "individual" ? "Then $9/month" : "Then $19/month"}
-              </p>
-            </div>
-
-            <ul className="space-y-2.5 mb-7 flex-1">
-              {(tab === "individual"
-                ? [
-                    "Unlock all 100 Seerah lessons",
-                    "Watch, read, review, and take quizzes",
-                    "Cancel anytime",
-                  ]
-                : [
-                    "Access for the household",
-                    "Structured Seerah learning for the family",
-                    "Cancel anytime",
-                  ]
-              ).map((f) => (
-                <li key={f} className="flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-gold flex-shrink-0 mt-0.5" />
-                  <span className="text-sm text-text">{f}</span>
-                </li>
-              ))}
-            </ul>
-
-            {/* Trial CTA */}
-            {tab === "individual" ? (
-              hasAnyAccess ? (
-                <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-center">
-                  <p className="text-sm text-green-400 font-medium">✓ Access Active</p>
-                  <Link href="/seerah" className="text-xs text-gold mt-1 hover:underline block">Go to course →</Link>
-                </div>
-              ) : (
-                <>
-                  <Link
-                    href={individualTrialHref}
-                    className={buttonClass("primary", "lg", "w-full justify-center shadow-lg shadow-gold/20")}
-                  >
-                    Start 7-Day Access for $1
-                    <ArrowRight className="w-4 h-4" />
-                  </Link>
-                  <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] text-text-muted/60">
-                    <Lock className="w-3 h-3 flex-shrink-0" />
-                    <span>Secure checkout · Cancel anytime</span>
-                  </div>
-                </>
-              )
-            ) : (
-              hasFamilyAny ? (
-                <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-center">
-                  <p className="text-sm text-green-400 font-medium">✓ Family Access Active</p>
-                  <Link href="/seerah" className="text-xs text-gold mt-1 hover:underline block">Go to course →</Link>
-                </div>
-              ) : (
-                <>
-                  <Link
-                    href={familyTrialHref}
-                    className={buttonClass("primary", "lg", "w-full justify-center shadow-lg shadow-gold/20")}
-                  >
-                    Start Family Access for $1
-                    <ArrowRight className="w-4 h-4" />
-                  </Link>
-                  <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] text-text-muted/60">
-                    <Lock className="w-3 h-3 flex-shrink-0" />
-                    <span>Secure checkout · Cancel anytime</span>
-                  </div>
-                </>
-              )
-            )}
-
-            <div className="mt-4 flex items-center justify-center gap-2 text-xs text-text-muted">
-              <Lock className="w-3.5 h-3.5" />
-              <span>Secure payment · Instant access</span>
-            </div>
-          </motion.div>
-
-          {/* ── Secondary lifetime card ───────────────────────────────────── */}
-          <motion.div
-            whileHover={prefersReduced ? undefined : { y: -4, transition: { duration: 0.18 } }}
-            className="relative p-7 rounded-2xl border border-border bg-surface flex flex-col hover:border-gold/20 hover:shadow-lg hover:shadow-gold/5 transition-shadow"
-          >
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-9 h-9 rounded-lg bg-surface-raised border border-border flex items-center justify-center">
-                <Infinity className="w-4 h-4 text-text-secondary" />
-              </div>
-              <p className="text-xs font-semibold uppercase tracking-widest text-text-secondary">
                 {tab === "individual" ? "Lifetime Access" : "Family Lifetime Access"}
               </p>
             </div>
 
+            {/* Price display */}
             <div className="mb-5">
               <div className="flex items-baseline gap-2 mb-1">
                 <span className="text-4xl font-bold text-text">
@@ -239,19 +139,19 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
             <ul className="space-y-2.5 mb-7 flex-1">
               {(tab === "individual"
                 ? [
-                    "Pay once",
-                    "Keep access forever",
-                    "Best if you already know you want the full course",
+                    "Pay once, own it forever",
+                    "All 100 parts — video, quiz, flashcards, mind maps",
+                    "No recurring charges",
                   ]
                 : [
-                    "Pay once",
-                    "Family access forever",
-                    "Best long-term value",
+                    "Pay once for the whole household",
+                    "Up to 5 learner profiles",
+                    "No recurring charges",
                   ]
               ).map((f) => (
                 <li key={f} className="flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-text-secondary flex-shrink-0 mt-0.5" />
-                  <span className="text-sm text-text-secondary">{f}</span>
+                  <CheckCircle2 className="w-4 h-4 text-gold flex-shrink-0 mt-0.5" />
+                  <span className="text-sm text-text">{f}</span>
                 </li>
               ))}
             </ul>
@@ -276,10 +176,10 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
                 <div className="space-y-3">
                   <Link
                     href={individualLifetimeHref}
-                    className="inline-flex items-center justify-center gap-2 w-full rounded-xl px-6 py-3.5 font-semibold text-base transition-all border border-border bg-surface hover:bg-surface-raised hover:border-gold/30 text-text cursor-pointer"
+                    className={buttonClass("primary", "lg", "w-full justify-center shadow-lg shadow-gold/20")}
                   >
-                    Get Lifetime Access
-                    <ArrowRight className="w-4 h-4 text-gold" />
+                    Get Lifetime Access — $79
+                    <ArrowRight className="w-4 h-4" />
                   </Link>
                   <Link
                     href="/gift-checkout"
@@ -299,10 +199,10 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
               ) : (
                 <Link
                   href={familyLifetimeHref}
-                  className="inline-flex items-center justify-center gap-2 w-full rounded-xl px-6 py-3.5 font-semibold text-base transition-all border border-border bg-surface hover:bg-surface-raised hover:border-gold/30 text-text cursor-pointer"
+                  className={buttonClass("primary", "lg", "w-full justify-center shadow-lg shadow-gold/20")}
                 >
-                  Get Family Lifetime
-                  <ArrowRight className="w-4 h-4 text-gold" />
+                  Get Family Lifetime — $149
+                  <ArrowRight className="w-4 h-4" />
                 </Link>
               )
             )}
@@ -310,6 +210,102 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
             <div className="mt-4 flex items-center justify-center gap-2 text-xs text-text-muted">
               <Lock className="w-3.5 h-3.5" />
               <span>Secure payment · 7-day guarantee</span>
+            </div>
+          </motion.div>
+
+          {/* ── Secondary trial card ──────────────────────────────────────── */}
+          <motion.div
+            whileHover={prefersReduced ? undefined : { y: -4, transition: { duration: 0.18 } }}
+            className="relative p-7 rounded-2xl border border-border bg-surface flex flex-col hover:border-gold/20 hover:shadow-lg hover:shadow-gold/5 transition-shadow"
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-9 h-9 rounded-lg bg-surface-raised border border-border flex items-center justify-center">
+                <Zap className="w-4 h-4 text-text-secondary" />
+              </div>
+              <p className="text-xs font-semibold uppercase tracking-widest text-text-secondary">
+                {tab === "individual" ? "Start for $1" : "Start Family for $1"}
+              </p>
+            </div>
+
+            <div className="mb-5">
+              <div className="flex items-baseline gap-1.5 mb-1">
+                <span className="text-4xl font-bold text-text">$1</span>
+                <span className="text-text-muted text-sm">now</span>
+              </div>
+              <p className="text-sm text-text-secondary">
+                {tab === "individual" ? "7 days of full access" : "7 days of family access"}
+              </p>
+              <p className="text-sm text-text-secondary mt-1">
+                {tab === "individual" ? "Then $9/month" : "Then $19/month"}
+              </p>
+            </div>
+
+            <ul className="space-y-2.5 mb-7 flex-1">
+              {(tab === "individual"
+                ? [
+                    "Unlock all 100 Seerah lessons",
+                    "Cancel anytime",
+                  ]
+                : [
+                    "Access for the household",
+                    "Cancel anytime",
+                  ]
+              ).map((f) => (
+                <li key={f} className="flex items-start gap-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-text-muted flex-shrink-0 mt-0.5" />
+                  <span className="text-sm text-text-secondary">{f}</span>
+                </li>
+              ))}
+            </ul>
+
+            {/* Trial CTA */}
+            {tab === "individual" ? (
+              hasAnyAccess ? (
+                <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-center">
+                  <p className="text-sm text-green-400 font-medium">✓ Access Active</p>
+                  <Link href="/seerah" className="text-xs text-gold mt-1 hover:underline block">Go to course →</Link>
+                </div>
+              ) : (
+                <>
+                  <Link
+                    href={individualTrialHref}
+                    className="inline-flex items-center justify-center gap-2 w-full rounded-xl px-6 py-3.5 font-semibold text-base transition-all border border-border bg-surface hover:bg-surface-raised hover:border-gold/30 text-text cursor-pointer"
+                  >
+                    Try for $1 — 7 Days
+                    <ArrowRight className="w-4 h-4 text-gold" />
+                  </Link>
+                  <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] text-text-muted/60">
+                    <Lock className="w-3 h-3 flex-shrink-0" />
+                    <span>Cancel anytime</span>
+                  </div>
+                </>
+              )
+            ) : (
+              hasFamilyAny ? (
+                <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-center">
+                  <p className="text-sm text-green-400 font-medium">✓ Family Access Active</p>
+                  <Link href="/seerah" className="text-xs text-gold mt-1 hover:underline block">Go to course →</Link>
+                </div>
+              ) : (
+                <>
+                  <Link
+                    href={familyTrialHref}
+                    className="inline-flex items-center justify-center gap-2 w-full rounded-xl px-6 py-3.5 font-semibold text-base transition-all border border-border bg-surface hover:bg-surface-raised hover:border-gold/30 text-text cursor-pointer"
+                  >
+                    Try Family for $1 — 7 Days
+                    <ArrowRight className="w-4 h-4 text-gold" />
+                  </Link>
+                  <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] text-text-muted/60">
+                    <Lock className="w-3 h-3 flex-shrink-0" />
+                    <span>Cancel anytime</span>
+                  </div>
+                </>
+              )
+            )}
+
+            <div className="mt-4 flex items-center justify-center gap-2 text-xs text-text-muted">
+              <Lock className="w-3.5 h-3.5" />
+              <span>Secure payment · Instant access</span>
             </div>
           </motion.div>
           </motion.div>
