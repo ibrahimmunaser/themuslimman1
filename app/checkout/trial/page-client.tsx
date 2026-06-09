@@ -125,6 +125,11 @@ export default function TrialCheckoutClientPage({ userEmail, isFamily }: Props) 
       });
       const data = await res.json();
       if (!res.ok) {
+        // If login succeeded but email still unverified, show verification screen
+        if (res.status === 403 && data.requiresVerification) {
+          setNeedsVerification(true);
+          return;
+        }
         setAuthError(data.error || "Invalid email or password");
         return;
       }
@@ -150,8 +155,15 @@ export default function TrialCheckoutClientPage({ userEmail, isFamily }: Props) 
       const data = await res.json();
 
       if (!res.ok) {
-        if (res.status === 409 || data.url) {
-          window.location.href = data.url ?? "/seerah";
+        // Already has access — redirect to course
+        if (data.url) {
+          window.location.href = data.url;
+          return;
+        }
+        // Email not verified — show verification screen
+        if (res.status === 403 && data.requiresVerification) {
+          setNeedsVerification(true);
+          setCheckoutLoading(false);
           return;
         }
         throw new Error(data.error || "Failed to create checkout session");
@@ -184,12 +196,12 @@ export default function TrialCheckoutClientPage({ userEmail, isFamily }: Props) 
             We sent a verification link to <strong>{authForm.email}</strong>.
             Click it to verify your account, then come back here to complete your purchase.
           </p>
-          <Link
-            href="/login"
+          <button
+            onClick={() => { setNeedsVerification(false); setAuthMode("login"); }}
             className="text-gold text-sm hover:text-gold-light transition-colors"
           >
             Already verified? Sign in →
-          </Link>
+          </button>
         </div>
       </div>
     );
