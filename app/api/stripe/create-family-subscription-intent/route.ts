@@ -3,7 +3,7 @@ import { stripe } from "@/lib/stripe";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { PLANS } from "@/lib/stripe-config";
-import { getUserAccessInfo, getActiveSubscription } from "@/lib/access";
+import { getUserAccessInfo, getActiveSubscription, FAMILY_PROFILE_LIMIT } from "@/lib/access";
 
 // Source of truth: STRIPE_FAMILY_MONTHLY_PRICE_ID env var.
 // Must start with "price_" — fail loudly at request time if misconfigured.
@@ -50,17 +50,53 @@ export async function POST() {
       );
     }
 
-    // Block users who already have an active FAMILY subscription — nothing to upgrade to.
-    // Individual-plan subscribers (trial or monthly) are allowed through; this is an upgrade.
+    // Block family plan holders — nothing to upgrade to.
     if (activeSub && user.planType === "family") {
       return NextResponse.json(
         {
-          error:
-            "You already have an active Family subscription. Manage your subscription from billing.",
+          error: "You already have an active Family subscription. Manage it from your billing page.",
           hasActiveSubscription: true,
         },
         { status: 409 }
       );
+    }
+
+    // ── Upgrade path: individual trial/monthly → Family Monthly ──────────────
+    // If the user already has an active individual subscription, upgrade it in
+    // Stripe instead of creating a new one. This avoids a second payment form,
+    // preserves the billing cycle, and lets Stripe handle proration automatically.
+    if (activeSub) {
+      const stripeSub = await stripe.subscriptions.retrieve(activeSub.stripeSubscriptionId);
+      const existingItemId = stripeSub.items.data[0]?.id;
+
+      if (!existingItemId) {
+        return NextResponse.json({ error: "Could not locate subscription item to upgrade" }, { status: 500 });
+      }
+
+      // Upgrade the subscription to the family monthly price.
+      // Stripe prorates the difference and charges the updated amount on the next invoice.
+      await stripe.subscriptions.update(activeSub.stripeSubscriptionId, {
+        items: [{ id: existingItemId, price: FAMILY_MONTHLY_PRICE_ID }],
+        proration_behavior: "create_prorations",
+        metadata: {
+          userId: user.id,
+          planId: FAMILY_MONTHLY_PLAN.id,
+          planType: "family",
+          type: "subscription",
+        },
+      });
+
+      // Immediately update user planType in DB so access checks reflect the upgrade.
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { planType: "family" },
+      });
+
+      // Auto-provision up to 5 learner profiles for family access.
+      await ensureFamilyProfiles(user.id);
+
+      console.log(`[CREATE-FAMILY-SUB] Upgraded individual sub ${activeSub.stripeSubscriptionId} to family monthly for user ${user.id}`);
+      return NextResponse.json({ upgraded: true });
     }
 
     // Ensure Stripe customer exists
@@ -79,31 +115,20 @@ export async function POST() {
       await prisma.user.update({ where: { id: user.id }, data: { stripeCustomerId: customerId } });
     }
 
-    // Cancel any existing active/trialing/incomplete/past_due individual subscriptions.
-    // This handles the upgrade path: individual trial/monthly → family monthly.
-    // Without this the user would have two concurrent Stripe subscriptions and be
-    // double-charged when the individual trial period ends.
-    for (const statusFilter of ["trialing", "active", "incomplete", "past_due"] as const) {
+    // Cancel any stale incomplete/past_due subscriptions to avoid Stripe conflicts.
+    // NOTE: Active/trialing individual subs are now handled above via the upgrade path
+    // (stripe.subscriptions.update), so this loop only needs to clean up orphaned ones.
+    for (const statusFilter of ["incomplete", "past_due"] as const) {
       const existingSubs = await stripe.subscriptions.list({
         customer: customerId,
         status: statusFilter,
         limit: 5,
       });
       for (const s of existingSubs.data) {
-        // Only cancel individual-plan subscriptions — skip any family sub rows
-        // (shouldn't exist at this point since we block active family subs above,
-        // but guard defensively to avoid cancelling the subscription we just need).
-        const subPlanType = s.metadata?.planType;
-        if (subPlanType === "family") continue;
+        if (s.metadata?.planType === "family") continue;
         await stripe.subscriptions.cancel(s.id).catch((e) =>
-          console.warn(`[CREATE-FAMILY-SUBSCRIPTION-INTENT] Could not cancel ${statusFilter} sub ${s.id}:`, e)
+          console.warn(`[CREATE-FAMILY-SUB] Could not cancel ${statusFilter} sub ${s.id}:`, e)
         );
-        // Mirror the cancellation in our DB immediately so access checks stay in sync
-        // while we wait for the customer.subscription.deleted webhook to arrive.
-        await prisma.subscription.updateMany({
-          where: { stripeSubscriptionId: s.id },
-          data: { status: "canceled", updatedAt: new Date() },
-        }).catch(() => {});
       }
     }
 
@@ -156,4 +181,39 @@ export async function POST() {
     const message = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json({ error: `Failed to create subscription: ${message}` }, { status: 500 });
   }
+}
+
+// ── Profile auto-provisioning ─────────────────────────────────────────────────
+
+async function ensureFamilyProfiles(userId: string): Promise<void> {
+  const [existingProfiles, user] = await Promise.all([
+    prisma.learnerProfile.findMany({
+      where: { userId },
+      select: { id: true, isDefault: true },
+      orderBy: { createdAt: "asc" },
+    }),
+    prisma.user.findUnique({ where: { id: userId }, select: { fullName: true } }),
+  ]);
+
+  const toCreate = FAMILY_PROFILE_LIMIT - existingProfiles.length;
+  if (toCreate <= 0) return;
+
+  const hasDefault    = existingProfiles.some((p) => p.isDefault);
+  const existingCount = existingProfiles.length;
+
+  const newProfiles = Array.from({ length: toCreate }, (_, i) => {
+    const slot      = existingCount + i + 1;
+    const isMainSlot = slot === 1;
+    return {
+      id:          crypto.randomUUID(),
+      userId,
+      displayName: isMainSlot ? (user?.fullName?.trim() || "Main Learner") : `Learner ${slot}`,
+      isDefault:   isMainSlot && !hasDefault,
+      createdAt:   new Date(),
+      updatedAt:   new Date(),
+    };
+  });
+
+  await prisma.learnerProfile.createMany({ data: newProfiles });
+  console.log(`[CREATE-FAMILY-SUB] ensureFamilyProfiles: created ${newProfiles.length} profiles for user ${userId}`);
 }

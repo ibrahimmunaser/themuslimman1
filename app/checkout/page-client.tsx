@@ -233,10 +233,16 @@ function CheckoutPageContent({
   const [clientSecret,   setClientSecret]   = useState<string | null>(initialClientSecret);
   const [loading,        setLoading]        = useState(false);
   const [error,          setError]          = useState<string | null>(null);
-  const [hasActiveSub,   setHasActiveSub]   = useState(false);
+  const [hasActiveSub,      setHasActiveSub]      = useState(false);
   // When hasActiveSub is true, this holds what plan type the user currently has
   // so we can show an upgrade CTA instead of a dead-end message.
   const [activeSubPlanType, setActiveSubPlanType] = useState<"individual" | "family" | null>(null);
+  // True when the user has already used their one $1 trial offer and selected a trial plan.
+  // Shows upgrade options (family monthly or family lifetime) instead of a payment form.
+  const [trialAlreadyUsed,  setTrialAlreadyUsed]  = useState(false);
+  // True while a subscription upgrade (individual → family monthly) is in progress.
+  const [upgradeLoading,    setUpgradeLoading]    = useState(false);
+  const [upgradeError,      setUpgradeError]      = useState<string | null>(null);
   const [freeAccess,     setFreeAccess]     = useState(initialFreeAccess);
   const [freeClaimLoading, setFreeClaimLoading] = useState(false);
   const [freeClaimError,   setFreeClaimError]   = useState<string | null>(null);
@@ -274,6 +280,8 @@ function CheckoutPageContent({
     setError(null);
     setHasActiveSub(false);
     setActiveSubPlanType(null);
+    setTrialAlreadyUsed(false);
+    setUpgradeError(null);
 
     try {
       const endpoint = toEndpoint(aud, bill);
@@ -296,16 +304,29 @@ function CheckoutPageContent({
       if (intentGen.current !== gen) return null;
 
       if (!res.ok) {
-        if (res.status === 409 && (data.hasLifetime || data.hasFamily || data.activeSub || data.hasActiveSubscription)) {
-          if (data.activeSub || data.hasActiveSubscription || data.hasLifetime || data.hasFamily) {
+        if (res.status === 409) {
+          // Trial already used — user must upgrade via family monthly or lifetime.
+          if (data.trialAlreadyUsed) {
+            setTrialAlreadyUsed(true);
+            if (data.currentPlanType) setActiveSubPlanType(data.currentPlanType as "individual" | "family");
+            return null;
+          }
+          // Already has this plan / downgrade attempt.
+          if (data.hasLifetime || data.hasFamily || data.activeSub || data.hasActiveSubscription) {
             setHasActiveSub(true);
-            if (data.currentPlanType) setActiveSubPlanType(data.currentPlanType);
+            if (data.currentPlanType) setActiveSubPlanType(data.currentPlanType as "individual" | "family");
             return null;
           }
           window.location.href = "/seerah";
           return null;
         }
         throw new Error(data.error || "Failed to initialize checkout");
+      }
+
+      // Subscription was upgraded in-place (individual → family monthly) — no payment form needed.
+      if (data.upgraded) {
+        window.location.href = "/payment/success?type=family-subscription";
+        return null;
       }
 
       const discount: number = data.promoDiscountAmount ?? 0;
@@ -999,6 +1020,82 @@ function CheckoutPageContent({
     );
   }
 
+  // ── Trial already used — show upgrade options (no second $1) ─────────────
+
+  if (trialAlreadyUsed) {
+    const isOnFamily = activeSubPlanType === "family";
+    const handleSwitchToFamilyMonthly = async () => {
+      setUpgradeLoading(true);
+      setUpgradeError(null);
+      try {
+        const res  = await fetch("/api/stripe/create-family-subscription-intent", { method: "POST" });
+        const data = await res.json();
+        if (data.upgraded) {
+          window.location.href = "/payment/success?type=family-subscription";
+          return;
+        }
+        if (!res.ok) throw new Error(data.error || "Upgrade failed");
+        // If a clientSecret came back (new subscriber, not upgrade), handle normally.
+        setClientSecret(data.clientSecret);
+        setTrialAlreadyUsed(false);
+      } catch (err) {
+        setUpgradeError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+      } finally {
+        setUpgradeLoading(false);
+      }
+    };
+
+    return (
+      <div className="min-h-screen bg-zinc-950 flex flex-col lg:flex-row">
+        {LeftColumn}
+        <div className="lg:w-1/2 px-6 sm:px-12 py-12 flex flex-col justify-center">
+          <div className="max-w-md w-full mx-auto space-y-4">
+            <div className="p-6 rounded-xl bg-gold/10 border border-gold/25 text-center space-y-3">
+              <p className="text-lg font-bold text-white">
+                {isOnFamily ? "You already have Family Access" : "Free trial already used"}
+              </p>
+              <p className="text-sm text-zinc-400">
+                {isOnFamily
+                  ? "Your Family plan already includes everything. Manage it from your billing page."
+                  : "You've used your $1 starter offer. Upgrade your plan below — no extra trial fee."}
+              </p>
+              <Link href="/seerah" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gold hover:bg-gold-light text-ink font-semibold text-sm transition-colors">
+                Go to Dashboard <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+
+            {!isOnFamily && (
+              <div className="p-5 rounded-xl border border-amber-500/20 bg-amber-500/5 space-y-3">
+                <p className="font-semibold text-white text-sm">Upgrade to Family Access</p>
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  One household account · up to 5 learner profiles · separate progress for every learner.
+                </p>
+                {upgradeError && (
+                  <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{upgradeError}</p>
+                )}
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={handleSwitchToFamilyMonthly}
+                    disabled={upgradeLoading}
+                    className="inline-flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm transition-colors disabled:opacity-50"
+                  >
+                    {upgradeLoading ? "Upgrading…" : <>Switch to Family Monthly — $19/mo <ArrowRight className="w-3.5 h-3.5" /></>}
+                  </button>
+                  <button
+                    onClick={() => { setTrialAlreadyUsed(false); setAudience("family"); setBilling("lifetime"); }}
+                    className="inline-flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl border border-amber-500/40 hover:border-amber-500/70 text-amber-400 font-semibold text-sm transition-colors"
+                  >
+                    Family Lifetime — $149 one-time
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // ── Authenticated: already has this plan (same type) ──────────────────────
 
   if (hasActiveSub) {
@@ -1050,10 +1147,10 @@ function CheckoutPageContent({
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <button
-                    onClick={() => { setAudience("family"); setBilling("trial"); }}
+                    onClick={() => { setAudience("family"); setBilling("monthly"); }}
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm transition-colors"
                   >
-                    7-Day Trial — $1 today <ArrowRight className="w-3.5 h-3.5" />
+                    Switch to Family Monthly — $19/mo <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                   <button
                     onClick={() => { setAudience("family"); setBilling("lifetime"); }}

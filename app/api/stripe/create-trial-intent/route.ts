@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { getUserAccessInfo, getActiveSubscription } from "@/lib/access";
+import { getUserAccessInfo } from "@/lib/access";
 import { PLANS } from "@/lib/stripe-config";
 
 const INDIVIDUAL_MONTHLY_PRICE_ID =
@@ -57,59 +57,46 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Block users who already have active access of the SAME plan type.
-    // Upgrading from individual → family (or vice versa) is allowed.
-    const [accessInfo, activeSub] = await Promise.all([
-      getUserAccessInfo(user.id, user.hasPaid),
-      getActiveSubscription(user.id),
-    ]);
+    // ── Access & subscription checks ─────────────────────────────────────────
+    const accessInfo = await getUserAccessInfo(user.id, user.hasPaid);
 
+    // Block lifetime holders — they don't need a trial.
+    // (Individual lifetime holders upgrading to a family plan do so via
+    //  create-family-payment-intent or create-family-subscription-intent, not the $1 trial.)
     if (accessInfo.hasLifetime) {
-      // Block lifetime holders only if they already have the matching scope.
-      // Individual lifetime holders can still upgrade to a family trial.
-      const alreadyHasSameScope =
-        isFamily ? user.planType === "family" : user.planType !== "family";
-      if (alreadyHasSameScope) {
-        return NextResponse.json(
-          { error: "You already have lifetime access.", hasLifetime: true },
-          { status: 409 }
-        );
-      }
+      return NextResponse.json(
+        { error: "You already have lifetime access.", hasLifetime: true },
+        { status: 409 }
+      );
     }
-    // How many trial days to grant for this purchase.
-    // Default = full 7 days. If the user is upgrading from an existing trial of
-    // a different plan type, carry over only the REMAINING days from their current
-    // trial — this closes the loophole where someone could stack two 7-day trials
-    // (individual then family) for $2 and get ~14 days free.
-    let effectiveTrialDays: number | null = null; // null = use plan default
 
-    if (activeSub) {
-      const activeIsFamily = user.planType === "family";
-      // The ONLY allowed cross-plan case is an upgrade: individual → family.
-      // Everything else is blocked:
-      //   individual → individual  (duplicate)
-      //   family     → family      (duplicate)
-      //   family     → individual  (downgrade — family already includes individual access)
-      const isUpgrade = !activeIsFamily && isFamily;
-      if (!isUpgrade) {
-        return NextResponse.json(
-          {
-            error: activeIsFamily && !isFamily
-              ? "You already have a Family plan. It includes everything in the Individual plan."
-              : "You already have an active subscription.",
-            hasActiveSubscription: true,
-            currentPlanType: user.planType ?? "individual",
-          },
-          { status: 409 }
-        );
-      }
+    // ── One $1 trial per account ───────────────────────────────────────────────
+    // A user may use the $1 starter offer ONCE across any plan (individual or family).
+    // If any subscription row exists in the DB (even a cancelled one) the user has
+    // already consumed their trial and must upgrade via family monthly or lifetime.
+    const anyPriorSub = await prisma.subscription.findFirst({
+      where: { userId: user.id },
+      select: { id: true },
+    });
 
-      // Cross-plan upgrade (e.g. individual trial → family trial).
-      // Calculate remaining days from the existing trial so the total free
-      // period never exceeds the original 7 days.
-      const msRemaining = activeSub.currentPeriodEnd.getTime() - Date.now();
-      effectiveTrialDays = Math.max(0, Math.ceil(msRemaining / 86_400_000));
+    if (anyPriorSub) {
+      const isOnFamily = user.planType === "family";
+      return NextResponse.json(
+        {
+          error: isOnFamily
+            ? "You already have a Family plan. Manage it from your billing page."
+            : "You've already used your free trial. Upgrade to Family Monthly or Family Lifetime instead.",
+          trialAlreadyUsed: true,
+          hasActiveSubscription: !isOnFamily,
+          currentPlanType: user.planType ?? "individual",
+        },
+        { status: 409 }
+      );
     }
+
+    // No prior subscription — determine trial days (always full 7 days now
+    // since the cross-plan trial-stacking loophole is fully closed above).
+    const effectiveTrialDays: number | null = null; // null = use plan default
 
     // Ensure Stripe customer exists
     const dbUser = await prisma.user.findUnique({

@@ -363,26 +363,24 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
       }
     }
 
-    // If the user was on a monthly subscription, mark it to cancel at period end.
-    // We do NOT cancel immediately — the user already paid for the current billing period
-    // and lifetime access is now active, so there is no harm letting the monthly sub
-    // expire naturally. Immediate cancellation would forfeit days they already paid for.
-    //
-    // When the subscription eventually expires, customer.subscription.deleted fires and
-    // handleSubscriptionDeleted runs. That handler checks for a lifetime family purchase
-    // before resetting planType, so family lifetime holders keep planType=family. ✓
+    // Lifetime replaces monthly: cancel any active subscription immediately so the user
+    // is not billed again. Lifetime access is now active, so there is no reason to keep
+    // the subscription running. The customer.subscription.deleted webhook will fire next;
+    // handleSubscriptionDeleted is guarded by hasPaid so planType is never incorrectly reset.
     const activeSub = await prisma.subscription.findFirst({
       where: { userId, status: { in: ["active", "trialing"] } },
       select: { stripeSubscriptionId: true },
     });
     if (activeSub) {
       try {
-        await stripe.subscriptions.update(activeSub.stripeSubscriptionId, {
-          cancel_at_period_end: true,
+        await stripe.subscriptions.cancel(activeSub.stripeSubscriptionId);
+        await prisma.subscription.updateMany({
+          where: { stripeSubscriptionId: activeSub.stripeSubscriptionId },
+          data: { status: "canceled", cancelAtPeriodEnd: false, updatedAt: new Date() },
         });
-        console.log(`[WEBHOOK] handlePaymentSuccess: Marked monthly subscription ${activeSub.stripeSubscriptionId} to cancel at period end after lifetime purchase for user ${userId}`);
+        console.log(`[WEBHOOK] handlePaymentSuccess: Immediately cancelled subscription ${activeSub.stripeSubscriptionId} after lifetime purchase for user ${userId}`);
       } catch (cancelErr) {
-        console.error(`[WEBHOOK] handlePaymentSuccess: Failed to mark subscription ${activeSub.stripeSubscriptionId} for cancellation:`, cancelErr);
+        console.error(`[WEBHOOK] handlePaymentSuccess: Failed to cancel subscription ${activeSub.stripeSubscriptionId}:`, cancelErr);
       }
     }
 
@@ -570,20 +568,27 @@ async function handleSubscriptionDeleted(sub: Stripe.Subscription) {
     throw new Error(`[WEBHOOK] handleSubscriptionDeleted: Could not resolve userId for family sub ${sub.id}`);
   }
 
-  // Keep planType=family if they own a lifetime family purchase
-  const lifetimeFamilyPurchase = await prisma.purchase.findFirst({
-    where: { userId, planId: "family", status: "succeeded" },
-    select: { id: true },
+  // Higher-tier wins: if the user has ANY lifetime access (individual or family),
+  // do not reset planType. The lifetime purchase already granted the correct planType
+  // via handlePaymentSuccess, and the cancellation webhook must not override it.
+  //
+  // Examples this protects:
+  //   • Individual monthly → buys Individual Lifetime → sub cancelled → stays planType=individual ✓
+  //   • Family monthly → buys Family Lifetime → sub cancelled → stays planType=family ✓
+  //   • Individual monthly → buys Family Lifetime → sub cancelled → stays planType=family ✓
+  const lifetimeUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { hasPaid: true },
   });
 
-  if (!lifetimeFamilyPurchase) {
+  if (!lifetimeUser?.hasPaid) {
     await prisma.user.update({
       where: { id: userId },
       data: { planType: "individual" },
     }).catch((e) => console.error("[WEBHOOK] handleSubscriptionDeleted: Failed to reset planType:", e));
     console.log(`[WEBHOOK] Downgraded user ${userId} to planType=individual after family sub ${sub.id} cancelled`);
   } else {
-    console.log(`[WEBHOOK] User ${userId} retains planType=family (has lifetime purchase) after sub ${sub.id} cancelled`);
+    console.log(`[WEBHOOK] User ${userId} retains planType (hasPaid=true) after sub ${sub.id} cancelled — lifetime access in effect`);
   }
 }
 

@@ -7,6 +7,7 @@ import { PLANS } from "@/lib/stripe-config";
 import { CardManager } from "@/components/billing/card-manager";
 import { PortalButton } from "@/components/billing/portal-button";
 import { CancelSubscriptionButton } from "@/components/billing/cancel-subscription-button";
+import { UpgradeToFamilyMonthlyButton } from "@/components/billing/upgrade-to-family-monthly-button";
 import {
   CreditCard,
   CheckCircle2,
@@ -334,12 +335,7 @@ export default async function BillingPage() {
                       Lifetime — $149
                       <ArrowRight className="w-4 h-4" />
                     </Link>
-                    <Link
-                      href="/checkout?plan=family-trial"
-                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-amber-500/40 hover:border-amber-500/70 text-amber-400 font-semibold text-sm transition-colors"
-                    >
-                      Try for $1 · $19/mo after
-                    </Link>
+                    <UpgradeToFamilyMonthlyButton />
                   </div>
                 </div>
               </div>
