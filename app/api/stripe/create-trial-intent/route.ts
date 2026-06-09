@@ -84,17 +84,20 @@ export async function POST(request: NextRequest) {
     let effectiveTrialDays: number | null = null; // null = use plan default
 
     if (activeSub) {
-      // Only block if the active subscription is for the same audience.
-      // An individual trial holder can upgrade to a family trial, and vice versa.
       const activeIsFamily = user.planType === "family";
-      const conflictsWithTarget = isFamily ? activeIsFamily : !activeIsFamily;
-      if (conflictsWithTarget) {
+      // The ONLY allowed cross-plan case is an upgrade: individual → family.
+      // Everything else is blocked:
+      //   individual → individual  (duplicate)
+      //   family     → family      (duplicate)
+      //   family     → individual  (downgrade — family already includes individual access)
+      const isUpgrade = !activeIsFamily && isFamily;
+      if (!isUpgrade) {
         return NextResponse.json(
           {
-            error: "You already have an active subscription.",
+            error: activeIsFamily && !isFamily
+              ? "You already have a Family plan. It includes everything in the Individual plan."
+              : "You already have an active subscription.",
             hasActiveSubscription: true,
-            // Tell the client what plan the user currently holds so it can
-            // offer the right upgrade path instead of a dead-end message.
             currentPlanType: user.planType ?? "individual",
           },
           { status: 409 }

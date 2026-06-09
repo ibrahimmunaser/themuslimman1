@@ -984,9 +984,13 @@ function CheckoutPageContent({
   // ── Authenticated: already has this plan (same type) ──────────────────────
 
   if (hasActiveSub) {
-    // Individual trial holder looking at the individual trial plan.
-    // Offer the family upgrade options directly.
-    const showUpgradeCta = activeSubPlanType === "individual" && audience === "individual";
+    const isOnFamily     = activeSubPlanType === "family";
+    const isOnIndividual = activeSubPlanType === "individual" || !activeSubPlanType;
+
+    // Family user looking at an individual plan — downgrade attempt.
+    const isDowngrade = isOnFamily && audience === "individual";
+    // Individual user looking at the same individual plan — duplicate attempt.
+    const showUpgradeCta = isOnIndividual && audience === "individual";
 
     return (
       <div className="min-h-screen bg-zinc-950 flex flex-col lg:flex-row">
@@ -995,11 +999,15 @@ function CheckoutPageContent({
           <div className="max-w-md w-full mx-auto space-y-4">
             <div className="p-6 rounded-xl bg-gold/10 border border-gold/25 text-center space-y-4">
               <RefreshCw className="w-10 h-10 text-gold mx-auto" />
-              <p className="text-lg font-bold text-white">You already have this plan</p>
+              <p className="text-lg font-bold text-white">
+                {isDowngrade ? "You already have Family Access" : "You already have this plan"}
+              </p>
               <p className="text-sm text-zinc-400">
-                {showUpgradeCta
-                  ? "You're already on an individual trial. Head to your dashboard or upgrade to a family plan."
-                  : "Your account is already active. Head to your dashboard to continue learning."}
+                {isDowngrade
+                  ? "Your Family plan already includes everything in the Individual plan — plus up to 5 learner profiles. There's nothing to downgrade to."
+                  : showUpgradeCta
+                    ? "You're already on an individual trial. Head to your dashboard or upgrade to a family plan."
+                    : "Your account is already active. Head to your dashboard to continue learning."}
               </p>
               <Link
                 href="/seerah"
@@ -1007,6 +1015,14 @@ function CheckoutPageContent({
               >
                 Go to Dashboard <ArrowRight className="w-4 h-4" />
               </Link>
+              {isDowngrade && (
+                <button
+                  onClick={() => { setAudience("family"); }}
+                  className="block w-full text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+                >
+                  View Family plan options →
+                </button>
+              )}
             </div>
             {showUpgradeCta && (
               <div className="p-5 rounded-xl border border-amber-500/20 bg-amber-500/5 space-y-3">
@@ -1016,20 +1032,13 @@ function CheckoutPageContent({
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <button
-                    onClick={() => {
-                      // Switch the left panel to Family + Trial and re-trigger intent creation.
-                      setAudience("family");
-                      setBilling("trial");
-                    }}
+                    onClick={() => { setAudience("family"); setBilling("trial"); }}
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm transition-colors"
                   >
                     7-Day Trial — $1 today <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                   <button
-                    onClick={() => {
-                      setAudience("family");
-                      setBilling("lifetime");
-                    }}
+                    onClick={() => { setAudience("family"); setBilling("lifetime"); }}
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-amber-500/40 hover:border-amber-500/70 text-amber-400 font-semibold text-sm transition-colors"
                   >
                     Lifetime — $149
