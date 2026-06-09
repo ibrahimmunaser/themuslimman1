@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import {
@@ -612,6 +613,18 @@ function CheckoutPageContent({
 
   const LeftColumn = (
     <div className="lg:w-1/2 bg-zinc-900/50 border-r border-zinc-800 px-6 sm:px-12 py-12 flex flex-col justify-center">
+      {/* Logo — links back to homepage */}
+      <Link href="/" className="flex items-center mb-10 self-start">
+        <Image
+          src="/images/logoicon.png"
+          alt="TheMuslimMan"
+          width={967}
+          height={219}
+          className="h-9 w-auto"
+          priority
+        />
+      </Link>
+
       {/* In-app browser warning — Instagram/TikTok/Facebook WebViews can block Stripe.
           Only shown when a social-app browser is detected on mobile. */}
       {isInApp && (
@@ -623,7 +636,7 @@ function CheckoutPageContent({
           </p>
         </div>
       )}
-      <Link href="/pricing" className="inline-flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-300 transition-colors mb-10">
+      <Link href="/pricing" className="inline-flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-300 transition-colors mb-8">
         <ArrowLeft className="w-4 h-4" />
         Back to pricing
       </Link>
