@@ -243,7 +243,7 @@ export default async function BillingPage() {
                     Upgrade for $149
                     <ArrowRight className="w-4 h-4" />
                   </Link>
-                  <span className="text-xs text-text-muted">One-time payment · Cancel your monthly subscription after</span>
+                  <span className="text-xs text-text-muted">One-time · Monthly subscription cancelled automatically</span>
                 </div>
               </div>
             </div>
@@ -309,7 +309,7 @@ export default async function BillingPage() {
                       Lifetime Access — $79
                       <ArrowRight className="w-4 h-4" />
                     </Link>
-                    <span className="text-xs text-text-muted">One-time payment · cancel your trial after</span>
+                    <span className="text-xs text-text-muted">One-time · Subscription cancelled automatically</span>
                   </div>
                 </div>
               </div>
