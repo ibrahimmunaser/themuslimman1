@@ -218,16 +218,21 @@ async function handleTrialFeePayment(pi: Stripe.PaymentIntent) {
   });
   console.log(`[WEBHOOK] handleTrialFeePayment: Subscription ${subscription.id} created (status: ${subscription.status})`);
 
-  // Update user: mark as paid so dashboard access check passes immediately.
-  await prisma.user.update({
-    where: { id: userId },
-    data: {
-      hasPaid: true,
-      ...(isFamily ? { planType: "family" } : {}),
-      ...(customerId ? { stripeCustomerId: customerId } : {}),
-    },
-  });
-  console.log(`[WEBHOOK] handleTrialFeePayment: User ${userId} hasPaid=true`);
+  // Immediately upsert the subscription row so the payment success page can
+  // detect access without waiting for the separate customer.subscription.created
+  // webhook delivery. That webhook will idempotently update the same row later.
+  await upsertSubscription(userId, subscription);
+
+  // Update family planType if needed. Do NOT set hasPaid=true — trial subscribers
+  // are subscription-based users, not lifetime buyers. Setting hasPaid would make
+  // the billing page show them as "Lifetime access" which is incorrect.
+  const userUpdate: { planType?: string; stripeCustomerId?: string } = {};
+  if (isFamily) userUpdate.planType = "family";
+  if (customerId) userUpdate.stripeCustomerId = customerId;
+  if (Object.keys(userUpdate).length > 0) {
+    await prisma.user.update({ where: { id: userId }, data: userUpdate });
+    console.log(`[WEBHOOK] handleTrialFeePayment: User ${userId} updated:`, userUpdate);
+  }
 
   // Send welcome email (only here — upsertSubscription skips it for isTrial subs)
   const planLabel = isFamily ? "Family Trial Access" : "7-Day Trial Access";

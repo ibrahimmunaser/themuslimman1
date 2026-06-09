@@ -54,6 +54,7 @@ export default async function BillingPage() {
 
   const isFamily          = user.planType === "family";
   const isMonthly         = !accessInfo.hasLifetime && accessInfo.hasActiveSubscription;
+  const isTrial           = isMonthly && accessInfo.subscription?.status === "trialing";
   const isFamilyLifetime  = isFamily && !isMonthly;
   const isFamilyMonthly   = isFamily && isMonthly;
   const sub               = accessInfo.subscription;
@@ -101,10 +102,14 @@ export default async function BillingPage() {
               <div>
                 <div className="flex items-center gap-2">
                   <p className="font-semibold text-text">
-                    {isFamilyMonthly
+                    {isFamilyMonthly && isTrial
+                      ? PLANS.familyTrial.name
+                      : isFamilyMonthly
                       ? PLANS.familyMonthly.name
                       : isFamilyLifetime
                       ? PLANS.family.name
+                      : isMonthly && isTrial
+                      ? PLANS.individualTrial.name
                       : isMonthly
                       ? PLANS.monthly.name
                       : PLANS.complete.name}
@@ -122,6 +127,8 @@ export default async function BillingPage() {
                 <p className="text-sm text-text-secondary mt-0.5">
                   {isFamilyMonthly || isFamilyLifetime
                     ? PLANS.family.subtitle
+                    : isTrial
+                    ? PLANS.individualTrial.subtitle
                     : isMonthly
                     ? PLANS.monthly.subtitle
                     : PLANS.complete.subtitle}
@@ -129,7 +136,16 @@ export default async function BillingPage() {
               </div>
             </div>
             <div className="text-right">
-              {isFamilyMonthly ? (
+              {isFamilyMonthly && isTrial ? (
+                <>
+                  <p className="text-xs text-text-muted">$1 today · then $19/mo</p>
+                  {sub && (
+                    <p className="text-xs text-text-muted mt-0.5">
+                      Trial ends {formatDate(sub.currentPeriodEnd)}
+                    </p>
+                  )}
+                </>
+              ) : isFamilyMonthly ? (
                 <>
                   <p className="text-xs text-text-muted">$19 / month</p>
                   {sub && (
@@ -137,6 +153,15 @@ export default async function BillingPage() {
                       {sub.cancelAtPeriodEnd
                         ? `Cancels ${formatDate(sub.currentPeriodEnd)}`
                         : `Renews ${formatDate(sub.currentPeriodEnd)}`}
+                    </p>
+                  )}
+                </>
+              ) : isMonthly && isTrial ? (
+                <>
+                  <p className="text-xs text-text-muted">$1 today · then $9/mo</p>
+                  {sub && (
+                    <p className="text-xs text-text-muted mt-0.5">
+                      Trial ends {formatDate(sub.currentPeriodEnd)}
                     </p>
                   )}
                 </>
@@ -171,6 +196,8 @@ export default async function BillingPage() {
               ? PLANS.familyMonthly.features
               : isFamilyLifetime
               ? PLANS.family.features
+              : isTrial
+              ? PLANS.monthly.features
               : isMonthly
               ? PLANS.monthly.features
               : PLANS.complete.features
@@ -211,8 +238,8 @@ export default async function BillingPage() {
           </div>
         )}
 
-        {/* Individual Lifetime → Family Lifetime upgrade card (pays only the $100 difference) */}
-        {accessInfo.hasLifetime && !isFamily && !isMonthly && (
+        {/* Individual Lifetime → Family Lifetime upgrade card (pays only the $70 difference) */}
+        {accessInfo.hasLifetime && !isFamily && !isMonthly && !isTrial && (
           <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-6">
             <div className="flex items-start gap-4">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-amber-500/15">
@@ -280,8 +307,8 @@ export default async function BillingPage() {
           </div>
         )}
 
-        {/* Card manager (only relevant for lifetime / Stripe-stored cards) */}
-        {accessInfo.hasLifetime && <CardManager />}
+        {/* Card manager — show for lifetime buyers; monthly/trial users manage cards via Stripe portal */}
+        {accessInfo.hasLifetime && !isTrial && <CardManager />}
 
         {/* Purchase history */}
         {purchases.length > 0 && (
