@@ -7,6 +7,7 @@ import { PLANS } from "@/lib/stripe-config";
 import { CardManager } from "@/components/billing/card-manager";
 import { PortalButton } from "@/components/billing/portal-button";
 import { CancelSubscriptionButton } from "@/components/billing/cancel-subscription-button";
+import { ReactivateSubscriptionButton } from "@/components/billing/reactivate-subscription-button";
 import { UpgradeToFamilyMonthlyButton } from "@/components/billing/upgrade-to-family-monthly-button";
 import {
   CreditCard,
@@ -25,6 +26,8 @@ import Link from "next/link";
 export const metadata = { title: "Billing | Complete Seerah", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
 
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+
 function formatDate(d: Date) {
   const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   return `${months[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
@@ -38,9 +41,12 @@ function formatAmount(cents: number, currency: string) {
   }).format(cents / 100);
 }
 
-export default async function BillingPage() {
+export default async function BillingPage({ searchParams }: { searchParams: SearchParams }) {
   const user = await requireStudent();
   if (!user.studentProfileId) redirect("/");
+
+  const params = await searchParams;
+  const upgradedPlan = typeof params.upgraded === "string" ? params.upgraded : null;
 
   // Parallelize access info + purchase history — saves one sequential round-trip.
   const [accessInfo, purchases] = await Promise.all([
@@ -71,6 +77,21 @@ export default async function BillingPage() {
           <h1 className="text-2xl font-bold text-text">Billing &amp; Plan</h1>
           <p className="text-text-secondary text-sm mt-1">Your plan details and billing history.</p>
         </div>
+
+        {/* Upgrade success confirmation */}
+        {upgradedPlan === "family-monthly" && (
+          <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-5 flex items-start gap-4">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-emerald-500/15 mt-0.5">
+              <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+            </div>
+            <div>
+              <p className="font-semibold text-emerald-400">Upgraded to Family Monthly</p>
+              <p className="text-sm text-text-secondary mt-1 leading-relaxed">
+                Your plan has been upgraded to Family Monthly — $19/mo. Your existing card will be charged at the next billing date with Stripe handling any proration automatically.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Payment failed warning — shown when monthly renewal bounces */}
         {isPastDue && (
@@ -188,8 +209,11 @@ export default async function BillingPage() {
           </div>
 
           {isMonthly && sub?.cancelAtPeriodEnd && (
-            <div className="mt-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs">
-              Your subscription is set to cancel on {formatDate(sub.currentPeriodEnd)}. You&apos;ll retain access until then.
+            <div className="mt-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 space-y-2">
+              <p className="text-amber-400 text-xs">
+                Your subscription is set to cancel on {formatDate(sub.currentPeriodEnd)}. You&apos;ll retain access until then.
+              </p>
+              <ReactivateSubscriptionButton isTrial={isTrial} />
             </div>
           )}
 

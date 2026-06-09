@@ -312,9 +312,11 @@ function CheckoutPageContent({
             return null;
           }
           // Already has this plan / downgrade attempt.
-          if (data.hasLifetime || data.hasFamily || data.activeSub || data.hasActiveSubscription) {
+          if (data.hasLifetime || data.hasFamily || data.activeSub || data.hasActiveSubscription || data.isFamilyPlan) {
             setHasActiveSub(true);
-            if (data.currentPlanType) setActiveSubPlanType(data.currentPlanType as "individual" | "family");
+            // isFamilyPlan means the user is on a family plan trying to buy individual — show downgrade block.
+            if (data.isFamilyPlan) setActiveSubPlanType("family");
+            else if (data.currentPlanType) setActiveSubPlanType(data.currentPlanType as "individual" | "family");
             return null;
           }
           window.location.href = "/seerah";

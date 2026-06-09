@@ -105,14 +105,17 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Set hasPaid and, for family purchases, planType=family.
-    // This mirrors the webhook so access is granted immediately even if the
-    // webhook is delayed. The upsert above already wrote the Purchase row.
+    // Set hasPaid and planType to mirror handlePaymentSuccess in the webhook,
+    // so access is granted immediately even if the webhook is delayed.
+    //   family    → planType = "family"  (5-profile household access)
+    //   complete  → planType = "individual" (corrects any stale "family" value left over
+    //               if the user was previously on a family trial before buying individual lifetime)
     await prisma.user.update({
       where: { id: userId },
       data: {
         hasPaid: true,
-        ...(planId === "family" ? { planType: "family" } : {}),
+        ...(planId === "family"   ? { planType: "family" }     : {}),
+        ...(planId === "complete" ? { planType: "individual" } : {}),
       },
     });
 

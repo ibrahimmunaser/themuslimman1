@@ -3,9 +3,10 @@ import { stripe, PLANS, type PlanId } from "@/lib/stripe";
 import { getCurrentUser } from "@/lib/auth";
 import { validatePromoCode, applyDiscount } from "@/lib/promo-codes";
 import { getCreatorPromoConfig } from "@/lib/creator-promos";
+import { getUserAccessInfo } from "@/lib/access";
+
 /** Individual lifetime price in cents ($79). */
 const BASE_PRICE = 7900;
-import { getUserAccessInfo } from "@/lib/access";
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,19 +19,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!user.emailVerified) {
-      return NextResponse.json(
-        { error: "Please verify your email address before making a purchase", requiresVerification: true },
-        { status: 403 }
-      );
-    }
-
     // If the user already has lifetime access, there is nothing to buy.
     // Monthly subscribers are NOT blocked — they can still upgrade to lifetime.
-    const { hasLifetime } = await getUserAccessInfo(user.id);
+    const { hasLifetime } = await getUserAccessInfo(user.id, user.hasPaid);
     if (hasLifetime) {
       return NextResponse.json(
         { error: "You already have access to this course", hasLifetime: true },
+        { status: 409 }
+      );
+    }
+
+    // Block family plan users from buying individual lifetime — that would be a downgrade.
+    // Family → Individual downgrades are not supported through checkout.
+    // Users on a family plan who want individual lifetime should contact support or
+    // cancel their family plan first.
+    if (user.planType === "family") {
+      return NextResponse.json(
+        {
+          error:
+            "You are on a Family plan. Individual Lifetime would be a downgrade. " +
+            "Upgrade to Family Lifetime from your billing page, or contact support.",
+          isFamilyPlan: true,
+        },
         { status: 409 }
       );
     }

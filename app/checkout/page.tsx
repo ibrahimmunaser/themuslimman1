@@ -97,7 +97,10 @@ export default async function CheckoutPage({ searchParams }: Props) {
   let initialAppliedPromoLabel: string | null = null;
   let initialFreeAccess = false;
 
-  if (user && initialAudience === "individual" && initialBilling === "lifetime") {
+  // Skip pre-creation for family plan users — create-payment-intent will block them
+  // with isFamilyPlan=true anyway (individual lifetime is a downgrade from family).
+  // Pre-creating a PI for them wastes a Stripe API call and leaves an abandoned PI.
+  if (user && initialAudience === "individual" && initialBilling === "lifetime" && user.planType !== "family") {
     try {
       const promoParam = params.promo?.trim().toUpperCase() ?? null;
       let finalAmount    = initialBasePrice;

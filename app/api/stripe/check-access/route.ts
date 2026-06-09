@@ -16,7 +16,7 @@ export async function GET() {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   }
 
-  const hasAccess = await hasActiveCourseAccess(user.id);
+  const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
 
   return NextResponse.json({ hasAccess, emailVerified: user.emailVerified }, {
     headers: { "Cache-Control": "no-store, no-cache" },

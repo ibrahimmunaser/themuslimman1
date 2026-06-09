@@ -13,12 +13,6 @@ export async function POST() {
     if (!user) {
       return NextResponse.json({ error: "You must be logged in to subscribe" }, { status: 401 });
     }
-    if (!user.emailVerified) {
-      return NextResponse.json(
-        { error: "Please verify your email address before subscribing", requiresVerification: true },
-        { status: 403 }
-      );
-    }
     if (!MONTHLY_PRICE_ID) {
       console.error("[CREATE-SUBSCRIPTION-INTENT] STRIPE_MONTHLY_PRICE_ID is not set");
       return NextResponse.json({ error: "Monthly subscription is not configured" }, { status: 500 });
@@ -33,6 +27,17 @@ export async function POST() {
     if (accessInfo.hasLifetime) {
       return NextResponse.json(
         { error: "You already have lifetime access to Complete Seerah.", hasLifetime: true },
+        { status: 409 }
+      );
+    }
+
+    // Block family plan users from downgrading to individual monthly.
+    if (user.planType === "family") {
+      return NextResponse.json(
+        {
+          error: "You are on a Family plan. Individual Monthly would be a downgrade. Manage your plan from the billing page.",
+          isFamilyPlan: true,
+        },
         { status: 409 }
       );
     }

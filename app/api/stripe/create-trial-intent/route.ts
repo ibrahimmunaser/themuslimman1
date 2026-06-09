@@ -94,10 +94,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // No prior subscription — determine trial days (always full 7 days now
-    // since the cross-plan trial-stacking loophole is fully closed above).
-    const effectiveTrialDays: number | null = null; // null = use plan default
-
     // Ensure Stripe customer exists
     const dbUser = await prisma.user.findUnique({
       where: { id: user.id },
@@ -118,8 +114,6 @@ export async function POST(request: NextRequest) {
     }
 
     const planConfig = isFamily ? PLANS.familyTrial : PLANS.individualTrial;
-    // Use remaining days when upgrading from another trial; otherwise full trial.
-    const trialDaysToGrant = effectiveTrialDays ?? planConfig.trialDays;
 
     // Create a PaymentIntent for the $1 trial fee only.
     // The actual subscription (with trial_period_days) is created by the webhook
@@ -136,10 +130,7 @@ export async function POST(request: NextRequest) {
         userId: user.id,
         planId: planConfig.id,
         monthlyPriceId,
-        trialDays: String(trialDaysToGrant),
-        // Flag if this is an upgrade so the webhook knows to skip the trial
-        // when 0 days remain (user already used their full trial period).
-        ...(effectiveTrialDays !== null ? { isUpgradedTrial: "true" } : {}),
+        trialDays: String(planConfig.trialDays),
       },
       description: `${planConfig.name} — 7-day trial fee`,
       receipt_email: user.email,

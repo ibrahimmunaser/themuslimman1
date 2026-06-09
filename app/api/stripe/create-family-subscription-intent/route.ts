@@ -74,10 +74,13 @@ export async function POST() {
       }
 
       // Upgrade the subscription to the family monthly price.
-      // Stripe prorates the difference and charges the updated amount on the next invoice.
+      // Also clear cancel_at_period_end: if the user previously cancelled and is
+      // now upgrading, we must re-activate renewal — otherwise the sub would still
+      // cancel at period end at the new family price instead of renewing.
       await stripe.subscriptions.update(activeSub.stripeSubscriptionId, {
         items: [{ id: existingItemId, price: FAMILY_MONTHLY_PRICE_ID }],
         proration_behavior: "create_prorations",
+        cancel_at_period_end: false,
         metadata: {
           userId: user.id,
           planId: FAMILY_MONTHLY_PLAN.id,
@@ -86,14 +89,27 @@ export async function POST() {
         },
       });
 
-      // Immediately update user planType in DB so access checks reflect the upgrade.
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { planType: "family" },
-      });
+      // Immediately update user planType and cancelAtPeriodEnd in DB.
+      await Promise.all([
+        prisma.user.update({
+          where: { id: user.id },
+          data: { planType: "family" },
+        }),
+        prisma.subscription.updateMany({
+          where: { stripeSubscriptionId: activeSub.stripeSubscriptionId },
+          data: { cancelAtPeriodEnd: false, updatedAt: new Date() },
+        }),
+      ]);
 
       // Auto-provision up to 5 learner profiles for family access.
       await ensureFamilyProfiles(user.id);
+
+      // Send upgrade confirmation email.
+      // The webhook's upsertSubscription will NOT send one because isFirstActivation=false
+      // (the subscription was already active/trialing before the price change).
+      sendUpgradeConfirmationEmail(user.id, user.email, user.fullName).catch((e) =>
+        console.error("[CREATE-FAMILY-SUB] Failed to send upgrade email:", e)
+      );
 
       console.log(`[CREATE-FAMILY-SUB] Upgraded individual sub ${activeSub.stripeSubscriptionId} to family monthly for user ${user.id}`);
       return NextResponse.json({ upgraded: true });
@@ -181,6 +197,61 @@ export async function POST() {
     const message = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json({ error: `Failed to create subscription: ${message}` }, { status: 500 });
   }
+}
+
+// ── Upgrade confirmation email ────────────────────────────────────────────────
+
+async function sendUpgradeConfirmationEmail(
+  userId: string,
+  email: string,
+  fullName: string | null,
+): Promise<void> {
+  const { Resend } = await import("resend");
+  const resend  = new Resend(process.env.RESEND_API_KEY);
+  const appUrl  = process.env.NEXT_PUBLIC_APP_URL ?? "https://themuslimman.com";
+  const year    = new Date().getFullYear();
+  const name    = fullName?.trim() || "dear student";
+
+  await resend.emails.send({
+    from:    process.env.EMAIL_FROM ?? "TheMuslimMan <noreply@themuslimman.com>",
+    to:      email,
+    subject: "You've been upgraded to Family Monthly Access",
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+        <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.6;color:#333;max-width:600px;margin:0 auto;padding:20px;">
+          <div style="background:linear-gradient(135deg,#1a1a1a 0%,#2d2d2d 100%);padding:30px 20px;text-align:center;border-radius:12px 12px 0 0;">
+            <h1 style="color:#f4c542;margin:0 0 8px 0;font-size:24px;">Upgraded to Family Access</h1>
+            <p style="color:#ccc;margin:0;font-size:15px;">Your plan has been updated.</p>
+          </div>
+          <div style="background:#fff;padding:40px 30px;border:1px solid #e5e5e5;border-top:none;">
+            <p style="font-size:16px;margin:0 0 16px 0;">Assalamu Alaykum ${name},</p>
+            <p style="font-size:15px;margin:0 0 16px 0;">
+              Your plan has been upgraded to <strong>Family Monthly Access — $19/mo</strong>.
+              Up to 5 learner profiles are now available, each with their own separate progress tracking.
+            </p>
+            <p style="font-size:14px;color:#555;margin:0 0 16px 0;">
+              Stripe will handle any proration automatically — your existing card will be charged the adjusted amount on your next billing date.
+            </p>
+            <div style="text-align:center;margin:32px 0;">
+              <a href="${appUrl}/student/profiles" style="display:inline-block;background:#f4c542;color:#1a1a1a;text-decoration:none;padding:16px 40px;border-radius:8px;font-weight:700;font-size:16px;">
+                Set Up Family Profiles
+              </a>
+            </div>
+            <p style="font-size:13px;color:#aaa;margin:0;">
+              Manage your billing anytime from your <a href="${appUrl}/billing" style="color:#b8960c;">billing page</a>.
+            </p>
+          </div>
+          <div style="background:#f8f9fa;padding:20px;text-align:center;border-radius:0 0 12px 12px;border:1px solid #e5e5e5;border-top:none;">
+            <p style="font-size:12px;color:#999;margin:0;">© ${year} TheMuslimMan · Complete Seerah</p>
+          </div>
+        </body>
+      </html>
+    `,
+  });
+
+  console.log(`[CREATE-FAMILY-SUB] Upgrade email sent to user ${userId}`);
 }
 
 // ── Profile auto-provisioning ─────────────────────────────────────────────────
