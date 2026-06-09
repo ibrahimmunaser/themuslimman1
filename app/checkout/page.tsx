@@ -139,8 +139,10 @@ export default async function CheckoutPage({ searchParams }: Props) {
   const normalizedPlan = LEGACY_PLAN_ALIASES[rawPlan] ?? rawPlan;
   const planConfig = PLAN_CONFIGS[normalizedPlan];
 
-  // ── New unified plans: use the simpler Stripe Checkout flow ────────────────
-  if (planConfig) {
+  // ── Trial plans: use Stripe hosted Checkout (requires two line items) ────────
+  // All other plans use the embedded Stripe Elements flow below so the payment
+  // form stays on the site with the dark theme the user is accustomed to.
+  if (planConfig && (normalizedPlan === "individual-trial" || normalizedPlan === "family-trial")) {
     return (
       <UnifiedCheckoutClient
         plan={planConfig}
@@ -150,8 +152,9 @@ export default async function CheckoutPage({ searchParams }: Props) {
     );
   }
 
-  // ── Legacy / default: individual + lifetime → Stripe Elements flow ─────────
-  // This path handles direct /checkout, /checkout?plan=individual&billing=lifetime, etc.
+  // ── All other plans: embedded Stripe Elements flow ────────────────────────
+  // Handles /checkout?plan=individual-lifetime, family-lifetime, individual-monthly,
+  // family-monthly, and legacy param formats like ?plan=complete, ?billing=monthly, etc.
   type Audience = "individual" | "family";
   type Billing  = "lifetime"  | "monthly";
 
@@ -161,11 +164,19 @@ export default async function CheckoutPage({ searchParams }: Props) {
   const planParam    = params.plan?.toLowerCase()    ?? "";
   const billingParam = params.billing?.toLowerCase() ?? "";
 
-  if (billingParam === "monthly")                               initialBilling  = "monthly";
-  if (billingParam === "lifetime")                              initialBilling  = "lifetime";
-  if (planParam    === "family" || planParam === "familymonthly") initialAudience = "family";
-  if (planParam    === "monthly" || planParam === "familymonthly") initialBilling = "monthly";
-  if (planParam    === "individual")                            initialAudience = "individual";
+  // Map new plan IDs to audience + billing for the Elements flow
+  if (normalizedPlan === "individual-lifetime")                  { initialAudience = "individual"; initialBilling = "lifetime"; }
+  else if (normalizedPlan === "family-lifetime")                 { initialAudience = "family";     initialBilling = "lifetime"; }
+  else if (normalizedPlan === "individual-monthly")              { initialAudience = "individual"; initialBilling = "monthly";  }
+  else if (normalizedPlan === "family-monthly")                  { initialAudience = "family";     initialBilling = "monthly";  }
+  // Legacy URL param fallbacks
+  else {
+    if (billingParam === "monthly")                                initialBilling  = "monthly";
+    if (billingParam === "lifetime")                               initialBilling  = "lifetime";
+    if (planParam === "family" || planParam === "familymonthly")   initialAudience = "family";
+    if (planParam === "monthly" || planParam === "familymonthly")  initialBilling  = "monthly";
+    if (planParam === "individual")                                 initialAudience = "individual";
+  }
 
   let initialClientSecret: string | null = null;
   const initialBasePrice  = 7900;

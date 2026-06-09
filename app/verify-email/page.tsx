@@ -70,7 +70,7 @@ function VerifyEmailContent() {
           </div>
           <h1 className="text-2xl font-bold text-text mb-2">Email verified!</h1>
           <p className="text-text-secondary text-sm mb-6">
-            Your account is now active. Redirecting you to your dashboard...
+            Your account is now active. Redirecting you now...
           </p>
           <Link href="/seerah">
             <Button variant="primary" size="lg">
