@@ -226,7 +226,8 @@ export async function POST(request: NextRequest) {
         break;
       }
 
-      // ── Legacy individual monthly (no trial) ─────────────────────────────────
+      // ── Individual monthly (also accepts "individual-monthly" alias) ──────────
+      case "individual-monthly":
       case "monthly": {
         if (!INDIVIDUAL_MONTHLY_PRICE_ID.startsWith("price_")) {
           return NextResponse.json(
