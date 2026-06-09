@@ -210,11 +210,6 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
             whileHover={prefersReduced ? undefined : { y: -4, transition: { duration: 0.18 } }}
             className="relative p-7 rounded-2xl border border-border bg-surface flex flex-col hover:border-gold/20 hover:shadow-lg hover:shadow-gold/5 transition-shadow"
           >
-            {/* Save % badge */}
-            <div className="absolute -top-3 left-5 px-3 py-1 rounded-full bg-surface-raised border border-gold/20 text-gold text-xs font-bold z-10">
-              {tab === "individual" ? "Save 27% vs monthly" : "Save 35% vs monthly"}
-            </div>
-
             <div className="flex items-center gap-2 mb-4">
               <div className="w-9 h-9 rounded-lg bg-surface-raised border border-border flex items-center justify-center">
                 <Infinity className="w-4 h-4 text-text-secondary" />
@@ -235,6 +230,9 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
               </div>
               <p className="text-sm text-text-secondary">
                 One-time payment · Lifetime access
+              </p>
+              <p className="text-xs text-gold font-medium mt-1.5">
+                {tab === "individual" ? "Save 27% vs monthly" : "Save 35% vs monthly"}
               </p>
             </div>
 
