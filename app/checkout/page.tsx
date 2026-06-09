@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { getUserAccessInfo } from "@/lib/access";
-import UnifiedCheckoutClient, { type UnifiedPlanInfo } from "./checkout-client";
 import CheckoutClientPage from "./page-client";
 import { stripe } from "@/lib/stripe";
 import { validatePromoCode, applyDiscount } from "@/lib/promo-codes";
@@ -9,109 +8,6 @@ import { getCreatorPromoConfig } from "@/lib/creator-promos";
 
 export const dynamic = "force-dynamic";
 
-// ── Plan definitions ──────────────────────────────────────────────────────────
-
-const PLAN_CONFIGS: Record<string, UnifiedPlanInfo> = {
-  "individual-trial": {
-    planKey: "individual-trial",
-    name: "7-Day Individual Trial",
-    subtitle: "Full access · cancel any time",
-    price: 900,          // $9/mo after trial
-    billingLabel: "/month after trial",
-    trialFee: 100,       // $1 today
-    trialDays: 7,
-    features: [
-      "All 100 Seerah video lessons",
-      "Audio lessons for every part",
-      "Briefings, slides, infographics",
-      "Quizzes, flashcards, and mind maps",
-      "Progress tracking",
-      "Cancel anytime",
-    ],
-    badge: "Most Popular",
-  },
-  "family-trial": {
-    planKey: "family-trial",
-    name: "7-Day Family Trial",
-    subtitle: "Up to 5 profiles · cancel any time",
-    price: 1900,         // $19/mo after trial
-    billingLabel: "/month after trial",
-    trialFee: 100,       // $1 today
-    trialDays: 7,
-    features: [
-      "Up to 5 learner profiles",
-      "All 100 Seerah video lessons",
-      "Audio, briefings, slides, infographics",
-      "Quizzes, flashcards, and mind maps",
-      "Separate progress per profile",
-      "Cancel anytime",
-    ],
-    isFamily: true,
-    badge: "Best for Families",
-  },
-  "individual-lifetime": {
-    planKey: "individual-lifetime",
-    name: "Lifetime Individual Access",
-    subtitle: "One-time payment · never expires",
-    price: 7900,         // $79 one-time
-    billingLabel: "one-time",
-    features: [
-      "All 100 Seerah video lessons",
-      "Audio lessons for every part",
-      "Briefings, slides, infographics",
-      "Quizzes, flashcards, and mind maps",
-      "Progress tracking",
-      "Lifetime access — no recurring fees",
-    ],
-    badge: "Best Value",
-  },
-  "family-lifetime": {
-    planKey: "family-lifetime",
-    name: "Lifetime Family Access",
-    subtitle: "Up to 5 profiles · one-time payment",
-    price: 14900,        // $149 one-time
-    billingLabel: "one-time",
-    features: [
-      "Up to 5 learner profiles",
-      "All 100 Seerah video lessons",
-      "Audio, briefings, slides, infographics",
-      "Quizzes, flashcards, and mind maps",
-      "Separate progress per profile",
-      "Lifetime access — no recurring fees",
-    ],
-    isFamily: true,
-    badge: "Best for Families",
-  },
-  "individual-monthly": {
-    planKey: "monthly",
-    name: "Monthly Individual Access",
-    subtitle: "Full access while subscribed",
-    price: 900,
-    billingLabel: "/month",
-    features: [
-      "All 100 Seerah video lessons",
-      "Audio, briefings, slides, infographics",
-      "Quizzes, flashcards, and mind maps",
-      "Progress tracking",
-      "Cancel anytime",
-    ],
-  },
-  "family-monthly": {
-    planKey: "family-monthly",
-    name: "Monthly Family Access",
-    subtitle: "Up to 5 profiles · billed monthly",
-    price: 1900,
-    billingLabel: "/month",
-    features: [
-      "Up to 5 learner profiles",
-      "All 100 Seerah video lessons",
-      "Audio, briefings, slides, infographics",
-      "Quizzes, flashcards, and mind maps",
-      "Cancel anytime",
-    ],
-    isFamily: true,
-  },
-};
 
 // Legacy plan param aliases → new format
 const LEGACY_PLAN_ALIASES: Record<string, string> = {
@@ -137,26 +33,9 @@ export default async function CheckoutPage({ searchParams }: Props) {
   // ── Resolve plan from URL param ────────────────────────────────────────────
   const rawPlan = (params.plan ?? "").toLowerCase().trim();
   const normalizedPlan = LEGACY_PLAN_ALIASES[rawPlan] ?? rawPlan;
-  const planConfig = PLAN_CONFIGS[normalizedPlan];
 
-  // ── Trial plans: use Stripe hosted Checkout (requires two line items) ────────
-  // All other plans use the embedded Stripe Elements flow below so the payment
-  // form stays on the site with the dark theme the user is accustomed to.
-  if (planConfig && (normalizedPlan === "individual-trial" || normalizedPlan === "family-trial")) {
-    return (
-      <UnifiedCheckoutClient
-        plan={planConfig}
-        userEmail={user?.email ?? null}
-        userVerified={user?.emailVerified ?? false}
-      />
-    );
-  }
-
-  // ── All other plans: embedded Stripe Elements flow ────────────────────────
-  // Handles /checkout?plan=individual-lifetime, family-lifetime, individual-monthly,
-  // family-monthly, and legacy param formats like ?plan=complete, ?billing=monthly, etc.
   type Audience = "individual" | "family";
-  type Billing  = "lifetime"  | "monthly";
+  type Billing  = "lifetime"  | "monthly" | "trial";
 
   let initialAudience: Audience = "individual";
   let initialBilling:  Billing  = "lifetime";
@@ -164,17 +43,20 @@ export default async function CheckoutPage({ searchParams }: Props) {
   const planParam    = params.plan?.toLowerCase()    ?? "";
   const billingParam = params.billing?.toLowerCase() ?? "";
 
-  // Map new plan IDs to audience + billing for the Elements flow
-  if (normalizedPlan === "individual-lifetime")                  { initialAudience = "individual"; initialBilling = "lifetime"; }
-  else if (normalizedPlan === "family-lifetime")                 { initialAudience = "family";     initialBilling = "lifetime"; }
-  else if (normalizedPlan === "individual-monthly")              { initialAudience = "individual"; initialBilling = "monthly";  }
-  else if (normalizedPlan === "family-monthly")                  { initialAudience = "family";     initialBilling = "monthly";  }
-  // Legacy URL param fallbacks
+  // Map plan IDs to audience + billing for the Elements flow.
+  // Monthly plans redirect to trial — trial is the entry point to the monthly subscription.
+  if      (normalizedPlan === "individual-trial")   { initialAudience = "individual"; initialBilling = "trial";    }
+  else if (normalizedPlan === "family-trial")        { initialAudience = "family";     initialBilling = "trial";    }
+  else if (normalizedPlan === "individual-lifetime") { initialAudience = "individual"; initialBilling = "lifetime"; }
+  else if (normalizedPlan === "family-lifetime")     { initialAudience = "family";     initialBilling = "lifetime"; }
+  else if (normalizedPlan === "individual-monthly")  { initialAudience = "individual"; initialBilling = "trial";    }
+  else if (normalizedPlan === "family-monthly")      { initialAudience = "family";     initialBilling = "trial";    }
+  // Legacy URL param fallbacks — treat monthly as trial
   else {
-    if (billingParam === "monthly")                                initialBilling  = "monthly";
+    if (billingParam === "monthly")                                initialBilling  = "trial";
     if (billingParam === "lifetime")                               initialBilling  = "lifetime";
     if (planParam === "family" || planParam === "familymonthly")   initialAudience = "family";
-    if (planParam === "monthly" || planParam === "familymonthly")  initialBilling  = "monthly";
+    if (planParam === "monthly" || planParam === "familymonthly")  initialBilling  = "trial";
     if (planParam === "individual")                                 initialAudience = "individual";
   }
 

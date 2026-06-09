@@ -21,7 +21,7 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type Audience = "individual" | "family";
-type Billing  = "lifetime" | "monthly";
+type Billing  = "lifetime" | "monthly" | "trial";
 type AuthMode = "signup" | "login";
 
 interface AppliedCoupon {
@@ -33,14 +33,17 @@ interface AppliedCoupon {
 
 /** Derive the canonical plan key from audience + billing. */
 function toPlanKey(audience: Audience, billing: Billing) {
-  if (audience === "individual" && billing === "lifetime") return "complete"     as const;
-  if (audience === "individual" && billing === "monthly")  return "monthly"      as const;
-  if (audience === "family"     && billing === "lifetime") return "family"       as const;
+  if (audience === "individual" && billing === "lifetime") return "complete"        as const;
+  if (audience === "individual" && billing === "monthly")  return "monthly"         as const;
+  if (audience === "individual" && billing === "trial")    return "individualTrial" as const;
+  if (audience === "family"     && billing === "lifetime") return "family"          as const;
+  if (audience === "family"     && billing === "trial")    return "familyTrial"     as const;
   return "familyMonthly" as const;
 }
 
 /** Derive the correct Stripe API endpoint. */
 function toEndpoint(audience: Audience, billing: Billing): string {
+  if (billing === "trial")                                 return "/api/stripe/create-trial-intent";
   if (audience === "individual" && billing === "lifetime") return "/api/stripe/create-payment-intent";
   if (audience === "individual" && billing === "monthly")  return "/api/stripe/create-subscription-intent";
   if (audience === "family"     && billing === "lifetime") return "/api/stripe/create-family-payment-intent";
@@ -50,6 +53,7 @@ function toEndpoint(audience: Audience, billing: Billing): string {
 /** Derive the payment success return URL. */
 function toReturnUrl(audience: Audience, billing: Billing): string {
   const base = window.location.origin;
+  if (billing === "trial")                                 return `${base}/payment/success?type=subscription`;
   if (audience === "individual" && billing === "monthly")  return `${base}/payment/success?type=subscription`;
   if (audience === "family"     && billing === "lifetime") return `${base}/payment/success?type=family`;
   if (audience === "family"     && billing === "monthly")  return `${base}/payment/success?type=family-subscription`;
@@ -102,7 +106,9 @@ function CheckoutForm({
   };
 
   const buttonLabel =
-    billing === "monthly"
+    billing === "trial"
+      ? `Start 7-Day Trial — ${formatPrice(finalPrice)} today`
+      : billing === "monthly"
       ? `Subscribe — ${formatPrice(finalPrice)}/mo`
       : `Get Lifetime Access — ${formatPrice(finalPrice)}`;
 
@@ -189,6 +195,7 @@ function CheckoutPageContent({
   const planKey   = toPlanKey(audience, billing);
   const currentPlan = PLANS[planKey];
   const isLifetime  = billing === "lifetime";
+  const isTrial     = billing === "trial";
 
   // Compute guest promo discount synchronously from the client-safe creator promo
   // config (20% × currentPlan.price). Because promoParam now comes from a server
@@ -568,14 +575,14 @@ function CheckoutPageContent({
     { id: "family",     Icon: Users, label: "Family" },
   ];
 
-  const billingOptions: { id: Billing; label: string; price: number; sub: string; badge?: string }[] = audience === "individual"
+  const billingOptions: { id: Billing; label: string; price: number; priceSuffix?: string; sub: string; badge?: string }[] = audience === "individual"
     ? [
-        { id: "monthly",  label: "Monthly",  price: PLANS.monthly.price,  sub: "Cancel anytime" },
-        { id: "lifetime", label: "Lifetime", price: PLANS.complete.price, sub: "Pay once, access forever", badge: "Best Value" },
+        { id: "trial",    label: "7-Day Trial", price: PLANS.individualTrial.trialFeeAmount, priceSuffix: " today", sub: `Then ${formatPrice(PLANS.individualTrial.price)}/mo · cancel anytime`, badge: "Most Popular" },
+        { id: "lifetime", label: "Lifetime",    price: PLANS.complete.price, sub: "Pay once, access forever", badge: "Best Value" },
       ]
     : [
-        { id: "monthly",  label: "Monthly",  price: PLANS.familyMonthly.price, sub: "Up to 5 profiles · Cancel anytime" },
-        { id: "lifetime", label: "Lifetime", price: PLANS.family.price,        sub: "Up to 5 profiles · Pay once", badge: "Best Value" },
+        { id: "trial",    label: "7-Day Trial", price: PLANS.familyTrial.trialFeeAmount, priceSuffix: " today", sub: `Then ${formatPrice(PLANS.familyTrial.price)}/mo · up to 5 profiles`, badge: "Most Popular" },
+        { id: "lifetime", label: "Lifetime",    price: PLANS.family.price, sub: "Up to 5 profiles · pay once", badge: "Best Value" },
       ];
 
   const LeftColumn = (
@@ -622,8 +629,8 @@ function CheckoutPageContent({
       </div>
 
       {/* Billing options */}
-      <div className="space-y-3 mb-8">
-        {billingOptions.map(({ id, label, price, sub, badge }) => (
+          <div className="space-y-3 mb-8">
+        {billingOptions.map(({ id, label, price, priceSuffix, sub, badge }) => (
           <button
             key={id}
             onClick={() => { setBilling(id); setAppliedCoupon(null); setGuestPromo(null); setDiscountAmount(0); setCouponInput(""); setCouponError(null); }}
@@ -656,7 +663,7 @@ function CheckoutPageContent({
               <span className={`text-xl font-bold ${billing === id ? "text-white" : "text-zinc-400"}`}>
                 {formatPrice(price)}
               </span>
-              {id === "monthly" && <span className="text-xs text-zinc-500">/mo</span>}
+              {priceSuffix && <span className="text-xs text-zinc-500">{priceSuffix}</span>}
             </div>
           </button>
         ))}
@@ -677,9 +684,9 @@ function CheckoutPageContent({
       {/* Trust badges */}
       <div className="mt-8 pt-6 border-t border-zinc-800 flex flex-wrap gap-4">
         {[
-          { Icon: Shield, text: isLifetime ? "7-day refund guarantee" : "Cancel anytime" },
+          { Icon: Shield, text: isTrial ? "Cancel anytime" : isLifetime ? "7-day refund guarantee" : "Cancel anytime" },
           { Icon: Lock,   text: "Secure payment" },
-          { Icon: Star,   text: isLifetime ? "Lifetime access" : "Full access while subscribed" },
+          { Icon: Star,   text: isTrial ? "7-day trial access" : isLifetime ? "Lifetime access" : "Full access while subscribed" },
         ].map(({ Icon, text }) => (
           <div key={text} className="flex items-center gap-2 text-xs text-zinc-500">
             <Icon className="w-4 h-4 text-zinc-600" />
@@ -698,7 +705,36 @@ function CheckoutPageContent({
         ? (guestPromo?.label ?? guestPromo?.code)
         : (appliedCoupon?.label ?? appliedCoupon?.code));
 
-  const OrderSummary = (
+  const trialPlanConfig = isTrial
+    ? (audience === "family" ? PLANS.familyTrial : PLANS.individualTrial)
+    : null;
+
+  const OrderSummary = isTrial && trialPlanConfig ? (
+    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 mb-6 space-y-3">
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-sm font-semibold text-white">{trialPlanConfig.name}</p>
+          <p className="text-xs text-zinc-500 mt-0.5">
+            {audience === "family" ? "Up to 5 learner profiles · " : ""}
+            7-day trial
+          </p>
+        </div>
+        <div className="text-right ml-4 flex-shrink-0">
+          <p className="text-sm font-bold text-white whitespace-nowrap">
+            {formatPrice(trialPlanConfig.trialFeeAmount)} today
+          </p>
+        </div>
+      </div>
+      <div className="flex items-center justify-between text-xs text-zinc-500 pt-1 border-t border-zinc-800/60">
+        <span>After 7 days</span>
+        <span>{formatPrice(trialPlanConfig.price)}/mo · cancel anytime</span>
+      </div>
+      <div className="flex items-center justify-between pt-1 border-t border-zinc-800">
+        <span className="text-sm font-semibold text-white">Due today</span>
+        <span className="text-lg font-bold text-gold">{formatPrice(trialPlanConfig.trialFeeAmount)}</span>
+      </div>
+    </div>
+  ) : (
     <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 mb-6 space-y-3">
       <div className="flex items-start justify-between">
         <div>
