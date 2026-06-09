@@ -28,7 +28,7 @@ const BUILT_IN_CODES: Record<string, PromoCode> = {
   KORRA20:    { type: "percent", value: 20, label: "20% off (Korra)",               creatorOnly: true },
   ITACHI20:   { type: "percent", value: 20, label: "20% off (Itachi)",              creatorOnly: true },
   DEEN:       { type: "percent", value: 20, label: "20% off (Deen Responds)",       creatorOnly: true },
-  ORTHODOX20: { type: "percent", value: 20, label: "20% off (The Orthodox Muslim)", creatorOnly: true },
+  ORTHODOX:   { type: "percent", value: 20, label: "20% off (The Orthodox Muslim)", creatorOnly: true },
   // Location codes — 20% off for local community members.
   DEARBORN20:  { type: "percent", value: 20, label: "20% off (Dearborn)",  creatorOnly: true },
   ANNARBOR20:  { type: "percent", value: 20, label: "20% off (Ann Arbor)", creatorOnly: true },
