@@ -57,26 +57,55 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Block users who already have active access
+    // Block users who already have active access of the SAME plan type.
+    // Upgrading from individual → family (or vice versa) is allowed.
     const [accessInfo, activeSub] = await Promise.all([
       getUserAccessInfo(user.id, user.hasPaid),
       getActiveSubscription(user.id),
     ]);
 
     if (accessInfo.hasLifetime) {
-      return NextResponse.json(
-        { error: "You already have lifetime access.", hasLifetime: true },
-        { status: 409 }
-      );
+      // Block lifetime holders only if they already have the matching scope.
+      // Individual lifetime holders can still upgrade to a family trial.
+      const alreadyHasSameScope =
+        isFamily ? user.planType === "family" : user.planType !== "family";
+      if (alreadyHasSameScope) {
+        return NextResponse.json(
+          { error: "You already have lifetime access.", hasLifetime: true },
+          { status: 409 }
+        );
+      }
     }
+    // How many trial days to grant for this purchase.
+    // Default = full 7 days. If the user is upgrading from an existing trial of
+    // a different plan type, carry over only the REMAINING days from their current
+    // trial — this closes the loophole where someone could stack two 7-day trials
+    // (individual then family) for $2 and get ~14 days free.
+    let effectiveTrialDays: number | null = null; // null = use plan default
+
     if (activeSub) {
-      return NextResponse.json(
-        {
-          error: "You already have an active subscription.",
-          hasActiveSubscription: true,
-        },
-        { status: 409 }
-      );
+      // Only block if the active subscription is for the same audience.
+      // An individual trial holder can upgrade to a family trial, and vice versa.
+      const activeIsFamily = user.planType === "family";
+      const conflictsWithTarget = isFamily ? activeIsFamily : !activeIsFamily;
+      if (conflictsWithTarget) {
+        return NextResponse.json(
+          {
+            error: "You already have an active subscription.",
+            hasActiveSubscription: true,
+            // Tell the client what plan the user currently holds so it can
+            // offer the right upgrade path instead of a dead-end message.
+            currentPlanType: user.planType ?? "individual",
+          },
+          { status: 409 }
+        );
+      }
+
+      // Cross-plan upgrade (e.g. individual trial → family trial).
+      // Calculate remaining days from the existing trial so the total free
+      // period never exceeds the original 7 days.
+      const msRemaining = activeSub.currentPeriodEnd.getTime() - Date.now();
+      effectiveTrialDays = Math.max(0, Math.ceil(msRemaining / 86_400_000));
     }
 
     // Ensure Stripe customer exists
@@ -99,6 +128,8 @@ export async function POST(request: NextRequest) {
     }
 
     const planConfig = isFamily ? PLANS.familyTrial : PLANS.individualTrial;
+    // Use remaining days when upgrading from another trial; otherwise full trial.
+    const trialDaysToGrant = effectiveTrialDays ?? planConfig.trialDays;
 
     // Create a PaymentIntent for the $1 trial fee only.
     // The actual subscription (with trial_period_days) is created by the webhook
@@ -115,7 +146,10 @@ export async function POST(request: NextRequest) {
         userId: user.id,
         planId: planConfig.id,
         monthlyPriceId,
-        trialDays: String(planConfig.trialDays),
+        trialDays: String(trialDaysToGrant),
+        // Flag if this is an upgrade so the webhook knows to skip the trial
+        // when 0 days remain (user already used their full trial period).
+        ...(effectiveTrialDays !== null ? { isUpgradedTrial: "true" } : {}),
       },
       description: `${planConfig.name} — 7-day trial fee`,
       receipt_email: user.email,

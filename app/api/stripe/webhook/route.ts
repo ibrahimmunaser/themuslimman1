@@ -192,7 +192,10 @@ async function handleTrialFeePayment(pi: Stripe.PaymentIntent) {
 
   const customerId =
     typeof pi.customer === "string" ? pi.customer : (pi.customer as Stripe.Customer)?.id ?? "";
-  const trialDaysNum = parseInt(trialDays ?? "7", 10) || 7;
+  const parsedTrialDays = parseInt(trialDays ?? "7", 10);
+  // If trialDays is 0 the user already exhausted their trial — start billing immediately.
+  // Fall back to 7 only when the metadata value is missing/NaN (normal first purchase).
+  const trialDaysNum = isNaN(parsedTrialDays) ? 7 : parsedTrialDays;
   const isFamily = planId === "familyTrial";
 
   // Attach the payment method to the customer as default for future subscription charges
@@ -202,18 +205,37 @@ async function handleTrialFeePayment(pi: Stripe.PaymentIntent) {
       .catch((e) => console.warn("[WEBHOOK] handleTrialFeePayment: Could not set default PM:", e));
   }
 
-  // Create the subscription with trial. This fires customer.subscription.created,
-  // but upsertSubscription skips the welcome email for isTrial subs.
+  // If upgrading from an individual trial to a family trial, cancel the old
+  // individual subscription so the user isn't billed twice after trial ends.
+  if (isFamily) {
+    const oldSubs = await prisma.subscription.findMany({
+      where: { userId, status: { in: ["trialing", "active"] } },
+      select: { stripeSubscriptionId: true },
+    });
+    for (const old of oldSubs) {
+      await stripe.subscriptions
+        .cancel(old.stripeSubscriptionId)
+        .catch((e) => console.warn("[WEBHOOK] handleTrialFeePayment: Could not cancel old sub:", e));
+      await prisma.subscription
+        .update({ where: { stripeSubscriptionId: old.stripeSubscriptionId }, data: { status: "canceled" } })
+        .catch(() => {});
+      console.log(`[WEBHOOK] handleTrialFeePayment: Cancelled old subscription ${old.stripeSubscriptionId} for user ${userId}`);
+    }
+  }
+
+  // Create the subscription. If trialDaysNum > 0 apply a trial period; otherwise
+  // bill immediately (user already exhausted their trial by upgrading late).
   const subscription = await stripe.subscriptions.create({
     customer: customerId,
     items: [{ price: monthlyPriceId }],
-    trial_period_days: trialDaysNum,
+    ...(trialDaysNum > 0 ? { trial_period_days: trialDaysNum } : {}),
     default_payment_method: pi.payment_method as string | undefined ?? undefined,
     metadata: {
       userId,
       planId,
       type: "subscription",
       isTrial: "true",
+      ...(isFamily ? { planType: "family" } : {}),
     },
   });
   console.log(`[WEBHOOK] handleTrialFeePayment: Subscription ${subscription.id} created (status: ${subscription.status})`);

@@ -233,6 +233,9 @@ function CheckoutPageContent({
   const [loading,        setLoading]        = useState(false);
   const [error,          setError]          = useState<string | null>(null);
   const [hasActiveSub,   setHasActiveSub]   = useState(false);
+  // When hasActiveSub is true, this holds what plan type the user currently has
+  // so we can show an upgrade CTA instead of a dead-end message.
+  const [activeSubPlanType, setActiveSubPlanType] = useState<"individual" | "family" | null>(null);
   const [freeAccess,     setFreeAccess]     = useState(initialFreeAccess);
   const [freeClaimLoading, setFreeClaimLoading] = useState(false);
   const [freeClaimError,   setFreeClaimError]   = useState<string | null>(null);
@@ -258,11 +261,18 @@ function CheckoutPageContent({
     bill: Billing,
     promoCode?: string
   ): Promise<{ discountAmount: number; finalPrice: number } | null> => {
+    // Stamp this call with a generation number. Any response that arrives after
+    // a newer call has started will be silently discarded — this prevents a slow
+    // 409 from an old trial intent overwriting the clientSecret from a faster
+    // lifetime intent when the user switches plans quickly.
+    const gen = ++intentGen.current;
+
     setLoading(true);
     setClientSecret(null);
     setFreeAccess(false);
     setError(null);
     setHasActiveSub(false);
+    setActiveSubPlanType(null);
 
     try {
       const endpoint = toEndpoint(aud, bill);
@@ -276,10 +286,14 @@ function CheckoutPageContent({
       });
       const data = await res.json();
 
+      // Discard stale responses — a newer createIntent call has already taken over.
+      if (intentGen.current !== gen) return null;
+
       if (!res.ok) {
         if (res.status === 409 && (data.hasLifetime || data.hasFamily || data.activeSub || data.hasActiveSubscription)) {
           if (data.activeSub || data.hasActiveSubscription || data.hasLifetime || data.hasFamily) {
             setHasActiveSub(true);
+            if (data.currentPlanType) setActiveSubPlanType(data.currentPlanType);
             return null;
           }
           window.location.href = "/seerah";
@@ -290,6 +304,10 @@ function CheckoutPageContent({
 
       const discount: number = data.promoDiscountAmount ?? 0;
       const price: number    = data.finalAmount ?? data.amount ?? currentPlan.price;
+
+      // One final stale-check before writing state — the fetch above could have
+      // taken a while and a newer call may have already completed.
+      if (intentGen.current !== gen) return null;
 
       setBasePrice(data.baseAmount ?? currentPlan.price);
       setFinalPrice(price);
@@ -311,10 +329,13 @@ function CheckoutPageContent({
       }
       return { discountAmount: discount, finalPrice: price };
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      if (intentGen.current === gen) {
+        setError(err instanceof Error ? err.message : "An error occurred");
+      }
       return null;
     } finally {
-      setLoading(false);
+      // Only clear the loading state if this is still the active call.
+      if (intentGen.current === gen) setLoading(false);
     }
   };
 
@@ -358,6 +379,10 @@ function CheckoutPageContent({
   // checks gen against the current value; if they differ, a newer autoApply
   // has started and this response must be discarded.
   const autoApplyGen  = useRef(0);
+  // Same pattern for createIntent — prevents a stale 409 from an old trial
+  // intent call overwriting a successful response from a newer lifetime call
+  // when the user switches plans quickly while the first fetch is in-flight.
+  const intentGen     = useRef(0);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -940,19 +965,25 @@ function CheckoutPageContent({
     );
   }
 
-  // ── Authenticated: already has active plan ─────────────────────────────────
+  // ── Authenticated: already has this plan (same type) ──────────────────────
 
   if (hasActiveSub) {
+    // Individual trial holder looking at the individual trial plan.
+    // Offer the family upgrade options directly.
+    const showUpgradeCta = activeSubPlanType === "individual" && audience === "individual";
+
     return (
       <div className="min-h-screen bg-zinc-950 flex flex-col lg:flex-row">
         {LeftColumn}
         <div className="lg:w-1/2 px-6 sm:px-12 py-12 flex flex-col justify-center">
-          <div className="max-w-md w-full mx-auto">
+          <div className="max-w-md w-full mx-auto space-y-4">
             <div className="p-6 rounded-xl bg-gold/10 border border-gold/25 text-center space-y-4">
               <RefreshCw className="w-10 h-10 text-gold mx-auto" />
-              <p className="text-lg font-bold text-white">You already have access</p>
+              <p className="text-lg font-bold text-white">You already have this plan</p>
               <p className="text-sm text-zinc-400">
-                Your account is already active. Head to your dashboard to continue learning.
+                {showUpgradeCta
+                  ? "You're already on an individual trial. Head to your dashboard or upgrade to a family plan."
+                  : "Your account is already active. Head to your dashboard to continue learning."}
               </p>
               <Link
                 href="/seerah"
@@ -961,6 +992,35 @@ function CheckoutPageContent({
                 Go to Dashboard <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
+            {showUpgradeCta && (
+              <div className="p-5 rounded-xl border border-amber-500/20 bg-amber-500/5 space-y-3">
+                <p className="font-semibold text-white text-sm">Upgrade to Family Access</p>
+                <p className="text-xs text-zinc-400">
+                  One household account with up to 5 learner profiles and individual progress tracking.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => {
+                      // Switch the left panel to Family + Trial and re-trigger intent creation.
+                      setAudience("family");
+                      setBilling("trial");
+                    }}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm transition-colors"
+                  >
+                    7-Day Trial — $1 today <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setAudience("family");
+                      setBilling("lifetime");
+                    }}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-amber-500/40 hover:border-amber-500/70 text-amber-400 font-semibold text-sm transition-colors"
+                  >
+                    Lifetime — $149
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

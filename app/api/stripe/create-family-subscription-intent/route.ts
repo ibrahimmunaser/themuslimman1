@@ -56,13 +56,13 @@ export async function POST() {
       );
     }
 
-    // Block users who already have any active monthly subscription (individual or family).
-    // Switching between monthly plans requires canceling the current subscription first.
-    if (activeSub) {
+    // Block users who already have an active FAMILY subscription — nothing to upgrade to.
+    // Individual-plan subscribers (trial or monthly) are allowed through; this is an upgrade.
+    if (activeSub && user.planType === "family") {
       return NextResponse.json(
         {
           error:
-            "You already have an active monthly subscription. Manage your subscription from billing.",
+            "You already have an active Family subscription. Manage your subscription from billing.",
           hasActiveSubscription: true,
         },
         { status: 409 }
