@@ -1,0 +1,8 @@
+fix: order summary price updates instantly when switching plans
+
+Reset basePrice/finalPrice synchronously in the audience-tab and billing-option
+onClick handlers so the right-panel order summary always reflects the selected
+plan before the async createIntent API call returns. Previously the summary
+could show stale pricing (e.g. $79 lifetime) after switching to a trial plan.
+
+Also auto-provision 5 learner profiles for family plan purchases via webhook.

@@ -256,6 +256,13 @@ async function handleTrialFeePayment(pi: Stripe.PaymentIntent) {
     console.log(`[WEBHOOK] handleTrialFeePayment: User ${userId} updated:`, userUpdate);
   }
 
+  // Auto-provision 5 learner profiles for family plans.
+  if (isFamily) {
+    await ensureFamilyProfiles(userId).catch((e) =>
+      console.error("[WEBHOOK] handleTrialFeePayment: Failed to provision family profiles:", e)
+    );
+  }
+
   // Send welcome email (only here — upsertSubscription skips it for isTrial subs)
   const planLabel = isFamily ? "Family Trial Access" : "7-Day Trial Access";
   sendPurchaseConfirmationEmail(userId, planLabel).catch((err) =>
@@ -331,6 +338,13 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
     await prisma.user.update({ where: { id: userId }, data: updateData });
     console.log(`[WEBHOOK] handlePaymentSuccess: User ${userId} updated - hasPaid=true, planType=${updateData.planType ?? "unchanged"}`);
 
+    // Auto-provision 5 learner profiles for family lifetime purchases.
+    if (planId === "family") {
+      await ensureFamilyProfiles(userId).catch((e) =>
+        console.error("[WEBHOOK] handlePaymentSuccess: Failed to provision family profiles:", e)
+      );
+    }
+
     // Attach payment method to Stripe customer for saved cards
     if (paymentIntent.payment_method && paymentIntent.customer) {
       console.log(`[WEBHOOK] handlePaymentSuccess: Attaching payment method ${paymentIntent.payment_method} to customer ${paymentIntent.customer}`);
@@ -385,6 +399,62 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
     // Re-throw so the webhook route returns 500 and Stripe retries.
     throw error;
   }
+}
+
+// ── Family profile auto-provisioning ─────────────────────────────────────────
+
+/**
+ * Ensures a family user has exactly 5 learner profiles.
+ * Safe to call multiple times — idempotent, never deletes existing profiles.
+ *
+ * Profile names:
+ *   Slot 1 — user's full name (or "Main Learner") — marked isDefault=true
+ *   Slots 2–5 — "Learner 2" … "Learner 5"
+ *
+ * If the user already has profiles those are kept and we only fill missing
+ * slots up to 5 total.
+ */
+async function ensureFamilyProfiles(userId: string): Promise<void> {
+  const FAMILY_LIMIT = 5;
+
+  const [existingProfiles, user] = await Promise.all([
+    prisma.learnerProfile.findMany({
+      where: { userId },
+      select: { id: true, isDefault: true },
+      orderBy: { createdAt: "asc" },
+    }),
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: { fullName: true },
+    }),
+  ]);
+
+  const toCreate = FAMILY_LIMIT - existingProfiles.length;
+  if (toCreate <= 0) return; // already fully provisioned
+
+  const hasDefault = existingProfiles.some((p) => p.isDefault);
+  const existingCount = existingProfiles.length;
+
+  const newProfiles = Array.from({ length: toCreate }, (_, i) => {
+    const slot = existingCount + i + 1; // 1-based slot index
+    const isMainSlot = slot === 1;
+    return {
+      id: crypto.randomUUID(),
+      userId,
+      displayName: isMainSlot
+        ? (user?.fullName?.trim() || "Main Learner")
+        : `Learner ${slot}`,
+      isDefault: isMainSlot && !hasDefault,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+  });
+
+  await prisma.learnerProfile.createMany({ data: newProfiles });
+  console.log(
+    `[WEBHOOK] ensureFamilyProfiles: Created ${newProfiles.length} profiles for user ${userId} ` +
+    `(${existingCount} already existed)`
+  );
 }
 
 // ── Subscription helpers ──────────────────────────────────────────────────────

@@ -640,7 +640,15 @@ function CheckoutPageContent({
         {audienceOptions.map(({ id, Icon, label }) => (
           <button
             key={id}
-            onClick={() => { setAudience(id); setAppliedCoupon(null); setGuestPromo(null); setDiscountAmount(0); setCouponInput(""); setCouponError(null); }}
+            onClick={() => {
+              setAudience(id);
+              setAppliedCoupon(null); setGuestPromo(null); setDiscountAmount(0); setCouponInput(""); setCouponError(null);
+              // Immediately reset displayed price to the new plan so the order
+              // summary never shows stale pricing while the API call is in-flight.
+              const newPlan = PLANS[toPlanKey(id, billing)];
+              const snap = billing === "trial" ? (newPlan as typeof PLANS.individualTrial).trialFeeAmount ?? newPlan.price : newPlan.price;
+              setBasePrice(snap); setFinalPrice(snap);
+            }}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
               audience === id
                 ? "bg-zinc-700 text-white shadow-sm"
@@ -658,7 +666,15 @@ function CheckoutPageContent({
         {billingOptions.map(({ id, label, price, priceSuffix, sub, badge }) => (
           <button
             key={id}
-            onClick={() => { setBilling(id); setAppliedCoupon(null); setGuestPromo(null); setDiscountAmount(0); setCouponInput(""); setCouponError(null); }}
+            onClick={() => {
+              setBilling(id);
+              setAppliedCoupon(null); setGuestPromo(null); setDiscountAmount(0); setCouponInput(""); setCouponError(null);
+              // Immediately snap displayed price to the selected plan so the order
+              // summary is always correct before the async createIntent responds.
+              const newPlan = PLANS[toPlanKey(audience, id)];
+              const snap = id === "trial" ? (newPlan as typeof PLANS.individualTrial).trialFeeAmount ?? newPlan.price : newPlan.price;
+              setBasePrice(snap); setFinalPrice(snap);
+            }}
             className={`w-full flex items-center p-4 rounded-xl border transition-all text-left ${
               billing === id
                 ? "border-gold/50 bg-gold/8 ring-1 ring-gold/30"
