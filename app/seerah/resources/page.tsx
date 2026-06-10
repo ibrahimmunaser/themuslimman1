@@ -133,17 +133,8 @@ export default async function SeerahResourcesPage() {
   const factsProgressMap = getAssetProgressMap("statement-of-facts");
   const factsCompletedCount = getAssetCompletedCount("statement-of-facts");
 
-  // Per-part OR lock — exactly matches the part-page access check.
-  // A part is unlocked if EITHER the complete-path predecessor quiz is passed
-  // Sequential lock: only Part 1 is freely accessible.
-  // Every other part requires the previous part's quiz to be passed.
-  const lockedPartNumbers = PARTS
-    .filter((p) => {
-      const n = p.partNumber;
-      if (n === 1) return false;
-      return !(progressMap[n - 1]?.quizPassed ?? false);
-    })
-    .map((p) => p.partNumber);
+  // All parts are freely accessible — no sequential lock.
+  const lockedPartNumbers: number[] = [];
 
   return (
     <ResourcesTabs

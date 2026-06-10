@@ -417,6 +417,5 @@ export async function submitQuizAnswers(
 
   devLog(`[PROGRESS] submitQuizAnswers: Part ${partNumber} server-computed score ${serverScore}% (${correct}/${total})`);
 
-  // Delegate to the existing recording + sequential-lock logic.
   return trackQuizCompleted(partNumber, serverScore);
 }

@@ -588,16 +588,6 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
     fetchPartAssets(part.partNumber).then(setAssetUrls);
   }, [part.partNumber, initialAssetUrls]);
 
-  // Track video completion — unlocks the quiz tab
-  const [videoCompleted, setVideoCompleted] = useState(initialVideoCompleted ?? false);
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent).detail;
-      if ((detail.videoWatchPercent ?? 0) >= 85) setVideoCompleted(true);
-    };
-    window.addEventListener("seerah:progressUpdate", handler);
-    return () => window.removeEventListener("seerah:progressUpdate", handler);
-  }, []);
 
   // Track which panels have been rendered at least once — never unmount after first visit
   const [renderedPanels, setRenderedPanels] = useState<Set<string>>(
@@ -738,7 +728,6 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
                     previewMode={previewMode}
                     assetUrls={assetUrls}
                     onSwitchMode={handleModeChange}
-                    videoCompleted={videoCompleted}
                     initialVideoPercent={initialVideoPercent}
                     initialQuizBestScore={initialQuizBestScore}
                   />
