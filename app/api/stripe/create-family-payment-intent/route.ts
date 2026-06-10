@@ -39,6 +39,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Block active IAP subscribers from buying a web family lifetime plan — they
+    // already have access through the app store and should not be double-billed.
+    // Exception: individual lifetime holders (hasPaid=true) upgrading to family
+    // lifetime are allowed through regardless of any IAP subscription.
+    if (accessInfo.mobilePurchase && !user.hasPaid) {
+      return NextResponse.json(
+        { error: "You have an active mobile subscription. Manage your access from the app.", hasAccess: true },
+        { status: 409 }
+      );
+    }
+
     // Unlike the individual checkout, we do NOT block existing Individual-plan
     // users — they're upgrading from Individual to Family.
 

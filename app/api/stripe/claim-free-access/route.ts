@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { validatePromoCode, applyDiscount, getFreeAccessPlan } from "@/lib/promo-codes";
 import { prisma } from "@/lib/db";
+import { stripe } from "@/lib/stripe";
 import { PLANS, type PlanId } from "@/lib/stripe";
 import { PLANS as STRIPE_CONFIG_PLANS } from "@/lib/stripe-config";
 import { checkRateLimit, getIP } from "@/lib/rate-limit";
@@ -89,12 +90,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user already has access
-    const existingPurchase = await prisma.purchase.findFirst({
-      where: { userId: user.id, status: "succeeded" },
-    });
+    // Check if user already has access via purchase or active subscription
+    const [existingPurchase, existingSubscription] = await Promise.all([
+      prisma.purchase.findFirst({
+        where: { userId: user.id, status: "succeeded" },
+      }),
+      prisma.subscription.findFirst({
+        where: {
+          userId: user.id,
+          status: { in: ["active", "trialing", "past_due"] },
+          currentPeriodEnd: { gte: new Date() },
+        },
+        select: { id: true },
+      }),
+    ]);
 
-    if (existingPurchase) {
+    if (existingPurchase || existingSubscription) {
       return NextResponse.json({ success: true, alreadyHasAccess: true });
     }
 
@@ -136,6 +147,25 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ success: true, alreadyHasAccess: true });
       }
       throw txErr;
+    }
+
+    // Lifetime free access replaces monthly: cancel any active Stripe subscription
+    // so the user is not double-billed. Mirrors gift/claim and handlePaymentSuccess.
+    const activeSub = await prisma.subscription.findFirst({
+      where: { userId: user.id, status: { in: ["active", "trialing", "past_due"] } },
+      select: { stripeSubscriptionId: true },
+    });
+    if (activeSub) {
+      try {
+        await stripe.subscriptions.cancel(activeSub.stripeSubscriptionId);
+        await prisma.subscription.updateMany({
+          where: { stripeSubscriptionId: activeSub.stripeSubscriptionId },
+          data: { status: "canceled", cancelAtPeriodEnd: false, updatedAt: new Date() },
+        });
+        console.log(`[claim-free-access] Cancelled subscription ${activeSub.stripeSubscriptionId} for user ${user.id}`);
+      } catch (cancelErr) {
+        console.error("[claim-free-access] Failed to cancel subscription:", cancelErr);
+      }
     }
 
     return NextResponse.json({ success: true });

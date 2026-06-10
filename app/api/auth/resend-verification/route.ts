@@ -30,6 +30,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Secondary per-user rate limit: 5 attempts per hour per account
+    const userRl = checkRateLimit(`resend-verify:user:${user.id}`, 5, 60 * 60 * 1000);
+    if (!userRl.allowed) {
+      return NextResponse.json(
+        { error: "Too many attempts. Please try again later." },
+        { status: 429, headers: { "Retry-After": String(userRl.retryAfterSeconds) } }
+      );
+    }
+
     if (user.emailVerified) {
       return NextResponse.json(
         { error: "Your email is already verified" },

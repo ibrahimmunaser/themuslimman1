@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { hashGiftToken } from "@/lib/gift";
 import { getCurrentUser } from "@/lib/auth";
+import { hasActiveCourseAccess } from "@/lib/access";
 import Link from "next/link";
 import { Gift } from "lucide-react";
 import GiftClaimButton from "./claim-button";
@@ -103,14 +104,11 @@ export default async function GiftClaimPage({ params }: GiftClaimPageProps) {
   // ── Valid gift (status = paid) ────────────────────────────────────────────
   const user = await getCurrentUser();
 
-  // Look up hasPaid directly from DB (not on session type)
+  // Check whether the signed-in user already has active course access
+  // (covers lifetime hasPaid, active Stripe subscriptions, and mobile IAP).
   let alreadyHasPaid = false;
   if (user) {
-    const dbUser = await prisma.user.findUnique({
-      where: { id: user.id },
-      select: { hasPaid: true },
-    });
-    alreadyHasPaid = dbUser?.hasPaid ?? false;
+    alreadyHasPaid = await hasActiveCourseAccess(user.id, user.hasPaid);
   }
 
   const toName = gift.recipientName ?? null;

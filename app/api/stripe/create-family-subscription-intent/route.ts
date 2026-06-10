@@ -50,6 +50,15 @@ export async function POST() {
       );
     }
 
+    // Block active mobile IAP subscribers — they already have access through the app
+    // and should not be billed again via a web family subscription.
+    if (accessInfo.mobilePurchase) {
+      return NextResponse.json(
+        { error: "You have an active mobile subscription. Manage your access from the app.", hasAccess: true },
+        { status: 409 }
+      );
+    }
+
     // Block family plan holders — nothing to upgrade to.
     if (activeSub && user.planType === "family") {
       return NextResponse.json(

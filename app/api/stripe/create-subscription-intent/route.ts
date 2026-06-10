@@ -6,7 +6,9 @@ import { getUserAccessInfo, getActiveSubscription } from "@/lib/access";
 import { PLANS } from "@/lib/stripe-config";
 
 export async function POST() {
-  const MONTHLY_PRICE_ID = process.env.STRIPE_MONTHLY_PRICE_ID;
+  // Support both old and new env var names for the individual monthly price.
+  const MONTHLY_PRICE_ID =
+    process.env.STRIPE_PRICE_INDIVIDUAL_MONTHLY ?? process.env.STRIPE_MONTHLY_PRICE_ID;
 
   try {
     const user = await getCurrentUser();
@@ -27,6 +29,14 @@ export async function POST() {
     if (accessInfo.hasLifetime) {
       return NextResponse.json(
         { error: "You already have lifetime access to Complete Seerah.", hasLifetime: true },
+        { status: 409 }
+      );
+    }
+
+    // Block active mobile IAP subscribers — they already have access through the app store.
+    if (accessInfo.mobilePurchase) {
+      return NextResponse.json(
+        { error: "You have an active mobile subscription. Manage your access from the app.", hasAccess: true },
         { status: 409 }
       );
     }

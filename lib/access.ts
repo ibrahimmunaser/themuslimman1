@@ -92,7 +92,7 @@ export async function getUserAccessInfo(userId: string, sessionHasPaid?: boolean
       select: { id: true, planId: true, createdAt: true },
     }),
     prisma.subscription.findFirst({
-      where: { userId },
+      where: { userId, status: { not: "canceled" } },
       orderBy: { createdAt: "desc" },
       select: {
         id: true,
@@ -117,7 +117,9 @@ export async function getUserAccessInfo(userId: string, sessionHasPaid?: boolean
 
   const hasLifetime = !!(user?.hasPaid || purchase || mobilePurchase?.purchaseType === "lifetime");
   const hasActiveSubscription =
-    (!!subscription && (ACTIVE_SUBSCRIPTION_STATUSES as readonly string[]).includes(subscription.status)) ||
+    (!!subscription &&
+      (ACTIVE_SUBSCRIPTION_STATUSES as readonly string[]).includes(subscription.status) &&
+      subscription.currentPeriodEnd > now) ||
     (mobilePurchase?.purchaseType === "subscription");
 
   return {

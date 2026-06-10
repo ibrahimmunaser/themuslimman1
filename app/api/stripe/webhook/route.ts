@@ -106,6 +106,21 @@ export async function POST(request: NextRequest) {
         console.log(`[WEBHOOK] checkout.session.completed: ${session.id}, mode: ${session.mode}`);
         if (session.mode === "subscription") {
           await handleSubscriptionCheckoutCompleted(session);
+        } else if (session.mode === "payment" && session.payment_intent) {
+          // Lifetime one-time payment via Stripe Checkout. Retrieve the PaymentIntent
+          // so handlePaymentSuccess can run its standard idempotent upsert.
+          // This fires in addition to payment_intent.succeeded — both are idempotent,
+          // so double-execution is safe and acts as a reliability fallback.
+          const piId = typeof session.payment_intent === "string"
+            ? session.payment_intent
+            : (session.payment_intent as { id: string }).id;
+          console.log(`[WEBHOOK] checkout.session.completed (payment): fetching PI ${piId}`);
+          const pi = await stripe.paymentIntents.retrieve(piId);
+          if (pi.status === "succeeded" && pi.metadata?.userId && pi.metadata?.planId) {
+            await handlePaymentSuccess(pi);
+          } else {
+            console.warn(`[WEBHOOK] checkout.session.completed (payment): PI ${piId} not ready or missing metadata (status=${pi.status})`);
+          }
         }
         break;
       }
@@ -256,12 +271,8 @@ async function handleTrialFeePayment(pi: Stripe.PaymentIntent) {
     console.log(`[WEBHOOK] handleTrialFeePayment: User ${userId} updated:`, userUpdate);
   }
 
-  // Auto-provision 5 learner profiles for family plans.
-  if (isFamily) {
-    await ensureFamilyProfiles(userId).catch((e) =>
-      console.error("[WEBHOOK] handleTrialFeePayment: Failed to provision family profiles:", e)
-    );
-  }
+  // Family profiles are auto-provisioned by upsertSubscription (called above)
+  // when the subscription first becomes active/trialing — no second call needed here.
 
   // Send welcome email (only here — upsertSubscription skips it for isTrial subs)
   const planLabel = isFamily ? "Family Trial Access" : "7-Day Trial Access";
@@ -363,12 +374,12 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
       }
     }
 
-    // Lifetime replaces monthly: cancel any active subscription immediately so the user
-    // is not billed again. Lifetime access is now active, so there is no reason to keep
-    // the subscription running. The customer.subscription.deleted webhook will fire next;
-    // handleSubscriptionDeleted is guarded by hasPaid so planType is never incorrectly reset.
+    // Lifetime replaces monthly: cancel any active or past_due subscription immediately
+    // so the user is not billed again. Lifetime access is now active, so there is no
+    // reason to keep the subscription running. The customer.subscription.deleted webhook
+    // fires next; handleSubscriptionDeleted is guarded by hasPaid so planType is safe.
     const activeSub = await prisma.subscription.findFirst({
-      where: { userId, status: { in: ["active", "trialing"] } },
+      where: { userId, status: { in: ["active", "trialing", "past_due"] } },
       select: { stripeSubscriptionId: true },
     });
     if (activeSub) {
@@ -568,27 +579,41 @@ async function handleSubscriptionDeleted(sub: Stripe.Subscription) {
     throw new Error(`[WEBHOOK] handleSubscriptionDeleted: Could not resolve userId for family sub ${sub.id}`);
   }
 
-  // Higher-tier wins: if the user has ANY lifetime access (individual or family),
-  // do not reset planType. The lifetime purchase already granted the correct planType
-  // via handlePaymentSuccess, and the cancellation webhook must not override it.
+  // Higher-tier wins: if the user has ANY lifetime access (Stripe or IAP) or an
+  // active family IAP subscription, do not reset planType. The lifetime purchase
+  // already granted the correct planType via handlePaymentSuccess, and the
+  // cancellation webhook must not override it.
   //
   // Examples this protects:
   //   • Individual monthly → buys Individual Lifetime → sub cancelled → stays planType=individual ✓
   //   • Family monthly → buys Family Lifetime → sub cancelled → stays planType=family ✓
   //   • Individual monthly → buys Family Lifetime → sub cancelled → stays planType=family ✓
-  const lifetimeUser = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { hasPaid: true },
-  });
+  //   • Family IAP sub + Stripe family sub cancelled → stays planType=family (IAP still active) ✓
+  const now = new Date();
+  const [lifetimeUser, familyIap] = await Promise.all([
+    prisma.user.findUnique({ where: { id: userId }, select: { hasPaid: true } }),
+    prisma.mobilePurchase.findFirst({
+      where: {
+        userId,
+        status: "active",
+        OR: [
+          { purchaseType: "lifetime" },
+          { purchaseType: "subscription", currentPeriodEnd: { gte: now } },
+        ],
+      },
+      select: { id: true },
+    }),
+  ]);
 
-  if (!lifetimeUser?.hasPaid) {
+  if (!lifetimeUser?.hasPaid && !familyIap) {
     await prisma.user.update({
       where: { id: userId },
       data: { planType: "individual" },
     }).catch((e) => console.error("[WEBHOOK] handleSubscriptionDeleted: Failed to reset planType:", e));
     console.log(`[WEBHOOK] Downgraded user ${userId} to planType=individual after family sub ${sub.id} cancelled`);
   } else {
-    console.log(`[WEBHOOK] User ${userId} retains planType (hasPaid=true) after sub ${sub.id} cancelled — lifetime access in effect`);
+    const reason = lifetimeUser?.hasPaid ? "hasPaid=true" : "active IAP subscription";
+    console.log(`[WEBHOOK] User ${userId} retains planType (${reason}) after sub ${sub.id} cancelled`);
   }
 }
 
@@ -716,6 +741,14 @@ async function upsertSubscription(userId: string, sub: Stripe.Subscription) {
       data: { planType: "family" },
     }).catch((e) => console.error("[WEBHOOK] upsertSubscription: Failed to set planType=family:", e));
     console.log(`[WEBHOOK] upsertSubscription: Set planType=family for user ${userId} (sub ${sub.id})`);
+
+    // Auto-provision up to 5 learner profiles on first activation so the user
+    // doesn't have to visit /profiles before they appear.
+    if (isFirstActivation) {
+      ensureFamilyProfiles(userId).catch((e) =>
+        console.error("[WEBHOOK] upsertSubscription: ensureFamilyProfiles failed:", e)
+      );
+    }
   }
 
   // Send a welcome email the first time a subscription becomes active/trialing.

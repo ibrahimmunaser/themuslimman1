@@ -19,9 +19,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // If the user already has lifetime access, there is nothing to buy.
-    // Monthly subscribers are NOT blocked — they can still upgrade to lifetime.
-    const { hasLifetime } = await getUserAccessInfo(user.id, user.hasPaid);
+    const { hasLifetime, mobilePurchase } = await getUserAccessInfo(user.id, user.hasPaid);
+
+    // Block lifetime holders — nothing left to buy individually.
     if (hasLifetime) {
       return NextResponse.json(
         { error: "You already have access to this course", hasLifetime: true },
@@ -29,10 +29,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Block active mobile IAP subscribers — they already have access through the app store
+    // and should not be double-billed via a web lifetime purchase.
+    if (mobilePurchase) {
+      return NextResponse.json(
+        { error: "You have an active mobile subscription. Manage your access from the app.", hasAccess: true },
+        { status: 409 }
+      );
+    }
+
     // Block family plan users from buying individual lifetime — that would be a downgrade.
-    // Family → Individual downgrades are not supported through checkout.
-    // Users on a family plan who want individual lifetime should contact support or
-    // cancel their family plan first.
     if (user.planType === "family") {
       return NextResponse.json(
         {

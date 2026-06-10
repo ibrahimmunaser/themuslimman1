@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireStudent } from "@/lib/auth";
+import { hasActiveCourseAccess } from "@/lib/access";
 
 // ─────────────────────────────────────────────────────────────
 // Join a class by code
@@ -13,6 +14,9 @@ export async function joinClassByCode(
 ): Promise<{ success: boolean; error?: string; classId?: string }> {
   const user = await requireStudent();
   if (!user.studentProfileId) return { success: false, error: "Student profile required." };
+  if (!user.emailVerified) return { success: false, error: "Email verification required." };
+  const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
+  if (!hasAccess) return { success: false, error: "Active subscription required." };
 
   const normalized = code.trim().toLowerCase();
   if (!normalized) return { success: false, error: "Enter a class code." };
@@ -51,6 +55,9 @@ export async function markItemComplete(
 ): Promise<{ success: boolean; error?: string }> {
   const user = await requireStudent();
   if (!user.studentProfileId) return { success: false, error: "Student profile required." };
+  if (!user.emailVerified) return { success: false, error: "Email verification required." };
+  const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
+  if (!hasAccess) return { success: false, error: "Active subscription required." };
 
   const enrollment = await prisma.classEnrollment.findUnique({
     where: { classId_studentId: { classId, studentId: user.studentProfileId } },
@@ -101,6 +108,9 @@ export async function startOrResumeQuiz(
 ): Promise<{ success: boolean; error?: string; attemptId?: string }> {
   const user = await requireStudent();
   if (!user.studentProfileId) return { success: false, error: "Student profile required." };
+  if (!user.emailVerified) return { success: false, error: "Email verification required." };
+  const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
+  if (!hasAccess) return { success: false, error: "Active subscription required." };
 
   // Verify enrollment
   const enrollment = await prisma.classEnrollment.findUnique({
@@ -145,6 +155,9 @@ export async function submitQuizAttempt(
 ): Promise<{ success: boolean; error?: string; score?: number; passed?: boolean; total?: number }> {
   const user = await requireStudent();
   if (!user.studentProfileId) return { success: false, error: "Student profile required." };
+  if (!user.emailVerified) return { success: false, error: "Email verification required." };
+  const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
+  if (!hasAccess) return { success: false, error: "Active subscription required." };
 
   const attempt = await prisma.quizAttempt.findFirst({
     where: { id: attemptId, studentId: user.studentProfileId, status: "in_progress" },

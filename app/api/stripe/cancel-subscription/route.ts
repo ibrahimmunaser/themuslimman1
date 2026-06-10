@@ -23,6 +23,7 @@ export async function POST() {
       where: {
         userId: user.id,
         status: { in: ["active", "trialing", "past_due"] },
+        currentPeriodEnd: { gte: new Date() },
       },
       select: { stripeSubscriptionId: true, cancelAtPeriodEnd: true, currentPeriodEnd: true },
       orderBy: { createdAt: "desc" },

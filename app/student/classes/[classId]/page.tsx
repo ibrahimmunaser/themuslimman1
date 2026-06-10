@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import {
   ArrowLeft,
   Lock,
@@ -9,6 +9,7 @@ import {
   Play,
 } from "lucide-react";
 import { requireStudent } from "@/lib/auth";
+import { hasActiveCourseAccess } from "@/lib/access";
 import { getStudentClassView } from "@/lib/queries/student";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -23,6 +24,10 @@ interface Props {
 export default async function StudentClassViewPage({ params }: Props) {
   const user = await requireStudent();
   if (!user.studentProfileId) notFound();
+
+  const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
+  if (!hasAccess) redirect("/pricing");
+  if (!user.emailVerified) redirect("/seerah");
 
   const { classId } = await params;
   const view = await getStudentClassView(user.studentProfileId, classId);

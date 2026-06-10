@@ -1,6 +1,7 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { requireStudent } from "@/lib/auth";
+import { hasActiveCourseAccess } from "@/lib/access";
 import { getStudentQuizData } from "@/lib/queries/student";
 import { ArrowLeft, Clock, Brain } from "lucide-react";
 import { QuizForm } from "./quiz-form";
@@ -19,6 +20,10 @@ export async function generateMetadata({ params }: Props) {
 export default async function StudentQuizPage({ params }: Props) {
   const user = await requireStudent();
   if (!user.studentProfileId) notFound();
+
+  const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
+  if (!hasAccess) redirect("/pricing");
+  if (!user.emailVerified) redirect("/seerah");
 
   const { classId, quizId } = await params;
   const data = await getStudentQuizData(user.studentProfileId, classId, quizId);

@@ -48,11 +48,20 @@ export async function POST(request: NextRequest) {
     const body = await request.json() as { type?: string };
     const checkoutType = (body.type ?? "individual-trial") as string;
 
-    // Short-circuit: user already has active access
+    // Short-circuit: user already has active access.
+    // Exception: individual lifetime holders may still proceed to family-lifetime
+    // to upgrade their plan (they pay the difference). All other combinations
+    // (family lifetime, active subscription) are fully blocked.
     const alreadyHasAccess = user.hasPaid || (await hasActiveCourseAccess(user.id));
     if (alreadyHasAccess) {
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://themuslimman.com";
-      return NextResponse.json({ url: `${appUrl}/seerah` });
+      const isIndividualLifetimeUpgrade =
+        checkoutType === "family-lifetime" &&
+        user.hasPaid &&
+        user.planType !== "family";
+      if (!isIndividualLifetimeUpgrade) {
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://themuslimman.com";
+        return NextResponse.json({ url: `${appUrl}/seerah` });
+      }
     }
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://themuslimman.com";
@@ -78,6 +87,22 @@ export async function POST(request: NextRequest) {
     }
 
     let session: Awaited<ReturnType<typeof stripe.checkout.sessions.create>>;
+
+    // One-trial-per-account guard for both trial types.
+    // Mirror the same check in create-trial-intent so the rule applies regardless
+    // of which checkout path is used.
+    if (checkoutType === "individual-trial" || checkoutType === "family-trial") {
+      const existingSubscription = await prisma.subscription.findFirst({
+        where: { userId: user.id },
+        select: { id: true, status: true },
+      });
+      if (existingSubscription) {
+        return NextResponse.json(
+          { error: "A trial has already been used on this account. Please choose a monthly or lifetime plan." },
+          { status: 409 }
+        );
+      }
+    }
 
     switch (checkoutType) {
       // ── Individual trial: $1 now, 7-day access, then $9/month ──────────────
@@ -109,7 +134,8 @@ export async function POST(request: NextRequest) {
             metadata: {
               userId: user.id,
               planType: "individual",
-              planId: "monthly",
+              planId: "individualTrial",
+              isTrial: "true",
             },
           },
           metadata: { userId: user.id, planType: "individual" },
@@ -149,7 +175,8 @@ export async function POST(request: NextRequest) {
             metadata: {
               userId: user.id,
               planType: "family",
-              planId: "familyMonthly",
+              planId: "familyTrial",
+              isTrial: "true",
             },
           },
           metadata: { userId: user.id, planType: "family" },

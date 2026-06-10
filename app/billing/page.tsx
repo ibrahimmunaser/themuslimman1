@@ -44,6 +44,7 @@ function formatAmount(cents: number, currency: string) {
 export default async function BillingPage({ searchParams }: { searchParams: SearchParams }) {
   const user = await requireStudent();
   if (!user.studentProfileId) redirect("/");
+  if (!user.emailVerified) redirect("/seerah");
 
   const params = await searchParams;
   const upgradedPlan = typeof params.upgraded === "string" ? params.upgraded : null;

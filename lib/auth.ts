@@ -320,15 +320,28 @@ export async function logout(): Promise<void> {
 // ─────────────────────────────────────────────────────────────
 
 export async function userHasPurchases(userId: string): Promise<{ hasPurchase: boolean; isPastDue: boolean }> {
-  const [purchase, subscription] = await Promise.all([
+  const now = new Date();
+  const [purchase, subscription, mobilePurchase] = await Promise.all([
     prisma.purchase.findFirst({ where: { userId, status: "succeeded" }, select: { id: true } }),
     prisma.subscription.findFirst({
       where: { userId, status: { in: ["active", "trialing", "past_due"] } },
       select: { id: true, status: true },
     }),
+    // Apple / Google IAP — lifetime or non-expired active subscription
+    prisma.mobilePurchase.findFirst({
+      where: {
+        userId,
+        status: "active",
+        OR: [
+          { purchaseType: "lifetime" },
+          { purchaseType: "subscription", currentPeriodEnd: { gte: now } },
+        ],
+      },
+      select: { id: true },
+    }),
   ]);
-  const hasPurchase = !!(purchase || subscription);
-  const isPastDue   = !purchase && subscription?.status === "past_due";
+  const hasPurchase = !!(purchase || subscription || mobilePurchase);
+  const isPastDue   = !purchase && !mobilePurchase && subscription?.status === "past_due";
   return { hasPurchase, isPastDue };
 }
 

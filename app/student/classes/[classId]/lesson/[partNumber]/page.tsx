@@ -1,9 +1,20 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { requireStudent } from "@/lib/auth";
+import { hasActiveCourseAccess } from "@/lib/access";
 import { getStudentLessonData } from "@/lib/queries/student";
 import { getPartById } from "@/lib/content";
 import { ERA_MAP } from "@/lib/types";
+import type { Quiz } from "@/lib/types";
+
+/** Strip correct_answer before the quiz crosses the server→client boundary. */
+function stripQuizAnswers(quiz: Quiz | null | undefined): Quiz | null | undefined {
+  if (!quiz) return quiz;
+  return {
+    ...quiz,
+    questions: quiz.questions.map(({ correct_answer: _a, ...q }) => q as Quiz["questions"][number]),
+  };
+}
 import {
   readBriefing,
   readStatementOfFacts,
@@ -45,6 +56,10 @@ export async function generateMetadata({ params }: Props) {
 export default async function StudentLessonPage({ params }: Props) {
   const user = await requireStudent();
   if (!user.studentProfileId) notFound();
+
+  const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
+  if (!hasAccess) redirect("/pricing");
+  if (!user.emailVerified) redirect("/seerah");
 
   const { classId, partNumber: partNumberStr } = await params;
   const partNum = parseInt(partNumberStr, 10);
@@ -117,7 +132,7 @@ export default async function StudentLessonPage({ params }: Props) {
       studyGuideText: studyGuideText ?? undefined,
       reportText: reportText ?? undefined,
       mindmapUrl: assetUrls.mindmapUrl ?? undefined,
-      quiz: quizData ?? undefined,
+      quiz: stripQuizAnswers(quizData) ?? undefined,
       flashcards: flashcards ?? undefined,
       slides: slideFiles,
       infographics: await (async () => {

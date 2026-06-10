@@ -60,13 +60,15 @@ export async function POST(request: NextRequest) {
     // ── Access & subscription checks ─────────────────────────────────────────
     const accessInfo = await getUserAccessInfo(user.id, user.hasPaid);
 
-    // Block lifetime holders — the $1 trial is a one-time starter offer only.
+    // Block any user who already has active course access — this covers:
+    //   • Lifetime buyers (hasPaid = true)
+    //   • Active/trialing Stripe subscribers
+    //   • Active mobile IAP subscribers (MobilePurchase table)
     // Individual lifetime holders who want family access are redirected by
-    // checkout/page.tsx to /checkout?plan=family-lifetime before they can
-    // reach this endpoint, so this is a secondary safety net.
-    if (accessInfo.hasLifetime) {
+    // checkout/page.tsx to /checkout?plan=family-lifetime before they reach here.
+    if (accessInfo.hasAccess) {
       return NextResponse.json(
-        { error: "You already have lifetime access.", hasLifetime: true },
+        { error: "You already have active access.", hasAccess: true },
         { status: 409 }
       );
     }

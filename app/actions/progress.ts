@@ -37,7 +37,7 @@ async function getUserPlan(userId: string, sessionHasPaid?: boolean): Promise<Us
 
   devLog(`[PROGRESS] getUserPlan: Fetching plan for user ${userId}`);
 
-  const [user, purchases, subscription] = await Promise.all([
+  const [user, purchases, subscription, mobilePurchase] = await Promise.all([
     prisma.user.findUnique({ where: { id: userId }, select: { hasPaid: true } }),
     prisma.purchase.findMany({ where: { userId, status: "succeeded" }, select: { planId: true } }),
     prisma.subscription.findFirst({
@@ -50,9 +50,20 @@ async function getUserPlan(userId: string, sessionHasPaid?: boolean): Promise<Us
       },
       select: { id: true },
     }),
+    prisma.mobilePurchase.findFirst({
+      where: {
+        userId,
+        status: "active",
+        OR: [
+          { purchaseType: "lifetime" },
+          { purchaseType: "subscription", currentPeriodEnd: { gte: new Date() } },
+        ],
+      },
+      select: { id: true },
+    }),
   ]);
 
-  if (purchases.some((p) => p.planId === "complete") || user?.hasPaid || subscription) {
+  if (purchases.some((p) => p.planId === "complete") || user?.hasPaid || subscription || mobilePurchase) {
     devLog(`[PROGRESS] getUserPlan: User ${userId} has "complete" plan`);
     return "complete";
   }
@@ -138,6 +149,10 @@ export async function trackVideoProgress(partNumber: number, watchPercent: numbe
     devLog(`[PROGRESS] trackVideoProgress: No authenticated student`);
     return;
   }
+  if (!user.emailVerified) {
+    devLog(`[PROGRESS] trackVideoProgress: User ${user.id} email not verified, skipping`);
+    return;
+  }
 
   const userId = user.id;
   const learnerProfileId = await getActiveProfileId(userId);
@@ -201,6 +216,7 @@ export async function trackBriefingOpened(partNumber: number) {
   
   const user = await requireStudent();
   if (!user) return;
+  if (!user.emailVerified) return;
 
   const userId          = user.id;
   const learnerProfileId = await getActiveProfileId(userId);
@@ -223,6 +239,7 @@ export async function trackQuizCompleted(partNumber: number, score: number) {
   
   const user = await requireStudent();
   if (!user) return;
+  if (!user.emailVerified) return;
 
   const userId          = user.id;
   const learnerProfileId = await getActiveProfileId(userId);
@@ -291,6 +308,7 @@ export async function trackQuizCompleted(partNumber: number, score: number) {
 export async function trackFlashcardsReviewed(partNumber: number) {
   const user = await requireStudent();
   if (!user) return;
+  if (!user.emailVerified) return;
 
   const userId          = user.id;
   const learnerProfileId = await getActiveProfileId(userId);
@@ -321,6 +339,7 @@ export async function trackAssetOpened(partNumber: number, assetId: string) {
   
   const user = await requireStudent();
   if (!user) return;
+  if (!user.emailVerified) return;
 
   const userId          = user.id;
   const learnerProfileId = await getActiveProfileId(userId);
@@ -369,6 +388,7 @@ export async function trackAssetOpened(partNumber: number, assetId: string) {
 export async function trackPartOpened(partNumber: number) {
   const user = await requireStudent();
   if (!user) return;
+  if (!user.emailVerified) return;
 
   const userId          = user.id;
   const learnerProfileId = await getActiveProfileId(userId);
@@ -398,6 +418,7 @@ export async function submitQuizAnswers(
 ): Promise<{ score: number; passed: boolean; bestScore: number } | undefined> {
   const user = await requireStudent();
   if (!user) return;
+  if (!user.emailVerified) return;
 
   // Load quiz data from the shared in-memory cache (no extra R2 round-trip
   // when the user just finished the quiz — data is almost always hot).

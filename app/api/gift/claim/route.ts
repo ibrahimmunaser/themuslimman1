@@ -155,5 +155,24 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Lifetime gift replaces monthly: cancel any active or past_due Stripe subscription
+  // so the recipient is not double-billed. Mirrors handlePaymentSuccess in the webhook.
+  const activeSub = await prisma.subscription.findFirst({
+    where: { userId: user.id, status: { in: ["active", "trialing", "past_due"] } },
+    select: { stripeSubscriptionId: true },
+  });
+  if (activeSub) {
+    try {
+      await stripe.subscriptions.cancel(activeSub.stripeSubscriptionId);
+      await prisma.subscription.updateMany({
+        where: { stripeSubscriptionId: activeSub.stripeSubscriptionId },
+        data: { status: "canceled", cancelAtPeriodEnd: false, updatedAt: new Date() },
+      });
+      console.log(`[GIFT CLAIM] Cancelled subscription ${activeSub.stripeSubscriptionId} after lifetime gift for user ${user.id}`);
+    } catch (cancelErr) {
+      console.error("[GIFT CLAIM] Failed to cancel subscription after gift claim:", cancelErr);
+    }
+  }
+
   return NextResponse.json({ success: true });
 }
