@@ -47,18 +47,8 @@ export function LessonsPathView({
 }: LessonsPathViewProps) {
   const filteredParts = parts;
 
-  // Sequential lock: first part is always accessible; each subsequent part
-  // requires the previous part's quiz to be passed.
+  // All parts are freely accessible — no sequential lock.
   const pathLockedSet = new Set<number>();
-  for (let i = 1; i < filteredParts.length; i++) {
-    const prevQuizPassed = progressData[filteredParts[i - 1].partNumber]?.quizPassed ?? false;
-    if (!prevQuizPassed) {
-      for (let j = i; j < filteredParts.length; j++) {
-        pathLockedSet.add(filteredParts[j].partNumber);
-      }
-      break;
-    }
-  }
 
   const partsByEra = filteredParts.reduce(
     (acc, part) => {

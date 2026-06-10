@@ -127,37 +127,17 @@ export default async function LearnIndexPage() {
     .filter(p => p.quizPassed)
     .map(p => p.partNumber);
 
-  // "started" is the only real DB status for in-progress parts.
-  const inProgressParts = allPartProgress
-    .filter(p => p.status === "started")
-    .map(p => p.partNumber);
-
-  // Build a set of passed quizzes for sequential-lock checks.
-  const quizPassedSet = new Set(completedParts);
-
-  // The highest part number the user can actually reach under the sequential lock:
-  // Part 1 is always accessible; Part n (n>1) requires Part n-1 quiz passed.
-  // Walk forward from 1 until we hit the first part whose prerequisite is unmet.
-  const maxAccessiblePart = (() => {
-    for (let n = 2; n <= PARTS.length; n++) {
-      if (!quizPassedSet.has(n - 1)) return n - 1;
-    }
-    return PARTS.length;
-  })();
-
-  // Compute current part: the lowest in-progress accessible part, or next after
-  // the highest completed, or Part 1 if nothing has started yet. Clamped to
-  // maxAccessiblePart so a stale "started" row never sends the user somewhere locked.
-  const accessibleInProgress = inProgressParts.filter(n => n <= maxAccessiblePart);
-  const accessibleCompleted  = completedParts.filter(n => n <= maxAccessiblePart);
-  let currentPart: number;
-  if (accessibleInProgress.length > 0) {
-    currentPart = Math.min(...accessibleInProgress);
-  } else if (accessibleCompleted.length > 0) {
-    currentPart = Math.min(Math.max(...accessibleCompleted) + 1, maxAccessiblePart);
-  } else {
-    currentPart = 1;
-  }
+  // Current part = the most recently accessed part (by lastAccessedAt).
+  // All parts are now freely accessible, so we simply resume wherever they left off.
+  // Falls back to Part 1 for brand-new users with no activity yet.
+  const lastAccessed = allPartProgress
+    .filter(p => p.lastAccessedAt)
+    .sort((a, b) => {
+      const aTime = a.lastAccessedAt ? new Date(a.lastAccessedAt).getTime() : 0;
+      const bTime = b.lastAccessedAt ? new Date(b.lastAccessedAt).getTime() : 0;
+      return bTime - aTime;
+    })[0];
+  const currentPart: number = lastAccessed?.partNumber ?? 1;
 
   // Proactively warm the user's current part so clicking "Continue" / "Start stage"
   // hits a hot cache instead of waiting for cold R2 fetches.
@@ -256,15 +236,8 @@ export default async function LearnIndexPage() {
     }])
   );
 
-  // Sequential lock: only Part 1 is freely accessible.
-  // Every other part requires the previous part's quiz to be passed.
-  const lockedPartNumbers = PARTS
-    .filter((p) => {
-      const n = p.partNumber;
-      if (n === 1) return false;
-      return !(progressMap[n - 1]?.quizPassed ?? false);
-    })
-    .map((p) => p.partNumber);
+  // All parts are freely accessible — no sequential lock.
+  const lockedPartNumbers: number[] = [];
 
   // Show all parts (plan-locked parts are shown for upsell purposes)
   const accessibleParts = PARTS;

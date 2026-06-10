@@ -37,7 +37,6 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
   const reportedRef     = useRef<Set<number>>(new Set());
   // High-water mark of the furthest position watched (0–100). Prevents
   // forward-seeking beyond what the user has genuinely watched.
-  const maxWatchedRef   = useRef<number>(initialVideoPercent ?? 0);
   // Tracks whether the player auto-muted due to a MUTED_SEGMENTS rule,
   // so we can restore audio without overriding a manual user mute.
   const autoMutedRef    = useRef<boolean>(false);
@@ -82,9 +81,6 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
   const [progress, setProgress] = useState(0);
   const [controlsVisible, setControlsVisible] = useState(false);
   const [videoError, setVideoError] = useState(false);
-  // Once 85 % of the video has been watched the seeking lock is lifted and the
-  // forward-10s button is restored so users can re-watch freely.
-  const [videoFullyWatched, setVideoFullyWatched] = useState(() => (initialVideoPercent ?? 0) >= 85);
   const controlsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const showControlsTemporarily = useCallback(() => {
@@ -106,11 +102,6 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
     const rounded = isNaN(pct) ? 0 : Math.round(pct);
     setProgress(rounded);
 
-    // Advance the high-water mark as the user watches further
-    maxWatchedRef.current = Math.max(maxWatchedRef.current, rounded);
-
-    // Lift the seek restriction once 85 % is genuinely reached
-    if (maxWatchedRef.current >= 85) setVideoFullyWatched(true);
 
     // ── Auto-mute + overlay audio for defined segments ───────────────────────
     if (partNumber) {
@@ -197,12 +188,7 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
     const duration = videoRef.current.duration;
     if (!isFinite(duration) || duration <= 0) return;
     const clickedPct = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
-    if (videoFullyWatched) {
-      videoRef.current.currentTime = clickedPct * duration;
-    } else {
-      const maxPct = maxWatchedRef.current / 100;
-      videoRef.current.currentTime = Math.min(clickedPct, maxPct) * duration;
-    }
+    videoRef.current.currentTime = clickedPct * duration;
   };
 
   const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -310,7 +296,6 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
         onEnded={() => {
           setPlaying(false);
           setStarted(false);
-          setVideoFullyWatched(true);
           if (overlayAudioRef.current) {
             overlayAudioRef.current.pause();
           }
