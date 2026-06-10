@@ -29,10 +29,17 @@ export default async function LearnIndexPage() {
   const user = await getCachedStudent();
   if (!user.studentProfileId) redirect("/");
 
-  // Gate 1: Email must be verified to access course content.
-  // Paid but unverified users land here and see the verification wall.
+  // Gate 1: Access check (payment / subscription).
+  // Run this BEFORE the email-verification gate so that unpaid+unverified users are
+  // sent straight to pricing rather than seeing a misleading "verify to unlock" wall.
+  // For unverified users we skip the thumbnail/profile fetch — it would be wasted work.
   if (!user.emailVerified) {
-    const hasPaid = user.hasPaid;
+    const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
+    if (!hasAccess) redirect("/pricing");
+
+    // User has paid but not yet verified — show the verification wall.
+    // At this point hasPaid / hasAccess is always true, so the "payment confirmed"
+    // message is always shown and is always accurate.
     return (
       <div className="flex-1 flex items-center justify-center px-4 py-16 min-h-[60vh]">
         <div className="max-w-md w-full text-center space-y-6">
@@ -46,11 +53,9 @@ export default async function LearnIndexPage() {
               <span className="font-semibold text-gold">{user.email}</span>.
               Click the link in that email to unlock your course.
             </p>
-            {hasPaid && (
-              <p className="text-sm text-emerald-400 font-medium mt-3">
-                Your payment is confirmed and saved — your access will unlock the moment you verify.
-              </p>
-            )}
+            <p className="text-sm text-emerald-400 font-medium mt-3">
+              Your payment is confirmed and saved — your access will unlock the moment you verify.
+            </p>
           </div>
           <ResendVerificationButton />
           <p className="text-xs text-text-muted">
@@ -64,6 +69,7 @@ export default async function LearnIndexPage() {
     );
   }
 
+  // Gate 2: Access check for verified users.
   // Run access check, thumbnail fetch, and profile-ID resolution in parallel.
   //
   // Why this order is safe:

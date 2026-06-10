@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { verifyEmail } from "@/lib/auth";
+import { checkRateLimit, getIP } from "@/lib/rate-limit";
 
 const VerifySchema = z.object({
   token: z.string().min(1),
@@ -12,6 +13,18 @@ const VerifySchema = z.object({
  * Verifies a user's email address using the token from the email link
  */
 export async function POST(request: NextRequest) {
+  // Rate limit: 10 attempts per 10 minutes per IP.
+  // Practical brute-force risk is near-zero (32-char token, 36^32 entropy) but
+  // having a limit is consistent with every other auth endpoint.
+  const ip = getIP(request);
+  const rl = checkRateLimit(`verify-email:${ip}`, 10, 10 * 60 * 1000);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Too many attempts. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSeconds) } }
+    );
+  }
+
   try {
     const body = await request.json();
     const parsed = VerifySchema.safeParse(body);

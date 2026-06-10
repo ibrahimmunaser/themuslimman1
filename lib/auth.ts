@@ -499,11 +499,21 @@ export async function changePassword(
 
   const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
 
-  // Update password and revoke ALL other sessions so any stolen session
-  // is immediately invalidated (same behaviour as resetPassword).
+  // Revoke all sessions except the current one so that any attacker who
+  // obtained a different session token is kicked out, while the authenticated
+  // user stays logged in and isn't forced to re-sign in.
+  const cookieStore2 = await cookies();
+  const currentRawToken = cookieStore2.get(COOKIE_NAME)?.value;
+  const currentTokenHash = currentRawToken ? hashToken(currentRawToken) : null;
+
   await prisma.$transaction([
     prisma.user.update({ where: { id: user.id }, data: { passwordHash } }),
-    prisma.session.deleteMany({ where: { userId: user.id } }),
+    prisma.session.deleteMany({
+      where: {
+        userId: user.id,
+        ...(currentTokenHash ? { NOT: { token: currentTokenHash } } : {}),
+      },
+    }),
   ]);
 
   return { success: true };

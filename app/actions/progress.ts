@@ -3,6 +3,8 @@
 import { prisma } from "@/lib/db";
 import { requireStudent } from "@/lib/auth";
 import { getActiveProfileId } from "@/app/actions/profiles";
+import { getPartPageData } from "@/lib/part-content-cache";
+import type { Quiz } from "@/lib/types";
 import {
   computeStatus,
   parseProgressRow,
@@ -237,18 +239,24 @@ export async function trackQuizCompleted(partNumber: number, score: number) {
 
   const passed  = clamped >= QUIZ_PASS_SCORE;
 
-  // Sequential-lock check: only Part 1 is freely accessible.
-  // Every other part requires the previous part's quiz to be passed.
+  // Sequential-lock check: every part requires the previous part to be completed.
+  // "Completed" means quizPassed = true (Complete plan) OR status = 'completed'/'mastered'
+  // (Essentials plan: video ≥ 85% + briefing opened, no quiz required).
   // This mirrors the page-level lock and prevents a client from POST-ing
   // a fake score to unlock arbitrary parts out of order.
   if (partNumber > 1) {
     const prevProgress = await prisma.partProgress.findUnique({
       where: { learnerProfileId_partNumber: { learnerProfileId, partNumber: partNumber - 1 } },
-      select: { quizPassed: true },
+      select: { quizPassed: true, status: true },
     });
 
-    if (!(prevProgress?.quizPassed ?? false)) {
-      devLog(`[PROGRESS] trackQuizCompleted: Part ${partNumber} — Part ${partNumber - 1} quiz not passed; ignoring score`);
+    const prevCompleted =
+      (prevProgress?.quizPassed ?? false) ||
+      prevProgress?.status === "completed" ||
+      prevProgress?.status === "mastered";
+
+    if (!prevCompleted) {
+      devLog(`[PROGRESS] trackQuizCompleted: Part ${partNumber} — Part ${partNumber - 1} not completed; ignoring score`);
       return;
     }
   }
@@ -375,10 +383,10 @@ export async function trackAssetOpened(partNumber: number, assetId: string) {
 /**
  * Mark a part as started (called when user opens the part page).
  *
- * Intentionally skips the plan check — Part 1 is freely accessible without a
- * purchase, and we want to record that even free/unverified users have opened it
- * so future analytics can track free-to-paid conversion rates. For all other
- * parts the page-level lock prevents non-paying users from reaching this point.
+ * Intentionally skips the plan check here: by the time this action is called,
+ * the page-level access gate (hasActiveCourseAccess) has already verified the
+ * user has an active subscription or purchase. The server action doesn't repeat
+ * that check to avoid an extra round-trip on every page view.
  */
 export async function trackPartOpened(partNumber: number) {
   const user = await requireStudent();
@@ -394,4 +402,43 @@ export async function trackPartOpened(partNumber: number) {
   });
   
   devLog(`[PROGRESS] trackPartOpened: Part ${partNumber} opened for profile ${learnerProfileId}`);
+}
+
+/**
+ * Server-side quiz submission — validates every answer against the authoritative
+ * quiz data, computes the score, then delegates to trackQuizCompleted.
+ *
+ * Use this instead of calling trackQuizCompleted with a client-supplied score.
+ * The client still uses getQuizAnswerMap for instant per-question feedback, but
+ * the final score that is recorded is always computed on the server.
+ *
+ * @param answers - map of questionId → the option the user selected
+ */
+export async function submitQuizAnswers(
+  partNumber: number,
+  answers: Record<string, string>,
+): Promise<{ score: number; passed: boolean; bestScore: number } | undefined> {
+  const user = await requireStudent();
+  if (!user) return;
+
+  // Load quiz data from the shared in-memory cache (no extra R2 round-trip
+  // when the user just finished the quiz — data is almost always hot).
+  const partData = await getPartPageData(partNumber);
+  const quizData = partData.quizData as Quiz | null | undefined;
+  if (!quizData || quizData.questions.length === 0) {
+    devLog(`[PROGRESS] submitQuizAnswers: No quiz data for part ${partNumber}`);
+    return;
+  }
+
+  // Compute score server-side from authoritative correct_answer values.
+  const total   = quizData.questions.length;
+  const correct = quizData.questions.filter(
+    (q) => answers[q.id] !== undefined && answers[q.id] === q.correct_answer,
+  ).length;
+  const serverScore = Math.round((correct / total) * 100);
+
+  devLog(`[PROGRESS] submitQuizAnswers: Part ${partNumber} server-computed score ${serverScore}% (${correct}/${total})`);
+
+  // Delegate to the existing recording + sequential-lock logic.
+  return trackQuizCompleted(partNumber, serverScore);
 }

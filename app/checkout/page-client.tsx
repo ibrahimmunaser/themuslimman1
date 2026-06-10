@@ -873,7 +873,8 @@ function CheckoutPageContent({
               <p className="text-lg font-bold text-white">Check your email</p>
               <p className="text-sm text-zinc-400">
                 We sent a verification link to <span className="text-gold">{authForm.email}</span>.
-                Click the link to verify, then sign in to complete your purchase.
+                You can verify now <em>or</em> tap <strong className="text-white">Sign In</strong> below
+                to pay first — your access unlocks once both steps are done.
               </p>
               <button
                 onClick={() => { setNeedsVerification(false); setAuthMode("login"); setResendState("idle"); }}

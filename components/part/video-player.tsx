@@ -4,8 +4,10 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { Play, Pause, Volume2, VolumeX, Maximize, RotateCcw, RotateCw } from "lucide-react";
 import { trackVideoProgress } from "@/app/actions/progress";
 
-// Report at these percent thresholds (once each per mount)
-const REPORT_THRESHOLDS = [25, 50, 75, 85, 95, 100];
+// Report at these percent thresholds (once each per mount).
+// Starting at 10% (not 25%) means a user who watches 10–24% and returns will
+// have their furthest position saved, so they can seek back to where they stopped.
+const REPORT_THRESHOLDS = [10, 25, 50, 75, 85, 95, 100];
 
 /**
  * Time segments (in seconds) that should be automatically muted for specific parts,

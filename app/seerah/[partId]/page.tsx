@@ -173,10 +173,11 @@ export default async function SeerahPartPage(props: Props) {
   const learnerProfileId = user.activeProfileId ?? await getActiveProfileId(user.id);
 
   const [accessOk, partProgress, prevProgress] = await Promise.all([
-    n !== 1 ? hasActiveCourseAccess(user.id, user.hasPaid) : Promise.resolve(true),
+    hasActiveCourseAccess(user.id, user.hasPaid),
     prisma.partProgress.findUnique({
       where: { learnerProfileId_partNumber: { learnerProfileId, partNumber: n } },
       select: {
+        status:             true,
         videoWatchPercent:  true,
         videoCompleted:     true,
         briefingOpened:     true,
@@ -189,17 +190,22 @@ export default async function SeerahPartPage(props: Props) {
     n > 1
       ? prisma.partProgress.findUnique({
           where: { learnerProfileId_partNumber: { learnerProfileId, partNumber: n - 1 } },
-          select: { quizPassed: true },
+          select: { quizPassed: true, status: true },
         })
       : Promise.resolve(null),
   ]);
 
   if (!accessOk) redirect("/pricing");
 
-  // Sequential progression lock: only Part 1 is freely accessible.
-  // Every other part requires the previous part's quiz to be passed.
-  if (n > 1 && !(prevProgress?.quizPassed ?? false)) {
-    redirect(`/seerah/part-${n - 1}`);
+  // Sequential progression lock: Part n requires Part n-1 to be completed.
+  // "Completed" = quizPassed (Complete plan) OR status completed/mastered
+  // (Essentials plan: video ≥ 85% + briefing, no quiz required).
+  if (n > 1) {
+    const prevCompleted =
+      (prevProgress?.quizPassed ?? false) ||
+      prevProgress?.status === "completed" ||
+      prevProgress?.status === "mastered";
+    if (!prevCompleted) redirect(`/seerah/part-${n - 1}`);
   }
 
   const userPlan = "complete" as const;
@@ -315,7 +321,11 @@ export default async function SeerahPartPage(props: Props) {
             nextPart={nextPart ? { id: nextPart.id, partNumber: nextPart.partNumber, title: nextPart.title, subtitle: nextPart.subtitle } : null}
             currentPart={n}
             totalParts={allParts.length}
-            initialQuizPassed={partProgress?.quizPassed ?? false}
+            initialQuizPassed={
+              (partProgress?.quizPassed ?? false) ||
+              partProgress?.status === "completed" ||
+              partProgress?.status === "mastered"
+            }
           />
         </div>
       </div>

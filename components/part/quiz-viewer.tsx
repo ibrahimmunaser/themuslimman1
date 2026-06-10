@@ -5,7 +5,7 @@ import { clsx } from "clsx";
 import { CheckCircle2, XCircle, ChevronRight, RotateCcw, Trophy, Loader2 } from "lucide-react";
 import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
 import type { Quiz, QuizQuestion } from "@/lib/types";
-import { trackQuizCompleted } from "@/app/actions/progress";
+import { submitQuizAnswers } from "@/app/actions/progress";
 import { getQuizAnswerMap, type QuizAnswerMap } from "@/app/actions/quiz";
 import { AnimatedProgressBar } from "@/components/motion";
 
@@ -172,7 +172,12 @@ function ScoreScreen({
 
   useEffect(() => {
     if (partNumber && !previewMode) {
-      trackQuizCompleted(partNumber, pct).catch(() => {});
+      // Build answer map from results and submit to server so the score is
+      // computed server-side rather than trusting the client-supplied value.
+      const answersMap: Record<string, string> = {};
+      for (const r of results) answersMap[r.question.id] = r.chosen;
+      submitQuizAnswers(partNumber, answersMap).catch(() => {});
+
       const bestScore = Math.max(pct, initialBestScore ?? 0);
       window.dispatchEvent(
         new CustomEvent("seerah:progressUpdate", {
