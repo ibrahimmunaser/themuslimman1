@@ -32,31 +32,34 @@ export default async function CheckoutPage({ searchParams }: Props) {
   // Send users with full lifetime access back to the dashboard UNLESS they are
   // attempting a legitimate upgrade to a family plan.
   //
-  //  Individual lifetime holders can still:
+  //  Individual lifetime holders can only:
   //    • /checkout?plan=family-lifetime  — upgrade to family lifetime ($70 diff)
-  //    • /checkout?plan=family-monthly   — subscribe to family monthly
   //
-  //  Individual lifetime holders trying family-trial are redirected to family-lifetime:
-  //  the $1 starter offer is a one-time-per-account offer; lifetime buyers must
-  //  upgrade directly to Family Lifetime ($70) or Family Monthly ($19/mo).
+  //  family-trial and family-monthly are redirected to family-lifetime because:
+  //   - The $1 trial is a one-time-per-account starter offer
+  //   - Monthly is a step down from a lifetime plan they already own
   //
   //  Family lifetime holders have nothing left to buy at all.
+  let isLifetimeUpgrade = false;
   if (user) {
     const { hasLifetime } = await getUserAccessInfo(user.id, user.hasPaid);
     if (hasLifetime) {
       // Family lifetime holders: nothing left to upgrade to.
       if (user.planType === "family") redirect("/seerah");
 
-      // Individual lifetime holders trying the family TRIAL: the $1 trial is a
-      // one-time starter offer and is not available to existing lifetime buyers.
-      // Redirect them straight to the family lifetime upgrade ($70 difference).
-      if (normalizedPlan === "family-trial") redirect("/checkout?plan=family-lifetime");
+      // Individual lifetime holders trying family-trial or family-monthly:
+      // the $1 trial is one-time-per-account, and a monthly subscription is a
+      // step down from what they already own. Redirect both straight to the
+      // family lifetime upgrade page ($70 difference).
+      if (normalizedPlan === "family-trial" || normalizedPlan === "family-monthly") {
+        redirect("/checkout?plan=family-lifetime");
+      }
 
-      const isFamilyPlanAttempt =
-        normalizedPlan === "family-lifetime" ||
-        normalizedPlan === "family-monthly";
-      // Individual lifetime holders: block unless they're upgrading to a family plan.
-      if (!isFamilyPlanAttempt) redirect("/seerah");
+      // Individual lifetime holders: only family-lifetime is a valid upgrade.
+      if (normalizedPlan !== "family-lifetime") redirect("/seerah");
+
+      // Flag used by the client to lock billing to "lifetime" only.
+      isLifetimeUpgrade = true;
     }
   }
 
@@ -181,6 +184,7 @@ export default async function CheckoutPage({ searchParams }: Props) {
       initialAppliedPromoLabel={initialAppliedPromoLabel}
       initialFreeAccess={initialFreeAccess}
       initialPromoParam={promoParamProp}
+      isLifetimeUpgrade={isLifetimeUpgrade}
     />
   );
 }

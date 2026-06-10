@@ -157,6 +157,12 @@ interface CheckoutPageClientProps {
   initialFreeAccess?: boolean;
   /** Passed from the server to avoid useSearchParams() SSR/CSR hydration mismatches. */
   initialPromoParam?: string | null;
+  /**
+   * True when the user is an individual lifetime holder upgrading to Family Lifetime.
+   * When set, the billing selector is locked to "lifetime" only — trial and monthly
+   * are not valid paths for existing lifetime buyers.
+   */
+  isLifetimeUpgrade?: boolean;
 }
 
 // ── Main checkout content ─────────────────────────────────────────────────────
@@ -183,6 +189,7 @@ function CheckoutPageContent({
   initialAppliedPromoLabel = null,
   initialFreeAccess = false,
   initialPromoParam = null,
+  isLifetimeUpgrade = false,
 }: CheckoutPageClientProps) {
   // promoParam comes from the server prop — no useSearchParams() needed.
   // This guarantees server and client render the same initial HTML.
@@ -629,7 +636,7 @@ function CheckoutPageContent({
     { id: "family",     Icon: Users, label: "Family" },
   ];
 
-  const billingOptions: { id: Billing; label: string; price: number; priceSuffix?: string; sub: string; badge?: string }[] = audience === "individual"
+  const allBillingOptions: { id: Billing; label: string; price: number; priceSuffix?: string; sub: string; badge?: string }[] = audience === "individual"
     ? [
         { id: "trial",    label: "7-Day Trial", price: PLANS.individualTrial.trialFeeAmount, priceSuffix: " today", sub: `Then ${formatPrice(PLANS.individualTrial.price)}/mo · cancel anytime`, badge: "Most Popular" },
         { id: "lifetime", label: "Lifetime",    price: PLANS.complete.price, sub: "Pay once, access forever", badge: "Best Value" },
@@ -638,6 +645,12 @@ function CheckoutPageContent({
         { id: "trial",    label: "7-Day Trial", price: PLANS.familyTrial.trialFeeAmount, priceSuffix: " today", sub: `Then ${formatPrice(PLANS.familyTrial.price)}/mo · up to 5 profiles`, badge: "Most Popular" },
         { id: "lifetime", label: "Lifetime",    price: PLANS.family.price, sub: "Up to 5 profiles · pay once", badge: "Best Value" },
       ];
+
+  // Individual lifetime holders upgrading to Family Lifetime can only pay once —
+  // hide trial and monthly options so they can't navigate into an invalid state.
+  const billingOptions = isLifetimeUpgrade
+    ? allBillingOptions.filter((o) => o.id === "lifetime")
+    : allBillingOptions;
 
   const LeftColumn = (
     <div className="lg:w-1/2 bg-zinc-900/50 border-r border-zinc-800 px-6 sm:px-12 py-12 flex flex-col justify-center">
@@ -681,7 +694,9 @@ function CheckoutPageContent({
         {audienceOptions.map(({ id, Icon, label }) => (
           <button
             key={id}
+            disabled={isLifetimeUpgrade && id !== "family"}
             onClick={() => {
+              if (isLifetimeUpgrade && id !== "family") return;
               setAudience(id);
               setAppliedCoupon(null); setGuestPromo(null); setDiscountAmount(0); setCouponInput(""); setCouponError(null);
               // Immediately reset displayed price to the new plan so the order
@@ -693,7 +708,9 @@ function CheckoutPageContent({
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
               audience === id
                 ? "bg-zinc-700 text-white shadow-sm"
-                : "text-zinc-500 hover:text-zinc-300"
+                : isLifetimeUpgrade && id !== "family"
+                  ? "text-zinc-700 cursor-not-allowed"
+                  : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
             <Icon className="w-4 h-4" />
