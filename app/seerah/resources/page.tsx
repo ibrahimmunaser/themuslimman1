@@ -29,6 +29,7 @@ export default async function SeerahResourcesPage() {
       : getActiveProfileId(user.id),
   ]);
   if (!hasAccess) redirect("/pricing");
+  if (!user.emailVerified) redirect("/seerah");
 
   const _userPlan = "complete" as const;
 
@@ -222,7 +223,6 @@ export default async function SeerahResourcesPage() {
         quizzesContent={
           <QuizResourceContent
             progressMap={quizProgressMap}
-            videoProgressMap={progressMap}
             completedCount={quizCompletedCount}
             passedCount={quizPassedCount}
             avgScore={quizAvgScore}

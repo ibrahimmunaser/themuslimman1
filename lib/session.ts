@@ -22,11 +22,4 @@ export interface SessionUser {
   // user's default profile when the cookie is absent or stale.
   activeProfileId: string | null;
   activeProfileName: string | null;
-
-  // Parent Progress Report Fields
-  courseFor: string;
-  studentName: string | null;
-  parentEmail: string | null;
-  parentEmailVerified: boolean;
-  sendWeeklyReports: boolean;
 }

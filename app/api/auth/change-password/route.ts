@@ -1,11 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser, changePassword } from "@/lib/auth";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Per-user rate limit: 5 attempts per 15 minutes to prevent brute-force of current password.
+    const rl = checkRateLimit(`change-password:${user.id}`, 5, 15 * 60 * 1000);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: "Too many attempts. Please try again later." },
+        { status: 429, headers: { "Retry-After": String(rl.retryAfterSeconds) } }
+      );
     }
 
     const { currentPassword, newPassword } = await request.json();

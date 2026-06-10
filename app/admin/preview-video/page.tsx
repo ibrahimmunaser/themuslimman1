@@ -1,3 +1,4 @@
+import { requireAdmin } from "@/lib/auth";
 import { getPartPageData } from "@/lib/part-content-cache";
 import { getPartById } from "@/lib/content";
 import { LazyVideoPlayer } from "@/components/part/lazy-video-player";
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export default async function AdminPreviewVideoPage({ searchParams }: Props) {
+  await requireAdmin();
   const { part } = await searchParams;
   const partNumber = Math.max(1, parseInt(part ?? "7", 10) || 7);
 

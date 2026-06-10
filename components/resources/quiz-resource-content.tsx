@@ -18,8 +18,6 @@ interface QuizResourceContentProps {
     quizPassed: boolean;
     quizAttempts: number;
   }>;
-  /** Video progress map — quiz is locked until video reaches 85% */
-  videoProgressMap?: Record<number, { videoWatchPercent: number; videoCompleted: boolean }>;
   completedCount: number;
   passedCount: number;
   avgScore: number;
@@ -30,7 +28,6 @@ interface QuizResourceContentProps {
 
 export function QuizResourceContent({
   progressMap,
-  videoProgressMap = {},
   completedCount,
   passedCount,
   avgScore,
@@ -69,14 +66,6 @@ export function QuizResourceContent({
   }, []);
 
   const handleOpenQuiz = async (part: typeof PARTS[0]) => {
-    // Mirror the part page: quiz is locked until video reaches 85%
-    const videoProgress = videoProgressMap[part.partNumber];
-    const videoCompleted = videoProgress?.videoCompleted || (videoProgress?.videoWatchPercent ?? 0) >= 85;
-    if (!videoCompleted) {
-      alert(`Watch the Part ${part.partNumber} video to at least 85% before taking the quiz.`);
-      return;
-    }
-
     setSelectedPart(part);
 
     // Check cache first

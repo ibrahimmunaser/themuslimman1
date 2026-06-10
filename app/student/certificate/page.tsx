@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { requireStudent } from "@/lib/auth";
+import { hasActiveCourseAccess } from "@/lib/access";
 import { StudentLayout } from "@/components/student/student-layout";
-import { prisma } from "@/lib/db";
 import { Award, Lock } from "lucide-react";
 
 export const metadata = { title: "Certificate | Complete Seerah" };
@@ -12,14 +12,10 @@ export default async function CertificatePage() {
   const user = await requireStudent();
   if (!user.studentProfileId) redirect("/");
 
-  let _hasCompletePlan = user.hasPaid;
-  if (!user.hasPaid) {
-    const purchases = await prisma.purchase.findMany({
-      where: { userId: user.id, status: "succeeded" },
-    });
-    if (purchases.length === 0) redirect("/pricing");
-    _hasCompletePlan = purchases.some(p => p.planId === "complete");
-  }
+  const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
+  if (!hasAccess) redirect("/pricing");
+  if (!user.emailVerified) redirect("/seerah");
+
   const userPlan = "complete" as const;
 
   const requiredLessons = userPlan === "complete" ? 100 : 75;

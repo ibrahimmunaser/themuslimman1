@@ -1,5 +1,4 @@
-import { redirect } from "next/navigation";
-import { requireAuth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { r2ListFolders, r2ListFiles } from "@/lib/r2";
 import { Check, X, Folder, FileIcon, RefreshCw, ChevronRight } from "lucide-react";
 import Link from "next/link";
@@ -28,12 +27,7 @@ export default async function R2AdminPage({
 }: {
   searchParams: Promise<{ bucket?: string; folder?: string }>;
 }) {
-  const user = await requireAuth();
-  
-  // Only admins can access this page
-  if (user.role !== "platform_admin") {
-    redirect("/dashboard");
-  }
+  await requireAdmin();
 
   const { bucket, folder } = await searchParams;
 

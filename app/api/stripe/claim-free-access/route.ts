@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { validatePromoCode, applyDiscount, getFreeAccessPlan } from "@/lib/promo-codes";
+import { hasActiveCourseAccess } from "@/lib/access";
 import { prisma } from "@/lib/db";
 import { stripe } from "@/lib/stripe";
 import { PLANS, type PlanId } from "@/lib/stripe";
@@ -90,22 +91,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user already has access via purchase or active subscription
-    const [existingPurchase, existingSubscription] = await Promise.all([
-      prisma.purchase.findFirst({
-        where: { userId: user.id, status: "succeeded" },
-      }),
-      prisma.subscription.findFirst({
-        where: {
-          userId: user.id,
-          status: { in: ["active", "trialing", "past_due"] },
-          currentPeriodEnd: { gte: new Date() },
-        },
-        select: { id: true },
-      }),
-    ]);
-
-    if (existingPurchase || existingSubscription) {
+    // Check if user already has access — covers hasPaid, Purchase rows,
+    // active Stripe subscriptions, and mobile IAP subscriptions.
+    const alreadyHasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
+    if (alreadyHasAccess) {
       return NextResponse.json({ success: true, alreadyHasAccess: true });
     }
 

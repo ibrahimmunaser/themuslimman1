@@ -17,7 +17,7 @@ export default async function TrialCheckoutPage({ searchParams }: Props) {
   }
 
   if (user) {
-    const alreadyHasAccess = user.hasPaid || (await hasActiveCourseAccess(user.id));
+    const alreadyHasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
     if (alreadyHasAccess) redirect("/seerah");
   }
 

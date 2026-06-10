@@ -1,8 +1,10 @@
+import { requireAdmin } from "@/lib/auth";
 import { ComingSoon } from "@/components/ui/coming-soon";
 
 export const metadata = { title: "Platform Settings" };
 
-export default function AdminSettingsPage() {
+export default async function AdminSettingsPage() {
+  await requireAdmin();
   return (
     <ComingSoon
       title="Platform Settings — coming next"

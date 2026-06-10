@@ -12,6 +12,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
+import { requireAdmin } from "@/lib/auth";
 import { getAdminAnalyticsData } from "@/lib/queries/admin";
 
 export const metadata = { title: "Analytics | Admin", robots: { index: false, follow: false } };
@@ -50,6 +51,7 @@ const PLAN_LABELS: Record<string, string> = {
 };
 
 export default async function AdminAnalyticsPage() {
+  await requireAdmin();
   const data = await getAdminAnalyticsData();
   const { funnel, planStats, subStats, recentAbandoned } = data;
 

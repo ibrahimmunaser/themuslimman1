@@ -115,8 +115,12 @@ function PaymentSuccessPageContent() {
       try {
         const response = await fetch(`/api/stripe/verify-payment?payment_intent=${paymentIntent}`);
         if (!response.ok) throw new Error("Payment verification failed");
+        // Fetch the real email verification status so pay-first users see the
+        // verification banner rather than assuming email is already confirmed.
+        const accessRes = await fetch("/api/stripe/check-access");
+        const accessData = accessRes.ok ? await accessRes.json() : {};
         setSuccessType(type === "family" ? "family" : "lifetime");
-        setEmailVerified(true); // legacy flow always had email verified
+        setEmailVerified(accessData.emailVerified ?? false);
         setLoading(false);
       } catch {
         setError("Failed to verify payment. If you were charged, contact support.");

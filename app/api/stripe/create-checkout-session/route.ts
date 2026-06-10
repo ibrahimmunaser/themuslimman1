@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     // Exception: individual lifetime holders may still proceed to family-lifetime
     // to upgrade their plan (they pay the difference). All other combinations
     // (family lifetime, active subscription) are fully blocked.
-    const alreadyHasAccess = user.hasPaid || (await hasActiveCourseAccess(user.id));
+    const alreadyHasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
     if (alreadyHasAccess) {
       const isIndividualLifetimeUpgrade =
         checkoutType === "family-lifetime" &&

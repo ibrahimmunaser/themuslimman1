@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { requireStudent } from "@/lib/auth";
 import { getProfilesWithProgress } from "@/app/actions/profiles";
-import { isFamilyPlan, getProfileLimit, getUserAccessInfo } from "@/lib/access";
+import { isFamilyPlan, getProfileLimit, getUserAccessInfo, hasActiveCourseAccess } from "@/lib/access";
 import { StudentLayout } from "@/components/student/student-layout";
 import { ProfilesClient } from "./profiles-client";
 
@@ -12,10 +12,14 @@ export default async function ProfilesPage() {
   const user = await requireStudent();
   if (!user.studentProfileId) redirect("/");
 
-  const [profiles, accessInfo] = await Promise.all([
+  const [hasAccess, profiles, accessInfo] = await Promise.all([
+    hasActiveCourseAccess(user.id, user.hasPaid),
     getProfilesWithProgress(),
     getUserAccessInfo(user.id, user.hasPaid),
   ]);
+
+  if (!hasAccess) redirect("/pricing");
+  if (!user.emailVerified) redirect("/seerah");
 
   const isFamily     = isFamilyPlan(user.planType);
   const profileLimit = getProfileLimit(user.planType);

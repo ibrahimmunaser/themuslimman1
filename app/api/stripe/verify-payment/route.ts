@@ -3,6 +3,36 @@ import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 
+async function ensureFamilyProfiles(userId: string): Promise<void> {
+  const FAMILY_LIMIT = 5;
+  const [existingProfiles, user] = await Promise.all([
+    prisma.learnerProfile.findMany({
+      where: { userId },
+      select: { id: true, isDefault: true },
+      orderBy: { createdAt: "asc" },
+    }),
+    prisma.user.findUnique({ where: { id: userId }, select: { fullName: true } }),
+  ]);
+  const toCreate = FAMILY_LIMIT - existingProfiles.length;
+  if (toCreate <= 0) return;
+  const hasDefault     = existingProfiles.some((p) => p.isDefault);
+  const existingCount  = existingProfiles.length;
+  const newProfiles    = Array.from({ length: toCreate }, (_, i) => {
+    const slot       = existingCount + i + 1;
+    const isMainSlot = slot === 1;
+    return {
+      id:          crypto.randomUUID(),
+      userId,
+      displayName: isMainSlot ? (user?.fullName?.trim() || "Main Learner") : `Learner ${slot}`,
+      isDefault:   isMainSlot && !hasDefault,
+      createdAt:   new Date(),
+      updatedAt:   new Date(),
+    };
+  });
+  await prisma.learnerProfile.createMany({ data: newProfiles });
+  console.log(`[VERIFY-PAYMENT] ensureFamilyProfiles: created ${newProfiles.length} profiles for user ${userId}`);
+}
+
 export async function GET(request: NextRequest) {
   // ── 1. Require authenticated session ───────────────────────────────────────
   const currentUser = await getCurrentUser();
@@ -118,6 +148,15 @@ export async function GET(request: NextRequest) {
         ...(planId === "complete" ? { planType: "individual" } : {}),
       },
     });
+
+    // Auto-provision 5 learner profiles for family lifetime purchases immediately,
+    // so the user doesn't see 0 profiles if they navigate to /profiles before
+    // the webhook's handlePaymentSuccess fires.
+    if (planId === "family") {
+      ensureFamilyProfiles(userId).catch((e) =>
+        console.error("[VERIFY-PAYMENT] ensureFamilyProfiles failed:", e)
+      );
+    }
 
     console.log(`[VERIFY-PAYMENT] Access granted for user ${currentUser.id}${planId === "family" ? " (planType=family set)" : ""}`);
 

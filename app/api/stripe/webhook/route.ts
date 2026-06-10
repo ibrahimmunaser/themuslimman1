@@ -101,6 +101,27 @@ export async function POST(request: NextRequest) {
         break;
       }
 
+      case "payment_intent.canceled": {
+        // Clean up any pending GiftPurchase rows created before payment was collected.
+        // These accumulate when a purchaser abandons the gift checkout flow.
+        const canceledPI = event.data.object as Stripe.PaymentIntent;
+        console.log(`[WEBHOOK] payment_intent.canceled: ${canceledPI.id}`);
+        if (canceledPI.metadata?.type === "gift") {
+          const result = await prisma.giftPurchase.deleteMany({
+            where: { stripePaymentIntentId: canceledPI.id, status: "pending" },
+          });
+          if (result.count > 0) {
+            console.log(`[WEBHOOK] payment_intent.canceled: deleted ${result.count} stale pending GiftPurchase row(s) for PI ${canceledPI.id}`);
+          }
+        }
+        // Mark any non-succeeded Purchase row as failed (mirrors payment_failed handling).
+        await prisma.purchase.updateMany({
+          where: { stripePaymentIntentId: canceledPI.id, status: { not: "succeeded" } },
+          data: { status: "failed", updatedAt: new Date() },
+        });
+        break;
+      }
+
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
         console.log(`[WEBHOOK] checkout.session.completed: ${session.id}, mode: ${session.mode}`);

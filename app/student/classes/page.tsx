@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { KeyRound, GraduationCap, ChevronRight } from "lucide-react";
 import { requireStudent } from "@/lib/auth";
+import { hasActiveCourseAccess } from "@/lib/access";
 import { getStudentDashboardData } from "@/lib/queries/student";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -11,6 +13,11 @@ export const metadata = { title: "My Programs" };
 export default async function StudentClassesPage() {
   const user = await requireStudent();
   if (!user.studentProfileId) return null;
+
+  const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
+  if (!hasAccess) redirect("/pricing");
+  if (!user.emailVerified) redirect("/seerah");
+
   const { enrollments } = await getStudentDashboardData(user.studentProfileId);
 
   return (

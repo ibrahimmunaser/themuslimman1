@@ -467,7 +467,6 @@ export default async function LearnIndexPage() {
             quizzesContent={
               <QuizResourceContent
                 progressMap={quizProgressMap}
-                videoProgressMap={videoProgressMap}
                 completedCount={quizCompletedCount}
                 passedCount={quizPassedCount}
                 avgScore={quizAvgScore}
@@ -492,10 +491,6 @@ export default async function LearnIndexPage() {
         progressContent={
           <CourseProgressContent 
             userPlan={userPlan}
-            hasParentEmail={!!user.parentEmail && user.parentEmailVerified}
-            parentEmail={user.parentEmail || undefined}
-            studentName={user.studentName || undefined}
-            sendWeeklyReports={user.sendWeeklyReports}
             completedLessons={completedCount}
             totalLessons={totalParts}
             progressPercentage={progressPercentage}

@@ -46,7 +46,10 @@ async function getUserPlan(userId: string, sessionHasPaid?: boolean): Promise<Us
         // Include "past_due" so users in Stripe's dunning window keep progress tracking.
         // Mirrors ACTIVE_SUBSCRIPTION_STATUSES from lib/access.ts.
         status: { in: ["active", "trialing", "past_due"] },
-        currentPeriodEnd: { gt: new Date() },
+        // Use gte (≥) to match hasActiveCourseAccess in lib/access.ts exactly.
+        // Using gt (>) would deny progress tracking in the same millisecond
+        // that the access gate still grants dashboard access via gte.
+        currentPeriodEnd: { gte: new Date() },
       },
       select: { id: true },
     }),
@@ -317,10 +320,24 @@ export async function trackFlashcardsReviewed(partNumber: number) {
   if (!userPlan) return;
 
   await getOrCreateProgress(userId, learnerProfileId, partNumber);
-  await prisma.partProgress.update({
-    where: { learnerProfileId_partNumber: { learnerProfileId, partNumber } },
-    data: { flashcardsReviewed: true, lastAccessedAt: new Date() },
-  });
+
+  // Write flashcardsReviewed=true AND append "flashcard" to openedAssets so both
+  // the part-page path and the resources-page path agree on completion counts.
+  // The CASE expression is a no-op when "flashcard" is already in the array.
+  await prisma.$executeRaw`
+    UPDATE "PartProgress"
+    SET
+      "flashcardsReviewed" = true,
+      "openedAssets" = CASE
+        WHEN COALESCE("openedAssets", '[]')::jsonb ? 'flashcard'
+        THEN COALESCE("openedAssets", '[]')
+        ELSE (COALESCE("openedAssets", '[]')::jsonb || jsonb_build_array('flashcard'::text))::text
+      END,
+      "lastAccessedAt" = NOW(),
+      "updatedAt" = NOW()
+    WHERE "learnerProfileId" = ${learnerProfileId}
+      AND "partNumber" = ${partNumber}
+  `;
 
   await recomputeAndSave(learnerProfileId, partNumber, userPlan);
 }

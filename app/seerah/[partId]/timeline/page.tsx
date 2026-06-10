@@ -33,6 +33,7 @@ export default async function TimelinePage(props: Props) {
 
   const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
   if (!hasAccess) redirect("/pricing");
+  if (!user.emailVerified) redirect("/seerah");
 
   const _userPlan = "complete" as const;
 

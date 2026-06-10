@@ -17,6 +17,7 @@ export default async function QuizzesPage() {
 
   const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
   if (!hasAccess) redirect("/pricing");
+  if (!user.emailVerified) redirect("/seerah");
 
   const userPlan = "complete" as const;
 

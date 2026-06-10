@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 import { nanoid } from "nanoid";
 import { prisma } from "./db";
 import { hashToken } from "./hash-token";
+import { checkRateLimit } from "./rate-limit";
 import type { SessionUser } from "./session";
 import { ROLES, type Role, isRole } from "./roles";
 
@@ -116,11 +117,6 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
           emailVerified: true,
           hasPaid: true,
           planType: true,
-          courseFor: true,
-          studentName: true,
-          parentEmail: true,
-          parentEmailVerified: true,
-          sendWeeklyReports: true,
           studentProfile: { select: { id: true } },
           learnerProfiles: {
             select: { id: true, displayName: true, isDefault: true },
@@ -179,11 +175,6 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
     planType: user.planType,
     activeProfileId: activeProfile?.id ?? null,
     activeProfileName: activeProfile?.displayName ?? null,
-    courseFor: user.courseFor,
-    studentName: user.studentName,
-    parentEmail: user.parentEmail,
-    parentEmailVerified: user.parentEmailVerified,
-    sendWeeklyReports: user.sendWeeklyReports,
   };
 }
 
@@ -372,6 +363,20 @@ export async function verifyEmail(token: string): Promise<{ success: boolean; er
 // ─────────────────────────────────────────────────────────────
 
 export async function requestPasswordReset(email: string): Promise<{ success: boolean; error?: string }> {
+  // Per-email rate limit: 3 reset emails per hour per address.
+  // This is in addition to the per-IP limit in the API route, so rotating
+  // proxies cannot spam reset emails to a victim's inbox.
+  const emailRl = checkRateLimit(
+    `pw-reset:email:${email.trim().toLowerCase()}`,
+    3,
+    60 * 60 * 1000,
+  );
+  if (!emailRl.allowed) {
+    // Return the same message as a successful request to prevent enumeration
+    // (an attacker shouldn't know whether the limit was due to a real account).
+    return { success: true };
+  }
+
   const user = await prisma.user.findUnique({
     where: { email: email.toLowerCase() },
   });

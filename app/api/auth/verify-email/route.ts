@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { verifyEmail } from "@/lib/auth";
+import { verifyEmail, getCurrentUser } from "@/lib/auth";
 import { checkRateLimit, getIP } from "@/lib/rate-limit";
 
 const VerifySchema = z.object({
@@ -26,6 +26,13 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    // If the session user is already verified, treat as success without consuming
+    // the token — handles re-clicks on old verification links gracefully.
+    const sessionUser = await getCurrentUser();
+    if (sessionUser?.emailVerified) {
+      return NextResponse.json({ success: true });
+    }
+
     const body = await request.json();
     const parsed = VerifySchema.safeParse(body);
 

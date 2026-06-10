@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import { requireStudent } from "@/lib/auth";
 import { hasActiveCourseAccess } from "@/lib/access";
 import { StudentLayout } from "@/components/student/student-layout";
-import { ParentEmailSettings } from "@/components/student/parent-email-settings";
 import { User, Mail, Shield } from "lucide-react";
 import { ChangePasswordForm } from "@/components/student/change-password-form";
 
@@ -15,6 +14,7 @@ export default async function SettingsPage() {
 
   const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
   if (!hasAccess) redirect("/pricing");
+  if (!user.emailVerified) redirect("/seerah");
 
   const userPlan = "complete" as const;
 
@@ -78,14 +78,6 @@ export default async function SettingsPage() {
             </div>
           </div>
 
-
-          {/* Parent Progress Reports */}
-          <ParentEmailSettings
-            currentParentEmail={user.parentEmail}
-            parentEmailVerified={user.parentEmailVerified}
-            studentName={user.studentName}
-            sendWeeklyReports={user.sendWeeklyReports}
-          />
 
           {/* Account Plan */}
           <div className="mt-6"></div>

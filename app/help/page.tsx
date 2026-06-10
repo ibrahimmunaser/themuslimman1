@@ -58,7 +58,7 @@ export default async function HelpPage() {
       questions: [
         {
           q: "Can I access parts in any order?",
-          a: "The course is designed to be taken in order — each part unlocks after you pass the short quiz at the end of the previous lesson. Part 1 is always open. This keeps the Seerah connected and builds naturally from one event to the next.",
+          a: "Yes — all 100 parts are immediately accessible once your plan is active. You can jump to any lesson at any time. The parts are numbered to help you follow the Seerah chronologically, but there are no locks or requirements between lessons.",
         },
         {
           q: "Can I access lessons on mobile?",

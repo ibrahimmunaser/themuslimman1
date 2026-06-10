@@ -628,12 +628,6 @@ model User {
   hasPaid                                         Boolean          @default(false)
   stripePaymentIntentId                           String?
   verificationExpires                             DateTime?
-  courseFor                                       String           @default("myself")
-  parentEmail                                     String?
-  sendWeeklyReports                               Boolean          @default(false)
-  studentName                                     String?
-  parentEmailVerified                             Boolean          @default(false)
-  parentVerificationToken                         String?          @unique
   stripeCustomerId                                String?          @unique
   planType                                        String           @default("individual")
   activityLogs                                    ActivityLog[]

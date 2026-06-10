@@ -2,18 +2,12 @@ import Link from "next/link";
 import {
   TrendingUp, Target, Award,
   Play, CheckCircle2, BookOpen,
-  FileText, ChevronRight,
+  ChevronRight,
 } from "lucide-react";
-import { SendProgressReportButton } from "./send-progress-report-button";
-import { ProgressReportsAccordion } from "./progress-reports-accordion";
 import type { StageData } from "./course-home-content";
 
 interface CourseProgressContentProps {
   userPlan: "essentials" | "complete";
-  hasParentEmail?: boolean;
-  parentEmail?: string;
-  studentName?: string;
-  sendWeeklyReports?: boolean;
   completedLessons: number;
   totalLessons: number;
   progressPercentage: number;
@@ -27,10 +21,6 @@ interface CourseProgressContentProps {
 
 export function CourseProgressContent({
   userPlan,
-  hasParentEmail = false,
-  parentEmail,
-  studentName,
-  sendWeeklyReports = false,
   completedLessons,
   totalLessons,
   progressPercentage,
@@ -304,41 +294,6 @@ export function CourseProgressContent({
             ))}
           </div>
         )}
-      </section>
-
-      {/* ── Email / Parent Progress Reports — collapsed by default ─────── */}
-      <section>
-        <ProgressReportsAccordion
-          hasParentEmail={hasParentEmail}
-          parentEmail={parentEmail}
-          sendWeeklyReports={sendWeeklyReports}
-        >
-          {hasParentEmail ? (
-            <SendProgressReportButton
-              userPlan={userPlan}
-              hasParentEmail={hasParentEmail}
-              parentEmail={parentEmail}
-              studentName={studentName}
-              sendWeeklyReports={sendWeeklyReports}
-            />
-          ) : (
-            <div className="flex items-start gap-3">
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-text mb-1">Set up parent reports</p>
-                <p className="text-xs text-text-secondary mb-3">
-                  Keep a parent or guardian updated with automated weekly progress reports or on-demand summaries.
-                </p>
-                <Link
-                  href="/student/settings"
-                  className="inline-flex items-center gap-2 px-4 py-2.5 min-h-[44px] bg-gold hover:bg-gold/90 text-ink font-semibold rounded-lg text-sm transition-colors"
-                >
-                  <FileText className="w-3.5 h-3.5" />
-                  Set Up in Settings
-                </Link>
-              </div>
-            </div>
-          )}
-        </ProgressReportsAccordion>
       </section>
 
     </div>

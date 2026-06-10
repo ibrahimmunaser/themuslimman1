@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getActiveProfileId } from "@/app/actions/profiles";
 import { checkRateLimit, getIP } from "@/lib/rate-limit";
+import { hasActiveCourseAccess } from "@/lib/access";
 
 export async function POST(request: NextRequest) {
   // Rate limit: 30 updates per minute per IP (1 update per 2 s is plenty for 60-second intervals)
@@ -21,6 +22,13 @@ export async function POST(request: NextRequest) {
     const user = await getCurrentUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (!user.emailVerified) {
+      return NextResponse.json({ error: "Email verification required" }, { status: 403 });
+    }
+    const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
+    if (!hasAccess) {
+      return NextResponse.json({ error: "No active subscription" }, { status: 403 });
     }
     const body = await request.json();
     

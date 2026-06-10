@@ -18,6 +18,9 @@ export async function GET(req: NextRequest) {
   if (process.env.NODE_ENV === "production") {
     return NextResponse.json({ error: "Not available" }, { status: 403 });
   }
+  if (process.env.ALLOW_DEBUG_ENDPOINTS !== "true") {
+    return NextResponse.json({ error: "Debug endpoints disabled" }, { status: 403 });
+  }
 
   try {
     const _user = await requireStudent();
