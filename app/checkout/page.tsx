@@ -33,20 +33,28 @@ export default async function CheckoutPage({ searchParams }: Props) {
   // attempting a legitimate upgrade to a family plan.
   //
   //  Individual lifetime holders can still:
-  //    • /checkout?plan=family-trial     — try the family plan for $1
   //    • /checkout?plan=family-lifetime  — upgrade to family lifetime ($70 diff)
   //    • /checkout?plan=family-monthly   — subscribe to family monthly
+  //
+  //  Individual lifetime holders trying family-trial are redirected to family-lifetime:
+  //  the $1 starter offer is a one-time-per-account offer; lifetime buyers must
+  //  upgrade directly to Family Lifetime ($70) or Family Monthly ($19/mo).
   //
   //  Family lifetime holders have nothing left to buy at all.
   if (user) {
     const { hasLifetime } = await getUserAccessInfo(user.id, user.hasPaid);
     if (hasLifetime) {
-      const isFamilyPlanAttempt =
-        normalizedPlan === "family-lifetime" ||
-        normalizedPlan === "family-trial"    ||
-        normalizedPlan === "family-monthly";
       // Family lifetime holders: nothing left to upgrade to.
       if (user.planType === "family") redirect("/seerah");
+
+      // Individual lifetime holders trying the family TRIAL: the $1 trial is a
+      // one-time starter offer and is not available to existing lifetime buyers.
+      // Redirect them straight to the family lifetime upgrade ($70 difference).
+      if (normalizedPlan === "family-trial") redirect("/checkout?plan=family-lifetime");
+
+      const isFamilyPlanAttempt =
+        normalizedPlan === "family-lifetime" ||
+        normalizedPlan === "family-monthly";
       // Individual lifetime holders: block unless they're upgrading to a family plan.
       if (!isFamilyPlanAttempt) redirect("/seerah");
     }

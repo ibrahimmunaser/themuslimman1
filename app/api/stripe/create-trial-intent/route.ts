@@ -60,9 +60,10 @@ export async function POST(request: NextRequest) {
     // ── Access & subscription checks ─────────────────────────────────────────
     const accessInfo = await getUserAccessInfo(user.id, user.hasPaid);
 
-    // Block lifetime holders — they don't need a trial.
-    // (Individual lifetime holders upgrading to a family plan do so via
-    //  create-family-payment-intent or create-family-subscription-intent, not the $1 trial.)
+    // Block lifetime holders — the $1 trial is a one-time starter offer only.
+    // Individual lifetime holders who want family access are redirected by
+    // checkout/page.tsx to /checkout?plan=family-lifetime before they can
+    // reach this endpoint, so this is a secondary safety net.
     if (accessInfo.hasLifetime) {
       return NextResponse.json(
         { error: "You already have lifetime access.", hasLifetime: true },
