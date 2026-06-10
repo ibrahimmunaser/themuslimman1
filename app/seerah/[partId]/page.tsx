@@ -172,7 +172,7 @@ export default async function SeerahPartPage(props: Props) {
 
   const learnerProfileId = user.activeProfileId ?? await getActiveProfileId(user.id);
 
-  const [accessOk, partProgress, prevProgress] = await Promise.all([
+  const [accessOk, partProgress] = await Promise.all([
     hasActiveCourseAccess(user.id, user.hasPaid),
     prisma.partProgress.findUnique({
       where: { learnerProfileId_partNumber: { learnerProfileId, partNumber: n } },
@@ -187,26 +187,9 @@ export default async function SeerahPartPage(props: Props) {
         openedAssets:       true,
       },
     }),
-    n > 1
-      ? prisma.partProgress.findUnique({
-          where: { learnerProfileId_partNumber: { learnerProfileId, partNumber: n - 1 } },
-          select: { quizPassed: true, status: true },
-        })
-      : Promise.resolve(null),
   ]);
 
   if (!accessOk) redirect("/pricing");
-
-  // Sequential progression lock: Part n requires Part n-1 to be completed.
-  // "Completed" = quizPassed (Complete plan) OR status completed/mastered
-  // (Essentials plan: video ≥ 85% + briefing, no quiz required).
-  if (n > 1) {
-    const prevCompleted =
-      (prevProgress?.quizPassed ?? false) ||
-      prevProgress?.status === "completed" ||
-      prevProgress?.status === "mastered";
-    if (!prevCompleted) redirect(`/seerah/part-${n - 1}`);
-  }
 
   const userPlan = "complete" as const;
 

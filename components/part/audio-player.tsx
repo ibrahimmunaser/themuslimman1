@@ -127,8 +127,7 @@ export function AudioPlayer({ src, title, partNumber, compact = false, previewMo
     const pct = x / rect.width;
     // Map 0–100% of the bar to startOffset–duration (never before intro cutoff).
     const target = startOffset + pct * (audioRef.current.duration - startOffset);
-    // Block forward seeking until the video has been fully watched.
-    if (!videoCompleted && target > audioRef.current.currentTime) return;
+    // Seeking is unrestricted.
     audioRef.current.currentTime = Math.max(startOffset, target);
   };
 
@@ -221,7 +220,7 @@ export function AudioPlayer({ src, title, partNumber, compact = false, previewMo
         tabIndex={0}
         onKeyDown={(e) => {
           if (!audioRef.current) return;
-          if (e.key === "ArrowRight" && videoCompleted) audioRef.current.currentTime = Math.min(audioRef.current.duration, audioRef.current.currentTime + 5);
+          if (e.key === "ArrowRight") audioRef.current.currentTime = Math.min(audioRef.current.duration, audioRef.current.currentTime + 5);
           if (e.key === "ArrowLeft") audioRef.current.currentTime = Math.max(startOffset, audioRef.current.currentTime - 5);
         }}
       >
@@ -257,19 +256,15 @@ export function AudioPlayer({ src, title, partNumber, compact = false, previewMo
           {playing ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
         </button>
 
-        {/* Forward is hidden until the video has been fully watched */}
-        {videoCompleted ? (
-          <button
-            onClick={() => skip(10)}
-            className="flex flex-col items-center text-text-muted/60 hover:text-text-secondary transition-colors min-h-[44px] min-w-[44px] justify-center"
-            aria-label="Forward 10 seconds"
-          >
-            <SkipForward className="w-4 h-4" />
-            <span className="text-[9px] mt-0.5 leading-none" aria-hidden>+10s</span>
-          </button>
-        ) : (
-          <div className="min-h-[44px] min-w-[44px]" />
-        )}
+        {/* Forward 10s */}
+        <button
+          onClick={() => skip(10)}
+          className="flex flex-col items-center text-text-muted/60 hover:text-text-secondary transition-colors min-h-[44px] min-w-[44px] justify-center"
+          aria-label="Forward 10 seconds"
+        >
+          <SkipForward className="w-4 h-4" />
+          <span className="text-[9px] mt-0.5 leading-none" aria-hidden>+10s</span>
+        </button>
       </div>
     </div>
   );

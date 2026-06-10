@@ -239,28 +239,6 @@ export async function trackQuizCompleted(partNumber: number, score: number) {
 
   const passed  = clamped >= QUIZ_PASS_SCORE;
 
-  // Sequential-lock check: every part requires the previous part to be completed.
-  // "Completed" means quizPassed = true (Complete plan) OR status = 'completed'/'mastered'
-  // (Essentials plan: video ≥ 85% + briefing opened, no quiz required).
-  // This mirrors the page-level lock and prevents a client from POST-ing
-  // a fake score to unlock arbitrary parts out of order.
-  if (partNumber > 1) {
-    const prevProgress = await prisma.partProgress.findUnique({
-      where: { learnerProfileId_partNumber: { learnerProfileId, partNumber: partNumber - 1 } },
-      select: { quizPassed: true, status: true },
-    });
-
-    const prevCompleted =
-      (prevProgress?.quizPassed ?? false) ||
-      prevProgress?.status === "completed" ||
-      prevProgress?.status === "mastered";
-
-    if (!prevCompleted) {
-      devLog(`[PROGRESS] trackQuizCompleted: Part ${partNumber} — Part ${partNumber - 1} not completed; ignoring score`);
-      return;
-    }
-  }
-
   await getOrCreateProgress(userId, learnerProfileId, partNumber);
 
   // Atomic best-score update: only raise quizBestScore, never lower it.

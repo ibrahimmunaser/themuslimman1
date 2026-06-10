@@ -290,17 +290,7 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
         onTimeUpdate={handleTimeUpdate}
         onError={() => setVideoError(true)}
         onSeeking={() => {
-          // Once the video is fully watched, seeking is unrestricted.
-          if (videoFullyWatched) return;
-          // Catch native seeks (keyboard shortcuts, touch scrubbing) and clamp
-          // them to the max-watched position so users cannot skip ahead.
-          if (!videoRef.current) return;
-          const duration = videoRef.current.duration;
-          if (!isFinite(duration) || duration <= 0) return;
-          const maxTime = (maxWatchedRef.current / 100) * duration;
-          if (videoRef.current.currentTime > maxTime + 0.5) {
-            videoRef.current.currentTime = maxTime;
-          }
+          // Seeking is unrestricted — users can jump to any position freely.
         }}
         onPause={() => {
           setPlaying(false);
@@ -405,17 +395,15 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
             <span className="absolute text-[7px] font-bold leading-none" aria-hidden>10</span>
           </button>
 
-          {/* Forward 10s — shown only after the video has been fully watched */}
-          {videoFullyWatched && (
-            <button
-              onClick={() => { if (videoRef.current) videoRef.current.currentTime = Math.min(videoRef.current.duration, videoRef.current.currentTime + 10); }}
-              className="relative min-w-[44px] min-h-[44px] flex items-center justify-center text-white/70 hover:text-white transition-colors"
-              aria-label="Forward 10 seconds"
-            >
-              <RotateCw className="w-5 h-5" />
-              <span className="absolute text-[7px] font-bold leading-none" aria-hidden>10</span>
-            </button>
-          )}
+          {/* Forward 10s */}
+          <button
+            onClick={() => { if (videoRef.current) videoRef.current.currentTime = Math.min(videoRef.current.duration, videoRef.current.currentTime + 10); }}
+            className="relative min-w-[44px] min-h-[44px] flex items-center justify-center text-white/70 hover:text-white transition-colors"
+            aria-label="Forward 10 seconds"
+          >
+            <RotateCw className="w-5 h-5" />
+            <span className="absolute text-[7px] font-bold leading-none" aria-hidden>10</span>
+          </button>
 
           <div className="relative flex items-center gap-1">
             {/* Mute toggle — single tap on mobile; on desktop also toggles slider.

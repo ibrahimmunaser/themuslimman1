@@ -414,13 +414,6 @@ function SubTabContent({ id, part, previewMode, assetUrls, onSwitchMode, videoCo
     case "flashcards":
       return wrap(part.assets.flashcards ? <FlashcardsViewer flashcards={part.assets.flashcards} partNumber={part.partNumber} previewMode={previewMode} /> : <EmptyContent label="Flashcards" />);
     case "quiz":
-      if (!previewMode && !videoCompleted) return wrap(
-        <div className="py-10 text-center space-y-2">
-          <Lock className="w-5 h-5 text-text-muted/50 mx-auto mb-3" />
-          <p className="text-text-secondary text-sm font-medium">Quiz is locked</p>
-          <p className="text-xs text-text-muted">Watch the full video to unlock the quiz.</p>
-        </div>
-      );
       return wrap(part.assets.quiz ? <QuizViewer quiz={part.assets.quiz} partNumber={part.partNumber} previewMode={previewMode} initialBestScore={initialQuizBestScore} /> : <EmptyContent label="Quiz" />);
     case "slides":      return <SlidesPanel part={part} previewMode={previewMode} />;
     case "mindmap":     return <LazyMindmapViewer partNumber={part.partNumber} title={`Part ${part.partNumber} — Mindmap`} previewMode={previewMode} mindmapUrl={assetUrls.mindmapUrl} />;
@@ -669,14 +662,13 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
                 <div className="flex gap-1">
                   {MODES.filter((m) => !m.primary).map((mode) => {
                     const available = getModeSubTabs(mode, part).length > 0;
-                    const quizLocked = !previewMode && mode.id === "quiz" && !videoCompleted;
                     return (
                       <ModeButton
                         key={mode.id}
                         mode={mode}
                         isActive={activeMode === mode.id}
                         isAvailable={available}
-                        isLocked={quizLocked}
+                        isLocked={false}
                         onClick={() => available ? handleModeChange(mode.id) : undefined}
                       />
                     );
@@ -688,14 +680,13 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
             <div className="hidden sm:flex gap-2 lg:justify-center lg:flex-wrap">
               {MODES.map((mode) => {
                 const available = getModeSubTabs(mode, part).length > 0;
-                const quizLocked = !previewMode && mode.id === "quiz" && !videoCompleted;
                 return (
                   <ModeButton
                     key={mode.id}
                     mode={mode}
                     isActive={activeMode === mode.id}
                     isAvailable={available}
-                    isLocked={quizLocked}
+                    isLocked={false}
                     onClick={() => available ? handleModeChange(mode.id) : undefined}
                   />
                 );
