@@ -81,6 +81,119 @@ export async function getAdminDashboardData() {
   };
 }
 
+export async function getAdminAnalyticsData() {
+  const ROLES_STUDENT = "student";
+  const ACTIVE_SUB_STATUSES = ["active", "trialing", "past_due"] as const;
+
+  const [
+    totalSignups,
+    startedCheckout,
+    completedPurchase,
+    planBreakdown,
+    subStatusBreakdown,
+    abandonedUsers,
+    revenueByPlan,
+    recentAbandoned,
+  ] = await Promise.all([
+    // Total student signups
+    prisma.user.count({ where: { role: ROLES_STUDENT } }),
+
+    // Started checkout = Stripe customer was created (checkout page was reached and form was initialized)
+    prisma.user.count({
+      where: { role: ROLES_STUDENT, stripeCustomerId: { not: null } },
+    }),
+
+    // Completed a purchase (lifetime or subscription)
+    prisma.user.count({
+      where: {
+        role: ROLES_STUDENT,
+        OR: [
+          { hasPaid: true },
+          { subscriptions: { some: { status: { in: [...ACTIVE_SUB_STATUSES] } } } },
+        ],
+      },
+    }),
+
+    // Revenue + count broken down by planId
+    prisma.purchase.groupBy({
+      by: ["planId"],
+      where: { status: "succeeded" },
+      _sum: { amount: true },
+      _count: { id: true },
+      orderBy: { _sum: { amount: "desc" } },
+    }),
+
+    // Subscription counts by status
+    prisma.subscription.groupBy({
+      by: ["status"],
+      _count: { id: true },
+    }),
+
+    // Checkout abandonment count: reached checkout (stripeCustomerId) but never purchased
+    prisma.user.count({
+      where: {
+        role: ROLES_STUDENT,
+        stripeCustomerId: { not: null },
+        hasPaid: false,
+        subscriptions: { none: { status: { in: [...ACTIVE_SUB_STATUSES] } } },
+      },
+    }),
+
+    // Revenue by plan with plan name for display
+    prisma.purchase.groupBy({
+      by: ["planId", "planName"],
+      where: { status: "succeeded" },
+      _sum: { amount: true },
+      _count: { id: true },
+    }),
+
+    // Recent abandoned checkout users for the table
+    prisma.user.findMany({
+      where: {
+        role: ROLES_STUDENT,
+        stripeCustomerId: { not: null },
+        hasPaid: false,
+        subscriptions: { none: { status: { in: [...ACTIVE_SUB_STATUSES] } } },
+      },
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        createdAt: true,
+        lastLoginAt: true,
+        emailVerified: true,
+      },
+      orderBy: { createdAt: "desc" },
+      take: 25,
+    }),
+  ]);
+
+  // Merge planBreakdown and revenueByPlan into one list
+  const planStats = revenueByPlan.map((r) => ({
+    planId:   r.planId,
+    planName: r.planName,
+    count:    r._count.id,
+    revenueCents: r._sum.amount ?? 0,
+  })).sort((a, b) => b.revenueCents - a.revenueCents);
+
+  const subStats = subStatusBreakdown.map((s) => ({
+    status: s.status,
+    count:  s._count.id,
+  }));
+
+  return {
+    funnel: {
+      totalSignups,
+      startedCheckout,
+      completedPurchase,
+      abandonedCheckout: abandonedUsers,
+    },
+    planStats,
+    subStats,
+    recentAbandoned,
+  };
+}
+
 export async function getAdminOrdersData() {
   const startTime = Date.now();
   console.log(`[ADMIN_QUERY] getAdminOrdersData: Starting orders data fetch...`);
