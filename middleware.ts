@@ -62,6 +62,7 @@ export const config = {
     "/teacher/:path*",
     "/student/:path*",
     "/change-password",
+    "/seerah",
     "/seerah/:path*",
     "/learn/:path*",
     "/billing",

@@ -16,6 +16,9 @@ const SignupSchema = z.object({
   fullName: z.string().min(2, "Name must be at least 2 characters").max(100),
   email: z.string().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters").max(1000, "Password is too long"),
+  // Optional: safe internal redirect path to include in the verification link
+  // so the user returns to their destination (e.g. gift claim) after verifying.
+  redirectAfterVerify: z.string().max(500).optional(),
 });
 
 /**
@@ -51,7 +54,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { fullName, email, password } = parsed.data;
+    const { fullName, email, password, redirectAfterVerify } = parsed.data;
+
+    // Validate the optional redirect: must be a safe internal relative path.
+    const safeRedirect =
+      redirectAfterVerify &&
+      redirectAfterVerify.startsWith("/") &&
+      !redirectAfterVerify.startsWith("//")
+        ? redirectAfterVerify
+        : null;
 
     // Check if email already exists
     const existingEmail = await prisma.user.findUnique({
@@ -141,7 +152,7 @@ export async function POST(request: NextRequest) {
     // Send verification email (only in production)
     // Use the raw (un-hashed) token in the URL — the DB stores the hash.
     if (!isDevelopment && rawVerificationToken) {
-      const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify-email?token=${rawVerificationToken}`;
+      const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify-email?token=${rawVerificationToken}${safeRedirect ? `&redirect=${encodeURIComponent(safeRedirect)}` : ""}`;
 
       try {
         const resend = new Resend(process.env.RESEND_API_KEY);

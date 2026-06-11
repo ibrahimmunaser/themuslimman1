@@ -97,8 +97,9 @@ export default async function CheckoutPage({ searchParams }: Props) {
     "family-lifetime":     14900,
     "individual-trial":    100,
     "family-trial":        100,
-    "individual-monthly":  900,
-    "family-monthly":      1900,
+    // monthly plans redirect to trial at checkout, so seed the trial fee ($1)
+    "individual-monthly":  100,
+    "family-monthly":      100,
   };
   const initialBasePrice  = planBasePrice[normalizedPlan] ?? 7900;
   let initialClientSecret: string | null = null;

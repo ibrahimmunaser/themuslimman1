@@ -58,6 +58,9 @@ function SignupPageContent() {
           fullName: form.fullName.trim(),
           email: form.email.trim().toLowerCase(),
           password: form.password,
+          // Pass the redirect so the verification email link brings the user
+          // back to their destination (e.g. gift claim page) after verifying.
+          ...(redirectAfter ? { redirectAfterVerify: redirectAfter } : {}),
         }),
       });
 

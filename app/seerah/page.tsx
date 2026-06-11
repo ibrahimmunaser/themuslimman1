@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getCachedStudent } from "@/lib/auth-cache";
-import { hasActiveCourseAccess } from "@/lib/access";
+import { hasActiveCourseAccess, isFamilyPlan } from "@/lib/access";
 import { getActiveProfileId } from "@/app/actions/profiles";
 import { PARTS } from "@/lib/content";
 import { getThumbnailUrls } from "@/lib/r2";
@@ -24,10 +24,23 @@ export const metadata = { title: "Complete Seerah" };
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-export default async function LearnIndexPage() {
+export default async function LearnIndexPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string>>;
+}) {
   // getCachedStudent() deduplicates with the seerah/layout.tsx call in the same request.
   const user = await getCachedStudent();
   if (!user.studentProfileId) redirect("/");
+
+  // Family plan holders must always choose their active learner profile before
+  // accessing the dashboard — no matter what link brought them here.
+  // Exception: arriving from the profile picker itself (?from=profiles) so we
+  // don't create an infinite redirect loop.
+  const params = await searchParams;
+  if (isFamilyPlan(user.planType) && params.from !== "profiles") {
+    redirect("/profiles");
+  }
 
   // Gate 1: Access check (payment / subscription).
   // Run this BEFORE the email-verification gate so that unpaid+unverified users are

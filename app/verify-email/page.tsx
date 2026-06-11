@@ -10,6 +10,13 @@ function VerifyEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
+  // Optional redirect destination embedded in the verification link (e.g. gift claim page).
+  // Validated to be a safe internal path before use.
+  const rawRedirect = searchParams.get("redirect") ?? "";
+  const safeRedirect =
+    rawRedirect.startsWith("/") && !rawRedirect.startsWith("//")
+      ? rawRedirect
+      : "";
   
   const [status, setStatus] = useState<"verifying" | "success" | "error">("verifying");
   const [message, setMessage] = useState("Verifying your email...");
@@ -34,8 +41,8 @@ function VerifyEmailContent() {
         if (response.ok && data.success) {
           setStatus("success");
           setMessage("Email verified successfully!");
-          // Redirect to dashboard/account if logged in, otherwise to homepage
-          setTimeout(() => router.push("/seerah"), 2000);
+          // Redirect to the embedded destination (e.g. gift claim) or default dashboard.
+          setTimeout(() => router.push(safeRedirect || "/seerah"), 2000);
         } else {
           setStatus("error");
           setMessage(data.error || "Verification failed");
@@ -72,9 +79,9 @@ function VerifyEmailContent() {
           <p className="text-text-secondary text-sm mb-6">
             Your email is confirmed. Taking you to your dashboard...
           </p>
-          <Link href="/seerah">
+          <Link href={safeRedirect || "/seerah"}>
             <Button variant="primary" size="lg">
-              Go to Dashboard
+              {safeRedirect ? "Continue" : "Go to Dashboard"}
             </Button>
           </Link>
         </>

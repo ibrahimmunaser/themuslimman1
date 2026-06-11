@@ -40,7 +40,12 @@ export function LoginForm() {
         // Only allow safe internal relative paths to prevent open redirect attacks.
         const isSafeReturn =
           returnUrl && returnUrl.startsWith("/") && !returnUrl.startsWith("//");
-        if (isSafeReturn) {
+        if (result.role === "student" && result.isFamily) {
+          // Family plan holders always land on the profile picker first —
+          // they must choose which learner is active before accessing the course.
+          // This takes priority over any returnUrl ("no matter what").
+          destination = "/profiles";
+        } else if (isSafeReturn) {
           destination = returnUrl;
         } else if (result.role === "student") {
           // /seerah is the single gatekeeper: it shows the verification wall,

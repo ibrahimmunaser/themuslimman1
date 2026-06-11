@@ -54,7 +54,7 @@ export function ProfilePickerClient({
       // Small delay so the selection animation plays before navigation
       await new Promise((r) => setTimeout(r, 320));
       // Full navigation so server re-renders with the new profile cookie
-      window.location.href = "/seerah";
+      window.location.href = "/seerah?from=profiles";
     } catch {
       setSelecting(null);
       setSwitchError("Something went wrong. Please try again.");
