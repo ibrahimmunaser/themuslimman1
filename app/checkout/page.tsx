@@ -175,6 +175,7 @@ export default async function CheckoutPage({ searchParams }: Props) {
   return (
     <CheckoutClientPage
       userEmail={user?.email ?? ""}
+      userPlanType={user?.planType ?? null}
       initialAudience={initialAudience}
       initialBilling={initialBilling}
       initialClientSecret={initialClientSecret}

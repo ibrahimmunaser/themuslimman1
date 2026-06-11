@@ -27,12 +27,20 @@ export type QuizAnswerMapResult =
  *
  * Answers are not included in the RSC page payload (stripped in stripQuizAnswers),
  * so they are only accessible after this explicit access-gated fetch.
+ *
+ * @param previewMode - When true and partNumber is 1, skip access check (free preview)
  */
 export async function getQuizAnswerMap(
   partNumber: number,
+  previewMode = false,
 ): Promise<QuizAnswerMapResult> {
-  const deny = await requirePartAccess(partNumber);
-  if (deny) return { ok: false, error: "Access denied" };
+  // Skip access check for Part 1 in preview mode (landing page free preview)
+  const skipAccessCheck = previewMode && partNumber === 1;
+  
+  if (!skipAccessCheck) {
+    const deny = await requirePartAccess(partNumber);
+    if (deny) return { ok: false, error: "Access denied" };
+  }
 
   // Use the shared in-memory part cache — no extra file/R2 read on repeat calls.
   const partData = await getPartPageData(partNumber);

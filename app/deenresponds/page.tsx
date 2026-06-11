@@ -11,7 +11,7 @@ import { Footer } from "@/components/landing/footer";
 import { generateSignedR2Url, VIDEO_URL_EXPIRY } from "@/lib/r2";
 import { DeenPromoSetter } from "./deen-promo-setter";
 import { R2VideoPlayer } from "./r2-video-player";
-import { Part1PreviewCard } from "./part1-preview-card";
+import { Part1FullPreview } from "@/components/landing/part1-full-preview";
 import { MobileStickyCta } from "./mobile-sticky-cta";
 
 export const dynamic = "force-dynamic";
@@ -65,7 +65,7 @@ const FAQ = [
   },
   {
     q: "What happens right after I buy?",
-    a: "You create an account (or sign in) and get immediate access to all 100 parts through your student dashboard.",
+    a: "You create an account (or sign in) and get immediate access to all 100 parts through your student dashboard. Lifetime plans are a one-time payment. The $1 trial converts to $9/month after 7 days — cancel anytime before then and you won't be charged.",
   },
 ];
 
@@ -73,7 +73,7 @@ export default async function DeenRespondsPage() {
   // Track page visit for influencer analytics — fire-and-forget.
   prisma.influencerClick
     .create({ data: { id: crypto.randomUUID(), creator: "deenresponds" } })
-    .catch(() => {});
+    .catch((err) => console.error("[deenresponds] Failed to record click:", err));
 
   // Pre-sign the sponsor video URL (4-hour expiry).
   let sponsorVideoUrl: string | null = null;
@@ -97,7 +97,7 @@ export default async function DeenRespondsPage() {
             <span className="font-bold">20% off lifetime access</span>
           </p>
           <a
-            href="#pricing"
+            href={INDIVIDUAL_URL}
             className="shrink-0 text-xs font-bold text-ink bg-gold hover:bg-gold-light px-4 py-1.5 rounded-lg transition-colors"
           >
             Get Access
@@ -105,138 +105,63 @@ export default async function DeenRespondsPage() {
         </div>
       </div>
 
-      {/* ── Minimal landing header (no nav leaks) ─────────────────────────── */}
-      <header className="py-3 px-4 sm:px-6 border-b border-white/5 bg-ink">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
+      {/* ── Minimal landing header (logo only) ────────────────────────────── */}
+      <header className="py-4 px-4 sm:px-6 border-b border-white/5 bg-ink">
+        <div className="max-w-6xl mx-auto flex items-center justify-center">
           <Link href="/" className="flex items-center">
             <Image
               src="/images/logoicon.png"
               alt="Complete Seerah"
               width={967}
               height={219}
-              className="h-9 sm:h-11 w-auto"
+              className="h-10 sm:h-12 w-auto"
               priority
             />
           </Link>
-          <a
-            href="#pricing"
-            className={`${primaryBtn} hidden sm:inline-flex px-5 py-2.5 text-sm`}
-          >
-            Get Access — 20% Off
-          </a>
         </div>
       </header>
 
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <section className="relative pt-14 pb-20 md:pt-20 md:pb-28 overflow-hidden">
+      <section className="relative pt-16 pb-24 md:pt-24 md:pb-32 overflow-hidden">
         <div
           className="absolute inset-0 pointer-events-none"
           style={{ background: "radial-gradient(ellipse 1000px 600px at 50% -5%, rgba(200,169,110,0.10) 0%, transparent 70%)" }}
           aria-hidden
         />
-        <div className="relative max-w-6xl mx-auto px-4 sm:px-6">
-          {/* Two-column: text left, phone mockup right (desktop only) */}
-          <div className="xl:grid xl:grid-cols-[1fr_340px] xl:gap-16 xl:items-center">
+        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 text-center">
+          <div className="inline-flex items-center gap-2 mb-6">
+            <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
+            <p className="text-sm text-gold font-semibold uppercase tracking-widest">
+              As seen on Deen Responds
+            </p>
+            <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
+          </div>
 
-            {/* ── Text column ── */}
-            <div className="text-center xl:text-left">
-              <div className="inline-flex items-center gap-2 mb-6">
-                <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
-                <p className="text-sm text-gold font-semibold uppercase tracking-widest">
-                  As seen on Deen Responds
-                </p>
-                <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
-              </div>
+          <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold tracking-tight leading-[1.05] mb-7">
+            Learn the Life of the{" "}
+            <br className="hidden sm:block" />
+            Prophet ﷺ{" "}
+            <span className="text-gradient-gold">in Order</span>
+          </h1>
 
-              <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold tracking-tight leading-[1.05] mb-7">
-                Learn the Life of the{" "}
-                <br className="hidden sm:block" />
-                Prophet ﷺ{" "}
-                <span className="text-gradient-gold">in Order</span>
-              </h1>
+          <p className="text-xl sm:text-2xl text-text-secondary max-w-2xl mx-auto mb-12 leading-relaxed">
+            A 100-part Seerah program — step by step, beginning to end — so the Prophet&apos;s ﷺ life finally makes sense as one connected story.
+          </p>
 
-              <p className="text-xl sm:text-2xl text-text-secondary max-w-2xl mx-auto xl:mx-0 mb-12 leading-relaxed">
-                A 100-part Seerah program — step by step, beginning to end — so the Prophet&apos;s ﷺ life finally makes sense as one connected story.
-              </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
+            <a href="#preview" className={`${outlineBtn} w-full sm:w-auto px-10 py-5 text-lg`}>
+              Watch Part 1 Free
+            </a>
+            <Link href={INDIVIDUAL_URL} className={`${primaryBtn} w-full sm:w-auto px-10 py-5 text-lg`}>
+              Get Lifetime Access — 20% Off
+            </Link>
+          </div>
 
-              <div className="flex flex-col sm:flex-row items-center justify-center xl:justify-start gap-4 mb-10">
-                <a href="#preview" className={`${outlineBtn} w-full sm:w-auto px-8 py-4 text-base`}>
-                  Watch Part 1 Free
-                </a>
-                <a href="#pricing" className={`${primaryBtn} w-full sm:w-auto px-8 py-4 text-base`}>
-                  Get Lifetime Access — 20% Off
-                </a>
-              </div>
-
-              <div className="flex items-center justify-center xl:justify-start gap-4 sm:gap-6 text-xs text-text-muted flex-wrap">
-                <span className="flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-gold/60" />7-day guarantee</span>
-                <span className="flex items-center gap-1.5"><Zap className="w-3.5 h-3.5 text-gold/60" />Instant access</span>
-                <span className="flex items-center gap-1.5"><Smartphone className="w-3.5 h-3.5 text-gold/60" />Mobile friendly</span>
-                <span className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-gold/60" />Individual &amp; family plans</span>
-              </div>
-            </div>
-
-            {/* ── Phone mockup (desktop only) ── */}
-            <div className="hidden xl:flex justify-center items-center">
-              <div className="relative">
-                {/* Ambient glow */}
-                <div className="absolute -inset-8 bg-gold/8 rounded-full blur-3xl" />
-                {/* Phone frame */}
-                <div className="relative w-[300px] bg-zinc-900 rounded-[44px] border-2 border-zinc-700/60 shadow-2xl shadow-black/60 p-2 overflow-hidden">
-                  {/* Screen */}
-                  <div className="bg-zinc-950 rounded-[36px] overflow-hidden">
-                    {/* Notch */}
-                    <div className="h-7 bg-zinc-900 flex items-center justify-center">
-                      <div className="w-16 h-3.5 bg-zinc-800 rounded-full" />
-                    </div>
-                    {/* App header */}
-                    <div className="px-4 pt-3 pb-1.5 flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-md bg-gold/20 flex items-center justify-center">
-                        <span className="text-[8px] text-gold font-bold">CS</span>
-                      </div>
-                      <span className="text-xs text-gold font-semibold">Complete Seerah</span>
-                    </div>
-                    {/* Video thumbnail */}
-                    <div className="mx-4 aspect-video bg-zinc-800 rounded-xl relative overflow-hidden mb-3">
-                      <div
-                        className="absolute inset-0"
-                        style={{ background: "linear-gradient(135deg, #2a1f08 0%, #1a1208 100%)" }}
-                      />
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-10 h-10 rounded-full bg-gold/80 flex items-center justify-center shadow-lg shadow-gold/30">
-                          <Play className="w-4 h-4 text-ink fill-ink ml-0.5" />
-                        </div>
-                      </div>
-                      <div className="absolute bottom-1.5 left-3 text-[9px] text-white/50">Part 1 of 100</div>
-                    </div>
-                    {/* Part info */}
-                    <div className="px-4 mb-3">
-                      <div className="text-[9px] text-zinc-500 uppercase tracking-wider mb-0.5">Part 1</div>
-                      <div className="text-[11px] text-white font-semibold leading-snug">The Pre-Islamic Arabian Context</div>
-                    </div>
-                    {/* Resource type pills */}
-                    <div className="px-4 flex gap-1.5 mb-4 flex-wrap">
-                      {["Video", "Audio", "Quiz", "Cards"].map((r) => (
-                        <span key={r} className="text-[9px] text-gold/70 bg-gold/8 border border-gold/20 rounded-md px-2 py-0.5">
-                          {r}
-                        </span>
-                      ))}
-                    </div>
-                    {/* Progress */}
-                    <div className="px-4 pb-4">
-                      <div className="flex justify-between mb-1.5">
-                        <span className="text-[9px] text-zinc-500">Progress</span>
-                        <span className="text-[9px] text-gold">1 / 100</span>
-                      </div>
-                      <div className="h-1.5 bg-zinc-800 rounded-full">
-                        <div className="h-full w-[1%] bg-gold rounded-full" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
+          <div className="flex items-center justify-center gap-4 sm:gap-6 text-xs text-text-muted flex-wrap">
+            <span className="flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-gold/60" />7-day guarantee</span>
+            <span className="flex items-center gap-1.5"><Zap className="w-3.5 h-3.5 text-gold/60" />Instant access</span>
+            <span className="flex items-center gap-1.5"><Smartphone className="w-3.5 h-3.5 text-gold/60" />Mobile friendly</span>
+            <span className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-gold/60" />Individual &amp; family plans</span>
           </div>
         </div>
       </section>
@@ -258,6 +183,7 @@ export default async function DeenRespondsPage() {
               url={sponsorVideoUrl}
               title="Deen Responds — Complete Seerah"
               label="Deen Responds on TheMuslimMan Seerah Program"
+              autoplay={true}
             />
           ) : (
             <div className="relative w-full aspect-video rounded-2xl border border-border bg-surface flex items-center justify-center">
@@ -269,28 +195,32 @@ export default async function DeenRespondsPage() {
             <a href="#preview" className={`${outlineBtn} px-6 py-3 text-sm`}>
               Watch Part 1 Free
             </a>
-            <a href="#pricing" className={`${primaryBtn} px-6 py-3 text-sm`}>
+            <Link href={INDIVIDUAL_URL} className={`${primaryBtn} px-6 py-3 text-sm`}>
               Get Access — 20% Off
-            </a>
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* ── Problem ──────────────────────────────────────────────────────── */}
+      {/* ── Problem → Solution ───────────────────────────────────────────── */}
       <section className="py-16 sm:py-20">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 text-center">
           <h2 className="text-2xl sm:text-3xl font-bold mb-5">
             Most Muslims Know Seerah in Pieces
           </h2>
-          <p className="text-text-secondary mb-8 leading-relaxed text-lg">
+          <p className="text-text-secondary mb-10 leading-relaxed text-lg">
             You know the famous events — Hira, the Hijrah, Badr, Uhud — but not how the full life of the Prophet ﷺ flows from beginning to end.
           </p>
 
-          <div className="flex flex-col gap-2 mb-8 max-w-md mx-auto text-left">
-            {["Not random clips.", "Not scattered lectures.", "Not isolated stories without the full timeline."].map((line) => (
-              <div key={line} className="flex items-center gap-3 py-3 px-4 rounded-xl bg-red-500/5 border border-red-500/15">
-                <span className="text-red-400/70 font-bold text-base leading-none flex-shrink-0">×</span>
-                <span className="text-sm text-red-400/80">{line}</span>
+          <div className="flex flex-col gap-3 mb-10 max-w-md mx-auto">
+            {[
+              "Learn in order",
+              "See how events connect",
+              "Follow one clear path"
+            ].map((line) => (
+              <div key={line} className="flex items-center gap-3 py-4 px-5 rounded-xl bg-gold/5 border border-gold/20">
+                <CheckCircle2 className="w-5 h-5 text-gold flex-shrink-0" />
+                <span className="text-base font-medium text-text">{line}</span>
               </div>
             ))}
           </div>
@@ -302,8 +232,8 @@ export default async function DeenRespondsPage() {
       </section>
 
       {/* ── Free Preview ─────────────────────────────────────────────────── */}
-      <section id="preview" className="py-16 sm:py-20 bg-surface/20 border-y border-border/50">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6">
+      <section id="preview" className="py-16 sm:py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-10">
             <h2 className="text-2xl sm:text-3xl font-bold mb-3">Start With Part 1 — Free</h2>
             <p className="text-text-secondary">
@@ -311,10 +241,10 @@ export default async function DeenRespondsPage() {
             </p>
           </div>
 
-          <Part1PreviewCard />
+          <Part1FullPreview />
 
           {/* Post-preview purchase hook */}
-          <div className="mt-8 p-6 rounded-2xl bg-gold/5 border border-gold/20 text-center">
+          <div className="mt-12 p-6 sm:p-8 rounded-2xl bg-gold/5 border border-gold/20 text-center max-w-3xl mx-auto">
             <p className="font-semibold text-text mb-1">That was Part 1 of 100.</p>
             <p className="text-sm text-text-secondary mb-6">
               If that felt right, get the full course today — 20% off for Deen Responds viewers.
@@ -480,7 +410,7 @@ export default async function DeenRespondsPage() {
             <Link href={MONTHLY_URL} className="text-gold hover:text-gold-light underline underline-offset-2">
               Start with 7 days for $1
             </Link>
-            .
+            {" "}— then $9/month. Cancel anytime.
           </p>
         </div>
       </section>
@@ -515,12 +445,18 @@ export default async function DeenRespondsPage() {
             <a href="#preview" className={`${outlineBtn} w-full sm:w-auto px-8 py-4 text-base`}>
               Watch Part 1 Free
             </a>
-            <a
-              href="#pricing"
-              className={`${primaryBtn} w-full sm:w-auto px-8 py-4 text-base`}
-            >
+            <a href="#pricing" className={`${primaryBtn} w-full sm:w-auto px-8 py-4 text-base`}>
               Choose Lifetime Access
             </a>
+          </div>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-4 text-sm">
+            <Link href={INDIVIDUAL_URL} className="text-gold underline underline-offset-2 hover:text-gold-light transition-colors">
+              Individual — $63.20
+            </Link>
+            <span className="hidden sm:inline text-text-muted">·</span>
+            <Link href={FAMILY_URL} className="text-gold underline underline-offset-2 hover:text-gold-light transition-colors">
+              Family — $119.20
+            </Link>
           </div>
 
           <div className="mt-8 pt-8 border-t border-border/50 flex items-center justify-center gap-6 flex-wrap text-xs text-text-muted">
@@ -537,7 +473,7 @@ export default async function DeenRespondsPage() {
       </div>
 
       {/* ── Sticky mobile CTA (fixed bottom, mobile only) ─────────────────── */}
-      <MobileStickyCta />
+      <MobileStickyCta href={INDIVIDUAL_URL} />
     </div>
   );
 }

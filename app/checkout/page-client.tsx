@@ -146,6 +146,7 @@ function CheckoutForm({
 
 interface CheckoutPageClientProps {
   userEmail?: string;
+  userPlanType?: string | null;
   initialAudience?: Audience;
   initialBilling?: Billing;
   initialClientSecret?: string | null;
@@ -179,6 +180,7 @@ function useIsInAppBrowser() {
 
 function CheckoutPageContent({
   userEmail = "",
+  userPlanType = null,
   initialAudience = "individual",
   initialBilling  = "lifetime",
   initialClientSecret = null,
@@ -316,17 +318,18 @@ function CheckoutPageContent({
           if (data.trialAlreadyUsed) {
             setTrialAlreadyUsed(true);
             if (data.currentPlanType) setActiveSubPlanType(data.currentPlanType as "individual" | "family");
+            // Fallback to server-provided userPlanType if API didn't return plan info
+            else if (userPlanType === "family" || userPlanType === "individual") setActiveSubPlanType(userPlanType);
             return null;
           }
-          // Already has this plan / downgrade attempt.
-          if (data.hasLifetime || data.hasFamily || data.activeSub || data.hasActiveSubscription || data.isFamilyPlan) {
-            setHasActiveSub(true);
-            // isFamilyPlan means the user is on a family plan trying to buy individual — show downgrade block.
-            if (data.isFamilyPlan) setActiveSubPlanType("family");
-            else if (data.currentPlanType) setActiveSubPlanType(data.currentPlanType as "individual" | "family");
-            return null;
-          }
-          window.location.href = "/seerah";
+          // Already has this plan / downgrade attempt / any other 409 conflict.
+          // Show the "already have access" UI instead of redirecting.
+          setHasActiveSub(true);
+          // isFamilyPlan means the user is on a family plan trying to buy individual — show downgrade block.
+          if (data.isFamilyPlan) setActiveSubPlanType("family");
+          else if (data.currentPlanType) setActiveSubPlanType(data.currentPlanType as "individual" | "family");
+          // Fallback to server-provided userPlanType if API didn't return plan info
+          else if (userPlanType === "family" || userPlanType === "individual") setActiveSubPlanType(userPlanType);
           return null;
         }
         throw new Error(data.error || "Failed to initialize checkout");
@@ -1119,12 +1122,22 @@ function CheckoutPageContent({
   // ── Authenticated: already has this plan (same type) ──────────────────────
 
   if (hasActiveSub) {
-    const isOnFamily     = activeSubPlanType === "family";
-    const isOnIndividual = activeSubPlanType === "individual" || !activeSubPlanType;
+    // Final fallback: if plan type still unknown after API + server prop, derive from
+    // context clues. If the audience the user was trying to buy is "family" and we
+    // got a conflict, they likely have individual. If the userPlanType prop contains
+    // "family" in any form, treat as family. Otherwise default to individual.
+    const resolvedPlanType: "family" | "individual" =
+      activeSubPlanType ??
+      (userPlanType?.includes("family") ? "family" : "individual");
+
+    const isOnFamily     = resolvedPlanType === "family";
+    const isOnIndividual = resolvedPlanType === "individual";
 
     // Family user looking at an individual plan — downgrade attempt.
     const isDowngrade = isOnFamily && audience === "individual";
-    // Individual user looking at the same individual plan — duplicate attempt.
+    // Family user looking at family plan — already have it.
+    const familyDuplicate = isOnFamily && audience === "family";
+    // Individual user looking at the same individual plan — show upgrade to family option.
     const showUpgradeCta = isOnIndividual && audience === "individual";
 
     return (
@@ -1135,14 +1148,16 @@ function CheckoutPageContent({
             <div className="p-6 rounded-xl bg-gold/10 border border-gold/25 text-center space-y-4">
               <RefreshCw className="w-10 h-10 text-gold mx-auto" />
               <p className="text-lg font-bold text-white">
-                {isDowngrade ? "You already have Family Access" : "You already have this plan"}
+                {isDowngrade || familyDuplicate ? "You already have Family Access" : "You already have this plan"}
               </p>
               <p className="text-sm text-zinc-400">
                 {isDowngrade
                   ? "Your Family plan already includes everything in the Individual plan — plus up to 5 learner profiles. There's nothing to downgrade to."
-                  : showUpgradeCta
-                    ? "You're already on an individual trial. Head to your dashboard or upgrade to a family plan."
-                    : "Your account is already active. Head to your dashboard to continue learning."}
+                  : familyDuplicate
+                    ? "You already have an active Family plan. Head to your dashboard to continue learning."
+                    : showUpgradeCta
+                      ? "You're already on an individual trial. Head to your dashboard or upgrade to a family plan."
+                      : "Your account is already active. Head to your dashboard to continue learning."}
               </p>
               <Link
                 href="/seerah"
@@ -1159,7 +1174,7 @@ function CheckoutPageContent({
                 </button>
               )}
             </div>
-            {showUpgradeCta && (
+            {showUpgradeCta && !familyDuplicate && (
               <div className="p-5 rounded-xl border border-amber-500/20 bg-amber-500/5 space-y-3">
                 <p className="font-semibold text-white text-sm">Upgrade to Family Access</p>
                 <p className="text-xs text-zinc-400">

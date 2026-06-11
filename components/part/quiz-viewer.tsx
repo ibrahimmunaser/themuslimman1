@@ -333,7 +333,7 @@ export function QuizViewer({ quiz, partNumber, previewMode, initialBestScore }: 
     if (fetchedRef.current) return;
     fetchedRef.current = true;
 
-    getQuizAnswerMap(effectivePartNumber).then((result) => {
+    getQuizAnswerMap(effectivePartNumber, previewMode).then((result) => {
       if (!result.ok) {
         console.error("[QuizViewer] getQuizAnswerMap error:", result.error);
         setPhase("error");
