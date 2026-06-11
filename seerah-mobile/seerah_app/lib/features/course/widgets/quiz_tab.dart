@@ -88,11 +88,13 @@ class _QuizTabState extends ConsumerState<QuizTab> {
           );
         }
 
-        if (_done) return _ResultsScreen(
+        if (_done) {
+          return _ResultsScreen(
           score: _score,
           total: questions.length,
           onRestart: _restart,
         );
+        }
 
         final q = questions[_currentQ];
         return Column(
