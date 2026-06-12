@@ -32,7 +32,8 @@ export function R2VideoPlayer({
   const [errored, setErrored]   = useState(false);
   const [retryKey, setRetryKey] = useState(0);
   const videoRef    = useRef<HTMLVideoElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const containerRef = useRef<any>(null);
 
   // Autoplay when ≥50% visible (muted to comply with browser policies)
   useEffect(() => {
