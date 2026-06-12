@@ -36,7 +36,7 @@ export function AudioPlayer({ src, title, partNumber, compact = false, previewMo
 
   // Crop the intro: skip the first N seconds of every audio track.
   // Part 7 has a longer intro (9.5s); all others are 4s.
-  const startOffset = partNumber === 7 ? 9.5 : 3;
+  const startOffset = partNumber === 7 ? 9.5 : 2.5;
 
   useEffect(() => {
     const audio = audioRef.current;

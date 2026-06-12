@@ -3,6 +3,12 @@
 import { useState, useRef, useEffect } from "react";
 import { Play, Volume2, VolumeX, RefreshCw } from "lucide-react";
 
+declare global {
+  interface Window {
+    deenTrack?: (event: string, props?: Record<string, string>) => void;
+  }
+}
+
 interface R2VideoPlayerProps {
   url: string;
   title?: string;
@@ -10,6 +16,8 @@ interface R2VideoPlayerProps {
   label?: string;
   /** Auto-play when video comes into view (muted initially for browser compliance) */
   autoplay?: boolean;
+  /** If set, calls window.deenTrack(trackEvent) once when the user first clicks play */
+  trackEvent?: string;
 }
 
 export function R2VideoPlayer({
@@ -17,6 +25,7 @@ export function R2VideoPlayer({
   title = "Video",
   label,
   autoplay = false,
+  trackEvent,
 }: R2VideoPlayerProps) {
   const [playing, setPlaying]   = useState(false);
   const [muted, setMuted]       = useState(true);
@@ -135,7 +144,7 @@ export function R2VideoPlayer({
   return (
     <button
       ref={containerRef}
-      onClick={() => setPlaying(true)}
+      onClick={() => { setPlaying(true); if (trackEvent) window.deenTrack?.(trackEvent); }}
       className="group relative w-full aspect-video rounded-2xl overflow-hidden border border-zinc-700/40 shadow-2xl shadow-black/60 cursor-pointer bg-zinc-950"
       aria-label={`Play: ${title}`}
     >

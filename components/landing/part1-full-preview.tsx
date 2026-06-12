@@ -12,7 +12,13 @@ function stripQuizAnswers(quiz: Quiz | null | undefined): Quiz | null | undefine
   };
 }
 
-export async function Part1FullPreview() {
+export async function Part1FullPreview({
+  checkoutHref = "/checkout?plan=individual-trial",
+  hideCta = false,
+}: {
+  checkoutHref?: string;
+  hideCta?: boolean;
+} = {}) {
   const partBase = getPartById("part-1");
 
   let part: Part | null = null;
@@ -98,24 +104,26 @@ export async function Part1FullPreview() {
         <Part1PreviewTabs part={part} initialAssetUrls={initialAssetUrls} />
       </div>
 
-      {/* Call-to-Action */}
-      <div className="p-8 border-t border-gold/20 bg-surface-raised text-center">
-        <p className="text-sm text-text-secondary mb-6">
-          You just experienced the full Part 1 — the exact same format and quality as all 100 parts.
-        </p>
-        <a
-          href="/checkout?plan=individual-trial"
-          className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-gold to-gold-light hover:from-gold-light hover:to-gold text-ink font-bold text-base shadow-lg shadow-gold/30 transition-all hover:shadow-gold/40 hover:scale-[1.02] active:scale-[0.99]"
-        >
-          Continue the Full Seerah — Start for $1
-        </a>
-        <p className="text-sm text-text-muted mt-4 max-w-lg mx-auto leading-relaxed">
-          Unlock the full 100-part Seerah journey with videos, summaries, quizzes, flashcards, mind maps, and progress tracking.
-        </p>
-        <p className="text-xs text-text-muted mt-3">
-          7-Day Clarity Guarantee · Lifetime Access · Instant Unlock
-        </p>
-      </div>
+      {/* Call-to-Action — hidden on pages that provide their own post-preview hook */}
+      {!hideCta && (
+        <div className="p-8 border-t border-gold/20 bg-surface-raised text-center">
+          <p className="text-sm text-text-secondary mb-6">
+            You just experienced the full Part 1 — the exact same format and quality as all 100 parts.
+          </p>
+          <a
+            href={checkoutHref}
+            className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-gold to-gold-light hover:from-gold-light hover:to-gold text-ink font-bold text-base shadow-lg shadow-gold/30 transition-all hover:shadow-gold/40 hover:scale-[1.02] active:scale-[0.99]"
+          >
+            Continue the Full Seerah — Start for $1
+          </a>
+          <p className="text-sm text-text-muted mt-4 max-w-lg mx-auto leading-relaxed">
+            Unlock the full 100-part Seerah journey with videos, summaries, quizzes, flashcards, mind maps, and progress tracking.
+          </p>
+          <p className="text-xs text-text-muted mt-3">
+            7-Day Clarity Guarantee · Lifetime Access · Instant Unlock
+          </p>
+        </div>
+      )}
     </div>
   );
 }

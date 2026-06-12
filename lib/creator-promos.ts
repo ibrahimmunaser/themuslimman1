@@ -81,6 +81,60 @@ export const CREATOR_PROMO_CODES: Record<string, CreatorPromoConfig> = {
     utm_campaign: "seerah_launch",
     utm_content: "annarbor",
   },
+  COMMUNITY20: {
+    code: "COMMUNITY20",
+    discountPercent: 20,
+    displayLabel: "COMMUNITY20 — 20% off lifetime access",
+    creator: "community",
+    utm_source: "direct",
+    utm_medium: "community",
+    utm_campaign: "seerah_launch",
+    utm_content: "community",
+  },
+  COMMUNITY49: {
+    code: "COMMUNITY49",
+    // 37.975% of $79 = $29.9… → Math.round = $30 → display $79 − $30 = $49
+    discountPercent: 37.975,
+    displayLabel: "Community pricing — Individual Lifetime",
+    creator: "community",
+    utm_source: "direct",
+    utm_medium: "community",
+    utm_campaign: "seerah_launch",
+    utm_content: "community",
+  },
+  COMMUNITY99: {
+    code: "COMMUNITY99",
+    // 33.557% of $149 = $49.999… → Math.round = $50 → display $149 − $50 = $99
+    discountPercent: 33.557,
+    displayLabel: "Community pricing — Family Lifetime",
+    creator: "community",
+    utm_source: "direct",
+    utm_medium: "community",
+    utm_campaign: "seerah_launch",
+    utm_content: "community",
+  },
+  DEEN59: {
+    code: "DEEN59",
+    // 25.316% of $79 = $19.999… → Math.round = $20 → display $79 − $20 = $59
+    discountPercent: 25.316,
+    displayLabel: "Deen Responds pricing — Individual Lifetime",
+    creator: "deenresponds",
+    utm_source: "youtube",
+    utm_medium: "influencer",
+    utm_campaign: "seerah_launch",
+    utm_content: "deenresponds",
+  },
+  DEEN119: {
+    code: "DEEN119",
+    // 20.134% of $149 = $29.999… → Math.round = $30 → display $149 − $30 = $119
+    discountPercent: 20.134,
+    displayLabel: "Deen Responds pricing — Family Lifetime",
+    creator: "deenresponds",
+    utm_source: "youtube",
+    utm_medium: "influencer",
+    utm_campaign: "seerah_launch",
+    utm_content: "deenresponds",
+  },
 };
 
 /** localStorage key used to persist the active creator promo across pages. */

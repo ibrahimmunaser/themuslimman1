@@ -140,7 +140,7 @@ export default async function CheckoutPage({ searchParams }: Props) {
         const paymentIntent = await stripe.paymentIntents.create({
           amount:               finalAmount,
           currency:             "usd",
-          payment_method_types: ["card"],
+          automatic_payment_methods: { enabled: true },
           metadata: {
             userId:   user.id,
             planId:   "complete",

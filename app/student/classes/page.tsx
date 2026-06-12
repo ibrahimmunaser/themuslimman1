@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { KeyRound, GraduationCap, ChevronRight } from "lucide-react";
+import { KeyRound, GraduationCap, ChevronRight, Users } from "lucide-react";
 import { requireStudent } from "@/lib/auth";
-import { hasActiveCourseAccess } from "@/lib/access";
+import { hasActiveCourseAccess, isFamilyPlan } from "@/lib/access";
 import { getStudentDashboardData } from "@/lib/queries/student";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -22,6 +22,15 @@ export default async function StudentClassesPage() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto">
+      {isFamilyPlan(user.planType) && (
+        <div className="mb-6 flex items-start gap-3 px-4 py-3 rounded-xl bg-gold/5 border border-gold/20 text-sm text-text-secondary">
+          <Users className="w-4 h-4 text-gold/70 flex-shrink-0 mt-0.5" />
+          <span>
+            <strong className="text-text font-medium">Family plan note:</strong>{" "}
+            Class and program enrollments are shared across all learner profiles on this account. Each profile&apos;s self-paced Seerah progress is still tracked independently.
+          </span>
+        </div>
+      )}
       <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-text">My Programs</h1>

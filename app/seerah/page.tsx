@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { getCachedStudent } from "@/lib/auth-cache";
 import { hasActiveCourseAccess, isFamilyPlan } from "@/lib/access";
 import { getActiveProfileId } from "@/app/actions/profiles";
@@ -33,13 +34,17 @@ export default async function LearnIndexPage({
   const user = await getCachedStudent();
   if (!user.studentProfileId) redirect("/");
 
-  // Family plan holders must always choose their active learner profile before
-  // accessing the dashboard — no matter what link brought them here.
-  // Exception: arriving from the profile picker itself (?from=profiles) so we
-  // don't create an infinite redirect loop.
+  // Family plan holders must pick a learner profile before accessing the dashboard,
+  // but only when no profile cookie is set (first login / cookie expired).
+  // Once a profile is chosen the cookie persists for 30 days, so sidebar
+  // navigation (/seerah, /seerah?tab=lessons, etc.) works without re-prompting.
+  // The ?from=profiles param is kept as a secondary bypass to avoid loops if the
+  // cookie and redirect race during a fresh profile switch.
   const params = await searchParams;
   if (isFamilyPlan(user.planType) && params.from !== "profiles") {
-    redirect("/profiles");
+    const cookieStore = await cookies();
+    const hasProfileCookie = !!cookieStore.get("seerah_profile")?.value;
+    if (!hasProfileCookie) redirect("/profiles");
   }
 
   // Gate 1: Access check (payment / subscription).

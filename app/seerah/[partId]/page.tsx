@@ -1,8 +1,9 @@
 import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { getCachedStudent } from "@/lib/auth-cache";
-import { hasActiveCourseAccess } from "@/lib/access";
+import { hasActiveCourseAccess, isFamilyPlan } from "@/lib/access";
 import { getActiveProfileId } from "@/app/actions/profiles";
 import { getPartById, PARTS } from "@/lib/content";
 import { ERA_MAP } from "@/lib/types";
@@ -169,6 +170,13 @@ export default async function SeerahPartPage(props: Props) {
   // Unverified users cannot access individual lesson pages — send them back to
   // the dashboard which shows the verification wall.
   if (!user.emailVerified) redirect("/seerah");
+
+  // Family plan: redirect to profile picker if no profile cookie is set (first
+  // visit / cookie expired). Consistent with the /seerah dashboard gate.
+  if (isFamilyPlan(user.planType)) {
+    const cookieStore = await cookies();
+    if (!cookieStore.get("seerah_profile")?.value) redirect("/profiles");
+  }
 
   const learnerProfileId = user.activeProfileId ?? await getActiveProfileId(user.id);
 

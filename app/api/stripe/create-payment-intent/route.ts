@@ -67,13 +67,19 @@ export async function POST(request: NextRequest) {
     let promoDiscountAmount = 0;
 
     if (promoCode && promoCode.trim().length > 0) {
-      const promo = validatePromoCode(promoCode);
+      const normalized = promoCode.trim().toUpperCase();
+      // These codes are absolute prices calibrated for the family plan.
+      // Applying them to the individual plan ($79) would overcharge the customer.
+      if (normalized === "COMMUNITY99" || normalized === "DEEN119") {
+        return NextResponse.json({ error: "Invalid promo code for this plan" }, { status: 400 });
+      }
+      const promo = validatePromoCode(normalized);
       if (!promo) {
         return NextResponse.json({ error: "Invalid promo code" }, { status: 400 });
       }
       finalAmount = applyDiscount(baseAmount, promo);
       promoDiscountAmount = baseAmount - finalAmount;
-      appliedPromoCode = promoCode.trim().toUpperCase();
+      appliedPromoCode = normalized;
     }
 
     // Resolve creator metadata from the promo code (if it's a creator code)
@@ -94,7 +100,7 @@ export async function POST(request: NextRequest) {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: finalAmount,
       currency: "usd",
-      payment_method_types: ["card"],
+      automatic_payment_methods: { enabled: true },
       metadata: {
         userId: user.id,
         planId: plan.id,

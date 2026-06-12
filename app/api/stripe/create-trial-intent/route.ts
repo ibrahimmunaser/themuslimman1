@@ -126,8 +126,8 @@ export async function POST(request: NextRequest) {
       amount: planConfig.trialFeeAmount,
       currency: "usd",
       customer: customerId,
-      payment_method_types: ["card"],
-      setup_future_usage: "off_session", // save card for future subscription charges
+      automatic_payment_methods: { enabled: true },
+      setup_future_usage: "off_session", // save payment method for future subscription charges
       metadata: {
         type: "trial_fee",
         userId: user.id,

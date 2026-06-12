@@ -5,6 +5,7 @@ import { useEffect, useState, useRef } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import {
   Elements,
+  ExpressCheckoutElement,
   PaymentElement,
   useStripe,
   useElements,
@@ -74,9 +75,13 @@ function CheckoutForm({
 }) {
   const stripe   = useStripe();
   const elements = useElements();
-  const [error, setError]         = useState<string | null>(null);
+  const [error, setError]           = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
+  const [showExpressCheckout, setShowExpressCheckout] = useState(false);
 
+  const returnUrl = toReturnUrl(audience, billing);
+
+  // Called by the card form submit button
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!stripe || !elements) return;
@@ -93,9 +98,29 @@ function CheckoutForm({
     try {
       const { error: confirmError } = await stripe.confirmPayment({
         elements,
-        confirmParams: { return_url: toReturnUrl(audience, billing) },
+        confirmParams: { return_url: returnUrl },
       });
 
+      if (confirmError) {
+        setError(confirmError.message ?? "Payment failed. Please try again.");
+        setProcessing(false);
+      }
+    } catch {
+      setError("Connection lost. Please check your internet and try again.");
+      setProcessing(false);
+    }
+  };
+
+  // Called by Apple Pay / Google Pay / PayPal after the user authenticates
+  const handleExpressConfirm = async () => {
+    if (!stripe || !elements) return;
+    setProcessing(true);
+    setError(null);
+    try {
+      const { error: confirmError } = await stripe.confirmPayment({
+        elements,
+        confirmParams: { return_url: returnUrl },
+      });
       if (confirmError) {
         setError(confirmError.message ?? "Payment failed. Please try again.");
         setProcessing(false);
@@ -114,31 +139,59 @@ function CheckoutForm({
       : `Get Lifetime Access — ${formatPrice(finalPrice)}`;
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      <PaymentElement options={{ wallets: { link: "never" } }} />
-      {error && (
-        <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-          {error}
+    <div className="space-y-5">
+      {/* Express checkout: Apple Pay, Google Pay, Samsung Pay, Link — shown only when at least one is available */}
+      <div className={showExpressCheckout ? "block" : "hidden"}>
+        <ExpressCheckoutElement
+          onConfirm={handleExpressConfirm}
+          onReady={({ availablePaymentMethods }) => {
+            if (availablePaymentMethods && Object.keys(availablePaymentMethods).length > 0) {
+              setShowExpressCheckout(true);
+            }
+          }}
+          options={{
+            buttonType: { applePay: "buy", googlePay: "buy", link: "pay" },
+            buttonTheme: { applePay: "black", googlePay: "black" },
+            // maxRows: 5 so Samsung Pay can appear alongside others on supported devices
+            layout: { maxColumns: 1, maxRows: 5, overflow: "auto" },
+          }}
+        />
+      </div>
+      {showExpressCheckout && (
+        <div className="flex items-center gap-3 text-xs text-zinc-500">
+          <div className="flex-1 h-px bg-zinc-700/60" />
+          <span>or pay with card</span>
+          <div className="flex-1 h-px bg-zinc-700/60" />
         </div>
       )}
-      <button
-        type="submit"
-        disabled={!stripe || processing}
-        className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-gold hover:bg-gold-light disabled:opacity-60 text-ink font-bold text-base transition-colors shadow-lg shadow-gold/20"
-      >
-        <Lock className="w-4 h-4" />
-        {processing ? "Processing…" : buttonLabel}
-      </button>
-      <p className="text-xs text-zinc-500 text-center">
-        Secure payment powered by Stripe · Your information is encrypted
-      </p>
-      <p className="text-xs text-zinc-600 text-center leading-relaxed">
-        By {billing === "monthly" ? "subscribing" : "purchasing"} you agree to our{" "}
-        <a href="/terms"   className="underline hover:text-zinc-400 transition-colors">Terms of Service</a>{", "}
-        <a href="/privacy" className="underline hover:text-zinc-400 transition-colors">Privacy Policy</a>{", and "}
-        <a href="/refund"  className="underline hover:text-zinc-400 transition-colors">Refund Policy</a>.
-      </p>
-    </form>
+
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Apple Pay, Google Pay, and Link appear above via ExpressCheckoutElement — suppress duplicates here */}
+        <PaymentElement options={{ wallets: { applePay: "never", googlePay: "never", link: "never" } }} />
+        {error && (
+          <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+            {error}
+          </div>
+        )}
+        <button
+          type="submit"
+          disabled={!stripe || processing}
+          className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-gold hover:bg-gold-light disabled:opacity-60 text-ink font-bold text-base transition-colors shadow-lg shadow-gold/20"
+        >
+          <Lock className="w-4 h-4" />
+          {processing ? "Processing…" : buttonLabel}
+        </button>
+        <p className="text-xs text-zinc-500 text-center">
+          Secure payment powered by Stripe · Your information is encrypted
+        </p>
+        <p className="text-xs text-zinc-600 text-center leading-relaxed">
+          By {billing === "monthly" ? "subscribing" : "purchasing"} you agree to our{" "}
+          <a href="/terms"   className="underline hover:text-zinc-400 transition-colors">Terms of Service</a>{", "}
+          <a href="/privacy" className="underline hover:text-zinc-400 transition-colors">Privacy Policy</a>{", and "}
+          <a href="/refund"  className="underline hover:text-zinc-400 transition-colors">Refund Policy</a>.
+        </p>
+      </form>
+    </div>
   );
 }
 
@@ -167,6 +220,15 @@ interface CheckoutPageClientProps {
 }
 
 // ── Main checkout content ─────────────────────────────────────────────────────
+
+// Plan-specific promo codes that must be resolved to the correct variant based on
+// the selected audience. Add any new plan-paired codes here.
+const COMMUNITY_CODE_MAP: Partial<Record<string, Record<"individual" | "family", string>>> = {
+  COMMUNITY49: { individual: "COMMUNITY49", family: "COMMUNITY99" },
+  COMMUNITY99: { individual: "COMMUNITY49", family: "COMMUNITY99" },
+  DEEN59:      { individual: "DEEN59",      family: "DEEN119"     },
+  DEEN119:     { individual: "DEEN59",      family: "DEEN119"     },
+};
 
 /** Returns true when running inside an Instagram / TikTok / Facebook in-app browser. */
 function useIsInAppBrowser() {
@@ -202,6 +264,12 @@ function CheckoutPageContent({
   const [audience, setAudience] = useState<Audience>(initialAudience);
   const [billing,  setBilling]  = useState<Billing>(initialBilling);
 
+  // Community codes are plan-specific: resolve to the correct variant based on
+  // the selected audience (defined at module level to avoid per-render allocation).
+  const resolvedPromoParam = promoParam
+    ? (COMMUNITY_CODE_MAP[promoParam.toUpperCase()]?.[audience] ?? promoParam)
+    : null;
+
   const planKey   = toPlanKey(audience, billing);
   const currentPlan = PLANS[planKey];
   const isLifetime  = billing === "lifetime";
@@ -212,7 +280,7 @@ function CheckoutPageContent({
   // prop (not useSearchParams), server and client always agree on the initial value
   // — no hydration mismatch, no async fetch race condition, always correct for the
   // currently selected plan.
-  const creatorPromoConfig   = promoParam ? getCreatorPromoConfig(promoParam) : null;
+  const creatorPromoConfig   = resolvedPromoParam ? getCreatorPromoConfig(resolvedPromoParam) : null;
   const guestCreatorDiscount = (creatorPromoConfig && isLifetime)
     ? Math.round(currentPlan.price * creatorPromoConfig.discountPercent / 100)
     : 0;
@@ -461,10 +529,12 @@ function CheckoutPageContent({
 
     if (billing === "lifetime") {
       const couponCode = appliedCoupon?.code;
-      if (promoParam) { autoApply(promoParam); return; }
+      const resolveCode = (code: string) =>
+        COMMUNITY_CODE_MAP[code.toUpperCase()]?.[audience] ?? code;
+      if (promoParam) { autoApply(resolveCode(promoParam)); return; }
       const stored = getCreatorPromo();
-      if (stored) { autoApply(stored, clearCreatorPromo); return; }
-      if (couponCode) { autoApply(couponCode); return; }
+      if (stored) { autoApply(resolveCode(stored), clearCreatorPromo); return; }
+      if (couponCode) { autoApply(resolveCode(couponCode)); return; }
     }
 
     createIntent(audience, billing, undefined);

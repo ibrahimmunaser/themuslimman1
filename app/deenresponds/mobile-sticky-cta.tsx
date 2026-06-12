@@ -3,8 +3,15 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 
+declare global {
+  interface Window {
+    deenTrack?: (event: string, props?: Record<string, string>) => void;
+  }
+}
+
 interface MobileStickyCtaProps {
   href?: string;
+  onCtaClick?: () => void;
 }
 
 /**
@@ -12,7 +19,7 @@ interface MobileStickyCtaProps {
  * Dismissible with an X so it doesn't cover content permanently.
  * Defaults to scrolling to #pricing; accepts an explicit href to go direct to checkout.
  */
-export function MobileStickyCta({ href = "#pricing" }: MobileStickyCtaProps) {
+export function MobileStickyCta({ href = "#pricing", onCtaClick }: MobileStickyCtaProps) {
   const [dismissed, setDismissed] = useState(false);
   if (dismissed) return null;
 
@@ -21,9 +28,11 @@ export function MobileStickyCta({ href = "#pricing" }: MobileStickyCtaProps) {
       <div className="flex items-center gap-3">
         <a
           href={href}
-          className="flex-1 flex items-center justify-center py-3.5 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-sm transition-colors shadow-lg shadow-gold/20"
+          onClick={() => { onCtaClick?.(); window.deenTrack?.("sticky_cta_clicked"); }}
+          className="flex-1 flex flex-col items-center justify-center py-2.5 rounded-xl bg-gold hover:bg-gold-light text-ink transition-colors shadow-lg shadow-gold/20"
         >
-          Get Access — 20% Off
+          <span className="font-bold text-sm leading-tight">Claim Sponsor Offer</span>
+          <span className="text-[10px] font-medium opacity-80 leading-tight">Sponsor discount applied</span>
         </a>
         <button
           onClick={() => setDismissed(true)}

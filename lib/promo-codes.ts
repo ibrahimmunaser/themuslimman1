@@ -30,8 +30,16 @@ const BUILT_IN_CODES: Record<string, PromoCode> = {
   DEEN:       { type: "percent", value: 20, label: "20% off (Deen Responds)",       creatorOnly: true },
   ORTHODOX:   { type: "percent", value: 20, label: "20% off (The Orthodox Muslim)", creatorOnly: true },
   // Location codes — 20% off for local community members.
-  DEARBORN20:  { type: "percent", value: 20, label: "20% off (Dearborn)",  creatorOnly: true },
-  ANNARBOR20:  { type: "percent", value: 20, label: "20% off (Ann Arbor)", creatorOnly: true },
+  DEARBORN20:   { type: "percent", value: 20, label: "20% off (Dearborn)",   creatorOnly: true },
+  ANNARBOR20:   { type: "percent", value: 20, label: "20% off (Ann Arbor)",  creatorOnly: true },
+  // Community code — 20% off for WhatsApp / Instagram / local community audience.
+  COMMUNITY20:  { type: "percent", value: 20, label: "20% off (Community)",  creatorOnly: true },
+  // Community exclusive pricing — individual $49, family $99 (absolute final prices).
+  COMMUNITY49:  { type: "absolute", value: 4900, label: "$49 Community (Individual)", creatorOnly: true },
+  COMMUNITY99:  { type: "absolute", value: 9900, label: "$99 Community (Family)",     creatorOnly: true },
+  // Deen Responds exclusive pricing — individual $59, family $119 (absolute final prices).
+  DEEN59:  { type: "absolute", value: 5900, label: "$59 Deen Responds (Individual)", creatorOnly: true },
+  DEEN119: { type: "absolute", value: 11900, label: "$119 Deen Responds (Family)",   creatorOnly: true },
   // Free-access codes are NOT hardcoded here. Configure them via two env vars:
   //   FREE_ACCESS_CODE=YOURCODE          (the promo code string — treated as absolute $0)
   //   FREE_ACCESS_PLAN=complete|family   (the plan to grant; defaults to "complete")

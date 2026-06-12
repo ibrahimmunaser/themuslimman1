@@ -157,7 +157,7 @@ export default async function PricingPage() {
   return (
     <div className="flex flex-col min-h-screen bg-ink text-text">
       <Navbar />
-      <CreatorPromoTracker showBanner />
+      <CreatorPromoTracker />
 
       {/* ════════════════════════════════════════
           1. HERO

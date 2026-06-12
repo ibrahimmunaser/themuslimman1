@@ -13,22 +13,22 @@ import { DeenPromoSetter } from "./deen-promo-setter";
 import { R2VideoPlayer } from "./r2-video-player";
 import { Part1FullPreview } from "@/components/landing/part1-full-preview";
 import { MobileStickyCta } from "./mobile-sticky-cta";
+import { DeenAnalytics } from "./deen-analytics";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Complete Seerah — Deen Responds Exclusive Offer",
   description:
-    "Learn the life of the Prophet ﷺ in order. 100 lessons, video, audio, quizzes, and more. 20% off lifetime access for Deen Responds viewers.",
+    "Learn the life of the Prophet ﷺ in order. 100 lessons, video, audio, quizzes, and more. Exclusive pricing for Deen Responds viewers.",
   robots: { index: false, follow: false },
 };
 
 // ── URL constants ─────────────────────────────────────────────────────────────
-const PROMO = "DEEN";
 const UTM   = "utm_source=youtube&utm_medium=influencer&utm_campaign=seerah_launch&utm_content=deenresponds";
 
-const INDIVIDUAL_URL  = `/checkout?plan=individual-lifetime&promo=${PROMO}&${UTM}`;
-const FAMILY_URL      = `/checkout?plan=family-lifetime&promo=${PROMO}&${UTM}`;
+const INDIVIDUAL_URL  = `/checkout?plan=individual-lifetime&promo=DEEN59&${UTM}`;
+const FAMILY_URL      = `/checkout?plan=family-lifetime&promo=DEEN119&${UTM}`;
 const MONTHLY_URL     = `/checkout?plan=individual-trial&${UTM}`;
 
 const SPONSOR_VIDEO_KEY = "Deen/deenrespondslandingpage.mp4";
@@ -52,25 +52,45 @@ const INCLUDED_ITEMS = [
 // ── FAQ ───────────────────────────────────────────────────────────────────────
 const FAQ = [
   {
-    q: "Can I try it before paying?",
-    a: "Yes. Part 1 is completely free — full video, audio, quiz, and flashcards. No signup, no payment.",
+    q: "Is this beginner-friendly?",
+    a: "Yes. The course starts from the very beginning and goes step by step. No prior knowledge of Islamic history is required.",
+  },
+  {
+    q: "Can I use this with my family?",
+    a: "Yes. The family plan is built for households — up to 5 separate learner profiles, each tracking their own progress independently.",
+  },
+  {
+    q: "Is Part 1 free?",
+    a: "Yes. Part 1 is completely free — full video, audio, quiz, and flashcards. No signup, no payment required to watch it.",
+  },
+  {
+    q: "Can I watch on mobile?",
+    a: "Yes. The course works on phone, tablet, and desktop. Many students go through lessons during commutes or before bed.",
   },
   {
     q: "Do I need to enter a promo code?",
-    a: "No. The 20% Deen Responds discount is applied automatically at checkout.",
+    a: "No. The Deen Responds discount is applied automatically at checkout when you use any link on this page.",
+  },
+  {
+    q: "What happens right after I buy?",
+    a: "You create an account (or sign in) and get immediate access to all 100 parts through your student dashboard. Lifetime plans are a one-time payment with no recurring charges.",
+  },
+  {
+    q: "Do I need to verify my email?",
+    a: "Yes. After checkout you'll verify your email to activate your account. The verification link arrives within a minute.",
+  },
+  {
+    q: "Can I cancel?",
+    a: "Monthly plans can be cancelled anytime before the next billing date and you won't be charged again. Lifetime plans are a one-time payment — there's nothing to cancel.",
   },
   {
     q: "Is there a refund policy?",
     a: "Yes — 7-Day Clarity Guarantee. If the Seerah isn't becoming clearer and more connected for you within 7 days, email us for a full refund. No questions asked.",
   },
-  {
-    q: "What happens right after I buy?",
-    a: "You create an account (or sign in) and get immediate access to all 100 parts through your student dashboard. Lifetime plans are a one-time payment. The $1 trial converts to $9/month after 7 days — cancel anytime before then and you won't be charged.",
-  },
 ];
 
 export default async function DeenRespondsPage() {
-  // Track page visit for influencer analytics — fire-and-forget.
+  // Record page visit in DB (fire-and-forget).
   prisma.influencerClick
     .create({ data: { id: crypto.randomUUID(), creator: "deenresponds" } })
     .catch((err) => console.error("[deenresponds] Failed to record click:", err));
@@ -87,23 +107,9 @@ export default async function DeenRespondsPage() {
     <div className="flex flex-col min-h-screen bg-ink text-text">
       {/* Persist DEEN promo to localStorage so it auto-applies at checkout */}
       <DeenPromoSetter />
+      {/* Client-side analytics — event delegation via [data-track] attributes */}
+      <DeenAnalytics />
 
-      {/* ── Sticky promo bar ──────────────────────────────────────────────── */}
-      <div className="sticky top-0 z-50 bg-[#1a150a]/95 border-b border-gold/20 backdrop-blur-md">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between gap-4">
-          <p className="text-sm text-gold font-medium">
-            <span className="hidden sm:inline">🎁 </span>
-            Deen Responds viewers:{" "}
-            <span className="font-bold">20% off lifetime access</span>
-          </p>
-          <a
-            href={INDIVIDUAL_URL}
-            className="shrink-0 text-xs font-bold text-ink bg-gold hover:bg-gold-light px-4 py-1.5 rounded-lg transition-colors"
-          >
-            Get Access
-          </a>
-        </div>
-      </div>
 
       {/* ── Minimal landing header (logo only) ────────────────────────────── */}
       <header className="py-4 px-4 sm:px-6 border-b border-white/5 bg-ink">
@@ -149,11 +155,11 @@ export default async function DeenRespondsPage() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
-            <a href="#preview" className={`${outlineBtn} w-full sm:w-auto px-10 py-5 text-lg`}>
+            <a href="#preview" data-track="hero_preview_clicked" className={`${outlineBtn} w-full sm:w-auto px-10 py-5 text-lg`}>
               Watch Part 1 Free
             </a>
-            <Link href={INDIVIDUAL_URL} className={`${primaryBtn} w-full sm:w-auto px-10 py-5 text-lg`}>
-              Get Lifetime Access — 20% Off
+            <Link href={INDIVIDUAL_URL} data-track="hero_cta_clicked" data-plan="individual" className={`${primaryBtn} w-full sm:w-auto px-10 py-5 text-lg`}>
+              Get Lifetime Access
             </Link>
           </div>
 
@@ -171,10 +177,10 @@ export default async function DeenRespondsPage() {
         <div className="max-w-3xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-8">
             <h2 className="text-2xl sm:text-3xl font-bold mb-2">
-              Heard about us from Deen Responds?
+              Watch why Deen Responds recommended this course
             </h2>
             <p className="text-text-secondary text-sm">
-              Watch what they said — then try Part 1 for free before you buy anything.
+              Then try Part 1 for free before you buy anything.
             </p>
           </div>
 
@@ -183,7 +189,8 @@ export default async function DeenRespondsPage() {
               url={sponsorVideoUrl}
               title="Deen Responds — Complete Seerah"
               label="Deen Responds on TheMuslimMan Seerah Program"
-              autoplay={true}
+              autoplay={false}
+              trackEvent="sponsor_video_played"
             />
           ) : (
             <div className="relative w-full aspect-video rounded-2xl border border-border bg-surface flex items-center justify-center">
@@ -192,11 +199,11 @@ export default async function DeenRespondsPage() {
           )}
 
           <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-            <a href="#preview" className={`${outlineBtn} px-6 py-3 text-sm`}>
+            <a href="#preview" data-track="sponsor_section_preview_clicked" className={`${outlineBtn} px-6 py-3 text-sm`}>
               Watch Part 1 Free
             </a>
-            <Link href={INDIVIDUAL_URL} className={`${primaryBtn} px-6 py-3 text-sm`}>
-              Get Access — 20% Off
+            <Link href={INDIVIDUAL_URL} data-track="sponsor_section_cta_clicked" data-plan="individual" className={`${primaryBtn} px-6 py-3 text-sm`}>
+              Get Access
             </Link>
           </div>
         </div>
@@ -231,8 +238,28 @@ export default async function DeenRespondsPage() {
         </div>
       </section>
 
+      {/* ── Who this is for ──────────────────────────────────────────────── */}
+      <section className="py-16 sm:py-20 bg-surface/20 border-y border-border/50">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6">
+          <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8">Who This Is For</h2>
+          <div className="space-y-3">
+            {[
+              "You want to finally learn the Seerah in order — beginning to end.",
+              "You want your family to learn the Prophet's ﷺ life step by step, together.",
+              "You're tired of random clips and scattered stories with no structure.",
+              "You want something simple and clear enough to actually continue.",
+            ].map((line) => (
+              <div key={line} className="flex items-start gap-3 py-4 px-5 rounded-xl bg-gold/5 border border-gold/20">
+                <CheckCircle2 className="w-5 h-5 text-gold flex-shrink-0 mt-0.5" />
+                <span className="text-base text-text leading-snug">{line}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── Free Preview ─────────────────────────────────────────────────── */}
-      <section id="preview" className="py-16 sm:py-20">
+      <section id="preview" className="py-16 sm:py-20 scroll-mt-14">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-10">
             <h2 className="text-2xl sm:text-3xl font-bold mb-3">Start With Part 1 — Free</h2>
@@ -241,32 +268,8 @@ export default async function DeenRespondsPage() {
             </p>
           </div>
 
-          <Part1FullPreview />
+          <Part1FullPreview hideCta />
 
-          {/* Post-preview purchase hook */}
-          <div className="mt-12 p-6 sm:p-8 rounded-2xl bg-gold/5 border border-gold/20 text-center max-w-3xl mx-auto">
-            <p className="font-semibold text-text mb-1">That was Part 1 of 100.</p>
-            <p className="text-sm text-text-secondary mb-6">
-              If that felt right, get the full course today — 20% off for Deen Responds viewers.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link
-                href={INDIVIDUAL_URL}
-                className={`${primaryBtn} px-6 py-3.5 text-sm`}
-              >
-                Individual Access — $63.20
-              </Link>
-              <Link
-                href={FAMILY_URL}
-                className={`${outlineBtn} px-6 py-3.5 text-sm`}
-              >
-                Family Access — $119.20
-              </Link>
-            </div>
-            <p className="text-xs text-text-muted mt-4">
-              🛡️ 7-day clarity guarantee · Instant access · Cancel anytime (monthly)
-            </p>
-          </div>
         </div>
       </section>
 
@@ -297,7 +300,7 @@ export default async function DeenRespondsPage() {
       </section>
 
       {/* ── Pricing ──────────────────────────────────────────────────────── */}
-      <section id="pricing" className="py-16 sm:py-24 bg-surface/20 border-y border-border/50">
+      <section id="pricing" className="py-16 sm:py-24 bg-surface/20 border-y border-border/50 scroll-mt-14">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold/10 border border-gold/25 text-gold text-xs font-bold uppercase tracking-wider mb-5">
             Exclusive for Deen Responds Viewers
@@ -306,7 +309,7 @@ export default async function DeenRespondsPage() {
             Deen Responds Lifetime Offer
           </h2>
           <p className="text-text-secondary text-base mb-12">
-            20% off lifetime access — automatically applied at checkout. No code needed.
+            Exclusive pricing for Deen Responds viewers — applied at checkout. No code needed.
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto mb-8">
@@ -326,8 +329,8 @@ export default async function DeenRespondsPage() {
 
               <div className="mb-6">
                 <p className="text-sm text-text-muted line-through">$79</p>
-                <p className="text-5xl sm:text-6xl font-bold text-gold leading-none mt-1">$63.20</p>
-                <p className="text-xs text-emerald-400 mt-2 font-medium">You save $15.80</p>
+                <p className="text-5xl sm:text-6xl font-bold text-gold leading-none mt-1">$59</p>
+                <p className="text-xs text-emerald-400 mt-2 font-medium">You save $20</p>
               </div>
 
               <ul className="space-y-1.5 text-left mb-8">
@@ -342,9 +345,11 @@ export default async function DeenRespondsPage() {
               <div className="mt-auto">
                 <Link
                   href={INDIVIDUAL_URL}
+                  data-track="checkout_started"
+                  data-plan="individual"
                   className="block w-full py-4 px-5 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-sm text-center transition-colors shadow-lg shadow-gold/20"
                 >
-                  Get Individual Access — $63.20
+                  Get Individual Access — $59
                 </Link>
               </div>
             </div>
@@ -365,8 +370,8 @@ export default async function DeenRespondsPage() {
 
               <div className="mb-6">
                 <p className="text-sm text-text-muted line-through">$149</p>
-                <p className="text-5xl sm:text-6xl font-bold text-gold leading-none mt-1">$119.20</p>
-                <p className="text-xs text-emerald-400 mt-2 font-medium">You save $29.80</p>
+                <p className="text-5xl sm:text-6xl font-bold text-gold leading-none mt-1">$119</p>
+                <p className="text-xs text-emerald-400 mt-2 font-medium">You save $30</p>
               </div>
 
               <ul className="space-y-1.5 text-left mb-8">
@@ -381,9 +386,11 @@ export default async function DeenRespondsPage() {
               <div className="mt-auto">
                 <Link
                   href={FAMILY_URL}
+                  data-track="checkout_started"
+                  data-plan="family"
                   className="block w-full py-4 px-5 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-sm text-center transition-colors shadow-lg shadow-gold/20"
                 >
-                  Get Family Access — $119.20
+                  Get Family Access — $119
                 </Link>
               </div>
             </div>
@@ -442,20 +449,20 @@ export default async function DeenRespondsPage() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
-            <a href="#preview" className={`${outlineBtn} w-full sm:w-auto px-8 py-4 text-base`}>
+            <a href="#preview" data-track="final_cta_preview_clicked" className={`${outlineBtn} w-full sm:w-auto px-8 py-4 text-base`}>
               Watch Part 1 Free
             </a>
-            <a href="#pricing" className={`${primaryBtn} w-full sm:w-auto px-8 py-4 text-base`}>
+            <a href="#pricing" data-track="final_cta_pricing_clicked" className={`${primaryBtn} w-full sm:w-auto px-8 py-4 text-base`}>
               Choose Lifetime Access
             </a>
           </div>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-4 text-sm">
-            <Link href={INDIVIDUAL_URL} className="text-gold underline underline-offset-2 hover:text-gold-light transition-colors">
-              Individual — $63.20
+            <Link href={INDIVIDUAL_URL} data-track="checkout_started" data-plan="individual" className="text-gold underline underline-offset-2 hover:text-gold-light transition-colors">
+              Individual — $59
             </Link>
             <span className="hidden sm:inline text-text-muted">·</span>
-            <Link href={FAMILY_URL} className="text-gold underline underline-offset-2 hover:text-gold-light transition-colors">
-              Family — $119.20
+            <Link href={FAMILY_URL} data-track="checkout_started" data-plan="family" className="text-gold underline underline-offset-2 hover:text-gold-light transition-colors">
+              Family — $119
             </Link>
           </div>
 

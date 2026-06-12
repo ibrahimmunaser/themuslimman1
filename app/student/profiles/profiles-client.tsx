@@ -146,7 +146,8 @@ export function ProfilesClient({
     setSwitchingId(profileId);
     startTransition(async () => {
       await switchProfile(profileId);
-      router.push("/seerah");
+      // Full reload clears stale client state; ?from=profiles bypasses the family redirect gate.
+      window.location.href = "/seerah?from=profiles";
     });
   }
 
