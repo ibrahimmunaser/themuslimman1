@@ -150,7 +150,7 @@ function CheckoutForm({
             }
           }}
           options={{
-            buttonType: { applePay: "buy", googlePay: "buy", link: "pay" },
+            buttonType: { applePay: "buy", googlePay: "buy" },
             buttonTheme: { applePay: "black", googlePay: "black" },
             // maxRows: 5 so Samsung Pay can appear alongside others on supported devices
             layout: { maxColumns: 1, maxRows: 5, overflow: "auto" },
