@@ -61,6 +61,28 @@ export const CREATOR_PROMO_CODES: Record<string, CreatorPromoConfig> = {
     utm_campaign: "seerah_launch",
     utm_content: "theorthodoxmuslim",
   },
+  ORTHODOX59: {
+    code: "ORTHODOX59",
+    // Same as DEEN59: $79 − $20 = $59
+    discountPercent: 25.316,
+    displayLabel: "The Orthodox Muslim pricing — Individual Lifetime",
+    creator: "theorthodoxmuslim",
+    utm_source: "youtube",
+    utm_medium: "influencer",
+    utm_campaign: "seerah_launch",
+    utm_content: "theorthodoxmuslim",
+  },
+  ORTHODOX119: {
+    code: "ORTHODOX119",
+    // Same as DEEN119: $149 − $30 = $119
+    discountPercent: 20.134,
+    displayLabel: "The Orthodox Muslim pricing — Family Lifetime",
+    creator: "theorthodoxmuslim",
+    utm_source: "youtube",
+    utm_medium: "influencer",
+    utm_campaign: "seerah_launch",
+    utm_content: "theorthodoxmuslim",
+  },
   DEARBORN20: {
     code: "DEARBORN20",
     discountPercent: 20,

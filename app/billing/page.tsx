@@ -18,7 +18,8 @@ const INDIVIDUAL_TO_FAMILY_PROMO: Record<string, string> = {
   KORRA20:      "KORRA20",       // 20% off both → ~$63 individual, ~$119 family → ~$56 upgrade
   ITACHI20:     "ITACHI20",
   DEEN:         "DEEN",
-  ORTHODOX:     "ORTHODOX",
+  ORTHODOX:     "ORTHODOX",      // legacy 20% code — same code works for family
+  ORTHODOX59:   "ORTHODOX119",   // $59 individual → $119 family → $60 upgrade
   DEARBORN20:   "DEARBORN20",
   ANNARBOR20:   "ANNARBOR20",
   COMMUNITY20:  "COMMUNITY20",

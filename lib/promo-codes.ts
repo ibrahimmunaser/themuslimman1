@@ -35,7 +35,10 @@ const BUILT_IN_CODES: Record<string, PromoCode> = {
   KORRA20:    { type: "percent", value: 20, label: "20% off (Korra)",               creatorOnly: true },
   ITACHI20:   { type: "percent", value: 20, label: "20% off (Itachi)",              creatorOnly: true },
   DEEN:       { type: "percent", value: 20, label: "20% off (Deen Responds)",       creatorOnly: true },
-  ORTHODOX:   { type: "percent", value: 20, label: "20% off (The Orthodox Muslim)", creatorOnly: true },
+  ORTHODOX:    { type: "percent", value: 20, label: "20% off (The Orthodox Muslim)", creatorOnly: true },
+  // The Orthodox Muslim exclusive pricing — individual $59, family $119 (absolute final prices).
+  ORTHODOX59:  { type: "absolute", value: 5900,  label: "$59 The Orthodox Muslim (Individual)", creatorOnly: true, planType: "individual" },
+  ORTHODOX119: { type: "absolute", value: 11900, label: "$119 The Orthodox Muslim (Family)",    creatorOnly: true, planType: "family"     },
   // Location codes — 20% off for local community members.
   DEARBORN20:   { type: "percent", value: 20, label: "20% off (Dearborn)",   creatorOnly: true },
   ANNARBOR20:   { type: "percent", value: 20, label: "20% off (Ann Arbor)",  creatorOnly: true },

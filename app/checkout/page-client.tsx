@@ -279,6 +279,8 @@ const COMMUNITY_CODE_MAP: Partial<Record<string, Record<"individual" | "family",
   DEEN119:      { individual: "DEEN59",       family: "DEEN119"      },
   BROWNIE59:    { individual: "BROWNIE59",    family: "BROWNIE119"   },
   BROWNIE119:   { individual: "BROWNIE59",    family: "BROWNIE119"   },
+  ORTHODOX59:   { individual: "ORTHODOX59",   family: "ORTHODOX119"  },
+  ORTHODOX119:  { individual: "ORTHODOX59",   family: "ORTHODOX119"  },
 };
 
 /** Returns true when running inside an Instagram / TikTok / Facebook in-app browser. */
