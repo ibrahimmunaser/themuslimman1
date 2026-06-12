@@ -96,7 +96,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
   // familyReferenceCents = what the user would pay for Family if buying fresh today
   // (discounted family price with their promo, or full $149 if no promo applies).
   // Used as the strikethrough "instead of X" reference in the upgrade card.
-  let familyReferenceCents = PLANS.family.price; // $149 default
+  let familyReferenceCents: number = PLANS.family.price; // $149 default
   if (familyPromoCode) {
     const familyPromo = validatePromoCode(familyPromoCode);
     if (familyPromo) {
