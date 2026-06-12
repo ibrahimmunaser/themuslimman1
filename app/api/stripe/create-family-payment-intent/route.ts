@@ -4,12 +4,23 @@ import { getCurrentUser } from "@/lib/auth";
 import { PLANS } from "@/lib/stripe-config";
 import { validatePromoCode, applyDiscount } from "@/lib/promo-codes";
 import { getUserAccessInfo } from "@/lib/access";
+import { checkRateLimit, getIP } from "@/lib/rate-limit";
 
 // Source of truth: STRIPE_FAMILY_LIFETIME_PRICE_ID env var (used only for metadata / Stripe dashboard linkage).
 const FAMILY_LIFETIME_PRICE_ID = process.env.STRIPE_FAMILY_LIFETIME_PRICE_ID ?? "";
 const FAMILY_PLAN = PLANS.family;
 
 export async function POST(request: NextRequest) {
+  // Rate limit: 10 payment intent creations per 10 minutes per IP.
+  const ip = getIP(request);
+  const rl = checkRateLimit(`create-family-pi:${ip}`, 10, 10 * 60 * 1000);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSeconds) } }
+    );
+  }
+
   try {
     const user = await getCurrentUser();
 
@@ -74,6 +85,13 @@ export async function POST(request: NextRequest) {
       if (!promo) {
         return NextResponse.json({ error: "Invalid promo code" }, { status: 400 });
       }
+      // Reject codes that are explicitly scoped to the individual plan.
+      if (promo.planType === "individual") {
+        return NextResponse.json(
+          { error: "This code is for individual plans only" },
+          { status: 400 }
+        );
+      }
       finalAmount = applyDiscount(baseAmount, promo);
       promoDiscountAmount = baseAmount - finalAmount;
       appliedPromoCode = promoCode.trim().toUpperCase();
@@ -125,7 +143,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("[FAMILY_CHECKOUT] Error creating payment intent:", error);
     return NextResponse.json(
-      { error: `Failed to initialize payment: ${error instanceof Error ? error.message : "Unknown error"}` },
+      { error: "Failed to initialize payment. Please try again." },
       { status: 500 }
     );
   }

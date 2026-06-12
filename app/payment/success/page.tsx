@@ -17,6 +17,7 @@ function PaymentSuccessPageContent() {
   const [error, setError] = useState<string | null>(null);
   const [successType, setSuccessType] = useState<SuccessType>("lifetime");
   const [emailVerified, setEmailVerified] = useState<boolean | null>(null);
+  const [hasPassword, setHasPassword] = useState<boolean | null>(null);
   const [resendLoading, setResendLoading] = useState(false);
   const [resendDone, setResendDone] = useState(false);
 
@@ -69,6 +70,7 @@ function PaymentSuccessPageContent() {
             const data = await res.json();
             if (data.hasAccess) {
               setEmailVerified(data.emailVerified ?? true);
+              setHasPassword(data.hasPassword ?? true);
               setLoading(false);
               return;
             }
@@ -121,6 +123,7 @@ function PaymentSuccessPageContent() {
         const accessData = accessRes.ok ? await accessRes.json() : {};
         setSuccessType(type === "family" ? "family" : "lifetime");
         setEmailVerified(accessData.emailVerified ?? false);
+        setHasPassword(accessData.hasPassword ?? true);
         setLoading(false);
       } catch {
         setError("Failed to verify payment. If you were charged, contact support.");
@@ -215,24 +218,42 @@ function PaymentSuccessPageContent() {
           </p>
         </div>
 
-        {/* Email verification banner — shown for paid-but-unverified users */}
+        {/* Post-checkout action banner — shown for unverified users */}
         {needsVerification && (
           <div className="mb-4 bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex items-start gap-3">
             <Mail className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-            <div className="space-y-1.5">
-              <p className="text-sm font-semibold text-amber-300">One more step — verify your email</p>
-              <p className="text-xs text-text-secondary leading-relaxed">
-                Your payment is confirmed and saved. Check your inbox for the verification link
-                to unlock your course.
-              </p>
-              <button
-                onClick={resendVerification}
-                disabled={resendLoading || resendDone}
-                className="text-xs text-gold hover:text-gold/80 underline disabled:opacity-50"
-              >
-                {resendDone ? "Email sent!" : resendLoading ? "Sending…" : "Resend verification email"}
-              </button>
-            </div>
+            {hasPassword === false ? (
+              /* Guest checkout: they need to set a password */
+              <div className="space-y-1.5">
+                <p className="text-sm font-semibold text-amber-300">One more step — set your password</p>
+                <p className="text-xs text-text-secondary leading-relaxed">
+                  Your access is confirmed. Check your inbox — we sent you a link to set your
+                  password and go straight to the dashboard.
+                </p>
+                <p className="text-xs text-zinc-500">
+                  Link not arriving?{" "}
+                  <a href="/forgot-password" className="text-gold hover:text-gold/80 underline">
+                    Request a new one
+                  </a>
+                </p>
+              </div>
+            ) : (
+              /* Existing account: they need to verify their email */
+              <div className="space-y-1.5">
+                <p className="text-sm font-semibold text-amber-300">One more step — verify your email</p>
+                <p className="text-xs text-text-secondary leading-relaxed">
+                  Your payment is confirmed and saved. Check your inbox for the verification link
+                  to unlock your course.
+                </p>
+                <button
+                  onClick={resendVerification}
+                  disabled={resendLoading || resendDone}
+                  className="text-xs text-gold hover:text-gold/80 underline disabled:opacity-50"
+                >
+                  {resendDone ? "Email sent!" : resendLoading ? "Sending…" : "Resend verification email"}
+                </button>
+              </div>
+            )}
           </div>
         )}
 

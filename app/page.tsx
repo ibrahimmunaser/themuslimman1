@@ -536,7 +536,7 @@ export default async function LandingPage() {
               },
               {
                 q: "Is there only one plan?",
-                a: "Yes. Start for just $1 — get 7 days of full access, then $9/month (individual) or $19/month (family). Or get lifetime access for a one-time $79 (individual) or $149 (family) payment. Cancel anytime.",
+                a: "Yes. Start with a free 7-day trial — enter your card and get full access, then $9/month (individual) or $19/month (family). Or get lifetime access for a one-time $79 (individual) or $149 (family) payment. Cancel anytime.",
               },
               {
                 q: "Is the course self-paced?",
@@ -604,7 +604,7 @@ export default async function LandingPage() {
               href="/checkout?plan=individual-trial"
               className={buttonClass("primary", "xl", "shadow-2xl shadow-gold/20")}
             >
-              Start for $1 — 7-Day Trial
+              Start Free 7-Day Trial
               <ArrowRight className="w-5 h-5" />
             </Link>
             <Link

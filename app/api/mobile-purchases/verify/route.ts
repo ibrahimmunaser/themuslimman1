@@ -372,8 +372,10 @@ export async function POST(req: NextRequest) {
     const hasAccess = await hasActiveCourseAccess(user.id);
     return NextResponse.json({ success: true, hasAccess });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Unexpected error";
     console.error("[mobile-purchases/verify]", err);
-    return NextResponse.json({ success: false, error: message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Purchase verification failed. Please try again." },
+      { status: 500 }
+    );
   }
 }

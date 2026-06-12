@@ -415,7 +415,7 @@ export default async function DeenRespondsPage() {
           <p className="text-sm text-text-muted">
             Not ready to commit?{" "}
             <Link href={MONTHLY_URL} className="text-gold hover:text-gold-light underline underline-offset-2">
-              Start with 7 days for $1
+              Start with a free 7-day trial
             </Link>
             {" "}— then $9/month. Cancel anytime.
           </p>

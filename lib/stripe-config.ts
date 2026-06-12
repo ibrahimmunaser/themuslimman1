@@ -23,12 +23,12 @@ export const PLANS = {
     ],
   },
 
-  // ── Trial plans (Stripe Checkout Session: $1 setup fee + monthly + 7-day trial) ──
+  // ── Trial plans (free 7-day trial — card collected at checkout, first charge after trial) ──
   individualTrial: {
     id: "individualTrial",
     name: "Individual Trial",
     subtitle: "7 days of full access",
-    trialFeeAmount: 100,  // $1.00 setup fee charged at checkout
+    trialFeeAmount: 0,    // Free — no charge at checkout; first bill after 7-day trial
     price: 900,           // $9.00/month after trial
     trialDays: 7,
     features: [
@@ -41,7 +41,7 @@ export const PLANS = {
     id: "familyTrial",
     name: "Family Trial",
     subtitle: "7 days of family access",
-    trialFeeAmount: 100,  // $1.00 setup fee charged at checkout
+    trialFeeAmount: 0,    // Free — no charge at checkout; first bill after 7-day trial
     price: 1900,          // $19.00/month after trial
     trialDays: 7,
     features: [

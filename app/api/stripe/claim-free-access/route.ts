@@ -61,23 +61,22 @@ export async function POST(request: NextRequest) {
     }
 
     // Determine the plan to grant.
-    // Priority: FREE_ACCESS_CODE env var (explicit override) → promo type absolute $0 → reject.
-    // The client sends planType ("family" | "individual") which we use when the code is a
-    // generic absolute-$0 code, but we verify server-side that the price is actually $0
-    // for that plan — the client cannot inflate the plan beyond what the code covers.
+    // Priority: FREE_ACCESS_CODE env var (explicit override) → promo planType field → individual.
+    // Client-supplied planType is intentionally ignored; the server resolves the plan.
     const envGrantedPlan = getFreeAccessPlan(promoCode);
     let isFamily = envGrantedPlan === "family";
 
     if (!envGrantedPlan) {
-      // Not a FREE_ACCESS_CODE env var code — accept if the promo itself is absolute $0.
+      // Not a FREE_ACCESS_CODE env var code — accept only absolute-$0 promos.
       if (promo.type !== "absolute" || promo.value !== 0) {
         return NextResponse.json(
           { error: "This code does not grant free access" },
           { status: 400 }
         );
       }
-      // Use the plan requested by the client (already validated above that it's $0).
-      isFamily = planType === "family";
+      // Derive plan from the promo's own planType field so the client cannot
+      // claim family access with an individual-scoped $0 code.
+      isFamily = promo.planType === "family";
     }
 
     // Verify the promo actually reduces the price to $0 for the resolved plan.

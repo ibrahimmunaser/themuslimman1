@@ -4,11 +4,22 @@ import { getCurrentUser } from "@/lib/auth";
 import { validatePromoCode, applyDiscount } from "@/lib/promo-codes";
 import { getCreatorPromoConfig } from "@/lib/creator-promos";
 import { getUserAccessInfo } from "@/lib/access";
+import { checkRateLimit, getIP } from "@/lib/rate-limit";
 
 /** Individual lifetime price in cents ($79). */
 const BASE_PRICE = 7900;
 
 export async function POST(request: NextRequest) {
+  // Rate limit: 10 payment intent creations per 10 minutes per IP.
+  const ip = getIP(request);
+  const rl = checkRateLimit(`create-pi:${ip}`, 10, 10 * 60 * 1000);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSeconds) } }
+    );
+  }
+
   try {
     const user = await getCurrentUser();
 
@@ -68,14 +79,13 @@ export async function POST(request: NextRequest) {
 
     if (promoCode && promoCode.trim().length > 0) {
       const normalized = promoCode.trim().toUpperCase();
-      // These codes are absolute prices calibrated for the family plan.
-      // Applying them to the individual plan ($79) would overcharge the customer.
-      if (normalized === "COMMUNITY99" || normalized === "DEEN119") {
-        return NextResponse.json({ error: "Invalid promo code for this plan" }, { status: 400 });
-      }
       const promo = validatePromoCode(normalized);
       if (!promo) {
         return NextResponse.json({ error: "Invalid promo code" }, { status: 400 });
+      }
+      // Reject codes that are explicitly scoped to the family plan.
+      if (promo.planType === "family") {
+        return NextResponse.json({ error: "This code is for family plans only" }, { status: 400 });
       }
       finalAmount = applyDiscount(baseAmount, promo);
       promoDiscountAmount = baseAmount - finalAmount;
@@ -136,9 +146,8 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error creating payment intent:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
-      { error: `Failed to initialize payment: ${errorMessage}` },
+      { error: "Failed to initialize payment. Please try again." },
       { status: 500 }
     );
   }

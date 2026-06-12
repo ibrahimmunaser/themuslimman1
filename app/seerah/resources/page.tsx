@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { getCachedStudent } from "@/lib/auth-cache";
-import { hasActiveCourseAccess } from "@/lib/access";
+import { hasActiveCourseAccess, isFamilyPlan } from "@/lib/access";
 import { getActiveProfileId } from "@/app/actions/profiles";
 import { prisma } from "@/lib/db";
 import { ResourcesTabs } from "@/components/resources/resources-tabs";
@@ -30,6 +31,11 @@ export default async function SeerahResourcesPage() {
   ]);
   if (!hasAccess) redirect("/pricing");
   if (!user.emailVerified) redirect("/seerah");
+
+  if (isFamilyPlan(user.planType)) {
+    const cookieStore = await cookies();
+    if (!cookieStore.get("seerah_profile")?.value) redirect("/profiles");
+  }
 
   const _userPlan = "complete" as const;
 

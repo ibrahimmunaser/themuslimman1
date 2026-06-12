@@ -140,7 +140,9 @@ export async function POST() {
     return NextResponse.json({ clientSecret, amount: PLANS.monthly.price });
   } catch (error) {
     console.error("[CREATE-SUBSCRIPTION-INTENT] Error:", error);
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json({ error: `Failed to create subscription: ${message}` }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to initialize payment. Please try again." },
+      { status: 500 }
+    );
   }
 }

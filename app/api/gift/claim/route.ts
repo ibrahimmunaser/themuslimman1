@@ -3,8 +3,19 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { hashGiftToken } from "@/lib/gift";
 import { stripe } from "@/lib/stripe";
+import { checkRateLimit, getIP } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
+  // Rate limit: 10 attempts per 15 minutes per IP to prevent gift token enumeration.
+  const ip = getIP(request);
+  const rl = checkRateLimit(`gift-claim:${ip}`, 10, 15 * 60 * 1000);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Too many attempts. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSeconds) } }
+    );
+  }
+
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ error: "You must be signed in to claim a gift" }, { status: 401 });

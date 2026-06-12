@@ -1,8 +1,9 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { requireStudent } from "@/lib/auth";
-import { hasActiveCourseAccess } from "@/lib/access";
+import { hasActiveCourseAccess, isFamilyPlan } from "@/lib/access";
 import { getActiveProfileId } from "@/app/actions/profiles";
+import { cookies } from "next/headers";
 import { getPartById, PARTS } from "@/lib/content";
 import { ERA_MAP } from "@/lib/types";
 import { getTimelineForPart } from "@/lib/timeline-data";
@@ -34,6 +35,11 @@ export default async function TimelinePage(props: Props) {
   const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
   if (!hasAccess) redirect("/pricing");
   if (!user.emailVerified) redirect("/seerah");
+
+  if (isFamilyPlan(user.planType)) {
+    const cookieStore = await cookies();
+    if (!cookieStore.get("seerah_profile")?.value) redirect("/profiles");
+  }
 
   const _userPlan = "complete" as const;
 

@@ -4,6 +4,8 @@ import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/db";
 import { generateGiftToken, hashGiftToken, buildClaimUrl, sendGiftClaimEmail } from "@/lib/gift";
 import Stripe from "stripe";
+import { nanoid } from "nanoid";
+import { hashToken } from "@/lib/hash-token";
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
@@ -69,7 +71,9 @@ export async function POST(request: NextRequest) {
         if (paymentIntent.metadata?.type === "gift") {
           await handleGiftPaymentSuccess(paymentIntent);
         } else if (paymentIntent.metadata?.type === "trial_fee") {
-          // Trial fee paid — create the subscription with trial now that payment is confirmed.
+          // Legacy $1 trial-fee PI — handled for backward compatibility with any
+          // in-flight PIs created before the free-trial migration. New signups no
+          // longer go through this path (subscription + SetupIntent instead).
           await handleTrialFeePayment(paymentIntent);
         } else if (paymentIntent.metadata?.type === "subscription") {
           // Subscription payment — access is handled by customer.subscription.* events
@@ -787,10 +791,12 @@ async function upsertSubscription(userId: string, sub: Stripe.Subscription) {
   // Send a welcome email the first time a subscription becomes active/trialing.
   // Monthly buyers would otherwise get no confirmation after checkout.
   //
-  // Skip for trial subscriptions (isTrial = "true"): their welcome email is sent
-  // by handleTrialFeePayment (payment_intent.succeeded for the $1 trial fee),
-  // which runs BEFORE customer.subscription.created. Sending here would either
-  // duplicate the email or send it prematurely (before $1 is actually paid).
+  // Skip for trial subscriptions (isTrial = "true"): the trial welcome email is
+  // sent synchronously by create-trial-intent (the API route that creates the
+  // subscription). Since that route also writes the DB row immediately,
+  // isFirstActivation will be false when this webhook fires — so this branch is
+  // only a safety guard in case the DB write raced. For legacy $1-trial PIs,
+  // handleTrialFeePayment sends the email instead.
   const isTrialSub = sub.metadata?.isTrial === "true";
   if (isFirstActivation && !isTrialSub) {
     const planLabel = isFamilySub ? "Family Monthly Access" : "Monthly Access";
@@ -799,7 +805,12 @@ async function upsertSubscription(userId: string, sub: Stripe.Subscription) {
     );
     console.log(`[WEBHOOK] upsertSubscription: Welcome email queued for user ${userId} (sub ${sub.id})`);
   } else if (isFirstActivation && isTrialSub) {
-    console.log(`[WEBHOOK] upsertSubscription: Skipping email for trial sub ${sub.id} — handled by handleTrialFeePayment`);
+    // DB row created after a race — send email here as fallback
+    const planLabel = isFamilySub ? "Family Trial Access" : "7-Day Trial Access";
+    sendPurchaseConfirmationEmail(userId, planLabel).catch((err) =>
+      console.error("[WEBHOOK] upsertSubscription: Failed to send trial welcome email fallback:", err)
+    );
+    console.log(`[WEBHOOK] upsertSubscription: Trial welcome email fallback queued for user ${userId} (sub ${sub.id})`);
   }
 }
 
@@ -900,11 +911,19 @@ async function handleGiftPaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
 async function sendPurchaseConfirmationEmail(userId: string, planName: string) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { email: true, fullName: true },
+    select: { email: true, fullName: true, passwordHash: true },
   });
 
   if (!user) {
     console.error("[PURCHASE_EMAIL] User not found:", userId);
+    return;
+  }
+
+  // Guest checkout users (no password yet) receive a "set your password" email
+  // rather than the regular welcome email. Setting the password also verifies
+  // their email, granting full dashboard access.
+  if (!user.passwordHash) {
+    await sendAccountSetupEmail(userId, user.email, user.fullName, planName);
     return;
   }
 
@@ -991,4 +1010,97 @@ async function sendPurchaseConfirmationEmail(userId: string, planName: string) {
   });
 
   console.log(`[PURCHASE_EMAIL] Confirmation sent to user ${userId}`);
+}
+
+/**
+ * Sends a "set your password" email to a guest-checkout user after their
+ * purchase is confirmed. The token link (48h expiry) takes them to
+ * /set-password where they choose a password and are automatically verified
+ * and logged in.
+ */
+async function sendAccountSetupEmail(
+  userId: string,
+  email: string,
+  fullName: string | null,
+  planName: string,
+) {
+  const rawToken = nanoid(32);
+  const tokenHash = hashToken(rawToken);
+  const expiry = new Date(Date.now() + 48 * 60 * 60 * 1000); // 48 hours
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { passwordResetToken: tokenHash, passwordResetExpiry: expiry },
+  });
+
+  const { Resend } = await import("resend");
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://themuslimman.com";
+  const setupUrl = `${appUrl}/set-password?token=${rawToken}`;
+  const year = new Date().getFullYear();
+  const greeting = fullName ? fullName : "dear student";
+
+  await resend.emails.send({
+    from: process.env.EMAIL_FROM ?? "TheMuslimMan <noreply@themuslimman.com>",
+    to: email,
+    subject: "Set your password and start learning — Complete Seerah",
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); padding: 30px 20px; text-align: center; border-radius: 12px 12px 0 0;">
+            <h1 style="color: #f4c542; margin: 0 0 8px 0; font-size: 24px;">JazakAllahu Khayran</h1>
+            <p style="color: #ccc; margin: 0; font-size: 15px;">One last step to start learning.</p>
+          </div>
+
+          <div style="background: #ffffff; padding: 40px 30px; border: 1px solid #e5e5e5; border-top: none;">
+            <p style="font-size: 16px; margin: 0 0 16px 0;">Assalamu Alaykum ${greeting},</p>
+
+            <p style="font-size: 15px; margin: 0 0 16px 0;">
+              Your <strong>${planName}</strong> is now active. Click the button below to set your
+              password and go straight to the dashboard.
+            </p>
+
+            <div style="text-align: center; margin: 32px 0;">
+              <a href="${setupUrl}" style="display: inline-block; background: #f4c542; color: #1a1a1a; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: 700; font-size: 16px;">
+                Set My Password &amp; Start Learning
+              </a>
+            </div>
+
+            <p style="font-size: 13px; color: #888; text-align: center; margin: 0 0 24px 0;">
+              This link expires in 48 hours. If it stops working, use
+              <a href="${appUrl}/forgot-password" style="color: #b8960c; text-decoration: none;">Forgot Password</a>
+              to get a new one.
+            </p>
+
+            <div style="background: #f9f4e8; border: 1px solid #e8d88a; border-radius: 8px; padding: 20px; margin: 24px 0;">
+              <p style="font-size: 14px; font-weight: 700; color: #333; margin: 0 0 8px 0;">Once you&rsquo;re in, start here:</p>
+              <ol style="font-size: 14px; color: #555; padding-left: 20px; margin: 0; line-height: 1.8;">
+                <li>Go to Part 1 on the dashboard</li>
+                <li>Use the <strong>video, briefing, flashcards, and quiz together</strong></li>
+                <li>Reply to this email if anything is unclear</li>
+              </ol>
+            </div>
+
+            <div style="background: #f5f5f5; border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin: 24px 0; font-size: 13px; color: #666;">
+              <strong style="color: #333;">7-Day Clarity Guarantee:</strong> Not what you expected? Email us within 7 days for a full refund.
+              <a href="${appUrl}/contact" style="color: #b8960c; text-decoration: none;"> Contact us.</a>
+            </div>
+          </div>
+
+          <div style="background: #f8f9fa; padding: 20px; text-align: center; border-radius: 0 0 12px 12px; border: 1px solid #e5e5e5; border-top: none;">
+            <p style="font-size: 12px; color: #999; margin: 0;">
+              © ${year} TheMuslimMan · Complete Seerah
+            </p>
+          </div>
+        </body>
+      </html>
+    `,
+  });
+
+  console.log(`[PURCHASE_EMAIL] Account setup email sent to user ${userId}`);
 }

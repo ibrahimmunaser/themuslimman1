@@ -20,6 +20,13 @@ export interface PromoCode {
   label: string;
   /** Internal label — unused at runtime, kept for auditing only. */
   creatorOnly?: boolean;
+  /**
+   * Restricts which checkout plan this code may be applied to.
+   * "individual" → rejected on family checkout
+   * "family"     → rejected on individual checkout
+   * undefined    → applies to any plan (e.g. percent-off codes)
+   */
+  planType?: "individual" | "family";
 }
 
 /** Built-in codes that are always active (no env var required). */
@@ -35,11 +42,11 @@ const BUILT_IN_CODES: Record<string, PromoCode> = {
   // Community code — 20% off for WhatsApp / Instagram / local community audience.
   COMMUNITY20:  { type: "percent", value: 20, label: "20% off (Community)",  creatorOnly: true },
   // Community exclusive pricing — individual $49, family $99 (absolute final prices).
-  COMMUNITY49:  { type: "absolute", value: 4900, label: "$49 Community (Individual)", creatorOnly: true },
-  COMMUNITY99:  { type: "absolute", value: 9900, label: "$99 Community (Family)",     creatorOnly: true },
+  COMMUNITY49:  { type: "absolute", value: 4900,  label: "$49 Community (Individual)", creatorOnly: true, planType: "individual" },
+  COMMUNITY99:  { type: "absolute", value: 9900,  label: "$99 Community (Family)",     creatorOnly: true, planType: "family"     },
   // Deen Responds exclusive pricing — individual $59, family $119 (absolute final prices).
-  DEEN59:  { type: "absolute", value: 5900, label: "$59 Deen Responds (Individual)", creatorOnly: true },
-  DEEN119: { type: "absolute", value: 11900, label: "$119 Deen Responds (Family)",   creatorOnly: true },
+  DEEN59:  { type: "absolute", value: 5900,  label: "$59 Deen Responds (Individual)", creatorOnly: true, planType: "individual" },
+  DEEN119: { type: "absolute", value: 11900, label: "$119 Deen Responds (Family)",    creatorOnly: true, planType: "family"     },
   // Free-access codes are NOT hardcoded here. Configure them via two env vars:
   //   FREE_ACCESS_CODE=YOURCODE          (the promo code string — treated as absolute $0)
   //   FREE_ACCESS_PLAN=complete|family   (the plan to grant; defaults to "complete")

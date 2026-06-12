@@ -162,7 +162,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
             <div className="text-right">
               {isFamilyMonthly && isTrial ? (
                 <>
-                  <p className="text-xs text-text-muted">$1 today · then $19/mo</p>
+                  <p className="text-xs text-text-muted">Free today · then $19/mo</p>
                   {sub && (
                     <p className="text-xs text-text-muted mt-0.5">
                       Trial ends {formatDate(sub.currentPeriodEnd)}
@@ -182,7 +182,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
                 </>
               ) : isMonthly && isTrial ? (
                 <>
-                  <p className="text-xs text-text-muted">$1 today · then $9/mo</p>
+                  <p className="text-xs text-text-muted">Free today · then $9/mo</p>
                   {sub && (
                     <p className="text-xs text-text-muted mt-0.5">
                       Trial ends {formatDate(sub.currentPeriodEnd)}

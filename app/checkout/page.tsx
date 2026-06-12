@@ -36,7 +36,7 @@ export default async function CheckoutPage({ searchParams }: Props) {
   //    • /checkout?plan=family-lifetime  — upgrade to family lifetime ($70 diff)
   //
   //  family-trial and family-monthly are redirected to family-lifetime because:
-  //   - The $1 trial is a one-time-per-account starter offer
+  //   - The free trial is one-per-account
   //   - Monthly is a step down from a lifetime plan they already own
   //
   //  Family lifetime holders have nothing left to buy at all.
@@ -48,7 +48,7 @@ export default async function CheckoutPage({ searchParams }: Props) {
       if (user.planType === "family") redirect("/seerah");
 
       // Individual lifetime holders trying family-trial or family-monthly:
-      // the $1 trial is one-time-per-account, and a monthly subscription is a
+      // the free trial is one-time-per-account, and a monthly subscription is a
       // step down from what they already own. Redirect both straight to the
       // family lifetime upgrade page ($70 difference).
       if (normalizedPlan === "family-trial" || normalizedPlan === "family-monthly") {
@@ -91,15 +91,14 @@ export default async function CheckoutPage({ searchParams }: Props) {
 
   // Base price for the selected plan — used to seed the client price state so the
   // order summary shows the correct amount before the async createIntent responds.
-  // Trial plans show the $1 setup fee; lifetime plans show the plan's full price.
+  // Trial plans are free today; lifetime plans show the plan's full price.
   const planBasePrice: Record<string, number> = {
     "individual-lifetime": 7900,
     "family-lifetime":     14900,
-    "individual-trial":    100,
-    "family-trial":        100,
-    // monthly plans redirect to trial at checkout, so seed the trial fee ($1)
-    "individual-monthly":  100,
-    "family-monthly":      100,
+    "individual-trial":    0,
+    "family-trial":        0,
+    "individual-monthly":  0,
+    "family-monthly":      0,
   };
   const initialBasePrice  = planBasePrice[normalizedPlan] ?? 7900;
   let initialClientSecret: string | null = null;

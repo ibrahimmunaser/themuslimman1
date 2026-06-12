@@ -109,12 +109,12 @@ const OUTCOMES = [
 
 const FAQ_ITEMS = [
   {
-    q: "How does the $1 trial work?",
-    a: "You pay $1 now and get 7 days of full access. After 7 days, your subscription automatically continues at $9/month (individual) or $19/month (family). You can cancel anytime before the trial ends — no charge.",
+    q: "How does the free trial work?",
+    a: "Enter your card details and get 7 days of full access — completely free, nothing charged today. After 7 days, your subscription automatically continues at $9/month (individual) or $19/month (family). You can cancel anytime before the trial ends — no charge.",
   },
   {
     q: "What is the difference between the trial and lifetime?",
-    a: "The $1 trial gives you 7 days of full access, then $9/month after that — cancel anytime. Lifetime is a one-time $79 payment (individual) or $149 (family) that gives you permanent access with no recurring charges ever.",
+    a: "The free trial gives you 7 days of full access, then $9/month after that — cancel anytime. Lifetime is a one-time $79 payment (individual) or $149 (family) that gives you permanent access with no recurring charges ever.",
   },
   {
     q: "What happens if I cancel?",

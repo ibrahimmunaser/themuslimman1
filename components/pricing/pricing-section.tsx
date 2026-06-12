@@ -39,7 +39,7 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
             Choose Your Access
           </h2>
           <p className="text-sm text-text-secondary">
-            Start for $1 · Cancel anytime · Or get lifetime access.
+            Start free · Cancel anytime · Or get lifetime access.
           </p>
         </FadeUp>
 
@@ -107,14 +107,14 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
                 <Zap className="w-4 h-4 text-text-secondary" />
               </div>
               <p className="text-xs font-semibold uppercase tracking-widest text-text-secondary">
-                {tab === "individual" ? "Start for $1" : "Start Family for $1"}
+                {tab === "individual" ? "Free 7-Day Trial" : "Free Family Trial"}
               </p>
             </div>
 
             <div className="mb-5">
               <div className="flex items-baseline gap-1.5 mb-1">
-                <span className="text-4xl font-bold text-text">$1</span>
-                <span className="text-text-muted text-sm">now</span>
+                <span className="text-4xl font-bold text-text">Free</span>
+                <span className="text-text-muted text-sm">for 7 days</span>
               </div>
               <p className="text-sm text-text-secondary">
                 {tab === "individual" ? "7 days of full access" : "7 days of family access"}
@@ -148,7 +148,7 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
                     href={individualTrialHref}
                     className="inline-flex items-center justify-center gap-2 w-full rounded-xl px-6 py-3.5 font-semibold text-base transition-all border border-border bg-surface hover:bg-surface-raised hover:border-gold/30 text-text cursor-pointer"
                   >
-                    Try for $1 — 7 Days
+                    Start Free Trial — 7 Days
                     <ArrowRight className="w-4 h-4 text-gold" />
                   </Link>
                   <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] text-text-muted/60">
@@ -169,7 +169,7 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
                     href={familyTrialHref}
                     className="inline-flex items-center justify-center gap-2 w-full rounded-xl px-6 py-3.5 font-semibold text-base transition-all border border-border bg-surface hover:bg-surface-raised hover:border-gold/30 text-text cursor-pointer"
                   >
-                    Try Family for $1 — 7 Days
+                    Start Family Free Trial — 7 Days
                     <ArrowRight className="w-4 h-4 text-gold" />
                   </Link>
                   <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] text-text-muted/60">

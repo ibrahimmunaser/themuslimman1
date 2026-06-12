@@ -496,6 +496,59 @@ export async function resetPassword(
 }
 
 // ─────────────────────────────────────────────────────────────
+// Complete account setup (checkout-first flow)
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Used after guest checkout: validates the account-setup token (reuses the
+ * passwordResetToken field), sets the user's password, marks their email as
+ * verified, and creates a fresh session so they land directly in the dashboard.
+ */
+export async function completeAccountSetup(
+  token: string,
+  newPassword: string,
+): Promise<{ success: boolean; error?: string }> {
+  if (newPassword.length < 8) {
+    return { success: false, error: "Password must be at least 8 characters" };
+  }
+  if (newPassword.length > 1000) {
+    return { success: false, error: "Password is too long" };
+  }
+
+  const tokenHash = hashToken(token);
+  const user = await prisma.user.findFirst({
+    where: { passwordResetToken: tokenHash, passwordResetExpiry: { gt: new Date() } },
+    select: { id: true, role: true },
+  });
+  if (!user) {
+    return {
+      success: false,
+      error: "This link has expired or has already been used. Use Forgot Password to get a new one.",
+    };
+  }
+
+  const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
+
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordHash,
+        passwordResetToken: null,
+        passwordResetExpiry: null,
+        emailVerified: true,
+      },
+    }),
+    prisma.session.deleteMany({ where: { userId: user.id } }),
+  ]);
+
+  // Create a fresh session — user lands directly in the dashboard
+  await createSession(user.id, user.role);
+
+  return { success: true };
+}
+
+// ─────────────────────────────────────────────────────────────
 // Change password (for logged-in users)
 // ─────────────────────────────────────────────────────────────
 

@@ -33,7 +33,7 @@ export default function TrialCheckoutClientPage({ userEmail, isFamily }: Props) 
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   const planType = isFamily ? "family-trial" : "individual-trial";
-  const planTitle = isFamily ? "Start Family Access for $1" : "Start for $1";
+  const planTitle = isFamily ? "Start Free Family Trial" : "Start Free Trial";
   const planSubtitle = isFamily
     ? "7 days of full family access"
     : "7 days of full access";
@@ -51,8 +51,8 @@ export default function TrialCheckoutClientPage({ userEmail, isFamily }: Props) 
         "Cancel anytime",
       ];
   const buttonLabel = isFamily
-    ? "Start Family Access for $1"
-    : "Start 7-Day Access for $1";
+    ? "Start Free Family Trial"
+    : "Start Free 7-Day Trial";
 
   // ── Auth handlers ────────────────────────────────────────────────────────────
 
@@ -247,8 +247,8 @@ export default function TrialCheckoutClientPage({ userEmail, isFamily }: Props) 
         {/* Plan summary */}
         <div className="bg-zinc-800/60 border border-gold/20 rounded-2xl p-6 mb-8">
           <div className="flex items-baseline gap-2 mb-1">
-            <span className="text-4xl font-bold text-gold">$1</span>
-            <span className="text-zinc-400 text-sm">now</span>
+            <span className="text-4xl font-bold text-gold">Free</span>
+            <span className="text-zinc-400 text-sm">for 7 days</span>
           </div>
           <p className="text-zinc-300 text-sm mb-1">{planSubtitle}</p>
           <p className="text-zinc-500 text-sm">{planAfter} · Cancel anytime</p>
@@ -467,8 +467,8 @@ export default function TrialCheckoutClientPage({ userEmail, isFamily }: Props) 
             {/* Order summary */}
             <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 mb-6 space-y-3">
               <div className="flex justify-between text-sm">
-                <span className="text-zinc-400">7-day access fee</span>
-                <span className="text-white font-semibold">$1.00</span>
+                <span className="text-zinc-400">7-day free trial</span>
+                <span className="text-green-400 font-semibold">Free</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-zinc-400">After trial</span>
@@ -476,7 +476,7 @@ export default function TrialCheckoutClientPage({ userEmail, isFamily }: Props) 
               </div>
               <div className="border-t border-zinc-800 pt-3 flex justify-between">
                 <span className="text-sm font-semibold text-white">Due today</span>
-                <span className="text-gold font-bold">$1.00</span>
+                <span className="text-green-400 font-bold">FREE</span>
               </div>
             </div>
 

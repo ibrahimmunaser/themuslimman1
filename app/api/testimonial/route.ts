@@ -31,14 +31,15 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { name, email, whatMadeYouTry, mostHelpful, whoWouldRecommend, canUseWords, displayPref } = body;
+    const { name, whatMadeYouTry, mostHelpful, whoWouldRecommend, canUseWords, displayPref } = body;
 
-    if (!name || !email || !whatMadeYouTry || !mostHelpful || !canUseWords || !displayPref) {
+    if (!name || !whatMadeYouTry || !mostHelpful || !canUseWords || !displayPref) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
     const safeName            = escapeHtml(name);
-    const safeEmail           = escapeHtml(email);
+    // Use the authenticated session email — never trust the client-supplied value.
+    const safeEmail           = escapeHtml(user.email ?? "");
     const safeWhatMadeYouTry  = escapeHtml(whatMadeYouTry);
     const safeMostHelpful     = escapeHtml(mostHelpful);
     const safeWhoWouldRecommend = whoWouldRecommend ? escapeHtml(whoWouldRecommend) : null;

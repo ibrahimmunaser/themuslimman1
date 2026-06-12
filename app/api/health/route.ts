@@ -10,9 +10,9 @@ export async function GET() {
 
     return NextResponse.json({ status: "ok", database: "connected" });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
+    console.error("[HEALTH] DB check failed:", error);
     return NextResponse.json(
-      { status: "error", database: "unreachable", error: message },
+      { status: "error", database: "unreachable" },
       { status: 503 }
     );
   }

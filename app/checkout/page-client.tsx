@@ -97,25 +97,40 @@ function CheckoutForm({
     }
 
     try {
-      const { error: confirmError, paymentIntent } = await stripe.confirmPayment({
-        elements,
-        confirmParams: { return_url: returnUrl },
-        // redirect: "if_required" so in-page success (no 3DS) is caught below
-        redirect: "if_required",
-      });
-
-      if (confirmError) {
-        setError(confirmError.message ?? "Payment failed. Please try again.");
-        setProcessing(false);
-      } else if (paymentIntent?.status === "succeeded") {
-        // Payment completed in-page (no redirect) — navigate manually
-        const url = new URL(returnUrl, window.location.origin);
-        url.searchParams.set("payment_intent", paymentIntent.id);
-        url.searchParams.set("payment_intent_client_secret", paymentIntent.client_secret ?? "");
-        url.searchParams.set("redirect_status", "succeeded");
-        window.location.href = url.toString();
+      if (billing === "trial") {
+        // Free trial: save card via SetupIntent — no charge today.
+        const { error: confirmError, setupIntent } = await stripe.confirmSetup({
+          elements,
+          confirmParams: { return_url: returnUrl },
+          redirect: "if_required",
+        });
+        if (confirmError) {
+          setError(confirmError.message ?? "Card setup failed. Please try again.");
+          setProcessing(false);
+        } else if (setupIntent?.status === "succeeded") {
+          // Setup completed in-page — navigate to success
+          window.location.href = returnUrl;
+        }
+        // If redirect happened, browser navigates away — no further action needed
+      } else {
+        const { error: confirmError, paymentIntent } = await stripe.confirmPayment({
+          elements,
+          confirmParams: { return_url: returnUrl },
+          // redirect: "if_required" so in-page success (no 3DS) is caught below
+          redirect: "if_required",
+        });
+        if (confirmError) {
+          setError(confirmError.message ?? "Payment failed. Please try again.");
+          setProcessing(false);
+        } else if (paymentIntent?.status === "succeeded") {
+          // Payment completed in-page (no redirect) — navigate manually
+          const url = new URL(returnUrl, window.location.origin);
+          url.searchParams.set("payment_intent", paymentIntent.id);
+          url.searchParams.set("payment_intent_client_secret", paymentIntent.client_secret ?? "");
+          url.searchParams.set("redirect_status", "succeeded");
+          window.location.href = url.toString();
+        }
       }
-      // If redirect happened, browser navigates away — no further action needed
     } catch {
       setError("Connection lost. Please check your internet and try again.");
       setProcessing(false);
@@ -153,7 +168,7 @@ function CheckoutForm({
 
   const buttonLabel =
     billing === "trial"
-      ? `Start 7-Day Trial — ${formatPrice(finalPrice)} today`
+      ? "Start Free 7-Day Trial"
       : billing === "monthly"
       ? `Subscribe — ${formatPrice(finalPrice)}/mo`
       : `Get Lifetime Access — ${formatPrice(finalPrice)}`;
@@ -161,8 +176,8 @@ function CheckoutForm({
   return (
     <div className="space-y-5">
       {/* Express checkout: Apple Pay, Google Pay, Samsung Pay, Link
-          Hidden for monthly — server-side subscription PIs are card-only */}
-      {billing !== "monthly" && (
+          Hidden for monthly (card-only subscriptions) and trial (SetupIntent flow) */}
+      {billing !== "monthly" && billing !== "trial" && (
         <>
           <div className={showExpressCheckout ? "block" : "hidden"}>
             <ExpressCheckoutElement
@@ -217,7 +232,7 @@ function CheckoutForm({
           Secure payment powered by Stripe · Your information is encrypted
         </p>
         <p className="text-xs text-zinc-600 text-center leading-relaxed">
-          By {billing === "monthly" ? "subscribing" : "purchasing"} you agree to our{" "}
+          By {billing === "trial" ? "starting your trial" : billing === "monthly" ? "subscribing" : "purchasing"} you agree to our{" "}
           <a href="/terms"   className="underline hover:text-zinc-400 transition-colors">Terms of Service</a>{", "}
           <a href="/privacy" className="underline hover:text-zinc-400 transition-colors">Privacy Policy</a>{", and "}
           <a href="/refund"  className="underline hover:text-zinc-400 transition-colors">Refund Policy</a>.
@@ -346,7 +361,7 @@ function CheckoutPageContent({
   // When hasActiveSub is true, this holds what plan type the user currently has
   // so we can show an upgrade CTA instead of a dead-end message.
   const [activeSubPlanType, setActiveSubPlanType] = useState<"individual" | "family" | null>(null);
-  // True when the user has already used their one $1 trial offer and selected a trial plan.
+  // True when the user has already used their one free trial and selected a trial plan.
   // Shows upgrade options (family monthly or family lifetime) instead of a payment form.
   const [trialAlreadyUsed,  setTrialAlreadyUsed]  = useState(false);
   // True while a subscription upgrade (individual → family monthly) is in progress.
@@ -575,39 +590,40 @@ function CheckoutPageContent({
 
   // ── Auth handlers ──────────────────────────────────────────────────────────
 
-  const handleSignup = async (e: React.FormEvent) => {
+  const handleGuestCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError("");
     if (authForm.fullName.trim().length < 2) { setAuthError("Please enter your full name"); return; }
-    if (!authForm.email.includes("@"))         { setAuthError("Please enter a valid email address"); return; }
-    if (authForm.password.length < 8)          { setAuthError("Password must be at least 8 characters"); return; }
-    if (authForm.password !== authForm.confirmPassword) { setAuthError("Passwords do not match"); return; }
+    if (!authForm.email.includes("@"))       { setAuthError("Please enter a valid email address"); return; }
 
     setAuthLoading(true);
     try {
-      const res = await fetch("/api/auth/signup-student", {
+      const res = await fetch("/api/auth/guest-checkout", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fullName: authForm.fullName, email: authForm.email, password: authForm.password }),
+        body: JSON.stringify({ fullName: authForm.fullName, email: authForm.email }),
       });
       const data = await res.json();
-      if (!res.ok) { setAuthError(data.error || "Failed to create account"); return; }
-
-      if (data.emailVerified) {
-        if ((guestPromo || creatorPromoConfig) && billing === "lifetime") {
-          const code     = guestPromo?.code     ?? promoParam ?? "";
-          const label    = guestPromo?.label    ?? creatorPromoConfig?.displayLabel ?? "";
-          // Use the synchronously-computed creator discount if available so the
-          // correct plan-specific discount is applied regardless of fetch timing.
-          const discount = guestCreatorDiscount > 0 ? guestCreatorDiscount : (guestPromo?.discount ?? 0);
-          setAppliedCoupon({ code, label, discount, finalPrice: currentPlan.price - discount });
-          setCouponInput(code);
+      if (!res.ok) {
+        if (data.hasAccount) {
+          // Email has a real account — switch to login tab so they can sign in
+          setAuthMode("login");
+          setAuthError("You already have an account with this email. Please sign in.");
+          return;
         }
-        setAuthEmail(authForm.email);
-        setIsAuthenticated(true);
-      } else {
-        setNeedsVerification(true);
+        setAuthError(data.error || "Failed to continue. Please try again.");
+        return;
       }
+
+      if ((guestPromo || creatorPromoConfig) && billing === "lifetime") {
+        const code     = guestPromo?.code     ?? promoParam ?? "";
+        const label    = guestPromo?.label    ?? creatorPromoConfig?.displayLabel ?? "";
+        const discount = guestCreatorDiscount > 0 ? guestCreatorDiscount : (guestPromo?.discount ?? 0);
+        setAppliedCoupon({ code, label, discount, finalPrice: currentPlan.price - discount });
+        setCouponInput(code);
+      }
+      setAuthEmail(authForm.email);
+      setIsAuthenticated(true);
     } catch {
       setAuthError("An error occurred. Please try again.");
     } finally {
@@ -741,13 +757,13 @@ function CheckoutPageContent({
     { id: "family",     Icon: Users, label: "Family" },
   ];
 
-  const allBillingOptions: { id: Billing; label: string; price: number; priceSuffix?: string; sub: string; badge?: string }[] = audience === "individual"
+  const allBillingOptions: { id: Billing; label: string; price: number; priceSuffix?: string; priceOverride?: string; sub: string; badge?: string }[] = audience === "individual"
     ? [
-        { id: "trial",    label: "7-Day Trial", price: PLANS.individualTrial.trialFeeAmount, priceSuffix: " today", sub: `Then ${formatPrice(PLANS.individualTrial.price)}/mo · cancel anytime`, badge: "Most Popular" },
+        { id: "trial",    label: "7-Day Trial", price: 0, priceOverride: "Free", priceSuffix: " today", sub: `Then ${formatPrice(PLANS.individualTrial.price)}/mo · cancel anytime`, badge: "Most Popular" },
         { id: "lifetime", label: "Lifetime",    price: PLANS.complete.price, sub: "Pay once, access forever", badge: "Best Value" },
       ]
     : [
-        { id: "trial",    label: "7-Day Trial", price: PLANS.familyTrial.trialFeeAmount, priceSuffix: " today", sub: `Then ${formatPrice(PLANS.familyTrial.price)}/mo · up to 5 profiles`, badge: "Most Popular" },
+        { id: "trial",    label: "7-Day Trial", price: 0, priceOverride: "Free", priceSuffix: " today", sub: `Then ${formatPrice(PLANS.familyTrial.price)}/mo · up to 5 profiles`, badge: "Most Popular" },
         { id: "lifetime", label: "Lifetime",    price: PLANS.family.price, sub: "Up to 5 profiles · pay once", badge: "Best Value" },
       ];
 
@@ -826,7 +842,7 @@ function CheckoutPageContent({
 
       {/* Billing options */}
           <div className="space-y-3 mb-8">
-        {billingOptions.map(({ id, label, price, priceSuffix, sub, badge }) => (
+        {billingOptions.map(({ id, label, price, priceSuffix, priceOverride, sub, badge }) => (
           <button
             key={id}
             onClick={() => {
@@ -865,7 +881,7 @@ function CheckoutPageContent({
 
             <div className="text-right ml-4 flex-shrink-0">
               <span className={`text-xl font-bold ${billing === id ? "text-white" : "text-zinc-400"}`}>
-                {formatPrice(price)}
+                {priceOverride ?? formatPrice(price)}
               </span>
               {priceSuffix && <span className="text-xs text-zinc-500">{priceSuffix}</span>}
             </div>
@@ -920,13 +936,11 @@ function CheckoutPageContent({
           <p className="text-sm font-semibold text-white">{trialPlanConfig.name}</p>
           <p className="text-xs text-zinc-500 mt-0.5">
             {audience === "family" ? "Up to 5 learner profiles · " : ""}
-            7-day trial
+            7-day free trial
           </p>
         </div>
         <div className="text-right ml-4 flex-shrink-0">
-          <p className="text-sm font-bold text-white whitespace-nowrap">
-            {formatPrice(trialPlanConfig.trialFeeAmount)} today
-          </p>
+          <p className="text-sm font-bold text-green-400 whitespace-nowrap">Free today</p>
         </div>
       </div>
       <div className="flex items-center justify-between text-xs text-zinc-500 pt-1 border-t border-zinc-800/60">
@@ -935,7 +949,7 @@ function CheckoutPageContent({
       </div>
       <div className="flex items-center justify-between pt-1 border-t border-zinc-800">
         <span className="text-sm font-semibold text-white">Due today</span>
-        <span className="text-lg font-bold text-gold">{formatPrice(trialPlanConfig.trialFeeAmount)}</span>
+        <span className="text-lg font-bold text-green-400">FREE</span>
       </div>
     </div>
   ) : (
@@ -1053,9 +1067,9 @@ function CheckoutPageContent({
               ))}
             </div>
 
-            {/* Signup form */}
+            {/* Guest checkout form — name + email only; password is set after purchase */}
             {authMode === "signup" && (
-              <form onSubmit={handleSignup} className="space-y-3">
+              <form onSubmit={handleGuestCheckout} className="space-y-3">
                 <input
                   type="text" placeholder="Full name"
                   value={authForm.fullName}
@@ -1070,33 +1084,16 @@ function CheckoutPageContent({
                   required
                   className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm"
                 />
-                <div className="relative">
-                  <input
-                    type={showPass ? "text" : "password"} placeholder="Password (min 8 characters)"
-                    value={authForm.password} minLength={8} required
-                    onChange={(e) => setAuthForm((f) => ({ ...f, password: e.target.value }))}
-                    className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm pr-11"
-                  />
-                  <button type="button" onClick={() => setShowPass((s) => !s)} className="absolute right-2 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] flex items-center justify-center text-zinc-500 hover:text-zinc-300">
-                    {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-                <input
-                  type={showPass ? "text" : "password"} placeholder="Confirm password" required
-                  value={authForm.confirmPassword}
-                  onChange={(e) => setAuthForm((f) => ({ ...f, confirmPassword: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm"
-                />
                 {authError && <p className="text-xs text-red-400 pt-1">{authError}</p>}
                 <button
                   type="submit" disabled={authLoading}
                   className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-gold hover:bg-gold-light disabled:opacity-60 text-ink font-bold text-sm transition-colors"
                 >
-                  {authLoading ? "Creating account…" : "Create Account & Continue"}
+                  {authLoading ? "Continuing…" : "Continue to Payment"}
                   {!authLoading && <ArrowRight className="w-4 h-4" />}
                 </button>
                 <p className="text-xs text-zinc-600 text-center leading-relaxed">
-                  By creating an account you agree to our{" "}
+                  You&rsquo;ll set a password after checkout. By continuing you agree to our{" "}
                   <a href="/terms"   className="underline hover:text-zinc-400">Terms</a>,{" "}
                   <a href="/privacy" className="underline hover:text-zinc-400">Privacy Policy</a>, and{" "}
                   <a href="/refund"  className="underline hover:text-zinc-400">Refund Policy</a>.
@@ -1145,7 +1142,7 @@ function CheckoutPageContent({
     );
   }
 
-  // ── Trial already used — show upgrade options (no second $1) ─────────────
+  // ── Trial already used — show upgrade options (one free trial per account) ──
 
   if (trialAlreadyUsed) {
     const isOnFamily = activeSubPlanType === "family";
@@ -1182,7 +1179,7 @@ function CheckoutPageContent({
               <p className="text-sm text-zinc-400">
                 {isOnFamily
                   ? "Your Family plan already includes everything. Manage it from your billing page."
-                  : "You've used your $1 starter offer. Upgrade your plan below — no extra trial fee."}
+                  : "You've already used your free trial. Upgrade your plan below."}
               </p>
               <Link href="/seerah" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gold hover:bg-gold-light text-ink font-semibold text-sm transition-colors">
                 Go to Dashboard <ArrowRight className="w-4 h-4" />

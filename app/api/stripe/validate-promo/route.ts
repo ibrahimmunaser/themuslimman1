@@ -38,6 +38,21 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ valid: false, error: "Invalid promo code" }, { status: 400 });
   }
 
+  // Enforce plan restrictions — absolute codes scoped to one plan type cannot be
+  // applied to the other.
+  if (promo.planType === "family" && plan !== "family") {
+    return NextResponse.json(
+      { valid: false, error: "This code is for family plans only" },
+      { status: 400 }
+    );
+  }
+  if (promo.planType === "individual" && plan === "family") {
+    return NextResponse.json(
+      { valid: false, error: "This code is for individual plans only" },
+      { status: 400 }
+    );
+  }
+
   const basePrice = plan === "family" ? PLANS.family.price : INDIVIDUAL_BASE_PRICE;
   const finalPrice = applyDiscount(basePrice, promo);
   const promoDiscountAmount = basePrice - finalPrice;
