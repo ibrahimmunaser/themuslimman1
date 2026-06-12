@@ -273,10 +273,12 @@ interface CheckoutPageClientProps {
 // Plan-specific promo codes that must be resolved to the correct variant based on
 // the selected audience. Add any new plan-paired codes here.
 const COMMUNITY_CODE_MAP: Partial<Record<string, Record<"individual" | "family", string>>> = {
-  COMMUNITY49: { individual: "COMMUNITY49", family: "COMMUNITY99" },
-  COMMUNITY99: { individual: "COMMUNITY49", family: "COMMUNITY99" },
-  DEEN59:      { individual: "DEEN59",      family: "DEEN119"     },
-  DEEN119:     { individual: "DEEN59",      family: "DEEN119"     },
+  COMMUNITY49:  { individual: "COMMUNITY49",  family: "COMMUNITY99"  },
+  COMMUNITY99:  { individual: "COMMUNITY49",  family: "COMMUNITY99"  },
+  DEEN59:       { individual: "DEEN59",       family: "DEEN119"      },
+  DEEN119:      { individual: "DEEN59",       family: "DEEN119"      },
+  BROWNIE59:    { individual: "BROWNIE59",    family: "BROWNIE119"   },
+  BROWNIE119:   { individual: "BROWNIE59",    family: "BROWNIE119"   },
 };
 
 /** Returns true when running inside an Instagram / TikTok / Facebook in-app browser. */

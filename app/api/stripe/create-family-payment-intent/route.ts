@@ -5,6 +5,7 @@ import { PLANS } from "@/lib/stripe-config";
 import { validatePromoCode, applyDiscount } from "@/lib/promo-codes";
 import { getUserAccessInfo } from "@/lib/access";
 import { checkRateLimit, getIP } from "@/lib/rate-limit";
+import { prisma } from "@/lib/db";
 
 // Source of truth: STRIPE_FAMILY_LIFETIME_PRICE_ID env var (used only for metadata / Stripe dashboard linkage).
 const FAMILY_LIFETIME_PRICE_ID = process.env.STRIPE_FAMILY_LIFETIME_PRICE_ID ?? "";
@@ -67,17 +68,14 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { promoCode, isUpgrade } = body as { promoCode?: string; isUpgrade?: boolean };
 
-    // Individual Lifetime → Family Lifetime upgrade: charge only the $100 difference.
+    // Individual Lifetime → Family Lifetime upgrade.
     // Verified server-side: user must have hasPaid=true and not already be on family plan.
     const isEligibleForUpgradePrice = isUpgrade && user.hasPaid && user.planType !== "family";
 
-    const baseAmount: number = isEligibleForUpgradePrice
-      ? FAMILY_PLAN.upgradeFromLifetimePrice  // 7000 cents = $70.00 (upgrade: $149 - $79)
-      : FAMILY_PLAN.price;                    // 14900 cents = $149.00
-
     // Apply promo code discount if provided
-    let finalAmount: number = baseAmount;
     let appliedPromoCode: string | null = null;
+    let baseAmount: number;
+    let finalAmount: number;
     let promoDiscountAmount = 0;
 
     if (promoCode?.trim()) {
@@ -92,9 +90,34 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
-      finalAmount = applyDiscount(baseAmount, promo);
-      promoDiscountAmount = baseAmount - finalAmount;
+
+      if (isEligibleForUpgradePrice) {
+        // Smart upgrade with promo: charge discounted_family_price − what_they_paid_for_individual.
+        // e.g. BROWNIE119 ($119) − individual purchase ($59) = $60 upgrade cost.
+        // This ensures total lifetime spend equals the discounted family price.
+        const discountedFamilyPrice = applyDiscount(FAMILY_PLAN.price, promo);
+        const individualPurchase = await prisma.purchase.findFirst({
+          where: { userId: user.id, status: "succeeded" },
+          select: { amount: true },
+          orderBy: { createdAt: "asc" }, // earliest = the original individual purchase
+        });
+        const individualPaid = individualPurchase?.amount ?? PLANS.complete.price; // fallback $79
+        baseAmount  = discountedFamilyPrice;
+        finalAmount = Math.max(0, discountedFamilyPrice - individualPaid);
+        promoDiscountAmount = baseAmount - finalAmount;
+      } else {
+        // New family purchase with promo (not an upgrade).
+        baseAmount  = FAMILY_PLAN.price;
+        finalAmount = applyDiscount(baseAmount, promo);
+        promoDiscountAmount = baseAmount - finalAmount;
+      }
       appliedPromoCode = promoCode.trim().toUpperCase();
+    } else {
+      // No promo: upgrade pays fixed $70 diff (full $149 − full $79); new purchase pays $149.
+      baseAmount  = isEligibleForUpgradePrice
+        ? FAMILY_PLAN.upgradeFromLifetimePrice  // 7000 cents = $70
+        : FAMILY_PLAN.price;                    // 14900 cents = $149
+      finalAmount = baseAmount;
     }
 
     // Free access: skip Stripe entirely when code makes it $0

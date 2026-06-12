@@ -4,6 +4,25 @@ import { prisma } from "@/lib/db";
 import { getUserAccessInfo } from "@/lib/access";
 import { StudentLayout } from "@/components/student/student-layout";
 import { PLANS } from "@/lib/stripe-config";
+import { validatePromoCode, applyDiscount } from "@/lib/promo-codes";
+
+// Maps an individual lifetime promo code to the paired family promo code (if one exists).
+// Percentage codes (same code for both plans) map to themselves.
+// Absolute codes with plan-specific variants map to the family variant.
+const INDIVIDUAL_TO_FAMILY_PROMO: Record<string, string> = {
+  // Absolute plan-paired codes
+  COMMUNITY49:  "COMMUNITY99",   // $49 individual → $99 family  → $50 upgrade
+  DEEN59:       "DEEN119",       // $59 individual → $119 family → $60 upgrade
+  BROWNIE59:    "BROWNIE119",    // $59 individual → $119 family → $60 upgrade
+  // Percentage codes — same code applies to both plans
+  KORRA20:      "KORRA20",       // 20% off both → ~$63 individual, ~$119 family → ~$56 upgrade
+  ITACHI20:     "ITACHI20",
+  DEEN:         "DEEN",
+  ORTHODOX:     "ORTHODOX",
+  DEARBORN20:   "DEARBORN20",
+  ANNARBOR20:   "ANNARBOR20",
+  COMMUNITY20:  "COMMUNITY20",
+};
 import { CardManager } from "@/components/billing/card-manager";
 import { PortalButton } from "@/components/billing/portal-button";
 import { CancelSubscriptionButton } from "@/components/billing/cancel-subscription-button";
@@ -58,6 +77,35 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
     }),
   ]);
   if (!accessInfo.hasAccess) redirect("/pricing");
+
+  // ── Individual → Family upgrade pricing ──────────────────────────────────────
+  // Find the individual lifetime purchase to determine what the user actually paid,
+  // and whether they used a promo code that has a family equivalent.
+  const individualPurchase = purchases.find((p) => p.planId === "complete");
+  const individualPaidCents = individualPurchase?.amount ?? PLANS.complete.price;
+  const indivPromoCode = individualPurchase?.promoCode?.toUpperCase() ?? null;
+  const familyPromoCode = indivPromoCode
+    ? (INDIVIDUAL_TO_FAMILY_PROMO[indivPromoCode] ?? null)
+    : null;
+
+  // Compute the expected upgrade cost server-side so the billing page shows the right number.
+  // If the user's individual promo maps to a family promo, the upgrade = discounted_family − paid.
+  // Otherwise it's the standard $70 (full $149 − full $79).
+  let upgradeCostCents = PLANS.family.upgradeFromLifetimePrice; // $70 default
+  if (familyPromoCode) {
+    const familyPromo = validatePromoCode(familyPromoCode);
+    if (familyPromo) {
+      const discountedFamilyPrice = applyDiscount(PLANS.family.price, familyPromo);
+      upgradeCostCents = Math.max(0, discountedFamilyPrice - individualPaidCents);
+    }
+  }
+
+  const upgradeUrl = familyPromoCode
+    ? `/checkout?plan=family-lifetime&promo=${familyPromoCode}`
+    : "/checkout?plan=family-lifetime";
+
+  const fmtCurrency = (cents: number) =>
+    new Intl.NumberFormat("en-US", { style: "currency", currency: "usd", minimumFractionDigits: 0 }).format(cents / 100);
 
   const userPlan = "complete" as const;
 
@@ -275,7 +323,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
           </div>
         )}
 
-        {/* Individual Lifetime → Family Lifetime upgrade card (pays only the $70 difference) */}
+        {/* Individual Lifetime → Family Lifetime upgrade card */}
         {accessInfo.hasLifetime && !isFamily && !isMonthly && !isTrial && (
           <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-6">
             <div className="flex items-start gap-4">
@@ -291,14 +339,15 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
                 </p>
                 <div className="mt-3 flex items-center gap-2 text-xs text-amber-400/80">
                   <ArrowUpCircle className="w-3.5 h-3.5 flex-shrink-0" />
-                  You&apos;ve already paid $79 for Individual Lifetime — you&apos;re only paying the $70 difference.
+                  You&apos;ve already paid {fmtCurrency(individualPaidCents)} for Individual Lifetime
+                  — you&apos;re only paying the {fmtCurrency(upgradeCostCents)} difference.
                 </div>
                 <div className="mt-4 flex flex-wrap items-center gap-3">
                   <Link
-                    href="/checkout?plan=family&billing=lifetime"
+                    href={upgradeUrl}
                     className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm transition-colors shadow-sm"
                   >
-                    Upgrade for $70
+                    Upgrade for {fmtCurrency(upgradeCostCents)}
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                   <span className="text-xs text-text-muted">
