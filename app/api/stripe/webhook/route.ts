@@ -1017,6 +1017,10 @@ async function sendPurchaseConfirmationEmail(userId: string, planName: string) {
  * purchase is confirmed. The token link (48h expiry) takes them to
  * /set-password where they choose a password and are automatically verified
  * and logged in.
+ *
+ * Idempotent: if a valid token already exists it is reused so that multiple
+ * webhook events for the same purchase don't each generate a new token and
+ * invalidate the link already sent in the first email.
  */
 async function sendAccountSetupEmail(
   userId: string,
@@ -1024,9 +1028,28 @@ async function sendAccountSetupEmail(
   fullName: string | null,
   planName: string,
 ) {
-  const rawToken = nanoid(32);
+  // Reload the user to get the current token state
+  const current = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { passwordHash: true, passwordResetToken: true, passwordResetExpiry: true },
+  });
+
+  // Already set up — nothing to do
+  if (!current || current.passwordHash) return;
+
+  let rawToken: string;
+
+  if (current.passwordResetToken && current.passwordResetExpiry && current.passwordResetExpiry > new Date()) {
+    // A valid token already exists — skip regenerating to avoid invalidating
+    // the link that was already emailed. Don't send a duplicate email.
+    console.log(`[PURCHASE_EMAIL] Valid setup token already exists for user ${userId} — skipping duplicate email`);
+    return;
+  }
+
+  // Generate a fresh token (48-hour expiry)
+  rawToken = nanoid(32);
   const tokenHash = hashToken(rawToken);
-  const expiry = new Date(Date.now() + 48 * 60 * 60 * 1000); // 48 hours
+  const expiry = new Date(Date.now() + 48 * 60 * 60 * 1000);
 
   await prisma.user.update({
     where: { id: userId },

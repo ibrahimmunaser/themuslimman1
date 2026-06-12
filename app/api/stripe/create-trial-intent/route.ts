@@ -316,6 +316,9 @@ async function sendTrialWelcomeEmail(userId: string, planName: string) {
 /**
  * Sends an account setup email (set password + verify) for guest-checkout users.
  * Token is stored in the passwordResetToken field and expires in 48 hours.
+ *
+ * Idempotent: reuses any existing valid token to avoid invalidating a link
+ * that was already emailed by an earlier call for the same purchase.
  */
 async function sendAccountSetupEmail(
   userId: string,
@@ -323,6 +326,20 @@ async function sendAccountSetupEmail(
   fullName: string | null,
   planName: string,
 ) {
+  // Reload to get current token state
+  const current = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { passwordHash: true, passwordResetToken: true, passwordResetExpiry: true },
+  });
+
+  if (!current || current.passwordHash) return; // already set up
+
+  if (current.passwordResetToken && current.passwordResetExpiry && current.passwordResetExpiry > new Date()) {
+    // Valid token already exists — don't overwrite or send a duplicate email
+    console.log(`[CREATE-TRIAL-INTENT] Valid setup token already exists for user ${userId} — skipping duplicate email`);
+    return;
+  }
+
   const rawToken = nanoid(32);
   const tokenHash = hashToken(rawToken);
   const expiry = new Date(Date.now() + 48 * 60 * 60 * 1000);
