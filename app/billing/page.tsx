@@ -92,7 +92,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
   // Compute the expected upgrade cost server-side so the billing page shows the right number.
   // If the user's individual promo maps to a family promo, the upgrade = discounted_family − paid.
   // Otherwise it's the standard $70 (full $149 − full $79).
-  let upgradeCostCents = PLANS.family.upgradeFromLifetimePrice; // $70 default
+  let upgradeCostCents: number = PLANS.family.upgradeFromLifetimePrice; // $70 default
   // familyReferenceCents = what the user would pay for Family if buying fresh today
   // (discounted family price with their promo, or full $149 if no promo applies).
   // Used as the strikethrough "instead of X" reference in the upgrade card.
