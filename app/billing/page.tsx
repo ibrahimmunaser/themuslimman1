@@ -93,11 +93,15 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
   // If the user's individual promo maps to a family promo, the upgrade = discounted_family − paid.
   // Otherwise it's the standard $70 (full $149 − full $79).
   let upgradeCostCents = PLANS.family.upgradeFromLifetimePrice; // $70 default
+  // familyReferenceCents = what the user would pay for Family if buying fresh today
+  // (discounted family price with their promo, or full $149 if no promo applies).
+  // Used as the strikethrough "instead of X" reference in the upgrade card.
+  let familyReferenceCents = PLANS.family.price; // $149 default
   if (familyPromoCode) {
     const familyPromo = validatePromoCode(familyPromoCode);
     if (familyPromo) {
-      const discountedFamilyPrice = applyDiscount(PLANS.family.price, familyPromo);
-      upgradeCostCents = Math.max(0, discountedFamilyPrice - individualPaidCents);
+      familyReferenceCents = applyDiscount(PLANS.family.price, familyPromo);
+      upgradeCostCents = Math.max(0, familyReferenceCents - individualPaidCents);
     }
   }
 
@@ -352,7 +356,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                   <span className="text-xs text-text-muted">
-                    <span className="line-through opacity-60 mr-1">$149</span>
+                    <span className="line-through opacity-60 mr-1">{fmtCurrency(familyReferenceCents)}</span>
                     One-time · Lifetime family access
                   </span>
                 </div>

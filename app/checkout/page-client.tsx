@@ -56,6 +56,7 @@ function toEndpoint(audience: Audience, billing: Billing): string {
 /** Derive the payment success return URL. */
 function toReturnUrl(audience: Audience, billing: Billing): string {
   const base = window.location.origin;
+  if (billing === "trial" && audience === "family")        return `${base}/payment/success?type=family-subscription&billing=trial`;
   if (billing === "trial")                                 return `${base}/payment/success?type=subscription&billing=trial`;
   if (audience === "individual" && billing === "monthly")  return `${base}/payment/success?type=subscription`;
   if (audience === "family"     && billing === "lifetime") return `${base}/payment/success?type=family`;
