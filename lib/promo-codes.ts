@@ -45,8 +45,10 @@ const BUILT_IN_CODES: Record<string, PromoCode> = {
   COMMUNITY49:  { type: "absolute", value: 4900,  label: "$49 Community (Individual)", creatorOnly: true, planType: "individual" },
   COMMUNITY99:  { type: "absolute", value: 9900,  label: "$99 Community (Family)",     creatorOnly: true, planType: "family"     },
   // Deen Responds exclusive pricing — individual $59, family $119 (absolute final prices).
-  DEEN59:  { type: "absolute", value: 5900,  label: "$59 Deen Responds (Individual)", creatorOnly: true, planType: "individual" },
-  DEEN119: { type: "absolute", value: 11900, label: "$119 Deen Responds (Family)",    creatorOnly: true, planType: "family"     },
+  DEEN59:    { type: "absolute", value: 5900,  label: "$59 Deen Responds (Individual)",  creatorOnly: true, planType: "individual" },
+  DEEN119:   { type: "absolute", value: 11900, label: "$119 Deen Responds (Family)",     creatorOnly: true, planType: "family"     },
+  BROWNIE59:  { type: "absolute", value: 5900,  label: "$59 Browniesaadi (Individual)",  creatorOnly: true, planType: "individual" },
+  BROWNIE119: { type: "absolute", value: 11900, label: "$119 Browniesaadi (Family)",     creatorOnly: true, planType: "family"     },
   // Free-access codes are NOT hardcoded here. Configure them via two env vars:
   //   FREE_ACCESS_CODE=YOURCODE          (the promo code string — treated as absolute $0)
   //   FREE_ACCESS_PLAN=complete|family   (the plan to grant; defaults to "complete")

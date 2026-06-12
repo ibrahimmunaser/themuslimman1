@@ -135,6 +135,38 @@ export const CREATOR_PROMO_CODES: Record<string, CreatorPromoConfig> = {
     utm_campaign: "seerah_launch",
     utm_content: "deenresponds",
   },
+  BROWNIE: {
+    code: "BROWNIE",
+    discountPercent: 25.316,
+    displayLabel: "BROWNIE — Browniesaadi exclusive pricing",
+    creator: "browniesaadi",
+    utm_source: "youtube",
+    utm_medium: "influencer",
+    utm_campaign: "seerah_launch",
+    utm_content: "browniesaadi",
+  },
+  BROWNIE59: {
+    code: "BROWNIE59",
+    // Same as DEEN59: $79 − $20 = $59
+    discountPercent: 25.316,
+    displayLabel: "Browniesaadi pricing — Individual Lifetime",
+    creator: "browniesaadi",
+    utm_source: "youtube",
+    utm_medium: "influencer",
+    utm_campaign: "seerah_launch",
+    utm_content: "browniesaadi",
+  },
+  BROWNIE119: {
+    code: "BROWNIE119",
+    // Same as DEEN119: $149 − $30 = $119
+    discountPercent: 20.134,
+    displayLabel: "Browniesaadi pricing — Family Lifetime",
+    creator: "browniesaadi",
+    utm_source: "youtube",
+    utm_medium: "influencer",
+    utm_campaign: "seerah_launch",
+    utm_content: "browniesaadi",
+  },
 };
 
 /** localStorage key used to persist the active creator promo across pages. */

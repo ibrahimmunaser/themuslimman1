@@ -18,6 +18,8 @@ interface R2VideoPlayerProps {
   autoplay?: boolean;
   /** If set, calls window.deenTrack(trackEvent) once when the user first clicks play */
   trackEvent?: string;
+  /** Tailwind aspect-ratio class. Defaults to "aspect-video" (16:9). Use "aspect-[9/16]" for portrait. */
+  aspectClass?: string;
 }
 
 export function R2VideoPlayer({
@@ -26,6 +28,7 @@ export function R2VideoPlayer({
   label,
   autoplay = false,
   trackEvent,
+  aspectClass = "aspect-video",
 }: R2VideoPlayerProps) {
   const [playing, setPlaying]   = useState(false);
   const [muted, setMuted]       = useState(true);
@@ -86,7 +89,7 @@ export function R2VideoPlayer({
       return (
         <div
           ref={containerRef}
-          className="relative w-full aspect-video rounded-2xl overflow-hidden border border-zinc-700/40 shadow-2xl shadow-black/60 bg-zinc-900 flex flex-col items-center justify-center gap-4"
+          className={`relative w-full ${aspectClass} rounded-2xl overflow-hidden border border-zinc-700/40 shadow-2xl shadow-black/60 bg-zinc-900 flex flex-col items-center justify-center gap-4`}
         >
           <p className="text-sm text-zinc-400">Video failed to load.</p>
           <button
@@ -103,7 +106,7 @@ export function R2VideoPlayer({
     return (
       <div
         ref={containerRef}
-        className="relative w-full aspect-video rounded-2xl overflow-hidden border border-zinc-700/40 shadow-2xl shadow-black/60 bg-zinc-900"
+        className={`relative w-full ${aspectClass} rounded-2xl overflow-hidden border border-zinc-700/40 shadow-2xl shadow-black/60 bg-zinc-900`}
       >
         <video
           key={retryKey}
@@ -146,7 +149,7 @@ export function R2VideoPlayer({
     <button
       ref={containerRef}
       onClick={() => { setPlaying(true); if (trackEvent) window.deenTrack?.(trackEvent); }}
-      className="group relative w-full aspect-video rounded-2xl overflow-hidden border border-zinc-700/40 shadow-2xl shadow-black/60 cursor-pointer bg-zinc-950"
+      className={`group relative w-full ${aspectClass} rounded-2xl overflow-hidden border border-zinc-700/40 shadow-2xl shadow-black/60 cursor-pointer bg-zinc-950`}
       aria-label={`Play: ${title}`}
     >
       <div

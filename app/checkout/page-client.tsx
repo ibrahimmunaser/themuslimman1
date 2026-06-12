@@ -179,21 +179,23 @@ function CheckoutForm({
           Hidden for monthly (card-only subscriptions) and trial (SetupIntent flow) */}
       {billing !== "monthly" && billing !== "trial" && (
         <>
-          <div className={showExpressCheckout ? "block" : "hidden"}>
-            <ExpressCheckoutElement
-              onConfirm={handleExpressConfirm}
-              onReady={({ availablePaymentMethods }) => {
-                if (availablePaymentMethods && Object.keys(availablePaymentMethods).length > 0) {
-                  setShowExpressCheckout(true);
-                }
-              }}
-              options={{
-                buttonType: { applePay: "buy", googlePay: "buy" },
-                buttonTheme: { applePay: "black", googlePay: "black" },
-                layout: { maxColumns: 1, maxRows: 5, overflow: "auto" },
-              }}
-            />
-          </div>
+          {/* Container must never be display:none — hiding before mount prevents
+              Google Pay / Apple Pay from initializing. Stripe requires the element
+              to be in a visible container so it can detect wallet availability.
+              The divider is shown separately once onReady confirms a button exists. */}
+          <ExpressCheckoutElement
+            onConfirm={handleExpressConfirm}
+            onReady={({ availablePaymentMethods }) => {
+              if (availablePaymentMethods && Object.keys(availablePaymentMethods).length > 0) {
+                setShowExpressCheckout(true);
+              }
+            }}
+            options={{
+              buttonType: { applePay: "buy", googlePay: "buy" },
+              buttonTheme: { applePay: "black", googlePay: "black" },
+              layout: { maxColumns: 1, maxRows: 5, overflow: "auto" },
+            }}
+          />
           {showExpressCheckout && (
             <div className="flex items-center gap-3 text-xs text-zinc-500">
               <div className="flex-1 h-px bg-zinc-700/60" />

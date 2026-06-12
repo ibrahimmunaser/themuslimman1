@@ -43,7 +43,7 @@ export async function POST() {
   } catch (error) {
     console.error("[REACTIVATE-SUB] Error:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to reactivate subscription" },
+      { error: "Failed to reactivate subscription. Please try again or contact support." },
       { status: 500 }
     );
   }
