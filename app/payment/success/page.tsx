@@ -24,6 +24,7 @@ function PaymentSuccessPageContent() {
   const paymentIntent = searchParams.get("payment_intent");
   const sessionId = searchParams.get("session_id");
   const type = searchParams.get("type"); // "subscription" | "family" | "lifetime" | "family-lifetime" | null
+  const billing = searchParams.get("billing"); // "trial" | "monthly" | null
   const preview = searchParams.get("preview"); // dev-only: bypass payment verification
 
   async function resendVerification() {
@@ -195,6 +196,7 @@ function PaymentSuccessPageContent() {
   const isFamily             = successType === "family";              // family lifetime (legacy)
   const isFamilyLifetime     = successType === "family-lifetime";     // family lifetime (new)
   const isFamilyAny          = isFamily || isFamilySubscription || isFamilyLifetime;
+  const isTrial              = billing === "trial";
 
   const needsVerification = emailVerified === false;
 
@@ -211,7 +213,7 @@ function PaymentSuccessPageContent() {
             <div className="absolute inset-0 rounded-full bg-green-500/20 animate-ping" />
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold mb-3">
-            {isSubscription || isFamilySubscription ? "Subscription Active!" : "Payment Successful!"}
+            {isTrial ? "Free Trial Active!" : isSubscription || isFamilySubscription ? "Subscription Active!" : "Payment Successful!"}
           </h1>
           <p className="text-lg text-text-secondary">
             {isFamilyAny ? "Welcome to Family Access" : "Welcome to Complete Seerah"}
@@ -282,13 +284,15 @@ function PaymentSuccessPageContent() {
                 </div>
               </>
             ) : isSubscription ? (
-              // Individual monthly
+              // Individual monthly or trial
               <>
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-gold/10 border border-gold/25 flex items-center justify-center flex-shrink-0">
                     <Check className="w-4 h-4 text-gold" />
                   </div>
-                  <p className="text-text-secondary">Monthly subscription activated</p>
+                  <p className="text-text-secondary">
+                    {isTrial ? "7-day free trial activated — no charge today" : "Monthly subscription activated"}
+                  </p>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-gold/10 border border-gold/25 flex items-center justify-center flex-shrink-0">

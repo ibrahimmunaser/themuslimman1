@@ -1,11 +1,20 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getUserAccessInfo, getActiveSubscription } from "@/lib/access";
 import { PLANS } from "@/lib/stripe-config";
+import { checkRateLimit, getIP } from "@/lib/rate-limit";
 
-export async function POST() {
+export async function POST(request: NextRequest) {
+  const ip = getIP(request);
+  const rl = checkRateLimit(`create-sub-intent:${ip}`, 10, 10 * 60 * 1000);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSeconds) } }
+    );
+  }
   // Support both old and new env var names for the individual monthly price.
   const MONTHLY_PRICE_ID =
     process.env.STRIPE_PRICE_INDIVIDUAL_MONTHLY ?? process.env.STRIPE_MONTHLY_PRICE_ID;

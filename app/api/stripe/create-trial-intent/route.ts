@@ -7,6 +7,7 @@ import { getUserAccessInfo } from "@/lib/access";
 import { PLANS } from "@/lib/stripe-config";
 import { nanoid } from "nanoid";
 import { hashToken } from "@/lib/hash-token";
+import { checkRateLimit, getIP } from "@/lib/rate-limit";
 
 const INDIVIDUAL_MONTHLY_PRICE_ID =
   process.env.STRIPE_PRICE_INDIVIDUAL_MONTHLY ??
@@ -37,6 +38,15 @@ const FAMILY_MONTHLY_PRICE_ID =
  * gates dashboard access.
  */
 export async function POST(request: NextRequest) {
+  const ip = getIP(request);
+  const rl = checkRateLimit(`create-trial-intent:${ip}`, 10, 10 * 60 * 1000);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSeconds) } }
+    );
+  }
+
   try {
     const user = await getCurrentUser();
     if (!user) {
@@ -75,13 +85,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // One free trial per account — any prior subscription row blocks re-use.
-    const anyPriorSub = await prisma.subscription.findFirst({
+    // One free trial per account. Check for any prior subscription row,
+    // but allow recovery if the checkout was abandoned mid-flow (card never saved).
+    const priorSub = await prisma.subscription.findFirst({
       where: { userId: user.id },
-      select: { id: true },
+      select: { id: true, stripeSubscriptionId: true, status: true },
+      orderBy: { createdAt: "desc" },
     });
 
-    if (anyPriorSub) {
+    if (priorSub) {
+      // Attempt to recover an abandoned trial checkout: if the Stripe subscription
+      // still has a pending_setup_intent awaiting a card, return its client secret
+      // so the user can complete checkout without burning their trial entitlement.
+      if (priorSub.stripeSubscriptionId && priorSub.status === "trialing") {
+        try {
+          const stripeSub = await stripe.subscriptions.retrieve(
+            priorSub.stripeSubscriptionId,
+            { expand: ["pending_setup_intent"] }
+          );
+          const psi = stripeSub.pending_setup_intent as Stripe.SetupIntent | null;
+          if (
+            psi?.client_secret &&
+            (psi.status === "requires_payment_method" || psi.status === "requires_confirmation")
+          ) {
+            console.log(
+              `[CREATE-TRIAL-INTENT] Resuming abandoned trial checkout for user ${user.id}`
+            );
+            return NextResponse.json({ clientSecret: psi.client_secret, isFreeTrialSetup: true });
+          }
+        } catch (err) {
+          console.warn("[CREATE-TRIAL-INTENT] Could not retrieve Stripe sub for recovery:", err);
+        }
+      }
+
       const isOnFamily = user.planType === "family";
       return NextResponse.json(
         {

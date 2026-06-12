@@ -52,36 +52,66 @@ export default async function LearnIndexPage({
   // sent straight to pricing rather than seeing a misleading "verify to unlock" wall.
   // For unverified users we skip the thumbnail/profile fetch — it would be wasted work.
   if (!user.emailVerified) {
-    const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
+    const [hasAccess, dbUser] = await Promise.all([
+      hasActiveCourseAccess(user.id, user.hasPaid),
+      prisma.user.findUnique({ where: { id: user.id }, select: { passwordHash: true } }),
+    ]);
     if (!hasAccess) redirect("/pricing");
 
-    // User has paid but not yet verified — show the verification wall.
-    // At this point hasPaid / hasAccess is always true, so the "payment confirmed"
-    // message is always shown and is always accurate.
+    const isGuestAccount = !dbUser?.passwordHash;
+
     return (
       <div className="flex-1 flex items-center justify-center px-4 py-16 min-h-[60vh]">
         <div className="max-w-md w-full text-center space-y-6">
           <div className="w-16 h-16 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center mx-auto">
             <Mail className="w-8 h-8 text-gold" />
           </div>
-          <div className="space-y-2">
-            <h1 className="text-2xl font-bold text-text">Verify your email to unlock access</h1>
-            <p className="text-text-secondary">
-              We sent a verification link to{" "}
-              <span className="font-semibold text-gold">{user.email}</span>.
-              Click the link in that email to unlock your course.
-            </p>
-            <p className="text-sm text-emerald-400 font-medium mt-3">
-              Your payment is confirmed and saved — your access will unlock the moment you verify.
-            </p>
-          </div>
-          <ResendVerificationButton />
-          <p className="text-xs text-text-muted">
-            Wrong email?{" "}
-            <a href="/contact" className="text-gold hover:text-gold/80 underline">
-              Contact support
-            </a>
-          </p>
+          {isGuestAccount ? (
+            <>
+              <div className="space-y-2">
+                <h1 className="text-2xl font-bold text-text">Check your email to get started</h1>
+                <p className="text-text-secondary">
+                  We sent a link to{" "}
+                  <span className="font-semibold text-gold">{user.email}</span>.
+                  Click it to set your password and unlock the course.
+                </p>
+                <p className="text-sm text-emerald-400 font-medium mt-3">
+                  Your access is confirmed and ready — the link takes you straight to the dashboard.
+                </p>
+              </div>
+              <p className="text-xs text-text-muted">
+                Link not arriving?{" "}
+                <a href="/forgot-password" className="text-gold hover:text-gold/80 underline">
+                  Request a new one
+                </a>
+                {" · "}
+                <a href="/contact" className="text-gold hover:text-gold/80 underline">
+                  Contact support
+                </a>
+              </p>
+            </>
+          ) : (
+            <>
+              <div className="space-y-2">
+                <h1 className="text-2xl font-bold text-text">Verify your email to unlock access</h1>
+                <p className="text-text-secondary">
+                  We sent a verification link to{" "}
+                  <span className="font-semibold text-gold">{user.email}</span>.
+                  Click the link in that email to unlock your course.
+                </p>
+                <p className="text-sm text-emerald-400 font-medium mt-3">
+                  Your payment is confirmed and saved — your access will unlock the moment you verify.
+                </p>
+              </div>
+              <ResendVerificationButton />
+              <p className="text-xs text-text-muted">
+                Wrong email?{" "}
+                <a href="/contact" className="text-gold hover:text-gold/80 underline">
+                  Contact support
+                </a>
+              </p>
+            </>
+          )}
         </div>
       </div>
     );

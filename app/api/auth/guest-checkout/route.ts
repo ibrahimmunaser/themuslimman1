@@ -11,7 +11,7 @@ const COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 
 const GuestCheckoutSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
-  fullName: z.string().min(2, "Name must be at least 2 characters").max(100),
+  fullName: z.string().trim().min(2, "Name must be at least 2 characters").max(100),
 });
 
 async function createInlineSession(userId: string, role: string) {

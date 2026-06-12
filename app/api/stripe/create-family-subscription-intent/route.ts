@@ -1,16 +1,25 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { PLANS } from "@/lib/stripe-config";
 import { getUserAccessInfo, getActiveSubscription, FAMILY_PROFILE_LIMIT } from "@/lib/access";
+import { checkRateLimit, getIP } from "@/lib/rate-limit";
 
 // Source of truth: STRIPE_FAMILY_MONTHLY_PRICE_ID env var.
 // Must start with "price_" — fail loudly at request time if misconfigured.
 const FAMILY_MONTHLY_PRICE_ID = process.env.STRIPE_FAMILY_MONTHLY_PRICE_ID ?? "";
 const FAMILY_MONTHLY_PLAN = PLANS.familyMonthly;
 
-export async function POST() {
+export async function POST(request: NextRequest) {
+  const ip = getIP(request);
+  const rl = checkRateLimit(`create-family-sub-intent:${ip}`, 10, 10 * 60 * 1000);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSeconds) } }
+    );
+  }
   try {
     const user = await getCurrentUser();
     if (!user) {
