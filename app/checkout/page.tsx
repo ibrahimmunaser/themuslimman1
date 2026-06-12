@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getCurrentUser } from "@/lib/auth";
+import { getCachedCurrentUser } from "@/lib/auth-cache";
 import { getUserAccessInfo } from "@/lib/access";
 import CheckoutClientPage from "./page-client";
 import { stripe } from "@/lib/stripe";
@@ -22,7 +22,7 @@ interface Props {
 }
 
 export default async function CheckoutPage({ searchParams }: Props) {
-  const [user, params] = await Promise.all([getCurrentUser(), searchParams]);
+  const [user, params] = await Promise.all([getCachedCurrentUser(), searchParams]);
 
   // ── Resolve plan from URL param ────────────────────────────────────────────
   const rawPlan = (params.plan ?? "").toLowerCase().trim();

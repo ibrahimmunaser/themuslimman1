@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db";
 import { requireStudent } from "@/lib/auth";
 import { setActiveProfileCookie } from "@/lib/auth";
 import { getProfileLimit } from "@/lib/access";
+import { getCachedStudent } from "@/lib/auth-cache";
 
 const PROFILE_COOKIE = "seerah_profile";
 
@@ -85,7 +86,7 @@ async function createDefaultProfileForUser(userId: string): Promise<string> {
 
 /** Returns all learner profiles for the current user. */
 export async function getProfiles() {
-  const user = await requireStudent();
+  const user = await getCachedStudent();
 
   const profiles = await prisma.learnerProfile.findMany({
     where: { userId: user.id },
@@ -107,7 +108,7 @@ export async function getProfiles() {
 
 /** Returns a summary of progress for each learner profile (for parent dashboard). */
 export async function getProfilesWithProgress() {
-  const user = await requireStudent();
+  const user = await getCachedStudent();
 
   const profiles = await prisma.learnerProfile.findMany({
     where: { userId: user.id },
@@ -374,7 +375,7 @@ export async function setDefaultProfile(profileId: string) {
  * Safe to call multiple times — idempotent.
  */
 export async function ensureFamilyProfiles() {
-  const user = await requireStudent();
+  const user = await getCachedStudent();
 
   const [existing, hasDefault] = await Promise.all([
     prisma.learnerProfile.findMany({

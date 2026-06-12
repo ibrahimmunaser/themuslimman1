@@ -12,6 +12,19 @@ import { AnimatedProgressBar } from "@/components/motion";
 /** QuizQuestion without correct_answer — used client-side only */
 type SafeQuizQuestion = Omit<QuizQuestion, "correct_answer">;
 
+/**
+ * Lightweight snapshot of an in-progress quiz.
+ * Stored in PartTabs parent so the state survives tab switches without keeping
+ * the heavy QuizViewer mounted in a hidden DOM node.
+ * Does NOT include the "done" (score screen) state — a completed quiz always
+ * restarts fresh so we never re-submit answers to the server.
+ */
+export interface QuizDraft {
+  current: number;
+  results: QuestionResult[];
+  currentFeedback: CurrentFeedback | null;
+}
+
 interface QuizViewerProps {
   quiz: Quiz;
   partNumber?: number;
@@ -19,6 +32,10 @@ interface QuizViewerProps {
   previewMode?: boolean;
   /** Previously recorded best score — used to ensure the progress event never lowers the displayed score */
   initialBestScore?: number;
+  /** In-progress state saved from the previous mount (if the user switched tabs mid-quiz). */
+  draft?: QuizDraft | null;
+  /** Called whenever the in-progress state changes. Pass null when the quiz finishes or resets. */
+  onDraftChange?: (draft: QuizDraft | null) => void;
 }
 
 type AnswerState = "unanswered" | "correct" | "wrong";
@@ -314,7 +331,7 @@ function ScoreScreen({
 type QuizPhase = "loading" | "error" | "ready";
 type CurrentFeedback = { correctAnswer: string; explanation: string; correct: boolean; chosen: string };
 
-export function QuizViewer({ quiz, partNumber, previewMode, initialBestScore }: QuizViewerProps) {
+export function QuizViewer({ quiz, partNumber, previewMode, initialBestScore, draft, onDraftChange }: QuizViewerProps) {
   // Strip correct_answer — it must never be used from the RSC payload.
   // The answer map is fetched separately once via getQuizAnswerMap.
   const safeQuestions: SafeQuizQuestion[] = quiz.questions.map(
@@ -345,9 +362,12 @@ export function QuizViewer({ quiz, partNumber, previewMode, initialBestScore }: 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const [current, setCurrent] = useState(0);
-  const [results, setResults] = useState<QuestionResult[]>([]);
-  const [currentFeedback, setCurrentFeedback] = useState<CurrentFeedback | null>(null);
+  // Restore in-progress state from parent-held draft (survives tab switches).
+  // Never restore a "done" state — completed quizzes always restart fresh so
+  // we don't re-submit answers to the server on remount.
+  const [current, setCurrent] = useState(draft?.current ?? 0);
+  const [results, setResults] = useState<QuestionResult[]>(draft?.results ?? []);
+  const [currentFeedback, setCurrentFeedback] = useState<CurrentFeedback | null>(draft?.currentFeedback ?? null);
   const [done, setDone] = useState(false);
 
   // ── Instant answer resolution from pre-fetched map ────────────────────────
@@ -356,12 +376,15 @@ export function QuizViewer({ quiz, partNumber, previewMode, initialBestScore }: 
     const entry = answerMap[question.id];
     if (!entry) return; // map not ready (shouldn't happen — button is disabled in loading phase)
 
-    setCurrentFeedback({
+    const feedback: CurrentFeedback = {
       chosen,
       correctAnswer: entry.correctAnswer,
       explanation: entry.explanation,
       correct: chosen === entry.correctAnswer,
-    });
+    };
+    setCurrentFeedback(feedback);
+    // Persist draft so the answered state survives a tab switch
+    onDraftChange?.({ current, results, currentFeedback: feedback });
   };
 
   const handleNext = () => {
@@ -378,9 +401,13 @@ export function QuizViewer({ quiz, partNumber, previewMode, initialBestScore }: 
     if (current + 1 >= safeQuestions.length) {
       setResults(updated);
       setDone(true);
+      // Quiz complete — clear draft so score is not re-submitted on remount
+      onDraftChange?.(null);
     } else {
+      const next = current + 1;
       setResults(updated);
-      setCurrent((c) => c + 1);
+      setCurrent(next);
+      onDraftChange?.({ current: next, results: updated, currentFeedback: null });
     }
   };
 
@@ -389,6 +416,7 @@ export function QuizViewer({ quiz, partNumber, previewMode, initialBestScore }: 
     setResults([]);
     setCurrentFeedback(null);
     setDone(false);
+    onDraftChange?.(null);
   };
 
   // ── Loading / error states ─────────────────────────────────────────────────

@@ -5,7 +5,6 @@ import Link from "next/link";
 import { BookOpen, Clock, Layers, ClipboardCheck } from "lucide-react";
 import { trackBriefingOpened, trackAssetOpened } from "@/app/actions/progress";
 import { formatSeerahContent } from "@/lib/text-formatter";
-import { PART_CONTENT } from "@/lib/part-content-data";
 import { PARTS } from "@/lib/content";
 import { ERA_MAP } from "@/lib/types";
 
@@ -50,11 +49,7 @@ export function TextViewer({
   hasQuiz,
   onSwitchToQuiz,
 }: TextViewerProps) {
-  const preRendered =
-    partNumber && assetId === "briefing"
-      ? (PART_CONTENT[partNumber]?.briefingHtml ?? null)
-      : null;
-  const html = preRendered ?? formatSeerahContent(content);
+  const html = formatSeerahContent(content);
   const meta = assetId ? ASSET_META[assetId] : undefined;
   const readTime = estimateReadTime(html);
 

@@ -26,7 +26,7 @@ import { TextViewer } from "./text-viewer";
 import { FactsViewer } from "./facts-viewer";
 import { LazyMindmapViewer } from "./lazy-mindmap-viewer";
 import { SlidesViewer } from "./slides-viewer";
-import { QuizViewer } from "./quiz-viewer";
+import { QuizViewer, type QuizDraft } from "./quiz-viewer";
 import { FlashcardsViewer } from "./flashcards-viewer";
 import type { Part } from "@/lib/types";
 import { trackAssetOpened } from "@/app/actions/progress";
@@ -350,7 +350,7 @@ export function SlidesPanel({ part, previewMode }: { part: Part; previewMode?: b
 
 import { fetchPartAssets, type PartAssets as PartAssetUrls } from "@/lib/part-asset-cache";
 
-function SubTabContent({ id, part, previewMode, assetUrls, onSwitchMode, videoCompleted, initialVideoPercent, initialQuizBestScore }: {
+function SubTabContent({ id, part, previewMode, assetUrls, onSwitchMode, videoCompleted, initialVideoPercent, initialQuizBestScore, quizDraft, onQuizDraftChange }: {
   id: SubTabId;
   part: Part;
   previewMode?: boolean;
@@ -359,6 +359,8 @@ function SubTabContent({ id, part, previewMode, assetUrls, onSwitchMode, videoCo
   videoCompleted?: boolean;
   initialVideoPercent?: number;
   initialQuizBestScore?: number;
+  quizDraft?: QuizDraft | null;
+  onQuizDraftChange?: (draft: QuizDraft | null) => void;
 }) {
   const wrap = (child: React.ReactNode) => (
     <div className="rounded-xl bg-surface/60 p-4 sm:p-6">{child}</div>
@@ -414,7 +416,16 @@ function SubTabContent({ id, part, previewMode, assetUrls, onSwitchMode, videoCo
     case "flashcards":
       return wrap(part.assets.flashcards ? <FlashcardsViewer flashcards={part.assets.flashcards} partNumber={part.partNumber} previewMode={previewMode} /> : <EmptyContent label="Flashcards" />);
     case "quiz":
-      return wrap(part.assets.quiz ? <QuizViewer quiz={part.assets.quiz} partNumber={part.partNumber} previewMode={previewMode} initialBestScore={initialQuizBestScore} /> : <EmptyContent label="Quiz" />);
+      return wrap(part.assets.quiz
+        ? <QuizViewer
+            quiz={part.assets.quiz}
+            partNumber={part.partNumber}
+            previewMode={previewMode}
+            initialBestScore={initialQuizBestScore}
+            draft={quizDraft}
+            onDraftChange={onQuizDraftChange}
+          />
+        : <EmptyContent label="Quiz" />);
     case "slides":      return <SlidesPanel part={part} previewMode={previewMode} />;
     case "mindmap":     return <LazyMindmapViewer partNumber={part.partNumber} title={`Part ${part.partNumber} — Mindmap`} previewMode={previewMode} mindmapUrl={assetUrls.mindmapUrl} />;
     case "infographic": return <InfographicPanel part={part} previewMode={previewMode} />;
@@ -589,17 +600,21 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
   }, [part.partNumber, initialAssetUrls]);
 
 
-  // Track which panels have been rendered at least once — never unmount after first visit
-  const [renderedPanels, setRenderedPanels] = useState<Set<string>>(
-    () => new Set([`${resolvedInitialMode}::${getModeSubTabs(MODES.find((m) => m.id === resolvedInitialMode)!, part)[0]?.id ?? MODES.find((m) => m.id === resolvedInitialMode)!.subTabs[0].id}`])
-  );
+  // Keep the video panel mounted once visited so the player state (seek position,
+  // buffered data) is preserved when the user switches to Read and back.
+  // All other panels unmount when not active to avoid mounting hidden heavy components.
+  const [videoMounted, setVideoMounted] = useState(resolvedInitialMode === "watch");
+
+  // Quiz in-progress state — held here so it survives the QuizViewer unmounting
+  // when the user switches away from the Quiz tab. Never stores the "done" state.
+  const [quizDraft, setQuizDraft] = useState<QuizDraft | null>(null);
 
   const handleModeChange = useCallback((modeId: ModeId) => {
     setActiveMode(modeId);
     const newSubTabs = getModeSubTabs(MODES.find((m) => m.id === modeId)!, part);
     const newSubTabId = newSubTabs[0]?.id ?? MODES.find((m) => m.id === modeId)!.subTabs[0].id;
     setActiveSubTab(newSubTabId as SubTabId);
-    setRenderedPanels((prev) => new Set([...prev, `${modeId}::${newSubTabId}`]));
+    if (modeId === "watch") setVideoMounted(true);
     // Persist in URL without full navigation
     const params = new URLSearchParams(searchParams.toString());
     params.set("mode", modeId);
@@ -608,14 +623,13 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
 
   const handleSubTabChange = (tabId: SubTabId) => {
     setActiveSubTab(tabId);
-    setRenderedPanels((prev) => new Set([...prev, `${activeMode}::${tabId}`]));
+    if (tabId === "video") setVideoMounted(true);
   };
 
 
   const currentSubTab = subTabs.find((t) => t.id === activeSubTab)?.id ?? subTabs[0]?.id;
 
-  // All panels that should ever be rendered (visited at least once)
-  const allPanels = [...renderedPanels];
+  const isVideoActive = activeMode === "watch" && currentSubTab === "video";
 
   return (
     <div className="space-y-5">
@@ -712,28 +726,44 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
             </div>
           )}
 
-          {/* Content — panels stay mounted after first visit, hidden via CSS */}
+          {/* Content rendering:
+              - Video panel: kept mounted once visited so the player state (seek position,
+                buffered data) is preserved when the user switches tabs and returns.
+              - All other panels: rendered only when active. Quiz in-progress state will
+                reset on tab switch (best score from DB is preserved via initialQuizBestScore). */}
           <div className="pt-0.5">
-            {allPanels.map((panelKey) => {
-              const [modeId, subTabId] = panelKey.split("::");
-              const isVisible = activeMode === modeId && currentSubTab === subTabId;
-              return (
-                <div
-                  key={panelKey}
-                  className={isVisible ? "animate-in fade-in-0 duration-200" : "hidden"}
-                >
-                  <SubTabContent
-                    id={subTabId as SubTabId}
-                    part={part}
-                    previewMode={previewMode}
-                    assetUrls={assetUrls}
-                    onSwitchMode={handleModeChange}
-                    initialVideoPercent={initialVideoPercent}
-                    initialQuizBestScore={initialQuizBestScore}
-                  />
-                </div>
-              );
-            })}
+            {/* Video panel — stays in DOM once visited */}
+            {videoMounted && (
+              <div className={isVideoActive ? "animate-in fade-in-0 duration-200" : "hidden"}>
+                <SubTabContent
+                  id="video"
+                  part={part}
+                  previewMode={previewMode}
+                  assetUrls={assetUrls}
+                  onSwitchMode={handleModeChange}
+                  initialVideoPercent={initialVideoPercent}
+                  initialQuizBestScore={initialQuizBestScore}
+                  quizDraft={quizDraft}
+                  onQuizDraftChange={setQuizDraft}
+                />
+              </div>
+            )}
+            {/* Active non-video panel — rendered only when active */}
+            {!isVideoActive && currentSubTab && (
+              <div className="animate-in fade-in-0 duration-200">
+                <SubTabContent
+                  id={currentSubTab}
+                  part={part}
+                  previewMode={previewMode}
+                  assetUrls={assetUrls}
+                  onSwitchMode={handleModeChange}
+                  initialVideoPercent={initialVideoPercent}
+                  initialQuizBestScore={initialQuizBestScore}
+                  quizDraft={quizDraft}
+                  onQuizDraftChange={setQuizDraft}
+                />
+              </div>
+            )}
           </div>
 
         </div>

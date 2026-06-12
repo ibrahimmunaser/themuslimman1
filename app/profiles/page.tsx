@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { requireStudent } from "@/lib/auth";
+import { getCachedStudent } from "@/lib/auth-cache";
 import { getProfiles, ensureFamilyProfiles } from "@/app/actions/profiles";
 import { isFamilyPlan, getProfileLimit, hasActiveCourseAccess } from "@/lib/access";
 import { ProfilePickerClient } from "@/components/profiles/profile-picker-client";
@@ -12,7 +12,7 @@ interface Props {
 }
 
 export default async function ProfilePickerPage({ searchParams }: Props) {
-  const user = await requireStudent();
+  const user = await getCachedStudent();
   if (!user.studentProfileId) redirect("/");
 
   const { preview } = await searchParams;

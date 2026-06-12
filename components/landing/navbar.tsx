@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { getCurrentUser } from "@/lib/auth";
+import { getCachedCurrentUser } from "@/lib/auth-cache";
 import { NavbarUserMenu } from "./navbar-user-menu";
 import { NavbarMobileMenu } from "./navbar-mobile-menu";
 import { NavLinks } from "./nav-links";
@@ -10,7 +10,7 @@ export async function Navbar() {
   let firstName = null;
   
   try {
-    user = await getCurrentUser();
+    user = await getCachedCurrentUser();
     firstName = user ? user.fullName.split(" ")[0] : null;
   } catch (error) {
     if ((error as { digest?: string })?.digest !== "DYNAMIC_SERVER_USAGE") {

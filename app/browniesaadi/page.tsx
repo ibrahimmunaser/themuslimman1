@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
@@ -264,7 +265,22 @@ export default async function BrowniesaadiPage() {
               Watch the full first lesson before you buy anything. No signup, no payment.
             </p>
           </div>
-          <Part1FullPreview hideCta />
+          <Suspense fallback={
+            <div className="rounded-2xl border border-border bg-surface overflow-hidden" style={{ minHeight: 480 }}>
+              <div className="h-14 bg-surface-raised border-b border-border flex items-center gap-2 px-4">
+                {[1,2,3,4].map((i) => (
+                  <div key={i} className="h-8 w-20 rounded-lg bg-surface animate-pulse" />
+                ))}
+              </div>
+              <div className="p-6 space-y-4">
+                <div className="h-5 bg-surface-raised rounded w-2/3 animate-pulse" />
+                <div className="h-4 bg-surface-raised rounded w-1/2 animate-pulse" />
+                <div className="mt-6 aspect-video bg-surface-raised rounded-xl animate-pulse" />
+              </div>
+            </div>
+          }>
+            <Part1FullPreview hideCta />
+          </Suspense>
         </div>
       </section>
 

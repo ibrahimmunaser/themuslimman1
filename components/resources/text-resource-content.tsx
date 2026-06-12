@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { PARTS } from "@/lib/content";
-import { PART_CONTENT } from "@/lib/part-content-data";
 import { ERA_MAP } from "@/lib/types";
+import { getPartBriefingHtml, getPartStatementOfFactsText } from "@/app/actions/part-text-content";
 import { eraGradient } from "./era-gradient";
 import { ResourcePageClient } from "./resource-page-client";
 import { FileText, CheckCircle2, BookOpen, GraduationCap, BarChart2, Clock, X, Lock } from "lucide-react";
@@ -50,6 +50,8 @@ export function TextResourceContent({
   const [selectedPart, setSelectedPart] = useState<{ partNumber: number; title: string; subtitle?: string } | null>(null);
   const [localProgressMap, setLocalProgressMap] = useState(progressMap);
   const [localReadCount, setLocalReadCount] = useState(completedCount);
+  // Content cache: loaded lazily on first open to avoid importing part-content-data in the client bundle
+  const [contentCache, setContentCache] = useState<Record<number, { html: string | null; factsText: string | null; loaded: boolean }>>({});
 
   // Lock body scroll when modal is open
   useEffect(() => {
@@ -87,6 +89,23 @@ export function TextResourceContent({
   const handleOpenContent = (part: (typeof PARTS)[0]) => {
     setSelectedPart({ partNumber: part.partNumber, title: part.title, subtitle: part.subtitle });
 
+    // Lazily fetch content if not already cached
+    if (!contentCache[part.partNumber]?.loaded) {
+      if (resourceType === "briefing") {
+        getPartBriefingHtml(part.partNumber).then((html) => {
+          setContentCache((prev) => ({ ...prev, [part.partNumber]: { ...prev[part.partNumber], html, factsText: null, loaded: true } }));
+        }).catch(() => {
+          setContentCache((prev) => ({ ...prev, [part.partNumber]: { html: null, factsText: null, loaded: true } }));
+        });
+      } else if (resourceType === "statement-of-facts") {
+        getPartStatementOfFactsText(part.partNumber).then((factsText) => {
+          setContentCache((prev) => ({ ...prev, [part.partNumber]: { ...prev[part.partNumber], html: null, factsText, loaded: true } }));
+        }).catch(() => {
+          setContentCache((prev) => ({ ...prev, [part.partNumber]: { html: null, factsText: null, loaded: true } }));
+        });
+      }
+    }
+
     const wasAlreadyRead = localProgressMap[part.partNumber];
     if (!wasAlreadyRead) {
       setLocalProgressMap(prev => ({ ...prev, [part.partNumber]: true }));
@@ -100,17 +119,16 @@ export function TextResourceContent({
 
   const handleClose = () => setSelectedPart(null);
 
-  // Resolve content from hardcoded data (same source as lesson pages)
-  const getHtml = (partNumber: number): string | null => {
-    const data = PART_CONTENT[partNumber];
-    if (!data) return null;
-    if (resourceType === "briefing") return data.briefingHtml ?? null;
-    return null;
+  const getCachedHtml = (partNumber: number): string | null => {
+    return contentCache[partNumber]?.html ?? null;
   };
 
-  const getFactsText = (partNumber: number): string | null => {
-    const data = PART_CONTENT[partNumber];
-    return data?.statementOfFactsText ?? null;
+  const getCachedFactsText = (partNumber: number): string | null => {
+    return contentCache[partNumber]?.factsText ?? null;
+  };
+
+  const isContentLoaded = (partNumber: number): boolean => {
+    return contentCache[partNumber]?.loaded === true;
   };
 
   return (
@@ -180,11 +198,16 @@ export function TextResourceContent({
 
             {/* Modal Content */}
             <div className="flex-1 overflow-y-auto overscroll-contain">
-              {resourceType === "statement-of-facts" ? (
+              {!isContentLoaded(selectedPart.partNumber) ? (
+                /* Loading state while content is fetched from server */
+                <div className="flex items-center justify-center py-16">
+                  <div className="w-6 h-6 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
+                </div>
+              ) : resourceType === "statement-of-facts" ? (
                 /* ── Facts — same rendering as FactsViewer in lessons ── */
                 <div className="p-6">
                   {(() => {
-                    const text = getFactsText(selectedPart.partNumber);
+                    const text = getCachedFactsText(selectedPart.partNumber);
                     if (!text) return <p className="text-text-muted text-sm">No facts available.</p>;
                     const facts = text.split("\n").map(l => l.trim()).filter(Boolean);
                     return (
@@ -211,7 +234,7 @@ export function TextResourceContent({
                     <div
                       className="formatted-text"
                       dangerouslySetInnerHTML={{
-                        __html: getHtml(selectedPart.partNumber) ?? "<p class='seerah-p text-text-muted'>Content not available.</p>",
+                        __html: getCachedHtml(selectedPart.partNumber) ?? "<p class='seerah-p text-text-muted'>Content not available.</p>",
                       }}
                     />
                   </div>
