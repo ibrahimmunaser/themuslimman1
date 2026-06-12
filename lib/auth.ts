@@ -257,7 +257,7 @@ export async function login(
 
   if (!user.passwordHash) {
     await bcrypt.compare(password, "$2a$12$dummyhashfortimingequalityXXXXXXXXXXXXXXX");
-    return { success: false, error: "Please set up your password first" };
+    return { success: false, error: "Check your email for a link to set your password and access your account." };
   }
 
   const valid = await bcrypt.compare(password, user.passwordHash);
