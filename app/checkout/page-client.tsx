@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
 import { loadStripe } from "@stripe/stripe-js";
+import type { StripeExpressCheckoutElementConfirmEvent } from "@stripe/stripe-js";
 import {
   Elements,
   ExpressCheckoutElement,
@@ -122,7 +123,7 @@ function CheckoutForm({
   };
 
   // Called by Apple Pay / Google Pay / Samsung Pay / Link after wallet auth
-  const handleExpressConfirm = async (event: { paymentFailed: (opts: { reason: string }) => void }) => {
+  const handleExpressConfirm = async (event: StripeExpressCheckoutElementConfirmEvent) => {
     if (!stripe || !elements || processing) return;
     setProcessing(true);
     setError(null);
