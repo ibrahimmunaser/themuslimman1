@@ -126,8 +126,10 @@ export async function POST(request: NextRequest) {
       amount: planConfig.trialFeeAmount,
       currency: "usd",
       customer: customerId,
-      automatic_payment_methods: { enabled: true },
-      setup_future_usage: "off_session", // save payment method for future subscription charges
+      // Only allow payment methods that can be saved off-session for future subscription charges.
+      // Cash App Pay cannot be saved off-session — excluding it prevents a broken trial flow.
+      payment_method_types: ["card", "link"],
+      setup_future_usage: "off_session",
       metadata: {
         type: "trial_fee",
         userId: user.id,

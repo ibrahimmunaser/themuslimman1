@@ -84,7 +84,7 @@ function CheckoutForm({
   // Called by the card form submit button
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!stripe || !elements) return;
+    if (!stripe || !elements || processing) return;
     setProcessing(true);
     setError(null);
 
@@ -96,36 +96,55 @@ function CheckoutForm({
     }
 
     try {
-      const { error: confirmError } = await stripe.confirmPayment({
+      const { error: confirmError, paymentIntent } = await stripe.confirmPayment({
         elements,
         confirmParams: { return_url: returnUrl },
+        // redirect: "if_required" so in-page success (no 3DS) is caught below
+        redirect: "if_required",
       });
 
       if (confirmError) {
         setError(confirmError.message ?? "Payment failed. Please try again.");
         setProcessing(false);
+      } else if (paymentIntent?.status === "succeeded") {
+        // Payment completed in-page (no redirect) — navigate manually
+        const url = new URL(returnUrl, window.location.origin);
+        url.searchParams.set("payment_intent", paymentIntent.id);
+        url.searchParams.set("payment_intent_client_secret", paymentIntent.client_secret ?? "");
+        url.searchParams.set("redirect_status", "succeeded");
+        window.location.href = url.toString();
       }
+      // If redirect happened, browser navigates away — no further action needed
     } catch {
       setError("Connection lost. Please check your internet and try again.");
       setProcessing(false);
     }
   };
 
-  // Called by Apple Pay / Google Pay / PayPal after the user authenticates
-  const handleExpressConfirm = async () => {
-    if (!stripe || !elements) return;
+  // Called by Apple Pay / Google Pay / Samsung Pay / Link after wallet auth
+  const handleExpressConfirm = async (event: { paymentFailed: (opts: { reason: string }) => void }) => {
+    if (!stripe || !elements || processing) return;
     setProcessing(true);
     setError(null);
     try {
-      const { error: confirmError } = await stripe.confirmPayment({
+      const { error: confirmError, paymentIntent } = await stripe.confirmPayment({
         elements,
         confirmParams: { return_url: returnUrl },
+        redirect: "if_required",
       });
       if (confirmError) {
+        event.paymentFailed({ reason: "fail" });
         setError(confirmError.message ?? "Payment failed. Please try again.");
         setProcessing(false);
+      } else if (paymentIntent?.status === "succeeded") {
+        const url = new URL(returnUrl, window.location.origin);
+        url.searchParams.set("payment_intent", paymentIntent.id);
+        url.searchParams.set("payment_intent_client_secret", paymentIntent.client_secret ?? "");
+        url.searchParams.set("redirect_status", "succeeded");
+        window.location.href = url.toString();
       }
     } catch {
+      event.paymentFailed({ reason: "fail" });
       setError("Connection lost. Please check your internet and try again.");
       setProcessing(false);
     }
@@ -140,34 +159,46 @@ function CheckoutForm({
 
   return (
     <div className="space-y-5">
-      {/* Express checkout: Apple Pay, Google Pay, Samsung Pay, Link — shown only when at least one is available */}
-      <div className={showExpressCheckout ? "block" : "hidden"}>
-        <ExpressCheckoutElement
-          onConfirm={handleExpressConfirm}
-          onReady={({ availablePaymentMethods }) => {
-            if (availablePaymentMethods && Object.keys(availablePaymentMethods).length > 0) {
-              setShowExpressCheckout(true);
-            }
-          }}
-          options={{
-            buttonType: { applePay: "buy", googlePay: "buy" },
-            buttonTheme: { applePay: "black", googlePay: "black" },
-            // maxRows: 5 so Samsung Pay can appear alongside others on supported devices
-            layout: { maxColumns: 1, maxRows: 5, overflow: "auto" },
-          }}
-        />
-      </div>
-      {showExpressCheckout && (
-        <div className="flex items-center gap-3 text-xs text-zinc-500">
-          <div className="flex-1 h-px bg-zinc-700/60" />
-          <span>or pay with card</span>
-          <div className="flex-1 h-px bg-zinc-700/60" />
-        </div>
+      {/* Express checkout: Apple Pay, Google Pay, Samsung Pay, Link
+          Hidden for monthly — server-side subscription PIs are card-only */}
+      {billing !== "monthly" && (
+        <>
+          <div className={showExpressCheckout ? "block" : "hidden"}>
+            <ExpressCheckoutElement
+              onConfirm={handleExpressConfirm}
+              onReady={({ availablePaymentMethods }) => {
+                if (availablePaymentMethods && Object.keys(availablePaymentMethods).length > 0) {
+                  setShowExpressCheckout(true);
+                }
+              }}
+              options={{
+                buttonType: { applePay: "buy", googlePay: "buy" },
+                buttonTheme: { applePay: "black", googlePay: "black" },
+                layout: { maxColumns: 1, maxRows: 5, overflow: "auto" },
+              }}
+            />
+          </div>
+          {showExpressCheckout && (
+            <div className="flex items-center gap-3 text-xs text-zinc-500">
+              <div className="flex-1 h-px bg-zinc-700/60" />
+              <span>or pay with card</span>
+              <div className="flex-1 h-px bg-zinc-700/60" />
+            </div>
+          )}
+        </>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Apple Pay, Google Pay, and Link appear above via ExpressCheckoutElement — suppress duplicates here */}
-        <PaymentElement options={{ wallets: { applePay: "never", googlePay: "never", link: "never" } }} />
+        {/* Apple Pay, Google Pay, Link appear above via ExpressCheckoutElement — suppress duplicates.
+            Cash App requires setup_future_usage=off_session to be absent; hide it on trial. */}
+        <PaymentElement
+          options={{
+            wallets: { applePay: "never", googlePay: "never", link: "never" },
+            ...(billing === "trial" || billing === "monthly"
+              ? { paymentMethodOrder: ["card"] }
+              : {}),
+          }}
+        />
         {error && (
           <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
             {error}

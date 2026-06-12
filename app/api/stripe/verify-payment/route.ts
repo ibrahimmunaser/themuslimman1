@@ -72,9 +72,20 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { userId, planId, planName } = paymentIntent.metadata;
+    const { userId, planId, planName, type: piType } = paymentIntent.metadata;
 
-    // ── 3. Metadata must contain a userId ────────────────────────────────────
+    // ── 3. Reject trial_fee and subscription PIs — those are handled by webhooks/polling
+    if (piType === "trial_fee" || piType === "subscription") {
+      console.warn(
+        `[VERIFY-PAYMENT] Intent ${paymentIntentId} has type "${piType}" — not a lifetime purchase; rejecting`
+      );
+      return NextResponse.json(
+        { error: "Invalid payment type for this endpoint" },
+        { status: 400 }
+      );
+    }
+
+    // ── 4. Metadata must contain a userId ────────────────────────────────────
     if (!userId) {
       console.error(
         `[VERIFY-PAYMENT] Intent ${paymentIntentId} has no userId in metadata`

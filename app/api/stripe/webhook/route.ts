@@ -234,11 +234,23 @@ async function handleTrialFeePayment(pi: Stripe.PaymentIntent) {
   const trialDaysNum = isNaN(parsedTrialDays) ? 7 : parsedTrialDays;
   const isFamily = planId === "familyTrial";
 
-  // Attach the payment method to the customer as default for future subscription charges
+  // Attach the payment method as default only if it supports off-session recurring charges.
+  // Card and Link are saveable; other methods (e.g. Cash App) are not and must not be set.
   if (pi.payment_method && customerId) {
-    await stripe.customers
-      .update(customerId, { invoice_settings: { default_payment_method: pi.payment_method as string } })
-      .catch((e) => console.warn("[WEBHOOK] handleTrialFeePayment: Could not set default PM:", e));
+    try {
+      const pm = await stripe.paymentMethods.retrieve(pi.payment_method as string);
+      if (pm.type === "card" || pm.type === "link") {
+        await stripe.customers.update(customerId, {
+          invoice_settings: { default_payment_method: pi.payment_method as string },
+        });
+      } else {
+        console.warn(
+          `[WEBHOOK] handleTrialFeePayment: PM type "${pm.type}" cannot be saved off-session — skipping default PM update`
+        );
+      }
+    } catch (e) {
+      console.warn("[WEBHOOK] handleTrialFeePayment: Could not set default PM:", e);
+    }
   }
 
   // If upgrading from an individual trial to a family trial, cancel the old
