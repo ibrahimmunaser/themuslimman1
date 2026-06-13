@@ -3,9 +3,9 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
 import {
-  BookOpen, Smartphone, Users,
-  ShieldCheck, Lock, Zap, CheckCircle2, Play,
-  GraduationCap, Infinity as InfinityIcon,
+  Smartphone, Users, ShieldCheck, Lock, Zap, CheckCircle2, Play,
+  Video, Monitor, LayoutGrid, FileText, ListChecks,
+  GitBranch, Layers, HelpCircle,
 } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { Footer } from "@/components/landing/footer";
@@ -40,14 +40,16 @@ const primaryBtn =
 const outlineBtn =
   "inline-flex items-center justify-center gap-2 rounded-xl border border-gold/40 text-gold font-semibold hover:bg-gold/5 transition-colors";
 
-// ── What's Included (6 clear items) ──────────────────────────────────────────
-const INCLUDED_ITEMS = [
-  { Icon: BookOpen,      label: "100-Part Seerah Course"      },
-  { Icon: GraduationCap, label: "Chronological Lessons"       },
-  { Icon: CheckCircle2,  label: "Student Dashboard"           },
-  { Icon: Smartphone,    label: "Mobile Friendly"             },
-  { Icon: Users,         label: "Individual & Family Access"  },
-  { Icon: InfinityIcon,  label: "Lifetime Access"             },
+// ── What You Get Inside ───────────────────────────────────────────────────────
+const WHAT_YOU_GET = [
+  { icon: <Video className="w-5 h-5" />,       stat: "100", label: "Videos",              desc: "Follow the Seerah step by step, in chronological order." },
+  { icon: <Monitor className="w-5 h-5" />,     stat: "300", label: "Presentations",       desc: "Visual slides that make every lesson easy to follow." },
+  { icon: <LayoutGrid className="w-5 h-5" />,  stat: "300", label: "Explanatory Images",  desc: "Infographics that show what words alone cannot fully explain." },
+  { icon: <FileText className="w-5 h-5" />,    stat: "100", label: "Briefing Documents",  desc: "Concise written summaries for every part of the Seerah." },
+  { icon: <ListChecks className="w-5 h-5" />,  stat: "100", label: "Statements of Fact",  desc: "Key facts distilled — clear, memorable, and verifiable." },
+  { icon: <GitBranch className="w-5 h-5" />,   stat: "100", label: "Mind Maps",           desc: "See how events, people, and themes connect at a glance." },
+  { icon: <Layers className="w-5 h-5" />,      stat: "100", label: "Flashcards",          desc: "Reinforce what you learned through active recall." },
+  { icon: <HelpCircle className="w-5 h-5" />,  stat: "100", label: "Quizzes",             desc: "Test what you actually retained after each part." },
 ];
 
 // ── FAQ ───────────────────────────────────────────────────────────────────────
@@ -289,29 +291,43 @@ export default async function DeenRespondsPage() {
         </div>
       </section>
 
-      {/* ── What's Included ──────────────────────────────────────────────── */}
+      {/* ── What You Get Inside ──────────────────────────────────────────── */}
       <section className="py-16 sm:py-20">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 text-center">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-3">What&apos;s Included</h2>
-          <p className="text-text-secondary text-sm mb-10">
-            Everything you need to learn the full Seerah — in one plan, at one price.
-          </p>
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl sm:text-3xl font-bold text-text mb-3">
+              What You Get Inside
+            </h2>
+            <p className="text-text-secondary max-w-xl mx-auto text-sm sm:text-base">
+              Every part of the Seerah comes with a full set of learning tools — not just a video.
+            </p>
+          </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-10">
-            {INCLUDED_ITEMS.map(({ Icon, label }) => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 mb-12">
+            {WHAT_YOU_GET.map((card) => (
               <div
-                key={label}
-                className="flex items-center gap-3 p-4 rounded-xl border border-border bg-surface hover:border-gold/30 transition-colors text-left"
+                key={card.label}
+                className="flex flex-col gap-3 p-4 sm:p-5 rounded-xl border border-border bg-surface hover:border-gold/25 hover:bg-surface-raised transition-colors"
               >
-                <Icon className="w-5 h-5 text-gold flex-shrink-0" />
-                <span className="text-sm font-medium text-text leading-tight">{label}</span>
+                <div className="w-9 h-9 rounded-lg bg-gold/10 border border-gold/15 flex items-center justify-center text-gold flex-shrink-0">
+                  {card.icon}
+                </div>
+                <div>
+                  <p className="text-2xl sm:text-3xl font-bold text-gold leading-none mb-1">
+                    {card.stat}
+                  </p>
+                  <p className="font-semibold text-text text-sm">{card.label}</p>
+                  <p className="text-xs text-text-muted mt-1 leading-relaxed">{card.desc}</p>
+                </div>
               </div>
             ))}
           </div>
 
-          <a href="#pricing" className={`${primaryBtn} px-8 py-4 text-base`}>
-            See Pricing Options
-          </a>
+          <div className="text-center">
+            <a href="#pricing" className={`${primaryBtn} px-8 py-4 text-base`}>
+              See Pricing Options
+            </a>
+          </div>
         </div>
       </section>
 
