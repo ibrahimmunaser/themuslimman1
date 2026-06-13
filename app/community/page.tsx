@@ -7,6 +7,7 @@ import {
   Video, Monitor, LayoutGrid, FileText, ListChecks,
   GitBranch, Layers, HelpCircle,
 } from "lucide-react";
+import { prisma } from "@/lib/db";
 import { Footer } from "@/components/landing/footer";
 import { Part1FullPreview } from "@/components/landing/part1-full-preview";
 import { CommunityPromoSetter } from "./community-promo-setter";
@@ -69,7 +70,11 @@ const FAQ = [
   },
 ];
 
-export default function CommunityPage() {
+export default async function CommunityPage() {
+  prisma.influencerClick
+    .create({ data: { id: crypto.randomUUID(), creator: "community" } })
+    .catch((err) => console.error("[community] Failed to record click:", err));
+
   return (
     <div className="flex flex-col min-h-screen bg-ink text-text">
       {/* Persist COMMUNITY49 promo to localStorage so it auto-applies at checkout */}
