@@ -132,12 +132,17 @@ export default async function BrowniesaadiPage() {
           aria-hidden
         />
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 text-center">
-          <div className="inline-flex items-center gap-2 mb-6">
-            <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
-            <p className="text-sm text-gold font-semibold uppercase tracking-widest">
-              As seen on Browniesaadi
-            </p>
-            <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
+          <div className="flex flex-col items-center gap-3 mb-6">
+            <div className="inline-flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
+              <p className="text-sm text-gold font-semibold uppercase tracking-widest">
+                As seen on Browniesaadi
+              </p>
+              <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
+            </div>
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gold/10 border border-gold/30 text-gold text-xs font-semibold">
+              Limited-time Browniesaadi campaign price
+            </div>
           </div>
 
           <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold tracking-tight leading-[1.05] mb-7">
@@ -151,14 +156,18 @@ export default async function BrowniesaadiPage() {
             A 100-part Seerah program — step by step, beginning to end — so the Prophet&apos;s ﷺ life finally makes sense as one connected story.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-5">
             <a href="#preview" data-track="hero_preview_clicked" className={`${outlineBtn} w-full sm:w-auto px-10 py-5 text-lg`}>
               Watch Part 1 Free
             </a>
             <Link href={INDIVIDUAL_URL} data-track="hero_cta_clicked" data-plan="individual" className={`${primaryBtn} w-full sm:w-auto px-10 py-5 text-lg`}>
-              Get Lifetime Access
+              Claim Lifetime Offer
             </Link>
           </div>
+
+          <p className="text-xs text-text-muted mb-8 max-w-sm mx-auto">
+            The $59/$119 lifetime pricing is campaign-only and may not be available later.
+          </p>
 
           <div className="flex items-center justify-center gap-4 sm:gap-6 text-xs text-text-muted flex-wrap">
             <span className="flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-gold/60" />7-day guarantee</span>
@@ -327,17 +336,29 @@ export default async function BrowniesaadiPage() {
         </div>
       </section>
 
+      {/* ── Urgency strip ─────────────────────────────────────────────────── */}
+      <div className="bg-gold/8 border-y border-gold/20 px-4 py-4 text-center">
+        <p className="text-sm text-gold/90 max-w-2xl mx-auto leading-snug">
+          <span className="font-semibold">Browniesaadi campaign pricing is active now:</span>{" "}
+          Individual lifetime $59 · Family lifetime $119.{" "}
+          <span className="text-gold/70">Prices may return to normal after this promotion.</span>
+        </p>
+      </div>
+
       {/* ── Pricing ───────────────────────────────────────────────────────── */}
-      <section id="pricing" className="py-16 sm:py-24 bg-surface/20 border-y border-border/50 scroll-mt-14">
+      <section id="pricing" className="py-16 sm:py-24 bg-surface/20 border-b border-border/50 scroll-mt-14">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold/10 border border-gold/25 text-gold text-xs font-bold uppercase tracking-wider mb-5">
             Exclusive for Browniesaadi Viewers
           </div>
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">
-            Browniesaadi Lifetime Offer
+            Limited-Time Browniesaadi Lifetime Offer
           </h2>
-          <p className="text-text-secondary text-base mb-12">
-            Exclusive pricing for Browniesaadi viewers — applied at checkout. No code needed.
+          <p className="text-text-secondary text-base mb-3">
+            Lock in lifetime access before this campaign ends. Applied automatically — no code needed.
+          </p>
+          <p className="text-xs text-text-muted mb-12">
+            Regular pricing may return after the promotion.
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto mb-8">
@@ -352,12 +373,17 @@ export default async function BrowniesaadiPage() {
               <p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">
                 Individual Lifetime
               </p>
-              <p className="text-sm text-text-secondary mb-6">For one learner</p>
+              <p className="text-sm text-text-secondary mb-4">For one learner</p>
+              <span className="inline-flex self-center items-center px-2.5 py-0.5 rounded-full bg-gold/10 border border-gold/25 text-gold text-[10px] font-semibold uppercase tracking-wide mb-4">
+                Campaign Price
+              </span>
 
               <div className="mb-6">
-                <p className="text-sm text-text-muted line-through">$79</p>
-                <p className="text-5xl sm:text-6xl font-bold text-gold leading-none mt-1">$59</p>
-                <p className="text-xs text-emerald-400 mt-2 font-medium">You save $20</p>
+                <p className="text-xs text-text-muted uppercase tracking-wide mb-1">Regular price</p>
+                <p className="text-base text-text-muted line-through font-medium">$79</p>
+                <p className="text-xs text-gold/70 uppercase tracking-wide mt-3 mb-1">Browniesaadi campaign price</p>
+                <p className="text-5xl sm:text-6xl font-bold text-gold leading-none">$59</p>
+                <p className="text-xs text-emerald-400 mt-2 font-medium">$20 off — campaign pricing only</p>
               </div>
 
               <ul className="space-y-1.5 text-left mb-8">
@@ -391,14 +417,19 @@ export default async function BrowniesaadiPage() {
               <p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">
                 Family Lifetime
               </p>
-              <p className="text-sm text-text-secondary mb-6">
+              <p className="text-sm text-text-secondary mb-4">
                 Parents &amp; households — up to 5 learners
               </p>
+              <span className="inline-flex self-center items-center px-2.5 py-0.5 rounded-full bg-gold/10 border border-gold/25 text-gold text-[10px] font-semibold uppercase tracking-wide mb-4">
+                Campaign Price
+              </span>
 
               <div className="mb-6">
-                <p className="text-sm text-text-muted line-through">$149</p>
-                <p className="text-5xl sm:text-6xl font-bold text-gold leading-none mt-1">$119</p>
-                <p className="text-xs text-emerald-400 mt-2 font-medium">You save $30</p>
+                <p className="text-xs text-text-muted uppercase tracking-wide mb-1">Regular price</p>
+                <p className="text-base text-text-muted line-through font-medium">$149</p>
+                <p className="text-xs text-gold/70 uppercase tracking-wide mt-3 mb-1">Browniesaadi campaign price</p>
+                <p className="text-5xl sm:text-6xl font-bold text-gold leading-none">$119</p>
+                <p className="text-xs text-emerald-400 mt-2 font-medium">$30 off — campaign pricing only</p>
               </div>
 
               <ul className="space-y-1.5 text-left mb-8">
@@ -471,7 +502,7 @@ export default async function BrowniesaadiPage() {
             Begin the Seerah From the First Lesson
           </h2>
           <p className="text-text-secondary text-lg mb-10">
-            Watch Part 1 free, or get lifetime access with the Browniesaadi discount.
+            Start free, or lock in the Browniesaadi lifetime price before campaign pricing ends.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
@@ -479,7 +510,7 @@ export default async function BrowniesaadiPage() {
               Watch Part 1 Free
             </a>
             <a href="#pricing" data-track="final_cta_pricing_clicked" className={`${primaryBtn} w-full sm:w-auto px-8 py-4 text-base`}>
-              Choose Lifetime Access
+              Lock In Lifetime Offer
             </a>
           </div>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-4 text-sm">
@@ -504,7 +535,11 @@ export default async function BrowniesaadiPage() {
         <Footer />
       </div>
 
-      <MobileStickyCta href={INDIVIDUAL_URL} />
+      <MobileStickyCta
+        href={INDIVIDUAL_URL}
+        label="Claim Offer"
+        sublabel="Browniesaadi lifetime offer from $59"
+      />
     </div>
   );
 }

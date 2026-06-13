@@ -12,6 +12,8 @@ declare global {
 interface MobileStickyCtaProps {
   href?: string;
   onCtaClick?: () => void;
+  label?: string;
+  sublabel?: string;
 }
 
 /**
@@ -19,7 +21,12 @@ interface MobileStickyCtaProps {
  * Dismissible with an X so it doesn't cover content permanently.
  * Defaults to scrolling to #pricing; accepts an explicit href to go direct to checkout.
  */
-export function MobileStickyCta({ href = "#pricing", onCtaClick }: MobileStickyCtaProps) {
+export function MobileStickyCta({
+  href = "#pricing",
+  onCtaClick,
+  label = "Claim Sponsor Offer",
+  sublabel = "Sponsor discount applied",
+}: MobileStickyCtaProps) {
   const [dismissed, setDismissed] = useState(false);
   if (dismissed) return null;
 
@@ -31,8 +38,8 @@ export function MobileStickyCta({ href = "#pricing", onCtaClick }: MobileStickyC
           onClick={() => { onCtaClick?.(); window.deenTrack?.("sticky_cta_clicked"); }}
           className="flex-1 flex flex-col items-center justify-center py-2.5 rounded-xl bg-gold hover:bg-gold-light text-ink transition-colors shadow-lg shadow-gold/20"
         >
-          <span className="font-bold text-sm leading-tight">Claim Sponsor Offer</span>
-          <span className="text-[10px] font-medium opacity-80 leading-tight">Sponsor discount applied</span>
+          <span className="font-bold text-sm leading-tight">{label}</span>
+          <span className="text-[10px] font-medium opacity-80 leading-tight">{sublabel}</span>
         </a>
         <button
           onClick={() => setDismissed(true)}
