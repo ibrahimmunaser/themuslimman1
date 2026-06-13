@@ -254,9 +254,6 @@ export default function CommunityPage() {
           <p className="text-text-secondary text-base mb-3">
             Special pricing for my community — applied at checkout. No code needed.
           </p>
-          <p className="text-sm text-gold/70 italic mb-12">
-            This is a special offer for my community. I&apos;m not sure how long I&apos;ll keep it open.
-          </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto mb-8">
 
