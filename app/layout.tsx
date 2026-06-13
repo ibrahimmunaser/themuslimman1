@@ -22,7 +22,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: "Complete Seerah System — TheMuslimMan",
+    default: "TheMuslimMan | Complete Seerah Course",
     template: "%s | TheMuslimMan",
   },
   description:
@@ -33,13 +33,13 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: "https://themuslimman.com",
     siteName: "TheMuslimMan",
-    title: "Complete Seerah System — TheMuslimMan",
+    title: "TheMuslimMan | Complete Seerah Course",
     description:
       "Finally understand the full life of the Prophet ﷺ in one structured, complete system.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Complete Seerah System — TheMuslimMan",
+    title: "TheMuslimMan | Complete Seerah Course",
     description:
       "Finally understand the full life of the Prophet ﷺ in one structured, complete system.",
   },
