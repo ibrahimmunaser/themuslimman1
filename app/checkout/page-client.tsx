@@ -280,20 +280,29 @@ function CheckoutForm({
           {/* Container must never be display:none — hiding before mount prevents
               Google Pay / Apple Pay from initializing. Stripe requires the element
               to be in a visible container so it can detect wallet availability.
-              The divider is shown separately once onReady confirms a button exists. */}
-          <ExpressCheckoutElement
-            onConfirm={handleExpressConfirm}
-            onReady={({ availablePaymentMethods }) => {
-              if (availablePaymentMethods && Object.keys(availablePaymentMethods).length > 0) {
-                setShowExpressCheckout(true);
-              }
-            }}
-            options={{
-              buttonType: { applePay: "buy", googlePay: "buy" },
-              buttonTheme: { applePay: "black", googlePay: "black" },
-              layout: { maxColumns: 1, maxRows: 5, overflow: "auto" },
-            }}
-          />
+              The border wrapper is applied once onReady confirms a button exists so
+              we don't flash an empty bordered box while Stripe loads. */}
+          <div
+            className={
+              showExpressCheckout
+                ? "rounded-xl border border-zinc-600 bg-zinc-800/40 p-3"
+                : undefined
+            }
+          >
+            <ExpressCheckoutElement
+              onConfirm={handleExpressConfirm}
+              onReady={({ availablePaymentMethods }) => {
+                if (availablePaymentMethods && Object.keys(availablePaymentMethods).length > 0) {
+                  setShowExpressCheckout(true);
+                }
+              }}
+              options={{
+                buttonType: { applePay: "buy", googlePay: "buy" },
+                buttonTheme: { applePay: "white-outline", googlePay: "white" },
+                layout: { maxColumns: 1, maxRows: 5, overflow: "auto" },
+              }}
+            />
+          </div>
           {showExpressCheckout && (
             <div className="flex items-center gap-3 text-xs text-zinc-500">
               <div className="flex-1 h-px bg-zinc-700/60" />
