@@ -265,20 +265,6 @@ export default async function LandingPage() {
       </section>
 
       {/* ============================================
-          OFFER STRIP — capture impulse buyers post-preview
-      ============================================ */}
-      <section className="py-8 border-t border-border bg-surface/30">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 text-center">
-          <p className="text-xs font-semibold text-gold/70 uppercase tracking-widest mb-2">
-            Liked what you saw?
-          </p>
-          <h2 className="text-2xl sm:text-3xl font-bold">
-            Continue after Part 1 at your own pace.
-          </h2>
-        </div>
-      </section>
-
-      {/* ============================================
           PRICING — immediately after preview
       ============================================ */}
       <PricingSection
