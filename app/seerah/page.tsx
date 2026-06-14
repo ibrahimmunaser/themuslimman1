@@ -32,7 +32,19 @@ export default async function LearnIndexPage({
 }) {
   // getCachedStudent() deduplicates with the seerah/layout.tsx call in the same request.
   const user = await getCachedStudent();
-  if (!user.studentProfileId) redirect("/");
+
+  // Auto-create a StudentProfile if one doesn't exist yet.
+  // This happens for new users who just set their password after purchase —
+  // the webhook grants access but does not create a StudentProfile.
+  if (!user.studentProfileId) {
+    await prisma.studentProfile.upsert({
+      where:  { userId: user.id },
+      create: { id: crypto.randomUUID(), userId: user.id, updatedAt: new Date() },
+      update: {},
+    });
+    // Redirect back to /seerah so getCachedStudent() re-runs with the new profile.
+    redirect("/seerah");
+  }
 
   // Family plan holders must pick a learner profile before accessing the dashboard,
   // but only when no profile cookie is set (first login / cookie expired).

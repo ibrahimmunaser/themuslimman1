@@ -20,7 +20,8 @@ export default async function SeerahResourcesPage() {
   // getCachedStudent() deduplicates this call with the parent layout's auth
   // query — no extra DB round-trip on this page.
   const user = await getCachedStudent();
-  if (!user.studentProfileId) redirect("/");
+  // No studentProfile yet — redirect to /seerah which auto-creates it.
+  if (!user.studentProfileId) redirect("/seerah");
 
   // Run access check and profile ID lookup in parallel — both only need user.id.
   const [hasAccess, learnerProfileId] = await Promise.all([
