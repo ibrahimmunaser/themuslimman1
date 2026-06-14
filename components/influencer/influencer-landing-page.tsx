@@ -66,8 +66,6 @@ export interface InfluencerPageConfig {
 
 const primaryBtn =
   "inline-flex items-center justify-center gap-2 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold transition-colors shadow-lg shadow-gold/25";
-const outlineBtn =
-  "inline-flex items-center justify-center gap-2 rounded-xl border border-gold/40 text-gold font-semibold hover:bg-gold/5 transition-colors";
 
 // ── Static data ────────────────────────────────────────────────────────────────
 

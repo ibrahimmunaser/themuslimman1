@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, ArrowRight, Calendar, Infinity, ShieldCheck, Lock, Zap } from "lucide-react";
+import { CheckCircle2, Calendar, Infinity, ShieldCheck, Lock, Zap } from "lucide-react";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
