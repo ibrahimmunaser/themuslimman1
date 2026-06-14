@@ -136,9 +136,9 @@ export function InfluencerLandingPage({
       <InfluencerPromoSetter promoCode={individualPromoCode} />
       <BrownieFunnelTracker creator={creator} promoCode={individualPromoCode} />
 
-      {/* ── Header ───────────────────────────────────────────────────────── */}
-      <header className="py-4 px-4 sm:px-6 border-b border-white/5 bg-ink/95 sticky top-0 z-40 backdrop-blur-sm">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
+      {/* ── Header — logo only, no competing CTA ────────────────────────── */}
+      <header className="py-4 px-4 sm:px-6 border-b border-border/30 bg-ink sticky top-0 z-40">
+        <div className="max-w-6xl mx-auto flex items-center">
           <Link href="/" className="flex items-center">
             <Image
               src="/images/logoicon.png"
@@ -148,14 +148,6 @@ export function InfluencerLandingPage({
               className="h-9 sm:h-10 w-auto"
               priority
             />
-          </Link>
-          <Link
-            href={individualUrl}
-            data-track="individual_lifetime_cta_clicked"
-            data-plan="individual"
-            className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-sm transition-colors shadow-md shadow-gold/20"
-          >
-            Get Lifetime Access — {indPrice}
           </Link>
         </div>
       </header>
@@ -178,54 +170,53 @@ export function InfluencerLandingPage({
             <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
           </div>
 
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight leading-[1.08] mb-4">
-            Learn the Life of the{" "}
-            <br className="hidden sm:block" />
-            Prophet ﷺ{" "}
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight leading-[1.08] mb-3">
+            Learn the Prophet&apos;s ﷺ Life{" "}
             <span className="text-gradient-gold">in Order</span>
           </h1>
 
-          <p className="text-base sm:text-lg text-text-secondary max-w-xl mx-auto mb-6 leading-relaxed">
-            Most Muslims know scattered stories from the Seerah, but not the Prophet&apos;s ﷺ life as one connected journey. This 100-part course fixes that — step by step, beginning to end.
+          <p className="text-base sm:text-lg text-text-secondary max-w-lg mx-auto mb-5 leading-relaxed">
+            Most Muslims know scattered stories from the Seerah, but not the Prophet&apos;s ﷺ life as one connected journey. This 100-part course helps you learn it step by step.
           </p>
 
-          <p className="text-2xl sm:text-3xl font-bold text-gold mb-1">
-            Lifetime access from{" "}
-            <span className="underline decoration-gold/40 underline-offset-4">{indPrice}</span>
+          <p className="text-3xl sm:text-4xl font-bold text-gold mb-1">
+            Lifetime access from {indPrice}
           </p>
-          <p className="text-xs text-gold/70 mb-1 font-medium">
-            {displayName} campaign discount applied — lifetime pricing may be removed after launch.
+          <p className="text-xs text-gold/60 mb-1">
+            {displayName} campaign discount applied — pricing may return to normal after launch.
           </p>
-          <p className="text-sm text-text-muted mb-8">
+          <p className="text-sm text-text-muted mb-7">
             One-time payment · No subscription · 7-day refund guarantee
           </p>
 
-          <div className="flex flex-col items-center justify-center gap-3 mb-6 w-full max-w-xs mx-auto sm:max-w-none sm:flex-row sm:items-center sm:w-auto">
-            <Link
-              href={individualUrl}
-              data-track="individual_lifetime_cta_clicked"
-              data-plan="individual"
-              className={`${primaryBtn} px-8 py-4 text-base w-full sm:w-auto`}
-            >
-              Get Lifetime Access — {indPrice}
-            </Link>
+          <Link
+            href={individualUrl}
+            data-track="individual_lifetime_cta_clicked"
+            data-plan="individual"
+            className={`${primaryBtn} px-10 py-4 text-base mb-4`}
+          >
+            Get Lifetime Access — {indPrice}
+          </Link>
+
+          <p className="text-xs text-text-muted/50 mb-2">
+            Need family access?{" "}
             <Link
               href={familyUrl}
               data-track="family_lifetime_cta_clicked"
               data-plan="family"
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-gold/30 text-gold/70 font-medium hover:text-gold hover:border-gold/50 transition-colors px-6 py-3.5 text-sm w-full sm:w-auto"
+              className="underline underline-offset-2 hover:text-text-muted transition-colors"
             >
               Get Family Access — {famPrice}
             </Link>
-          </div>
+          </p>
 
           <a
             href="#preview"
             data-track="watch_part1_clicked"
-            className="inline-flex items-center gap-1 text-xs text-text-muted/60 hover:text-text-muted transition-colors"
+            className="inline-flex items-center gap-1 text-xs text-text-muted/40 hover:text-text-muted/60 transition-colors"
           >
             <Play className="w-3 h-3 flex-shrink-0" />
-            Not ready? Watch Part 1 free
+            Watch Part 1 free first
           </a>
         </div>
       </section>
