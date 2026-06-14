@@ -43,6 +43,7 @@ export default async function BrowniesaadiPage() {
         sponsorVideoUrl={videoUrl}
         videoSectionLabel="Why Brownie Saadi recommended this"
         showPricingCards={false}
+        showHeroCard={true}
       />
       <MobileStickyCta
         href={INDIVIDUAL_URL}

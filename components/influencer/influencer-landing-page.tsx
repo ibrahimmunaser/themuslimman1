@@ -47,6 +47,12 @@ export interface InfluencerPageConfig {
    * Defaults to true.
    */
   showPricingCards?: boolean;
+  /**
+   * When true, replaces the plain hero CTA button with the full individual pricing card.
+   * The separate pricing grid section is automatically hidden when this is enabled.
+   * Defaults to false.
+   */
+  showHeroCard?: boolean;
 }
 
 // ── Shared styles ──────────────────────────────────────────────────────────────
@@ -127,6 +133,7 @@ export function InfluencerLandingPage({
   videoSectionLabel,
   videoAspectClass = "aspect-portrait",
   showPricingCards = true,
+  showHeroCard = false,
   // monthlyUrl intentionally unused — monthly/trial plans removed from UI
 }: InfluencerPageConfig) {
   const indPrice    = fmtPrice(individualPriceCents);
@@ -182,54 +189,119 @@ export function InfluencerLandingPage({
             Most Muslims know scattered stories from the Seerah, but not the Prophet&apos;s ﷺ life as one connected journey. This 100-part course helps you learn it step by step.
           </p>
 
-          <p className="text-3xl sm:text-4xl font-bold text-gold mb-1">
-            Lifetime access from {indPrice}
-          </p>
-          <p className="text-xs text-gold/60 mb-1">
-            {displayName} campaign discount applied — pricing may return to normal after launch.
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm text-text-muted mb-7">
-            <span>One-time payment</span>
-            <span className="hidden sm:inline text-text-muted/30">·</span>
-            <span>No subscription</span>
-            <span className="hidden sm:inline text-text-muted/30">·</span>
-            <span>7-day refund guarantee</span>
-          </div>
+          {showHeroCard ? (
+            /* ── Inline pricing card mode ─────────────────────────── */
+            <div className="mt-2 w-full max-w-xs mx-auto text-left">
+              <div className="relative rounded-2xl border-2 border-gold/60 bg-surface shadow-lg shadow-gold/10 p-6 flex flex-col">
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap">
+                  <span className="px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-gold text-ink shadow-sm">
+                    Main Offer
+                  </span>
+                </div>
+                <p className="text-xl font-bold text-text mb-0.5">For Me</p>
+                <p className="text-xs text-text-muted mb-4">Individual Lifetime Access</p>
+                <div className="mb-5">
+                  <span className="text-xs text-text-muted line-through mr-2">{regIndPrice}</span>
+                  <span className="text-5xl font-bold text-gold">{indPrice}</span>
+                  <p className="text-xs text-gold/60 mt-1">one-time · no renewal ever</p>
+                </div>
+                <ul className="space-y-2 mb-7 flex-1">
+                  {[
+                    "All 100 parts, unlocked immediately",
+                    "Videos, quizzes, flashcards, mind maps",
+                    "Progress dashboard · Mobile friendly",
+                    "One-time payment — yours for life",
+                  ].map((f) => (
+                    <li key={f} className="flex items-start gap-2 text-xs text-text-secondary">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-gold flex-shrink-0 mt-0.5" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  href={individualUrl}
+                  data-track="individual_lifetime_cta_clicked"
+                  data-plan="individual"
+                  className="block w-full py-4 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-base text-center transition-colors shadow-lg shadow-gold/25"
+                >
+                  Get Lifetime Access — {indPrice}
+                </Link>
+              </div>
+              <p className="text-xs text-text-muted/50 mt-3 text-center">
+                Need family access?{" "}
+                <Link
+                  href={familyUrl}
+                  data-track="family_lifetime_cta_clicked"
+                  data-plan="family"
+                  className="underline underline-offset-2 hover:text-text-muted transition-colors"
+                >
+                  Get Family Access — {famPrice}
+                </Link>
+              </p>
+              <div className="flex justify-center mt-2">
+                <a
+                  href="#preview"
+                  data-track="watch_part1_clicked"
+                  className="inline-flex items-center gap-1 text-xs text-text-muted/40 hover:text-text-muted/60 transition-colors"
+                >
+                  <Play className="w-3 h-3 flex-shrink-0" />
+                  Watch Part 1 free first
+                </a>
+              </div>
+            </div>
+          ) : (
+            /* ── Standard button mode ─────────────────────────────── */
+            <>
+              <p className="text-3xl sm:text-4xl font-bold text-gold mb-1">
+                Lifetime access from {indPrice}
+              </p>
+              <p className="text-xs text-gold/60 mb-1">
+                {displayName} campaign discount applied — pricing may return to normal after launch.
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm text-text-muted mb-7">
+                <span>One-time payment</span>
+                <span className="hidden sm:inline text-text-muted/30">·</span>
+                <span>No subscription</span>
+                <span className="hidden sm:inline text-text-muted/30">·</span>
+                <span>7-day refund guarantee</span>
+              </div>
 
-          <Link
-            href={individualUrl}
-            data-track="individual_lifetime_cta_clicked"
-            data-plan="individual"
-            className={`${primaryBtn} px-10 py-4 text-base mb-4`}
-          >
-            Get Lifetime Access — {indPrice}
-          </Link>
+              <Link
+                href={individualUrl}
+                data-track="individual_lifetime_cta_clicked"
+                data-plan="individual"
+                className={`${primaryBtn} px-10 py-4 text-base mb-4`}
+              >
+                Get Lifetime Access — {indPrice}
+              </Link>
 
-          <p className="text-xs text-text-muted/50 mb-2">
-            Need family access?{" "}
-            <Link
-              href={familyUrl}
-              data-track="family_lifetime_cta_clicked"
-              data-plan="family"
-              className="underline underline-offset-2 hover:text-text-muted transition-colors"
-            >
-              Get Family Access — {famPrice}
-            </Link>
-          </p>
+              <p className="text-xs text-text-muted/50 mb-2">
+                Need family access?{" "}
+                <Link
+                  href={familyUrl}
+                  data-track="family_lifetime_cta_clicked"
+                  data-plan="family"
+                  className="underline underline-offset-2 hover:text-text-muted transition-colors"
+                >
+                  Get Family Access — {famPrice}
+                </Link>
+              </p>
 
-          <a
-            href="#preview"
-            data-track="watch_part1_clicked"
-            className="inline-flex items-center gap-1 text-xs text-text-muted/40 hover:text-text-muted/60 transition-colors"
-          >
-            <Play className="w-3 h-3 flex-shrink-0" />
-            Watch Part 1 free first
-          </a>
+              <a
+                href="#preview"
+                data-track="watch_part1_clicked"
+                className="inline-flex items-center gap-1 text-xs text-text-muted/40 hover:text-text-muted/60 transition-colors"
+              >
+                <Play className="w-3 h-3 flex-shrink-0" />
+                Watch Part 1 free first
+              </a>
+            </>
+          )}
         </div>
       </section>
 
-      {/* ── Pricing cards — shown only when showPricingCards is true ───────── */}
-      {showPricingCards && <section id="pricing" className="pb-12 scroll-mt-16">
+      {/* ── Pricing cards — shown only when showPricingCards is true and hero card is not shown ── */}
+      {showPricingCards && !showHeroCard && <section id="pricing" className="pb-12 scroll-mt-16">
         <div className="max-w-2xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 items-start">
 
