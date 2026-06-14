@@ -44,6 +44,7 @@ export default async function DeenRespondsPage() {
         regularFamilyPriceCents={14900}
         sponsorVideoUrl={videoUrl}
         videoSectionLabel="Why Deen Responds recommended this"
+        videoAspectClass="aspect-video"
       />
       <MobileStickyCta
         href={INDIVIDUAL_URL}

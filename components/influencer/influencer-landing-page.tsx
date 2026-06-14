@@ -36,6 +36,12 @@ export interface InfluencerPageConfig {
   sponsorVideoUrl?: string | null;
   /** Label above the video section, e.g. "Why Deen Responds recommended this" */
   videoSectionLabel?: string;
+  /**
+   * Aspect ratio class passed to R2VideoPlayer.
+   * "aspect-portrait" (9:16) for vertical reels — default for Brownie-style content.
+   * "aspect-video"    (16:9) for landscape YouTube-style videos — use for Deen Responds.
+   */
+  videoAspectClass?: "aspect-portrait" | "aspect-video";
 }
 
 // ── Shared styles ──────────────────────────────────────────────────────────────
@@ -115,6 +121,7 @@ export function InfluencerLandingPage({
   regularFamilyPriceCents,
   sponsorVideoUrl,
   videoSectionLabel,
+  videoAspectClass = "aspect-portrait",
 }: InfluencerPageConfig) {
   const indPrice    = fmtPrice(individualPriceCents);
   const famPrice    = fmtPrice(familyPriceCents);
@@ -322,15 +329,18 @@ export function InfluencerLandingPage({
             <p className="text-sm font-semibold text-text-muted uppercase tracking-wider mb-5">
               {videoSectionLabel ?? `Why ${displayName} recommended this`}
             </p>
-            {/* Centered portrait container — intentional reel/Instagram look */}
-            <div className="mx-auto" style={{ maxWidth: "260px" }}>
+            {/* Portrait → narrow centered column; landscape → full width */}
+            <div
+              className="mx-auto w-full"
+              style={videoAspectClass === "aspect-portrait" ? { maxWidth: "260px" } : undefined}
+            >
               <R2VideoPlayer
                 url={sponsorVideoUrl}
                 title={`${displayName} — Complete Seerah`}
                 label={`${displayName} on TheMuslimMan Seerah`}
                 autoplay={false}
                 trackEvent="sponsor_video_played"
-                aspectClass="aspect-portrait"
+                aspectClass={videoAspectClass}
               />
             </div>
             <div className="mt-6">
