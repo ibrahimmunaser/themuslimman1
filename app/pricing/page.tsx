@@ -109,20 +109,8 @@ const OUTCOMES = [
 
 const FAQ_ITEMS = [
   {
-    q: "How does the free trial work?",
-    a: "Enter your card details and get 7 days of full access — completely free, nothing charged today. After 7 days, your subscription automatically continues at $9/month (individual) or $19/month (family). You can cancel anytime before the trial ends — no charge.",
-  },
-  {
-    q: "What is the difference between the trial and lifetime?",
-    a: "The free trial gives you 7 days of full access, then $9/month after that — cancel anytime. Lifetime is a one-time $79 payment (individual) or $149 (family) that gives you permanent access with no recurring charges ever.",
-  },
-  {
-    q: "What happens if I cancel?",
-    a: "You keep full access until the end of your current billing period. After that, access stops. You can resubscribe anytime.",
-  },
-  {
-    q: "Can I upgrade from monthly to lifetime?",
-    a: "Yes — contact support and we'll help you make the switch. We can credit your recent monthly payment toward the lifetime price.",
+    q: "Is this a subscription?",
+    a: "No. Both plans are a one-time payment — individual lifetime for $79 or family lifetime for $149. No recurring charges, no renewals, no cancellations needed.",
   },
   {
     q: "What does Complete Seerah include?",
@@ -138,7 +126,11 @@ const FAQ_ITEMS = [
   },
   {
     q: "Will more content be added?",
-    a: "Yes. All future content and improvements are included at no extra cost for both monthly and lifetime members.",
+    a: "Yes. All future content and improvements are included at no extra cost for all lifetime members.",
+  },
+  {
+    q: "What is the difference between Individual and Family?",
+    a: "Individual lifetime gives one learner permanent access. Family lifetime supports up to 5 learner profiles under one household — each with their own progress tracking.",
   },
 ];
 
@@ -212,10 +204,10 @@ export default async function PricingPage() {
           <FadeUp delay={0.18}>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-5">
               <Link
-                href="#pricing"
+                href="/checkout?plan=individual-lifetime"
                 className={buttonClass("primary", "xl", "shadow-lg shadow-gold/20")}
               >
-                Start Learning
+                Get Lifetime Access — $79
                 <ArrowRight className="w-5 h-5" />
               </Link>
               <Link
@@ -227,15 +219,14 @@ export default async function PricingPage() {
                 )}
               >
                 <Play className="w-4 h-4" />
-                Preview Part 1 Free
+                Watch Part 1 Free
               </Link>
             </div>
             <p className="text-xs text-text-muted">
-              From{" "}
-              <span className="text-text-secondary font-medium">$9/month</span>
+              <span className="text-gold font-semibold">$79 individual</span>
               {" "}or{" "}
-              <span className="text-gold font-semibold">$79 lifetime</span>
-              {" "}· 7-Day Clarity Guarantee
+              <span className="text-gold font-semibold">$149 family</span>
+              {" "}· One-time payment · No subscription · 7-Day Guarantee
             </p>
           </FadeUp>
         </div>
@@ -311,7 +302,10 @@ export default async function PricingPage() {
               </div>
             }
           >
-            <Part1FullPreview />
+            <Part1FullPreview
+              checkoutHref="/checkout?plan=individual-lifetime"
+              ctaLabel="Get Lifetime Access — $79"
+            />
           </Suspense>
         </div>
       </section>
@@ -439,30 +433,29 @@ export default async function PricingPage() {
       <section className="py-16 border-t border-border bg-gold-bg">
         <div className="max-w-xl mx-auto px-4 sm:px-6 text-center">
           <FadeUp>
-            <p className="text-sm text-text-secondary mb-3">
-              Start with Part 1 free, then unlock the full course when you&apos;re ready.
-            </p>
-            <h2 className="text-2xl sm:text-3xl font-bold text-text mb-6">
-              Ready to learn the Seerah properly?
+            <h2 className="text-2xl sm:text-3xl font-bold text-text mb-2">
+              Start learning the Prophet&apos;s ﷺ life in order.
             </h2>
+            <p className="text-sm text-gold/80 mb-6">
+              Pay once. Lifetime access. No monthly charge.
+            </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-5">
               <Link
-                href="#pricing"
+                href="/checkout?plan=individual-lifetime"
                 className={buttonClass("primary", "xl", "shadow-lg shadow-gold/25")}
               >
-                Start Learning
+                Get Lifetime Access — $79
                 <ArrowRight className="w-5 h-5" />
               </Link>
               <Link
-                href="#preview"
+                href="/checkout?plan=family-lifetime"
                 className={buttonClass(
                   "ghost",
                   "xl",
                   "border border-gold/30 text-gold hover:bg-gold/5",
                 )}
               >
-                <Play className="w-4 h-4" />
-                Preview Part 1 Free
+                Family Lifetime — $149
               </Link>
             </div>
             {!accessInfo?.hasAccess && (

@@ -15,7 +15,7 @@ function stripQuizAnswers(quiz: Quiz | null | undefined): Quiz | null | undefine
 export async function Part1FullPreview({
   checkoutHref = "/checkout?plan=individual-trial",
   hideCta = false,
-  ctaLabel = "Continue the Full Seerah — Start Free Trial",
+  ctaLabel = "Get Lifetime Access — $79",
 }: {
   checkoutHref?: string;
   hideCta?: boolean;
@@ -119,10 +119,10 @@ export async function Part1FullPreview({
             {ctaLabel}
           </a>
           <p className="text-sm text-text-muted mt-4 max-w-lg mx-auto leading-relaxed">
-            Unlock the full 100-part Seerah journey with videos, summaries, quizzes, flashcards, mind maps, and progress tracking.
+            All 100 parts — video, briefing, quiz, flashcards, and mind maps. One-time payment. No subscription.
           </p>
           <p className="text-xs text-text-muted mt-3">
-            7-Day Clarity Guarantee · Lifetime Access · Instant Unlock
+            One-time payment · Lifetime access · 7-day refund guarantee
           </p>
         </div>
       )}

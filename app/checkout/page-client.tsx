@@ -13,7 +13,7 @@ import {
 } from "@stripe/react-stripe-js";
 import {
   Check, Lock, User, Users, ArrowLeft, ArrowRight,
-  Shield, Star, Tag, X, Eye, EyeOff, RefreshCw,
+  Shield, ShieldCheck, Star, Tag, X, Eye, EyeOff, RefreshCw, Zap,
 } from "lucide-react";
 import Link from "next/link";
 import { PLANS, formatPrice } from "@/lib/stripe-config";
@@ -881,21 +881,16 @@ function CheckoutPageContent({
     { id: "family",     Icon: Users, label: "Family" },
   ];
 
+  // Only lifetime plans are offered — trial and monthly have been removed from the UI.
   const allBillingOptions: { id: Billing; label: string; price: number; priceSuffix?: string; priceOverride?: string; sub: string; badge?: string }[] = audience === "individual"
     ? [
-        { id: "trial",    label: "7-Day Trial", price: 0, priceOverride: "Free", priceSuffix: " today", sub: `Then ${formatPrice(PLANS.individualTrial.price)}/mo · cancel anytime`, badge: "Most Popular" },
-        { id: "lifetime", label: "Lifetime",    price: PLANS.complete.price, sub: "Pay once, access forever", badge: "Best Value" },
+        { id: "lifetime", label: "Lifetime", price: PLANS.complete.price, sub: "Pay once, access forever", badge: "Best Value" },
       ]
     : [
-        { id: "trial",    label: "7-Day Trial", price: 0, priceOverride: "Free", priceSuffix: " today", sub: `Then ${formatPrice(PLANS.familyTrial.price)}/mo · up to 5 profiles`, badge: "Most Popular" },
-        { id: "lifetime", label: "Lifetime",    price: PLANS.family.price, sub: "Up to 5 profiles · pay once", badge: "Best Value" },
+        { id: "lifetime", label: "Lifetime", price: PLANS.family.price, sub: "Up to 5 profiles · pay once", badge: "Best Value" },
       ];
 
-  // Individual lifetime holders upgrading to Family Lifetime can only pay once —
-  // hide trial and monthly options so they can't navigate into an invalid state.
-  const billingOptions = isLifetimeUpgrade
-    ? allBillingOptions.filter((o) => o.id === "lifetime")
-    : allBillingOptions;
+  const billingOptions = allBillingOptions;
 
   const LeftColumn = (
     <div className="order-2 lg:order-1 lg:w-1/2 bg-zinc-900/50 lg:border-r border-zinc-800 px-6 sm:px-12 py-12 flex flex-col justify-center border-t lg:border-t-0">
@@ -1297,11 +1292,26 @@ function CheckoutPageContent({
                   {!authLoading && <ArrowRight className="w-4 h-4" />}
                 </button>
                 )}
-                <p className="text-xs text-zinc-600 text-center leading-relaxed">
+                {/* Trust signals — visible right under the button */}
+                <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 py-2">
+                  <span className="flex items-center gap-1.5 text-xs text-zinc-500">
+                    <ShieldCheck className="w-3.5 h-3.5 text-gold/50" />
+                    7-day refund guarantee
+                  </span>
+                  <span className="flex items-center gap-1.5 text-xs text-zinc-500">
+                    <Lock className="w-3.5 h-3.5 text-gold/50" />
+                    Secure checkout
+                  </span>
+                  <span className="flex items-center gap-1.5 text-xs text-zinc-500">
+                    <Zap className="w-3.5 h-3.5 text-gold/50" />
+                    Instant access
+                  </span>
+                </div>
+                <p className="text-xs text-zinc-700 text-center leading-relaxed">
                   You&rsquo;ll set a password after checkout. By continuing you agree to our{" "}
-                  <a href="/terms"   className="underline hover:text-zinc-400">Terms</a>,{" "}
-                  <a href="/privacy" className="underline hover:text-zinc-400">Privacy Policy</a>, and{" "}
-                  <a href="/refund"  className="underline hover:text-zinc-400">Refund Policy</a>.
+                  <a href="/terms"   className="underline hover:text-zinc-500">Terms</a>,{" "}
+                  <a href="/privacy" className="underline hover:text-zinc-500">Privacy Policy</a>, and{" "}
+                  <a href="/refund"  className="underline hover:text-zinc-500">Refund Policy</a>.
                 </p>
               </form>
             )}

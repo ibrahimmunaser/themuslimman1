@@ -26,24 +26,23 @@ export default async function BrowniesaadiPage() {
 
   const INDIVIDUAL_URL = `/checkout?plan=individual-lifetime&promo=BROWNIE59&source=browniesaadi&${UTM}`;
   const FAMILY_URL     = `/checkout?plan=family-lifetime&promo=BROWNIE119&source=browniesaadi&${UTM}`;
-  const MONTHLY_URL    = `/checkout?plan=individual-trial&source=browniesaadi&${UTM}`;
 
   return (
     <>
       <InfluencerLandingPage
         creator="browniesaadi"
         displayName="Brownie Saadi"
-        sourceBadge="Brownie Saadi Special Offer"
+        sourceBadge="Brownie Saadi Special"
         individualPromoCode="BROWNIE59"
         individualUrl={INDIVIDUAL_URL}
         familyUrl={FAMILY_URL}
-        monthlyUrl={MONTHLY_URL}
         individualPriceCents={5900}
         familyPriceCents={11900}
         regularIndividualPriceCents={7900}
         regularFamilyPriceCents={14900}
         sponsorVideoUrl={videoUrl}
         videoSectionLabel="Why Brownie Saadi recommended this"
+        showPricingCards={false}
       />
       <MobileStickyCta
         href={INDIVIDUAL_URL}
@@ -53,3 +52,4 @@ export default async function BrowniesaadiPage() {
     </>
   );
 }
+

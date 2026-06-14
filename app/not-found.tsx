@@ -55,7 +55,7 @@ export default function NotFound() {
               Sign In
             </Link>
             <span className="text-border">•</span>
-            <Link href="/checkout?plan=individual-trial" className="text-text-secondary hover:text-gold transition-colors">
+            <Link href="/checkout?plan=individual-lifetime" className="text-text-secondary hover:text-gold transition-colors">
               Get Access
             </Link>
           </div>

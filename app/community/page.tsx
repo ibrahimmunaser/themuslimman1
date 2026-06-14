@@ -21,7 +21,6 @@ export default async function CommunityPage() {
 
   const INDIVIDUAL_URL = `/checkout?plan=individual-lifetime&promo=COMMUNITY49&source=community&${UTM}`;
   const FAMILY_URL     = `/checkout?plan=family-lifetime&promo=COMMUNITY99&source=community&${UTM}`;
-  const MONTHLY_URL    = `/checkout?plan=individual-trial&source=community&${UTM}`;
 
   return (
     <>
@@ -32,7 +31,6 @@ export default async function CommunityPage() {
         individualPromoCode="COMMUNITY49"
         individualUrl={INDIVIDUAL_URL}
         familyUrl={FAMILY_URL}
-        monthlyUrl={MONTHLY_URL}
         individualPriceCents={4900}
         familyPriceCents={9900}
         regularIndividualPriceCents={7900}
@@ -46,3 +44,4 @@ export default async function CommunityPage() {
     </>
   );
 }
+

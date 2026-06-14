@@ -26,7 +26,6 @@ export default async function DeenRespondsPage() {
 
   const INDIVIDUAL_URL = `/checkout?plan=individual-lifetime&promo=DEEN59&source=deenresponds&${UTM}`;
   const FAMILY_URL     = `/checkout?plan=family-lifetime&promo=DEEN119&source=deenresponds&${UTM}`;
-  const MONTHLY_URL    = `/checkout?plan=individual-trial&source=deenresponds&${UTM}`;
 
   return (
     <>
@@ -37,7 +36,6 @@ export default async function DeenRespondsPage() {
         individualPromoCode="DEEN59"
         individualUrl={INDIVIDUAL_URL}
         familyUrl={FAMILY_URL}
-        monthlyUrl={MONTHLY_URL}
         individualPriceCents={5900}
         familyPriceCents={11900}
         regularIndividualPriceCents={7900}
@@ -54,3 +52,4 @@ export default async function DeenRespondsPage() {
     </>
   );
 }
+

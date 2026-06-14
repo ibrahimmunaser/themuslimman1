@@ -73,20 +73,21 @@ export default async function CheckoutPage({ searchParams }: Props) {
   const billingParam = params.billing?.toLowerCase() ?? "";
 
   // Map plan IDs to audience + billing for the Elements flow.
-  // Monthly plans redirect to trial — trial is the entry point to the monthly subscription.
-  if      (normalizedPlan === "individual-trial")   { initialAudience = "individual"; initialBilling = "trial";    }
-  else if (normalizedPlan === "family-trial")        { initialAudience = "family";     initialBilling = "trial";    }
-  else if (normalizedPlan === "individual-lifetime") { initialAudience = "individual"; initialBilling = "lifetime"; }
+  // Trial and monthly plans are no longer offered — redirect old URLs to lifetime.
+  if      (normalizedPlan === "individual-lifetime") { initialAudience = "individual"; initialBilling = "lifetime"; }
   else if (normalizedPlan === "family-lifetime")     { initialAudience = "family";     initialBilling = "lifetime"; }
-  else if (normalizedPlan === "individual-monthly")  { initialAudience = "individual"; initialBilling = "trial";    }
-  else if (normalizedPlan === "family-monthly")      { initialAudience = "family";     initialBilling = "trial";    }
-  // Legacy URL param fallbacks — treat monthly as trial
+  // Legacy / old trial+monthly URLs → redirect to equivalent lifetime plan
+  else if (normalizedPlan === "individual-trial" || normalizedPlan === "individual-monthly") {
+    redirect("/checkout?plan=individual-lifetime");
+  }
+  else if (normalizedPlan === "family-trial" || normalizedPlan === "family-monthly") {
+    redirect("/checkout?plan=family-lifetime");
+  }
+  // Legacy URL param fallbacks
   else {
-    if (billingParam === "monthly")                                initialBilling  = "trial";
-    if (billingParam === "lifetime")                               initialBilling  = "lifetime";
-    if (planParam === "family" || planParam === "familymonthly")   initialAudience = "family";
-    if (planParam === "monthly" || planParam === "familymonthly")  initialBilling  = "trial";
-    if (planParam === "individual")                                 initialAudience = "individual";
+    if (billingParam === "lifetime")                             initialBilling  = "lifetime";
+    if (planParam === "family" || planParam === "familymonthly") initialAudience = "family";
+    if (planParam === "individual")                              initialAudience = "individual";
   }
 
   // Base price for the selected plan — used to seed the client price state so the

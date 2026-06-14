@@ -21,7 +21,6 @@ export default async function TheOrthodoxMuslimPage() {
 
   const INDIVIDUAL_URL = `/checkout?plan=individual-lifetime&promo=ORTHODOX59&source=theorthodoxmuslim&${UTM}`;
   const FAMILY_URL     = `/checkout?plan=family-lifetime&promo=ORTHODOX119&source=theorthodoxmuslim&${UTM}`;
-  const MONTHLY_URL    = `/checkout?plan=individual-trial&source=theorthodoxmuslim&${UTM}`;
 
   return (
     <>
@@ -32,7 +31,6 @@ export default async function TheOrthodoxMuslimPage() {
         individualPromoCode="ORTHODOX59"
         individualUrl={INDIVIDUAL_URL}
         familyUrl={FAMILY_URL}
-        monthlyUrl={MONTHLY_URL}
         individualPriceCents={5900}
         familyPriceCents={11900}
         regularIndividualPriceCents={7900}
@@ -51,3 +49,4 @@ export default async function TheOrthodoxMuslimPage() {
     </>
   );
 }
+

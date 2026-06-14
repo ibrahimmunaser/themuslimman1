@@ -26,7 +26,6 @@ export interface InfluencerPageConfig {
   /** Checkout URLs */
   individualUrl: string;
   familyUrl: string;
-  monthlyUrl: string;
   /** Displayed prices (cents) */
   individualPriceCents: number;
   familyPriceCents: number;
@@ -42,6 +41,12 @@ export interface InfluencerPageConfig {
    * "aspect-video"    (16:9) for landscape YouTube-style videos — use for Deen Responds.
    */
   videoAspectClass?: "aspect-portrait" | "aspect-video";
+  /**
+   * When false, hides the two-card pricing grid below the hero.
+   * Use for single-offer pages where the hero already shows the price + family footnote.
+   * Defaults to true.
+   */
+  showPricingCards?: boolean;
 }
 
 // ── Shared styles ──────────────────────────────────────────────────────────────
@@ -114,7 +119,6 @@ export function InfluencerLandingPage({
   individualPromoCode,
   individualUrl,
   familyUrl,
-  monthlyUrl,
   individualPriceCents,
   familyPriceCents,
   regularIndividualPriceCents,
@@ -122,6 +126,8 @@ export function InfluencerLandingPage({
   sponsorVideoUrl,
   videoSectionLabel,
   videoAspectClass = "aspect-portrait",
+  showPricingCards = true,
+  // monthlyUrl intentionally unused — monthly/trial plans removed from UI
 }: InfluencerPageConfig) {
   const indPrice    = fmtPrice(individualPriceCents);
   const famPrice    = fmtPrice(familyPriceCents);
@@ -222,8 +228,8 @@ export function InfluencerLandingPage({
         </div>
       </section>
 
-      {/* ── Pricing cards — immediately below hero ──────────────────────── */}
-      <section id="pricing" className="pb-12 scroll-mt-16">
+      {/* ── Pricing cards — shown only when showPricingCards is true ───────── */}
+      {showPricingCards && <section id="pricing" className="pb-12 scroll-mt-16">
         <div className="max-w-2xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 items-start">
 
@@ -308,15 +314,8 @@ export function InfluencerLandingPage({
             <span className="flex items-center gap-1.5"><Zap className="w-3.5 h-3.5 text-gold/60" />Instant access</span>
           </div>
 
-          <p className="text-xs text-text-muted text-center mt-4">
-            Not ready for lifetime?{" "}
-            <Link href={monthlyUrl} data-track="trial_cta_clicked" className="text-gold/80 hover:text-gold underline underline-offset-2">
-              Try 7 days free
-            </Link>
-            {" "}— then $9/month.
-          </p>
         </div>
-      </section>
+      </section>}
 
       {/* ══════════════════════════════════════════════════════════════════════
           PROOF SECTIONS
@@ -424,22 +423,20 @@ export function InfluencerLandingPage({
             </p>
           </div>
           <Suspense fallback={
-            <div className="rounded-2xl border border-border bg-surface overflow-hidden" style={{ minHeight: 400 }}>
-              <div className="h-12 bg-surface-raised border-b border-border flex items-center gap-2 px-4">
-                {[1,2,3,4].map((i) => <div key={i} className="h-7 w-16 rounded-lg bg-surface animate-pulse" />)}
-              </div>
-              <div className="p-6">
-                <div className="aspect-video bg-surface-raised rounded-xl animate-pulse" />
+            <div className="rounded-2xl border border-border bg-surface overflow-hidden p-8">
+              <div className="space-y-4">
+                <div className="h-6 bg-surface-raised rounded w-1/3" />
+                <div className="h-4 bg-surface-raised rounded w-1/2" />
+                <div className="h-4 bg-surface-raised rounded w-3/4" />
+                <div className="mt-6 aspect-video bg-surface-raised rounded-xl" />
               </div>
             </div>
           }>
-            <Part1FullPreview hideCta />
+            <Part1FullPreview
+              checkoutHref={individualUrl}
+              ctaLabel={`Get Lifetime Access — ${indPrice}`}
+            />
           </Suspense>
-          <div className="mt-8 text-center">
-            <Link href={individualUrl} data-track="individual_lifetime_cta_clicked" data-plan="individual" className={`${primaryBtn} px-8 py-4 text-base`}>
-              Get Lifetime Access — {indPrice}
-            </Link>
-          </div>
         </div>
       </section>
 

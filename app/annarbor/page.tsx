@@ -25,7 +25,6 @@ export const metadata: Metadata = {
 const UTM = "utm_source=direct&utm_medium=promo&utm_campaign=seerah_launch&utm_content=annarbor";
 const CHECKOUT_URL = `/checkout?plan=individual-lifetime&promo=ANNARBOR29&source=annarbor&${UTM}`;
 const FAMILY_URL   = `/checkout?plan=family-lifetime&promo=ANNARBOR119&source=annarbor&${UTM}`;
-const MONTHLY_URL  = `/checkout?plan=individual-trial&source=annarbor&${UTM}`;
 
 const primaryBtn =
   "inline-flex items-center justify-center gap-2 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold transition-colors shadow-lg shadow-gold/25";
@@ -222,13 +221,7 @@ export default async function AnnArborPage() {
             </Link>
           </p>
 
-          <p className="text-xs text-text-muted/40 text-center mt-2">
-            Not ready?{" "}
-            <Link href={MONTHLY_URL} data-track="trial_cta_clicked" className="underline underline-offset-2 hover:text-text-muted/60 transition-colors">
-              Try 7 days free
-            </Link>
-            {" "}— then $9/month.
-          </p>
+          {/* trial option removed */}
         </div>
       </section>
 
