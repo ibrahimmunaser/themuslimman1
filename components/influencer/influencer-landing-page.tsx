@@ -329,20 +329,31 @@ export function InfluencerLandingPage({
             <p className="text-sm font-semibold text-text-muted uppercase tracking-wider mb-5">
               {videoSectionLabel ?? `Why ${displayName} recommended this`}
             </p>
-            {/* Portrait → narrow centered column; landscape → full width */}
-            <div
-              className="mx-auto w-full"
-              style={videoAspectClass === "aspect-portrait" ? { maxWidth: "260px" } : undefined}
-            >
-              <R2VideoPlayer
-                url={sponsorVideoUrl}
-                title={`${displayName} — Complete Seerah`}
-                label={`${displayName} on TheMuslimMan Seerah`}
-                autoplay={false}
-                trackEvent="sponsor_video_played"
-                aspectClass={videoAspectClass}
-              />
-            </div>
+            {videoAspectClass === "aspect-portrait" ? (
+              /* Portrait — narrow centered column like an Instagram reel */
+              <div className="mx-auto" style={{ maxWidth: "260px", aspectRatio: "9/16" }}>
+                <R2VideoPlayer
+                  url={sponsorVideoUrl}
+                  title={`${displayName} — Complete Seerah`}
+                  label={`${displayName} on TheMuslimMan Seerah`}
+                  autoplay={false}
+                  trackEvent="sponsor_video_played"
+                  aspectClass="aspect-portrait"
+                />
+              </div>
+            ) : (
+              /* Landscape — full width 16:9 */
+              <div style={{ aspectRatio: "16/9" }}>
+                <R2VideoPlayer
+                  url={sponsorVideoUrl}
+                  title={`${displayName} — Complete Seerah`}
+                  label={`${displayName} on TheMuslimMan Seerah`}
+                  autoplay={false}
+                  trackEvent="sponsor_video_played"
+                  aspectClass="aspect-video"
+                />
+              </div>
+            )}
             <div className="mt-6">
               <Link
                 href={individualUrl}
