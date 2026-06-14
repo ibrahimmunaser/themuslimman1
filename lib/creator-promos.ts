@@ -134,6 +134,17 @@ export const CREATOR_PROMO_CODES: Record<string, CreatorPromoConfig> = {
     utm_campaign: "seerah_launch",
     utm_content: "annarbor",
   },
+  ANNARBOR79: {
+    code: "ANNARBOR79",
+    // $149 − $70 = $79  →  70 / 149 × 100 ≈ 46.980%
+    discountPercent: 46.980,
+    displayLabel: "Ann Arbor Student Family Lifetime — $79",
+    creator: "annarbor",
+    utm_source: "direct",
+    utm_medium: "promo",
+    utm_campaign: "seerah_launch",
+    utm_content: "annarbor",
+  },
   COMMUNITY20: {
     code: "COMMUNITY20",
     discountPercent: 20,

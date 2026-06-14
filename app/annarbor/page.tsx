@@ -25,7 +25,7 @@ export const metadata: Metadata = {
 
 const UTM                  = "utm_source=direct&utm_medium=promo&utm_campaign=seerah_launch&utm_content=annarbor";
 const CHECKOUT_URL         = `/checkout?plan=individual-lifetime&promo=ANNARBOR29&source=annarbor&${UTM}`;
-const FAMILY_URL           = `/checkout?plan=family-lifetime&promo=ANNARBOR119&source=annarbor&${UTM}`;
+const FAMILY_URL           = `/checkout?plan=family-lifetime&promo=ANNARBOR79&source=annarbor&${UTM}`;
 const INDIVIDUAL_MONTHLY_URL = `/checkout?plan=individual-monthly&source=annarbor&${UTM}`;
 const FAMILY_MONTHLY_URL     = `/checkout?plan=family-monthly&source=annarbor&${UTM}`;
 
@@ -169,7 +169,7 @@ export default async function AnnArborPage() {
         individualLifetimeUrl={CHECKOUT_URL}
         familyLifetimeUrl={FAMILY_URL}
         individualLifetimePriceCents={2900}
-        familyLifetimePriceCents={11900}
+        familyLifetimePriceCents={7900}
         regularIndividualPriceCents={7900}
         regularFamilyPriceCents={14900}
       />
