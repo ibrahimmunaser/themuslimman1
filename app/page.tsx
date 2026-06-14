@@ -92,17 +92,17 @@ export default async function LandingPage() {
 
               <FadeUp delay={0.15}>
                 <p className="text-sm text-gold/80 font-medium mb-8 xl:text-left text-center">
-                  One-time payment · Lifetime access · No monthly charge
+                  Start for $4.99/month · Cancel anytime
                 </p>
               </FadeUp>
 
               <FadeUp delay={0.2}>
                 <div className="flex flex-col items-center xl:items-start gap-3 mb-5">
                   <Link
-                    href="/checkout?plan=individual-lifetime"
+                    href="/checkout?plan=individual-monthly"
                     className={buttonClass("primary", "xl", "shadow-2xl shadow-gold/20 w-full sm:w-auto")}
                   >
-                    Get Lifetime Access — $79
+                    Start for $4.99/month
                     <ArrowRight className="w-5 h-5" />
                   </Link>
                   <div className="flex flex-wrap items-center justify-center xl:justify-start gap-x-4 gap-y-1 text-sm text-text-muted/60">
@@ -113,8 +113,8 @@ export default async function LandingPage() {
                       Watch Part 1 free first
                     </a>
                     <span aria-hidden>·</span>
-                    <Link href="/checkout?plan=family-lifetime" className="hover:text-text-muted transition-colors">
-                      Family plan — $149
+                    <Link href="/checkout?plan=individual-lifetime" className="hover:text-text-muted transition-colors">
+                      Prefer to pay once? $79 lifetime
                     </Link>
                   </div>
                 </div>
@@ -256,8 +256,8 @@ export default async function LandingPage() {
             </div>
           }>
             <Part1FullPreview
-              checkoutHref="/checkout?plan=individual-lifetime"
-              ctaLabel="Get Lifetime Access — $79"
+              checkoutHref="/checkout?plan=individual-monthly"
+              ctaLabel="Start for $4.99/month"
             />
           </Suspense>
         </div>
@@ -272,24 +272,24 @@ export default async function LandingPage() {
             Liked what you saw?
           </p>
           <h2 className="text-2xl sm:text-3xl font-bold mb-2">
-            Get full access — pay once, keep it forever.
+            Continue after Part 1 at your own pace.
           </h2>
           <p className="text-sm text-text-muted mb-6">
-            Continue after Part 1 at your own pace. One-time payment · No subscription · 7-day refund guarantee
+            Start for $4.99/month · Cancel anytime · 7-day refund guarantee
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
-              href="/checkout?plan=individual-lifetime"
+              href="/checkout?plan=individual-monthly"
               className={buttonClass("primary", "lg", "shadow-lg shadow-gold/20 w-full sm:w-auto")}
             >
-              Get Lifetime Access — $79
+              Start for $4.99/month
               <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
-              href="/checkout?plan=family-lifetime"
+              href="/checkout?plan=individual-lifetime"
               className="text-sm text-text-muted/60 hover:text-text-muted transition-colors"
             >
-              Family plan — $149 →
+              Prefer to pay once? $79 lifetime →
             </Link>
           </div>
         </div>
@@ -425,8 +425,8 @@ export default async function LandingPage() {
                 a: "Every lesson includes a video, briefing, quiz, flashcards, mind map, and visual slides. You go at your own pace — there are no deadlines.",
               },
               {
-                q: "Is this a subscription?",
-                a: "No. Both plans are a one-time payment. Individual lifetime is $79. Family lifetime is $149. No monthly charges, no renewals, no cancellations needed.",
+                q: "What are my options?",
+                a: "Individual Membership is $4.99/month (cancel anytime). Family Membership is $9.99/month for up to 5 learner profiles. If you prefer to pay once, individual lifetime is $79 and family lifetime is $149 — no recurring charges.",
               },
               {
                 q: "Is the course self-paced?",
@@ -482,28 +482,32 @@ export default async function LandingPage() {
             Start learning the Prophet&apos;s ﷺ life in order.
           </h2>
           <p className="text-base text-gold/80 mb-8">
-            Pay once. Lifetime access. No monthly charge.
+            Start for $4.99/month. Cancel anytime.
           </p>
 
           <Link
-            href="/checkout?plan=individual-lifetime"
+            href="/checkout?plan=individual-monthly"
             className={buttonClass("primary", "xl", "shadow-2xl shadow-gold/20 w-full sm:w-auto")}
           >
-            Get Lifetime Access — $79
+            Start for $4.99/month
             <ArrowRight className="w-5 h-5" />
           </Link>
 
           <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-text-muted/60">
             <span className="flex items-center gap-1"><Lock className="w-3 h-3" /> Secure checkout</span>
             <span aria-hidden>·</span>
-            <span>One-time payment</span>
+            <span>Cancel anytime</span>
             <span aria-hidden>·</span>
             <span>7-day refund guarantee</span>
           </div>
 
           <p className="mt-5 text-sm text-text-muted/50 flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
-            <Link href="/checkout?plan=family-lifetime" className="hover:text-text-muted transition-colors underline underline-offset-2">
-              Family plan — $149
+            <Link href="/checkout?plan=individual-lifetime" className="hover:text-text-muted transition-colors underline underline-offset-2">
+              Prefer to pay once? $79 lifetime
+            </Link>
+            <span aria-hidden>·</span>
+            <Link href="/checkout?plan=family-monthly" className="hover:text-text-muted transition-colors underline underline-offset-2">
+              Family — $9.99/month
             </Link>
             <span aria-hidden>·</span>
             <a href="#preview" className="hover:text-text-muted transition-colors underline underline-offset-2">

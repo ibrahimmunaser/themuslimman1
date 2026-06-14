@@ -109,12 +109,16 @@ const OUTCOMES = [
 
 const FAQ_ITEMS = [
   {
-    q: "Is this a subscription?",
-    a: "No. Both plans are a one-time payment — individual lifetime for $79 or family lifetime for $149. No recurring charges, no renewals, no cancellations needed.",
+    q: "What are my options?",
+    a: "Individual Membership is $4.99/month — cancel anytime. Family Membership is $9.99/month for up to 5 learner profiles. If you prefer to pay once, individual lifetime is $79 and family lifetime is $149.",
   },
   {
-    q: "What does Complete Seerah include?",
-    a: "You get the full 100-part Seerah journey: video lessons, briefings, quizzes, flashcards, mind maps, visual resources, study guides, and guided progress tracking.",
+    q: "Can I cancel the monthly plan anytime?",
+    a: "Yes. You can cancel your membership at any time from your account billing page. You keep access until the end of the billing period.",
+  },
+  {
+    q: "What does the course include?",
+    a: "The full 100-part Seerah journey: video lessons, briefings, quizzes, flashcards, mind maps, visual resources, study guides, and guided progress tracking.",
   },
   {
     q: "Is there a free option?",
@@ -125,12 +129,12 @@ const FAQ_ITEMS = [
     a: "If you start the course and feel it isn't what you expected, contact us within 7 days for a full refund — no questions asked.",
   },
   {
-    q: "Will more content be added?",
-    a: "Yes. All future content and improvements are included at no extra cost for all lifetime members.",
+    q: "What is the difference between Individual and Family?",
+    a: "Individual is for one learner. Family supports up to 5 learner profiles in one household — each with their own independent progress tracking.",
   },
   {
-    q: "What is the difference between Individual and Family?",
-    a: "Individual lifetime gives one learner permanent access. Family lifetime supports up to 5 learner profiles under one household — each with their own progress tracking.",
+    q: "Will more content be added?",
+    a: "Yes. All future content and improvements are included at no extra cost for all members.",
   },
 ];
 
@@ -204,10 +208,10 @@ export default async function PricingPage() {
           <FadeUp delay={0.18}>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-5">
               <Link
-                href="/checkout?plan=individual-lifetime"
+                href="/checkout?plan=individual-monthly"
                 className={buttonClass("primary", "xl", "shadow-lg shadow-gold/20")}
               >
-                Get Lifetime Access — $79
+                Start for $4.99/month
                 <ArrowRight className="w-5 h-5" />
               </Link>
               <Link
@@ -223,10 +227,10 @@ export default async function PricingPage() {
               </Link>
             </div>
             <p className="text-xs text-text-muted">
-              <span className="text-gold font-semibold">$79 individual</span>
-              {" "}or{" "}
-              <span className="text-gold font-semibold">$149 family</span>
-              {" "}· One-time payment · No subscription · 7-Day Guarantee
+              Cancel anytime ·{" "}
+              <Link href="/checkout?plan=individual-lifetime" className="text-gold/70 hover:text-gold transition-colors underline underline-offset-2">
+                Prefer to pay once? Lifetime from $79
+              </Link>
             </p>
           </FadeUp>
         </div>
@@ -303,8 +307,8 @@ export default async function PricingPage() {
             }
           >
             <Part1FullPreview
-              checkoutHref="/checkout?plan=individual-lifetime"
-              ctaLabel="Get Lifetime Access — $79"
+              checkoutHref="/checkout?plan=individual-monthly"
+              ctaLabel="Start for $4.99/month"
             />
           </Suspense>
         </div>
@@ -437,27 +441,37 @@ export default async function PricingPage() {
               Start learning the Prophet&apos;s ﷺ life in order.
             </h2>
             <p className="text-sm text-gold/80 mb-6">
-              Pay once. Lifetime access. No monthly charge.
+              Start for $4.99/month. Cancel anytime.
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-5">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-4">
               <Link
-                href="/checkout?plan=individual-lifetime"
+                href="/checkout?plan=individual-monthly"
                 className={buttonClass("primary", "xl", "shadow-lg shadow-gold/25")}
               >
-                Get Lifetime Access — $79
+                Start for $4.99/month
                 <ArrowRight className="w-5 h-5" />
               </Link>
               <Link
-                href="/checkout?plan=family-lifetime"
+                href="/checkout?plan=family-monthly"
                 className={buttonClass(
                   "ghost",
                   "xl",
                   "border border-gold/30 text-gold hover:bg-gold/5",
                 )}
               >
-                Family Lifetime — $149
+                Family — $9.99/month
               </Link>
             </div>
+            <p className="text-xs text-text-muted mb-5">
+              Prefer to pay once?{" "}
+              <Link href="/checkout?plan=individual-lifetime" className="text-gold/70 hover:text-gold underline underline-offset-2 transition-colors">
+                Individual Lifetime $79
+              </Link>
+              {" "}·{" "}
+              <Link href="/checkout?plan=family-lifetime" className="text-gold/70 hover:text-gold underline underline-offset-2 transition-colors">
+                Family Lifetime $149
+              </Link>
+            </p>
             {!accessInfo?.hasAccess && (
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link

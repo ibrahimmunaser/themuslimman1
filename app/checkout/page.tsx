@@ -73,16 +73,13 @@ export default async function CheckoutPage({ searchParams }: Props) {
   const billingParam = params.billing?.toLowerCase() ?? "";
 
   // Map plan IDs to audience + billing for the Elements flow.
-  // Trial and monthly plans are no longer offered — redirect old URLs to lifetime.
   if      (normalizedPlan === "individual-lifetime") { initialAudience = "individual"; initialBilling = "lifetime"; }
   else if (normalizedPlan === "family-lifetime")     { initialAudience = "family";     initialBilling = "lifetime"; }
-  // Legacy / old trial+monthly URLs → redirect to equivalent lifetime plan
-  else if (normalizedPlan === "individual-trial" || normalizedPlan === "individual-monthly") {
-    redirect("/checkout?plan=individual-lifetime");
-  }
-  else if (normalizedPlan === "family-trial" || normalizedPlan === "family-monthly") {
-    redirect("/checkout?plan=family-lifetime");
-  }
+  else if (normalizedPlan === "individual-monthly")  { initialAudience = "individual"; initialBilling = "monthly";  }
+  else if (normalizedPlan === "family-monthly")      { initialAudience = "family";     initialBilling = "monthly";  }
+  // Trial URLs → redirect to monthly (trials removed; monthly is the new entry-level plan)
+  else if (normalizedPlan === "individual-trial") { redirect("/checkout?plan=individual-monthly"); }
+  else if (normalizedPlan === "family-trial")     { redirect("/checkout?plan=family-monthly"); }
   // Legacy URL param fallbacks
   else {
     if (billingParam === "lifetime")                             initialBilling  = "lifetime";
@@ -96,10 +93,10 @@ export default async function CheckoutPage({ searchParams }: Props) {
   const planBasePrice: Record<string, number> = {
     "individual-lifetime": 7900,
     "family-lifetime":     14900,
+    "individual-monthly":  499,
+    "family-monthly":      999,
     "individual-trial":    0,
     "family-trial":        0,
-    "individual-monthly":  0,
-    "family-monthly":      0,
   };
   const initialBasePrice  = planBasePrice[normalizedPlan] ?? 7900;
   let initialClientSecret: string | null = null;

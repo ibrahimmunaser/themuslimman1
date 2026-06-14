@@ -922,13 +922,15 @@ function CheckoutPageContent({
     { id: "family",     Icon: Users, label: "Family" },
   ];
 
-  // Only lifetime plans are offered — trial and monthly have been removed from the UI.
+  // Monthly is the default/first option; lifetime is available as a secondary option.
   const allBillingOptions: { id: Billing; label: string; price: number; priceSuffix?: string; priceOverride?: string; sub: string; badge?: string }[] = audience === "individual"
     ? [
-        { id: "lifetime", label: "Lifetime", price: PLANS.complete.price, sub: "Pay once, access forever", badge: "Best Value" },
+        { id: "monthly",  label: "Monthly",  price: PLANS.monthly.price,   priceSuffix: "/mo", sub: "Cancel anytime",          badge: "Most Popular" },
+        { id: "lifetime", label: "Lifetime", price: PLANS.complete.price,  sub: "Pay once, access forever", badge: "Best Value" },
       ]
     : [
-        { id: "lifetime", label: "Lifetime", price: PLANS.family.price, sub: "Up to 5 profiles · pay once", badge: "Best Value" },
+        { id: "monthly",  label: "Monthly",  price: PLANS.familyMonthly.price, priceSuffix: "/mo", sub: "Up to 5 profiles · cancel anytime", badge: "Most Popular" },
+        { id: "lifetime", label: "Lifetime", price: PLANS.family.price,        sub: "Up to 5 profiles · pay once", badge: "Best Value" },
       ];
 
   const billingOptions = allBillingOptions;

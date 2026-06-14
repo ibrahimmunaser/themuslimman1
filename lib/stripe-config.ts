@@ -51,22 +51,20 @@ export const PLANS = {
     ],
   },
 
-  // ── Monthly subscriptions (legacy direct subscription, no trial) ──
+  // ── Individual monthly subscription ($4.99/month) ─────────────────────────
+  // New price for future customers. Existing customers stay on their original
+  // price via their Stripe subscription — changing this constant does not
+  // retroactively affect any active subscription.
   monthly: {
     id: "monthly",
-    name: "Monthly Access",
+    name: "Individual Membership",
     subtitle: "Full access while subscribed",
-    price: 900, // $9.00/month
+    price: 499, // $4.99/month
     interval: "month" as const,
     features: [
-      "All 100 Seerah parts",
-      "Video lessons",
-      "Audio lessons",
-      "Summaries and briefings",
-      "Quizzes",
-      "Flashcards",
-      "Mind maps",
-      "Progress tracking",
+      "All 100 Seerah parts, unlocked immediately",
+      "Videos, quizzes, flashcards, mind maps",
+      "Progress dashboard · Mobile friendly",
       "Cancel anytime",
     ],
   },
@@ -117,22 +115,20 @@ export const PLANS = {
     badge: "Best for Families",
     profileLimit: 5,
   },
+  // ── Family monthly subscription ($9.99/month) ──────────────────────────────
+  // New price for future customers — existing subscribers are unaffected.
   familyMonthly: {
     id: "familyMonthly",
-    name: "Family Access Monthly",
-    subtitle: "One household account with up to 5 learner profiles",
-    price: 1900, // $19.00/month
+    name: "Family Membership",
+    subtitle: "For parents, spouse, and children — up to 5 profiles",
+    price: 999, // $9.99/month
     interval: "month" as const,
     stripeProductId: "prod_UbM4rARx0wZTAI", // env: STRIPE_PRICE_FAMILY_MONTHLY
     features: [
-      "One household account",
-      "Up to 5 learner profiles",
-      "Separate progress for every course asset",
-      "All 100 Seerah parts",
-      "Video, audio, briefings, slides, infographics",
-      "Quizzes, flashcards, and mind maps",
-      "Parent progress dashboard",
-      "Easy profile switching",
+      "Everything in Individual Membership",
+      "Up to 5 separate learner profiles",
+      "Each profile tracks progress independently",
+      "All 100 parts for every family member",
       "Cancel anytime",
     ],
     recommended: false,
