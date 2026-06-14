@@ -258,6 +258,7 @@ export default async function LandingPage() {
             <Part1FullPreview
               checkoutHref="/checkout?plan=individual-monthly"
               ctaLabel="Continue After Part 1"
+              hideCta
             />
           </Suspense>
         </div>
@@ -266,28 +267,25 @@ export default async function LandingPage() {
       {/* ============================================
           OFFER STRIP — capture impulse buyers post-preview
       ============================================ */}
-      <section className="py-10 border-t border-border bg-surface/30">
+      <section className="py-8 border-t border-border bg-surface/30">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 text-center">
-          <p className="text-xs font-semibold text-gold/70 uppercase tracking-widest mb-3">
+          <p className="text-xs font-semibold text-gold/70 uppercase tracking-widest mb-2">
             Liked what you saw?
           </p>
-          <h2 className="text-2xl sm:text-3xl font-bold mb-2">
+          <h2 className="text-2xl sm:text-3xl font-bold">
             Continue after Part 1 at your own pace.
           </h2>
-          <p className="text-sm text-text-muted mb-6">
-            Cancel anytime · 7-day refund guarantee
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <a
-              href="#pricing"
-              className={buttonClass("primary", "lg", "shadow-lg shadow-gold/20 w-full sm:w-auto")}
-            >
-              View Plans
-              <ArrowRight className="w-4 h-4" />
-            </a>
-          </div>
         </div>
       </section>
+
+      {/* ============================================
+          PRICING — immediately after preview
+      ============================================ */}
+      <PricingSection
+        hasLifetime={!!(user?.hasPaid)}
+        hasMonthly={false}
+        hasFamily={user?.planType === "family"}
+      />
 
       {/* ============================================
           WHY SCATTERED VIDEOS DON'T WORK
@@ -357,15 +355,6 @@ export default async function LandingPage() {
           </div>
         </div>
       </section>
-
-      {/* ============================================
-          PRICING
-      ============================================ */}
-      <PricingSection
-        hasLifetime={!!(user?.hasPaid)}
-        hasMonthly={false}
-        hasFamily={user?.planType === "family"}
-      />
 
       {/* ============================================
           WHAT HAPPENS AFTER YOU BUY
