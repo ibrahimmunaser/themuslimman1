@@ -10,6 +10,7 @@ import { Footer } from "@/components/landing/footer";
 import { Part1FullPreview } from "@/components/landing/part1-full-preview";
 import { InfluencerPromoSetter } from "./influencer-promo-setter";
 import BrownieFunnelTracker from "./brownie-funnel-tracker";
+import { R2VideoPlayer } from "@/app/deenresponds/r2-video-player";
 
 // ── Config ─────────────────────────────────────────────────────────────────────
 
@@ -31,20 +32,10 @@ export interface InfluencerPageConfig {
   familyPriceCents: number;
   regularIndividualPriceCents: number;
   regularFamilyPriceCents: number;
-  /** Optional sponsor video URL (signed R2). Null = skip the video section. */
+  /** Optional signed R2 URL. When provided, a sponsor video section is shown. */
   sponsorVideoUrl?: string | null;
   /** Label above the video section, e.g. "Why Deen Responds recommended this" */
   videoSectionLabel?: string;
-  /** Optional R2VideoPlayer import — lazily provided by the page wrapper to avoid
-   *  importing the player in pages that don't have a video. */
-  VideoPlayer?: React.ComponentType<{
-    url: string;
-    title: string;
-    label: string;
-    autoplay: boolean;
-    trackEvent: string;
-    aspectClass: string;
-  }>;
 }
 
 // ── Shared styles ──────────────────────────────────────────────────────────────
@@ -124,7 +115,6 @@ export function InfluencerLandingPage({
   regularFamilyPriceCents,
   sponsorVideoUrl,
   videoSectionLabel,
-  VideoPlayer,
 }: InfluencerPageConfig) {
   const indPrice    = fmtPrice(individualPriceCents);
   const famPrice    = fmtPrice(familyPriceCents);
@@ -185,9 +175,13 @@ export function InfluencerLandingPage({
           <p className="text-xs text-gold/60 mb-1">
             {displayName} campaign discount applied — pricing may return to normal after launch.
           </p>
-          <p className="text-sm text-text-muted mb-7">
-            One-time payment · No subscription · 7-day refund guarantee
-          </p>
+          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm text-text-muted mb-7">
+            <span>One-time payment</span>
+            <span className="hidden sm:inline text-text-muted/30">·</span>
+            <span>No subscription</span>
+            <span className="hidden sm:inline text-text-muted/30">·</span>
+            <span>7-day refund guarantee</span>
+          </div>
 
           <Link
             href={individualUrl}
@@ -322,13 +316,13 @@ export function InfluencerLandingPage({
       ═════════════════════════════════════════════════════════════════════= */}
 
       {/* ── Sponsor video (optional) ────────────────────────────────────── */}
-      {sponsorVideoUrl && VideoPlayer && (
+      {sponsorVideoUrl && (
         <section className="py-12 bg-surface/30 border-y border-border/50">
           <div className="max-w-sm mx-auto px-4 sm:px-6">
             <p className="text-center text-sm font-semibold text-text-muted uppercase tracking-wider mb-5">
               {videoSectionLabel ?? `Why ${displayName} recommended this`}
             </p>
-            <VideoPlayer
+            <R2VideoPlayer
               url={sponsorVideoUrl}
               title={`${displayName} — Complete Seerah`}
               label={`${displayName} on TheMuslimMan Seerah Program`}
@@ -340,10 +334,6 @@ export function InfluencerLandingPage({
               <Link href={individualUrl} data-track="individual_lifetime_cta_clicked" data-plan="individual" className={`${primaryBtn} w-full py-3.5 text-sm`}>
                 Get Lifetime Access — {indPrice}
               </Link>
-              <a href="#preview" data-track="watch_part1_clicked" className="inline-flex items-center justify-center gap-2 rounded-xl border border-gold/25 text-gold/60 font-medium hover:text-gold/80 transition-colors w-full py-3 text-sm">
-                <Play className="w-4 h-4" />
-                Watch Part 1 Free
-              </a>
             </div>
           </div>
         </section>

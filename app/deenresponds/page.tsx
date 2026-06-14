@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { InfluencerLandingPage } from "@/components/influencer/influencer-landing-page";
 import { generateSignedR2Url, VIDEO_URL_EXPIRY } from "@/lib/r2";
-import { R2VideoPlayer } from "./r2-video-player";
 import { prisma } from "@/lib/db";
 import { MobileStickyCta } from "./mobile-sticky-cta";
 
@@ -45,7 +44,6 @@ export default async function DeenRespondsPage() {
         regularFamilyPriceCents={14900}
         sponsorVideoUrl={videoUrl}
         videoSectionLabel="Why Deen Responds recommended this"
-        VideoPlayer={R2VideoPlayer}
       />
       <MobileStickyCta
         href={INDIVIDUAL_URL}
