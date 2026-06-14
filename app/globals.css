@@ -905,3 +905,8 @@ audio, video {
   0%   { left: -35%; }
   100% { left: 100%; }
 }
+
+/* Portrait 9:16 aspect ratio — used for vertical/reel-style video embeds */
+@utility aspect-portrait {
+  aspect-ratio: 9 / 16;
+}

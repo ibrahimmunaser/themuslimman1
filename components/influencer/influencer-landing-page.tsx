@@ -315,26 +315,31 @@ export function InfluencerLandingPage({
           PROOF SECTIONS
       ═════════════════════════════════════════════════════════════════════= */}
 
-      {/* ── Sponsor video (optional) ────────────────────────────────────── */}
+      {/* ── Sponsor video (optional) — portrait reel style ──────────────── */}
       {sponsorVideoUrl && (
         <section className="py-12 bg-surface/30 border-y border-border/50">
-          <div className="max-w-xl mx-auto px-4 sm:px-6">
-            <p className="text-center text-sm font-semibold text-text-muted uppercase tracking-wider mb-5">
+          <div className="max-w-sm mx-auto px-4 sm:px-6 text-center">
+            <p className="text-sm font-semibold text-text-muted uppercase tracking-wider mb-5">
               {videoSectionLabel ?? `Why ${displayName} recommended this`}
             </p>
-            {/* Visible border wrapper ensures the player is obvious even on dark backgrounds */}
-            <div className="rounded-2xl border border-gold/20 overflow-hidden bg-surface">
+            {/* Centered portrait container — intentional reel/Instagram look */}
+            <div className="mx-auto" style={{ maxWidth: "260px" }}>
               <R2VideoPlayer
                 url={sponsorVideoUrl}
                 title={`${displayName} — Complete Seerah`}
-                label={`${displayName} on TheMuslimMan Seerah Program`}
+                label={`${displayName} on TheMuslimMan Seerah`}
                 autoplay={false}
                 trackEvent="sponsor_video_played"
-                aspectClass="aspect-video"
+                aspectClass="aspect-portrait"
               />
             </div>
-            <div className="mt-5">
-              <Link href={individualUrl} data-track="individual_lifetime_cta_clicked" data-plan="individual" className={`${primaryBtn} w-full py-3.5 text-sm`}>
+            <div className="mt-6">
+              <Link
+                href={individualUrl}
+                data-track="individual_lifetime_cta_clicked"
+                data-plan="individual"
+                className={`${primaryBtn} w-full py-3.5 text-sm`}
+              >
                 Get Lifetime Access — {indPrice}
               </Link>
             </div>
