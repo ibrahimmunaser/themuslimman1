@@ -751,6 +751,20 @@ async function upsertSubscription(userId: string, sub: Stripe.Subscription) {
     ACTIVE_STATUSES.includes(sub.status) &&
     (!existing || !ACTIVE_STATUSES.includes(existing.status));
 
+  // Abandoned checkout: Stripe expires incomplete subscriptions after ~23 hours.
+  // When that happens, send a one-time recovery email so we have a chance to win
+  // the customer back. Only fires once — when status transitions to incomplete_expired.
+  const isAbandonedExpiry =
+    sub.status === "incomplete_expired" &&
+    (!existing || existing.status === "incomplete");
+
+  if (isAbandonedExpiry) {
+    console.log(`[WEBHOOK] upsertSubscription: incomplete_expired for sub ${sub.id} (userId ${userId}) — queueing recovery email`);
+    sendAbandonedCheckoutEmail(userId, sub).catch((e) =>
+      console.error("[WEBHOOK] upsertSubscription: Failed to send abandoned checkout email:", e)
+    );
+  }
+
   const subCreator   = sub.metadata?.creator   ?? null;
   const subPromoCode = sub.metadata?.promoCode ?? null;
 
@@ -1145,4 +1159,94 @@ async function sendAccountSetupEmail(
   });
 
   console.log(`[PURCHASE_EMAIL] Account setup email sent to user ${userId}`);
+}
+
+// ── Abandoned subscription checkout recovery ──────────────────────────────────
+
+/**
+ * Fires when a subscription expires in `incomplete_expired` state — meaning the
+ * customer started checkout (subscription was created in Stripe) but never paid.
+ *
+ * Sends a single recovery email with a direct link back to checkout so the
+ * customer can complete their purchase. Idempotent: called at most once per
+ * subscription (only on the incomplete → incomplete_expired transition).
+ */
+async function sendAbandonedCheckoutEmail(
+  userId: string,
+  sub: Stripe.Subscription,
+): Promise<void> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { email: true, fullName: true },
+  });
+  if (!user) {
+    console.warn(`[ABANDONED_EMAIL] User ${userId} not found — cannot send recovery email`);
+    return;
+  }
+
+  const isFamilySub = sub.metadata?.planType === "family";
+  const planParam   = isFamilySub ? "family-monthly" : "individual-monthly";
+  const source      = sub.metadata?.source ?? "";
+  const promoCode   = sub.metadata?.promoCode ?? "";
+
+  // Build checkout URL that re-applies original source / promo attribution.
+  const { Resend } = await import("resend");
+  const resend  = new Resend(process.env.RESEND_API_KEY);
+  const appUrl  = process.env.NEXT_PUBLIC_APP_URL ?? "https://themuslimman.com";
+  const year    = new Date().getFullYear();
+
+  const params = new URLSearchParams({ plan: planParam });
+  if (source)    params.set("source", source);
+  if (promoCode) params.set("promo", promoCode);
+  const checkoutUrl = `${appUrl}/checkout?${params.toString()}`;
+
+  const greeting = user.fullName?.trim() || "dear student";
+  const planLabel = isFamilySub ? "Family Membership ($9.99/month)" : "Individual Membership ($4.99/month)";
+
+  await resend.emails.send({
+    from:    process.env.EMAIL_FROM ?? "TheMuslimMan <noreply@themuslimman.com>",
+    to:      user.email,
+    subject: "You left before completing your Seerah membership",
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+        <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.6;color:#333;max-width:600px;margin:0 auto;padding:20px;">
+          <div style="background:linear-gradient(135deg,#1a1a1a 0%,#2d2d2d 100%);padding:30px 20px;text-align:center;border-radius:12px 12px 0 0;">
+            <h1 style="color:#f4c542;margin:0 0 8px 0;font-size:22px;">You were almost in.</h1>
+            <p style="color:#ccc;margin:0;font-size:15px;">Complete Seerah — ${planLabel}</p>
+          </div>
+          <div style="background:#fff;padding:40px 30px;border:1px solid #e5e5e5;border-top:none;">
+            <p style="font-size:16px;margin:0 0 16px 0;">Assalamu Alaykum ${greeting},</p>
+            <p style="font-size:15px;margin:0 0 16px 0;">
+              You started signing up for the <strong>Complete Seerah ${planLabel}</strong>,
+              but your payment was not completed.
+            </p>
+            <p style="font-size:15px;margin:0 0 24px 0;">
+              Part 1 is still free. If you want to continue after Part 1, your spot is still here.
+            </p>
+            <div style="text-align:center;margin:32px 0;">
+              <a href="${checkoutUrl}" style="display:inline-block;background:#f4c542;color:#1a1a1a;text-decoration:none;padding:16px 40px;border-radius:8px;font-weight:700;font-size:16px;">
+                Complete My Membership
+              </a>
+            </div>
+            <ul style="font-size:14px;color:#555;padding-left:20px;margin:0 0 24px 0;line-height:1.9;">
+              <li>Less than a coffee each month</li>
+              <li>Cancel anytime — no commitment</li>
+              <li>Instant access after payment</li>
+              <li>7-day refund guarantee</li>
+            </ul>
+            <p style="font-size:13px;color:#aaa;margin:0;">
+              Questions? Reply to this email or <a href="${appUrl}/contact" style="color:#b8960c;">contact us here</a>.
+            </p>
+          </div>
+          <div style="background:#f8f9fa;padding:20px;text-align:center;border-radius:0 0 12px 12px;border:1px solid #e5e5e5;border-top:none;">
+            <p style="font-size:12px;color:#999;margin:0;">© ${year} TheMuslimMan · Complete Seerah</p>
+          </div>
+        </body>
+      </html>
+    `,
+  });
+
+  console.log(`[ABANDONED_EMAIL] Recovery email sent to user ${userId} (sub ${sub.id})`);
 }

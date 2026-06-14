@@ -19,6 +19,10 @@ export async function POST(request: NextRequest) {
   const MONTHLY_PRICE_ID =
     process.env.STRIPE_PRICE_INDIVIDUAL_MONTHLY ?? process.env.STRIPE_MONTHLY_PRICE_ID;
 
+  let body: Record<string, string> = {};
+  try { body = await request.json(); } catch { /* no body is fine */ }
+  const { creator, promoCode, source, utmSource, utmCampaign, utmMedium, utmContent } = body;
+
   try {
     const user = await getCurrentUser();
     if (!user) {
@@ -113,11 +117,25 @@ export async function POST(request: NextRequest) {
       items: [{ price: MONTHLY_PRICE_ID }],
       payment_behavior: "default_incomplete",
       payment_settings: {
-        payment_method_types: ["card"],
+        // "card" covers Apple Pay / Google Pay (they create card tokens).
+        // "link" enables Stripe Link for saved-email fast checkout.
+        payment_method_types: ["card", "link"],
         save_default_payment_method: "on_subscription",
       },
       expand: ["latest_invoice", "latest_invoice.confirmation_secret"],
-      metadata: { userId: user.id, type: "subscription" },
+      metadata: {
+        userId:    user.id,
+        type:      "subscription",
+        planId:    "monthly",
+        planType:  "individual",
+        ...(creator    ? { creator }    : {}),
+        ...(promoCode  ? { promoCode }  : {}),
+        ...(source     ? { source }     : {}),
+        ...(utmSource  ? { utmSource }  : {}),
+        ...(utmCampaign  ? { utmCampaign }  : {}),
+        ...(utmMedium  ? { utmMedium }  : {}),
+        ...(utmContent ? { utmContent } : {}),
+      },
     });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -140,7 +158,18 @@ export async function POST(request: NextRequest) {
     const piId: string | null = invoice?.confirmation_secret?.payment_intent ?? null;
     if (piId) {
       await stripe.paymentIntents.update(piId, {
-        metadata: { type: "subscription", userId: user.id, subscriptionId: subscription.id },
+        metadata: {
+          type:     "subscription",
+          userId:   user.id,
+          planId:   "monthly",
+          planType: "individual",
+          subscriptionId: subscription.id,
+          ...(creator   ? { creator }   : {}),
+          ...(promoCode ? { promoCode } : {}),
+          ...(source    ? { source }    : {}),
+          ...(utmSource ? { utmSource } : {}),
+          ...(utmCampaign ? { utmCampaign } : {}),
+        },
       }).catch((e) => console.error("[CREATE-SUBSCRIPTION-INTENT] Could not update PI metadata:", e));
     } else {
       console.warn("[CREATE-SUBSCRIPTION-INTENT] No payment_intent ID found on confirmation_secret — PI metadata not tagged");

@@ -571,8 +571,9 @@ function CheckoutPageContent({
       // correct amount regardless of what the client sends here.
       if (aud === "family" && bill === "lifetime") body.isUpgrade = true;
 
-      // Pass creator attribution for trial subscriptions so Subscription.creator is set.
-      if (bill === "trial") {
+      // Pass creator attribution for trial and monthly subscriptions so Subscription.creator
+      // and Subscription.promoCode are set — enabling influencer commission tracking.
+      if (bill === "trial" || bill === "monthly") {
         const storedPromo = promoCode ?? getCreatorPromo();
         if (storedPromo) {
           const cfg = getCreatorPromoConfig(storedPromo);
@@ -581,6 +582,9 @@ function CheckoutPageContent({
             body.promoCode = storedPromo;
           }
         }
+        // Pass the landing-page source (e.g. "browniesaadi") so we know which
+        // influencer page drove the subscription, even without a promo code.
+        if (initialSourceParam) body.source = initialSourceParam;
       }
 
       const res  = await fetch(endpoint, {

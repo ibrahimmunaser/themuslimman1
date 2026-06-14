@@ -20,6 +20,10 @@ export async function POST(request: NextRequest) {
       { status: 429, headers: { "Retry-After": String(rl.retryAfterSeconds) } }
     );
   }
+  let body: Record<string, string> = {};
+  try { body = await request.json(); } catch { /* no body is fine */ }
+  const { creator, promoCode, source, utmSource, utmCampaign, utmMedium, utmContent } = body;
+
   try {
     const user = await getCurrentUser();
     if (!user) {
@@ -172,15 +176,24 @@ export async function POST(request: NextRequest) {
       items: [{ price: FAMILY_MONTHLY_PRICE_ID }],
       payment_behavior: "default_incomplete",
       payment_settings: {
-        payment_method_types: ["card"],
+        // "card" covers Apple Pay / Google Pay (they create card tokens).
+        // "link" enables Stripe Link for saved-email fast checkout.
+        payment_method_types: ["card", "link"],
         save_default_payment_method: "on_subscription",
       },
       expand: ["latest_invoice", "latest_invoice.confirmation_secret"],
       metadata: {
-        userId: user.id,
-        planId: FAMILY_MONTHLY_PLAN.id,   // "familyMonthly"
+        userId:   user.id,
+        planId:   FAMILY_MONTHLY_PLAN.id,  // "familyMonthly"
         planType: "family",                // used in webhook to set user.planType
-        type: "subscription",
+        type:     "subscription",
+        ...(creator    ? { creator }    : {}),
+        ...(promoCode  ? { promoCode }  : {}),
+        ...(source     ? { source }     : {}),
+        ...(utmSource  ? { utmSource }  : {}),
+        ...(utmCampaign  ? { utmCampaign }  : {}),
+        ...(utmMedium  ? { utmMedium }  : {}),
+        ...(utmContent ? { utmContent } : {}),
       },
     });
 
@@ -200,11 +213,16 @@ export async function POST(request: NextRequest) {
     if (piId) {
       await stripe.paymentIntents.update(piId, {
         metadata: {
-          type: "subscription",
-          userId: user.id,
-          planId: FAMILY_MONTHLY_PLAN.id,
+          type:     "subscription",
+          userId:   user.id,
+          planId:   FAMILY_MONTHLY_PLAN.id,
           planType: "family",
           subscriptionId: subscription.id,
+          ...(creator   ? { creator }   : {}),
+          ...(promoCode ? { promoCode } : {}),
+          ...(source    ? { source }    : {}),
+          ...(utmSource ? { utmSource } : {}),
+          ...(utmCampaign ? { utmCampaign } : {}),
         },
       }).catch((e) => console.warn("[CREATE-FAMILY-SUB] Could not update PI metadata:", e));
     }
