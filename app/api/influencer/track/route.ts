@@ -3,7 +3,13 @@ import { nanoid } from "nanoid";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit, getIP } from "@/lib/rate-limit";
 
-const KNOWN_CREATORS = ["browniesaadi", "community"] as const;
+const KNOWN_CREATORS = [
+  "browniesaadi",
+  "community",
+  "deenresponds",
+  "annarbor",
+  "theorthodoxmuslim",
+] as const;
 
 const KNOWN_EVENT_TYPES = [
   // v1 events (kept for backward compat)
@@ -18,6 +24,7 @@ const KNOWN_EVENT_TYPES = [
   "checkout_form_submitted",
   // v2 simplified funnel events
   "brownie_landing_page_view",
+  "landing_page_view",
   "individual_lifetime_cta_clicked",
   "family_lifetime_cta_clicked",
   "watch_part1_clicked",

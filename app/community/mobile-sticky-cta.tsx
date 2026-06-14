@@ -5,13 +5,19 @@ import { X } from "lucide-react";
 
 interface MobileStickyCtaProps {
   href?: string;
+  label?: string;
+  sublabel?: string;
 }
 
 /**
  * Fixed bottom bar on mobile only (hidden sm+).
  * Dismissible so it never permanently covers footer links.
  */
-export function MobileStickyCta({ href = "#pricing" }: MobileStickyCtaProps) {
+export function MobileStickyCta({
+  href = "#pricing",
+  label = "Community Lifetime Offer from $49",
+  sublabel = "One-time payment · No subscription",
+}: MobileStickyCtaProps) {
   const [dismissed, setDismissed] = useState(false);
   if (dismissed) return null;
 
@@ -20,9 +26,10 @@ export function MobileStickyCta({ href = "#pricing" }: MobileStickyCtaProps) {
       <div className="flex items-center gap-3">
         <a
           href={href}
-          className="flex-1 flex items-center justify-center py-3.5 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-sm transition-colors shadow-lg shadow-gold/20"
+          className="flex-1 flex flex-col items-center justify-center py-3.5 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-sm transition-colors shadow-lg shadow-gold/20"
         >
-          Get Access — 20% Off
+          <span>{label}</span>
+          {sublabel && <span className="text-[10px] font-normal mt-0.5 opacity-70">{sublabel}</span>}
         </a>
         <button
           onClick={() => setDismissed(true)}

@@ -180,7 +180,8 @@ function CheckoutForm({
     }
   };
 
-  const isBrownie = (creator ?? "").toLowerCase() === "browniesaadi";
+  // True for any creator promo code, not just browniesaadi
+  const isCreatorPromo = !!(creator && creator.length > 0);
 
   const buttonLabel =
     billing === "trial"
@@ -197,13 +198,12 @@ function CheckoutForm({
           "Due today: $0",
           "Cancel anytime before trial ends",
           "Secure checkout",
-          ...(isBrownie ? ["Browniesaadi discount applied"] : []),
         ]
       : [
           "One-time payment — no recurring charge",
           "7-day refund guarantee",
           "Secure checkout",
-          ...(isBrownie ? ["Browniesaadi campaign price applied"] : []),
+          ...(isCreatorPromo ? ["Special offer discount applied"] : []),
         ];
 
   const whatHappensNext =
@@ -356,6 +356,8 @@ const COMMUNITY_CODE_MAP: Partial<Record<string, Record<"individual" | "family",
   BROWNIE119:   { individual: "BROWNIE59",    family: "BROWNIE119"   },
   ORTHODOX59:   { individual: "ORTHODOX59",   family: "ORTHODOX119"  },
   ORTHODOX119:  { individual: "ORTHODOX59",   family: "ORTHODOX119"  },
+  ANNARBOR59:   { individual: "ANNARBOR59",   family: "ANNARBOR119"  },
+  ANNARBOR119:  { individual: "ANNARBOR59",   family: "ANNARBOR119"  },
 };
 
 /** Returns true when running inside an Instagram / TikTok / Facebook in-app browser. */
@@ -389,13 +391,16 @@ function CheckoutPageContent({
   const promoParam = initialPromoParam;
   const isInApp = useIsInAppBrowser();
 
-  // Influencer confirmation mode: active when the user comes from an influencer
-  // landing page (source=browniesaadi) or has a Brownie promo code in the URL.
-  // In this mode the plan selector is hidden by default — the user sees a simple
-  // "Your selected offer" confirmation, with a "Change plan" link to reveal it.
+  // Influencer confirmation mode: active when the user arrives from any influencer
+  // landing page (source param matches a known creator) or carries a creator promo
+  // code, and the plan is a lifetime plan. In this mode the plan selector is hidden
+  // by default — the user sees "Your selected offer" and a "Change plan" link.
+  const INFLUENCER_SOURCES = new Set([
+    "browniesaadi", "deenresponds", "community", "annarbor", "theorthodoxmuslim",
+  ]);
   const isInfluencerMode = !!(
-    initialSourceParam === "browniesaadi" ||
-    promoParam?.toUpperCase().startsWith("BROWNIE")
+    (initialSourceParam && INFLUENCER_SOURCES.has(initialSourceParam)) ||
+    (promoParam && getCreatorPromoConfig(promoParam) !== null)
   ) && initialBilling === "lifetime";
 
   const [showPlanSelector, setShowPlanSelector] = useState(!isInfluencerMode);
@@ -942,7 +947,7 @@ function CheckoutPageContent({
             {displayDiscount > 0 && (
               <div className="flex items-center gap-2 text-xs text-green-400">
                 <Check className="w-3.5 h-3.5 flex-shrink-0" />
-                Brownie Saadi discount applied — saving {formatPrice(displayDiscount)}
+                Special offer discount applied — saving {formatPrice(displayDiscount)}
               </div>
             )}
             <div className="flex flex-wrap gap-x-4 gap-y-1">
@@ -957,7 +962,7 @@ function CheckoutPageContent({
           <button
             onClick={() => {
               setShowPlanSelector(true);
-              sendCheckoutEvent("browniesaadi", "change_plan_clicked", { plan: `${audience}-${billing}` });
+              sendCheckoutEvent(initialSourceParam ?? "unknown", "change_plan_clicked", { plan: `${audience}-${billing}` });
             }}
             className="mt-3 text-xs text-zinc-500 hover:text-zinc-300 transition-colors underline underline-offset-2"
           >
