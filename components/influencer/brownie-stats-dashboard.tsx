@@ -2,6 +2,11 @@ import React from "react";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
+export interface FunnelStep {
+  key: string;
+  label: string;
+}
+
 interface FunnelEvent {
   id: string;
   eventType: string;
@@ -37,19 +42,33 @@ interface BrownieStatsDashboardProps {
   purchases: Purchase[];
   trials: TrialSub[];
   lastUpdated: Date;
+  /**
+   * Funnel step definitions in order. Defaults to the standard Brownie funnel.
+   */
+  funnelSteps?: FunnelStep[];
+  /**
+   * Event key whose unique sessions serve as the "100%" baseline for conversion
+   * percentages. Defaults to "brownie_landing_page_view".
+   */
+  landingEventKey?: string;
+  /**
+   * Commission per sale in cents. Defaults to 500 ($5).
+   * Pass 0 to hide the commission card and show a revenue card instead.
+   */
+  commissionPerSale?: number;
 }
 
-// ── Funnel steps in order ──────────────────────────────────────────────────────
+// ── Default funnel steps ───────────────────────────────────────────────────────
 
-const FUNNEL_STEPS = [
-  { key: "brownie_landing_page_view",          label: "Landing Views"                    },
-  { key: "individual_lifetime_cta_clicked",    label: "Clicked Individual Lifetime CTA"  },
-  { key: "family_lifetime_cta_clicked",        label: "Clicked Family Lifetime CTA"      },
-  { key: "watch_part1_clicked",                label: "Clicked Watch Part 1 Free"        },
-  { key: "checkout_loaded_individual_lifetime",label: "Checkout — Individual Lifetime"   },
-  { key: "checkout_loaded_family_lifetime",    label: "Checkout — Family Lifetime"       },
-  { key: "change_plan_clicked",                label: "Clicked Change Plan"              },
-  { key: "checkout_form_submitted",            label: "Submitted Payment Form"           },
+const DEFAULT_FUNNEL_STEPS: FunnelStep[] = [
+  { key: "brownie_landing_page_view",           label: "Landing Views"                    },
+  { key: "individual_lifetime_cta_clicked",     label: "Clicked Individual Lifetime CTA"  },
+  { key: "family_lifetime_cta_clicked",         label: "Clicked Family Lifetime CTA"      },
+  { key: "watch_part1_clicked",                 label: "Clicked Watch Part 1 Free"        },
+  { key: "checkout_loaded_individual_lifetime", label: "Checkout — Individual Lifetime"   },
+  { key: "checkout_loaded_family_lifetime",     label: "Checkout — Family Lifetime"       },
+  { key: "change_plan_clicked",                 label: "Clicked Change Plan"              },
+  { key: "checkout_form_submitted",             label: "Submitted Payment Form"           },
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -62,6 +81,10 @@ function maskEmail(email: string): string {
 
 function fmt(n: number) { return n.toLocaleString(); }
 
+function fmtUsd(cents: number) {
+  return (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
+}
+
 function fmtDate(d: Date) {
   return new Intl.DateTimeFormat("en-US", {
     month: "short", day: "numeric", year: "numeric",
@@ -70,9 +93,7 @@ function fmtDate(d: Date) {
 }
 
 function fmtShortDate(d: Date) {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short", day: "numeric",
-  }).format(d);
+  return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(d);
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
@@ -85,11 +106,14 @@ export function BrownieStatsDashboard({
   purchases,
   trials,
   lastUpdated,
+  funnelSteps = DEFAULT_FUNNEL_STEPS,
+  landingEventKey,
+  commissionPerSale = 500,
 }: BrownieStatsDashboardProps) {
   const uniqueVisitors = new Set(events.map((e) => e.visitorId)).size;
   const uniqueSessions = new Set(events.map((e) => e.sessionId)).size;
 
-  // Per-event-type unique sessions
+  // Per-event-type counts and unique session sets
   const eventCountMap = new Map<string, number>();
   const eventSessionMap = new Map<string, Set<string>>();
   for (const e of events) {
@@ -99,11 +123,15 @@ export function BrownieStatsDashboard({
     eventSessionMap.set(e.eventType, s);
   }
 
-  const landingUniqueSessions = eventSessionMap.get("landing_view")?.size ?? uniqueSessions;
+  // Resolve the landing baseline — try the explicit key first, then the first
+  // funnel step, then fall back to all unique sessions.
+  const resolvedLandingKey = landingEventKey ?? funnelSteps[0]?.key;
+  const landingUniqueSessions =
+    (resolvedLandingKey ? eventSessionMap.get(resolvedLandingKey)?.size : undefined)
+    ?? uniqueSessions;
 
-  // Revenue
   const totalRevenueCents = purchases.reduce((sum, p) => sum + p.amount, 0);
-  const commissionCents = purchases.length * 500;
+  const commissionCents = commissionPerSale > 0 ? purchases.length * commissionPerSale : 0;
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
@@ -122,34 +150,49 @@ export function BrownieStatsDashboard({
           <p className="text-zinc-600 text-xs mt-1">Last updated: {fmtDate(lastUpdated)}</p>
         </div>
 
-        {/* ── Commission ─────────────────────────────────────────── */}
-        <div className="border border-amber-500/30 rounded-xl p-5 bg-amber-500/5">
-          <p className="text-xs font-semibold text-amber-500/70 uppercase tracking-wider mb-1">
-            Your Commission
-          </p>
-          <p className="text-4xl font-bold text-amber-400">
-            {(commissionCents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })}
-          </p>
-          <p className="text-xs text-zinc-500 mt-1">
-            $5 per sale · {purchases.length} sale{purchases.length !== 1 ? "s" : ""} · {trials.length} trial{trials.length !== 1 ? "s" : ""}
-          </p>
-          <p className="text-xs text-zinc-600 mt-0.5">
-            Note: trials are not commissionable until they convert to paid.
-          </p>
-        </div>
+        {/* ── Commission or Revenue highlight ────────────────────── */}
+        {commissionPerSale > 0 ? (
+          <div className="border border-amber-500/30 rounded-xl p-5 bg-amber-500/5">
+            <p className="text-xs font-semibold text-amber-500/70 uppercase tracking-wider mb-1">
+              Your Commission
+            </p>
+            <p className="text-4xl font-bold text-amber-400">{fmtUsd(commissionCents)}</p>
+            <p className="text-xs text-zinc-500 mt-1">
+              {fmtUsd(commissionPerSale)} per sale · {purchases.length} sale{purchases.length !== 1 ? "s" : ""}
+              {trials.length > 0 ? ` · ${trials.length} trial${trials.length !== 1 ? "s" : ""}` : ""}
+            </p>
+            {trials.length > 0 && (
+              <p className="text-xs text-zinc-600 mt-0.5">
+                Note: trials are not commissionable until they convert to paid.
+              </p>
+            )}
+          </div>
+        ) : (
+          <div className="border border-amber-500/30 rounded-xl p-5 bg-amber-500/5">
+            <p className="text-xs font-semibold text-amber-500/70 uppercase tracking-wider mb-1">
+              Total Revenue
+            </p>
+            <p className="text-4xl font-bold text-amber-400">{fmtUsd(totalRevenueCents)}</p>
+            <p className="text-xs text-zinc-500 mt-1">
+              from {purchases.length} sale{purchases.length !== 1 ? "s" : ""}
+            </p>
+          </div>
+        )}
 
         {/* ── Summary metrics ────────────────────────────────────── */}
         <div>
           <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">Overview</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            <MetricCard label="Raw Page Loads" value={fmt(rawClicks)} note="Includes refreshes & bots" />
-            <MetricCard label="Unique Visitors" value={fmt(uniqueVisitors)} note="From funnel events" />
-            <MetricCard label="Unique Sessions" value={fmt(uniqueSessions)} note="From funnel events" />
-            <MetricCard label="Paid Purchases" value={fmt(purchases.length)} />
-            <MetricCard label="Trial Starts" value={fmt(trials.length)} />
+            <MetricCard label="Raw Page Loads"  value={fmt(rawClicks)}       note="Includes refreshes & bots" />
+            <MetricCard label="Unique Visitors"  value={fmt(uniqueVisitors)}  note="From funnel events" />
+            <MetricCard label="Unique Sessions"  value={fmt(uniqueSessions)}  note="From funnel events" />
+            <MetricCard label="Paid Purchases"   value={fmt(purchases.length)} />
+            {trials.length > 0 && (
+              <MetricCard label="Trial Starts" value={fmt(trials.length)} />
+            )}
             <MetricCard
               label="Revenue"
-              value={(totalRevenueCents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })}
+              value={fmtUsd(totalRevenueCents)}
               note="Gross, before fees"
             />
           </div>
@@ -169,8 +212,8 @@ export function BrownieStatsDashboard({
                 </tr>
               </thead>
               <tbody>
-                {FUNNEL_STEPS.map(({ key, label }) => {
-                  const count = eventCountMap.get(key) ?? 0;
+                {funnelSteps.map(({ key, label }) => {
+                  const count    = eventCountMap.get(key) ?? 0;
                   const sessions = eventSessionMap.get(key)?.size ?? 0;
                   const pct = landingUniqueSessions > 0
                     ? ((sessions / landingUniqueSessions) * 100).toFixed(1)
@@ -198,7 +241,7 @@ export function BrownieStatsDashboard({
             </table>
           </div>
           <p className="text-xs text-zinc-600 mt-2">
-            Note: "Raw Page Loads" ({fmt(rawClicks)}) ≠ unique visitors. Use Unique Sessions above for accurate conversion rates.
+            Note: &ldquo;Raw Page Loads&rdquo; ({fmt(rawClicks)}) ≠ unique visitors. Use Unique Sessions above for accurate conversion rates.
           </p>
         </div>
 
@@ -217,7 +260,9 @@ export function BrownieStatsDashboard({
                     <th className="text-left px-4 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Email</th>
                     <th className="text-left px-4 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Code</th>
                     <th className="text-right px-4 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Amount</th>
-                    <th className="text-right px-4 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Your Cut</th>
+                    {commissionPerSale > 0 && (
+                      <th className="text-right px-4 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Your Cut</th>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
@@ -227,10 +272,10 @@ export function BrownieStatsDashboard({
                       <td className="px-4 py-3 text-zinc-300 text-xs whitespace-nowrap">{fmtShortDate(new Date(p.createdAt))}</td>
                       <td className="px-4 py-3 text-zinc-300 font-mono text-xs">{maskEmail(p.userEmail)}</td>
                       <td className="px-4 py-3 text-zinc-500 font-mono text-xs">{p.promoCode ?? "—"}</td>
-                      <td className="px-4 py-3 text-right text-zinc-300 text-xs">
-                        {(p.amount / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })}
-                      </td>
-                      <td className="px-4 py-3 text-right text-amber-400 font-semibold text-xs">$5.00</td>
+                      <td className="px-4 py-3 text-right text-zinc-300 text-xs">{fmtUsd(p.amount)}</td>
+                      {commissionPerSale > 0 && (
+                        <td className="px-4 py-3 text-right text-amber-400 font-semibold text-xs">{fmtUsd(commissionPerSale)}</td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
@@ -240,11 +285,9 @@ export function BrownieStatsDashboard({
         </div>
 
         {/* ── Trial history ──────────────────────────────────────── */}
-        <div>
-          <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">Trial Starts</p>
-          {trials.length === 0 ? (
-            <EmptyState label="No trials yet." sub="Trial sign-ups will appear here." />
-          ) : (
+        {trials.length > 0 && (
+          <div>
+            <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">Trial Starts</p>
             <div className="border border-zinc-800 rounded-xl overflow-hidden overflow-x-auto">
               <table className="w-full text-sm min-w-[400px]">
                 <thead>
@@ -267,8 +310,8 @@ export function BrownieStatsDashboard({
                 </tbody>
               </table>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* ── Event history ──────────────────────────────────────── */}
         <div>
@@ -299,9 +342,7 @@ export function BrownieStatsDashboard({
                       <td className="px-4 py-3 text-zinc-600 text-xs font-mono">{e.sessionId.slice(0, 8)}</td>
                       <td className="px-4 py-3 text-zinc-400 text-xs">{e.userEmail ? maskEmail(e.userEmail) : "—"}</td>
                       <td className="px-4 py-3 text-right text-zinc-400 text-xs">
-                        {e.amount != null
-                          ? (e.amount / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })
-                          : "—"}
+                        {e.amount != null ? fmtUsd(e.amount) : "—"}
                       </td>
                     </tr>
                   ))}
