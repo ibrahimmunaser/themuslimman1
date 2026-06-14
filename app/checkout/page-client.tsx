@@ -889,18 +889,7 @@ function CheckoutPageContent({
     : allBillingOptions;
 
   const LeftColumn = (
-    <div className="lg:w-1/2 bg-zinc-900/50 border-r border-zinc-800 px-6 sm:px-12 py-12 flex flex-col justify-center">
-      {/* Logo — links back to homepage */}
-      <Link href="/" className="flex items-center mb-10 self-start">
-        <Image
-          src="/images/logoicon.png"
-          alt="TheMuslimMan"
-          width={967}
-          height={219}
-          className="h-9 w-auto"
-          priority
-        />
-      </Link>
+    <div className="order-2 lg:order-1 lg:w-1/2 bg-zinc-900/50 lg:border-r border-zinc-800 px-6 sm:px-12 py-12 flex flex-col justify-center border-t lg:border-t-0">
 
       {/* In-app browser warning — Instagram/TikTok/Facebook WebViews can block Stripe.
           Only shown when a social-app browser is detected on mobile. */}
@@ -913,10 +902,13 @@ function CheckoutPageContent({
           </p>
         </div>
       )}
-      <Link href="/pricing" className="inline-flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-300 transition-colors mb-8">
-        <ArrowLeft className="w-4 h-4" />
-        Back to pricing
-      </Link>
+      {/* Back link — hidden for influencer traffic (no escape hatch mid-funnel) */}
+      {!isInfluencerMode && (
+        <Link href="/pricing" className="inline-flex items-center gap-1.5 text-xs text-zinc-600 hover:text-zinc-400 transition-colors mb-8">
+          <ArrowLeft className="w-3 h-3" />
+          Back to pricing
+        </Link>
+      )}
 
       <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">Complete Seerah</h1>
       <p className="text-zinc-400 text-base mb-8 leading-relaxed">
@@ -964,9 +956,9 @@ function CheckoutPageContent({
               setShowPlanSelector(true);
               sendCheckoutEvent(initialSourceParam ?? "unknown", "change_plan_clicked", { plan: `${audience}-${billing}` });
             }}
-            className="mt-3 text-xs text-zinc-500 hover:text-zinc-300 transition-colors underline underline-offset-2"
+            className="mt-3 text-xs text-zinc-700 hover:text-zinc-500 transition-colors"
           >
-            Change plan
+            Need a different plan?
           </button>
         </div>
       )}
@@ -1173,7 +1165,7 @@ function CheckoutPageContent({
     return (
       <div className="min-h-screen bg-zinc-950 flex flex-col lg:flex-row">
         {LeftColumn}
-        <div className="lg:w-1/2 px-6 sm:px-12 py-12 flex flex-col justify-center">
+        <div className="order-1 lg:order-2 lg:w-1/2 px-6 sm:px-12 py-12 flex flex-col justify-center">
           <div className="max-w-md w-full mx-auto">
             {OrderSummary}
             <div className="p-6 rounded-xl bg-gold/10 border border-gold/25 text-center space-y-3">
@@ -1218,7 +1210,7 @@ function CheckoutPageContent({
     return (
       <div className="min-h-screen bg-zinc-950 flex flex-col lg:flex-row">
         {LeftColumn}
-        <div className="lg:w-1/2 px-6 sm:px-12 py-12 flex flex-col justify-center">
+        <div className="order-1 lg:order-2 lg:w-1/2 px-6 sm:px-12 py-12 flex flex-col justify-center">
           <div className="max-w-md w-full mx-auto">
             <h2 className="text-xl font-bold text-white mb-6">Complete your order</h2>
             {OrderSummary}
@@ -1368,7 +1360,7 @@ function CheckoutPageContent({
     return (
       <div className="min-h-screen bg-zinc-950 flex flex-col lg:flex-row">
         {LeftColumn}
-        <div className="lg:w-1/2 px-6 sm:px-12 py-12 flex flex-col justify-center">
+        <div className="order-1 lg:order-2 lg:w-1/2 px-6 sm:px-12 py-12 flex flex-col justify-center">
           <div className="max-w-md w-full mx-auto space-y-4">
             <div className="p-6 rounded-xl bg-gold/10 border border-gold/25 text-center space-y-3">
               <p className="text-lg font-bold text-white">
@@ -1440,7 +1432,7 @@ function CheckoutPageContent({
     return (
       <div className="min-h-screen bg-zinc-950 flex flex-col lg:flex-row">
         {LeftColumn}
-        <div className="lg:w-1/2 px-6 sm:px-12 py-12 flex flex-col justify-center">
+        <div className="order-1 lg:order-2 lg:w-1/2 px-6 sm:px-12 py-12 flex flex-col justify-center">
           <div className="max-w-md w-full mx-auto space-y-4">
             <div className="p-6 rounded-xl bg-gold/10 border border-gold/25 text-center space-y-4">
               <RefreshCw className="w-10 h-10 text-gold mx-auto" />
@@ -1504,7 +1496,7 @@ function CheckoutPageContent({
   return (
     <div className="min-h-screen bg-zinc-950 flex flex-col lg:flex-row">
       {LeftColumn}
-      <div className="lg:w-1/2 px-6 sm:px-12 py-12 flex flex-col justify-center">
+      <div className="order-1 lg:order-2 lg:w-1/2 px-6 sm:px-12 py-12 flex flex-col justify-center">
         <div className="max-w-md w-full mx-auto">
           <h2 className="text-xl font-bold text-white mb-2">Complete your order</h2>
           <p className="text-sm text-zinc-500 mb-6">Signed in as <span className="text-zinc-300">{authEmail}</span></p>
