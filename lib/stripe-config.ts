@@ -62,7 +62,7 @@ export const PLANS = {
     price: 499, // $4.99/month
     interval: "month" as const,
     features: [
-      "All 100 Seerah parts, unlocked immediately",
+      "Start today. Continue at your own pace.",
       "Videos, quizzes, flashcards, mind maps",
       "Progress dashboard · Mobile friendly",
       "Cancel anytime",
@@ -125,10 +125,9 @@ export const PLANS = {
     interval: "month" as const,
     stripeProductId: "prod_UbM4rARx0wZTAI", // env: STRIPE_PRICE_FAMILY_MONTHLY
     features: [
-      "Everything in Individual Membership",
+      "Start today. Everyone learns at their own pace.",
       "Up to 5 separate learner profiles",
       "Each profile tracks progress independently",
-      "All 100 parts for every family member",
       "Cancel anytime",
     ],
     recommended: false,
@@ -151,7 +150,8 @@ export function normalizeToActivePlan(_planId: string | null | undefined): "comp
 }
 
 export function formatPrice(cents: number): string {
-  return `$${(cents / 100).toFixed(0)}`;
+  const dollars = cents / 100;
+  return dollars % 1 === 0 ? `$${dollars.toFixed(0)}` : `$${dollars.toFixed(2)}`;
 }
 
 export function formatPriceWithCents(cents: number): string {

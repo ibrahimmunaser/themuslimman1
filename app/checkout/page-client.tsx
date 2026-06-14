@@ -245,6 +245,12 @@ function CheckoutForm({
           "Cancel anytime before trial ends",
           "Secure checkout",
         ]
+      : billing === "monthly"
+      ? [
+          "Cancel anytime",
+          "7-day refund guarantee",
+          "Secure checkout",
+        ]
       : [
           "One-time payment — no recurring charge",
           "7-day refund guarantee",
@@ -268,8 +274,9 @@ function CheckoutForm({
   return (
     <div className="space-y-5">
       {/* Express checkout: Apple Pay, Google Pay, Samsung Pay, Link
-          Hidden for monthly (card-only subscriptions) and trial (SetupIntent flow) */}
-      {billing !== "monthly" && billing !== "trial" && (
+          Hidden for trial (SetupIntent flow — incompatible with confirmPayment).
+          Enabled for both lifetime and monthly (subscription PaymentIntent). */}
+      {billing !== "trial" && (
         <>
           {/* Container must never be display:none — hiding before mount prevents
               Google Pay / Apple Pay from initializing. Stripe requires the element
@@ -450,7 +457,7 @@ function CheckoutPageContent({
     (promoParam && getCreatorPromoConfig(promoParam) !== null)
   ) && initialBilling === "lifetime";
 
-  const [showPlanSelector, setShowPlanSelector] = useState(!isInfluencerMode);
+  const [showPlanSelector, setShowPlanSelector] = useState(false);
 
   // ── Audience + billing state ───────────────────────────────────────────────
   const [audience, setAudience] = useState<Audience>(initialAudience);
@@ -964,27 +971,33 @@ function CheckoutPageContent({
           : "Full structured access to all 100 parts of the Seerah of the Prophet ﷺ."}
       </p>
 
-      {/* ── Influencer confirmation mode: show selected offer ──────────────── */}
-      {isInfluencerMode && !showPlanSelector && (
+      {/* ── Selected offer confirmation — always shown until user taps "Change plan" */}
+      {!showPlanSelector && (
         <div className="mb-8">
-          <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">Your selected offer</p>
+          <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">Your selected plan</p>
           <div className="border border-gold/30 bg-gold/5 rounded-xl p-4 space-y-3">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-base font-bold text-white">
                   {isAnnArborStudent
                     ? "Ann Arbor Student Lifetime Access"
-                    : audience === "family"
-                      ? "Family Lifetime Access"
-                      : "Individual Lifetime Access"}
+                    : billing === "monthly"
+                      ? audience === "family"
+                        ? "Family Monthly Membership"
+                        : "Individual Monthly Membership"
+                      : audience === "family"
+                        ? "Family Lifetime Access"
+                        : "Individual Lifetime Access"}
                 </p>
                 <p className="text-xs text-zinc-400 mt-0.5">
                   {audience === "family" ? "Up to 5 learner profiles · " : ""}
-                  One-time payment · No subscription · Lifetime access
+                  {billing === "monthly"
+                    ? "Billed monthly · Cancel anytime"
+                    : "One-time payment · No subscription · Lifetime access"}
                 </p>
               </div>
               <p className="text-xl font-bold text-gold whitespace-nowrap">
-                {formatPrice(displayPrice)}
+                {formatPrice(displayPrice)}{billing === "monthly" ? "/mo" : ""}
               </p>
             </div>
             {displayDiscount > 0 && (
@@ -994,7 +1007,10 @@ function CheckoutPageContent({
               </div>
             )}
             <div className="flex flex-wrap gap-x-4 gap-y-1">
-              {["One-time payment", "No subscription", "7-day refund guarantee", "Instant access"].map((t) => (
+              {(billing === "monthly"
+                ? ["Cancel anytime", "Instant access", "7-day refund guarantee"]
+                : ["One-time payment", "No subscription", "7-day refund guarantee", "Instant access"]
+              ).map((t) => (
                 <span key={t} className="flex items-center gap-1 text-xs text-zinc-400">
                   <Check className="w-3 h-3 text-zinc-600 flex-shrink-0" />
                   {t}
@@ -1007,27 +1023,25 @@ function CheckoutPageContent({
               setShowPlanSelector(true);
               sendCheckoutEvent(initialSourceParam ?? "unknown", "change_plan_clicked", { plan: `${audience}-${billing}` });
             }}
-            className="mt-3 text-xs text-zinc-700 hover:text-zinc-500 transition-colors"
+            className="mt-2 text-[10px] text-zinc-800 hover:text-zinc-600 transition-colors"
           >
-            Need a different plan?
+            Change plan
           </button>
         </div>
       )}
 
-      {/* ── Standard plan selector (hidden in influencer mode until "Change plan") */}
-      {(!isInfluencerMode || showPlanSelector) && (
+      {/* ── Plan selector — only shown when user explicitly taps "Need a different plan?" */}
+      {showPlanSelector && (
         <>
-          {isInfluencerMode && showPlanSelector && (
-            <div className="flex items-center gap-2 mb-4">
-              <button
-                onClick={() => setShowPlanSelector(false)}
-                className="inline-flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
-              >
-                <ArrowLeft className="w-3 h-3" />
-                Back to your offer
-              </button>
-            </div>
-          )}
+          <div className="flex items-center gap-2 mb-4">
+            <button
+              onClick={() => setShowPlanSelector(false)}
+              className="inline-flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+            >
+              <ArrowLeft className="w-3 h-3" />
+              Back to your plan
+            </button>
+          </div>
 
           {/* Audience tabs */}
           <div className="flex gap-1 bg-zinc-900 border border-zinc-800 rounded-xl p-1 mb-6">
@@ -1192,11 +1206,18 @@ function CheckoutPageContent({
         </div>
       )}
       <div className="flex items-center justify-between pt-2 border-t border-zinc-800">
-        <span className="text-sm font-semibold text-white">Total{!isLifetime ? " today" : ""}</span>
+        <span className="text-sm font-semibold text-white">
+          {isLifetime ? "Total" : "Due today"}
+        </span>
         <span className="text-lg font-bold text-gold">
-          {formatPrice(isLifetime ? displayPrice : displayBase)}{!isLifetime ? "/mo" : ""}
+          {formatPrice(isLifetime ? displayPrice : displayBase)}
         </span>
       </div>
+      {!isLifetime && (
+        <p className="text-xs text-zinc-500">
+          Then {formatPrice(displayBase)}/month. Cancel anytime.
+        </p>
+      )}
     </div>
   );
 

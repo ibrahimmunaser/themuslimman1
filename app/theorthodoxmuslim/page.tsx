@@ -19,8 +19,10 @@ export default async function TheOrthodoxMuslimPage() {
     .create({ data: { id: crypto.randomUUID(), creator: "theorthodoxmuslim" } })
     .catch(() => {});
 
-  const INDIVIDUAL_URL = `/checkout?plan=individual-lifetime&promo=ORTHODOX59&source=theorthodoxmuslim&${UTM}`;
-  const FAMILY_URL     = `/checkout?plan=family-lifetime&promo=ORTHODOX119&source=theorthodoxmuslim&${UTM}`;
+  const INDIVIDUAL_URL         = `/checkout?plan=individual-lifetime&promo=ORTHODOX59&source=theorthodoxmuslim&${UTM}`;
+  const FAMILY_URL             = `/checkout?plan=family-lifetime&promo=ORTHODOX119&source=theorthodoxmuslim&${UTM}`;
+  const INDIVIDUAL_MONTHLY_URL = `/checkout?plan=individual-monthly&source=theorthodoxmuslim&${UTM}`;
+  const FAMILY_MONTHLY_URL     = `/checkout?plan=family-monthly&source=theorthodoxmuslim&${UTM}`;
 
   return (
     <>
@@ -35,15 +37,17 @@ export default async function TheOrthodoxMuslimPage() {
         familyPriceCents={11900}
         regularIndividualPriceCents={7900}
         regularFamilyPriceCents={14900}
+        individualMonthlyUrl={INDIVIDUAL_MONTHLY_URL}
+        familyMonthlyUrl={FAMILY_MONTHLY_URL}
       />
       {/* Mobile sticky CTA */}
       <div className="fixed bottom-0 left-0 right-0 z-50 sm:hidden bg-ink/95 border-t border-gold/20 backdrop-blur-sm px-4 py-3">
         <Link
-          href={INDIVIDUAL_URL}
+          href={INDIVIDUAL_MONTHLY_URL}
           className="flex flex-col items-center justify-center w-full py-3.5 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-sm transition-colors shadow-lg shadow-gold/20"
         >
-          <span>Orthodox Muslim Lifetime Offer from $59</span>
-          <span className="text-[10px] font-normal mt-0.5 opacity-70">One-time payment · No subscription</span>
+          <span>Start for $4.99/month</span>
+          <span className="text-[10px] font-normal mt-0.5 opacity-70">Cancel anytime · Instant access</span>
         </Link>
       </div>
     </>

@@ -19,8 +19,10 @@ export default async function CommunityPage() {
     .create({ data: { id: crypto.randomUUID(), creator: "community" } })
     .catch(() => {});
 
-  const INDIVIDUAL_URL = `/checkout?plan=individual-lifetime&promo=COMMUNITY49&source=community&${UTM}`;
-  const FAMILY_URL     = `/checkout?plan=family-lifetime&promo=COMMUNITY99&source=community&${UTM}`;
+  const INDIVIDUAL_URL         = `/checkout?plan=individual-lifetime&promo=COMMUNITY49&source=community&${UTM}`;
+  const FAMILY_URL             = `/checkout?plan=family-lifetime&promo=COMMUNITY99&source=community&${UTM}`;
+  const INDIVIDUAL_MONTHLY_URL = `/checkout?plan=individual-monthly&source=community&${UTM}`;
+  const FAMILY_MONTHLY_URL     = `/checkout?plan=family-monthly&source=community&${UTM}`;
 
   return (
     <>
@@ -35,11 +37,13 @@ export default async function CommunityPage() {
         familyPriceCents={9900}
         regularIndividualPriceCents={7900}
         regularFamilyPriceCents={14900}
+        individualMonthlyUrl={INDIVIDUAL_MONTHLY_URL}
+        familyMonthlyUrl={FAMILY_MONTHLY_URL}
       />
       <MobileStickyCta
-        href={INDIVIDUAL_URL}
-        label="Community Lifetime Offer from $49"
-        sublabel="One-time payment · No subscription"
+        href={INDIVIDUAL_MONTHLY_URL}
+        label="Start for $4.99/month"
+        sublabel="Cancel anytime · Instant access"
       />
     </>
   );

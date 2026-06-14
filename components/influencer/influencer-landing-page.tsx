@@ -11,6 +11,7 @@ import { Part1FullPreview } from "@/components/landing/part1-full-preview";
 import { InfluencerPromoSetter } from "./influencer-promo-setter";
 import BrownieFunnelTracker from "./brownie-funnel-tracker";
 import { R2VideoPlayer } from "@/app/deenresponds/r2-video-player";
+import { InfluencerPricingToggle } from "./influencer-pricing-toggle";
 
 // ── Config ─────────────────────────────────────────────────────────────────────
 
@@ -53,6 +54,12 @@ export interface InfluencerPageConfig {
    * Defaults to false.
    */
   showHeroCard?: boolean;
+  /**
+   * Monthly checkout URLs. When provided, a Monthly/Lifetime toggle replaces the
+   * static pricing cards section. Attribution source + utm params should be included.
+   */
+  individualMonthlyUrl?: string;
+  familyMonthlyUrl?: string;
 }
 
 // ── Shared styles ──────────────────────────────────────────────────────────────
@@ -113,7 +120,8 @@ const FAQ = [
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 function fmtPrice(cents: number) {
-  return `$${Math.round(cents / 100)}`;
+  const dollars = cents / 100;
+  return dollars % 1 === 0 ? `$${dollars.toFixed(0)}` : `$${dollars.toFixed(2)}`;
 }
 
 // ── Component ──────────────────────────────────────────────────────────────────
@@ -134,8 +142,10 @@ export function InfluencerLandingPage({
   videoAspectClass = "aspect-portrait",
   showPricingCards = true,
   showHeroCard = false,
-  // monthlyUrl intentionally unused — monthly/trial plans removed from UI
+  individualMonthlyUrl,
+  familyMonthlyUrl,
 }: InfluencerPageConfig) {
+  const hasMonthlyPlans = !!(individualMonthlyUrl && familyMonthlyUrl);
   const indPrice    = fmtPrice(individualPriceCents);
   const famPrice    = fmtPrice(familyPriceCents);
   const regIndPrice = fmtPrice(regularIndividualPriceCents);
@@ -249,8 +259,53 @@ export function InfluencerLandingPage({
                 </a>
               </div>
             </div>
+          ) : hasMonthlyPlans ? (
+            /* ── Monthly-first mode ──────────────────────────────── */
+            <>
+              <p className="text-3xl sm:text-4xl font-bold text-gold mb-1">
+                Start for $4.99/month
+              </p>
+              <p className="text-xs text-gold/60 mb-1">
+                Or get {displayName}&apos;s lifetime deal for {indPrice} — see options below.
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm text-text-muted mb-7">
+                <span>Cancel anytime</span>
+                <span className="hidden sm:inline text-text-muted/30">·</span>
+                <span>Instant access</span>
+                <span className="hidden sm:inline text-text-muted/30">·</span>
+                <span>7-day refund guarantee</span>
+              </div>
+
+              <Link
+                href={individualMonthlyUrl!}
+                data-track="individual_monthly_cta_clicked"
+                data-plan="individual-monthly"
+                className={`${primaryBtn} px-10 py-4 text-base mb-4`}
+              >
+                Start for $4.99/month
+              </Link>
+
+              <p className="text-xs text-text-muted/50 mb-2">
+                Prefer to pay once?{" "}
+                <a
+                  href="#pricing"
+                  className="underline underline-offset-2 hover:text-text-muted transition-colors"
+                >
+                  See {displayName} lifetime deal — {indPrice} →
+                </a>
+              </p>
+
+              <a
+                href="#preview"
+                data-track="watch_part1_clicked"
+                className="inline-flex items-center gap-1 text-xs text-text-muted/40 hover:text-text-muted/60 transition-colors"
+              >
+                <Play className="w-3 h-3 flex-shrink-0" />
+                Watch Part 1 free first
+              </a>
+            </>
           ) : (
-            /* ── Standard button mode ─────────────────────────────── */
+            /* ── Lifetime-only mode ───────────────────────────────── */
             <>
               <p className="text-3xl sm:text-4xl font-bold text-gold mb-1">
                 Lifetime access from {indPrice}
@@ -300,8 +355,23 @@ export function InfluencerLandingPage({
         </div>
       </section>
 
-      {/* ── Pricing cards — shown only when showPricingCards is true and hero card is not shown ── */}
-      {showPricingCards && !showHeroCard && <section id="pricing" className="pb-12 scroll-mt-16">
+      {/* ── Pricing toggle (monthly + lifetime) — shown when monthly URLs provided ── */}
+      {hasMonthlyPlans && !showHeroCard && (
+        <InfluencerPricingToggle
+          displayName={displayName}
+          individualMonthlyUrl={individualMonthlyUrl!}
+          familyMonthlyUrl={familyMonthlyUrl!}
+          individualLifetimeUrl={individualUrl}
+          familyLifetimeUrl={familyUrl}
+          individualLifetimePriceCents={individualPriceCents}
+          familyLifetimePriceCents={familyPriceCents}
+          regularIndividualPriceCents={regularIndividualPriceCents}
+          regularFamilyPriceCents={regularFamilyPriceCents}
+        />
+      )}
+
+      {/* ── Static pricing cards — shown when no monthly URLs and showPricingCards is true ── */}
+      {!hasMonthlyPlans && showPricingCards && !showHeroCard && <section id="pricing" className="pb-12 scroll-mt-16">
         <div className="max-w-2xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 items-start">
 

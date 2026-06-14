@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
 import {
-  CheckCircle2, ShieldCheck, Lock, Zap,
+  CheckCircle2,
   Video, Monitor, LayoutGrid, FileText, ListChecks,
   GitBranch, Layers, HelpCircle,
 } from "lucide-react";
@@ -12,6 +12,7 @@ import { Footer } from "@/components/landing/footer";
 import { Part1FullPreview } from "@/components/landing/part1-full-preview";
 import { InfluencerPromoSetter } from "@/components/influencer/influencer-promo-setter";
 import BrownieFunnelTracker from "@/components/influencer/brownie-funnel-tracker";
+import { InfluencerPricingToggle } from "@/components/influencer/influencer-pricing-toggle";
 
 export const dynamic = "force-dynamic";
 
@@ -22,9 +23,11 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-const UTM = "utm_source=direct&utm_medium=promo&utm_campaign=seerah_launch&utm_content=annarbor";
-const CHECKOUT_URL = `/checkout?plan=individual-lifetime&promo=ANNARBOR29&source=annarbor&${UTM}`;
-const FAMILY_URL   = `/checkout?plan=family-lifetime&promo=ANNARBOR119&source=annarbor&${UTM}`;
+const UTM                  = "utm_source=direct&utm_medium=promo&utm_campaign=seerah_launch&utm_content=annarbor";
+const CHECKOUT_URL         = `/checkout?plan=individual-lifetime&promo=ANNARBOR29&source=annarbor&${UTM}`;
+const FAMILY_URL           = `/checkout?plan=family-lifetime&promo=ANNARBOR119&source=annarbor&${UTM}`;
+const INDIVIDUAL_MONTHLY_URL = `/checkout?plan=individual-monthly&source=annarbor&${UTM}`;
+const FAMILY_MONTHLY_URL     = `/checkout?plan=family-monthly&source=annarbor&${UTM}`;
 
 const primaryBtn =
   "inline-flex items-center justify-center gap-2 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold transition-colors shadow-lg shadow-gold/25";
@@ -120,35 +123,37 @@ export default async function AnnArborPage() {
             Most Muslims know scattered stories from the Seerah, but not the Prophet&apos;s ﷺ life as one connected journey. This 100-part course helps you learn it step by step.
           </p>
 
-          <div className="flex flex-wrap items-baseline justify-center gap-x-3 gap-y-0.5 mb-1">
-            <p className="text-3xl sm:text-4xl font-bold text-gold">$29</p>
-            <p className="text-lg sm:text-xl text-text-muted/50 line-through">$79</p>
-            <span className="px-2 py-0.5 rounded-md bg-gold/15 text-gold text-xs font-bold uppercase tracking-wide">Save $50</span>
-          </div>
-          <p className="text-sm text-text-secondary mb-1">
-            Student lifetime access — one-time payment
+          <p className="text-3xl sm:text-4xl font-bold text-gold mb-1">
+            Start for $4.99/month
           </p>
           <p className="text-xs text-gold/60 mb-1">
-            Ann Arbor student discount applied automatically.
+            Or get the Ann Arbor student lifetime deal — $29 one-time (see below).
           </p>
           <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm text-text-muted mb-7">
-            <span>One-time payment</span>
+            <span>Cancel anytime</span>
             <span className="hidden sm:inline text-text-muted/30">·</span>
-            <span>No subscription</span>
+            <span>Instant access</span>
             <span className="hidden sm:inline text-text-muted/30">·</span>
-            <span>Keep access forever</span>
+            <span>7-day refund guarantee</span>
           </div>
 
           <Link
-            href={CHECKOUT_URL}
-            data-track="student_lifetime_cta_clicked"
-            data-plan="individual"
+            href={INDIVIDUAL_MONTHLY_URL}
+            data-track="individual_monthly_cta_clicked"
+            data-plan="individual-monthly"
             className={`${primaryBtn} px-10 py-4 text-base mb-4`}
           >
-            Get Student Lifetime Access — $29
+            Start for $4.99/month
           </Link>
 
-          <p className="text-xs text-text-muted/40 mt-3">
+          <p className="text-xs text-text-muted/50 mb-2">
+            Prefer to pay once?{" "}
+            <a href="#pricing" className="underline underline-offset-2 hover:text-text-muted transition-colors">
+              Ann Arbor student lifetime — $29 →
+            </a>
+          </p>
+
+          <p className="text-xs text-text-muted/40 mt-1">
             <a href="#preview" data-track="watch_part1_clicked" className="hover:text-text-muted/60 transition-colors">
               Watch Part 1 free first
             </a>
@@ -156,74 +161,18 @@ export default async function AnnArborPage() {
         </div>
       </section>
 
-      {/* ── Offer card ────────────────────────────────────────────────────── */}
-      <section id="pricing" className="pb-12 scroll-mt-16">
-        <div className="max-w-sm mx-auto px-4 sm:px-6">
-          {/* Main student card — dominant */}
-          <div className="relative rounded-2xl border-2 border-gold/60 bg-surface shadow-lg shadow-gold/10 p-6 flex flex-col">
-            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap">
-              <span className="px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-gold text-ink shadow-sm">
-                Student Offer
-              </span>
-            </div>
-            <p className="text-xl font-bold text-text mb-0.5">For Students</p>
-            <p className="text-xs text-text-muted mb-4">Individual Lifetime Access</p>
-            <div className="mb-5">
-              <div className="flex items-baseline gap-3 mb-1">
-                <span className="text-5xl font-bold text-gold">$29</span>
-                <span className="text-lg text-text-muted/50 line-through">$79</span>
-                <span className="px-2 py-0.5 rounded-md bg-gold/15 text-gold text-[10px] font-bold uppercase tracking-wide">Save $50</span>
-              </div>
-              <p className="text-xs text-gold/60">one-time · keep forever</p>
-            </div>
-            <ul className="space-y-2 mb-7 flex-1">
-              {[
-                "All 100 Seerah parts, unlocked immediately",
-                "Videos, quizzes, flashcards, mind maps",
-                "Summaries and presentations per lesson",
-                "Progress tracking dashboard",
-                "Mobile friendly — learn anywhere",
-                "No subscription — pay once, keep forever",
-              ].map((f) => (
-                <li key={f} className="flex items-start gap-2 text-xs text-text-secondary">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-gold flex-shrink-0 mt-0.5" />
-                  {f}
-                </li>
-              ))}
-            </ul>
-            <Link
-              href={CHECKOUT_URL}
-              data-track="student_lifetime_cta_clicked"
-              data-plan="individual"
-              className="block w-full py-4 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-base text-center transition-colors shadow-lg shadow-gold/25"
-            >
-              Get Student Lifetime Access — $29
-            </Link>
-          </div>
-
-          {/* Trust row */}
-          <div className="flex items-center justify-center gap-4 flex-wrap text-xs text-text-muted mt-4">
-            <span className="flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-gold/60" />7-day refund guarantee</span>
-            <span className="flex items-center gap-1.5"><Lock className="w-3.5 h-3.5 text-gold/60" />Secure checkout</span>
-            <span className="flex items-center gap-1.5"><Zap className="w-3.5 h-3.5 text-gold/60" />Instant access</span>
-          </div>
-
-          {/* Family secondary link */}
-          <p className="text-xs text-text-muted/50 text-center mt-4">
-            Buying for your family?{" "}
-            <Link
-              href={FAMILY_URL}
-              data-track="family_lifetime_cta_clicked"
-              data-plan="family"
-              className="underline underline-offset-2 hover:text-text-muted/70 transition-colors"
-            >
-              View family option — $119
-            </Link>
-          </p>
-
-          {/* trial option removed */}
-        </div>
-      </section>
+      {/* ── Pricing toggle ─────────────────────────────────────────────────── */}
+      <InfluencerPricingToggle
+        displayName="Ann Arbor Student"
+        individualMonthlyUrl={INDIVIDUAL_MONTHLY_URL}
+        familyMonthlyUrl={FAMILY_MONTHLY_URL}
+        individualLifetimeUrl={CHECKOUT_URL}
+        familyLifetimeUrl={FAMILY_URL}
+        individualLifetimePriceCents={2900}
+        familyLifetimePriceCents={11900}
+        regularIndividualPriceCents={7900}
+        regularFamilyPriceCents={14900}
+      />
 
       {/* ── Proof / value ─────────────────────────────────────────────────── */}
       <section className="py-12 sm:py-16">
@@ -324,25 +273,25 @@ export default async function AnnArborPage() {
             Start the Seerah From the Beginning
           </h2>
           <p className="text-text-secondary mb-1">
-            Student price. One-time. Yours forever.
+            Start for $4.99/month — cancel anytime.
           </p>
           <p className="text-sm text-text-muted mb-8">
-            This offer is available while the Ann Arbor student campaign is active.
+            Or grab the Ann Arbor student lifetime deal for $29 one-time.
           </p>
           <Link
-            href={CHECKOUT_URL}
-            data-track="student_lifetime_cta_clicked"
-            data-plan="individual"
+            href={INDIVIDUAL_MONTHLY_URL}
+            data-track="individual_monthly_cta_clicked"
+            data-plan="individual-monthly"
             className={`${primaryBtn} w-full py-4 text-base mb-3`}
           >
-            Get Student Lifetime Access — $29
+            Start for $4.99/month
           </Link>
-          <p className="text-xs text-text-muted">
-            One-time payment · No subscription · 7-day refund guarantee
+          <p className="text-xs text-text-muted mb-2">
+            Cancel anytime · Instant access · 7-day refund guarantee
           </p>
-          <p className="text-xs text-text-muted/40 mt-3">
-            <a href="#preview" data-track="watch_part1_clicked" className="hover:text-text-muted/60 transition-colors">
-              Or watch Part 1 free first
+          <p className="text-xs text-text-muted/50">
+            <a href="#pricing" className="underline underline-offset-2 hover:text-text-muted transition-colors">
+              Or get the $29 lifetime deal →
             </a>
           </p>
         </div>
@@ -351,13 +300,13 @@ export default async function AnnArborPage() {
       {/* Mobile sticky CTA */}
       <div className="fixed bottom-0 left-0 right-0 z-50 sm:hidden bg-ink/95 border-t border-gold/20 backdrop-blur-sm px-4 py-3">
         <Link
-          href={CHECKOUT_URL}
-          data-track="student_lifetime_cta_clicked"
-          data-plan="individual"
+          href={INDIVIDUAL_MONTHLY_URL}
+          data-track="individual_monthly_cta_clicked"
+          data-plan="individual-monthly"
           className="flex flex-col items-center justify-center w-full py-3.5 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-sm transition-colors shadow-lg shadow-gold/20"
         >
-          <span>Ann Arbor Student Special — $29</span>
-          <span className="text-[10px] font-normal mt-0.5 opacity-70">One-time payment · Keep forever</span>
+          <span>Start for $4.99/month</span>
+          <span className="text-[10px] font-normal mt-0.5 opacity-70">Cancel anytime · Instant access</span>
         </Link>
       </div>
 

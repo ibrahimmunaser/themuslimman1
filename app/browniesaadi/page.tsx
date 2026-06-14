@@ -24,8 +24,10 @@ export default async function BrowniesaadiPage() {
       .catch(() => {}),
   ]);
 
-  const INDIVIDUAL_URL = `/checkout?plan=individual-lifetime&promo=BROWNIE59&source=browniesaadi&${UTM}`;
-  const FAMILY_URL     = `/checkout?plan=family-lifetime&promo=BROWNIE119&source=browniesaadi&${UTM}`;
+  const INDIVIDUAL_URL         = `/checkout?plan=individual-lifetime&promo=BROWNIE59&source=browniesaadi&${UTM}`;
+  const FAMILY_URL             = `/checkout?plan=family-lifetime&promo=BROWNIE119&source=browniesaadi&${UTM}`;
+  const INDIVIDUAL_MONTHLY_URL = `/checkout?plan=individual-monthly&source=browniesaadi&${UTM}`;
+  const FAMILY_MONTHLY_URL     = `/checkout?plan=family-monthly&source=browniesaadi&${UTM}`;
 
   return (
     <>
@@ -42,13 +44,13 @@ export default async function BrowniesaadiPage() {
         regularFamilyPriceCents={14900}
         sponsorVideoUrl={videoUrl}
         videoSectionLabel="Why Brownie Saadi recommended this"
-        showPricingCards={false}
-        showHeroCard={true}
+        individualMonthlyUrl={INDIVIDUAL_MONTHLY_URL}
+        familyMonthlyUrl={FAMILY_MONTHLY_URL}
       />
       <MobileStickyCta
-        href={INDIVIDUAL_URL}
-        label="Brownie Saadi Lifetime Offer from $59"
-        sublabel="One-time payment · No subscription"
+        href={INDIVIDUAL_MONTHLY_URL}
+        label="Start for $4.99/month"
+        sublabel="Cancel anytime · Instant access"
       />
     </>
   );

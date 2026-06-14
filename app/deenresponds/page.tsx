@@ -24,8 +24,10 @@ export default async function DeenRespondsPage() {
       .catch(() => {}),
   ]);
 
-  const INDIVIDUAL_URL = `/checkout?plan=individual-lifetime&promo=DEEN59&source=deenresponds&${UTM}`;
-  const FAMILY_URL     = `/checkout?plan=family-lifetime&promo=DEEN119&source=deenresponds&${UTM}`;
+  const INDIVIDUAL_URL         = `/checkout?plan=individual-lifetime&promo=DEEN59&source=deenresponds&${UTM}`;
+  const FAMILY_URL             = `/checkout?plan=family-lifetime&promo=DEEN119&source=deenresponds&${UTM}`;
+  const INDIVIDUAL_MONTHLY_URL = `/checkout?plan=individual-monthly&source=deenresponds&${UTM}`;
+  const FAMILY_MONTHLY_URL     = `/checkout?plan=family-monthly&source=deenresponds&${UTM}`;
 
   return (
     <>
@@ -43,11 +45,13 @@ export default async function DeenRespondsPage() {
         sponsorVideoUrl={videoUrl}
         videoSectionLabel="Why Deen Responds recommended this"
         videoAspectClass="aspect-video"
+        individualMonthlyUrl={INDIVIDUAL_MONTHLY_URL}
+        familyMonthlyUrl={FAMILY_MONTHLY_URL}
       />
       <MobileStickyCta
-        href={INDIVIDUAL_URL}
-        label="Deen Responds Lifetime Offer from $59"
-        sublabel="One-time payment · No subscription"
+        href={INDIVIDUAL_MONTHLY_URL}
+        label="Start for $4.99/month"
+        sublabel="Cancel anytime · Instant access"
       />
     </>
   );
