@@ -288,29 +288,24 @@ export default async function AnnArborPage() {
             <p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">Not ready yet?</p>
             <h2 className="text-xl sm:text-2xl font-bold mb-2">Watch Part 1 Free</h2>
             <p className="text-text-secondary text-sm">
-              Full first lesson — video, audio, quiz. No signup required.
+              Full first lesson — video, slides, quiz. No account required.
             </p>
           </div>
           <Suspense fallback={
-            <div className="rounded-2xl border border-border bg-surface overflow-hidden" style={{ minHeight: 400 }}>
-              <div className="h-12 bg-surface-raised border-b border-border flex items-center gap-2 px-4">
-                {[1,2,3,4].map((i) => <div key={i} className="h-7 w-16 rounded-lg bg-surface animate-pulse" />)}
+            <div className="rounded-2xl border border-border bg-surface overflow-hidden p-8">
+              <div className="space-y-4">
+                <div className="h-6 bg-surface-raised rounded w-1/3" />
+                <div className="h-4 bg-surface-raised rounded w-1/2" />
+                <div className="h-4 bg-surface-raised rounded w-3/4" />
+                <div className="mt-6 aspect-video bg-surface-raised rounded-xl" />
               </div>
-              <div className="p-6"><div className="aspect-video bg-surface-raised rounded-xl animate-pulse" /></div>
             </div>
           }>
-            <Part1FullPreview hideCta />
+            <Part1FullPreview
+              checkoutHref={CHECKOUT_URL}
+              ctaLabel="Get Student Lifetime Access — $29"
+            />
           </Suspense>
-          <div className="mt-8 text-center">
-            <Link
-              href={CHECKOUT_URL}
-              data-track="student_lifetime_cta_clicked"
-              data-plan="individual"
-              className={`${primaryBtn} px-8 py-4 text-base`}
-            >
-              Get Student Lifetime Access — $29
-            </Link>
-          </div>
         </div>
       </section>
 
