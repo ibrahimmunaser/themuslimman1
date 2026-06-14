@@ -92,7 +92,7 @@ export default async function LandingPage() {
 
               <FadeUp delay={0.15}>
                 <p className="text-sm text-gold/80 font-medium mb-8 xl:text-left text-center">
-                  Start for $4.99/month · Cancel anytime
+                  Cancel anytime · Start with Part 1 free
                 </p>
               </FadeUp>
 
@@ -102,7 +102,7 @@ export default async function LandingPage() {
                     href="/checkout?plan=individual-monthly"
                     className={buttonClass("primary", "xl", "shadow-2xl shadow-gold/20 w-full sm:w-auto")}
                   >
-                    Start for $4.99/month
+                    Start Learning
                     <ArrowRight className="w-5 h-5" />
                   </Link>
                   <div className="flex flex-wrap items-center justify-center xl:justify-start gap-x-4 gap-y-1 text-sm text-text-muted/60">
@@ -113,9 +113,9 @@ export default async function LandingPage() {
                       Watch Part 1 free first
                     </a>
                     <span aria-hidden>·</span>
-                    <Link href="/checkout?plan=individual-lifetime" className="hover:text-text-muted transition-colors">
-                      Prefer to pay once? $79 lifetime
-                    </Link>
+                    <a href="#pricing" className="hover:text-text-muted transition-colors">
+                      See pricing →
+                    </a>
                   </div>
                 </div>
               </FadeUp>
@@ -257,7 +257,7 @@ export default async function LandingPage() {
           }>
             <Part1FullPreview
               checkoutHref="/checkout?plan=individual-monthly"
-              ctaLabel="Start for $4.99/month"
+              ctaLabel="Continue After Part 1"
             />
           </Suspense>
         </div>
@@ -275,22 +275,16 @@ export default async function LandingPage() {
             Continue after Part 1 at your own pace.
           </h2>
           <p className="text-sm text-text-muted mb-6">
-            Start for $4.99/month · Cancel anytime · 7-day refund guarantee
+            Cancel anytime · 7-day refund guarantee
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link
-              href="/checkout?plan=individual-monthly"
+            <a
+              href="#pricing"
               className={buttonClass("primary", "lg", "shadow-lg shadow-gold/20 w-full sm:w-auto")}
             >
-              Start for $4.99/month
+              View Plans
               <ArrowRight className="w-4 h-4" />
-            </Link>
-            <Link
-              href="/checkout?plan=individual-lifetime"
-              className="text-sm text-text-muted/60 hover:text-text-muted transition-colors"
-            >
-              Prefer to pay once? $79 lifetime →
-            </Link>
+            </a>
           </div>
         </div>
       </section>
@@ -482,14 +476,14 @@ export default async function LandingPage() {
             Start learning the Prophet&apos;s ﷺ life in order.
           </h2>
           <p className="text-base text-gold/80 mb-8">
-            Start for $4.99/month. Cancel anytime.
+            Cancel anytime · 7-day refund guarantee
           </p>
 
           <Link
             href="/checkout?plan=individual-monthly"
             className={buttonClass("primary", "xl", "shadow-2xl shadow-gold/20 w-full sm:w-auto")}
           >
-            Start for $4.99/month
+            Start Learning Today
             <ArrowRight className="w-5 h-5" />
           </Link>
 
@@ -502,13 +496,9 @@ export default async function LandingPage() {
           </div>
 
           <p className="mt-5 text-sm text-text-muted/50 flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
-            <Link href="/checkout?plan=individual-lifetime" className="hover:text-text-muted transition-colors underline underline-offset-2">
-              Prefer to pay once? $79 lifetime
-            </Link>
-            <span aria-hidden>·</span>
-            <Link href="/checkout?plan=family-monthly" className="hover:text-text-muted transition-colors underline underline-offset-2">
-              Family — $9.99/month
-            </Link>
+            <a href="#pricing" className="hover:text-text-muted transition-colors underline underline-offset-2">
+              See all plans →
+            </a>
             <span aria-hidden>·</span>
             <a href="#preview" className="hover:text-text-muted transition-colors underline underline-offset-2">
               Watch Part 1 free first
