@@ -1,0 +1,94 @@
+import { NextRequest, NextResponse } from "next/server";
+import { nanoid } from "nanoid";
+import { prisma } from "@/lib/prisma";
+import { checkRateLimit, getIP } from "@/lib/rate-limit";
+
+const KNOWN_CREATORS = ["browniesaadi", "community"] as const;
+
+const KNOWN_EVENT_TYPES = [
+  // v1 events (kept for backward compat)
+  "landing_view",
+  "hero_cta_clicked",
+  "hero_preview_clicked",
+  "pricing_viewed",
+  "trial_cta_clicked",
+  "lifetime_cta_clicked",
+  "checkout_started",
+  "checkout_loaded",
+  "checkout_form_submitted",
+  // v2 simplified funnel events
+  "brownie_landing_page_view",
+  "individual_lifetime_cta_clicked",
+  "family_lifetime_cta_clicked",
+  "watch_part1_clicked",
+  "checkout_loaded_individual_lifetime",
+  "checkout_loaded_family_lifetime",
+  "change_plan_clicked",
+  "purchase_completed",
+] as const;
+
+export async function POST(req: NextRequest) {
+  try {
+    const ip = getIP(req);
+    const rl = checkRateLimit(`inf_track:${ip}`, 60, 60_000);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { ok: false, error: "rate_limited" },
+        { status: 429, headers: { "Retry-After": String(rl.retryAfterSeconds) } }
+      );
+    }
+
+    const body = await req.json();
+    const {
+      creator,
+      eventType,
+      sessionId,
+      visitorId,
+      route,
+      plan,
+      promoCode,
+      amount,
+      userEmail,
+      metadata,
+    } = body as Record<string, unknown>;
+
+    if (
+      typeof creator !== "string" ||
+      !KNOWN_CREATORS.includes(creator as (typeof KNOWN_CREATORS)[number])
+    ) {
+      return NextResponse.json({ ok: false, error: "invalid_creator" }, { status: 400 });
+    }
+
+    if (
+      typeof eventType !== "string" ||
+      !KNOWN_EVENT_TYPES.includes(eventType as (typeof KNOWN_EVENT_TYPES)[number])
+    ) {
+      return NextResponse.json({ ok: false, error: "invalid_event_type" }, { status: 400 });
+    }
+
+    if (typeof sessionId !== "string" || !sessionId || typeof visitorId !== "string" || !visitorId) {
+      return NextResponse.json({ ok: false, error: "missing_ids" }, { status: 400 });
+    }
+
+    await prisma.influencerEvent.create({
+      data: {
+        id: nanoid(),
+        creator,
+        eventType,
+        sessionId,
+        visitorId,
+        route: typeof route === "string" ? route : null,
+        plan: typeof plan === "string" ? plan : null,
+        promoCode: typeof promoCode === "string" ? promoCode : null,
+        amount: typeof amount === "number" ? amount : null,
+        userEmail: typeof userEmail === "string" ? userEmail : null,
+        metadata: typeof metadata === "string" ? metadata : null,
+      },
+    });
+
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error("[influencer/track] error:", err);
+    return NextResponse.json({ ok: true });
+  }
+}

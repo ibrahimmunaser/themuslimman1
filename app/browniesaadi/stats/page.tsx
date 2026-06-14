@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { InfluencerStatsPage } from "@/components/influencer/influencer-stats-page";
+import { BrownieStatsDashboard } from "@/components/influencer/brownie-stats-dashboard";
 
 export const metadata = { title: "Creator Stats", robots: { index: false, follow: false } };
 
@@ -24,24 +24,46 @@ export default async function BrowniesaadiStatsPage({
 
   const now = new Date();
 
-  const [totalClicks, purchases] = await Promise.all([
+  const [rawClicks, events, purchases, trials] = await Promise.all([
     prisma.influencerClick.count({ where: { creator: CREATOR } }),
+
+    prisma.influencerEvent.findMany({
+      where: { creator: CREATOR },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true, eventType: true, sessionId: true, visitorId: true,
+        plan: true, promoCode: true, amount: true, userEmail: true, createdAt: true,
+      },
+    }),
+
     prisma.purchase.findMany({
       where: { creator: CREATOR, status: "succeeded" },
-      select: { id: true, amount: true, createdAt: true, user: { select: { email: true } } },
+      select: {
+        id: true, amount: true, createdAt: true, promoCode: true,
+        user: { select: { email: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    }),
+
+    prisma.subscription.findMany({
+      where: { creator: CREATOR },
+      select: {
+        id: true, createdAt: true, promoCode: true,
+        user: { select: { email: true } },
+      },
       orderBy: { createdAt: "desc" },
     }),
   ]);
 
   return (
-    <InfluencerStatsPage
+    <BrownieStatsDashboard
       displayName={DISPLAY_NAME}
       promoCode={PROMO_CODE}
-      totalClicks={totalClicks}
-      totalPurchases={purchases.length}
-      commissionCents={purchases.length * 500}
-      lastUpdated={now}
+      rawClicks={rawClicks}
+      events={events}
       purchases={purchases.map((p) => ({ ...p, userEmail: p.user.email }))}
+      trials={trials.map((t) => ({ ...t, userEmail: t.user.email }))}
+      lastUpdated={now}
     />
   );
 }

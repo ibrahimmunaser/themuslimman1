@@ -18,6 +18,7 @@ import {
 import Link from "next/link";
 import { PLANS, formatPrice } from "@/lib/stripe-config";
 import { clearCreatorPromo, getCreatorPromo, getCreatorPromoConfig } from "@/lib/creator-promos";
+import CheckoutFunnelTracker, { sendCheckoutEvent } from "./checkout-funnel-tracker";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
@@ -70,10 +71,14 @@ function CheckoutForm({
   audience,
   billing,
   finalPrice,
+  creator,
+  promoCode,
 }: {
   audience: Audience;
   billing: Billing;
   finalPrice: number;
+  creator?: string;
+  promoCode?: string;
 }) {
   const stripe   = useStripe();
   const elements = useElements();
@@ -89,6 +94,14 @@ function CheckoutForm({
     if (!stripe || !elements || processing) return;
     setProcessing(true);
     setError(null);
+
+    if (creator) {
+      sendCheckoutEvent(creator, "checkout_form_submitted", {
+        plan: `${audience}-${billing}`,
+        promoCode,
+        amount: finalPrice,
+      });
+    }
 
     const { error: submitError } = await elements.submit();
     if (submitError) {
@@ -167,12 +180,44 @@ function CheckoutForm({
     }
   };
 
+  const isBrownie = (creator ?? "").toLowerCase() === "browniesaadi";
+
   const buttonLabel =
     billing === "trial"
-      ? "Start Free 7-Day Trial"
+      ? "Start Free Trial — $0 Today"
       : billing === "monthly"
       ? `Subscribe — ${formatPrice(finalPrice)}/mo`
-      : `Get Lifetime Access — ${formatPrice(finalPrice)}`;
+      : audience === "family"
+        ? `Get Family Lifetime Access — ${formatPrice(finalPrice)}`
+        : `Get Lifetime Access — ${formatPrice(finalPrice)}`;
+
+  const trustBadges =
+    billing === "trial"
+      ? [
+          "Due today: $0",
+          "Cancel anytime before trial ends",
+          "Secure checkout",
+          ...(isBrownie ? ["Browniesaadi discount applied"] : []),
+        ]
+      : [
+          "One-time payment — no recurring charge",
+          "7-day refund guarantee",
+          "Secure checkout",
+          ...(isBrownie ? ["Browniesaadi campaign price applied"] : []),
+        ];
+
+  const whatHappensNext =
+    billing === "trial"
+      ? [
+          "Your card is saved but not charged today.",
+          "You get full access to all 100 parts immediately.",
+          "After 7 days, you're billed monthly. Cancel anytime.",
+        ]
+      : [
+          "You get instant access to all 100 parts.",
+          "No recurring charges — this is a one-time payment.",
+          "Set your password via email to activate your account.",
+        ];
 
   return (
     <div className="space-y-5">
@@ -231,9 +276,32 @@ function CheckoutForm({
           <Lock className="w-4 h-4" />
           {processing ? "Processing…" : buttonLabel}
         </button>
-        <p className="text-xs text-zinc-500 text-center">
-          Secure payment powered by Stripe · Your information is encrypted
-        </p>
+
+        {/* Contextual trust badges */}
+        <div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 pt-1">
+          {trustBadges.map((badge) => (
+            <span key={badge} className="flex items-center gap-1 text-xs text-zinc-400">
+              <Check className="w-3 h-3 text-green-400 flex-shrink-0" />
+              {badge}
+            </span>
+          ))}
+        </div>
+
+        {/* What happens next */}
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 space-y-2">
+          <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wide">What happens next</p>
+          <ol className="space-y-1.5">
+            {whatHappensNext.map((step, i) => (
+              <li key={i} className="flex items-start gap-2 text-xs text-zinc-400">
+                <span className="flex-shrink-0 w-4 h-4 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-[10px] text-zinc-500 font-bold mt-0.5">
+                  {i + 1}
+                </span>
+                {step}
+              </li>
+            ))}
+          </ol>
+        </div>
+
         <p className="text-xs text-zinc-600 text-center leading-relaxed">
           By {billing === "trial" ? "starting your trial" : billing === "monthly" ? "subscribing" : "purchasing"} you agree to our{" "}
           <a href="/terms"   className="underline hover:text-zinc-400 transition-colors">Terms of Service</a>{", "}
@@ -267,6 +335,12 @@ interface CheckoutPageClientProps {
    * are not valid paths for existing lifetime buyers.
    */
   isLifetimeUpgrade?: boolean;
+  /**
+   * The `source` URL param (e.g. "browniesaadi"). When set, checkout enters
+   * influencer confirmation mode: the plan selector is hidden by default and
+   * the user sees a simple "Your selected offer" confirmation view instead.
+   */
+  initialSourceParam?: string | null;
 }
 
 // ── Main checkout content ─────────────────────────────────────────────────────
@@ -307,12 +381,24 @@ function CheckoutPageContent({
   initialAppliedPromoLabel = null,
   initialFreeAccess = false,
   initialPromoParam = null,
+  initialSourceParam = null,
   isLifetimeUpgrade = false,
 }: CheckoutPageClientProps) {
   // promoParam comes from the server prop — no useSearchParams() needed.
   // This guarantees server and client render the same initial HTML.
   const promoParam = initialPromoParam;
   const isInApp = useIsInAppBrowser();
+
+  // Influencer confirmation mode: active when the user comes from an influencer
+  // landing page (source=browniesaadi) or has a Brownie promo code in the URL.
+  // In this mode the plan selector is hidden by default — the user sees a simple
+  // "Your selected offer" confirmation, with a "Change plan" link to reveal it.
+  const isInfluencerMode = !!(
+    initialSourceParam === "browniesaadi" ||
+    promoParam?.toUpperCase().startsWith("BROWNIE")
+  ) && initialBilling === "lifetime";
+
+  const [showPlanSelector, setShowPlanSelector] = useState(!isInfluencerMode);
 
   // ── Audience + billing state ───────────────────────────────────────────────
   const [audience, setAudience] = useState<Audience>(initialAudience);
@@ -423,6 +509,18 @@ function CheckoutPageContent({
       // upgrading to Family Lifetime pay only the $70 difference; the server returns the
       // correct amount regardless of what the client sends here.
       if (aud === "family" && bill === "lifetime") body.isUpgrade = true;
+
+      // Pass creator attribution for trial subscriptions so Subscription.creator is set.
+      if (bill === "trial") {
+        const storedPromo = promoCode ?? getCreatorPromo();
+        if (storedPromo) {
+          const cfg = getCreatorPromoConfig(storedPromo);
+          if (cfg?.creator) {
+            body.creator   = cfg.creator;
+            body.promoCode = storedPromo;
+          }
+        }
+      }
 
       const res  = await fetch(endpoint, {
         method:  "POST",
@@ -613,9 +711,14 @@ function CheckoutPageContent({
       const data = await res.json();
       if (!res.ok) {
         if (data.hasAccount) {
-          // Email has a real account — switch to login tab so they can sign in
-          setAuthMode("login");
-          setAuthError("You already have an account with this email. Please sign in.");
+          if (isInfluencerMode) {
+            // In influencer mode there's no sign-in tab — direct them to the dashboard
+            setAuthError("__existing_account__");
+          } else {
+            // Switch to login tab so they can sign in
+            setAuthMode("login");
+            setAuthError("You already have an account with this email. Please sign in.");
+          }
           return;
         }
         setAuthError(data.error || "Failed to continue. Please try again.");
@@ -817,84 +920,140 @@ function CheckoutPageContent({
           : "Full structured access to all 100 parts of the Seerah of the Prophet ﷺ."}
       </p>
 
-      {/* Audience tabs */}
-      <div className="flex gap-1 bg-zinc-900 border border-zinc-800 rounded-xl p-1 mb-6">
-        {audienceOptions.map(({ id, Icon, label }) => (
-          <button
-            key={id}
-            disabled={isLifetimeUpgrade && id !== "family"}
-            onClick={() => {
-              if (isLifetimeUpgrade && id !== "family") return;
-              setAudience(id);
-              setAppliedCoupon(null); setGuestPromo(null); setDiscountAmount(0); setCouponInput(""); setCouponError(null);
-              // Immediately reset displayed price to the new plan so the order
-              // summary never shows stale pricing while the API call is in-flight.
-              const newPlan = PLANS[toPlanKey(id, billing)];
-              const snap = billing === "trial" ? (newPlan as typeof PLANS.individualTrial).trialFeeAmount ?? newPlan.price : newPlan.price;
-              setBasePrice(snap); setFinalPrice(snap);
-            }}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
-              audience === id
-                ? "bg-zinc-700 text-white shadow-sm"
-                : isLifetimeUpgrade && id !== "family"
-                  ? "text-zinc-700 cursor-not-allowed"
-                  : "text-zinc-500 hover:text-zinc-300"
-            }`}
-          >
-            <Icon className="w-4 h-4" />
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {/* Billing options */}
-          <div className="space-y-3 mb-8">
-        {billingOptions.map(({ id, label, price, priceSuffix, priceOverride, sub, badge }) => (
-          <button
-            key={id}
-            onClick={() => {
-              setBilling(id);
-              setAppliedCoupon(null); setGuestPromo(null); setDiscountAmount(0); setCouponInput(""); setCouponError(null);
-              // Immediately snap displayed price to the selected plan so the order
-              // summary is always correct before the async createIntent responds.
-              const newPlan = PLANS[toPlanKey(audience, id)];
-              const snap = id === "trial" ? (newPlan as typeof PLANS.individualTrial).trialFeeAmount ?? newPlan.price : newPlan.price;
-              setBasePrice(snap); setFinalPrice(snap);
-            }}
-            className={`w-full flex items-center p-4 rounded-xl border transition-all text-left ${
-              billing === id
-                ? "border-gold/50 bg-gold/8 ring-1 ring-gold/30"
-                : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
-            }`}
-          >
-            {/* Radio dot */}
-            <div className={`w-4 h-4 rounded-full border-2 mr-4 flex-shrink-0 flex items-center justify-center ${
-              billing === id ? "border-gold" : "border-zinc-600"
-            }`}>
-              {billing === id && <div className="w-2 h-2 rounded-full bg-gold" />}
-            </div>
-
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className={`font-semibold text-sm ${billing === id ? "text-white" : "text-zinc-300"}`}>{label}</span>
-                {badge && (
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-gold/20 text-gold uppercase tracking-wide">
-                    {badge}
-                  </span>
-                )}
+      {/* ── Influencer confirmation mode: show selected offer ──────────────── */}
+      {isInfluencerMode && !showPlanSelector && (
+        <div className="mb-8">
+          <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">Your selected offer</p>
+          <div className="border border-gold/30 bg-gold/5 rounded-xl p-4 space-y-3">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-base font-bold text-white">
+                  {audience === "family" ? "Family Lifetime Access" : "Individual Lifetime Access"}
+                </p>
+                <p className="text-xs text-zinc-400 mt-0.5">
+                  {audience === "family" ? "Up to 5 learner profiles · " : ""}
+                  One-time payment · No subscription · Lifetime access
+                </p>
               </div>
-              <span className="text-xs text-zinc-500">{sub}</span>
+              <p className="text-xl font-bold text-gold whitespace-nowrap">
+                {formatPrice(displayPrice)}
+              </p>
             </div>
-
-            <div className="text-right ml-4 flex-shrink-0">
-              <span className={`text-xl font-bold ${billing === id ? "text-white" : "text-zinc-400"}`}>
-                {priceOverride ?? formatPrice(price)}
-              </span>
-              {priceSuffix && <span className="text-xs text-zinc-500">{priceSuffix}</span>}
+            {displayDiscount > 0 && (
+              <div className="flex items-center gap-2 text-xs text-green-400">
+                <Check className="w-3.5 h-3.5 flex-shrink-0" />
+                Brownie Saadi discount applied — saving {formatPrice(displayDiscount)}
+              </div>
+            )}
+            <div className="flex flex-wrap gap-x-4 gap-y-1">
+              {["One-time payment", "No subscription", "7-day refund guarantee", "Instant access"].map((t) => (
+                <span key={t} className="flex items-center gap-1 text-xs text-zinc-400">
+                  <Check className="w-3 h-3 text-zinc-600 flex-shrink-0" />
+                  {t}
+                </span>
+              ))}
             </div>
+          </div>
+          <button
+            onClick={() => {
+              setShowPlanSelector(true);
+              sendCheckoutEvent("browniesaadi", "change_plan_clicked", { plan: `${audience}-${billing}` });
+            }}
+            className="mt-3 text-xs text-zinc-500 hover:text-zinc-300 transition-colors underline underline-offset-2"
+          >
+            Change plan
           </button>
-        ))}
-      </div>
+        </div>
+      )}
+
+      {/* ── Standard plan selector (hidden in influencer mode until "Change plan") */}
+      {(!isInfluencerMode || showPlanSelector) && (
+        <>
+          {isInfluencerMode && showPlanSelector && (
+            <div className="flex items-center gap-2 mb-4">
+              <button
+                onClick={() => setShowPlanSelector(false)}
+                className="inline-flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+              >
+                <ArrowLeft className="w-3 h-3" />
+                Back to your offer
+              </button>
+            </div>
+          )}
+
+          {/* Audience tabs */}
+          <div className="flex gap-1 bg-zinc-900 border border-zinc-800 rounded-xl p-1 mb-6">
+            {audienceOptions.map(({ id, Icon, label }) => (
+              <button
+                key={id}
+                disabled={isLifetimeUpgrade && id !== "family"}
+                onClick={() => {
+                  if (isLifetimeUpgrade && id !== "family") return;
+                  setAudience(id);
+                  setAppliedCoupon(null); setGuestPromo(null); setDiscountAmount(0); setCouponInput(""); setCouponError(null);
+                  const newPlan = PLANS[toPlanKey(id, billing)];
+                  const snap = billing === "trial" ? (newPlan as typeof PLANS.individualTrial).trialFeeAmount ?? newPlan.price : newPlan.price;
+                  setBasePrice(snap); setFinalPrice(snap);
+                }}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  audience === id
+                    ? "bg-zinc-700 text-white shadow-sm"
+                    : isLifetimeUpgrade && id !== "family"
+                      ? "text-zinc-700 cursor-not-allowed"
+                      : "text-zinc-500 hover:text-zinc-300"
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* Billing options */}
+          <div className="space-y-3 mb-8">
+            {billingOptions.map(({ id, label, price, priceSuffix, priceOverride, sub, badge }) => (
+              <button
+                key={id}
+                onClick={() => {
+                  setBilling(id);
+                  setAppliedCoupon(null); setGuestPromo(null); setDiscountAmount(0); setCouponInput(""); setCouponError(null);
+                  const newPlan = PLANS[toPlanKey(audience, id)];
+                  const snap = id === "trial" ? (newPlan as typeof PLANS.individualTrial).trialFeeAmount ?? newPlan.price : newPlan.price;
+                  setBasePrice(snap); setFinalPrice(snap);
+                }}
+                className={`w-full flex items-center p-4 rounded-xl border transition-all text-left ${
+                  billing === id
+                    ? "border-gold/50 bg-gold/8 ring-1 ring-gold/30"
+                    : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
+                }`}
+              >
+                <div className={`w-4 h-4 rounded-full border-2 mr-4 flex-shrink-0 flex items-center justify-center ${
+                  billing === id ? "border-gold" : "border-zinc-600"
+                }`}>
+                  {billing === id && <div className="w-2 h-2 rounded-full bg-gold" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className={`font-semibold text-sm ${billing === id ? "text-white" : "text-zinc-300"}`}>{label}</span>
+                    {badge && (
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-gold/20 text-gold uppercase tracking-wide">
+                        {badge}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-xs text-zinc-500">{sub}</span>
+                </div>
+                <div className="text-right ml-4 flex-shrink-0">
+                  <span className={`text-xl font-bold ${billing === id ? "text-white" : "text-zinc-400"}`}>
+                    {priceOverride ?? formatPrice(price)}
+                  </span>
+                  {priceSuffix && <span className="text-xs text-zinc-500">{priceSuffix}</span>}
+                </div>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
 
       {/* Features */}
       <ul className="space-y-2.5">
@@ -1059,20 +1218,22 @@ function CheckoutPageContent({
             <h2 className="text-xl font-bold text-white mb-6">Complete your order</h2>
             {OrderSummary}
 
-            {/* Auth tabs */}
-            <div className="flex gap-1 bg-zinc-900 border border-zinc-800 rounded-xl p-1 mb-5">
-              {(["signup", "login"] as AuthMode[]).map((mode) => (
-                <button
-                  key={mode}
-                  onClick={() => { setAuthMode(mode); setAuthError(""); }}
-                  className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
-                    authMode === mode ? "bg-zinc-700 text-white shadow-sm" : "text-zinc-500 hover:text-zinc-300"
-                  }`}
-                >
-                  {mode === "signup" ? "New customer" : "Sign in"}
-                </button>
-              ))}
-            </div>
+            {/* Auth tabs — hidden in influencer mode (new visitors only) */}
+            {!isInfluencerMode && (
+              <div className="flex gap-1 bg-zinc-900 border border-zinc-800 rounded-xl p-1 mb-5">
+                {(["signup", "login"] as AuthMode[]).map((mode) => (
+                  <button
+                    key={mode}
+                    onClick={() => { setAuthMode(mode); setAuthError(""); }}
+                    className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
+                      authMode === mode ? "bg-zinc-700 text-white shadow-sm" : "text-zinc-500 hover:text-zinc-300"
+                    }`}
+                  >
+                    {mode === "signup" ? "New customer" : "Sign in"}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* Guest checkout form — name + email only; password is set after purchase */}
             {authMode === "signup" && (
@@ -1091,14 +1252,39 @@ function CheckoutPageContent({
                   required
                   className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm"
                 />
-                {authError && <p className="text-xs text-red-400 pt-1">{authError}</p>}
+                {authError === "__existing_account__" ? (
+                  <div className="p-4 rounded-xl bg-gold/10 border border-gold/25 text-sm space-y-2">
+                    <p className="font-semibold text-white">You already have an account</p>
+                    <p className="text-zinc-400 text-xs leading-relaxed">
+                      Sign in to your student dashboard to manage your plan or upgrade.
+                    </p>
+                    <a
+                      href="/signin"
+                      className="inline-flex items-center gap-1.5 text-gold text-xs font-semibold hover:text-gold-light transition-colors"
+                    >
+                      Go to sign in <ArrowRight className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
+                ) : authError ? (
+                  <p className="text-xs text-red-400 pt-1">{authError}</p>
+                ) : null}
+                {authError !== "__existing_account__" && (
                 <button
                   type="submit" disabled={authLoading}
                   className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-gold hover:bg-gold-light disabled:opacity-60 text-ink font-bold text-sm transition-colors"
                 >
-                  {authLoading ? "Continuing…" : "Continue to Payment"}
+                  {authLoading
+                    ? "Continuing…"
+                    : isTrial
+                      ? "Continue — It's Free Today"
+                      : audience === "family" && isLifetime
+                        ? "Continue to Family Lifetime"
+                        : isLifetime
+                          ? "Continue to Lifetime Access"
+                          : "Continue to Payment"}
                   {!authLoading && <ArrowRight className="w-4 h-4" />}
                 </button>
+                )}
                 <p className="text-xs text-zinc-600 text-center leading-relaxed">
                   You&rsquo;ll set a password after checkout. By continuing you agree to our{" "}
                   <a href="/terms"   className="underline hover:text-zinc-400">Terms</a>,{" "}
@@ -1108,8 +1294,8 @@ function CheckoutPageContent({
               </form>
             )}
 
-            {/* Login form */}
-            {authMode === "login" && (
+            {/* Login form — hidden in influencer mode */}
+            {authMode === "login" && !isInfluencerMode && (
               <form onSubmit={handleLogin} className="space-y-3">
                 <input
                   type="email" placeholder="Email address" required
@@ -1408,7 +1594,31 @@ function CheckoutPageContent({
                     },
                   }}
                 >
-                  <CheckoutForm audience={audience} billing={billing} finalPrice={finalPrice} />
+                  {(() => {
+                    const code = appliedCoupon?.code ?? resolvedPromoParam ?? "";
+                    const cfg = code ? getCreatorPromoConfig(code) : null;
+                    const checkoutCreator = cfg?.creator ?? null;
+                    return (
+                      <>
+                        {checkoutCreator && (
+                          <CheckoutFunnelTracker
+                            creator={checkoutCreator}
+                            plan={`${audience}-${billing}`}
+                            promoCode={code || null}
+                            amount={finalPrice}
+                            userEmail={authEmail}
+                          />
+                        )}
+                        <CheckoutForm
+                          audience={audience}
+                          billing={billing}
+                          finalPrice={finalPrice}
+                          creator={checkoutCreator ?? undefined}
+                          promoCode={code || undefined}
+                        />
+                      </>
+                    );
+                  })()}
                 </Elements>
               )}
             </>

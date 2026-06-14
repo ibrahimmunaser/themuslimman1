@@ -56,9 +56,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = (await request.json()) as { planId?: string };
+    const body = (await request.json()) as { planId?: string; creator?: string; promoCode?: string };
     const planId = body.planId ?? "individualTrial";
     const isFamily = planId === "familyTrial";
+    const creator   = typeof body.creator   === "string" ? body.creator   : undefined;
+    const promoCode = typeof body.promoCode === "string" ? body.promoCode : undefined;
 
     const monthlyPriceId = isFamily
       ? FAMILY_MONTHLY_PRICE_ID
@@ -181,6 +183,8 @@ export async function POST(request: NextRequest) {
         isTrial: "true",
         trialDays: String(planConfig.trialDays),
         ...(isFamily ? { planType: "family" } : {}),
+        ...(creator   ? { creator }   : {}),
+        ...(promoCode ? { promoCode } : {}),
       },
     });
 
@@ -206,6 +210,8 @@ export async function POST(request: NextRequest) {
         currentPeriodEnd: trialEnd,
         cancelAtPeriodEnd: false,
         updatedAt: new Date(),
+        ...(creator   ? { creator }   : {}),
+        ...(promoCode ? { promoCode } : {}),
       },
     });
 

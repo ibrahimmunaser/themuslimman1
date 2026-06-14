@@ -740,6 +740,9 @@ async function upsertSubscription(userId: string, sub: Stripe.Subscription) {
     ACTIVE_STATUSES.includes(sub.status) &&
     (!existing || !ACTIVE_STATUSES.includes(existing.status));
 
+  const subCreator   = sub.metadata?.creator   ?? null;
+  const subPromoCode = sub.metadata?.promoCode ?? null;
+
   await prisma.subscription.upsert({
     where: { stripeSubscriptionId: sub.id },
     create: {
@@ -753,6 +756,8 @@ async function upsertSubscription(userId: string, sub: Stripe.Subscription) {
       currentPeriodStart: createPeriodStart,
       currentPeriodEnd: createPeriodEnd,
       cancelAtPeriodEnd: sub.cancel_at_period_end,
+      ...(subCreator   ? { creator: subCreator }     : {}),
+      ...(subPromoCode ? { promoCode: subPromoCode } : {}),
     },
     update: {
       status: sub.status,
@@ -765,6 +770,9 @@ async function upsertSubscription(userId: string, sub: Stripe.Subscription) {
       } : {}),
       cancelAtPeriodEnd: sub.cancel_at_period_end,
       updatedAt: new Date(),
+      // Only backfill creator/promoCode if they are missing — never overwrite
+      ...(subCreator   ? { creator: subCreator }     : {}),
+      ...(subPromoCode ? { promoCode: subPromoCode } : {}),
     },
   });
 

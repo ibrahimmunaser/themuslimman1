@@ -18,7 +18,7 @@ const LEGACY_PLAN_ALIASES: Record<string, string> = {
 };
 
 interface Props {
-  searchParams: Promise<{ plan?: string; billing?: string; promo?: string }>;
+  searchParams: Promise<{ plan?: string; billing?: string; promo?: string; source?: string }>;
 }
 
 export default async function CheckoutPage({ searchParams }: Props) {
@@ -169,7 +169,8 @@ export default async function CheckoutPage({ searchParams }: Props) {
     }
   }
 
-  const promoParamProp = params.promo?.trim().toUpperCase() ?? null;
+  const promoParamProp  = params.promo?.trim().toUpperCase() ?? null;
+  const sourceParamProp = params.source?.trim().toLowerCase() ?? null;
 
   return (
     <CheckoutClientPage
@@ -185,6 +186,7 @@ export default async function CheckoutPage({ searchParams }: Props) {
       initialAppliedPromoLabel={initialAppliedPromoLabel}
       initialFreeAccess={initialFreeAccess}
       initialPromoParam={promoParamProp}
+      initialSourceParam={sourceParamProp}
       isLifetimeUpgrade={isLifetimeUpgrade}
     />
   );
