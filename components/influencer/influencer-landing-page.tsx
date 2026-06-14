@@ -325,7 +325,7 @@ export function InfluencerLandingPage({
       {/* ── Sponsor video (optional) — portrait reel style ──────────────── */}
       {sponsorVideoUrl && (
         <section className="py-12 bg-surface/30 border-y border-border/50">
-          <div className="max-w-sm mx-auto px-4 sm:px-6 text-center">
+          <div className={`mx-auto px-4 sm:px-6 text-center ${videoAspectClass === "aspect-portrait" ? "max-w-sm" : "max-w-2xl"}`}>
             <p className="text-sm font-semibold text-text-muted uppercase tracking-wider mb-5">
               {videoSectionLabel ?? `Why ${displayName} recommended this`}
             </p>
