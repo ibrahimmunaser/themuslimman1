@@ -7,8 +7,10 @@ import { getUserAccessInfo } from "@/lib/access";
 import { checkRateLimit, getIP } from "@/lib/rate-limit";
 import { prisma } from "@/lib/db";
 
-// Source of truth: STRIPE_FAMILY_LIFETIME_PRICE_ID env var (used only for metadata / Stripe dashboard linkage).
+// Standard family lifetime price ID ($149).
 const FAMILY_LIFETIME_PRICE_ID = process.env.STRIPE_FAMILY_LIFETIME_PRICE_ID ?? "";
+// Ann Arbor dedicated family lifetime price ID ($79) — separate Stripe product entry.
+const ANNARBOR_FAMILY_LIFETIME_PRICE_ID = process.env.STRIPE_PRICE_ANNARBOR_FAMILY_LIFETIME ?? "";
 const FAMILY_PLAN = PLANS.family;
 
 export async function POST(request: NextRequest) {
@@ -159,9 +161,13 @@ export async function POST(request: NextRequest) {
         planId: FAMILY_PLAN.id,                    // "family" — drives planType in webhook
         planName: FAMILY_PLAN.name,                // "Family Access"
         stripeProductId: FAMILY_PLAN.stripeProductId, // prod_UbM83Q8KLI4HX0
-        ...(FAMILY_LIFETIME_PRICE_ID.startsWith("price_")
-          ? { stripePriceId: FAMILY_LIFETIME_PRICE_ID }
-          : {}),
+        // Use the Ann Arbor-specific price ID when that promo is applied,
+        // otherwise fall back to the standard family lifetime price ID.
+        ...(appliedPromoCode === "ANNARBOR79" && ANNARBOR_FAMILY_LIFETIME_PRICE_ID.startsWith("price_")
+          ? { stripePriceId: ANNARBOR_FAMILY_LIFETIME_PRICE_ID }
+          : FAMILY_LIFETIME_PRICE_ID.startsWith("price_")
+            ? { stripePriceId: FAMILY_LIFETIME_PRICE_ID }
+            : {}),
         baseAmount: String(baseAmount),
         finalAmount: String(finalAmount),
         ...(isEligibleForUpgradePrice ? { upgradeFrom: "individual_lifetime" } : {}),
