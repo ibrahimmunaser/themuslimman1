@@ -183,14 +183,19 @@ function CheckoutForm({
   // True for any creator promo code, not just browniesaadi
   const isCreatorPromo = !!(creator && creator.length > 0);
 
+  // Ann Arbor student offer uses custom labels everywhere
+  const isAnnArborStudent = creator === "annarbor" && billing === "lifetime" && audience === "individual";
+
   const buttonLabel =
     billing === "trial"
       ? "Start Free Trial — $0 Today"
       : billing === "monthly"
       ? `Subscribe — ${formatPrice(finalPrice)}/mo`
-      : audience === "family"
-        ? `Get Family Lifetime Access — ${formatPrice(finalPrice)}`
-        : `Get Lifetime Access — ${formatPrice(finalPrice)}`;
+      : isAnnArborStudent
+        ? `Get Student Lifetime Access — ${formatPrice(finalPrice)}`
+        : audience === "family"
+          ? `Get Family Lifetime Access — ${formatPrice(finalPrice)}`
+          : `Get Lifetime Access — ${formatPrice(finalPrice)}`;
 
   const trustBadges =
     billing === "trial"
@@ -356,6 +361,7 @@ const COMMUNITY_CODE_MAP: Partial<Record<string, Record<"individual" | "family",
   BROWNIE119:   { individual: "BROWNIE59",    family: "BROWNIE119"   },
   ORTHODOX59:   { individual: "ORTHODOX59",   family: "ORTHODOX119"  },
   ORTHODOX119:  { individual: "ORTHODOX59",   family: "ORTHODOX119"  },
+  ANNARBOR29:   { individual: "ANNARBOR29",   family: "ANNARBOR119"  },
   ANNARBOR59:   { individual: "ANNARBOR59",   family: "ANNARBOR119"  },
   ANNARBOR119:  { individual: "ANNARBOR59",   family: "ANNARBOR119"  },
 };
@@ -408,6 +414,9 @@ function CheckoutPageContent({
   // ── Audience + billing state ───────────────────────────────────────────────
   const [audience, setAudience] = useState<Audience>(initialAudience);
   const [billing,  setBilling]  = useState<Billing>(initialBilling);
+
+  // Ann Arbor student offer: customise labels in the offer panel and buttons
+  const isAnnArborStudent = initialSourceParam === "annarbor" && billing === "lifetime" && audience === "individual";
 
   // Community codes are plan-specific: resolve to the correct variant based on
   // the selected audience (defined at module level to avoid per-render allocation).
@@ -925,7 +934,11 @@ function CheckoutPageContent({
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-base font-bold text-white">
-                  {audience === "family" ? "Family Lifetime Access" : "Individual Lifetime Access"}
+                  {isAnnArborStudent
+                    ? "Ann Arbor Student Lifetime Access"
+                    : audience === "family"
+                      ? "Family Lifetime Access"
+                      : "Individual Lifetime Access"}
                 </p>
                 <p className="text-xs text-zinc-400 mt-0.5">
                   {audience === "family" ? "Up to 5 learner profiles · " : ""}
@@ -1274,11 +1287,13 @@ function CheckoutPageContent({
                     ? "Continuing…"
                     : isTrial
                       ? "Continue — It's Free Today"
-                      : audience === "family" && isLifetime
-                        ? "Continue to Family Lifetime"
-                        : isLifetime
-                          ? "Continue to Lifetime Access"
-                          : "Continue to Payment"}
+                      : isAnnArborStudent
+                        ? "Continue to Student Access"
+                        : audience === "family" && isLifetime
+                          ? "Continue to Family Lifetime"
+                          : isLifetime
+                            ? "Continue to Lifetime Access"
+                            : "Continue to Payment"}
                   {!authLoading && <ArrowRight className="w-4 h-4" />}
                 </button>
                 )}

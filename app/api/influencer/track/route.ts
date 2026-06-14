@@ -25,6 +25,10 @@ const KNOWN_EVENT_TYPES = [
   // v2 simplified funnel events
   "brownie_landing_page_view",
   "landing_page_view",
+  // Ann Arbor student funnel events
+  "annarbor_landing_page_view",
+  "student_lifetime_cta_clicked",
+  "checkout_loaded_student_lifetime",
   "individual_lifetime_cta_clicked",
   "family_lifetime_cta_clicked",
   "watch_part1_clicked",

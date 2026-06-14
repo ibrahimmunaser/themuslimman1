@@ -7,6 +7,8 @@ interface FunnelTrackerProps {
   creator: string;
   promoCode?: string;
   userEmail?: string;
+  /** Custom v2 landing event name. Defaults to "brownie_landing_page_view". */
+  landingEvent?: string;
 }
 
 function getOrCreate(storage: Storage, key: string, ttlMs?: number): string {
@@ -56,7 +58,7 @@ function sendEvent(
   }
 }
 
-export default function BrownieFunnelTracker({ creator, promoCode, userEmail }: FunnelTrackerProps) {
+export default function BrownieFunnelTracker({ creator, promoCode, userEmail, landingEvent = "brownie_landing_page_view" }: FunnelTrackerProps) {
   const firedLandingView = useRef(false);
 
   useEffect(() => {
@@ -81,7 +83,7 @@ export default function BrownieFunnelTracker({ creator, promoCode, userEmail }: 
       firedLandingView.current = true;
       sessionStorage.setItem(svKey, "1");
       sendEvent(creator, "landing_view", sessionId, visitorId, { ...common });
-      sendEvent(creator, "brownie_landing_page_view", sessionId, visitorId, { ...common });
+      sendEvent(creator, landingEvent, sessionId, visitorId, { ...common });
     }
 
     // IntersectionObserver for pricing section
