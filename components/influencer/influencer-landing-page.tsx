@@ -222,10 +222,10 @@ export function InfluencerLandingPage({
           <a
             href="#preview"
             data-track="watch_part1_clicked"
-            className="inline-flex items-center gap-1.5 text-sm text-text-muted hover:text-gold transition-colors"
+            className="inline-flex items-center gap-1 text-xs text-text-muted/60 hover:text-text-muted transition-colors"
           >
-            <Play className="w-3.5 h-3.5 flex-shrink-0" />
-            Not ready yet? Watch Part 1 free first
+            <Play className="w-3 h-3 flex-shrink-0" />
+            Not ready? Watch Part 1 free
           </a>
         </div>
       </section>
