@@ -189,15 +189,18 @@ export function InfluencerLandingPage({
             Most Muslims know scattered stories from the Seerah, but not the Prophet&apos;s ﷺ life as one connected journey. This 100-part course fixes that — step by step, beginning to end.
           </p>
 
-          <p className="text-2xl sm:text-3xl font-bold text-gold mb-2">
+          <p className="text-2xl sm:text-3xl font-bold text-gold mb-1">
             Lifetime access from{" "}
             <span className="underline decoration-gold/40 underline-offset-4">{indPrice}</span>
+          </p>
+          <p className="text-xs text-gold/70 mb-1 font-medium">
+            {displayName} campaign discount applied — lifetime pricing may be removed after launch.
           </p>
           <p className="text-sm text-text-muted mb-8">
             One-time payment · No subscription · 7-day refund guarantee
           </p>
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 mb-6">
+          <div className="flex flex-col items-center justify-center gap-3 mb-6 w-full max-w-xs mx-auto sm:max-w-none sm:flex-row sm:items-center sm:w-auto">
             <Link
               href={individualUrl}
               data-track="individual_lifetime_cta_clicked"
@@ -210,9 +213,9 @@ export function InfluencerLandingPage({
               href={familyUrl}
               data-track="family_lifetime_cta_clicked"
               data-plan="family"
-              className={`${outlineBtn} px-8 py-4 text-base w-full sm:w-auto`}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-gold/30 text-gold/70 font-medium hover:text-gold hover:border-gold/50 transition-colors px-6 py-3.5 text-sm w-full sm:w-auto"
             >
-              For My Family — {famPrice}
+              Get Family Access — {famPrice}
             </Link>
           </div>
 
@@ -230,27 +233,28 @@ export function InfluencerLandingPage({
       {/* ── Pricing cards — immediately below hero ──────────────────────── */}
       <section id="pricing" className="pb-12 scroll-mt-16">
         <div className="max-w-2xl mx-auto px-4 sm:px-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 items-start">
 
-            {/* For Me */}
-            <div className="relative rounded-2xl border border-gold/25 bg-surface p-6 flex flex-col">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap">
-                <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-surface border border-gold/40 text-gold">
-                  Most Popular
+            {/* For Me — dominant primary card */}
+            <div className="relative rounded-2xl border-2 border-gold/60 bg-surface shadow-lg shadow-gold/10 p-6 flex flex-col">
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap">
+                <span className="px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-gold text-ink shadow-sm">
+                  Main Offer
                 </span>
               </div>
-              <p className="text-lg font-bold text-text mb-0.5">For Me</p>
+              <p className="text-xl font-bold text-text mb-0.5">For Me</p>
               <p className="text-xs text-text-muted mb-4">Individual Lifetime Access</p>
               <div className="mb-5">
                 <span className="text-xs text-text-muted line-through mr-2">{regIndPrice}</span>
-                <span className="text-4xl font-bold text-gold">{indPrice}</span>
-                <p className="text-xs text-gold/60 mt-0.5">one-time · no renewal</p>
+                <span className="text-5xl font-bold text-gold">{indPrice}</span>
+                <p className="text-xs text-gold/60 mt-1">one-time · no renewal ever</p>
               </div>
-              <ul className="space-y-1.5 mb-6 flex-1">
+              <ul className="space-y-2 mb-7 flex-1">
                 {[
                   "All 100 parts, unlocked immediately",
                   "Videos, quizzes, flashcards, mind maps",
                   "Progress dashboard · Mobile friendly",
+                  "One-time payment — yours for life",
                 ].map((f) => (
                   <li key={f} className="flex items-start gap-2 text-xs text-text-secondary">
                     <CheckCircle2 className="w-3.5 h-3.5 text-gold flex-shrink-0 mt-0.5" />
@@ -262,34 +266,34 @@ export function InfluencerLandingPage({
                 href={individualUrl}
                 data-track="individual_lifetime_cta_clicked"
                 data-plan="individual"
-                className="block w-full py-3.5 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-sm text-center transition-colors shadow-md shadow-gold/20"
+                className="block w-full py-4 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-base text-center transition-colors shadow-lg shadow-gold/25"
               >
                 Get Lifetime Access — {indPrice}
               </Link>
             </div>
 
-            {/* For My Family */}
-            <div className="relative rounded-2xl border border-gold/30 bg-gold/5 p-6 flex flex-col">
+            {/* For My Family — secondary card, visually quieter */}
+            <div className="relative rounded-2xl border border-border bg-surface/50 p-5 flex flex-col">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap">
-                <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-gold text-ink">
-                  Best for Families
+                <span className="px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-surface border border-border text-text-muted">
+                  For Households
                 </span>
               </div>
-              <p className="text-lg font-bold text-text mb-0.5">For My Family</p>
-              <p className="text-xs text-text-muted mb-4">Family Lifetime Access · up to 5 learners</p>
-              <div className="mb-5">
+              <p className="text-base font-bold text-text mb-0.5">For My Family</p>
+              <p className="text-xs text-text-muted mb-4">Family Lifetime · up to 5 profiles</p>
+              <div className="mb-4">
                 <span className="text-xs text-text-muted line-through mr-2">{regFamPrice}</span>
-                <span className="text-4xl font-bold text-gold">{famPrice}</span>
-                <p className="text-xs text-gold/60 mt-0.5">one-time · no renewal</p>
+                <span className="text-3xl font-bold text-gold">{famPrice}</span>
+                <p className="text-xs text-text-muted mt-0.5">one-time</p>
               </div>
-              <ul className="space-y-1.5 mb-6 flex-1">
+              <ul className="space-y-1.5 mb-5 flex-1">
                 {[
                   "Everything in Individual",
                   "5 separate learner profiles",
                   "One payment for the whole household",
                 ].map((f) => (
                   <li key={f} className="flex items-start gap-2 text-xs text-text-secondary">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-gold flex-shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-3.5 h-3.5 text-gold/60 flex-shrink-0 mt-0.5" />
                     {f}
                   </li>
                 ))}
@@ -298,9 +302,9 @@ export function InfluencerLandingPage({
                 href={familyUrl}
                 data-track="family_lifetime_cta_clicked"
                 data-plan="family"
-                className="block w-full py-3.5 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-sm text-center transition-colors shadow-md shadow-gold/20"
+                className="block w-full py-3 rounded-xl border border-gold/30 text-gold font-semibold text-sm text-center hover:bg-gold/5 transition-colors"
               >
-                Get Family Lifetime Access — {famPrice}
+                Get Family Access — {famPrice}
               </Link>
             </div>
           </div>
@@ -345,7 +349,7 @@ export function InfluencerLandingPage({
               <Link href={individualUrl} data-track="individual_lifetime_cta_clicked" data-plan="individual" className={`${primaryBtn} w-full py-3.5 text-sm`}>
                 Get Lifetime Access — {indPrice}
               </Link>
-              <a href="#preview" data-track="watch_part1_clicked" className={`${outlineBtn} w-full py-3 text-sm`}>
+              <a href="#preview" data-track="watch_part1_clicked" className="inline-flex items-center justify-center gap-2 rounded-xl border border-gold/25 text-gold/60 font-medium hover:text-gold/80 transition-colors w-full py-3 text-sm">
                 <Play className="w-4 h-4" />
                 Watch Part 1 Free
               </a>
@@ -460,8 +464,8 @@ export function InfluencerLandingPage({
             <Link href={individualUrl} data-track="individual_lifetime_cta_clicked" data-plan="individual" className={`${primaryBtn} w-full py-4 text-base`}>
               Get Lifetime Access — {indPrice}
             </Link>
-            <Link href={familyUrl} data-track="family_lifetime_cta_clicked" data-plan="family" className={`${outlineBtn} w-full py-4 text-base`}>
-              For My Family — {famPrice}
+            <Link href={familyUrl} data-track="family_lifetime_cta_clicked" data-plan="family" className="inline-flex items-center justify-center gap-2 rounded-xl border border-gold/30 text-gold/70 font-medium hover:text-gold hover:border-gold/50 transition-colors w-full py-3.5 text-sm">
+              Get Family Access — {famPrice}
             </Link>
           </div>
           <p className="text-xs text-text-muted mb-6">One-time payment · No subscription · 7-day refund guarantee</p>
