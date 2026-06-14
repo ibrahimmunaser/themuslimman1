@@ -36,6 +36,8 @@ const KNOWN_EVENT_TYPES = [
   "checkout_loaded_family_lifetime",
   "change_plan_clicked",
   "purchase_completed",
+  // Payment failure events
+  "checkout_payment_failed",
 ] as const;
 
 export async function POST(req: NextRequest) {

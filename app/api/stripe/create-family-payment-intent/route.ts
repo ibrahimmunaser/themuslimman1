@@ -132,10 +132,27 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Get or create Stripe Customer so failed/abandoned payments are recoverable by email.
+    const existingCustomer = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { stripeCustomerId: true, fullName: true },
+    });
+    let customerId = existingCustomer?.stripeCustomerId;
+    if (!customerId) {
+      const customer = await stripe.customers.create({
+        email: user.email,
+        name: existingCustomer?.fullName ?? undefined,
+        metadata: { userId: user.id },
+      });
+      customerId = customer.id;
+      await prisma.user.update({ where: { id: user.id }, data: { stripeCustomerId: customer.id } });
+    }
+
     // Create Stripe PaymentIntent
     const paymentIntent = await stripe.paymentIntents.create({
       amount: finalAmount,
       currency: "usd",
+      customer: customerId,
       automatic_payment_methods: { enabled: true },
       metadata: {
         userId: user.id,

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe, PLANS, type PlanId } from "@/lib/stripe";
+import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { validatePromoCode, applyDiscount } from "@/lib/promo-codes";
 import { getCreatorPromoConfig } from "@/lib/creator-promos";
@@ -8,6 +9,33 @@ import { checkRateLimit, getIP } from "@/lib/rate-limit";
 
 /** Individual lifetime price in cents ($79). */
 const BASE_PRICE = 7900;
+
+/**
+ * Gets the existing Stripe Customer ID for a user, or creates one and saves it.
+ * Linking a Customer to every PaymentIntent means Stripe can email the user
+ * about failed/abandoned payments and we can recover them from the dashboard.
+ */
+async function getOrCreateStripeCustomer(userId: string, email: string): Promise<string> {
+  const dbUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { stripeCustomerId: true, fullName: true },
+  });
+
+  if (dbUser?.stripeCustomerId) return dbUser.stripeCustomerId;
+
+  const customer = await stripe.customers.create({
+    email,
+    name: dbUser?.fullName ?? undefined,
+    metadata: { userId },
+  });
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { stripeCustomerId: customer.id },
+  });
+
+  return customer.id;
+}
 
 export async function POST(request: NextRequest) {
   // Rate limit: 10 payment intent creations per 10 minutes per IP.
@@ -107,9 +135,12 @@ export async function POST(request: NextRequest) {
     }
 
     // ── Create Stripe PaymentIntent ──
+    const customerId = await getOrCreateStripeCustomer(user.id, user.email);
+
     const paymentIntent = await stripe.paymentIntents.create({
       amount: finalAmount,
       currency: "usd",
+      customer: customerId,
       automatic_payment_methods: { enabled: true },
       metadata: {
         userId: user.id,

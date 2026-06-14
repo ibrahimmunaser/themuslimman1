@@ -35,6 +35,30 @@ interface AppliedCoupon {
   finalPrice: number;
 }
 
+/**
+ * Maps a Stripe StripeError to a human-friendly message.
+ * 3DS / authentication failures get a specific message that encourages
+ * the user to retry or try Apple Pay / Google Pay.
+ */
+function friendlyPaymentError(err: { code?: string; decline_code?: string; message?: string }): string {
+  const authCodes = new Set([
+    "payment_intent_authentication_failure",
+    "authentication_required",
+    "card_authentication_required",
+  ]);
+  const isAuthFailure =
+    (err.code && authCodes.has(err.code)) ||
+    (err.decline_code && authCodes.has(err.decline_code)) ||
+    err.message?.toLowerCase().includes("authentication") ||
+    err.message?.toLowerCase().includes("3d secure") ||
+    err.message?.toLowerCase().includes("3ds");
+
+  if (isAuthFailure) {
+    return "Your bank could not verify this payment. Please try again, use a different card, or use Apple Pay / Google Pay if available.";
+  }
+  return err.message ?? "Payment failed. Please try again.";
+}
+
 /** Derive the canonical plan key from audience + billing. */
 function toPlanKey(audience: Audience, billing: Billing) {
   if (audience === "individual" && billing === "lifetime") return "complete"        as const;
@@ -134,7 +158,15 @@ function CheckoutForm({
           redirect: "if_required",
         });
         if (confirmError) {
-          setError(confirmError.message ?? "Payment failed. Please try again.");
+          console.error("[CHECKOUT] payment confirmation failed:", confirmError.code, confirmError.decline_code, confirmError.message);
+          if (creator) {
+            sendCheckoutEvent(creator, "checkout_payment_failed", {
+              plan: `${audience}-${billing}`,
+              errorCode: confirmError.code ?? "unknown",
+              errorMessage: confirmError.message ?? "",
+            });
+          }
+          setError(friendlyPaymentError(confirmError));
           setProcessing(false);
         } else if (paymentIntent?.status === "succeeded") {
           // Payment completed in-page (no redirect) — navigate manually
@@ -164,7 +196,16 @@ function CheckoutForm({
       });
       if (confirmError) {
         event.paymentFailed({ reason: "fail" });
-        setError(confirmError.message ?? "Payment failed. Please try again.");
+        console.error("[CHECKOUT] express payment failed:", confirmError.code, confirmError.decline_code, confirmError.message);
+        if (creator) {
+          sendCheckoutEvent(creator, "checkout_payment_failed", {
+            plan: `${audience}-${billing}`,
+            errorCode: confirmError.code ?? "unknown",
+            errorMessage: confirmError.message ?? "",
+            method: "express",
+          });
+        }
+        setError(friendlyPaymentError(confirmError));
         setProcessing(false);
       } else if (paymentIntent?.status === "succeeded") {
         const url = new URL(returnUrl, window.location.origin);

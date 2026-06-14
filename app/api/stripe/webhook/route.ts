@@ -95,7 +95,18 @@ export async function POST(request: NextRequest) {
 
       case "payment_intent.payment_failed": {
         const failedPayment = event.data.object as Stripe.PaymentIntent;
-        console.error(`[WEBHOOK] payment_intent.payment_failed: ${failedPayment.id}, reason: ${failedPayment.last_payment_error?.message}`);
+        const lastErr = failedPayment.last_payment_error;
+        const isAuthFailure =
+          lastErr?.code === "payment_intent_authentication_failure" ||
+          lastErr?.code === "authentication_required" ||
+          (lastErr?.decline_code ?? "").includes("authentication");
+        const failureLabel = isAuthFailure ? "3D Secure / authentication failed" : (lastErr?.code ?? "unknown");
+        console.error(
+          `[WEBHOOK] payment_intent.payment_failed: ${failedPayment.id} | ` +
+          `${failureLabel} | decline_code=${lastErr?.decline_code ?? "n/a"} | ` +
+          `message=${lastErr?.message ?? "n/a"} | customer=${failedPayment.customer ?? "n/a"} | ` +
+          `amount=${failedPayment.amount} ${failedPayment.currency}`
+        );
         // Mark any existing Purchase row as failed so the billing page and access
         // checks reflect the correct state (prevents a stuck "processing" record).
         await prisma.purchase.updateMany({
