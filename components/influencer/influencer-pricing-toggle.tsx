@@ -112,7 +112,7 @@ export function InfluencerPricingToggle({
                 </div>
                 <ul className="space-y-2 mb-7 flex-1">
                   {[
-                    "All 100 parts, unlocked immediately",
+                    "Start today. Continue at your own pace.",
                     "Videos, quizzes, flashcards, mind maps",
                     "Progress dashboard · Mobile friendly",
                     "Cancel anytime — no commitment",
@@ -129,7 +129,7 @@ export function InfluencerPricingToggle({
                   data-plan="individual-monthly"
                   className="block w-full py-4 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-base text-center transition-colors shadow-lg shadow-gold/25"
                 >
-                  Start for $4.99/month
+                  Start Learning
                   <span className="ml-1">→</span>
                 </Link>
                 <div className="mt-3 flex items-center justify-center gap-1.5 text-xs text-text-muted">
@@ -217,8 +217,8 @@ export function InfluencerPricingToggle({
                 </div>
                 <ul className="space-y-2 mb-7 flex-1">
                   {[
-                    "Pay once — own it forever",
-                    "All 100 parts, unlocked immediately",
+                    "Pay once — yours forever",
+                    "Full access, start anytime",
                     "Videos, quizzes, flashcards, mind maps",
                     "Progress dashboard · Mobile friendly",
                   ].map((f) => (

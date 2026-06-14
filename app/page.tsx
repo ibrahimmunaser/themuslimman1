@@ -201,9 +201,9 @@ export default async function LandingPage() {
 
                   <div className="grid grid-cols-3 gap-2 mb-3 px-0.5">
                     {[
-                      { val: "100", sub: "Parts"  },
-                      { val: "$79",  sub: "Once"   },
-                      { val: "∞",   sub: "Access"  },
+                      { val: "Free", sub: "Part 1"  },
+                      { val: "∞",    sub: "Access"  },
+                      { val: "✓",    sub: "Your pace" },
                     ].map(({ val, sub }) => (
                       <div key={sub} className="text-center py-2 rounded-lg bg-surface-raised border border-border/40">
                         <p className="text-sm font-bold text-gold leading-none">{val}</p>
@@ -240,7 +240,7 @@ export default async function LandingPage() {
               Part 1 is completely free
             </h2>
             <p className="text-text-secondary max-w-xl mx-auto">
-              The full first lesson — video, briefing, study guide, mind map, quiz, and flashcards.
+              Watch the full first lesson — video, reading, and learning tools included.
               No account required. This is exactly what the full course looks like.
             </p>
           </FadeUp>
@@ -290,12 +290,12 @@ export default async function LandingPage() {
 
           <StaggerChildren className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto" stagger={0.07}>
             {[
-              { label: "All video lessons, in order" },
-              { label: "Quizzes to check understanding" },
-              { label: "Flashcards for review" },
-              { label: "Mind maps to see the big picture" },
+              { label: "Video lessons, in chronological order" },
+              { label: "Short quizzes to make it stick" },
+              { label: "Flashcards for easy review" },
+              { label: "Mind maps to see the full picture" },
               { label: "Visual slides and infographics" },
-              { label: "Lifetime access — pay once" },
+              { label: "Your own pace — no deadlines" },
             ].map(({ label }) => (
               <AnimatedCard key={label} lift className="flex items-center gap-3 p-4 rounded-xl border border-border bg-surface hover:border-gold/20 transition-colors">
                 <CheckCircle2 className="w-5 h-5 text-gold flex-shrink-0" />
@@ -322,12 +322,12 @@ export default async function LandingPage() {
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
             {[
-              { icon: "🗂️", title: "Flashcards for review",       desc: "Quick recall for names, dates, and key events — revisit any time." },
-              { icon: "📝", title: "Quizzes for recall",           desc: "Test your understanding and track mastery at your own pace." },
-              { icon: "🗺️", title: "Mind maps for structure",      desc: "See how events connect — the big picture in one view." },
-              { icon: "📊", title: "Slides and infographics",      desc: "Visual learning tools — ideal for teaching family or halaqah." },
-              { icon: "📧", title: "Parent progress reports",      desc: "Weekly summaries showing what your child watched and completed." },
-              { icon: "📖", title: "Briefings and study guides",   desc: "Written summaries for every part — read at your own pace." },
+              { icon: "🗂️", title: "Flashcards",           desc: "Quick recall for names, dates, and key events — revisit any time." },
+              { icon: "📝", title: "Short quizzes",        desc: "Quick checkpoints to help the story stick — at your own pace." },
+              { icon: "🗺️", title: "Mind maps",            desc: "See how events connect — the big picture in one view." },
+              { icon: "📊", title: "Slides & infographics", desc: "Visual tools — ideal for teaching family or halaqah." },
+              { icon: "📧", title: "Parent reports",        desc: "Weekly summaries showing what your child watched and completed." },
+              { icon: "📖", title: "Lesson summaries",      desc: "Written summaries for every part — read whenever you like." },
             ].map((item) => (
               <div
                 key={item.title}
@@ -391,7 +391,7 @@ export default async function LandingPage() {
             {[
               {
                 q: "What does Complete Seerah include?",
-                a: "Every lesson includes a video, briefing, quiz, flashcards, mind map, and visual slides. You go at your own pace — there are no deadlines.",
+                a: "Every lesson comes with a video, reading, visual slides, flashcards, and a short quiz. You go at your own pace — no deadlines, no pressure.",
               },
               {
                 q: "What are my options?",

@@ -262,7 +262,7 @@ function MonthlyCheckoutContent({ userEmail }: Props) {
         <span className="text-gold">Monthly Access</span>
       </h1>
       <p className="text-zinc-400 text-base mb-8 leading-relaxed">
-        Full access to all 100 parts. Cancel anytime.
+        Full Seerah access. Start today. Cancel anytime.
       </p>
 
       {/* Plan selector */}

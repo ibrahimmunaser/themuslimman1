@@ -110,7 +110,7 @@ export async function Part1FullPreview({
       {!hideCta && (
         <div className="p-8 border-t border-gold/20 bg-surface-raised text-center">
           <p className="text-sm text-text-secondary mb-6">
-            You just experienced the full Part 1 — the exact same format and quality as all 100 parts.
+            That was Part 1 — every part of the course follows the same format. Continue at your own pace.
           </p>
           <a
             href={checkoutHref}
@@ -119,10 +119,10 @@ export async function Part1FullPreview({
             {ctaLabel}
           </a>
           <p className="text-sm text-text-muted mt-4 max-w-lg mx-auto leading-relaxed">
-            All 100 parts — video, briefing, quiz, flashcards, and mind maps. One-time payment. No subscription.
+            Full Seerah access — video, reading, flashcards, and more. Start at $4.99/month or pay once.
           </p>
           <p className="text-xs text-text-muted mt-3">
-            One-time payment · Lifetime access · 7-day refund guarantee
+            Cancel anytime · 7-day refund guarantee
           </p>
         </div>
       )}

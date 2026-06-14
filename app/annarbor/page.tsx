@@ -120,7 +120,7 @@ export default async function AnnArborPage() {
           </h1>
 
           <p className="text-base sm:text-lg text-text-secondary max-w-lg mx-auto mb-5 leading-relaxed">
-            Most Muslims know scattered stories from the Seerah, but not the Prophet&apos;s ﷺ life as one connected journey. This 100-part course helps you learn it step by step.
+            Most Muslims know scattered stories from the Seerah, but not the Prophet&apos;s ﷺ life as one connected journey. Start with Part 1 free — continue at your own pace.
           </p>
 
           <p className="text-3xl sm:text-4xl font-bold text-gold mb-1">

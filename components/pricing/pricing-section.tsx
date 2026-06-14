@@ -97,7 +97,7 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
 
               <ul className="space-y-2 mb-6 flex-1">
                 {[
-                  "All 100 Seerah parts, unlocked immediately",
+                  "Start today. Continue at your own pace.",
                   "Videos, quizzes, flashcards, mind maps",
                   "Progress dashboard · Mobile friendly",
                   "Cancel anytime — no commitment",
@@ -119,7 +119,7 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
                   href="/checkout?plan=individual-monthly"
                   className={buttonClass("primary", "lg", "w-full justify-center shadow-lg shadow-gold/20")}
                 >
-                  Start for $4.99/month
+                  Start Learning
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               )}
@@ -219,8 +219,8 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
 
               <ul className="space-y-2 mb-6 flex-1">
                 {[
-                  "Pay once, own it forever",
-                  "All 100 parts — video, quiz, flashcards, mind maps",
+                  "Pay once — yours forever",
+                  "Full access — video, quiz, flashcards, mind maps",
                   "Progress tracking dashboard",
                   "No recurring charges",
                 ].map((f) => (
@@ -292,7 +292,7 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
                   "Everything in the Individual plan",
                   "Up to 5 separate learner profiles",
                   "Each profile tracks progress independently",
-                  "All 100 parts unlocked for every member",
+                  "Full access for every family member",
                   "Weekly parent progress reports",
                   "One payment — no recurring charges",
                 ].map((f) => (

@@ -25,7 +25,7 @@ export function TestimonialsSection() {
             yourself, and track your progress.
           </p>
           <p className="text-sm text-text-muted max-w-xl mx-auto mb-10">
-            Part 1 is free. Monthly or lifetime access for all 100 parts.
+            Part 1 is free. Continue at your own pace — monthly or lifetime access.
           </p>
         </FadeUp>
 
@@ -34,9 +34,9 @@ export function TestimonialsSection() {
             <div className="w-10 h-10 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center mb-3">
               <BookOpen className="w-5 h-5 text-gold" />
             </div>
-            <p className="font-semibold text-text text-sm mb-1">100 Structured Parts</p>
+            <p className="font-semibold text-text text-sm mb-1">One connected story</p>
             <p className="text-xs text-text-secondary leading-relaxed">
-              The complete Seerah from pre-Islamic Arabia to the Prophet&apos;s ﷺ final days.
+              The complete Seerah from pre-Islamic Arabia to the Prophet&apos;s ﷺ final days — in order.
             </p>
           </AnimatedCard>
           <AnimatedCard lift className="p-5 rounded-xl border border-border bg-surface hover:border-gold/20 transition-colors">
@@ -54,7 +54,7 @@ export function TestimonialsSection() {
             </div>
             <p className="font-semibold text-text text-sm mb-1">Progress Tracking</p>
             <p className="text-xs text-text-secondary leading-relaxed">
-              Track your progress across all 100 parts. Resume where you left off, any device.
+              Resume exactly where you left off — any device, any time.
             </p>
           </AnimatedCard>
         </StaggerChildren>

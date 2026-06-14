@@ -26,51 +26,51 @@ export const dynamic = "force-dynamic";
 const WHAT_YOU_GET = [
   {
     icon: <Video className="w-5 h-5" />,
-    stat: "100",
-    label: "Videos",
+    stat: "✓",
+    label: "Video lessons",
     desc: "Follow the Seerah step by step, in chronological order.",
   },
   {
     icon: <Monitor className="w-5 h-5" />,
-    stat: "300",
-    label: "Presentations",
-    desc: "Visual slides that make every lesson easy to follow.",
+    stat: "✓",
+    label: "Visual slides",
+    desc: "Slides that make every lesson easy to follow and remember.",
   },
   {
     icon: <LayoutGrid className="w-5 h-5" />,
-    stat: "300",
-    label: "Explanatory Images",
-    desc: "Infographics that show what words alone cannot fully explain.",
+    stat: "✓",
+    label: "Infographics",
+    desc: "Visual summaries that show what words alone can't fully explain.",
   },
   {
     icon: <FileText className="w-5 h-5" />,
-    stat: "100",
-    label: "Briefing Documents",
-    desc: "Concise written summaries for every part of the Seerah.",
+    stat: "✓",
+    label: "Lesson summaries",
+    desc: "Written recaps for every part — read at your own pace.",
   },
   {
     icon: <ListChecks className="w-5 h-5" />,
-    stat: "100",
-    label: "Statements of Fact",
-    desc: "Key facts distilled — clear, memorable, and verifiable.",
+    stat: "✓",
+    label: "Key facts",
+    desc: "The most important points from each lesson, clearly stated.",
   },
   {
     icon: <GitBranch className="w-5 h-5" />,
-    stat: "100",
-    label: "Mind Maps",
+    stat: "✓",
+    label: "Mind maps",
     desc: "See how events, people, and themes connect at a glance.",
   },
   {
     icon: <Layers className="w-5 h-5" />,
-    stat: "100",
+    stat: "✓",
     label: "Flashcards",
-    desc: "Reinforce what you learned through active recall.",
+    desc: "Quick review tools you can revisit any time.",
   },
   {
     icon: <HelpCircle className="w-5 h-5" />,
-    stat: "100",
-    label: "Quizzes",
-    desc: "Test what you actually retained after each part.",
+    stat: "✓",
+    label: "Short quizzes",
+    desc: "Checkpoints that help the story stick — no pressure.",
   },
 ];
 
@@ -118,7 +118,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "What does the course include?",
-    a: "The full 100-part Seerah journey: video lessons, briefings, quizzes, flashcards, mind maps, visual resources, study guides, and guided progress tracking.",
+    a: "Every lesson comes with a video, reading, visual slides, flashcards, and a short quiz. You go at your own pace — no deadlines, no pressure.",
   },
   {
     q: "Is there a free option?",
@@ -194,8 +194,7 @@ export default async function PricingPage() {
 
           <FadeUp delay={0.1}>
             <p className="text-base sm:text-lg text-text-secondary max-w-2xl mx-auto leading-relaxed mb-4">
-              A structured online Seerah course built with videos, visuals, summaries, quizzes,
-              flashcards, mind maps, and briefing documents — organized part by part.
+              A guided course that takes you through the Prophet&apos;s ﷺ life in order — from before his birth to the final days. Start with Part 1 free.
             </p>
           </FadeUp>
 
@@ -211,7 +210,7 @@ export default async function PricingPage() {
                 href="/checkout?plan=individual-monthly"
                 className={buttonClass("primary", "xl", "shadow-lg shadow-gold/20")}
               >
-                Start for $4.99/month
+                Start Learning
                 <ArrowRight className="w-5 h-5" />
               </Link>
               <Link
@@ -244,10 +243,10 @@ export default async function PricingPage() {
           <FadeUp>
             <div className="text-center mb-12">
               <h2 className="text-2xl sm:text-3xl font-bold text-text mb-3">
-                What You Get Inside
+                Everything you need — nothing extra to buy
               </h2>
               <p className="text-text-secondary max-w-xl mx-auto text-sm sm:text-base">
-                Every part of the Seerah comes with a full set of learning tools — not just a video.
+                Every lesson comes with a full set of tools to make the story stick — not just a video.
               </p>
             </div>
           </FadeUp>
@@ -262,9 +261,6 @@ export default async function PricingPage() {
                   {card.icon}
                 </div>
                 <div>
-                  <p className="text-2xl sm:text-3xl font-bold text-gold leading-none mb-1">
-                    {card.stat}
-                  </p>
                   <p className="font-semibold text-text text-sm">{card.label}</p>
                   <p className="text-xs text-text-muted mt-1 leading-relaxed">{card.desc}</p>
                 </div>
@@ -308,7 +304,7 @@ export default async function PricingPage() {
           >
             <Part1FullPreview
               checkoutHref="/checkout?plan=individual-monthly"
-              ctaLabel="Start for $4.99/month"
+              ctaLabel="Continue After Part 1"
             />
           </Suspense>
         </div>
@@ -441,14 +437,14 @@ export default async function PricingPage() {
               Start learning the Prophet&apos;s ﷺ life in order.
             </h2>
             <p className="text-sm text-gold/80 mb-6">
-              Start for $4.99/month. Cancel anytime.
+              Cancel anytime · Less than a coffee each month
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-4">
               <Link
                 href="/checkout?plan=individual-monthly"
                 className={buttonClass("primary", "xl", "shadow-lg shadow-gold/25")}
               >
-                Start for $4.99/month
+                Start Learning Today
                 <ArrowRight className="w-5 h-5" />
               </Link>
               <Link
@@ -459,18 +455,14 @@ export default async function PricingPage() {
                   "border border-gold/30 text-gold hover:bg-gold/5",
                 )}
               >
-                Family — $9.99/month
+                Family Plan
               </Link>
             </div>
             <p className="text-xs text-text-muted mb-5">
               Prefer to pay once?{" "}
-              <Link href="/checkout?plan=individual-lifetime" className="text-gold/70 hover:text-gold underline underline-offset-2 transition-colors">
-                Individual Lifetime $79
-              </Link>
-              {" "}·{" "}
-              <Link href="/checkout?plan=family-lifetime" className="text-gold/70 hover:text-gold underline underline-offset-2 transition-colors">
-                Family Lifetime $149
-              </Link>
+              <a href="#pricing" className="text-gold/70 hover:text-gold underline underline-offset-2 transition-colors">
+                View lifetime options →
+              </a>
             </p>
             {!accessInfo?.hasAccess && (
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

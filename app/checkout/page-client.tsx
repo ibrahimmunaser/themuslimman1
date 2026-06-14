@@ -261,11 +261,11 @@ function CheckoutForm({
     billing === "trial"
       ? [
           "Your card is saved but not charged today.",
-          "You get full access to all 100 parts immediately.",
+          "You get full access immediately.",
           "After 7 days, you're billed monthly. Cancel anytime.",
         ]
       : [
-          "You get instant access to all 100 parts.",
+          "You get instant access to the full course.",
           "No recurring charges — this is a one-time payment.",
           "Set your password via email to activate your account.",
         ];
@@ -967,7 +967,7 @@ function CheckoutPageContent({
       <p className="text-zinc-400 text-base mb-8 leading-relaxed">
         {audience === "family"
           ? "One household account with up to 5 learner profiles, each with their own progress."
-          : "Full structured access to all 100 parts of the Seerah of the Prophet ﷺ."}
+          : "Full access to the complete Seerah of the Prophet ﷺ."}
       </p>
 
       {/* ── Selected offer confirmation — always shown until user taps "Change plan" */}

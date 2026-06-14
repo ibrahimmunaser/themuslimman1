@@ -70,14 +70,14 @@ const primaryBtn =
 // ── Static data ────────────────────────────────────────────────────────────────
 
 const WHAT_YOU_GET = [
-  { icon: <Video className="w-5 h-5" />,       stat: "100", label: "Videos"             },
-  { icon: <Monitor className="w-5 h-5" />,     stat: "300", label: "Presentations"      },
-  { icon: <LayoutGrid className="w-5 h-5" />,  stat: "300", label: "Explanatory Images" },
-  { icon: <FileText className="w-5 h-5" />,    stat: "100", label: "Briefing Documents" },
-  { icon: <ListChecks className="w-5 h-5" />,  stat: "100", label: "Statements of Fact" },
-  { icon: <GitBranch className="w-5 h-5" />,   stat: "100", label: "Mind Maps"          },
-  { icon: <Layers className="w-5 h-5" />,      stat: "100", label: "Flashcards"         },
-  { icon: <HelpCircle className="w-5 h-5" />,  stat: "100", label: "Quizzes"            },
+  { icon: <Video className="w-5 h-5" />,       stat: "✓", label: "Video lessons"        },
+  { icon: <Monitor className="w-5 h-5" />,     stat: "✓", label: "Visual slides"        },
+  { icon: <LayoutGrid className="w-5 h-5" />,  stat: "✓", label: "Infographics"         },
+  { icon: <FileText className="w-5 h-5" />,    stat: "✓", label: "Lesson summaries"     },
+  { icon: <ListChecks className="w-5 h-5" />,  stat: "✓", label: "Key facts"            },
+  { icon: <GitBranch className="w-5 h-5" />,   stat: "✓", label: "Mind maps"            },
+  { icon: <Layers className="w-5 h-5" />,      stat: "✓", label: "Flashcards"           },
+  { icon: <HelpCircle className="w-5 h-5" />,  stat: "✓", label: "Review quizzes"       },
 ];
 
 const FAQ = [
@@ -103,7 +103,7 @@ const FAQ = [
   },
   {
     q: "What happens right after I buy?",
-    a: "You create an account and get immediate access to all 100 parts through your student dashboard. Lifetime plans are a one-time payment with no recurring charges.",
+    a: "You create an account and get immediate access to the full course. Start whenever you're ready — there are no deadlines.",
   },
   {
     q: "Do I need to verify my email?",
@@ -194,7 +194,7 @@ export function InfluencerLandingPage({
           </h1>
 
           <p className="text-base sm:text-lg text-text-secondary max-w-lg mx-auto mb-5 leading-relaxed">
-            Most Muslims know scattered stories from the Seerah, but not the Prophet&apos;s ﷺ life as one connected journey. This 100-part course helps you learn it step by step.
+            Most Muslims know scattered stories from the Seerah, but not the Prophet&apos;s ﷺ life as one connected journey. Start with Part 1 free — continue at your own pace.
           </p>
 
           {showHeroCard ? (
@@ -215,10 +215,10 @@ export function InfluencerLandingPage({
                 </div>
                 <ul className="space-y-2 mb-7 flex-1">
                   {[
-                    "All 100 parts, unlocked immediately",
+                    "Full access — yours forever",
                     "Videos, quizzes, flashcards, mind maps",
                     "Progress dashboard · Mobile friendly",
-                    "One-time payment — yours for life",
+                    "One-time payment — no recurring charges",
                   ].map((f) => (
                     <li key={f} className="flex items-start gap-2 text-xs text-text-secondary">
                       <CheckCircle2 className="w-3.5 h-3.5 text-gold flex-shrink-0 mt-0.5" />
@@ -389,10 +389,10 @@ export function InfluencerLandingPage({
               </div>
               <ul className="space-y-2 mb-7 flex-1">
                 {[
-                  "All 100 parts, unlocked immediately",
+                  "Full access — yours forever",
                   "Videos, quizzes, flashcards, mind maps",
                   "Progress dashboard · Mobile friendly",
-                  "One-time payment — yours for life",
+                  "One-time payment — no recurring charges",
                 ].map((f) => (
                   <li key={f} className="flex items-start gap-2 text-xs text-text-secondary">
                     <CheckCircle2 className="w-3.5 h-3.5 text-gold flex-shrink-0 mt-0.5" />
@@ -532,9 +532,9 @@ export function InfluencerLandingPage({
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-8">
             <h2 className="text-xl sm:text-2xl font-bold text-text mb-2">
-              Every Part Comes With a Full Set of Learning Tools
+              Everything you need to make it stick
             </h2>
-            <p className="text-text-secondary text-sm">Not just a video.</p>
+            <p className="text-text-secondary text-sm">Each lesson comes with the full set — go at your own pace.</p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {WHAT_YOU_GET.map((card) => (
