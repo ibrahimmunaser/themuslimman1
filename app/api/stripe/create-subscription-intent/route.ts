@@ -117,11 +117,12 @@ export async function POST(request: NextRequest) {
       items: [{ price: MONTHLY_PRICE_ID }],
       payment_behavior: "default_incomplete",
       payment_settings: {
-        // "card" covers Apple Pay / Google Pay (they create card tokens).
-        // "link" enables Stripe Link for saved-email fast checkout.
-        payment_method_types: ["card", "link"],
+        // No explicit payment_method_types — omitting this lets Stripe use automatic
+        // payment methods for the initial PaymentIntent, so Apple Pay, Google Pay,
+        // Link, and card are all offered. The saved payment method handles renewals.
         save_default_payment_method: "on_subscription",
       },
+      description: "Seerah Individual Monthly — TheMuslimMan",
       expand: ["latest_invoice", "latest_invoice.confirmation_secret"],
       metadata: {
         userId:    user.id,
@@ -152,27 +153,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Could not create subscription payment" }, { status: 500 });
     }
 
-    // Tag the underlying PaymentIntent so the webhook skips creating a Purchase record.
-    // Log but don't fail if the update errors — the invoice field on the PI will still
-    // cause the webhook to recognise it as a subscription payment and skip it safely.
-    const piId: string | null = invoice?.confirmation_secret?.payment_intent ?? null;
-    if (piId) {
+    // Tag the underlying PaymentIntent with metadata and description.
+    // The PI ID is embedded in the client_secret: "pi_{id}_secret_{token}".
+    // The confirmation_secret object does NOT have a `.payment_intent` field — that
+    // was the previous bug causing piId to always be null.
+    const piId: string | null = clientSecret ? clientSecret.split("_secret_")[0] : null;
+    if (piId?.startsWith("pi_")) {
       await stripe.paymentIntents.update(piId, {
+        description: "Seerah Individual Monthly — TheMuslimMan",
         metadata: {
-          type:     "subscription",
-          userId:   user.id,
-          planId:   "monthly",
-          planType: "individual",
+          type:           "subscription",
+          userId:         user.id,
+          planId:         "monthly",
+          planType:       "individual",
           subscriptionId: subscription.id,
-          ...(creator   ? { creator }   : {}),
-          ...(promoCode ? { promoCode } : {}),
-          ...(source    ? { source }    : {}),
-          ...(utmSource ? { utmSource } : {}),
+          ...(creator     ? { creator }     : {}),
+          ...(promoCode   ? { promoCode }   : {}),
+          ...(source      ? { source }      : {}),
+          ...(utmSource   ? { utmSource }   : {}),
           ...(utmCampaign ? { utmCampaign } : {}),
+          ...(utmMedium   ? { utmMedium }   : {}),
+          ...(utmContent  ? { utmContent }  : {}),
         },
       }).catch((e) => console.error("[CREATE-SUBSCRIPTION-INTENT] Could not update PI metadata:", e));
+      console.log(`[CREATE-SUBSCRIPTION-INTENT] Tagged PI ${piId} with metadata for user ${user.id}`);
     } else {
-      console.warn("[CREATE-SUBSCRIPTION-INTENT] No payment_intent ID found on confirmation_secret — PI metadata not tagged");
+      console.warn("[CREATE-SUBSCRIPTION-INTENT] Could not parse PI ID from client_secret:", clientSecret?.slice(0, 30));
     }
 
     return NextResponse.json({ clientSecret, amount: PLANS.monthly.price });

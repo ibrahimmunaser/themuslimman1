@@ -176,11 +176,11 @@ export async function POST(request: NextRequest) {
       items: [{ price: FAMILY_MONTHLY_PRICE_ID }],
       payment_behavior: "default_incomplete",
       payment_settings: {
-        // "card" covers Apple Pay / Google Pay (they create card tokens).
-        // "link" enables Stripe Link for saved-email fast checkout.
-        payment_method_types: ["card", "link"],
+        // No explicit payment_method_types — lets Stripe use automatic methods
+        // so Apple Pay, Google Pay, Link, and card are all offered initially.
         save_default_payment_method: "on_subscription",
       },
+      description: "Seerah Family Monthly — TheMuslimMan",
       expand: ["latest_invoice", "latest_invoice.confirmation_secret"],
       metadata: {
         userId:   user.id,
@@ -208,23 +208,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Could not create subscription payment" }, { status: 500 });
     }
 
-    // Tag the underlying PaymentIntent so the webhook skips creating a Purchase record
-    const piId: string | null = invoice?.confirmation_secret?.payment_intent ?? null;
-    if (piId) {
+    // Tag the underlying PaymentIntent with metadata and description.
+    // PI ID is embedded in the client_secret: "pi_{id}_secret_{token}".
+    const piId: string | null = clientSecret ? clientSecret.split("_secret_")[0] : null;
+    if (piId?.startsWith("pi_")) {
       await stripe.paymentIntents.update(piId, {
+        description: "Seerah Family Monthly — TheMuslimMan",
         metadata: {
-          type:     "subscription",
-          userId:   user.id,
-          planId:   FAMILY_MONTHLY_PLAN.id,
-          planType: "family",
+          type:           "subscription",
+          userId:         user.id,
+          planId:         FAMILY_MONTHLY_PLAN.id,
+          planType:       "family",
           subscriptionId: subscription.id,
-          ...(creator   ? { creator }   : {}),
-          ...(promoCode ? { promoCode } : {}),
-          ...(source    ? { source }    : {}),
-          ...(utmSource ? { utmSource } : {}),
+          ...(creator     ? { creator }     : {}),
+          ...(promoCode   ? { promoCode }   : {}),
+          ...(source      ? { source }      : {}),
+          ...(utmSource   ? { utmSource }   : {}),
           ...(utmCampaign ? { utmCampaign } : {}),
+          ...(utmMedium   ? { utmMedium }   : {}),
+          ...(utmContent  ? { utmContent }  : {}),
         },
       }).catch((e) => console.warn("[CREATE-FAMILY-SUB] Could not update PI metadata:", e));
+      console.log(`[CREATE-FAMILY-SUB] Tagged PI ${piId} with metadata for user ${user.id}`);
+    } else {
+      console.warn("[CREATE-FAMILY-SUB] Could not parse PI ID from client_secret:", clientSecret?.slice(0, 30));
     }
 
     return NextResponse.json({ clientSecret, amount: FAMILY_MONTHLY_PLAN.price });

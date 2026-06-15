@@ -111,6 +111,15 @@ function CheckoutForm({
 
   const returnUrl = toReturnUrl(audience, billing);
 
+  // Lightweight checkout stage logger. Always emits to console so stages appear
+  // in browser DevTools and Vercel server logs (for server-rendered events).
+  // Also calls sendCheckoutEvent for creator attribution tracking.
+  const logStage = (stage: string, extra?: Record<string, unknown>) => {
+    const ctx = { plan: `${audience}-${billing}`, amount: finalPrice, ...extra };
+    console.log(`[CHECKOUT:${stage}]`, ctx);
+    if (creator) sendCheckoutEvent(creator, stage, { ...ctx, promoCode });
+  };
+
   // Called by the card form submit button
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,13 +127,7 @@ function CheckoutForm({
     setProcessing(true);
     setError(null);
 
-    if (creator) {
-      sendCheckoutEvent(creator, "checkout_form_submitted", {
-        plan: `${audience}-${billing}`,
-        promoCode,
-        amount: finalPrice,
-      });
-    }
+    logStage("payment_submitted");
 
     const { error: submitError } = await elements.submit();
     if (submitError) {
@@ -158,16 +161,11 @@ function CheckoutForm({
         });
         if (confirmError) {
           console.error("[CHECKOUT] payment confirmation failed:", confirmError.code, confirmError.decline_code, confirmError.message);
-          if (creator) {
-            sendCheckoutEvent(creator, "checkout_payment_failed", {
-              plan: `${audience}-${billing}`,
-              errorCode: confirmError.code ?? "unknown",
-              errorMessage: confirmError.message ?? "",
-            });
-          }
+          logStage("payment_failed", { errorCode: confirmError.code ?? "unknown" });
           setError(friendlyPaymentError(confirmError));
           setProcessing(false);
         } else if (paymentIntent?.status === "succeeded") {
+          logStage("payment_succeeded");
           // Payment completed in-page (no redirect) — navigate manually
           const url = new URL(returnUrl, window.location.origin);
           url.searchParams.set("payment_intent", paymentIntent.id);
@@ -193,20 +191,14 @@ function CheckoutForm({
         confirmParams: { return_url: returnUrl },
         redirect: "if_required",
       });
-      if (confirmError) {
-        event.paymentFailed({ reason: "fail" });
-        console.error("[CHECKOUT] express payment failed:", confirmError.code, confirmError.decline_code, confirmError.message);
-        if (creator) {
-          sendCheckoutEvent(creator, "checkout_payment_failed", {
-            plan: `${audience}-${billing}`,
-            errorCode: confirmError.code ?? "unknown",
-            errorMessage: confirmError.message ?? "",
-            method: "express",
-          });
-        }
-        setError(friendlyPaymentError(confirmError));
+        if (confirmError) {
+          event.paymentFailed({ reason: "fail" });
+          console.error("[CHECKOUT] express payment failed:", confirmError.code, confirmError.decline_code, confirmError.message);
+          logStage("payment_failed", { errorCode: confirmError.code ?? "unknown", method: "express" });
+          setError(friendlyPaymentError(confirmError));
         setProcessing(false);
       } else if (paymentIntent?.status === "succeeded") {
+        logStage("payment_succeeded", { method: "express" });
         const url = new URL(returnUrl, window.location.origin);
         url.searchParams.set("payment_intent", paymentIntent.id);
         url.searchParams.set("payment_intent_client_secret", paymentIntent.client_secret ?? "");
@@ -301,6 +293,7 @@ function CheckoutForm({
               onReady={({ availablePaymentMethods }) => {
                 if (availablePaymentMethods && Object.keys(availablePaymentMethods).length > 0) {
                   setShowExpressCheckout(true);
+                  logStage("express_checkout_visible", { methods: Object.keys(availablePaymentMethods) });
                 }
               }}
               options={{
@@ -324,6 +317,7 @@ function CheckoutForm({
         {/* Apple Pay, Google Pay, Link appear above via ExpressCheckoutElement — suppress duplicates.
             Cash App requires setup_future_usage=off_session to be absent; hide it on trial. */}
         <PaymentElement
+          onReady={() => logStage("payment_element_loaded")}
           options={{
             wallets: { applePay: "never", googlePay: "never", link: "never" },
             ...(billing === "trial" || billing === "monthly"
