@@ -12,7 +12,7 @@ import {
 } from "@stripe/react-stripe-js";
 import {
   Check, Lock, User, Users, ArrowLeft, ArrowRight,
-  Shield, ShieldCheck, Star, Tag, X, Eye, EyeOff, RefreshCw, Zap,
+  Shield, Star, Tag, X, Eye, EyeOff, RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
 import { PLANS, formatPrice } from "@/lib/stripe-config";
@@ -230,7 +230,7 @@ function CheckoutForm({
     billing === "trial"
       ? "Start Free Trial — $0 Today"
       : billing === "monthly"
-      ? `Subscribe — ${formatPrice(finalPrice)}/mo`
+      ? "Start Learning"
       : isAnnArborStudent
         ? `Get Student Lifetime Access — ${formatPrice(finalPrice)}`
         : audience === "family"
@@ -245,11 +245,12 @@ function CheckoutForm({
           "Secure checkout",
         ]
       : billing === "monthly"
-      ? [
-          "Cancel anytime",
-          "7-day refund guarantee",
-          "Secure checkout",
-        ]
+      ? ([
+          `Due today: ${formatPrice(finalPrice)}`,
+          "Cancel anytime. No commitment.",
+          "Start instantly after payment.",
+          ...(audience === "individual" ? ["Less than a coffee each month."] : []),
+        ])
       : [
           "One-time payment — no recurring charge",
           "7-day refund guarantee",
@@ -263,6 +264,12 @@ function CheckoutForm({
           "Your card is saved but not charged today.",
           "You get full access immediately.",
           "After 7 days, you're billed monthly. Cancel anytime.",
+        ]
+      : billing === "monthly"
+      ? [
+          "Instant access right after payment — start today.",
+          "Cancel anytime — no long-term commitment.",
+          "We'll email you a link to set your password.",
         ]
       : [
           "You get instant access to the full course.",
@@ -505,6 +512,10 @@ function CheckoutPageContent({
   const [authLoading,setAuthLoading] = useState(false);
   const [needsVerification, setNeedsVerification] = useState(false);
   const [resendState, setResendState] = useState<"idle" | "loading" | "sent" | "error">("idle");
+  // Auto-trigger: fires when the email field blurs with a valid name + email so the
+  // Stripe payment form loads without requiring a separate "Continue to Payment" click.
+  const autoDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [autoIntentStarted, setAutoIntentStarted] = useState(false);
 
   // Promo shown to guests before auth (URL ?promo= param preview).
   // The `forAudience` field tags which plan this discount was computed for so
@@ -769,36 +780,32 @@ function CheckoutPageContent({
 
   // ── Auth handlers ──────────────────────────────────────────────────────────
 
-  const handleGuestCheckout = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setAuthError("");
-    if (authForm.fullName.trim().length < 2) { setAuthError("Please enter your full name"); return; }
-    if (!authForm.email.includes("@"))       { setAuthError("Please enter a valid email address"); return; }
-
+  // Core guest-checkout logic — shared by both the explicit form submit and the
+  // auto-trigger so we never duplicate the API call.
+  const runGuestCheckout = async (name: string, email: string) => {
     setAuthLoading(true);
     try {
       const res = await fetch("/api/auth/guest-checkout", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fullName: authForm.fullName, email: authForm.email }),
+        body: JSON.stringify({ fullName: name, email }),
       });
       const data = await res.json();
       if (!res.ok) {
         if (data.hasAccount) {
           if (isInfluencerMode) {
-            // In influencer mode there's no sign-in tab — direct them to the dashboard
             setAuthError("__existing_account__");
           } else {
-            // Switch to login tab so they can sign in
             setAuthMode("login");
             setAuthError("You already have an account with this email. Please sign in.");
           }
+          setAutoIntentStarted(false);
           return;
         }
         setAuthError(data.error || "Failed to continue. Please try again.");
+        setAutoIntentStarted(false);
         return;
       }
-
       if ((guestPromo || creatorPromoConfig) && billing === "lifetime") {
         const code     = guestPromo?.code     ?? promoParam ?? "";
         const label    = guestPromo?.label    ?? creatorPromoConfig?.displayLabel ?? "";
@@ -806,13 +813,37 @@ function CheckoutPageContent({
         setAppliedCoupon({ code, label, discount, finalPrice: currentPlan.price - discount });
         setCouponInput(code);
       }
-      setAuthEmail(authForm.email);
+      setAuthEmail(email);
       setIsAuthenticated(true);
     } catch {
       setAuthError("An error occurred. Please try again.");
+      setAutoIntentStarted(false);
     } finally {
       setAuthLoading(false);
     }
+  };
+
+  const handleGuestCheckout = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError("");
+    if (authForm.fullName.trim().length < 2) { setAuthError("Please enter your full name"); return; }
+    if (!authForm.email.includes("@"))       { setAuthError("Please enter a valid email address"); return; }
+    if (autoIntentStarted) return; // already in progress from auto-trigger
+    setAutoIntentStarted(true);
+    await runGuestCheckout(authForm.fullName, authForm.email);
+  };
+
+  // Auto-trigger: starts the guest account + payment intent as soon as a valid
+  // name + email are entered, so the Stripe form is ready without a button click.
+  const triggerAutoCheckout = (name: string, email: string) => {
+    if (isAuthenticated || autoIntentStarted || authLoading) return;
+    if (autoDebounceRef.current) clearTimeout(autoDebounceRef.current);
+    const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    if (name.trim().length < 2 || !validEmail) return;
+    autoDebounceRef.current = setTimeout(() => {
+      setAutoIntentStarted(true);
+      runGuestCheckout(name, email);
+    }, 300);
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -1288,151 +1319,6 @@ function CheckoutPageContent({
     );
   }
 
-  // ── Guest right column: auth form ─────────────────────────────────────────
-
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-zinc-950 flex flex-col lg:flex-row">
-        {LeftColumn}
-        <div className="order-1 lg:order-2 lg:w-1/2 px-6 sm:px-12 py-12 flex flex-col justify-center">
-          <div className="max-w-md w-full mx-auto">
-            <h2 className="text-xl font-bold text-white mb-6">Complete your order</h2>
-            {OrderSummary}
-
-            {/* Auth tabs — hidden in influencer mode (new visitors only) */}
-            {!isInfluencerMode && (
-              <div className="flex gap-1 bg-zinc-900 border border-zinc-800 rounded-xl p-1 mb-5">
-                {(["signup", "login"] as AuthMode[]).map((mode) => (
-                  <button
-                    key={mode}
-                    onClick={() => { setAuthMode(mode); setAuthError(""); }}
-                    className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
-                      authMode === mode ? "bg-zinc-700 text-white shadow-sm" : "text-zinc-500 hover:text-zinc-300"
-                    }`}
-                  >
-                    {mode === "signup" ? "New customer" : "Sign in"}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Guest checkout form — name + email only; password is set after purchase */}
-            {authMode === "signup" && (
-              <form onSubmit={handleGuestCheckout} className="space-y-3">
-                <input
-                  type="text" placeholder="Full name"
-                  value={authForm.fullName}
-                  onChange={(e) => setAuthForm((f) => ({ ...f, fullName: e.target.value }))}
-                  required
-                  className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm"
-                />
-                <input
-                  type="email" placeholder="Email address"
-                  value={authForm.email}
-                  onChange={(e) => setAuthForm((f) => ({ ...f, email: e.target.value }))}
-                  required
-                  className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm"
-                />
-                {authError === "__existing_account__" ? (
-                  <div className="p-4 rounded-xl bg-gold/10 border border-gold/25 text-sm space-y-2">
-                    <p className="font-semibold text-white">You already have an account</p>
-                    <p className="text-zinc-400 text-xs leading-relaxed">
-                      Sign in to your student dashboard to manage your plan or upgrade.
-                    </p>
-                    <a
-                      href="/signin"
-                      className="inline-flex items-center gap-1.5 text-gold text-xs font-semibold hover:text-gold-light transition-colors"
-                    >
-                      Go to sign in <ArrowRight className="w-3.5 h-3.5" />
-                    </a>
-                  </div>
-                ) : authError ? (
-                  <p className="text-xs text-red-400 pt-1">{authError}</p>
-                ) : null}
-                {authError !== "__existing_account__" && (
-                <button
-                  type="submit" disabled={authLoading}
-                  className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-gold hover:bg-gold-light disabled:opacity-60 text-ink font-bold text-sm transition-colors"
-                >
-                  {authLoading
-                    ? "Continuing…"
-                    : isTrial
-                      ? "Continue — It's Free Today"
-                      : isAnnArborStudent
-                        ? "Continue to Student Access"
-                        : audience === "family" && isLifetime
-                          ? "Continue to Family Lifetime"
-                          : isLifetime
-                            ? "Continue to Lifetime Access"
-                            : "Continue to Payment"}
-                  {!authLoading && <ArrowRight className="w-4 h-4" />}
-                </button>
-                )}
-                {/* Trust signals — visible right under the button */}
-                <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 py-2">
-                  <span className="flex items-center gap-1.5 text-xs text-zinc-500">
-                    <ShieldCheck className="w-3.5 h-3.5 text-gold/50" />
-                    7-day refund guarantee
-                  </span>
-                  <span className="flex items-center gap-1.5 text-xs text-zinc-500">
-                    <Lock className="w-3.5 h-3.5 text-gold/50" />
-                    Secure checkout
-                  </span>
-                  <span className="flex items-center gap-1.5 text-xs text-zinc-500">
-                    <Zap className="w-3.5 h-3.5 text-gold/50" />
-                    Instant access
-                  </span>
-                </div>
-                <p className="text-xs text-zinc-700 text-center leading-relaxed">
-                  You&rsquo;ll set a password after checkout. By continuing you agree to our{" "}
-                  <a href="/terms"   className="underline hover:text-zinc-500">Terms</a>,{" "}
-                  <a href="/privacy" className="underline hover:text-zinc-500">Privacy Policy</a>, and{" "}
-                  <a href="/refund"  className="underline hover:text-zinc-500">Refund Policy</a>.
-                </p>
-              </form>
-            )}
-
-            {/* Login form — hidden in influencer mode */}
-            {authMode === "login" && !isInfluencerMode && (
-              <form onSubmit={handleLogin} className="space-y-3">
-                <input
-                  type="email" placeholder="Email address" required
-                  value={authForm.email}
-                  onChange={(e) => setAuthForm((f) => ({ ...f, email: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm"
-                />
-                <div className="relative">
-                  <input
-                    type={showPass ? "text" : "password"} placeholder="Password" required
-                    value={authForm.password}
-                    onChange={(e) => setAuthForm((f) => ({ ...f, password: e.target.value }))}
-                    className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm pr-11"
-                  />
-                  <button type="button" onClick={() => setShowPass((s) => !s)} className="absolute right-2 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] flex items-center justify-center text-zinc-500 hover:text-zinc-300">
-                    {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-                {authError && <p className="text-xs text-red-400 pt-1">{authError}</p>}
-                <button
-                  type="submit" disabled={authLoading}
-                  className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-gold hover:bg-gold-light disabled:opacity-60 text-ink font-bold text-sm transition-colors"
-                >
-                  {authLoading ? "Signing in…" : "Sign In & Continue"}
-                  {!authLoading && <ArrowRight className="w-4 h-4" />}
-                </button>
-                <div className="text-center">
-                  <a href="/forgot-password" className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors">
-                    Forgot your password?
-                  </a>
-                </div>
-              </form>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   // ── Trial already used — show upgrade options (one free trial per account) ──
 
   if (trialAlreadyUsed) {
@@ -1592,20 +1478,123 @@ function CheckoutPageContent({
     );
   }
 
-  // ── Authenticated right column: payment form ───────────────────────────────
+  // ── Unified right column: name/email capture + payment form on one screen ──
 
   return (
     <div className="min-h-screen bg-zinc-950 flex flex-col lg:flex-row">
       {LeftColumn}
       <div className="order-1 lg:order-2 lg:w-1/2 px-6 sm:px-12 py-12 flex flex-col justify-center">
         <div className="max-w-md w-full mx-auto">
-          <h2 className="text-xl font-bold text-white mb-2">Complete your order</h2>
-          <p className="text-sm text-zinc-500 mb-6">Signed in as <span className="text-zinc-300">{authEmail}</span></p>
+
+          {/* ── Step 1: name + email (only shown for unauthenticated guests) ── */}
+          {!isAuthenticated && authMode === "signup" && (
+            <form onSubmit={handleGuestCheckout} className="space-y-3 mb-5">
+              <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">Your details</p>
+              <input
+                type="text" placeholder="Full name" required
+                value={authForm.fullName}
+                onChange={(e) => setAuthForm((f) => ({ ...f, fullName: e.target.value }))}
+                className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm"
+              />
+              <input
+                type="email" placeholder="Email address" required
+                value={authForm.email}
+                onChange={(e) => setAuthForm((f) => ({ ...f, email: e.target.value }))}
+                onBlur={(e) => triggerAutoCheckout(authForm.fullName, e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm"
+              />
+              {authError === "__existing_account__" ? (
+                <div className="p-4 rounded-xl bg-gold/10 border border-gold/25 text-sm space-y-2">
+                  <p className="font-semibold text-white">You already have an account</p>
+                  <p className="text-zinc-400 text-xs leading-relaxed">
+                    Sign in to your student dashboard to manage your plan or upgrade.
+                  </p>
+                  <a href="/signin" className="inline-flex items-center gap-1.5 text-gold text-xs font-semibold hover:text-gold-light transition-colors">
+                    Go to sign in <ArrowRight className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              ) : authError ? (
+                <p className="text-xs text-red-400 pt-1">{authError}</p>
+              ) : null}
+              {/* Hidden submit so pressing Enter submits the form */}
+              <button type="submit" className="sr-only" aria-hidden>Continue</button>
+              {/* Existing-account fallback */}
+              {!isInfluencerMode && !authError && (
+                <p className="text-xs text-zinc-600 text-center">
+                  Already have an account?{" "}
+                  <button
+                    type="button"
+                    onClick={() => { setAuthMode("login"); setAuthError(""); }}
+                    className="text-zinc-500 hover:text-gold transition-colors underline"
+                  >
+                    Sign in
+                  </button>
+                </p>
+              )}
+            </form>
+          )}
+
+          {/* ── Sign-in form (for existing accounts) ── */}
+          {!isAuthenticated && authMode === "login" && (
+            <div className="mb-5">
+              <div className="flex items-center gap-2 mb-3">
+                <button
+                  type="button"
+                  onClick={() => { setAuthMode("signup"); setAuthError(""); }}
+                  className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+                >
+                  <ArrowLeft className="w-3 h-3" />
+                  Back
+                </button>
+                <p className="text-xs text-zinc-400">Sign in to continue</p>
+              </div>
+              <form onSubmit={handleLogin} className="space-y-3">
+                <input
+                  type="email" placeholder="Email address" required
+                  value={authForm.email}
+                  onChange={(e) => setAuthForm((f) => ({ ...f, email: e.target.value }))}
+                  className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm"
+                />
+                <div className="relative">
+                  <input
+                    type={showPass ? "text" : "password"} placeholder="Password" required
+                    value={authForm.password}
+                    onChange={(e) => setAuthForm((f) => ({ ...f, password: e.target.value }))}
+                    className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm pr-11"
+                  />
+                  <button type="button" onClick={() => setShowPass((s) => !s)} className="absolute right-2 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] flex items-center justify-center text-zinc-500 hover:text-zinc-300">
+                    {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                {authError && authError !== "__existing_account__" && <p className="text-xs text-red-400 pt-1">{authError}</p>}
+                <button
+                  type="submit" disabled={authLoading}
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-gold hover:bg-gold-light disabled:opacity-60 text-ink font-bold text-sm transition-colors"
+                >
+                  {authLoading ? "Signing in…" : "Sign In & Continue"}
+                  {!authLoading && <ArrowRight className="w-4 h-4" />}
+                </button>
+                <div className="text-center">
+                  <a href="/forgot-password" className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors">
+                    Forgot your password?
+                  </a>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* ── Authenticated indicator ── */}
+          {isAuthenticated && (
+            <p className="text-xs text-zinc-500 mb-4 flex items-center gap-1.5">
+              <Check className="w-3 h-3 text-green-400 flex-shrink-0" />
+              {authEmail}
+            </p>
+          )}
 
           {OrderSummary}
 
-          {/* Promo code — lifetime plans only */}
-          {isLifetime && (
+          {/* Promo code — lifetime plans only (authenticated) */}
+          {isLifetime && isAuthenticated && (
             <div className="mb-6">
               {appliedCoupon ? (
                 <div className="flex items-center justify-between p-3 rounded-xl bg-green-500/10 border border-green-500/20">
@@ -1663,6 +1652,14 @@ function CheckoutPageContent({
           {/* Stripe payment form */}
           {!freeAccess && (
             <>
+              {/* Placeholder while waiting for the user to enter their details */}
+              {!isAuthenticated && !autoIntentStarted && !loading && authMode !== "login" && (
+                <div className="rounded-xl border border-dashed border-zinc-800 bg-zinc-900/20 p-6 text-center space-y-1.5">
+                  <p className="text-sm text-zinc-600">Enter your details above to see payment options</p>
+                  <p className="text-xs text-zinc-700">Apple Pay, Google Pay, card, and Link accepted</p>
+                </div>
+              )}
+
               {loading && (
                 <div className="flex items-center justify-center py-12">
                   <div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />

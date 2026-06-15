@@ -1184,20 +1184,28 @@ async function sendAbandonedCheckoutEmail(
     return;
   }
 
-  const isFamilySub = sub.metadata?.planType === "family";
-  const planParam   = isFamilySub ? "family-monthly" : "individual-monthly";
-  const source      = sub.metadata?.source ?? "";
-  const promoCode   = sub.metadata?.promoCode ?? "";
+  const isFamilySub  = sub.metadata?.planType === "family";
+  const planParam    = isFamilySub ? "family-monthly" : "individual-monthly";
+  const source       = sub.metadata?.source      ?? "";
+  const promoCode    = sub.metadata?.promoCode   ?? "";
+  const utmSource    = sub.metadata?.utmSource   ?? "";
+  const utmCampaign  = sub.metadata?.utmCampaign ?? "";
+  const utmMedium    = sub.metadata?.utmMedium   ?? "";
+  const utmContent   = sub.metadata?.utmContent  ?? "";
 
-  // Build checkout URL that re-applies original source / promo attribution.
+  // Build checkout URL that re-applies original source / promo / UTM attribution.
   const { Resend } = await import("resend");
   const resend  = new Resend(process.env.RESEND_API_KEY);
   const appUrl  = process.env.NEXT_PUBLIC_APP_URL ?? "https://themuslimman.com";
   const year    = new Date().getFullYear();
 
   const params = new URLSearchParams({ plan: planParam });
-  if (source)    params.set("source", source);
-  if (promoCode) params.set("promo", promoCode);
+  if (source)      params.set("source",       source);
+  if (promoCode)   params.set("promo",        promoCode);
+  if (utmSource)   params.set("utm_source",   utmSource);
+  if (utmCampaign) params.set("utm_campaign", utmCampaign);
+  if (utmMedium)   params.set("utm_medium",   utmMedium);
+  if (utmContent)  params.set("utm_content",  utmContent);
   const checkoutUrl = `${appUrl}/checkout?${params.toString()}`;
 
   const greeting = user.fullName?.trim() || "dear student";
