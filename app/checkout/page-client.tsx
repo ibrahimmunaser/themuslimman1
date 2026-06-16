@@ -96,12 +96,20 @@ function CheckoutForm({
   finalPrice,
   creator,
   promoCode,
+  getOrCreateClientSecret,
+  isAuthenticated,
+  authFormRef,
+  authLoading: authInProgress,
 }: {
   audience: Audience;
   billing: Billing;
   finalPrice: number;
   creator?: string;
   promoCode?: string;
+  getOrCreateClientSecret: (name: string, email: string) => Promise<string>;
+  isAuthenticated: boolean;
+  authFormRef: React.RefObject<{ fullName: string; email: string; password: string; confirmPassword: string }>;
+  authLoading: boolean;
 }) {
   const stripe   = useStripe();
   const elements = useElements();
@@ -110,6 +118,14 @@ function CheckoutForm({
   const [showExpressCheckout, setShowExpressCheckout] = useState(false);
 
   const returnUrl = toReturnUrl(audience, billing);
+
+  // Keep Stripe's internal amount in sync when a promo is applied so Apple Pay /
+  // Google Pay show the correct amount in the wallet sheet without remounting.
+  useEffect(() => {
+    if (!elements || billing === "trial" || finalPrice <= 0) return;
+    elements.update({ amount: finalPrice });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [finalPrice]);
 
   // Lightweight checkout stage logger. Always emits to console so stages appear
   // in browser DevTools and Vercel server logs (for server-rendered events).
@@ -123,11 +139,9 @@ function CheckoutForm({
   // Called by the card form submit button
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!stripe || !elements || processing) return;
+    if (!stripe || !elements || processing || authInProgress) return;
 
     // ── Guard: amount must be positive ────────────────────────────────────────
-    // Free-access paths bypass CheckoutForm, but catch any edge case where
-    // a $0 intent somehow reached here (would result in a Stripe API error).
     if (finalPrice <= 0) {
       setError("Something went wrong with your order. Please refresh and try again.");
       return;
@@ -135,23 +149,30 @@ function CheckoutForm({
 
     setProcessing(true);
     setError(null);
-
     logStage("payment_submitted");
 
-    // ── Guard: pre-flight checks before touching Stripe ───────────────────────
+    // ── Step 1: Ensure account + intent exist (deferred pattern) ──────────────
+    // getOrCreateClientSecret handles: validate name/email → create guest account
+    // (if needed) → create Stripe PaymentIntent/Subscription → return clientSecret.
+    let clientSecret: string;
     try {
-      // 1. Session check — verify the user is still authenticated.
-      //    A 401 here means the session cookie expired mid-checkout.
+      const name  = authFormRef.current?.fullName ?? "";
+      const email = authFormRef.current?.email    ?? "";
+      clientSecret = await getOrCreateClientSecret(name, email);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to prepare payment. Please try again.");
+      setProcessing(false);
+      return;
+    }
+
+    // ── Step 2: Pre-flight guards ──────────────────────────────────────────────
+    try {
       const sessionRes = await fetch("/api/stripe/check-access");
       if (sessionRes.status === 401) {
         setError("Your session has expired. Please sign in again to complete your purchase.");
         setProcessing(false);
         return;
       }
-
-      // 2. Duplicate-payment guard — webhook may have already granted access
-      //    (e.g. user double-tapped on a slow connection, or webhook fired fast).
-      //    Redirect straight to the dashboard instead of charging a second time.
       if (sessionRes.ok) {
         const { hasAccess } = await sessionRes.json();
         if (hasAccess) {
@@ -161,9 +182,10 @@ function CheckoutForm({
         }
       }
     } catch {
-      // Network error during pre-flight — proceed anyway; Stripe handles idempotency.
+      // Network error — proceed; Stripe handles idempotency.
     }
 
+    // ── Step 3: Validate Elements (card number, expiry, etc.) ─────────────────
     const { error: submitError } = await elements.submit();
     if (submitError) {
       setError(submitError.message ?? "An error occurred");
@@ -176,6 +198,7 @@ function CheckoutForm({
         // Free trial: save card via SetupIntent — no charge today.
         const { error: confirmError, setupIntent } = await stripe.confirmSetup({
           elements,
+          clientSecret,
           confirmParams: { return_url: returnUrl },
           redirect: "if_required",
         });
@@ -190,8 +213,8 @@ function CheckoutForm({
       } else {
         const { error: confirmError, paymentIntent } = await stripe.confirmPayment({
           elements,
+          clientSecret,
           confirmParams: { return_url: returnUrl },
-          // redirect: "if_required" so in-page success (no 3DS) is caught below
           redirect: "if_required",
         });
         if (confirmError) {
@@ -229,7 +252,22 @@ function CheckoutForm({
   const handleExpressConfirm = async (event: StripeExpressCheckoutElementConfirmEvent) => {
     if (!stripe || !elements || processing) return;
 
-    // Pre-flight: same duplicate-payment guard as handleSubmit.
+    // Wallet payments may provide billing details (name/email from Apple/Google Wallet).
+    // Use those to create an account if the user hasn't filled in the name/email fields yet.
+    const walletName  = event.billingDetails?.name  ?? authFormRef.current?.fullName ?? "";
+    const walletEmail = event.billingDetails?.email ?? authFormRef.current?.email    ?? "";
+
+    // ── Step 1: Ensure account + intent ───────────────────────────────────────
+    let clientSecret: string;
+    try {
+      clientSecret = await getOrCreateClientSecret(walletName, walletEmail);
+    } catch (err) {
+      event.paymentFailed({ reason: "fail" });
+      setError(err instanceof Error ? err.message : "Unable to prepare payment. Please try again.");
+      return;
+    }
+
+    // ── Step 2: Pre-flight duplicate guard ────────────────────────────────────
     try {
       const sessionRes = await fetch("/api/stripe/check-access");
       if (sessionRes.status === 401) {
@@ -254,6 +292,7 @@ function CheckoutForm({
     try {
       const { error: confirmError, paymentIntent } = await stripe.confirmPayment({
         elements,
+        clientSecret,
         confirmParams: { return_url: returnUrl },
         redirect: "if_required",
       });
@@ -634,11 +673,21 @@ function CheckoutPageContent({
 
   // ── Create payment / subscription intent ───────────────────────────────────
 
+  // Ref mirrors: always hold the latest value so async callbacks avoid stale closures.
+  const clientSecretRef    = useRef<string | null>(initialClientSecret ?? null);
+  const isAuthenticatedRef = useRef<boolean>(!!userEmail);
+  const authFormRef        = useRef({ fullName: "", email: "", password: "", confirmPassword: "" });
+
+  // Keep refs in sync with state.
+  useEffect(() => { isAuthenticatedRef.current = isAuthenticated; }, [isAuthenticated]);
+  useEffect(() => { clientSecretRef.current    = clientSecret;    }, [clientSecret]);
+  useEffect(() => { authFormRef.current        = authForm;        }, [authForm]);
+
   const createIntent = async (
     aud: Audience,
     bill: Billing,
     promoCode?: string
-  ): Promise<{ discountAmount: number; finalPrice: number } | null> => {
+  ): Promise<{ discountAmount: number; finalPrice: number; clientSecret?: string } | null> => {
     // Stamp this call with a generation number. Any response that arrives after
     // a newer call has started will be silently discarded — this prevents a slow
     // 409 from an old trial intent overwriting the clientSecret from a faster
@@ -743,8 +792,9 @@ function CheckoutPageContent({
         setFreeAccess(true);
       } else {
         setClientSecret(data.clientSecret);
+        clientSecretRef.current = data.clientSecret;
       }
-      return { discountAmount: discount, finalPrice: price };
+      return { discountAmount: discount, finalPrice: price, clientSecret: data.clientSecret as string | undefined };
     } catch (err) {
       if (intentGen.current === gen) {
         setError(err instanceof Error ? err.message : "An error occurred");
@@ -754,6 +804,42 @@ function CheckoutPageContent({
       // Only clear the loading state if this is still the active call.
       if (intentGen.current === gen) setLoading(false);
     }
+  };
+
+  // ── Deferred-intent helper ────────────────────────────────────────────────
+  // Called by CheckoutForm at submit time. Ensures auth + creates intent if
+  // not already done, then returns the clientSecret for stripe.confirmPayment.
+  const getOrCreateClientSecret = async (name: string, email: string): Promise<string> => {
+    // Fast path — intent already ready.
+    if (clientSecretRef.current) return clientSecretRef.current;
+
+    // Validate name + email before doing any network calls.
+    if (!isAuthenticatedRef.current) {
+      if (!name.trim() || name.trim().length < 2)
+        throw new Error("Please enter your full name to continue.");
+      if (!email.includes("@"))
+        throw new Error("Please enter a valid email address to continue.");
+
+      // Create guest account synchronously. runGuestCheckout sets isAuthenticated
+      // state and the clientSecretRef via the createIntent call it triggers.
+      await runGuestCheckout(name, email);
+    }
+
+    // At this point we are authenticated. If createIntent already fired (background
+    // auto-trigger), clientSecretRef should be set. Otherwise call it now.
+    if (!clientSecretRef.current) {
+      const result = await createIntent(audience, billing, appliedCoupon?.code ?? undefined);
+      const secret = result?.clientSecret;
+      if (secret) return secret;
+    }
+
+    // Poll briefly (max 3s) for the ref to be populated by the background flow.
+    for (let i = 0; i < 30; i++) {
+      if (clientSecretRef.current) return clientSecretRef.current;
+      await new Promise((r) => setTimeout(r, 100));
+    }
+
+    throw new Error("Unable to prepare payment. Please try again.");
   };
 
   // ── Validate URL promo for guest preview ───────────────────────────────────
@@ -1506,8 +1592,7 @@ function CheckoutPageContent({
   // ── Unified right column: name/email → payment → price ────────────────────
   // Layout order: 1) name/email  2) payment options  3) price summary
 
-  const isPaymentLoading = loading || (autoIntentStarted && !clientSecret && !error);
-  const showPaymentPrompt = !isAuthenticated && !autoIntentStarted && !loading && authMode !== "login";
+  // No longer used — payment form is always shown via deferred Elements.
 
   return (
     <div className="min-h-screen bg-zinc-950 flex flex-col lg:flex-row">
@@ -1709,74 +1794,68 @@ function CheckoutPageContent({
             </div>
           ) : (
             <>
-              {/* Waiting for name/email */}
-              {showPaymentPrompt && (
-                <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 px-5 py-8 text-center space-y-1">
-                  <p className="text-sm text-zinc-400 font-medium">Payment</p>
-                  <p className="text-xs text-zinc-600">Enter your name and email above to continue</p>
-                </div>
-              )}
-
-              {/* Loading — account + intent being created */}
-              {isPaymentLoading && !clientSecret && !error && (
-                <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 px-5 py-8 flex flex-col items-center gap-3">
-                  <div className="w-6 h-6 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
-                  <p className="text-xs text-zinc-500">Setting up secure payment…</p>
-                </div>
-              )}
-
               {error && !loading && (
                 <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
                   {error}
                 </div>
               )}
 
-              {clientSecret && !loading && isAuthenticated && (
-                <Elements
-                  stripe={stripePromise}
-                  key={clientSecret}
-                  options={{
-                    clientSecret,
-                    appearance: {
-                      theme: "night",
-                      variables: {
-                        colorPrimary: "#f4c542",
-                        colorBackground: "#18181b",
-                        colorText: "#f4f4f5",
-                        colorDanger: "#ef4444",
-                        fontFamily: "ui-sans-serif, system-ui, sans-serif",
-                        borderRadius: "12px",
+              {/* Deferred intent: Elements renders immediately without clientSecret.
+                  The form collects payment details upfront; we create the server-side
+                  intent only when the user clicks the pay button. key remounts the form
+                  on plan-type changes (audience/billing) but NOT on price changes —
+                  those are handled via elements.update() inside CheckoutForm. */}
+              {(() => {
+                const code = appliedCoupon?.code ?? resolvedPromoParam ?? "";
+                const cfg = code ? getCreatorPromoConfig(code) : null;
+                const checkoutCreator = cfg?.creator ?? null;
+                return (
+                  <Elements
+                    stripe={stripePromise}
+                    key={`${audience}-${billing}`}
+                    options={{
+                      mode: billing === "trial" ? "setup" : "payment",
+                      ...(billing !== "trial" && finalPrice > 0 ? { amount: finalPrice } : {}),
+                      currency: "usd",
+                      ...(billing === "monthly"
+                        ? { paymentMethodTypes: ["card", "link"] }
+                        : {}),
+                      appearance: {
+                        theme: "night",
+                        variables: {
+                          colorPrimary: "#f4c542",
+                          colorBackground: "#18181b",
+                          colorText: "#f4f4f5",
+                          colorDanger: "#ef4444",
+                          fontFamily: "ui-sans-serif, system-ui, sans-serif",
+                          borderRadius: "12px",
+                        },
                       },
-                    },
-                  }}
-                >
-                  {(() => {
-                    const code = appliedCoupon?.code ?? resolvedPromoParam ?? "";
-                    const cfg = code ? getCreatorPromoConfig(code) : null;
-                    const checkoutCreator = cfg?.creator ?? null;
-                    return (
-                      <>
-                        {checkoutCreator && (
-                          <CheckoutFunnelTracker
-                            creator={checkoutCreator}
-                            plan={`${audience}-${billing}`}
-                            promoCode={code || null}
-                            amount={finalPrice}
-                            userEmail={authEmail}
-                          />
-                        )}
-                        <CheckoutForm
-                          audience={audience}
-                          billing={billing}
-                          finalPrice={finalPrice}
-                          creator={checkoutCreator ?? undefined}
-                          promoCode={code || undefined}
-                        />
-                      </>
-                    );
-                  })()}
-                </Elements>
-              )}
+                    }}
+                  >
+                    {checkoutCreator && (
+                      <CheckoutFunnelTracker
+                        creator={checkoutCreator}
+                        plan={`${audience}-${billing}`}
+                        promoCode={code || null}
+                        amount={finalPrice}
+                        userEmail={authEmail}
+                      />
+                    )}
+                    <CheckoutForm
+                      audience={audience}
+                      billing={billing}
+                      finalPrice={finalPrice}
+                      creator={checkoutCreator ?? undefined}
+                      promoCode={code || undefined}
+                      getOrCreateClientSecret={getOrCreateClientSecret}
+                      isAuthenticated={isAuthenticated}
+                      authFormRef={authFormRef}
+                      authLoading={authLoading}
+                    />
+                  </Elements>
+                );
+              })()}
             </>
           )}
 
