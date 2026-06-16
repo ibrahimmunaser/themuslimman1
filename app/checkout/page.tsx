@@ -19,7 +19,7 @@ const LEGACY_PLAN_ALIASES: Record<string, string> = {
 };
 
 interface Props {
-  searchParams: Promise<{ plan?: string; billing?: string; promo?: string; source?: string }>;
+  searchParams: Promise<{ plan?: string; billing?: string; audience?: string; promo?: string; source?: string }>;
 }
 
 export default async function CheckoutPage({ searchParams }: Props) {
