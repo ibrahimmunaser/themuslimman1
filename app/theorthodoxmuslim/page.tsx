@@ -19,8 +19,9 @@ export default async function TheOrthodoxMuslimPage() {
     .create({ data: { id: crypto.randomUUID(), creator: "theorthodoxmuslim" } })
     .catch(() => {});
 
-  const INDIVIDUAL_URL         = `/checkout?plan=individual-lifetime&promo=ORTHODOX59&source=theorthodoxmuslim&${UTM}`;
-  const FAMILY_URL             = `/checkout?plan=family-lifetime&promo=ORTHODOX119&source=theorthodoxmuslim&${UTM}`;
+  // 20% off lifetime: $79 × 0.80 = $63.20 individual, $149 × 0.80 = $119.20 family
+  const INDIVIDUAL_URL         = `/checkout?plan=individual-lifetime&promo=ORTHODOX&source=theorthodoxmuslim&${UTM}`;
+  const FAMILY_URL             = `/checkout?plan=family-lifetime&promo=ORTHODOX&source=theorthodoxmuslim&${UTM}`;
   const INDIVIDUAL_MONTHLY_URL = `/checkout?plan=individual-monthly&source=theorthodoxmuslim&${UTM}`;
   const FAMILY_MONTHLY_URL     = `/checkout?plan=family-monthly&source=theorthodoxmuslim&${UTM}`;
 
@@ -30,11 +31,11 @@ export default async function TheOrthodoxMuslimPage() {
         creator="theorthodoxmuslim"
         displayName="The Orthodox Muslim"
         sourceBadge="As seen on The Orthodox Muslim"
-        individualPromoCode="ORTHODOX59"
+        individualPromoCode="ORTHODOX"
         individualUrl={INDIVIDUAL_URL}
         familyUrl={FAMILY_URL}
-        individualPriceCents={5900}
-        familyPriceCents={11900}
+        individualPriceCents={6320}
+        familyPriceCents={11920}
         regularIndividualPriceCents={7900}
         regularFamilyPriceCents={14900}
         individualMonthlyUrl={INDIVIDUAL_MONTHLY_URL}

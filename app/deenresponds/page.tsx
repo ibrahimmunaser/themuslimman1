@@ -24,8 +24,9 @@ export default async function DeenRespondsPage() {
       .catch(() => {}),
   ]);
 
-  const INDIVIDUAL_URL         = `/checkout?plan=individual-lifetime&promo=DEEN59&source=deenresponds&${UTM}`;
-  const FAMILY_URL             = `/checkout?plan=family-lifetime&promo=DEEN119&source=deenresponds&${UTM}`;
+  // 20% off lifetime: $79 × 0.80 = $63.20 individual, $149 × 0.80 = $119.20 family
+  const INDIVIDUAL_URL         = `/checkout?plan=individual-lifetime&promo=DEEN&source=deenresponds&${UTM}`;
+  const FAMILY_URL             = `/checkout?plan=family-lifetime&promo=DEEN&source=deenresponds&${UTM}`;
   const INDIVIDUAL_MONTHLY_URL = `/checkout?plan=individual-monthly&source=deenresponds&${UTM}`;
   const FAMILY_MONTHLY_URL     = `/checkout?plan=family-monthly&source=deenresponds&${UTM}`;
 
@@ -35,11 +36,11 @@ export default async function DeenRespondsPage() {
         creator="deenresponds"
         displayName="Deen Responds"
         sourceBadge="As seen on Deen Responds"
-        individualPromoCode="DEEN59"
+        individualPromoCode="DEEN"
         individualUrl={INDIVIDUAL_URL}
         familyUrl={FAMILY_URL}
-        individualPriceCents={5900}
-        familyPriceCents={11900}
+        individualPriceCents={6320}
+        familyPriceCents={11920}
         regularIndividualPriceCents={7900}
         regularFamilyPriceCents={14900}
         sponsorVideoUrl={videoUrl}

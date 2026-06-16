@@ -541,10 +541,16 @@ interface CheckoutPageClientProps {
 const COMMUNITY_CODE_MAP: Partial<Record<string, Record<"individual" | "family", string>>> = {
   COMMUNITY49:  { individual: "COMMUNITY49",  family: "COMMUNITY99"  },
   COMMUNITY99:  { individual: "COMMUNITY49",  family: "COMMUNITY99"  },
+  // Deen Responds — 20% off lifetime (percent code, same for both audiences)
+  DEEN:         { individual: "DEEN",         family: "DEEN"         },
+  // Legacy fixed-price codes kept for compatibility
   DEEN59:       { individual: "DEEN59",       family: "DEEN119"      },
   DEEN119:      { individual: "DEEN59",       family: "DEEN119"      },
   BROWNIE59:    { individual: "BROWNIE59",    family: "BROWNIE119"   },
   BROWNIE119:   { individual: "BROWNIE59",    family: "BROWNIE119"   },
+  // The Orthodox Muslim — 20% off lifetime (percent code, same for both audiences)
+  ORTHODOX:     { individual: "ORTHODOX",     family: "ORTHODOX"     },
+  // Legacy fixed-price codes kept for compatibility
   ORTHODOX59:   { individual: "ORTHODOX59",   family: "ORTHODOX119"  },
   ORTHODOX119:  { individual: "ORTHODOX59",   family: "ORTHODOX119"  },
   // Ann Arbor landing page pair: $29 individual ↔ $79 family
