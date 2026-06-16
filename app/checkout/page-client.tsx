@@ -152,15 +152,24 @@ function CheckoutForm({
     logStage("payment_submitted");
 
     // ── Step 1: Ensure account + intent exist (deferred pattern) ──────────────
-    // getOrCreateClientSecret handles: validate name/email → create guest account
-    // (if needed) → create Stripe PaymentIntent/Subscription → return clientSecret.
     let clientSecret: string;
     try {
       const name  = authFormRef.current?.fullName ?? "";
       const email = authFormRef.current?.email    ?? "";
       clientSecret = await getOrCreateClientSecret(name, email);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to prepare payment. Please try again.");
+      const msg = err instanceof Error ? err.message : "";
+      if (msg === "__FREE_ACCESS__") {
+        // $0 promo — no Stripe payment; free-claim UI should now be visible.
+        setProcessing(false);
+        return;
+      }
+      if (msg === "__AUTH_FAILED__") {
+        // Auth error already shown in the name/email form above payment.
+        setProcessing(false);
+        return;
+      }
+      setError(msg || "Unable to prepare payment. Please try again.");
       setProcessing(false);
       return;
     }
@@ -250,7 +259,7 @@ function CheckoutForm({
 
   // Called by Apple Pay / Google Pay / Samsung Pay / Link after wallet auth
   const handleExpressConfirm = async (event: StripeExpressCheckoutElementConfirmEvent) => {
-    if (!stripe || !elements || processing) return;
+    if (!stripe || !elements || processing || authInProgress) return;
 
     // Wallet payments may provide billing details (name/email from Apple/Google Wallet).
     // Use those to create an account if the user hasn't filled in the name/email fields yet.
@@ -263,7 +272,15 @@ function CheckoutForm({
       clientSecret = await getOrCreateClientSecret(walletName, walletEmail);
     } catch (err) {
       event.paymentFailed({ reason: "fail" });
-      setError(err instanceof Error ? err.message : "Unable to prepare payment. Please try again.");
+      const msg = err instanceof Error ? err.message : "";
+      if (msg === "__FREE_ACCESS__" || msg === "__AUTH_FAILED__") return;
+      // Google Pay / Apple Pay may not provide an email in some setups.
+      // Show a targeted message so the user knows what to do.
+      if (msg.includes("email")) {
+        setError("Please enter your email address in the form above, then try again.");
+      } else {
+        setError(msg || "Unable to prepare payment. Please try again.");
+      }
       return;
     }
 
@@ -809,9 +826,17 @@ function CheckoutPageContent({
   // ── Deferred-intent helper ────────────────────────────────────────────────
   // Called by CheckoutForm at submit time. Ensures auth + creates intent if
   // not already done, then returns the clientSecret for stripe.confirmPayment.
+  // Ref so getOrCreateClientSecret can read freeAccess without a stale closure.
+  const freeAccessRef = useRef<boolean>(!!initialFreeAccess);
+  useEffect(() => { freeAccessRef.current = freeAccess; }, [freeAccess]);
+
   const getOrCreateClientSecret = async (name: string, email: string): Promise<string> => {
     // Fast path — intent already ready.
     if (clientSecretRef.current) return clientSecretRef.current;
+
+    // If a $0 promo was applied, no Stripe payment is needed — bubble up so the
+    // free-claim UI is shown instead of attempting confirmPayment.
+    if (freeAccessRef.current) throw new Error("__FREE_ACCESS__");
 
     // Validate name + email before doing any network calls.
     if (!isAuthenticatedRef.current) {
@@ -820,10 +845,20 @@ function CheckoutPageContent({
       if (!email.includes("@"))
         throw new Error("Please enter a valid email address to continue.");
 
-      // Create guest account synchronously. runGuestCheckout sets isAuthenticated
-      // state and the clientSecretRef via the createIntent call it triggers.
+      // Create guest account. If this fails (409 existing account, network error,
+      // etc.) runGuestCheckout sets authError state but returns silently. We check
+      // the ref afterwards — if still not authenticated, propagate the error.
       await runGuestCheckout(name, email);
+
+      if (!isAuthenticatedRef.current) {
+        // Auth failed — authError state may have been set with the reason.
+        // Throw so CheckoutForm can surface it in the payment error area.
+        throw new Error("__AUTH_FAILED__");
+      }
     }
+
+    // If a $0 promo was set during runGuestCheckout, handle it.
+    if (freeAccessRef.current) throw new Error("__FREE_ACCESS__");
 
     // At this point we are authenticated. If createIntent already fired (background
     // auto-trigger), clientSecretRef should be set. Otherwise call it now.
@@ -831,11 +866,14 @@ function CheckoutPageContent({
       const result = await createIntent(audience, billing, appliedCoupon?.code ?? undefined);
       const secret = result?.clientSecret;
       if (secret) return secret;
+      // If freeAccess was set by createIntent, bubble up.
+      if (freeAccessRef.current) throw new Error("__FREE_ACCESS__");
     }
 
-    // Poll briefly (max 3s) for the ref to be populated by the background flow.
-    for (let i = 0; i < 30; i++) {
+    // Poll up to 10s for the background auto-trigger to finish setting the secret.
+    for (let i = 0; i < 100; i++) {
       if (clientSecretRef.current) return clientSecretRef.current;
+      if (freeAccessRef.current) throw new Error("__FREE_ACCESS__");
       await new Promise((r) => setTimeout(r, 100));
     }
 
@@ -974,8 +1012,16 @@ function CheckoutPageContent({
         const code     = guestPromo?.code     ?? promoParam ?? "";
         const label    = guestPromo?.label    ?? creatorPromoConfig?.displayLabel ?? "";
         const discount = guestCreatorDiscount > 0 ? guestCreatorDiscount : (guestPromo?.discount ?? 0);
-        setAppliedCoupon({ code, label, discount, finalPrice: currentPlan.price - discount });
+        const discountedPrice = currentPlan.price - discount;
+        setAppliedCoupon({ code, label, discount, finalPrice: discountedPrice });
         setCouponInput(code);
+        // Sync finalPrice so Elements + wallet sheet show the correct discounted
+        // amount immediately — before createIntent returns the server-verified price.
+        if (discount > 0) {
+          setFinalPrice(discountedPrice);
+          setDiscountAmount(discount);
+          setBasePrice(currentPlan.price);
+        }
       }
       setAuthEmail(email);
       setIsAuthenticated(true);
