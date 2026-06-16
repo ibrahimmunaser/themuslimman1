@@ -79,7 +79,10 @@ function toEndpoint(audience: Audience, billing: Billing): string {
 
 /** Derive the payment success return URL. */
 function toReturnUrl(audience: Audience, billing: Billing): string {
-  const base = window.location.origin;
+  const base =
+    typeof window !== "undefined"
+      ? window.location.origin
+      : (process.env.NEXT_PUBLIC_APP_URL ?? "https://themuslimman.com");
   if (billing === "trial" && audience === "family")        return `${base}/payment/success?type=family-subscription&billing=trial`;
   if (billing === "trial")                                 return `${base}/payment/success?type=subscription&billing=trial`;
   if (audience === "individual" && billing === "monthly")  return `${base}/payment/success?type=subscription`;
