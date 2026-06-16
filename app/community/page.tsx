@@ -6,9 +6,9 @@ import { MobileStickyCta } from "./mobile-sticky-cta";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Complete Seerah — Community Offer",
+  title: "Complete Seerah — Community",
   description:
-    "Learn the life of the Prophet ﷺ in order. A 100-part Seerah program for Muslims and families. Exclusive community pricing.",
+    "Learn the life of the Prophet ﷺ in order. A 100-part Seerah program for Muslims and families.",
   robots: { index: false, follow: false },
 };
 
@@ -19,8 +19,8 @@ export default async function CommunityPage() {
     .create({ data: { id: crypto.randomUUID(), creator: "community" } })
     .catch(() => {});
 
-  const INDIVIDUAL_URL         = `/checkout?plan=individual-lifetime&promo=COMMUNITY49&source=community&${UTM}`;
-  const FAMILY_URL             = `/checkout?plan=family-lifetime&promo=COMMUNITY99&source=community&${UTM}`;
+  const INDIVIDUAL_URL         = `/checkout?plan=individual-lifetime&source=community&${UTM}`;
+  const FAMILY_URL             = `/checkout?plan=family-lifetime&source=community&${UTM}`;
   const INDIVIDUAL_MONTHLY_URL = `/checkout?plan=individual-monthly&source=community&${UTM}`;
   const FAMILY_MONTHLY_URL     = `/checkout?plan=family-monthly&source=community&${UTM}`;
 
@@ -30,13 +30,10 @@ export default async function CommunityPage() {
         creator="community"
         displayName="Community"
         sourceBadge="Community Special Offer"
-        individualPromoCode="COMMUNITY49"
         individualUrl={INDIVIDUAL_URL}
         familyUrl={FAMILY_URL}
         individualPriceCents={4900}
-        familyPriceCents={9900}
-        regularIndividualPriceCents={7900}
-        regularFamilyPriceCents={14900}
+        familyPriceCents={7900}
         individualMonthlyUrl={INDIVIDUAL_MONTHLY_URL}
         familyMonthlyUrl={FAMILY_MONTHLY_URL}
       />
@@ -48,4 +45,3 @@ export default async function CommunityPage() {
     </>
   );
 }
-

@@ -7,9 +7,9 @@ import { MobileStickyCta } from "./mobile-sticky-cta";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Complete Seerah — Deen Responds Exclusive Offer",
+  title: "Complete Seerah — Deen Responds",
   description:
-    "Learn the life of the Prophet ﷺ in order. 100 lessons, video, audio, quizzes, and more. Exclusive pricing for Deen Responds viewers.",
+    "Learn the life of the Prophet ﷺ in order. 100 lessons, video, audio, quizzes, and more. As recommended by Deen Responds.",
   robots: { index: false, follow: false },
 };
 
@@ -24,9 +24,8 @@ export default async function DeenRespondsPage() {
       .catch(() => {}),
   ]);
 
-  // $20 off lifetime: $79 − $20 = $59 individual, $149 − $20 = $129 family
-  const INDIVIDUAL_URL         = `/checkout?plan=individual-lifetime&promo=DEEN20&source=deenresponds&${UTM}`;
-  const FAMILY_URL             = `/checkout?plan=family-lifetime&promo=DEEN20&source=deenresponds&${UTM}`;
+  const INDIVIDUAL_URL         = `/checkout?plan=individual-lifetime&source=deenresponds&${UTM}`;
+  const FAMILY_URL             = `/checkout?plan=family-lifetime&source=deenresponds&${UTM}`;
   const INDIVIDUAL_MONTHLY_URL = `/checkout?plan=individual-monthly&source=deenresponds&${UTM}`;
   const FAMILY_MONTHLY_URL     = `/checkout?plan=family-monthly&source=deenresponds&${UTM}`;
 
@@ -36,13 +35,10 @@ export default async function DeenRespondsPage() {
         creator="deenresponds"
         displayName="Deen Responds"
         sourceBadge="As seen on Deen Responds"
-        individualPromoCode="DEEN20"
         individualUrl={INDIVIDUAL_URL}
         familyUrl={FAMILY_URL}
-        individualPriceCents={5900}
-        familyPriceCents={12900}
-        regularIndividualPriceCents={7900}
-        regularFamilyPriceCents={14900}
+        individualPriceCents={4900}
+        familyPriceCents={7900}
         sponsorVideoUrl={videoUrl}
         videoSectionLabel="Why Deen Responds recommended this"
         videoAspectClass="aspect-video"
@@ -57,4 +53,3 @@ export default async function DeenRespondsPage() {
     </>
   );
 }
-

@@ -538,32 +538,10 @@ interface CheckoutPageClientProps {
 
 // Plan-specific promo codes that must be resolved to the correct variant based on
 // the selected audience. Add any new plan-paired codes here.
-const COMMUNITY_CODE_MAP: Partial<Record<string, Record<"individual" | "family", string>>> = {
-  COMMUNITY49:  { individual: "COMMUNITY49",  family: "COMMUNITY99"  },
-  COMMUNITY99:  { individual: "COMMUNITY49",  family: "COMMUNITY99"  },
-  // Deen Responds — $20 off lifetime (fixed cents, applies to any plan audience)
-  DEEN20:       { individual: "DEEN20",       family: "DEEN20"       },
-  // Deen Responds — 20% off lifetime (percent code, same for both audiences)
-  DEEN:         { individual: "DEEN",         family: "DEEN"         },
-  // Legacy fixed-price codes kept for compatibility
-  DEEN59:       { individual: "DEEN59",       family: "DEEN119"      },
-  DEEN119:      { individual: "DEEN59",       family: "DEEN119"      },
-  BROWNIE59:    { individual: "BROWNIE59",    family: "BROWNIE119"   },
-  BROWNIE119:   { individual: "BROWNIE59",    family: "BROWNIE119"   },
-  // The Orthodox Muslim — $20 off lifetime (fixed cents, applies to any plan audience)
-  ORTHODOX20:   { individual: "ORTHODOX20",   family: "ORTHODOX20"   },
-  // The Orthodox Muslim — 20% off lifetime (percent code, same for both audiences)
-  ORTHODOX:     { individual: "ORTHODOX",     family: "ORTHODOX"     },
-  // Legacy fixed-price codes kept for compatibility
-  ORTHODOX59:   { individual: "ORTHODOX59",   family: "ORTHODOX119"  },
-  ORTHODOX119:  { individual: "ORTHODOX59",   family: "ORTHODOX119"  },
-  // Ann Arbor landing page pair: $29 individual ↔ $79 family
-  ANNARBOR29:   { individual: "ANNARBOR29",   family: "ANNARBOR79"   },
-  ANNARBOR79:   { individual: "ANNARBOR29",   family: "ANNARBOR79"   },
-  // Ann Arbor higher-tier pair: $59 individual ↔ $119 family
-  ANNARBOR59:   { individual: "ANNARBOR59",   family: "ANNARBOR119"  },
-  ANNARBOR119:  { individual: "ANNARBOR59",   family: "ANNARBOR119"  },
-};
+// All creator / location discounts have been removed. No active promo codes apply.
+// Legacy codes are still recognised server-side for backward compatibility
+// (recovery emails, old bookmarks) but no new URLs embed promo= params.
+const COMMUNITY_CODE_MAP: Partial<Record<string, Record<"individual" | "family", string>>> = {};
 
 /** Returns true when running inside an Instagram / TikTok / Facebook in-app browser. */
 function useIsInAppBrowser() {

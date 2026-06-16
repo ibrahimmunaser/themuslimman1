@@ -18,13 +18,13 @@ interface InfluencerPricingToggleProps {
   individualLifetimeUrl: string;
   familyLifetimeUrl: string;
 
-  // Discounted lifetime prices in cents (e.g. 5900 = $59)
+  // Lifetime prices in cents
   individualLifetimePriceCents: number;
   familyLifetimePriceCents: number;
 
-  // Regular (before-discount) lifetime prices — shown as strikethrough
-  regularIndividualPriceCents: number;
-  regularFamilyPriceCents: number;
+  // Optional regular (pre-discount) prices — only shown when higher than actual price
+  regularIndividualPriceCents?: number;
+  regularFamilyPriceCents?: number;
 }
 
 type Tab = "monthly" | "lifetime";
@@ -49,10 +49,13 @@ export function InfluencerPricingToggle({
 }: InfluencerPricingToggleProps) {
   const [tab, setTab] = useState<Tab>("monthly");
 
-  const indLifetime = fmtPrice(individualLifetimePriceCents);
-  const famLifetime = fmtPrice(familyLifetimePriceCents);
-  const regInd      = fmtPrice(regularIndividualPriceCents);
-  const regFam      = fmtPrice(regularFamilyPriceCents);
+
+  const indLifetime    = fmtPrice(individualLifetimePriceCents);
+  const famLifetime    = fmtPrice(familyLifetimePriceCents);
+  const regInd         = regularIndividualPriceCents ? fmtPrice(regularIndividualPriceCents) : null;
+  const regFam         = regularFamilyPriceCents     ? fmtPrice(regularFamilyPriceCents)     : null;
+  const showIndStrike  = !!(regularIndividualPriceCents && regularIndividualPriceCents > individualLifetimePriceCents);
+  const showFamStrike  = !!(regularFamilyPriceCents     && regularFamilyPriceCents     > familyLifetimePriceCents);
 
   return (
     <section id="pricing" className="pb-12 scroll-mt-16">
@@ -205,13 +208,13 @@ export function InfluencerPricingToggle({
               <div className="relative rounded-2xl border-2 border-gold/60 bg-surface shadow-lg shadow-gold/10 p-6 flex flex-col">
                 <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap">
                   <span className="px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-gold text-ink shadow-sm">
-                    {displayName} Deal
+                    Best Value
                   </span>
                 </div>
                 <p className="text-xl font-bold text-text mb-0.5">For Me</p>
                 <p className="text-xs text-text-muted mb-4">Individual Lifetime Access</p>
                 <div className="mb-5">
-                  <span className="text-xs text-text-muted line-through mr-2">{regInd}</span>
+                  {showIndStrike && <span className="text-xs text-text-muted line-through mr-2">{regInd}</span>}
                   <span className="text-5xl font-bold text-gold">{indLifetime}</span>
                   <p className="text-xs text-gold/60 mt-1">one-time · no renewal ever</p>
                 </div>
@@ -252,7 +255,7 @@ export function InfluencerPricingToggle({
                 <p className="text-base font-bold text-text mb-0.5">For My Family</p>
                 <p className="text-xs text-text-muted mb-4">Family Lifetime · up to 5 profiles</p>
                 <div className="mb-4">
-                  <span className="text-xs text-text-muted line-through mr-2">{regFam}</span>
+                  {showFamStrike && <span className="text-xs text-text-muted line-through mr-2">{regFam}</span>}
                   <span className="text-3xl font-bold text-gold">{famLifetime}</span>
                   <p className="text-xs text-text-muted mt-0.5">one-time</p>
                 </div>

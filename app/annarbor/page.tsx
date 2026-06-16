@@ -17,15 +17,15 @@ import { InfluencerPricingToggle } from "@/components/influencer/influencer-pric
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Ann Arbor Student Special — Complete Seerah",
+  title: "Ann Arbor — Complete Seerah",
   description:
-    "Learn the life of the Prophet ﷺ in order. Student lifetime access for $29. One-time payment, no subscription.",
+    "Learn the life of the Prophet ﷺ in order. Lifetime access for $49. One-time payment, no subscription.",
   robots: { index: false, follow: false },
 };
 
 const UTM                  = "utm_source=direct&utm_medium=promo&utm_campaign=seerah_launch&utm_content=annarbor";
-const CHECKOUT_URL         = `/checkout?plan=individual-lifetime&promo=ANNARBOR29&source=annarbor&${UTM}`;
-const FAMILY_URL           = `/checkout?plan=family-lifetime&promo=ANNARBOR79&source=annarbor&${UTM}`;
+const CHECKOUT_URL         = `/checkout?plan=individual-lifetime&source=annarbor&${UTM}`;
+const FAMILY_URL           = `/checkout?plan=family-lifetime&source=annarbor&${UTM}`;
 const INDIVIDUAL_MONTHLY_URL = `/checkout?plan=individual-monthly&source=annarbor&${UTM}`;
 const FAMILY_MONTHLY_URL     = `/checkout?plan=family-monthly&source=annarbor&${UTM}`;
 
@@ -53,10 +53,6 @@ const FAQ = [
     a: "No. This is a one-time payment for lifetime access. No monthly charges, no renewals.",
   },
   {
-    q: "Do I need to enter a promo code?",
-    a: "No. The Ann Arbor student discount is applied automatically when you use this page.",
-  },
-  {
     q: "Can I watch on mobile?",
     a: "Yes. The course works on phone, tablet, and desktop. Most students go through lessons during commutes or between classes.",
   },
@@ -77,10 +73,9 @@ export default async function AnnArborPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-ink text-text">
-      <InfluencerPromoSetter promoCode="ANNARBOR29" />
       <BrownieFunnelTracker
         creator="annarbor"
-        promoCode="ANNARBOR29"
+        promoCode=""
         landingEvent="annarbor_landing_page_view"
       />
 
@@ -127,7 +122,7 @@ export default async function AnnArborPage() {
             Start for $4.99/month
           </p>
           <p className="text-xs text-gold/60 mb-1">
-            Or get the Ann Arbor student lifetime deal — $29 one-time (see below).
+            Or get lifetime access — $49 one-time (see below).
           </p>
           <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm text-text-muted mb-7">
             <span>Cancel anytime</span>
@@ -149,7 +144,7 @@ export default async function AnnArborPage() {
           <p className="text-xs text-text-muted/50 mb-2">
             Prefer to pay once?{" "}
             <a href="#pricing" className="underline underline-offset-2 hover:text-text-muted transition-colors">
-              Ann Arbor student lifetime — $29 →
+              Lifetime access — $49 →
             </a>
           </p>
 
@@ -163,15 +158,13 @@ export default async function AnnArborPage() {
 
       {/* ── Pricing toggle ─────────────────────────────────────────────────── */}
       <InfluencerPricingToggle
-        displayName="Ann Arbor Student"
+        displayName="Ann Arbor"
         individualMonthlyUrl={INDIVIDUAL_MONTHLY_URL}
         familyMonthlyUrl={FAMILY_MONTHLY_URL}
         individualLifetimeUrl={CHECKOUT_URL}
         familyLifetimeUrl={FAMILY_URL}
-        individualLifetimePriceCents={2900}
+        individualLifetimePriceCents={4900}
         familyLifetimePriceCents={7900}
-        regularIndividualPriceCents={7900}
-        regularFamilyPriceCents={14900}
       />
 
       {/* ── Proof / value ─────────────────────────────────────────────────── */}
@@ -245,7 +238,7 @@ export default async function AnnArborPage() {
           }>
             <Part1FullPreview
               checkoutHref={CHECKOUT_URL}
-              ctaLabel="Get Student Lifetime Access — $29"
+              ctaLabel="Get Lifetime Access — $49"
             />
           </Suspense>
         </div>
@@ -276,7 +269,7 @@ export default async function AnnArborPage() {
             Start for $4.99/month — cancel anytime.
           </p>
           <p className="text-sm text-text-muted mb-8">
-            Or grab the Ann Arbor student lifetime deal for $29 one-time.
+            Or get lifetime access for $49 one-time.
           </p>
           <Link
             href={INDIVIDUAL_MONTHLY_URL}
@@ -291,7 +284,7 @@ export default async function AnnArborPage() {
           </p>
           <p className="text-xs text-text-muted/50">
             <a href="#pricing" className="underline underline-offset-2 hover:text-text-muted transition-colors">
-              Or get the $29 lifetime deal →
+              Or get the $49 lifetime deal →
             </a>
           </p>
         </div>

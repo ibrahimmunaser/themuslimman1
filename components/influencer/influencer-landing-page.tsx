@@ -22,16 +22,17 @@ export interface InfluencerPageConfig {
   displayName: string;
   /** Top badge text, e.g. "As seen on Deen Responds" */
   sourceBadge: string;
-  /** Individual promo code stored in localStorage, e.g. "DEEN59" */
-  individualPromoCode: string;
+  /** Individual promo code stored in localStorage (optional — omit when no discount applies) */
+  individualPromoCode?: string;
   /** Checkout URLs */
   individualUrl: string;
   familyUrl: string;
   /** Displayed prices (cents) */
   individualPriceCents: number;
   familyPriceCents: number;
-  regularIndividualPriceCents: number;
-  regularFamilyPriceCents: number;
+  /** Optional regular (pre-discount) prices. Only shown when different from actual price. */
+  regularIndividualPriceCents?: number;
+  regularFamilyPriceCents?: number;
   /** Optional signed R2 URL. When provided, a sponsor video section is shown. */
   sponsorVideoUrl?: string | null;
   /** Label above the video section, e.g. "Why Deen Responds recommended this" */
@@ -98,10 +99,6 @@ const FAQ = [
     a: "Yes. The course works on phone, tablet, and desktop. Many students go through lessons during commutes or before bed.",
   },
   {
-    q: "Do I need to enter a promo code?",
-    a: "No. The discount is applied automatically at checkout when you use any link on this page.",
-  },
-  {
     q: "What happens right after I buy?",
     a: "You create an account and get immediate access to the full course. Start whenever you're ready — there are no deadlines.",
   },
@@ -128,7 +125,7 @@ export function InfluencerLandingPage({
   creator,
   displayName,
   sourceBadge,
-  individualPromoCode,
+  individualPromoCode = "",
   individualUrl,
   familyUrl,
   individualPriceCents,
@@ -146,12 +143,15 @@ export function InfluencerLandingPage({
   const hasMonthlyPlans = !!(individualMonthlyUrl && familyMonthlyUrl);
   const indPrice    = fmtPrice(individualPriceCents);
   const famPrice    = fmtPrice(familyPriceCents);
-  const regIndPrice = fmtPrice(regularIndividualPriceCents);
-  const regFamPrice = fmtPrice(regularFamilyPriceCents);
+  const regIndPrice = regularIndividualPriceCents ? fmtPrice(regularIndividualPriceCents) : null;
+  const regFamPrice = regularFamilyPriceCents     ? fmtPrice(regularFamilyPriceCents)     : null;
+  // Only show strikethrough when a different (higher) regular price is provided.
+  const showIndStrike = !!(regularIndividualPriceCents && regularIndividualPriceCents > individualPriceCents);
+  const showFamStrike = !!(regularFamilyPriceCents     && regularFamilyPriceCents     > familyPriceCents);
 
   return (
     <div className="flex flex-col min-h-screen bg-ink text-text">
-      <InfluencerPromoSetter promoCode={individualPromoCode} />
+      {individualPromoCode && <InfluencerPromoSetter promoCode={individualPromoCode} />}
       <BrownieFunnelTracker creator={creator} promoCode={individualPromoCode} />
 
       {/* ── Header — logo only, no competing CTA ────────────────────────── */}
@@ -209,7 +209,7 @@ export function InfluencerLandingPage({
                 <p className="text-xl font-bold text-text mb-0.5">For Me</p>
                 <p className="text-xs text-text-muted mb-4">Individual Lifetime Access</p>
                 <div className="mb-5">
-                  <span className="text-xs text-text-muted line-through mr-2">{regIndPrice}</span>
+                  {showIndStrike && <span className="text-xs text-text-muted line-through mr-2">{regIndPrice}</span>}
                   <span className="text-5xl font-bold text-gold">{indPrice}</span>
                   <p className="text-xs text-gold/60 mt-1">one-time · no renewal ever</p>
                 </div>
@@ -383,7 +383,7 @@ export function InfluencerLandingPage({
               <p className="text-xl font-bold text-text mb-0.5">For Me</p>
               <p className="text-xs text-text-muted mb-4">Individual Lifetime Access</p>
               <div className="mb-5">
-                <span className="text-xs text-text-muted line-through mr-2">{regIndPrice}</span>
+                {showIndStrike && <span className="text-xs text-text-muted line-through mr-2">{regIndPrice}</span>}
                 <span className="text-5xl font-bold text-gold">{indPrice}</span>
                 <p className="text-xs text-gold/60 mt-1">one-time · no renewal ever</p>
               </div>
@@ -420,7 +420,7 @@ export function InfluencerLandingPage({
               <p className="text-base font-bold text-text mb-0.5">For My Family</p>
               <p className="text-xs text-text-muted mb-4">Family Lifetime · up to 5 profiles</p>
               <div className="mb-4">
-                <span className="text-xs text-text-muted line-through mr-2">{regFamPrice}</span>
+                {showFamStrike && <span className="text-xs text-text-muted line-through mr-2">{regFamPrice}</span>}
                 <span className="text-3xl font-bold text-gold">{famPrice}</span>
                 <p className="text-xs text-text-muted mt-0.5">one-time</p>
               </div>

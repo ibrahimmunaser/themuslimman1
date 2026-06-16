@@ -7,9 +7,9 @@ import { MobileStickyCta } from "@/app/deenresponds/mobile-sticky-cta";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Complete Seerah — Browniesaadi Exclusive Offer",
+  title: "Complete Seerah — Brownie Saadi",
   description:
-    "Learn the life of the Prophet ﷺ in order. 100 lessons, video, audio, quizzes, and more. Exclusive pricing for Browniesaadi viewers.",
+    "Learn the life of the Prophet ﷺ in order. 100 lessons, video, audio, quizzes, and more. As recommended by Brownie Saadi.",
   robots: { index: false, follow: false },
 };
 
@@ -24,8 +24,8 @@ export default async function BrowniesaadiPage() {
       .catch(() => {}),
   ]);
 
-  const INDIVIDUAL_URL         = `/checkout?plan=individual-lifetime&promo=BROWNIE59&source=browniesaadi&${UTM}`;
-  const FAMILY_URL             = `/checkout?plan=family-lifetime&promo=BROWNIE119&source=browniesaadi&${UTM}`;
+  const INDIVIDUAL_URL         = `/checkout?plan=individual-lifetime&source=browniesaadi&${UTM}`;
+  const FAMILY_URL             = `/checkout?plan=family-lifetime&source=browniesaadi&${UTM}`;
   const INDIVIDUAL_MONTHLY_URL = `/checkout?plan=individual-monthly&source=browniesaadi&${UTM}`;
   const FAMILY_MONTHLY_URL     = `/checkout?plan=family-monthly&source=browniesaadi&${UTM}`;
 
@@ -35,13 +35,10 @@ export default async function BrowniesaadiPage() {
         creator="browniesaadi"
         displayName="Brownie Saadi"
         sourceBadge="Brownie Saadi Special"
-        individualPromoCode="BROWNIE59"
         individualUrl={INDIVIDUAL_URL}
         familyUrl={FAMILY_URL}
-        individualPriceCents={5900}
-        familyPriceCents={11900}
-        regularIndividualPriceCents={7900}
-        regularFamilyPriceCents={14900}
+        individualPriceCents={4900}
+        familyPriceCents={7900}
         sponsorVideoUrl={videoUrl}
         videoSectionLabel="Why Brownie Saadi recommended this"
         individualMonthlyUrl={INDIVIDUAL_MONTHLY_URL}
@@ -55,4 +52,3 @@ export default async function BrowniesaadiPage() {
     </>
   );
 }
-

@@ -77,7 +77,7 @@ export const PLANS = {
     id: "complete",
     name: "Complete Seerah",
     subtitle: "Full access to the structured 100-part Seerah journey",
-    price: 7900, // $79.00 lifetime access
+    price: 4900, // $49.00 lifetime access
     features: [
       "All 100 Seerah parts",
       "Video lessons",
@@ -97,8 +97,8 @@ export const PLANS = {
     id: "family",
     name: "Family Access",
     subtitle: "One household account with up to 5 learner profiles",
-    price: 14900, // $149.00 lifetime family access
-    upgradeFromLifetimePrice: 7000, // $70.00 — Individual Lifetime → Family Lifetime upgrade ($149 - $79)
+    price: 7900, // $79.00 lifetime family access
+    upgradeFromLifetimePrice: 3000, // $30.00 — Individual Lifetime → Family Lifetime upgrade ($79 - $49)
     stripeProductId: "prod_UbM83Q8KLI4HX0", // env: STRIPE_PRICE_FAMILY_LIFETIME
     features: [
       "One household account",
