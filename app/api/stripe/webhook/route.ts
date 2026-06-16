@@ -1177,10 +1177,31 @@ async function sendAbandonedCheckoutEmail(
 ): Promise<void> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { email: true, fullName: true },
+    select: { email: true, fullName: true, hasPaid: true },
   });
   if (!user) {
     console.warn(`[ABANDONED_EMAIL] User ${userId} not found — cannot send recovery email`);
+    return;
+  }
+
+  // Do not send a recovery email if the user has already paid (lifetime purchase)
+  // or currently has an active/trialing subscription — they either came back and
+  // completed a new checkout session, or the expiry was for a previous attempt
+  // while they were actively on the page for a fresh one.
+  if (user.hasPaid) {
+    console.log(`[ABANDONED_EMAIL] Skipping — user ${userId} already has lifetime access`);
+    return;
+  }
+  const activeSubscription = await prisma.subscription.findFirst({
+    where: {
+      userId,
+      status: { in: ["active", "trialing", "past_due"] },
+      stripeSubscriptionId: { not: sub.id }, // exclude the expiring sub itself
+    },
+    select: { id: true },
+  });
+  if (activeSubscription) {
+    console.log(`[ABANDONED_EMAIL] Skipping — user ${userId} already has an active subscription`);
     return;
   }
 
