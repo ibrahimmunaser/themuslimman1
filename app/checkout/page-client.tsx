@@ -124,10 +124,45 @@ function CheckoutForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!stripe || !elements || processing) return;
+
+    // ── Guard: amount must be positive ────────────────────────────────────────
+    // Free-access paths bypass CheckoutForm, but catch any edge case where
+    // a $0 intent somehow reached here (would result in a Stripe API error).
+    if (finalPrice <= 0) {
+      setError("Something went wrong with your order. Please refresh and try again.");
+      return;
+    }
+
     setProcessing(true);
     setError(null);
 
     logStage("payment_submitted");
+
+    // ── Guard: pre-flight checks before touching Stripe ───────────────────────
+    try {
+      // 1. Session check — verify the user is still authenticated.
+      //    A 401 here means the session cookie expired mid-checkout.
+      const sessionRes = await fetch("/api/stripe/check-access");
+      if (sessionRes.status === 401) {
+        setError("Your session has expired. Please sign in again to complete your purchase.");
+        setProcessing(false);
+        return;
+      }
+
+      // 2. Duplicate-payment guard — webhook may have already granted access
+      //    (e.g. user double-tapped on a slow connection, or webhook fired fast).
+      //    Redirect straight to the dashboard instead of charging a second time.
+      if (sessionRes.ok) {
+        const { hasAccess } = await sessionRes.json();
+        if (hasAccess) {
+          logStage("payment_skipped_already_has_access");
+          window.location.href = "/seerah";
+          return;
+        }
+      }
+    } catch {
+      // Network error during pre-flight — proceed anyway; Stripe handles idempotency.
+    }
 
     const { error: submitError } = await elements.submit();
     if (submitError) {
@@ -193,6 +228,27 @@ function CheckoutForm({
   // Called by Apple Pay / Google Pay / Samsung Pay / Link after wallet auth
   const handleExpressConfirm = async (event: StripeExpressCheckoutElementConfirmEvent) => {
     if (!stripe || !elements || processing) return;
+
+    // Pre-flight: same duplicate-payment guard as handleSubmit.
+    try {
+      const sessionRes = await fetch("/api/stripe/check-access");
+      if (sessionRes.status === 401) {
+        event.paymentFailed({ reason: "fail" });
+        setError("Your session has expired. Please refresh the page to continue.");
+        return;
+      }
+      if (sessionRes.ok) {
+        const { hasAccess } = await sessionRes.json();
+        if (hasAccess) {
+          logStage("payment_skipped_already_has_access", { method: "express" });
+          window.location.href = "/seerah";
+          return;
+        }
+      }
+    } catch {
+      // Network error — proceed; Stripe handles idempotency.
+    }
+
     setProcessing(true);
     setError(null);
     try {
