@@ -602,9 +602,11 @@ async function handleSubscriptionDeleted(sub: Stripe.Subscription) {
   //   2. price ID matches STRIPE_FAMILY_MONTHLY_PRICE_ID  (fallback for subs created
   //      before we added metadata, or if Stripe drops metadata on retries)
   const cancelledPriceId = sub.items.data[0]?.price?.id;
+  const familyMonthlyPriceId =
+    process.env.STRIPE_PRICE_FAMILY_MONTHLY ?? process.env.STRIPE_FAMILY_MONTHLY_PRICE_ID;
   const isFamilySub =
     sub.metadata?.planType === "family" ||
-    (!!cancelledPriceId && cancelledPriceId === process.env.STRIPE_FAMILY_MONTHLY_PRICE_ID);
+    (!!cancelledPriceId && cancelledPriceId === familyMonthlyPriceId);
 
   if (!isFamilySub) {
     console.log(`[WEBHOOK] handleSubscriptionDeleted: sub ${sub.id} is not a family sub — no planType change`);

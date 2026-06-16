@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
       }
       appliedPromoCode = promoCode.trim().toUpperCase();
     } else {
-      // No promo: upgrade pays fixed $70 diff (full $149 − full $79); new purchase pays $149.
+      // No promo: upgrade pays fixed $30 diff (full $79 − full $49); new purchase pays $79.
       baseAmount  = isEligibleForUpgradePrice
         ? FAMILY_PLAN.upgradeFromLifetimePrice  // 7000 cents = $70
         : FAMILY_PLAN.price;                    // 14900 cents = $149

@@ -1016,6 +1016,7 @@ function CheckoutPageContent({
         }
       }
       setAuthEmail(email);
+      isAuthenticatedRef.current = true; // sync update so getOrCreateClientSecret sees it immediately
       setIsAuthenticated(true);
     } catch (err) {
       if ((err as Error)?.name === "AbortError") return; // "Not you?" cancelled this
@@ -1073,6 +1074,7 @@ function CheckoutPageContent({
         setCouponInput(code);
       }
       setAuthEmail(authForm.email);
+      isAuthenticatedRef.current = true; // sync update so getOrCreateClientSecret sees it immediately
       setIsAuthenticated(true);
     } catch {
       setAuthError("An error occurred. Please try again.");
@@ -1534,7 +1536,7 @@ function CheckoutPageContent({
                     onClick={() => { setTrialAlreadyUsed(false); setAudience("family"); setBilling("lifetime"); }}
                     className="inline-flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl border border-amber-500/40 hover:border-amber-500/70 text-amber-400 font-semibold text-sm transition-colors"
                   >
-                    Family Lifetime — $149 one-time
+                    Family Lifetime — $79 one-time
                   </button>
                 </div>
               </div>
@@ -1617,7 +1619,7 @@ function CheckoutPageContent({
                     onClick={() => { setAudience("family"); setBilling("lifetime"); }}
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-amber-500/40 hover:border-amber-500/70 text-amber-400 font-semibold text-sm transition-colors"
                   >
-                    Lifetime — $149
+                    Lifetime — $49
                   </button>
                 </div>
               </div>

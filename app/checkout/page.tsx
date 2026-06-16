@@ -3,6 +3,7 @@ import { getCachedCurrentUser } from "@/lib/auth-cache";
 import { getUserAccessInfo } from "@/lib/access";
 import CheckoutClientPage from "./page-client";
 import { stripe } from "@/lib/stripe";
+import { PLANS } from "@/lib/stripe-config";
 import { validatePromoCode, applyDiscount } from "@/lib/promo-codes";
 import { getCreatorPromoConfig } from "@/lib/creator-promos";
 
@@ -33,7 +34,7 @@ export default async function CheckoutPage({ searchParams }: Props) {
   // attempting a legitimate upgrade to a family plan.
   //
   //  Individual lifetime holders can only:
-  //    • /checkout?plan=family-lifetime  — upgrade to family lifetime ($70 diff)
+  //    • /checkout?plan=family-lifetime  — upgrade to family lifetime ($30 diff)
   //
   //  family-trial and family-monthly are redirected to family-lifetime because:
   //   - The free trial is one-per-account
@@ -50,7 +51,7 @@ export default async function CheckoutPage({ searchParams }: Props) {
       // Individual lifetime holders trying family-trial or family-monthly:
       // the free trial is one-time-per-account, and a monthly subscription is a
       // step down from what they already own. Redirect both straight to the
-      // family lifetime upgrade page ($70 difference).
+      // family lifetime upgrade page ($30 difference).
       if (normalizedPlan === "family-trial" || normalizedPlan === "family-monthly") {
         redirect("/checkout?plan=family-lifetime");
       }
@@ -89,18 +90,17 @@ export default async function CheckoutPage({ searchParams }: Props) {
     if (audienceParam === "individual" || planParam === "individual")                          initialAudience = "individual";
   }
 
-  // Base price for the selected plan — used to seed the client price state so the
-  // order summary shows the correct amount before the async createIntent responds.
-  // Trial plans are free today; lifetime plans show the plan's full price.
+  // Base price for the selected plan — always sourced from PLANS so this stays
+  // in sync with stripe-config.ts. Never hardcode prices here.
   const planBasePrice: Record<string, number> = {
-    "individual-lifetime": 7900,
-    "family-lifetime":     14900,
-    "individual-monthly":  499,
-    "family-monthly":      999,
+    "individual-lifetime": PLANS.complete.price,      // $49
+    "family-lifetime":     PLANS.family.price,        // $79
+    "individual-monthly":  PLANS.monthly.price,       // $4.99
+    "family-monthly":      PLANS.familyMonthly.price, // $9.99
     "individual-trial":    0,
     "family-trial":        0,
   };
-  const initialBasePrice  = planBasePrice[normalizedPlan] ?? 7900;
+  const initialBasePrice  = planBasePrice[normalizedPlan] ?? PLANS.complete.price;
   let initialClientSecret: string | null = null;
   let initialFinalPrice = initialBasePrice;
   let initialDiscountAmount  = 0;
