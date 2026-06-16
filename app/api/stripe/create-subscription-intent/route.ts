@@ -117,9 +117,10 @@ export async function POST(request: NextRequest) {
       items: [{ price: MONTHLY_PRICE_ID }],
       payment_behavior: "default_incomplete",
       payment_settings: {
-        // No explicit payment_method_types — omitting this lets Stripe use automatic
-        // payment methods for the initial PaymentIntent, so Apple Pay, Google Pay,
-        // Link, and card are all offered. The saved payment method handles renewals.
+        // Restrict to card and link only — Apple Pay/Google Pay work because they
+        // confirm against a card network. Cash App and similar wallets cannot be
+        // saved off-session and would fail all renewal charges.
+        payment_method_types: ["card", "link"],
         save_default_payment_method: "on_subscription",
       },
       description: "Seerah Individual Monthly — TheMuslimMan",

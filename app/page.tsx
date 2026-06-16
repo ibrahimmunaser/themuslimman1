@@ -16,7 +16,6 @@ import { Part1FullPreview } from "@/components/landing/part1-full-preview";
 import { buttonClass } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth";
 import { hasActiveCourseAccess } from "@/lib/access";
-import { EmailVerificationBanner } from "@/components/auth/email-verification-banner";
 import { CreatorPromoTracker } from "@/components/promo/creator-promo-tracker";
 
 export const dynamic = "force-dynamic";
@@ -54,10 +53,6 @@ export default async function LandingPage() {
     <div className="flex flex-col min-h-screen bg-ink text-text">
       <Navbar />
       <CreatorPromoTracker />
-
-      {user && !user.emailVerified && (
-        <EmailVerificationBanner email={user.email} />
-      )}
 
       {/* ============================================
           HERO

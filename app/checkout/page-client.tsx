@@ -172,7 +172,17 @@ function CheckoutForm({
           url.searchParams.set("payment_intent_client_secret", paymentIntent.client_secret ?? "");
           url.searchParams.set("redirect_status", "succeeded");
           window.location.href = url.toString();
+        } else if (paymentIntent?.status === "processing") {
+          // Some payment methods (e.g. bank transfers) take time to process.
+          // Redirect to the success page — it will poll for confirmation.
+          logStage("payment_submitted", { status: "processing" });
+          const url = new URL(returnUrl, window.location.origin);
+          url.searchParams.set("payment_intent", paymentIntent.id);
+          url.searchParams.set("payment_intent_client_secret", paymentIntent.client_secret ?? "");
+          url.searchParams.set("redirect_status", "processing");
+          window.location.href = url.toString();
         }
+        // If Stripe redirected the browser (3DS etc.), no further action needed.
       }
     } catch {
       setError("Connection lost. Please check your internet and try again.");
@@ -203,6 +213,13 @@ function CheckoutForm({
         url.searchParams.set("payment_intent", paymentIntent.id);
         url.searchParams.set("payment_intent_client_secret", paymentIntent.client_secret ?? "");
         url.searchParams.set("redirect_status", "succeeded");
+        window.location.href = url.toString();
+      } else if (paymentIntent?.status === "processing") {
+        logStage("payment_submitted", { status: "processing", method: "express" });
+        const url = new URL(returnUrl, window.location.origin);
+        url.searchParams.set("payment_intent", paymentIntent.id);
+        url.searchParams.set("payment_intent_client_secret", paymentIntent.client_secret ?? "");
+        url.searchParams.set("redirect_status", "processing");
         window.location.href = url.toString();
       }
     } catch {
@@ -510,6 +527,9 @@ function CheckoutPageContent({
   // Stripe payment form loads without requiring a separate "Continue to Payment" click.
   const autoDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [autoIntentStarted, setAutoIntentStarted] = useState(false);
+  // AbortController ref: used to cancel in-flight guest-checkout + intent fetches
+  // when the user clicks "Not you?" so no stale clientSecret can surface.
+  const intentAbortRef = useRef<AbortController | null>(null);
 
   // Promo shown to guests before auth (URL ?promo= param preview).
   // The `forAudience` field tags which plan this discount was computed for so
@@ -777,12 +797,17 @@ function CheckoutPageContent({
   // Core guest-checkout logic — shared by both the explicit form submit and the
   // auto-trigger so we never duplicate the API call.
   const runGuestCheckout = async (name: string, email: string) => {
+    // Create a fresh AbortController for this run so "Not you?" can cancel it.
+    const controller = new AbortController();
+    intentAbortRef.current = controller;
+
     setAuthLoading(true);
     try {
       const res = await fetch("/api/auth/guest-checkout", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ fullName: name, email }),
+        signal: controller.signal,
       });
       const data = await res.json();
       if (!res.ok) {
@@ -809,7 +834,8 @@ function CheckoutPageContent({
       }
       setAuthEmail(email);
       setIsAuthenticated(true);
-    } catch {
+    } catch (err) {
+      if ((err as Error)?.name === "AbortError") return; // "Not you?" cancelled this
       setAuthError("An error occurred. Please try again.");
       setAutoIntentStarted(false);
     } finally {
@@ -837,7 +863,7 @@ function CheckoutPageContent({
     autoDebounceRef.current = setTimeout(() => {
       setAutoIntentStarted(true);
       runGuestCheckout(name, email);
-    }, 300);
+    }, 600);
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -1258,60 +1284,6 @@ function CheckoutPageContent({
     </div>
   );
 
-  // ── Needs verification screen ─────────────────────────────────────────────
-
-  if (!isAuthenticated && needsVerification) {
-    const handleResendVerification = async () => {
-      setResendState("loading");
-      try {
-        const res = await fetch("/api/auth/resend-verification", { method: "POST" });
-        setResendState(res.ok ? "sent" : "error");
-      } catch {
-        setResendState("error");
-      }
-    };
-
-    return (
-      <div className="min-h-screen bg-zinc-950 flex flex-col lg:flex-row">
-        {LeftColumn}
-        <div className="order-1 lg:order-2 lg:w-1/2 px-6 sm:px-12 py-12 flex flex-col justify-center">
-          <div className="max-w-md w-full mx-auto">
-            {OrderSummary}
-            <div className="p-6 rounded-xl bg-gold/10 border border-gold/25 text-center space-y-3">
-              <p className="text-lg font-bold text-white">Check your email</p>
-              <p className="text-sm text-zinc-400">
-                We sent a verification link to <span className="text-gold">{authForm.email}</span>.
-                You can verify now <em>or</em> tap <strong className="text-white">Sign In</strong> below
-                to pay first — your access unlocks once both steps are done.
-              </p>
-              <button
-                onClick={() => { setNeedsVerification(false); setAuthMode("login"); setResendState("idle"); }}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gold hover:bg-gold-light text-ink font-semibold text-sm transition-colors"
-              >
-                Go to Sign In <ArrowRight className="w-4 h-4" />
-              </button>
-              <div className="pt-2 border-t border-gold/20">
-                {resendState === "sent" ? (
-                  <p className="text-xs text-emerald-400">Email resent! Check your inbox.</p>
-                ) : resendState === "error" ? (
-                  <p className="text-xs text-red-400">Failed to resend. Try again in a moment.</p>
-                ) : (
-                  <button
-                    onClick={handleResendVerification}
-                    disabled={resendState === "loading"}
-                    className="text-xs text-zinc-400 hover:text-gold transition-colors disabled:opacity-50 flex items-center gap-1 mx-auto"
-                  >
-                    <RefreshCw className={`w-3 h-3 ${resendState === "loading" ? "animate-spin" : ""}`} />
-                    {resendState === "loading" ? "Sending…" : "Resend verification email"}
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   // ── Trial already used — show upgrade options (one free trial per account) ──
 
@@ -1372,7 +1344,7 @@ function CheckoutPageContent({
                     disabled={upgradeLoading}
                     className="inline-flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm transition-colors disabled:opacity-50"
                   >
-                    {upgradeLoading ? "Upgrading…" : <>Switch to Family Monthly — $19/mo <ArrowRight className="w-3.5 h-3.5" /></>}
+                    {upgradeLoading ? "Upgrading…" : <>Switch to Family Monthly — $9.99/mo <ArrowRight className="w-3.5 h-3.5" /></>}
                   </button>
                   <button
                     onClick={() => { setTrialAlreadyUsed(false); setAudience("family"); setBilling("lifetime"); }}
@@ -1455,7 +1427,7 @@ function CheckoutPageContent({
                     onClick={() => { setAudience("family"); setBilling("monthly"); }}
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm transition-colors"
                   >
-                    Switch to Family Monthly — $19/mo <ArrowRight className="w-3.5 h-3.5" />
+                    Switch to Family Monthly — $9.99/mo <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                   <button
                     onClick={() => { setAudience("family"); setBilling("lifetime"); }}
@@ -1472,28 +1444,39 @@ function CheckoutPageContent({
     );
   }
 
-  // ── Unified right column: name/email capture + payment form on one screen ──
+  // ── Unified right column: name/email → payment → price ────────────────────
+  // Layout order: 1) name/email  2) payment options  3) price summary
+
+  const isPaymentLoading = loading || (autoIntentStarted && !clientSecret && !error);
+  const showPaymentPrompt = !isAuthenticated && !autoIntentStarted && !loading && authMode !== "login";
 
   return (
     <div className="min-h-screen bg-zinc-950 flex flex-col lg:flex-row">
       {LeftColumn}
       <div className="order-1 lg:order-2 lg:w-1/2 px-6 sm:px-12 py-12 flex flex-col justify-center">
-        <div className="max-w-md w-full mx-auto">
+        <div className="max-w-md w-full mx-auto space-y-4">
 
-          {/* ── Step 1: name + email (only shown for unauthenticated guests) ── */}
+          {/* ── 1. Name + email (only shown for unauthenticated guests) ── */}
           {!isAuthenticated && authMode === "signup" && (
-            <form onSubmit={handleGuestCheckout} className="space-y-3 mb-5">
-              <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">Your details</p>
+            <form onSubmit={handleGuestCheckout} className="space-y-3">
               <input
                 type="text" placeholder="Full name" required
                 value={authForm.fullName}
-                onChange={(e) => setAuthForm((f) => ({ ...f, fullName: e.target.value }))}
+                onChange={(e) => {
+                  const name = e.target.value;
+                  setAuthForm((f) => ({ ...f, fullName: name }));
+                  triggerAutoCheckout(name, authForm.email);
+                }}
                 className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm"
               />
               <input
                 type="email" placeholder="Email address" required
                 value={authForm.email}
-                onChange={(e) => setAuthForm((f) => ({ ...f, email: e.target.value }))}
+                onChange={(e) => {
+                  const email = e.target.value;
+                  setAuthForm((f) => ({ ...f, email }));
+                  triggerAutoCheckout(authForm.fullName, email);
+                }}
                 onBlur={(e) => triggerAutoCheckout(authForm.fullName, e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm"
               />
@@ -1510,9 +1493,7 @@ function CheckoutPageContent({
               ) : authError ? (
                 <p className="text-xs text-red-400 pt-1">{authError}</p>
               ) : null}
-              {/* Hidden submit so pressing Enter submits the form */}
               <button type="submit" className="sr-only" aria-hidden>Continue</button>
-              {/* Existing-account fallback */}
               {!isInfluencerMode && !authError && (
                 <p className="text-xs text-zinc-600 text-center">
                   Already have an account?{" "}
@@ -1530,7 +1511,7 @@ function CheckoutPageContent({
 
           {/* ── Sign-in form (for existing accounts) ── */}
           {!isAuthenticated && authMode === "login" && (
-            <div className="mb-5">
+            <div>
               <div className="flex items-center gap-2 mb-3">
                 <button
                   type="button"
@@ -1579,54 +1560,67 @@ function CheckoutPageContent({
 
           {/* ── Authenticated indicator ── */}
           {isAuthenticated && (
-            <p className="text-xs text-zinc-500 mb-4 flex items-center gap-1.5">
+            <p className="text-xs text-zinc-500 flex items-center gap-1.5">
               <Check className="w-3 h-3 text-green-400 flex-shrink-0" />
               {authEmail}
+              <button
+                type="button"
+                onClick={async () => {
+                  // Abort any in-flight guest-checkout or intent fetch so stale
+                  // clientSecrets can never surface for a different identity.
+                  if (intentAbortRef.current) {
+                    intentAbortRef.current.abort();
+                    intentAbortRef.current = null;
+                  }
+                  if (autoDebounceRef.current) {
+                    clearTimeout(autoDebounceRef.current);
+                    autoDebounceRef.current = null;
+                  }
+                  // Increment intentGen to discard any in-flight createIntent response.
+                  ++intentGen.current;
+
+                  await fetch("/api/auth/signout", { method: "POST" });
+
+                  // Reset all auth + payment state to a clean slate.
+                  setIsAuthenticated(false);
+                  setAuthEmail("");
+                  setAuthMode("signup");
+                  setAuthForm({ fullName: "", email: "", password: "", confirmPassword: "" });
+                  setAuthError("");
+                  setAuthLoading(false);
+                  setAutoIntentStarted(false);
+                  setClientSecret(null);
+                  setLoading(false);
+                  setError(null);
+                  setHasActiveSub(false);
+                  setActiveSubPlanType(null);
+                  setTrialAlreadyUsed(false);
+                  setFreeAccess(false);
+                  setAppliedCoupon(null);
+                  setCouponInput("");
+                }}
+                className="ml-1 text-zinc-600 hover:text-zinc-400 underline transition-colors cursor-pointer"
+              >
+                Not you?
+              </button>
             </p>
           )}
 
-          {OrderSummary}
-
-          {/* Promo code — lifetime plans only (authenticated) */}
-          {isLifetime && isAuthenticated && (
-            <div className="mb-6">
-              {appliedCoupon ? (
-                <div className="flex items-center justify-between p-3 rounded-xl bg-green-500/10 border border-green-500/20">
-                  <div className="flex items-center gap-2">
-                    <Tag className="w-4 h-4 text-green-400 flex-shrink-0" />
-                    <div>
-                      <p className="text-sm font-medium text-green-400">{appliedCoupon.code} applied</p>
-                      <p className="text-xs text-zinc-500">{appliedCoupon.label}</p>
-                    </div>
-                  </div>
-                  <button onClick={handleRemoveCoupon} className="text-zinc-600 hover:text-zinc-400 transition-colors ml-3">
-                    <X className="w-4 h-4" />
-                  </button>
+          {/* ── Auto-applied promo — only shown when arriving from an influencer link ── */}
+          {isLifetime && isAuthenticated && appliedCoupon && (
+            <div className="flex items-center justify-between p-3 rounded-xl bg-green-500/10 border border-green-500/20">
+              <div className="flex items-center gap-2">
+                <Tag className="w-4 h-4 text-green-400 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-green-400">{appliedCoupon.code} applied</p>
+                  <p className="text-xs text-zinc-500">{appliedCoupon.label}</p>
                 </div>
-              ) : (
-                <div className="flex gap-2">
-                  <input
-                    type="text" placeholder="Promo code"
-                    value={couponInput}
-                    onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                    onKeyDown={(e) => e.key === "Enter" && handleApplyCoupon()}
-                    className="flex-1 px-4 py-2.5 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm"
-                  />
-                  <button
-                    onClick={handleApplyCoupon}
-                    disabled={couponLoading || !couponInput.trim()}
-                    className="px-4 py-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-zinc-300 hover:text-white hover:border-zinc-600 transition-colors text-sm font-medium disabled:opacity-50"
-                  >
-                    {couponLoading ? "…" : "Apply"}
-                  </button>
-                </div>
-              )}
-              {couponError && <p className="text-xs text-red-400 mt-2">{couponError}</p>}
+              </div>
             </div>
           )}
 
-          {/* Free access via promo */}
-          {freeAccess && (
+          {/* ── 2. Payment options ── */}
+          {freeAccess ? (
             <div className="space-y-3">
               <div className="p-4 rounded-xl bg-gold/10 border border-gold/25 text-center">
                 <p className="text-sm font-bold text-gold mb-1">Free Access Applied!</p>
@@ -1641,30 +1635,31 @@ function CheckoutPageContent({
               </button>
               {freeClaimError && <p className="text-xs text-red-400 text-center">{freeClaimError}</p>}
             </div>
-          )}
-
-          {/* Stripe payment form */}
-          {!freeAccess && (
+          ) : (
             <>
-              {/* Placeholder while waiting for the user to enter their details */}
-              {!isAuthenticated && !autoIntentStarted && !loading && authMode !== "login" && (
-                <div className="rounded-xl border border-dashed border-zinc-800 bg-zinc-900/20 p-6 text-center space-y-1.5">
-                  <p className="text-sm text-zinc-600">Enter your details above to see payment options</p>
-                  <p className="text-xs text-zinc-700">Apple Pay, Google Pay, card, and Link accepted</p>
+              {/* Waiting for name/email */}
+              {showPaymentPrompt && (
+                <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 px-5 py-8 text-center space-y-1">
+                  <p className="text-sm text-zinc-400 font-medium">Payment</p>
+                  <p className="text-xs text-zinc-600">Enter your name and email above to continue</p>
                 </div>
               )}
 
-              {loading && (
-                <div className="flex items-center justify-center py-12">
-                  <div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
+              {/* Loading — account + intent being created */}
+              {isPaymentLoading && !clientSecret && !error && (
+                <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 px-5 py-8 flex flex-col items-center gap-3">
+                  <div className="w-6 h-6 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
+                  <p className="text-xs text-zinc-500">Setting up secure payment…</p>
                 </div>
               )}
+
               {error && !loading && (
-                <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm mb-4">
+                <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
                   {error}
                 </div>
               )}
-              {clientSecret && !loading && (
+
+              {clientSecret && !loading && isAuthenticated && (
                 <Elements
                   stripe={stripePromise}
                   key={clientSecret}
@@ -1712,6 +1707,10 @@ function CheckoutPageContent({
               )}
             </>
           )}
+
+          {/* ── 3. Price summary at the bottom ── */}
+          {OrderSummary}
+
         </div>
       </div>
     </div>

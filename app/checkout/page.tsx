@@ -80,11 +80,13 @@ export default async function CheckoutPage({ searchParams }: Props) {
   // Trial URLs → redirect to monthly (trials removed; monthly is the new entry-level plan)
   else if (normalizedPlan === "individual-trial") { redirect("/checkout?plan=individual-monthly"); }
   else if (normalizedPlan === "family-trial")     { redirect("/checkout?plan=family-monthly"); }
-  // Legacy URL param fallbacks
+  // Legacy URL param fallbacks (?billing=monthly&audience=individual, etc.)
   else {
-    if (billingParam === "lifetime")                             initialBilling  = "lifetime";
-    if (planParam === "family" || planParam === "familymonthly") initialAudience = "family";
-    if (planParam === "individual")                              initialAudience = "individual";
+    if (billingParam === "lifetime") initialBilling = "lifetime";
+    if (billingParam === "monthly")  initialBilling = "monthly";
+    const audienceParam = params.audience?.toLowerCase() ?? "";
+    if (audienceParam === "family" || planParam === "family" || planParam === "familymonthly") initialAudience = "family";
+    if (audienceParam === "individual" || planParam === "individual")                          initialAudience = "individual";
   }
 
   // Base price for the selected plan — used to seed the client price state so the

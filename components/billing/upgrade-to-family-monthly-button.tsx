@@ -43,7 +43,7 @@ export function UpgradeToFamilyMonthlyButton() {
         disabled={loading}
         className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-amber-500/40 hover:border-amber-500/70 text-amber-400 font-semibold text-sm transition-colors disabled:opacity-50"
       >
-        {loading ? "Upgrading…" : <>Monthly — $19/mo <ArrowRight className="w-4 h-4" /></>}
+        {loading ? "Upgrading…" : <>Monthly — $9.99/mo <ArrowRight className="w-4 h-4" /></>}
       </button>
     </div>
   );

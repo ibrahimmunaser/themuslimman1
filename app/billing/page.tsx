@@ -141,7 +141,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
             <div>
               <p className="font-semibold text-emerald-400">Upgraded to Family Monthly</p>
               <p className="text-sm text-text-secondary mt-1 leading-relaxed">
-                Your plan has been upgraded to Family Monthly — $19/mo. Your existing card will be charged at the next billing date with Stripe handling any proration automatically.
+                Your plan has been upgraded to Family Monthly — $9.99/mo. Your existing card will be charged at the next billing date with Stripe handling any proration automatically.
               </p>
             </div>
           </div>
@@ -215,7 +215,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
             <div className="text-right">
               {isFamilyMonthly && isTrial ? (
                 <>
-                  <p className="text-xs text-text-muted">Free today · then $19/mo</p>
+                  <p className="text-xs text-text-muted">Free today · then $9.99/mo</p>
                   {sub && (
                     <p className="text-xs text-text-muted mt-0.5">
                       Trial ends {formatDate(sub.currentPeriodEnd)}
@@ -224,7 +224,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
                 </>
               ) : isFamilyMonthly ? (
                 <>
-                  <p className="text-xs text-text-muted">$19 / month</p>
+                  <p className="text-xs text-text-muted">$9.99 / month</p>
                   {sub && (
                     <p className="text-xs text-text-muted mt-0.5">
                       {sub.cancelAtPeriodEnd

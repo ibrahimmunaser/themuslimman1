@@ -3,6 +3,7 @@ import { stripe } from "@/lib/stripe";
 import { getCurrentUser } from "@/lib/auth";
 import { PLANS } from "@/lib/stripe-config";
 import { validatePromoCode, applyDiscount } from "@/lib/promo-codes";
+import { getCreatorPromoConfig } from "@/lib/creator-promos";
 import { getUserAccessInfo } from "@/lib/access";
 import { checkRateLimit, getIP } from "@/lib/rate-limit";
 import { prisma } from "@/lib/db";
@@ -120,6 +121,9 @@ export async function POST(request: NextRequest) {
       finalAmount = baseAmount;
     }
 
+    // Resolve creator metadata from the promo code (if it's a creator code)
+    const creatorConfig = appliedPromoCode ? getCreatorPromoConfig(appliedPromoCode) : null;
+
     // Free access: skip Stripe entirely when code makes it $0
     if (finalAmount === 0) {
       return NextResponse.json({
@@ -167,6 +171,15 @@ export async function POST(request: NextRequest) {
         ...(isEligibleForUpgradePrice ? { upgradeFrom: "individual_lifetime" } : {}),
         ...(appliedPromoCode
           ? { promoCode: appliedPromoCode, promoDiscountAmount: String(promoDiscountAmount) }
+          : {}),
+        ...(creatorConfig
+          ? {
+              creator: creatorConfig.creator,
+              utm_source: creatorConfig.utm_source,
+              utm_medium: creatorConfig.utm_medium,
+              utm_campaign: creatorConfig.utm_campaign,
+              utm_content: creatorConfig.utm_content,
+            }
           : {}),
       },
       description: `${FAMILY_PLAN.name} — TheMuslimMan${appliedPromoCode ? ` (${appliedPromoCode})` : ""}`,

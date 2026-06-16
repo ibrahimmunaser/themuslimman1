@@ -6,9 +6,11 @@ import { PLANS } from "@/lib/stripe-config";
 import { getUserAccessInfo, getActiveSubscription, FAMILY_PROFILE_LIMIT } from "@/lib/access";
 import { checkRateLimit, getIP } from "@/lib/rate-limit";
 
-// Source of truth: STRIPE_FAMILY_MONTHLY_PRICE_ID env var.
-// Must start with "price_" — fail loudly at request time if misconfigured.
-const FAMILY_MONTHLY_PRICE_ID = process.env.STRIPE_FAMILY_MONTHLY_PRICE_ID ?? "";
+// Support both env var names — new canonical name takes priority.
+const FAMILY_MONTHLY_PRICE_ID =
+  process.env.STRIPE_PRICE_FAMILY_MONTHLY ??
+  process.env.STRIPE_FAMILY_MONTHLY_PRICE_ID ??
+  "";
 const FAMILY_MONTHLY_PLAN = PLANS.familyMonthly;
 
 export async function POST(request: NextRequest) {
@@ -176,8 +178,9 @@ export async function POST(request: NextRequest) {
       items: [{ price: FAMILY_MONTHLY_PRICE_ID }],
       payment_behavior: "default_incomplete",
       payment_settings: {
-        // No explicit payment_method_types — lets Stripe use automatic methods
-        // so Apple Pay, Google Pay, Link, and card are all offered initially.
+        // Restrict to card and link only — Cash App and similar wallets cannot be
+        // saved off-session and would fail renewal charges.
+        payment_method_types: ["card", "link"],
         save_default_payment_method: "on_subscription",
       },
       description: "Seerah Family Monthly — TheMuslimMan",
@@ -271,7 +274,7 @@ async function sendUpgradeConfirmationEmail(
           <div style="background:#fff;padding:40px 30px;border:1px solid #e5e5e5;border-top:none;">
             <p style="font-size:16px;margin:0 0 16px 0;">Assalamu Alaykum ${name},</p>
             <p style="font-size:15px;margin:0 0 16px 0;">
-              Your plan has been upgraded to <strong>Family Monthly Access — $19/mo</strong>.
+              Your plan has been upgraded to <strong>Family Monthly Access — $9.99/mo</strong>.
               Up to 5 learner profiles are now available, each with their own separate progress tracking.
             </p>
             <p style="font-size:14px;color:#555;margin:0 0 16px 0;">

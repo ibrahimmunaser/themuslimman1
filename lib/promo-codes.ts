@@ -42,6 +42,11 @@ const BUILT_IN_CODES: Record<string, PromoCode> = {
   // Location codes — 20% off for local community members.
   DEARBORN20:   { type: "percent", value: 20, label: "20% off (Dearborn)",   creatorOnly: true },
   ANNARBOR20:   { type: "percent", value: 20, label: "20% off (Ann Arbor)",  creatorOnly: true },
+  // Ann Arbor exclusive pricing — absolute final prices per plan.
+  ANNARBOR29:   { type: "absolute", value: 2900,  label: "$29 Ann Arbor (Individual)",  creatorOnly: true, planType: "individual" },
+  ANNARBOR59:   { type: "absolute", value: 5900,  label: "$59 Ann Arbor (Individual)",  creatorOnly: true, planType: "individual" },
+  ANNARBOR79:   { type: "absolute", value: 7900,  label: "$79 Ann Arbor (Family)",      creatorOnly: true, planType: "family"     },
+  ANNARBOR119:  { type: "absolute", value: 11900, label: "$119 Ann Arbor (Family)",     creatorOnly: true, planType: "family"     },
   // Community code — 20% off for WhatsApp / Instagram / local community audience.
   COMMUNITY20:  { type: "percent", value: 20, label: "20% off (Community)",  creatorOnly: true },
   // Community exclusive pricing — individual $49, family $99 (absolute final prices).
