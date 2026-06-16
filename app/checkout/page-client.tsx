@@ -541,6 +541,8 @@ interface CheckoutPageClientProps {
 const COMMUNITY_CODE_MAP: Partial<Record<string, Record<"individual" | "family", string>>> = {
   COMMUNITY49:  { individual: "COMMUNITY49",  family: "COMMUNITY99"  },
   COMMUNITY99:  { individual: "COMMUNITY49",  family: "COMMUNITY99"  },
+  // Deen Responds — $20 off lifetime (fixed cents, applies to any plan audience)
+  DEEN20:       { individual: "DEEN20",       family: "DEEN20"       },
   // Deen Responds — 20% off lifetime (percent code, same for both audiences)
   DEEN:         { individual: "DEEN",         family: "DEEN"         },
   // Legacy fixed-price codes kept for compatibility
@@ -548,6 +550,8 @@ const COMMUNITY_CODE_MAP: Partial<Record<string, Record<"individual" | "family",
   DEEN119:      { individual: "DEEN59",       family: "DEEN119"      },
   BROWNIE59:    { individual: "BROWNIE59",    family: "BROWNIE119"   },
   BROWNIE119:   { individual: "BROWNIE59",    family: "BROWNIE119"   },
+  // The Orthodox Muslim — $20 off lifetime (fixed cents, applies to any plan audience)
+  ORTHODOX20:   { individual: "ORTHODOX20",   family: "ORTHODOX20"   },
   // The Orthodox Muslim — 20% off lifetime (percent code, same for both audiences)
   ORTHODOX:     { individual: "ORTHODOX",     family: "ORTHODOX"     },
   // Legacy fixed-price codes kept for compatibility
@@ -1017,7 +1021,8 @@ function CheckoutPageContent({
       if ((guestPromo || creatorPromoConfig) && billing === "lifetime") {
         const code     = guestPromo?.code     ?? promoParam ?? "";
         const label    = guestPromo?.label    ?? creatorPromoConfig?.displayLabel ?? "";
-        const discount = guestCreatorDiscount > 0 ? guestCreatorDiscount : (guestPromo?.discount ?? 0);
+        // Prefer server-validated discount (correct for both percent and fixed codes).
+        const discount = (guestPromo?.discount ?? 0) || guestCreatorDiscount;
         const discountedPrice = currentPlan.price - discount;
         setAppliedCoupon({ code, label, discount, finalPrice: discountedPrice });
         setCouponInput(code);
@@ -1081,7 +1086,8 @@ function CheckoutPageContent({
       if ((guestPromo || creatorPromoConfig) && billing === "lifetime") {
         const code     = guestPromo?.code     ?? promoParam ?? "";
         const label    = guestPromo?.label    ?? creatorPromoConfig?.displayLabel ?? "";
-        const discount = guestCreatorDiscount > 0 ? guestCreatorDiscount : (guestPromo?.discount ?? 0);
+        // Prefer server-validated discount (correct for both percent and fixed codes).
+        const discount = (guestPromo?.discount ?? 0) || guestCreatorDiscount;
         setAppliedCoupon({ code, label, discount, finalPrice: currentPlan.price - discount });
         setCouponInput(code);
       }
@@ -1170,16 +1176,16 @@ function CheckoutPageContent({
   const displayBase = (guestCreatorDiscount > 0 || !isAuthenticated)
     ? currentPlan.price
     : (appliedCoupon ? currentPlan.price : basePrice);
-  // For known creator promo codes the discount is always computed synchronously from
-  // creatorPromoConfig.discountPercent × currentPlan.price, so it is ALWAYS correct
-  // for the currently selected plan — regardless of auth state, async fetch timing,
-  // or in-flight race conditions.  For non-creator codes we fall back to the
-  // server/async-derived values.
-  const displayDiscount = guestCreatorDiscount > 0
-    ? guestCreatorDiscount
-    : (!isAuthenticated
-        ? ((guestPromo?.forAudience === audience) ? (guestPromo?.discount ?? 0) : 0)
-        : (appliedCoupon?.discount ?? discountAmount));
+  // Server-validated amounts always take priority (correct for both percent and fixed
+  // codes). Fall back to the client-side estimate (guestCreatorDiscount) only when no
+  // server value has arrived yet — this covers the brief window before validate-promo
+  // or createIntent responds.
+  const serverDiscount = !isAuthenticated
+    ? ((guestPromo?.forAudience === audience) ? (guestPromo?.discount ?? null) : null)
+    : (appliedCoupon ? (appliedCoupon.discount ?? discountAmount) : null);
+  const displayDiscount = serverDiscount !== null
+    ? serverDiscount
+    : (guestCreatorDiscount || discountAmount);
   const displayPrice    = displayBase - displayDiscount;
 
   // ── Left column ────────────────────────────────────────────────────────────

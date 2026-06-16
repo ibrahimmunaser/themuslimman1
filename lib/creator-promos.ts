@@ -51,10 +51,32 @@ export const CREATOR_PROMO_CODES: Record<string, CreatorPromoConfig> = {
     utm_campaign: "seerah_launch",
     utm_content: "deenresponds",
   },
+  // $20 fixed off: $79 − $20 = $59 individual, $149 − $20 = $129 family
+  DEEN20: {
+    code: "DEEN20",
+    discountPercent: 25.316, // display-only estimate ($20/$79); server uses fixed cents
+    displayLabel: "DEEN20 — $20 off lifetime access",
+    creator: "deenresponds",
+    utm_source: "youtube",
+    utm_medium: "influencer",
+    utm_campaign: "seerah_launch",
+    utm_content: "deenresponds",
+  },
   ORTHODOX: {
     code: "ORTHODOX",
     discountPercent: 20,
     displayLabel: "ORTHODOX — 20% off lifetime access",
+    creator: "theorthodoxmuslim",
+    utm_source: "youtube",
+    utm_medium: "influencer",
+    utm_campaign: "seerah_launch",
+    utm_content: "theorthodoxmuslim",
+  },
+  // $20 fixed off: $79 − $20 = $59 individual, $149 − $20 = $129 family
+  ORTHODOX20: {
+    code: "ORTHODOX20",
+    discountPercent: 25.316, // display-only estimate; server uses fixed cents
+    displayLabel: "ORTHODOX20 — $20 off lifetime access",
     creator: "theorthodoxmuslim",
     utm_source: "youtube",
     utm_medium: "influencer",

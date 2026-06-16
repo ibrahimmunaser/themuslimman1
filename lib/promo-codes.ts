@@ -52,9 +52,13 @@ const BUILT_IN_CODES: Record<string, PromoCode> = {
   // Community exclusive pricing — individual $49, family $99 (absolute final prices).
   COMMUNITY49:  { type: "absolute", value: 4900,  label: "$49 Community (Individual)", creatorOnly: true, planType: "individual" },
   COMMUNITY99:  { type: "absolute", value: 9900,  label: "$99 Community (Family)",     creatorOnly: true, planType: "family"     },
-  // Deen Responds exclusive pricing — individual $59, family $119 (absolute final prices).
+  // Deen Responds — $20 off any lifetime plan (individual or family).
+  DEEN20:    { type: "fixed",    value: 2000,  label: "$20 off (Deen Responds)",          creatorOnly: true },
+  // Legacy absolute codes kept for backward compatibility (recovery emails etc.)
   DEEN59:    { type: "absolute", value: 5900,  label: "$59 Deen Responds (Individual)",  creatorOnly: true, planType: "individual" },
   DEEN119:   { type: "absolute", value: 11900, label: "$119 Deen Responds (Family)",     creatorOnly: true, planType: "family"     },
+  // The Orthodox Muslim — $20 off any lifetime plan.
+  ORTHODOX20: { type: "fixed",   value: 2000,  label: "$20 off (The Orthodox Muslim)",   creatorOnly: true },
   BROWNIE59:  { type: "absolute", value: 5900,  label: "$59 Browniesaadi (Individual)",  creatorOnly: true, planType: "individual" },
   BROWNIE119: { type: "absolute", value: 11900, label: "$119 Browniesaadi (Family)",     creatorOnly: true, planType: "family"     },
   // Free-access codes are NOT hardcoded here. Configure them via two env vars:
