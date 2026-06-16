@@ -1850,29 +1850,32 @@ function CheckoutPageContent({
                 const code = appliedCoupon?.code ?? resolvedPromoParam ?? "";
                 const cfg = code ? getCreatorPromoConfig(code) : null;
                 const checkoutCreator = cfg?.creator ?? null;
+                const elementsAppearance = {
+                  theme: "night" as const,
+                  variables: {
+                    colorPrimary: "#f4c542",
+                    colorBackground: "#18181b",
+                    colorText: "#f4f4f5",
+                    colorDanger: "#ef4444",
+                    fontFamily: "ui-sans-serif, system-ui, sans-serif",
+                    borderRadius: "12px",
+                  },
+                };
+                // Stripe discriminated union: "setup" mode must not include amount.
+                const elementsOptions = billing === "trial"
+                  ? { mode: "setup" as const, currency: "usd", appearance: elementsAppearance }
+                  : {
+                      mode: "payment" as const,
+                      amount: finalPrice > 0 ? finalPrice : 1, // must be > 0 for payment mode
+                      currency: "usd",
+                      ...(billing === "monthly" ? { paymentMethodTypes: ["card", "link"] } : {}),
+                      appearance: elementsAppearance,
+                    };
                 return (
                   <Elements
                     stripe={stripePromise}
                     key={`${audience}-${billing}`}
-                    options={{
-                      mode: billing === "trial" ? "setup" : "payment",
-                      ...(billing !== "trial" && finalPrice > 0 ? { amount: finalPrice } : {}),
-                      currency: "usd",
-                      ...(billing === "monthly"
-                        ? { paymentMethodTypes: ["card", "link"] }
-                        : {}),
-                      appearance: {
-                        theme: "night",
-                        variables: {
-                          colorPrimary: "#f4c542",
-                          colorBackground: "#18181b",
-                          colorText: "#f4f4f5",
-                          colorDanger: "#ef4444",
-                          fontFamily: "ui-sans-serif, system-ui, sans-serif",
-                          borderRadius: "12px",
-                        },
-                      },
-                    }}
+                    options={elementsOptions}
                   >
                     {checkoutCreator && (
                       <CheckoutFunnelTracker
