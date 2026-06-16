@@ -298,7 +298,9 @@ export async function logout(): Promise<void> {
   const token = cookieStore.get(COOKIE_NAME)?.value;
 
   if (token) {
-    await prisma.session.delete({ where: { token: hashToken(token) } }).catch((err) => {
+    // deleteMany is idempotent — no error if the session row doesn't exist
+    // (guest-checkout users have a cookie but no DB session row).
+    await prisma.session.deleteMany({ where: { token: hashToken(token) } }).catch((err) => {
       console.error(`[AUTH] logout: Failed to delete session:`, err);
     });
   }
