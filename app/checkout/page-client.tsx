@@ -1868,7 +1868,7 @@ function CheckoutPageContent({
                       mode: "payment" as const,
                       amount: finalPrice > 0 ? finalPrice : 1, // must be > 0 for payment mode
                       currency: "usd",
-                      ...(billing === "monthly" ? { paymentMethodTypes: ["card", "link"] } : {}),
+                      ...(billing === "monthly" ? { paymentMethodTypes: ["card", "link", "upi"] } : {}),
                       appearance: elementsAppearance,
                     };
                 return (
