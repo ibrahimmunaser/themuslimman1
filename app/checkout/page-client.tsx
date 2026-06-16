@@ -1180,11 +1180,11 @@ function CheckoutPageContent({
   // codes). Fall back to the client-side estimate (guestCreatorDiscount) only when no
   // server value has arrived yet — this covers the brief window before validate-promo
   // or createIntent responds.
-  const serverDiscount = !isAuthenticated
+  const resolvedDiscount = !isAuthenticated
     ? ((guestPromo?.forAudience === audience) ? (guestPromo?.discount ?? null) : null)
     : (appliedCoupon ? (appliedCoupon.discount ?? discountAmount) : null);
-  const displayDiscount = serverDiscount !== null
-    ? serverDiscount
+  const displayDiscount = resolvedDiscount !== null
+    ? resolvedDiscount
     : (guestCreatorDiscount || discountAmount);
   const displayPrice    = displayBase - displayDiscount;
 
