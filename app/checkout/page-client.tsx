@@ -435,7 +435,10 @@ const COMMUNITY_CODE_MAP: Partial<Record<string, Record<"individual" | "family",
   BROWNIE119:   { individual: "BROWNIE59",    family: "BROWNIE119"   },
   ORTHODOX59:   { individual: "ORTHODOX59",   family: "ORTHODOX119"  },
   ORTHODOX119:  { individual: "ORTHODOX59",   family: "ORTHODOX119"  },
-  ANNARBOR29:   { individual: "ANNARBOR29",   family: "ANNARBOR119"  },
+  // Ann Arbor landing page pair: $29 individual ↔ $79 family
+  ANNARBOR29:   { individual: "ANNARBOR29",   family: "ANNARBOR79"   },
+  ANNARBOR79:   { individual: "ANNARBOR29",   family: "ANNARBOR79"   },
+  // Ann Arbor higher-tier pair: $59 individual ↔ $119 family
   ANNARBOR59:   { individual: "ANNARBOR59",   family: "ANNARBOR119"  },
   ANNARBOR119:  { individual: "ANNARBOR59",   family: "ANNARBOR119"  },
 };
@@ -1461,6 +1464,8 @@ function CheckoutPageContent({
             <form onSubmit={handleGuestCheckout} className="space-y-3">
               <input
                 type="text" placeholder="Full name" required
+                autoComplete="name"
+                inputMode="text"
                 value={authForm.fullName}
                 onChange={(e) => {
                   const name = e.target.value;
@@ -1471,6 +1476,8 @@ function CheckoutPageContent({
               />
               <input
                 type="email" placeholder="Email address" required
+                autoComplete="email"
+                inputMode="email"
                 value={authForm.email}
                 onChange={(e) => {
                   const email = e.target.value;
@@ -1486,7 +1493,10 @@ function CheckoutPageContent({
                   <p className="text-zinc-400 text-xs leading-relaxed">
                     Sign in to your student dashboard to manage your plan or upgrade.
                   </p>
-                  <a href="/signin" className="inline-flex items-center gap-1.5 text-gold text-xs font-semibold hover:text-gold-light transition-colors">
+                  <a
+                    href={`/login?redirect=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "/checkout")}`}
+                    className="inline-flex items-center gap-1.5 text-gold text-xs font-semibold hover:text-gold-light transition-colors"
+                  >
                     Go to sign in <ArrowRight className="w-3.5 h-3.5" />
                   </a>
                 </div>
@@ -1526,6 +1536,8 @@ function CheckoutPageContent({
               <form onSubmit={handleLogin} className="space-y-3">
                 <input
                   type="email" placeholder="Email address" required
+                  autoComplete="email"
+                  inputMode="email"
                   value={authForm.email}
                   onChange={(e) => setAuthForm((f) => ({ ...f, email: e.target.value }))}
                   className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm"

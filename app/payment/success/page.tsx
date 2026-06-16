@@ -25,6 +25,7 @@ function PaymentSuccessPageContent() {
   const sessionId = searchParams.get("session_id");
   const type = searchParams.get("type"); // "subscription" | "family" | "lifetime" | "family-lifetime" | null
   const billing = searchParams.get("billing"); // "trial" | "monthly" | null
+  const redirectStatus = searchParams.get("redirect_status"); // "succeeded" | "processing" | "failed"
   const preview = searchParams.get("preview"); // dev-only: bypass payment verification
 
   async function resendVerification() {
@@ -104,6 +105,15 @@ function PaymentSuccessPageContent() {
     // New Stripe Checkout Session lifetime payments (session_id in URL) — poll for access
     if (sessionId && (type === "lifetime" || type === "family-lifetime")) {
       const resolvedType: SuccessType = type === "family-lifetime" ? "family-lifetime" : "lifetime";
+      pollThenFinish(resolvedType);
+      return;
+    }
+
+    // If Stripe redirected with redirect_status=processing, the PaymentIntent is not
+    // yet confirmed — calling verify-payment would fail. Poll for access instead
+    // (the webhook will confirm and grant access when the payment settles).
+    if (redirectStatus === "processing") {
+      const resolvedType: SuccessType = type === "family" ? "family" : "lifetime";
       pollThenFinish(resolvedType);
       return;
     }

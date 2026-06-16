@@ -56,7 +56,19 @@ function getCacheStrategy(url) {
     return CACHE_STRATEGIES.documents;
   }
   
-  // API calls
+  // Never cache payment, auth, or any sensitive API routes — stale responses
+  // would cause false "access denied" results on the success page and break
+  // the check-access polling loop on slow mobile connections.
+  if (
+    pathname.startsWith("/api/stripe/") ||
+    pathname.startsWith("/api/auth/") ||
+    pathname.startsWith("/api/user/") ||
+    pathname.startsWith("/api/subscription/")
+  ) {
+    return null;
+  }
+
+  // Cache other API calls (non-sensitive public endpoints) briefly.
   if (pathname.startsWith("/api/")) {
     return CACHE_STRATEGIES.api;
   }

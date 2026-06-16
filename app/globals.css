@@ -912,3 +912,13 @@ audio, video {
     aspect-ratio: 9 / 16;
   }
 }
+
+/* iOS safe-area utilities — keeps sticky CTAs above the home indicator on notched iPhones */
+@layer utilities {
+  .safe-area-pb {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+  .safe-area-mb {
+    margin-bottom: max(0px, env(safe-area-inset-bottom));
+  }
+}
