@@ -597,6 +597,26 @@ model Subscription {
   @@index([userId])
 }
 
+model EmailAutomationEvent {
+  id        String   @id
+  userId    String
+  email     String
+  flowType  String   // e.g. "NO_PLAN_RECOVERY"
+  step      Int
+  subject   String
+  status    String   // "SENT" | "FAILED" | "SKIPPED"
+  sentAt    DateTime @default(now())
+  error     String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, flowType, step])
+  @@index([flowType, step])
+  @@index([sentAt])
+  @@index([status])
+  @@index([userId])
+}
+
 model InfluencerEvent {
   id        String   @id
   creator   String
@@ -654,6 +674,7 @@ model User {
   stripeCustomerId                                String?          @unique
   planType                                        String           @default("individual")
   activityLogs                                    ActivityLog[]
+  emailAutomationEvents                           EmailAutomationEvent[]
   GiftPurchase_GiftPurchase_claimedByUserIdToUser GiftPurchase[]   @relation("GiftPurchase_claimedByUserIdToUser")
   GiftPurchase_GiftPurchase_purchaserUserIdToUser GiftPurchase[]   @relation("GiftPurchase_purchaserUserIdToUser")
   learnerProfiles                                 LearnerProfile[]
