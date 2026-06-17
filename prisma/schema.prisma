@@ -597,6 +597,36 @@ model Subscription {
   @@index([userId])
 }
 
+model EmailOutreachLog {
+  id           String    @id
+  userId       String?
+  name         String
+  email        String
+  outreachType String    // "NO_PLAN_MANUAL"
+  subject      String
+  status       String    // "SENT" | "FAILED" | "SKIPPED"
+  sentAt       DateTime  @default(now())
+  error        String?
+  createdAt    DateTime  @default(now())
+  user         User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([email])
+  @@index([outreachType, status])
+  @@index([sentAt])
+  @@index([userId])
+}
+
+model EmailUnsubscribe {
+  id          String   @id
+  email       String   @unique
+  token       String   @unique
+  unsubscribedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  @@index([email])
+  @@index([token])
+}
+
 model EmailAutomationEvent {
   id        String   @id
   userId    String
@@ -675,6 +705,7 @@ model User {
   planType                                        String           @default("individual")
   activityLogs                                    ActivityLog[]
   emailAutomationEvents                           EmailAutomationEvent[]
+  emailOutreachLogs                               EmailOutreachLog[]
   GiftPurchase_GiftPurchase_claimedByUserIdToUser GiftPurchase[]   @relation("GiftPurchase_claimedByUserIdToUser")
   GiftPurchase_GiftPurchase_purchaserUserIdToUser GiftPurchase[]   @relation("GiftPurchase_purchaserUserIdToUser")
   learnerProfiles                                 LearnerProfile[]

@@ -12,6 +12,7 @@ import {
   MessageCircle,
   BookOpen,
   Mail,
+  Send,
 } from "lucide-react";
 import { ROLES, type Role } from "./roles";
 
@@ -37,6 +38,7 @@ export const ADMIN_NAV: NavItem[] = [
   { href: "/admin/content",    label: "Content Library", icon: Library },
   { href: "/admin/analytics",  label: "Analytics",       icon: BarChart3 },
   { href: "/admin/support",    label: "Support",         icon: MessageCircle },
+  { href: "/admin/email-outreach",   label: "Email Outreach",   icon: Send },
   { href: "/admin/email-automation", label: "Email Automation", icon: Mail },
   { href: "/admin/r2",         label: "R2 Storage",      icon: HardDrive },
   { href: "/admin/settings",   label: "Settings",        icon: ShieldCheck },
