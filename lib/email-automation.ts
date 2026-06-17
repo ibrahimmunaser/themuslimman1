@@ -136,20 +136,7 @@ export async function sendManualOutreachEmail(opts: {
   if (error) throw new Error(error.message ?? "Resend error");
 }
 
-function footer(year: number) {
-  return `
-    <div style="background:#f8f9fa;padding:20px;text-align:center;border-radius:0 0 12px 12px;border:1px solid #e5e5e5;border-top:none;">
-      <p style="font-size:12px;color:#999;margin:0;">
-        © ${year} TheMuslimMan · Complete Seerah
-      </p>
-      <p style="font-size:11px;color:#bbb;margin:6px 0 0 0;">
-        You received this because you created an account on TheMuslimMan.
-      </p>
-    </div>
-  `;
-}
-
-function buildStep1Html(firstName: string): string {
+function buildStep1Html(firstName: string, unsubscribeUrl: string): string {
   const year = new Date().getFullYear();
   const part1Url = `${APP_URL}/seerah?utm_source=email&utm_medium=no_plan_recovery&utm_campaign=no_plan_step_1`;
 
@@ -197,12 +184,20 @@ function buildStep1Html(firstName: string): string {
     </p>
   </div>
 
-  ${footer(year)}
+  <div style="background:#f8f9fa;padding:20px;text-align:center;border-radius:0 0 12px 12px;border:1px solid #e5e5e5;border-top:none;">
+    <p style="font-size:12px;color:#999;margin:0 0 6px 0;">
+      © ${year} TheMuslimMan · Complete Seerah
+    </p>
+    <p style="font-size:11px;color:#bbb;margin:0;">
+      You received this because you created an account on TheMuslimMan.
+      <a href="${unsubscribeUrl}" style="color:#aaa;">Unsubscribe</a>
+    </p>
+  </div>
 </body>
 </html>`;
 }
 
-function buildStep2Html(firstName: string): string {
+function buildStep2Html(firstName: string, unsubscribeUrl: string): string {
   const year = new Date().getFullYear();
   const part1Url = `${APP_URL}/seerah?utm_source=email&utm_medium=no_plan_recovery&utm_campaign=no_plan_step_2`;
   const plansUrl = `${APP_URL}/pricing?utm_source=email&utm_medium=no_plan_recovery&utm_campaign=no_plan_step_2`;
@@ -258,7 +253,15 @@ function buildStep2Html(firstName: string): string {
     </p>
   </div>
 
-  ${footer(year)}
+  <div style="background:#f8f9fa;padding:20px;text-align:center;border-radius:0 0 12px 12px;border:1px solid #e5e5e5;border-top:none;">
+    <p style="font-size:12px;color:#999;margin:0 0 6px 0;">
+      © ${year} TheMuslimMan · Complete Seerah
+    </p>
+    <p style="font-size:11px;color:#bbb;margin:0;">
+      You received this because you created an account on TheMuslimMan.
+      <a href="${unsubscribeUrl}" style="color:#aaa;">Unsubscribe</a>
+    </p>
+  </div>
 </body>
 </html>`;
 }
@@ -272,6 +275,9 @@ export async function sendNoPlanRecoveryEmail(opts: {
   const { email, fullName, step } = opts;
   const firstName = (fullName ?? "").split(" ")[0] ?? "";
 
+  const unsubToken     = await getOrCreateUnsubscribeToken(email);
+  const unsubscribeUrl = buildUnsubscribeUrl(unsubToken);
+
   const resend = new Resend(process.env.RESEND_API_KEY);
 
   const subject =
@@ -279,7 +285,9 @@ export async function sendNoPlanRecoveryEmail(opts: {
       ? "The first lesson is unlocked"
       : "Most Muslims learn scattered stories";
 
-  const html = step === 1 ? buildStep1Html(firstName) : buildStep2Html(firstName);
+  const html = step === 1
+    ? buildStep1Html(firstName, unsubscribeUrl)
+    : buildStep2Html(firstName, unsubscribeUrl);
 
   const { error } = await resend.emails.send({
     from: FROM,

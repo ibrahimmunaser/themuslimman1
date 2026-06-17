@@ -31,9 +31,12 @@ async function checkEligibility(r: Recipient, override: boolean): Promise<string
   const block = isBlockedEmail(r.email);
   if (block) return block;
 
-  // Unsubscribed
-  const unsub = await prisma.emailUnsubscribe.findUnique({ where: { email: r.email } });
-  if (unsub) return "unsubscribed";
+  // Unsubscribed (only if user actively clicked the unsubscribe link)
+  const unsub = await prisma.emailUnsubscribe.findUnique({
+    where:  { email: r.email },
+    select: { unsubscribed: true },
+  });
+  if (unsub?.unsubscribed) return "unsubscribed";
 
   // Already emailed (unless override)
   if (!override) {
@@ -84,13 +87,8 @@ export async function POST(req: NextRequest) {
       skipped++;
 
       if (!dryRun) {
-        await prisma.emailOutreachLog.upsert({
-          where: {
-            // use a composed unique on email+outreachType — emulate with findFirst + create
-            // (no unique constraint on those two together, so we just create always for SKIPPED)
-            id: `${r.email}-${OUTREACH_TYPE}-skip-${Date.now()}`,
-          },
-          create: {
+        await prisma.emailOutreachLog.create({
+          data: {
             id:          crypto.randomUUID(),
             userId:      r.userId,
             name:        r.name,
@@ -100,7 +98,6 @@ export async function POST(req: NextRequest) {
             status:      "SKIPPED",
             error:       skipReason,
           },
-          update: {},
         });
       }
       continue;

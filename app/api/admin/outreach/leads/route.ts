@@ -90,7 +90,7 @@ export async function GET(req: NextRequest) {
   // Collect all emails for unsubscribe check in one query
   const emails = users.map((u) => u.email);
   const unsubscribed = await prisma.emailUnsubscribe.findMany({
-    where:  { email: { in: emails } },
+    where:  { email: { in: emails }, unsubscribed: true },
     select: { email: true },
   });
   const unsubSet = new Set(unsubscribed.map((u) => u.email));
@@ -147,6 +147,7 @@ export async function GET(req: NextRequest) {
       ...(noPlanOnly ? {
         hasPaid: false,
         purchases:     { none: { status: "succeeded" } },
+        subscriptions: { none: { status: { in: [...ACTIVE_SUBSCRIPTION_STATUSES], currentPeriodEnd: { gte: now } } as never } },
       } : {}),
       ...(neverEmailed ? {
         emailOutreachLogs: { none: { outreachType: "NO_PLAN_MANUAL" } },

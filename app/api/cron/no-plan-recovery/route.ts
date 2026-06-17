@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { hasActiveCourseAccess } from "@/lib/access";
-import { sendNoPlanRecoveryEmail } from "@/lib/email-automation";
+import { sendNoPlanRecoveryEmail, isBlockedEmail } from "@/lib/email-automation";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -84,6 +84,12 @@ export async function GET(req: NextRequest) {
     results.step1.eligible = candidates.length;
 
     for (const user of candidates) {
+      // Skip blocked/test emails.
+      if (isBlockedEmail(user.email)) {
+        results.step1.skipped++;
+        continue;
+      }
+
       // Skip if they already have paid access.
       const hasPaid = await userHasPaidAccess(user.id);
       if (hasPaid) {
@@ -184,6 +190,12 @@ export async function GET(req: NextRequest) {
 
     for (const event of step1Events) {
       const user = event.user;
+
+      // Skip blocked/test emails.
+      if (isBlockedEmail(user.email)) {
+        results.step2.skipped++;
+        continue;
+      }
 
       const hasPaid = await userHasPaidAccess(user.id);
       if (hasPaid) {

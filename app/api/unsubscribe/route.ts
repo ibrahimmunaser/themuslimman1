@@ -21,7 +21,14 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(`${appUrl}/?unsubscribed=invalid`);
   }
 
-  // Already unsubscribed — idempotent
+  // Mark as unsubscribed (idempotent — safe to click multiple times)
+  if (!existing.unsubscribed) {
+    await prisma.emailUnsubscribe.update({
+      where: { token },
+      data:  { unsubscribed: true, unsubscribedAt: new Date() },
+    });
+  }
+
   return NextResponse.redirect(`${appUrl}/?unsubscribed=1`);
 }
 

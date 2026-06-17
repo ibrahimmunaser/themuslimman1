@@ -617,14 +617,16 @@ model EmailOutreachLog {
 }
 
 model EmailUnsubscribe {
-  id          String   @id
-  email       String   @unique
-  token       String   @unique
-  unsubscribedAt DateTime @default(now())
-  createdAt   DateTime @default(now())
+  id             String    @id
+  email          String    @unique
+  token          String    @unique
+  unsubscribed   Boolean   @default(false)
+  unsubscribedAt DateTime?
+  createdAt      DateTime  @default(now())
 
   @@index([email])
   @@index([token])
+  @@index([unsubscribed])
 }
 
 model EmailAutomationEvent {

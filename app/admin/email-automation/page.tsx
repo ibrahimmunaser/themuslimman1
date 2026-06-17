@@ -287,7 +287,7 @@ export default function EmailAutomationPage() {
           <p><strong className="text-text">Step 1</strong> — Sent 3 hours after verified signup. Subject: "The first lesson is unlocked". CTA: Watch Part 1 Free.</p>
           <p><strong className="text-text">Step 2</strong> — Sent 24 hours after Step 1. Subject: "Most Muslims learn scattered stories". CTAs: Continue Part 1 + View Plans.</p>
           <p><strong className="text-text">Stop condition</strong> — Flow stops immediately once the user purchases any plan. Max 2 emails.</p>
-          <p><strong className="text-text">Schedule</strong> — Cron runs every hour automatically.</p>
+          <p><strong className="text-text">Schedule</strong> — Cron runs daily at 8:00 AM UTC automatically.</p>
         </div>
       </div>
     </div>
