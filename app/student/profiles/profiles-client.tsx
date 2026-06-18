@@ -449,7 +449,6 @@ export function ProfilesClient({
             <p className="text-sm font-semibold text-amber-400 mb-1">Want profiles for the whole family?</p>
             <p className="text-xs text-zinc-500 mb-3">Family Access gives up to 5 separate learner profiles with independent progress tracking.</p>
             {hasLifetime ? (
-              {/* Lifetime holders upgrade by paying the $50 difference — go straight to family-lifetime checkout. */}
               <Link href="/checkout?plan=family-lifetime" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-black text-sm font-bold transition-colors">
                 Upgrade to Family — $50 <ChevronRight className="w-3.5 h-3.5" />
               </Link>
