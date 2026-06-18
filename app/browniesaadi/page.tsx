@@ -38,7 +38,7 @@ export default async function BrowniesaadiPage() {
         individualUrl={INDIVIDUAL_URL}
         familyUrl={FAMILY_URL}
         individualPriceCents={4900}
-        familyPriceCents={7900}
+        familyPriceCents={9900}
         sponsorVideoUrl={videoUrl}
         videoSectionLabel="Why Brownie Saadi recommended this"
         individualMonthlyUrl={INDIVIDUAL_MONTHLY_URL}

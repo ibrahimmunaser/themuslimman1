@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { validatePromoCode, applyDiscount } from "@/lib/promo-codes";
 import { PLANS } from "@/lib/stripe-config";
 
-/** Individual lifetime price in cents ($79). */
+/** Individual lifetime price in cents ($49). */
 const INDIVIDUAL_BASE_PRICE = PLANS.complete.price;
 import { checkRateLimit, getIP } from "@/lib/rate-limit";
 
@@ -11,8 +11,8 @@ import { checkRateLimit, getIP } from "@/lib/rate-limit";
  *
  * Validates a promo code server-side.
  * Returns discount details based on the CURRENT base price for the requested plan.
- *   plan=family     → uses family lifetime price ($149)
- *   plan=individual → uses individual lifetime price ($79)
+ *   plan=family     → uses family lifetime price ($99)
+ *   plan=individual → uses individual lifetime price ($49)
  */
 export async function GET(request: NextRequest) {
   // Rate limit: 10 attempts per 5 minutes per IP to prevent brute-force enumeration.

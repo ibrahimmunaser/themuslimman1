@@ -94,7 +94,7 @@ export default async function CheckoutPage({ searchParams }: Props) {
   // in sync with stripe-config.ts. Never hardcode prices here.
   const planBasePrice: Record<string, number> = {
     "individual-lifetime": PLANS.complete.price,      // $49
-    "family-lifetime":     PLANS.family.price,        // $79
+    "family-lifetime":     PLANS.family.price,        // $99
     "individual-monthly":  PLANS.monthly.price,       // $4.99
     "family-monthly":      PLANS.familyMonthly.price, // $9.99
     "individual-trial":    0,

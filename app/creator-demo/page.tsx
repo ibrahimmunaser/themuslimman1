@@ -424,7 +424,7 @@ export default async function CreatorDemoPage({ searchParams }: PageProps) {
             <div className="flex items-center justify-between mb-3">
               <div>
                 <p className="text-xs font-bold text-gold/80 uppercase tracking-wider">Individual</p>
-                <p className="text-2xl font-extrabold text-text mt-0.5">$79 <span className="text-sm font-normal text-text-muted">once</span></p>
+                <p className="text-2xl font-extrabold text-text mt-0.5">$49 <span className="text-sm font-normal text-text-muted">once</span></p>
               </div>
               <span className="text-[11px] bg-gold/15 border border-gold/30 text-gold px-2.5 py-1 rounded-full font-bold">Lifetime</span>
             </div>
@@ -433,7 +433,7 @@ export default async function CreatorDemoPage({ searchParams }: PageProps) {
               href="/checkout?plan=individual&billing=lifetime"
               className="flex items-center justify-center gap-2 w-full mt-4 bg-gold hover:bg-gold-light text-ink font-bold text-sm px-5 py-3.5 rounded-xl transition-colors"
             >
-              Get Lifetime Access — $79
+              Get Lifetime Access — $49
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
@@ -443,7 +443,7 @@ export default async function CreatorDemoPage({ searchParams }: PageProps) {
             <div className="flex items-center justify-between mb-3">
               <div>
                 <p className="text-xs font-bold text-text-muted uppercase tracking-wider">Family</p>
-                <p className="text-xl font-extrabold text-text mt-0.5">$149 <span className="text-sm font-normal text-text-muted">once</span></p>
+                <p className="text-xl font-extrabold text-text mt-0.5">$99 <span className="text-sm font-normal text-text-muted">once</span></p>
               </div>
               <span className="text-[11px] bg-surface-raised border border-border/50 text-text-muted px-2.5 py-1 rounded-full font-medium">5 Profiles</span>
             </div>
@@ -452,7 +452,7 @@ export default async function CreatorDemoPage({ searchParams }: PageProps) {
               href="/checkout?plan=family&billing=lifetime"
               className="flex items-center justify-center gap-2 w-full mt-4 bg-surface-raised border border-border/60 text-text text-sm font-semibold px-5 py-3 rounded-xl hover:border-gold/40 transition-colors"
             >
-              Get Family Access — $149
+              Get Family Access — $99
               <ChevronRight className="w-4 h-4 text-text-muted" />
             </Link>
           </div>

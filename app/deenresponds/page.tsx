@@ -38,7 +38,7 @@ export default async function DeenRespondsPage() {
         individualUrl={INDIVIDUAL_URL}
         familyUrl={FAMILY_URL}
         individualPriceCents={4900}
-        familyPriceCents={7900}
+        familyPriceCents={9900}
         sponsorVideoUrl={videoUrl}
         videoSectionLabel="Why Deen Responds recommended this"
         videoAspectClass="aspect-video"

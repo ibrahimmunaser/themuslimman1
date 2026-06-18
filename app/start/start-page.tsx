@@ -51,7 +51,7 @@ function Part1Btn({
 // ─── Sticky bottom bar ────────────────────────────────────────────────────────
 function StickyBar() {
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 bg-surface/95 backdrop-blur-sm border-t border-border shadow-2xl shadow-black/50">
+    <div className="fixed bottom-0 left-0 right-0 z-40 bg-surface/95 backdrop-blur-sm border-t border-border shadow-2xl shadow-black/50 md:hidden">
       <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
         {/* Left: simple label */}
         <p className="text-sm font-semibold text-text whitespace-nowrap">
@@ -242,20 +242,9 @@ export function StartPage({ preview }: { preview?: ReactNode }) {
           </div>
         </section>
 
-        {/* ── Mid-funnel CTA ────────────────────────────────────────────────── */}
-        <section className="max-w-2xl mx-auto px-4 py-16 text-center">
-          <h2 className="text-xl sm:text-2xl font-bold text-text mb-3">
-            Start with Part 1 free
-          </h2>
-          <p className="text-text-secondary text-sm sm:text-base mb-7 max-w-md mx-auto">
-            Begin with the first lesson and see how the course works before choosing a plan.
-          </p>
-          <Part1Btn size="md" />
-          <p className="mt-3 text-xs text-text-muted">No card needed. Start in under 30 seconds.</p>
-        </section>
 
         {/* ── Pricing preview ───────────────────────────────────────────────── */}
-        <section className="bg-surface border-t border-border py-14">
+        <section className="bg-ink border-t border-border py-14">
           <div className="max-w-4xl mx-auto px-4">
             <h2 className="text-xl sm:text-2xl font-bold text-text text-center mb-2">
               Continue the full course
@@ -276,7 +265,7 @@ export function StartPage({ preview }: { preview?: ReactNode }) {
                   className={`rounded-2xl border p-5 ${
                     plan.featured
                       ? "border-gold/40 bg-gold-bg"
-                      : "border-border bg-surface-raised"
+                      : "border-border bg-surface"
                   }`}
                 >
                   <div className="flex items-start justify-between mb-4">
@@ -311,7 +300,7 @@ export function StartPage({ preview }: { preview?: ReactNode }) {
         </section>
 
         {/* ── Footer ────────────────────────────────────────────────────────── */}
-        <footer className="py-10 text-center border-t border-border/40">
+        <footer className="bg-ink py-10 text-center border-t border-border/40">
           <Link href="/" className="inline-block mb-4">
             <Image
               src="/images/logoicon.png"

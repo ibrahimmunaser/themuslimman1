@@ -164,7 +164,7 @@ export default async function AnnArborPage() {
         individualLifetimeUrl={CHECKOUT_URL}
         familyLifetimeUrl={FAMILY_URL}
         individualLifetimePriceCents={4900}
-        familyLifetimePriceCents={7900}
+        familyLifetimePriceCents={9900}
       />
 
       {/* ── Proof / value ─────────────────────────────────────────────────── */}

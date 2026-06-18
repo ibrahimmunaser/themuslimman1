@@ -33,7 +33,7 @@ export default async function CommunityPage() {
         individualUrl={INDIVIDUAL_URL}
         familyUrl={FAMILY_URL}
         individualPriceCents={4900}
-        familyPriceCents={7900}
+        familyPriceCents={9900}
         individualMonthlyUrl={INDIVIDUAL_MONTHLY_URL}
         familyMonthlyUrl={FAMILY_MONTHLY_URL}
       />
