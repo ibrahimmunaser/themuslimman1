@@ -34,7 +34,7 @@ export default async function CheckoutPage({ searchParams }: Props) {
   // attempting a legitimate upgrade to a family plan.
   //
   //  Individual lifetime holders can only:
-  //    • /checkout?plan=family-lifetime  — upgrade to family lifetime ($30 diff)
+  //    • /checkout?plan=family-lifetime  — upgrade to family lifetime ($50 diff)
   //
   //  family-trial and family-monthly are redirected to family-lifetime because:
   //   - The free trial is one-per-account
@@ -92,9 +92,13 @@ export default async function CheckoutPage({ searchParams }: Props) {
 
   // Base price for the selected plan — always sourced from PLANS so this stays
   // in sync with stripe-config.ts. Never hardcode prices here.
+  // For lifetime upgrades (individual → family), use the upgrade difference price
+  // so the correct amount is shown immediately without waiting for the API response.
   const planBasePrice: Record<string, number> = {
     "individual-lifetime": PLANS.complete.price,      // $49
-    "family-lifetime":     PLANS.family.price,        // $99
+    "family-lifetime":     isLifetimeUpgrade
+                             ? PLANS.family.upgradeFromLifetimePrice  // $50 upgrade diff
+                             : PLANS.family.price,                    // $99 new purchase
     "individual-monthly":  PLANS.monthly.price,       // $4.99
     "family-monthly":      PLANS.familyMonthly.price, // $9.99
     "individual-trial":    0,
