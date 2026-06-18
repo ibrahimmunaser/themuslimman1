@@ -31,10 +31,18 @@ interface VideoPlayerProps {
   initialVideoPercent?: number;
 }
 
+// Crop the intro: skip the first N seconds of every video.
+// Part 7 has a longer intro; all others use the default.
+function getVideoStartOffset(partNumber?: number): number {
+  if (partNumber === 7) return 6;
+  return 2;
+}
+
 export function VideoPlayer({ src, title, poster, partNumber, previewMode, initialVideoPercent }: VideoPlayerProps) {
   const videoRef        = useRef<HTMLVideoElement>(null);
   const overlayAudioRef = useRef<HTMLAudioElement | null>(null);
   const reportedRef     = useRef<Set<number>>(new Set());
+  const startOffset     = getVideoStartOffset(partNumber);
   // High-water mark of the furthest position watched (0–100). Prevents
   // forward-seeking beyond what the user has genuinely watched.
   // Tracks whether the player auto-muted due to a MUTED_SEGMENTS rule,
@@ -98,8 +106,18 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
   const handleTimeUpdate = useCallback(() => {
     if (!videoRef.current) return;
     const currentTime = videoRef.current.currentTime;
-    const pct = (currentTime / videoRef.current.duration) * 100;
-    const rounded = isNaN(pct) ? 0 : Math.round(pct);
+
+    // Snap back if video somehow drifts before the intro cutoff.
+    if (currentTime < startOffset) {
+      videoRef.current.currentTime = startOffset;
+      return;
+    }
+
+    // Progress is relative to the cropped range [startOffset, duration].
+    const playable = videoRef.current.duration - startOffset;
+    const elapsed  = currentTime - startOffset;
+    const pct = playable > 0 ? (elapsed / playable) * 100 : 0;
+    const rounded = isNaN(pct) ? 0 : Math.min(100, Math.round(pct));
     setProgress(rounded);
 
 
@@ -177,6 +195,10 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
     if (playing) {
       videoRef.current.pause();
     } else {
+      // Guard: never start before the intro cutoff.
+      if (videoRef.current.currentTime < startOffset) {
+        videoRef.current.currentTime = startOffset;
+      }
       videoRef.current.play();
       setStarted(true);
     }
@@ -188,7 +210,8 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
     const duration = videoRef.current.duration;
     if (!isFinite(duration) || duration <= 0) return;
     const clickedPct = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
-    videoRef.current.currentTime = clickedPct * duration;
+    // Map 0–100% of the seek bar to [startOffset, duration].
+    videoRef.current.currentTime = startOffset + clickedPct * (duration - startOffset);
   };
 
   const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -269,9 +292,11 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
         onClick={handleVideoTap}
         onTouchEnd={handleVideoTap}
         onLoadedMetadata={() => {
-          if (videoRef.current) {
-            videoRef.current.volume = volume;
-          }
+          const vid = videoRef.current;
+          if (!vid) return;
+          vid.volume = volume;
+          // Jump past the intro as soon as metadata is available.
+          if (vid.currentTime < startOffset) vid.currentTime = startOffset;
         }}
         onTimeUpdate={handleTimeUpdate}
         onError={() => setVideoError(true)}
@@ -372,7 +397,7 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
 
           {/* Rewind 10s — 44px */}
           <button
-            onClick={() => { if (videoRef.current) videoRef.current.currentTime = Math.max(0, videoRef.current.currentTime - 10); }}
+            onClick={() => { if (videoRef.current) videoRef.current.currentTime = Math.max(startOffset, videoRef.current.currentTime - 10); }}
             className="relative min-w-[44px] min-h-[44px] flex items-center justify-center text-white/70 hover:text-white transition-colors"
             aria-label="Rewind 10 seconds"
           >
