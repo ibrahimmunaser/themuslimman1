@@ -1536,7 +1536,7 @@ function CheckoutPageContent({
                     onClick={() => { setTrialAlreadyUsed(false); setAudience("family"); setBilling("lifetime"); }}
                     className="inline-flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl border border-amber-500/40 hover:border-amber-500/70 text-amber-400 font-semibold text-sm transition-colors"
                   >
-                    Family Lifetime — $79 one-time
+                    Family Lifetime — $99 one-time
                   </button>
                 </div>
               </div>

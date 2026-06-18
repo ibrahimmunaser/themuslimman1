@@ -91,12 +91,12 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
 
   // Compute the expected upgrade cost server-side so the billing page shows the right number.
   // If the user's individual promo maps to a family promo, the upgrade = discounted_family − paid.
-  // Otherwise it's the standard $70 (full $149 − full $79).
-  let upgradeCostCents: number = PLANS.family.upgradeFromLifetimePrice; // $70 default
+  // Otherwise it's the standard $50 (full $99 − full $49).
+  let upgradeCostCents: number = PLANS.family.upgradeFromLifetimePrice; // $50 default
   // familyReferenceCents = what the user would pay for Family if buying fresh today
-  // (discounted family price with their promo, or full $149 if no promo applies).
+  // (discounted family price with their promo, or full $99 if no promo applies).
   // Used as the strikethrough "instead of X" reference in the upgrade card.
-  let familyReferenceCents: number = PLANS.family.price; // $149 default
+  let familyReferenceCents: number = PLANS.family.price; // $99 default
   if (familyPromoCode) {
     const familyPromo = validatePromoCode(familyPromoCode);
     if (familyPromo) {
@@ -310,7 +310,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-text">Upgrade to Family Lifetime</p>
                 <p className="text-sm text-text-secondary mt-1 leading-relaxed">
-                  Stop paying monthly. Get permanent Family Access for a one-time payment of $149 —
+                  Stop paying monthly. Get permanent Family Access for a one-time payment of $99 —
                   the same 5 learner profiles, separate progress for every course asset, lifetime access.
                 </p>
                 <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -318,7 +318,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
                     href="/checkout?plan=family&billing=lifetime"
                     className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gold hover:bg-gold-light text-black font-bold text-sm transition-colors shadow-sm"
                   >
-                    Upgrade for $149
+                    Upgrade for $99
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                   <span className="text-xs text-text-muted">One-time · Monthly subscription cancelled automatically</span>
@@ -378,14 +378,14 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
                   <p className="font-semibold text-text">Upgrade to Individual Lifetime</p>
                   <p className="text-sm text-text-secondary mt-1 leading-relaxed">
                     Stop paying monthly. Get permanent access to all 100 Seerah parts for a one-time
-                    payment of $79 — no more recurring charges, yours forever.
+                    payment of $49 — no more recurring charges, yours forever.
                   </p>
                   <div className="mt-4 flex flex-wrap items-center gap-3">
                     <Link
                       href="/checkout?plan=individual-lifetime"
                       className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gold hover:bg-gold-light text-black font-bold text-sm transition-colors shadow-sm"
                     >
-                      Lifetime Access — $79
+                      Lifetime Access — $49
                       <ArrowRight className="w-4 h-4" />
                     </Link>
                     <span className="text-xs text-text-muted">One-time · Subscription cancelled automatically</span>
@@ -411,7 +411,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
                       href="/checkout?plan=family-lifetime"
                       className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm transition-colors shadow-sm"
                     >
-                      Lifetime — $149
+                      Lifetime — $99
                       <ArrowRight className="w-4 h-4" />
                     </Link>
                     <UpgradeToFamilyMonthlyButton />

@@ -23,11 +23,11 @@ export const dynamic = "force-dynamic";
 export const metadata = {
   title: "Complete Seerah | Learn the Life of Prophet Muhammad ﷺ",
   description:
-    "Learn the life of Prophet Muhammad ﷺ in order — 100 lessons, one connected story. Lifetime access for $79. One-time payment, no subscription.",
+    "Learn the life of Prophet Muhammad ﷺ in order — 100 lessons, one connected story. Lifetime access for $49. One-time payment, no subscription.",
   openGraph: {
     title: "Complete Seerah | Learn the Life of Prophet Muhammad ﷺ",
     description:
-      "Learn the life of Prophet Muhammad ﷺ in order — 100 lessons, one connected story. Lifetime access for $79.",
+      "Learn the life of Prophet Muhammad ﷺ in order — 100 lessons, one connected story. Lifetime access for $49.",
     url: process.env.NEXT_PUBLIC_APP_URL ?? "https://themuslimman.com",
     siteName: "Complete Seerah",
   },
@@ -390,7 +390,7 @@ export default async function LandingPage() {
               },
               {
                 q: "What are my options?",
-                a: "Individual Membership is $4.99/month (cancel anytime). Family Membership is $9.99/month for up to 5 learner profiles. If you prefer to pay once, individual lifetime is $79 and family lifetime is $149 — no recurring charges.",
+                a: "Individual Membership is $4.99/month (cancel anytime). Family Membership is $9.99/month for up to 5 learner profiles. If you prefer to pay once, individual lifetime is $49 and family lifetime is $99 — no recurring charges.",
               },
               {
                 q: "Is the course self-paced?",

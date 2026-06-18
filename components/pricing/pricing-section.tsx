@@ -211,7 +211,7 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
 
               <div className="mb-5">
                 <div className="flex items-baseline gap-1.5 mb-0.5">
-                  <span className="text-4xl font-bold text-text">$79</span>
+                  <span className="text-4xl font-bold text-text">$49</span>
                   <span className="text-sm text-text-muted">one-time</span>
                 </div>
                 <p className="text-xs text-text-secondary">Pay once · access forever</p>
@@ -242,7 +242,7 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
                     href="/checkout?plan=individual-lifetime"
                     className={buttonClass("primary", "lg", "w-full justify-center shadow-lg shadow-gold/20")}
                   >
-                    Get Lifetime Access — $79
+                    Get Lifetime Access — $49
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                   <Link
@@ -281,7 +281,7 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
 
               <div className="mb-5">
                 <div className="flex items-baseline gap-1.5 mb-0.5">
-                  <span className="text-4xl font-bold text-text">$149</span>
+                  <span className="text-4xl font-bold text-text">$99</span>
                   <span className="text-sm text-text-muted">one-time</span>
                 </div>
                 <p className="text-xs text-text-secondary">One payment for the whole household</p>
@@ -314,7 +314,7 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
                     href="/checkout?plan=family-lifetime"
                     className={buttonClass("primary", "lg", "w-full justify-center shadow-lg shadow-gold/20")}
                   >
-                    Get Family Lifetime — $149
+                    Get Family Lifetime — $99
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                   <Link
@@ -358,6 +358,7 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
                 Start at $4.99/month →
               </button>
             </>
+
           )}
         </p>
 

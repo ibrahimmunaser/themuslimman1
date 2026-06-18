@@ -400,7 +400,7 @@ function FamilyCheckoutContent({
             </div>
             <p className="text-xs text-gold/80 mt-2 flex items-center gap-1.5">
               <ArrowUpCircle className="w-3.5 h-3.5 flex-shrink-0" />
-                  You&apos;ve already paid $79 for Individual Lifetime — you&apos;re only paying the $70 difference.
+                  You&apos;ve already paid $49 for Individual Lifetime — you&apos;re only paying the $50 difference.
             </p>
           </div>
         ) : cycle === "lifetime" ? (

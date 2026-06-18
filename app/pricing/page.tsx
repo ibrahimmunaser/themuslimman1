@@ -110,7 +110,7 @@ const OUTCOMES = [
 const FAQ_ITEMS = [
   {
     q: "What are my options?",
-    a: "Individual Membership is $4.99/month — cancel anytime. Family Membership is $9.99/month for up to 5 learner profiles. If you prefer to pay once, individual lifetime is $79 and family lifetime is $149.",
+    a: "Individual Membership is $4.99/month — cancel anytime. Family Membership is $9.99/month for up to 5 learner profiles. If you prefer to pay once, individual lifetime is $49 and family lifetime is $99.",
   },
   {
     q: "Can I cancel the monthly plan anytime?",
@@ -228,7 +228,7 @@ export default async function PricingPage() {
             <p className="text-xs text-text-muted">
               Cancel anytime ·{" "}
               <Link href="/checkout?plan=individual-lifetime" className="text-gold/70 hover:text-gold transition-colors underline underline-offset-2">
-                Prefer to pay once? Lifetime from $79
+                Prefer to pay once? Lifetime from $49
               </Link>
             </p>
           </FadeUp>

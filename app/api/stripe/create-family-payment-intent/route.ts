@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     // NEW (correct): hasLifetime && user.planType === "family"
     //   → hasLifetime = user.hasPaid || has a succeeded Purchase row, which is true only
     //     for actual lifetime buyers. Family Monthly users have hasPaid=false and no Purchase
-    //     row, so they pass through and can buy Family Lifetime at $149.
+    //     row, so they pass through and can buy Family Lifetime at $99.
     const accessInfo = await getUserAccessInfo(user.id, user.hasPaid);
     if (accessInfo.hasLifetime && user.planType === "family") {
       return NextResponse.json(
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
           select: { amount: true },
           orderBy: { createdAt: "asc" }, // earliest = the original individual purchase
         });
-        const individualPaid = individualPurchase?.amount ?? PLANS.complete.price; // fallback $79
+        const individualPaid = individualPurchase?.amount ?? PLANS.complete.price; // fallback $49
         baseAmount  = discountedFamilyPrice;
         finalAmount = Math.max(0, discountedFamilyPrice - individualPaid);
         promoDiscountAmount = baseAmount - finalAmount;
@@ -114,10 +114,10 @@ export async function POST(request: NextRequest) {
       }
       appliedPromoCode = promoCode.trim().toUpperCase();
     } else {
-      // No promo: upgrade pays fixed $30 diff (full $79 − full $49); new purchase pays $79.
+      // No promo: upgrade pays fixed $50 diff (full $99 − full $49); new purchase pays $99.
       baseAmount  = isEligibleForUpgradePrice
-        ? FAMILY_PLAN.upgradeFromLifetimePrice  // 7000 cents = $70
-        : FAMILY_PLAN.price;                    // 14900 cents = $149
+        ? FAMILY_PLAN.upgradeFromLifetimePrice  // 5000 cents = $50
+        : FAMILY_PLAN.price;                    // 9900 cents = $99
       finalAmount = baseAmount;
     }
 
