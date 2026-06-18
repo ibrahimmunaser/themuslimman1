@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, type ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { track } from "@vercel/analytics";
 import {
   Play, HelpCircle, Layers, TrendingUp, ChevronDown,
   Video, FileText, GitBranch, Users, List,
-  BookOpen, BarChart2, CheckCircle, Clock,
+  BookOpen, BarChart2, Clock,
 } from "lucide-react";
 
 const PART1_URL  = "/pricing#preview";
@@ -48,105 +48,6 @@ function Part1Btn({
   );
 }
 
-// ─── Product mockup card ──────────────────────────────────────────────────────
-function ProductMockup() {
-  return (
-    <div className="w-full max-w-2xl mx-auto rounded-2xl border border-border bg-surface overflow-hidden shadow-2xl shadow-black/40">
-      {/* Window chrome */}
-      <div className="flex items-center gap-1.5 px-4 py-3 bg-surface-raised border-b border-border">
-        <div className="w-2.5 h-2.5 rounded-full bg-border" />
-        <div className="w-2.5 h-2.5 rounded-full bg-border" />
-        <div className="w-2.5 h-2.5 rounded-full bg-border" />
-        <span className="ml-3 text-xs text-text-muted">themuslimman.com · Part 1</span>
-      </div>
-
-      {/* Video area */}
-      <div className="relative bg-black aspect-video flex items-center justify-center border-b border-border">
-        <div className="absolute inset-0 bg-gradient-to-br from-surface-raised/80 to-black/90" />
-        {/* Lesson title overlay */}
-        <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
-          <span className="text-xs font-semibold text-gold bg-gold/10 border border-gold/25 px-2.5 py-1 rounded-full">
-            Part 1 of 100
-          </span>
-          <span className="text-xs text-white/50">14:32</span>
-        </div>
-        {/* Play button */}
-        <div className="relative z-10 w-16 h-16 rounded-full bg-gold/20 border-2 border-gold/50 flex items-center justify-center">
-          <Play className="w-7 h-7 text-gold fill-current ml-1" />
-        </div>
-        {/* Video scrubber */}
-        <div className="absolute bottom-4 left-4 right-4">
-          <div className="h-1 bg-white/15 rounded-full mb-2">
-            <div className="h-1 bg-gold rounded-full w-[32%]" />
-          </div>
-          <div className="flex justify-between">
-            <span className="text-[10px] text-white/40">4:38</span>
-            <span className="text-[10px] text-white/40">14:32</span>
-          </div>
-        </div>
-        {/* Caption */}
-        <div className="absolute bottom-12 left-1/2 -translate-x-1/2 text-center">
-          <p className="text-white text-sm font-medium drop-shadow">The Year of the Elephant</p>
-        </div>
-      </div>
-
-      {/* Bottom strip: quiz + progress */}
-      <div className="grid grid-cols-2 divide-x divide-border">
-        {/* Quiz preview */}
-        <div className="p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <HelpCircle className="w-3.5 h-3.5 text-gold" />
-            <span className="text-xs font-semibold text-gold">Quiz · Part 1</span>
-          </div>
-          <p className="text-xs text-text mb-3 leading-relaxed">
-            In what year was the Prophet ﷺ born?
-          </p>
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2 text-xs bg-green-500/10 border border-green-500/30 rounded-lg px-3 py-1.5">
-              <CheckCircle className="w-3 h-3 text-green-400 shrink-0" />
-              <span className="text-green-300">570 CE — Year of the Elephant</span>
-            </div>
-            <div className="flex items-center gap-2 text-xs bg-surface-raised border border-border rounded-lg px-3 py-1.5 opacity-50">
-              <div className="w-3 h-3 rounded-full border border-border shrink-0" />
-              <span className="text-text-muted">580 CE</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Progress preview */}
-        <div className="p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <BarChart2 className="w-3.5 h-3.5 text-gold" />
-            <span className="text-xs font-semibold text-gold">Your Progress</span>
-          </div>
-          <div className="flex items-end gap-1 mb-3">
-            <span className="text-2xl font-bold text-text">1</span>
-            <span className="text-text-muted text-sm mb-0.5">/ 100 parts</span>
-          </div>
-          <div className="h-1.5 bg-border rounded-full mb-2">
-            <div className="h-1.5 bg-gold rounded-full w-[2%]" />
-          </div>
-          <div className="flex gap-1 flex-wrap">
-            {Array.from({ length: 10 }).map((_, i) => (
-              <div
-                key={i}
-                className={`w-4 h-4 rounded-sm text-[8px] flex items-center justify-center font-bold ${
-                  i === 0
-                    ? "bg-gold text-ink"
-                    : "bg-surface-raised border border-border text-text-muted"
-                }`}
-              >
-                {i + 1}
-              </div>
-            ))}
-            <span className="text-[10px] text-text-muted self-center ml-0.5">…</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ─── Sticky bottom bar ────────────────────────────────────────────────────────
 function StickyBar() {
   return (
@@ -173,7 +74,7 @@ function StickyBar() {
 }
 
 // ─── Main page ────────────────────────────────────────────────────────────────
-export function StartPage() {
+export function StartPage({ preview }: { preview?: ReactNode }) {
   useEffect(() => {
     safeTrack("start_page_view");
   }, []);
@@ -240,10 +141,15 @@ export function StartPage() {
           </a>
         </section>
 
-        {/* ── Product mockup ────────────────────────────────────────────────── */}
-        <section className="max-w-2xl mx-auto px-4 pb-16">
-          <ProductMockup />
-        </section>
+        {/* ── Real Part 1 preview ───────────────────────────────────────────── */}
+        {preview && (
+          <section className="max-w-5xl mx-auto px-4 pb-16">
+            <p className="text-xs font-semibold text-gold uppercase tracking-widest text-center mb-4">
+              This is what Part 1 looks like
+            </p>
+            {preview}
+          </section>
+        )}
 
         {/* ── How it works ──────────────────────────────────────────────────── */}
         <section className="bg-surface border-y border-border py-14">
