@@ -717,7 +717,7 @@ function CheckoutPageContent({
       if (promoCode && bill === "lifetime") body.promoCode = promoCode;
       // Always pass isUpgrade=true for family lifetime — the server validates eligibility
       // server-side (user.hasPaid && planType !== "family"). Individual lifetime holders
-      // upgrading to Family Lifetime pay only the $70 difference; the server returns the
+      // upgrading to Family Lifetime pay only the $50 difference; the server returns the
       // correct amount regardless of what the client sends here.
       if (aud === "family" && bill === "lifetime") body.isUpgrade = true;
 
