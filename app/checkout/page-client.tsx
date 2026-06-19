@@ -354,7 +354,7 @@ function CheckoutForm({
     billing === "trial"
       ? "Start Free Trial — $0 Today"
       : billing === "monthly"
-      ? "Start Learning"
+      ? `Start Learning — ${formatPrice(finalPrice)}/month`
       : isAnnArborStudent
         ? `Get Student Lifetime Access — ${formatPrice(finalPrice)}`
         : audience === "family"
@@ -462,6 +462,13 @@ function CheckoutForm({
             {error}
           </div>
         )}
+
+        {/* Source credibility — shown before payment for all plans */}
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-3 text-xs text-zinc-400 leading-relaxed">
+          <p className="font-semibold text-zinc-300 mb-1">Grounded in authentic sources</p>
+          <p>Based on Qur&apos;an, authentic hadith, and classical Seerah sources. Structured for learning, not random clips. This is an educational tool, not a fatwa site or replacement for scholars.</p>
+        </div>
+
         <button
           type="submit"
           disabled={!stripe || processing}
@@ -480,6 +487,14 @@ function CheckoutForm({
             </span>
           ))}
         </div>
+
+        {/* Safety valve — give hesitant users a free path instead of losing them */}
+        <p className="text-center text-xs text-zinc-500">
+          Not ready yet?{" "}
+          <a href="/pricing#preview" className="underline hover:text-zinc-300 transition-colors">
+            Watch Part 1 free first
+          </a>
+        </p>
 
         {/* What happens next */}
         <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 space-y-2">
@@ -1368,7 +1383,14 @@ function CheckoutPageContent({
 
       {/* Features */}
       <ul className="space-y-2.5">
-        {currentPlan.features.map((f) => (
+        {(billing === "monthly" ? [
+          "Short video lessons — one focused topic per part",
+          "Quiz after each lesson to retain what you learned",
+          "Flashcards to review key names and events",
+          "Summaries and mind maps to remember the timeline",
+          "Progress tracking so you always know where to continue",
+          "Cancel anytime — no long-term commitment",
+        ] : currentPlan.features).map((f) => (
           <li key={f} className="flex items-start gap-3">
             <div className="w-5 h-5 rounded-full bg-gold/15 flex items-center justify-center flex-shrink-0 mt-0.5">
               <Check className="w-3 h-3 text-gold" />
