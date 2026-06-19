@@ -10,7 +10,7 @@ import {
   BookOpen, BarChart2, Clock,
 } from "lucide-react";
 
-const PART1_URL  = "/pricing#preview";
+const PART1_URL  = "/watch-free";
 const PRICING_URL = "/pricing";
 
 function safeTrack(event: string) {
