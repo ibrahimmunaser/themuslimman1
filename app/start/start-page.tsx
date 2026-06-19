@@ -51,7 +51,7 @@ function Part1Btn({
 // ─── Sticky bottom bar ────────────────────────────────────────────────────────
 function StickyBar() {
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 bg-surface/95 backdrop-blur-sm border-t border-border shadow-2xl shadow-black/50 md:hidden">
+    <div className="fixed bottom-0 left-0 right-0 z-40 bg-surface/95 backdrop-blur-sm border-t border-border shadow-2xl shadow-black/50">
       <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
         {/* Left: simple label */}
         <p className="text-sm font-semibold text-text whitespace-nowrap">
@@ -171,12 +171,12 @@ export function StartPage({ preview }: { preview?: ReactNode }) {
                 },
                 {
                   icon: Layers,
-                  label: "Review flashcards and summaries",
+                  label: "Review with flashcards and summaries",
                   desc: "Reinforce key facts with flashcards, summaries, and mind maps.",
                 },
                 {
                   icon: TrendingUp,
-                  label: "Track your progress",
+                  label: "Track your progress step by step",
                   desc: "See exactly where you are across all 100 parts at a glance.",
                 },
               ].map(({ icon: Icon, label, desc }) => (
@@ -242,6 +242,18 @@ export function StartPage({ preview }: { preview?: ReactNode }) {
           </div>
         </section>
 
+
+        {/* ── Free start CTA ────────────────────────────────────────────────── */}
+        <section className="max-w-2xl mx-auto px-4 py-14 text-center">
+          <h2 className="text-xl sm:text-2xl font-bold text-text mb-3">
+            Start with Part 1 free
+          </h2>
+          <p className="text-text-secondary text-sm sm:text-base mb-7 max-w-md mx-auto">
+            Begin with the first lesson and see how the course works before choosing a plan.
+          </p>
+          <Part1Btn size="md" />
+          <p className="mt-3 text-xs text-text-muted">No card needed. Start in under 30 seconds.</p>
+        </section>
 
         {/* ── Pricing preview ───────────────────────────────────────────────── */}
         <section className="bg-ink border-t border-border py-14">

@@ -354,7 +354,9 @@ function CheckoutForm({
     billing === "trial"
       ? "Start Free Trial — $0 Today"
       : billing === "monthly"
-      ? `Start Learning — ${formatPrice(finalPrice)}/month`
+      ? audience === "family"
+        ? `Start Family Learning — ${formatPrice(finalPrice)}/month`
+        : `Start Learning — ${formatPrice(finalPrice)}/month`
       : isAnnArborStudent
         ? `Get Student Lifetime Access — ${formatPrice(finalPrice)}`
         : audience === "family"
