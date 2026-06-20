@@ -19,7 +19,7 @@ const INDIVIDUAL_MONTHLY_URL = `/checkout?plan=individual-monthly&source=theorth
 
 const FAQ = [
   { q: "Is the checkup free?", a: "Yes. Completely free. No payment, no card, no signup required to take the checkup." },
-  { q: "How long does it take?", a: "About 2 minutes. There are 15 short questions." },
+  { q: "How long does it take?", a: "About 2 minutes. There are 10 short questions." },
   { q: "Do I need to pay to see my result?", a: "No. Your score and result are shown instantly and for free after the last question." },
   { q: "What happens after I get my result?", a: "You'll see a personalised recommended next step. If you're ready, you can start full access. If not, Part 1 is completely free." },
   { q: "Is Part 1 free?", a: "Yes. Part 1 is completely free — full video, reading, slides, flashcards, and quiz. No signup or payment required." },
@@ -88,18 +88,16 @@ export default async function TheOrthodoxMuslimPage() {
               2 minutes · Free · Instant result
             </p>
 
-            {/* Secondary CTA */}
-            <p className="text-sm text-text-muted">
-              Or{" "}
+            {/* Secondary — quiet, not competing */}
+            <p className="text-sm text-text-muted/60">
+              Not ready for the checkup?{" "}
               <a
                 href="#preview"
                 data-track="orthodox_hero_watch_free_click"
-                className="text-gold underline underline-offset-2 hover:text-gold-light transition-colors font-semibold"
+                className="text-text-muted hover:text-gold underline underline-offset-2 transition-colors"
               >
-                <Play className="inline w-3.5 h-3.5 mr-1" />
-                Watch Part 1 Free
+                Watch Part 1 free first
               </a>
-              {" "}without the checkup.
             </p>
           </div>
         </section>
@@ -167,9 +165,9 @@ export default async function TheOrthodoxMuslimPage() {
               </div>
 
               <div className="p-4 rounded-xl bg-gold/8 border border-gold/20">
-                <p className="text-xs font-bold text-gold uppercase tracking-wider mb-1">Recommended next step</p>
-                <p className="text-sm text-text font-semibold">Individual Access — $4.99/month</p>
-                <p className="text-xs text-text-muted mt-0.5">Based on your answers</p>
+                <p className="text-xs font-bold text-gold uppercase tracking-wider mb-1">Your recommended next step</p>
+                <p className="text-sm text-text font-semibold">Personalised based on your answers</p>
+                <p className="text-xs text-text-muted mt-0.5">Individual or family path — revealed after your checkup</p>
               </div>
             </div>
 

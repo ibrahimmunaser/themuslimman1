@@ -373,9 +373,9 @@ function CheckoutForm({
       : billing === "monthly"
       ? ([
           `Due today: ${formatPrice(finalPrice)}`,
-          "Cancel anytime. No commitment.",
-          "Start instantly after payment.",
-          ...(audience === "individual" ? ["Less than a coffee each month."] : []),
+          "Instant access after payment.",
+          "Cancel anytime.",
+          "7-day refund guarantee.",
         ])
       : [
           "One-time payment — no recurring charge",

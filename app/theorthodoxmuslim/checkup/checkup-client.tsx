@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Play, BarChart2, ArrowRight, ChevronRight } from "lucide-react";
+import { Play, ChevronRight, ArrowRight } from "lucide-react";
 
 // ── Checkout URLs ────────────────────────────────────────────────────────────────
 
@@ -14,22 +14,16 @@ const FAMILY_LIFETIME_URL     = `/checkout?plan=family-lifetime&source=theorthod
 
 // ── Questions ────────────────────────────────────────────────────────────────────
 //
-// Scoring (max 70 raw, normalised to 100):
-//   Q1–Q7 are scored.  Q8–Q10 are personalisation/sales-qualification only.
-//
-// Quiz questions (Q4, Q5): correctAnswer index gets 10pts, "Not sure" gets 5pts,
-// wrong answers get 0.
+// Q1–Q7 are scored (max 70 raw → normalised to 100).
+// Q8–Q10 are personalisation only (all scores 0).
 
 interface Question {
   id: number;
   text: string;
   options: string[];
-  /** Points per option.  Length must match options.length. */
   scores: number[];
   category: "knowledge" | "timeline" | "consistency" | "personal";
-  /** For quiz questions: 0-based index of the correct option. */
   correctAnswer?: number;
-  isOpen?: boolean;
 }
 
 const QUESTIONS: Question[] = [
@@ -72,7 +66,6 @@ const QUESTIONS: Question[] = [
       "Boycott → Hijrah → Revelation in Hira → Public da'wah",
       "Not sure",
     ],
-    // Correct = index 0 (10pts), Not sure = index 3 (5pts), wrong = 0
     scores: [10, 0, 0, 5],
     correctAnswer: 0,
     category: "timeline",
@@ -86,7 +79,6 @@ const QUESTIONS: Question[] = [
       "Hudaybiyyah → Badr → Hijrah → Conquest of Makkah",
       "Not sure",
     ],
-    // Correct = index 0 (10pts), Not sure = index 3 (5pts), wrong = 0
     scores: [10, 0, 0, 5],
     correctAnswer: 0,
     category: "timeline",
@@ -116,7 +108,6 @@ const QUESTIONS: Question[] = [
     scores: [10, 5, 2, 0],
     category: "consistency",
   },
-  // Personalisation / sales-qualification — not scored
   {
     id: 8,
     text: "What usually stops you from learning consistently?",
@@ -158,7 +149,7 @@ const QUESTIONS: Question[] = [
   },
 ];
 
-const SCORED_COUNT = 7; // Q1–Q7, max 70 raw pts, normalised → 100
+const SCORED_COUNT = 7;
 
 // ── Scoring ──────────────────────────────────────────────────────────────────────
 
@@ -166,7 +157,7 @@ function computeScore(answers: Record<number, number>): number {
   let raw = 0;
   for (let i = 1; i <= SCORED_COUNT; i++) {
     const q = QUESTIONS[i - 1];
-    const idx = answers[i] ?? (q.options.length - 1);   // unanswered = worst option
+    const idx = answers[i] ?? (q.options.length - 1);
     raw += q.scores[idx] ?? 0;
   }
   return Math.min(100, Math.round((raw / 70) * 100));
@@ -180,12 +171,7 @@ function getResultType(score: number): ResultType {
   return "strong";
 }
 
-const RESULT_COPY: Record<ResultType, {
-  label: string;
-  tagline: string;
-  keyLine: string;
-  color: string;
-}> = {
+const RESULT_COPY: Record<ResultType, { label: string; tagline: string; keyLine: string; color: string }> = {
   scattered: {
     label: "Scattered Foundation",
     color: "text-amber-400",
@@ -206,70 +192,56 @@ const RESULT_COPY: Record<ResultType, {
   },
 };
 
-// ── Insights ─────────────────────────────────────────────────────────────────────
-
 function getInsights(answers: Record<number, number>) {
-  // Knowledge depth: Q1, Q2, Q3
-  const knowledgeScore = [1, 2, 3].reduce((s, id) => {
+  const knowledgeRaw = [1, 2, 3].reduce((s, id) => {
     const q = QUESTIONS[id - 1];
     return s + (q.scores[answers[id] ?? (q.options.length - 1)] ?? 0);
   }, 0);
-
-  // Timeline accuracy: Q4, Q5
-  const timelineScore = [4, 5].reduce((s, id) => {
+  const timelineRaw = [4, 5].reduce((s, id) => {
     const q = QUESTIONS[id - 1];
     return s + (q.scores[answers[id] ?? (q.options.length - 1)] ?? 0);
   }, 0);
-
-  // Consistency: Q6, Q7
-  const consistencyScore = [6, 7].reduce((s, id) => {
+  const consistencyRaw = [6, 7].reduce((s, id) => {
     const q = QUESTIONS[id - 1];
     return s + (q.scores[answers[id] ?? (q.options.length - 1)] ?? 0);
   }, 0);
 
   return {
     knowledge: {
-      weak: knowledgeScore < 20,
-      text: knowledgeScore < 20
+      weak: knowledgeRaw < 20,
+      text: knowledgeRaw < 20
         ? "You know some stories, but the full life of the Prophet ﷺ — in order — still needs structure."
         : "Your knowledge of the Seerah is solid. A structured path will help you complete it.",
     },
     timeline: {
-      weak: timelineScore < 15,
-      text: timelineScore < 15
+      weak: timelineRaw < 15,
+      text: timelineRaw < 15
         ? "The major events are not yet in clear order for you. Starting from the beginning will fix this quickly."
         : "You can place the major events in order. Keep building on this.",
     },
     consistency: {
-      weak: consistencyScore < 10,
-      text: consistencyScore < 10
+      weak: consistencyRaw < 10,
+      text: consistencyRaw < 10
         ? "Your learning is mostly random or inconsistent. A structured system with short lessons makes a big difference."
         : "You already have a learning habit. A clear path will make it much more effective.",
     },
   };
 }
 
-// ── Plan recommendation ───────────────────────────────────────────────────────────
-
 function getRecommendedPlan(answers: Record<number, number>) {
   const q9 = answers[9] ?? 0;
-  const isFamily = q9 === 1 || q9 === 3; // "My family/kids" or "Myself and my family"
-
+  const isFamily = q9 === 1 || q9 === 3;
   if (isFamily) {
     return {
-      plan: "family-monthly",
-      url: FAMILY_MONTHLY_URL,
-      lifetimeUrl: FAMILY_LIFETIME_URL,
+      plan: "family-monthly", url: FAMILY_MONTHLY_URL, lifetimeUrl: FAMILY_LIFETIME_URL,
       label: "Start Family Access — $9.99/month",
-      lifetimeLabel: "Lifetime family access starts at $99 →",
+      lifetimeLabel: "Prefer one payment? Lifetime family access is $99 →",
       description: "Up to 5 separate learner profiles, each tracking progress independently. One plan for your whole household.",
       isFamily: true,
     };
   }
   return {
-    plan: "individual-monthly",
-    url: INDIVIDUAL_MONTHLY_URL,
-    lifetimeUrl: INDIVIDUAL_LIFETIME_URL,
+    plan: "individual-monthly", url: INDIVIDUAL_MONTHLY_URL, lifetimeUrl: INDIVIDUAL_LIFETIME_URL,
     label: "Start Individual Access — $4.99/month",
     lifetimeLabel: "Prefer one payment? Lifetime access is $49 →",
     description: "Full access to all 100 structured parts — video, reading, slides, flashcards, quizzes, and progress tracking.",
@@ -282,9 +254,7 @@ function getRecommendedPlan(answers: Record<number, number>) {
 function track(event: string, props?: Record<string, unknown>) {
   try {
     if (typeof window === "undefined") return;
-    if (process.env.NODE_ENV === "development") {
-      console.log("[checkup]", event, props);
-    }
+    if (process.env.NODE_ENV === "development") console.log("[checkup]", event, props);
     const payload = JSON.stringify({ creator: "theorthodoxmuslim", eventType: event, ...props });
     if (navigator.sendBeacon) {
       navigator.sendBeacon("/api/influencer/track", new Blob([payload], { type: "application/json" }));
@@ -294,7 +264,7 @@ function track(event: string, props?: Record<string, unknown>) {
   } catch { /* never block */ }
 }
 
-// ── Progress bar ──────────────────────────────────────────────────────────────────
+// ── Progress bar ─────────────────────────────────────────────────────────────────
 
 function ProgressBar({ current, total }: { current: number; total: number }) {
   const pct = Math.round((current / total) * 100);
@@ -311,8 +281,6 @@ function ProgressBar({ current, total }: { current: number; total: number }) {
   );
 }
 
-// ── Category label ────────────────────────────────────────────────────────────────
-
 const CATEGORY_LABELS: Record<Question["category"], string> = {
   knowledge: "Seerah Knowledge",
   timeline: "Timeline",
@@ -320,36 +288,25 @@ const CATEGORY_LABELS: Record<Question["category"], string> = {
   personal: "About You",
 };
 
-// ── Main component ────────────────────────────────────────────────────────────────
+// ── Main ──────────────────────────────────────────────────────────────────────────
 
-type FlowStep = "contact" | "questions" | "result";
+// Flow: questions → email gate → result
+type FlowStep = "questions" | "email" | "result";
 
 export default function CheckupClient() {
-  const [step, setStep]           = useState<FlowStep>("contact");
-  const [name, setName]           = useState("");
-  const [email, setEmail]         = useState("");
-  const [phone, setPhone]         = useState("");
-  const [contactErr, setContactErr] = useState("");
-  const [currentQ, setCurrentQ]   = useState(0); // 0-based
-  const [answers, setAnswers]     = useState<Record<number, number>>({});
+  const [step, setStep]       = useState<FlowStep>("questions");
+  const [currentQ, setCurrentQ] = useState(0);
+  const [answers, setAnswers]   = useState<Record<number, number>>({});
+  const [name, setName]         = useState("");
+  const [email, setEmail]       = useState("");
+  const [phone, setPhone]       = useState("");
+  const [emailErr, setEmailErr] = useState("");
   const topRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { track("orthodox_checkup_landing_view"); }, []);
 
   function scrollTop() {
     topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-
-  // ── Contact ─────────────────────────────────────────────────────────────────
-
-  function handleContactSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!name.trim() || !email.trim()) { setContactErr("Please enter your name and email."); return; }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setContactErr("Please enter a valid email address."); return; }
-    setContactErr("");
-    track("orthodox_checkup_contact_submit");
-    setStep("questions");
-    scrollTop();
   }
 
   // ── Answer ──────────────────────────────────────────────────────────────────
@@ -363,41 +320,45 @@ export default function CheckupClient() {
     if (currentQ < QUESTIONS.length - 1) {
       setTimeout(() => { setCurrentQ((n) => n + 1); scrollTop(); }, 180);
     } else {
-      finishCheckup(updated);
+      // All questions answered — go to email gate
+      track("orthodox_checkup_completed");
+      setTimeout(() => { setStep("email"); scrollTop(); }, 180);
     }
   }
 
-  // ── Finish ──────────────────────────────────────────────────────────────────
+  // ── Email gate ──────────────────────────────────────────────────────────────
 
-  async function finishCheckup(finalAnswers: Record<number, number>) {
-    track("orthodox_checkup_completed");
-    const score      = computeScore(finalAnswers);
+  async function handleEmailSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email.trim()) { setEmailErr("Please enter your email."); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setEmailErr("Please enter a valid email."); return; }
+    setEmailErr("");
+
+    const score      = computeScore(answers);
     const resultType = getResultType(score);
-    const rec        = getRecommendedPlan(finalAnswers);
+    const rec        = getRecommendedPlan(answers);
     const params     = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+
+    track("orthodox_checkup_contact_submit");
 
     fetch("/api/checkup/submit", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        name, email, phone: phone || null,
-        answers: finalAnswers, score, resultType,
-        recommendedPlan: rec.plan,
+        name: name || null, email, phone: phone || null,
+        answers, score, resultType, recommendedPlan: rec.plan,
         source: "theorthodoxmuslim",
-        utmSource:   params.get("utm_source"),
-        utmMedium:   params.get("utm_medium"),
-        utmCampaign: params.get("utm_campaign"),
-        utmContent:  params.get("utm_content"),
+        utmSource: params.get("utm_source"), utmMedium: params.get("utm_medium"),
+        utmCampaign: params.get("utm_campaign"), utmContent: params.get("utm_content"),
       }),
     }).catch(() => {});
 
-    setAnswers(finalAnswers);
-    setStep("result");
     track("orthodox_checkup_result_view", { score, resultType, recommendedPlan: rec.plan });
+    setStep("result");
     scrollTop();
   }
 
-  // ── Derived values for result ────────────────────────────────────────────────
+  // ── Derived ─────────────────────────────────────────────────────────────────
 
   const score      = computeScore(answers);
   const resultType = getResultType(score);
@@ -417,44 +378,93 @@ export default function CheckupClient() {
             ← Back
           </Link>
           <span className="text-xs font-semibold text-gold uppercase tracking-wider">Free Seerah Checkup</span>
-          <span className="text-xs text-text-muted">2 min</span>
+          <span className="text-xs text-text-muted">
+            {step === "questions" ? `${currentQ + 1}/10` : step === "email" ? "Almost done" : "Your result"}
+          </span>
         </div>
       </header>
 
       <div className="max-w-xl mx-auto px-4 sm:px-6 py-10">
 
-        {/* ═══ CONTACT ═══ */}
-        {step === "contact" && (
+        {/* ═══ QUESTIONS ═══ */}
+        {step === "questions" && (
+          <div>
+            {currentQ === 0 && (
+              <div className="text-center mb-8">
+                <p className="text-xs font-bold text-gold uppercase tracking-widest mb-3">Free · 10 questions · Instant result</p>
+                <h1 className="text-3xl sm:text-4xl font-bold mb-3 leading-tight">
+                  The Free Seerah Checkup
+                </h1>
+                <p className="text-base text-text-secondary">
+                  Answer honestly. Your result is based on your real answers.
+                </p>
+              </div>
+            )}
+
+            <ProgressBar current={currentQ + 1} total={QUESTIONS.length} />
+
+            <div className="mt-8 mb-6">
+              <p className="text-xs font-semibold text-gold/70 uppercase tracking-widest mb-3">
+                {CATEGORY_LABELS[QUESTIONS[currentQ].category]}
+              </p>
+              <h2 className="text-xl sm:text-2xl font-bold leading-snug">
+                {QUESTIONS[currentQ].text}
+              </h2>
+            </div>
+
+            <div className="space-y-3">
+              {QUESTIONS[currentQ].options.map((option, idx) => (
+                <button
+                  key={option}
+                  onClick={() => handleAnswer(idx)}
+                  className="w-full text-left px-5 py-4 rounded-xl border border-border bg-surface hover:border-gold/50 hover:bg-gold/5 active:scale-[0.98] transition-all text-base font-medium text-text flex items-center justify-between group"
+                >
+                  <span>{option}</span>
+                  <ChevronRight className="w-4 h-4 text-text-muted group-hover:text-gold transition-colors flex-shrink-0" />
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ═══ EMAIL GATE ═══ */}
+        {step === "email" && (
           <div>
             <div className="text-center mb-8">
-              <p className="text-xs font-bold text-gold uppercase tracking-widest mb-3">Free · 10 questions · Instant result</p>
-              <h1 className="text-3xl sm:text-4xl font-bold mb-4 leading-tight">
-                Take the Free Seerah Checkup
-              </h1>
-              <p className="text-lg text-text-secondary leading-relaxed">
-                Answer 10 short questions and get your Seerah Clarity Score — plus a personalised next step.
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gold/10 border border-gold/20 mb-4">
+                <span className="text-2xl font-extrabold text-gold">✓</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-bold mb-3">
+                Your score is ready
+              </h2>
+              <p className="text-base text-text-secondary">
+                Enter your email to reveal your Seerah Clarity Score and personalised next step.
               </p>
             </div>
 
-            {/* Preview of what they'll receive */}
-            <div className="rounded-2xl border border-gold/20 bg-surface p-5 mb-8 space-y-2.5">
+            {/* Teaser — no number, no plan revealed */}
+            <div className="rounded-2xl border border-gold/20 bg-surface p-5 mb-7 space-y-3">
+              <p className="text-xs font-semibold text-text-muted uppercase tracking-wider">You will see</p>
               {[
-                { label: "Seerah Clarity Score", value: "0 – 100" },
-                { label: "Knowledge depth", value: "How well you know the Seerah" },
-                { label: "Timeline accuracy", value: "Can you place events in order?" },
-                { label: "Learning consistency", value: "Is your approach structured?" },
-                { label: "Personalised next step", value: "Based on your answers" },
-              ].map(({ label, value }) => (
-                <div key={label} className="flex items-center justify-between py-2 border-b border-border/30 last:border-0">
-                  <span className="text-sm font-medium text-text">{label}</span>
-                  <span className="text-xs text-text-muted">{value}</span>
+                "Your Seerah Clarity Score",
+                "Your strongest area",
+                "Your biggest gap",
+                "Your personalised next step",
+              ].map((item) => (
+                <div key={item} className="flex items-center gap-3 py-2 border-b border-border/30 last:border-0">
+                  <div className="w-5 h-5 rounded-full bg-gold/20 flex items-center justify-center flex-shrink-0">
+                    <span className="text-gold text-xs">→</span>
+                  </div>
+                  <span className="text-sm font-medium text-text">{item}</span>
                 </div>
               ))}
             </div>
 
-            <form onSubmit={handleContactSubmit} className="space-y-4">
+            <form onSubmit={handleEmailSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-text mb-1.5">First name <span className="text-gold">*</span></label>
+                <label className="block text-sm font-semibold text-text mb-1.5">
+                  First name <span className="text-xs text-text-muted/50 font-normal ml-1">optional</span>
+                </label>
                 <input
                   type="text" autoComplete="given-name" value={name}
                   onChange={(e) => setName(e.target.value)} placeholder="Your first name"
@@ -462,7 +472,9 @@ export default function CheckupClient() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-text mb-1.5">Email address <span className="text-gold">*</span></label>
+                <label className="block text-sm font-semibold text-text mb-1.5">
+                  Email address <span className="text-gold">*</span>
+                </label>
                 <input
                   type="email" autoComplete="email" value={email}
                   onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com"
@@ -479,50 +491,18 @@ export default function CheckupClient() {
                   className="w-full px-4 py-3.5 rounded-xl border border-border bg-surface text-text placeholder:text-text-muted focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/30 text-base transition-colors"
                 />
               </div>
-              {contactErr && <p className="text-sm text-red-400">{contactErr}</p>}
+              {emailErr && <p className="text-sm text-red-400">{emailErr}</p>}
               <button
                 type="submit"
-                onClick={() => track("orthodox_checkup_start_click")}
                 className="w-full py-4 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-lg transition-colors shadow-lg shadow-gold/25 flex items-center justify-center gap-2 mt-2"
               >
-                Start My Checkup
-                <ChevronRight className="w-5 h-5" />
+                Reveal My Score
+                <ArrowRight className="w-5 h-5" />
               </button>
-              <p className="text-xs text-center text-text-muted/60">Your result is shown instantly. We do not sell your information.</p>
-            </form>
-          </div>
-        )}
-
-        {/* ═══ QUESTIONS ═══ */}
-        {step === "questions" && (
-          <div>
-            <ProgressBar current={currentQ + 1} total={QUESTIONS.length} />
-
-            <div className="mt-8 mb-6">
-              <p className="text-xs font-semibold text-gold/70 uppercase tracking-widest mb-3">
-                {CATEGORY_LABELS[QUESTIONS[currentQ].category]}
+              <p className="text-xs text-center text-text-muted/60">
+                Your result is shown instantly. We do not sell your information.
               </p>
-              <h2 className="text-xl sm:text-2xl font-bold leading-snug">
-                {QUESTIONS[currentQ].text}
-              </h2>
-            </div>
-
-            <div className="space-y-3">
-              {QUESTIONS[currentQ].options.map((option, idx) => {
-                const isCorrect = QUESTIONS[currentQ].correctAnswer === idx;
-                return (
-                  <button
-                    key={option}
-                    onClick={() => handleAnswer(idx)}
-                    className="w-full text-left px-5 py-4 rounded-xl border border-border bg-surface hover:border-gold/50 hover:bg-gold/5 active:scale-[0.98] transition-all text-base font-medium text-text flex items-center justify-between group"
-                  >
-                    <span>{option}</span>
-                    <ChevronRight className="w-4 h-4 text-text-muted group-hover:text-gold transition-colors flex-shrink-0" />
-                  </button>
-                );
-                void isCorrect; // scoring is handled in computeScore; no UI feedback during quiz
-              })}
-            </div>
+            </form>
           </div>
         )}
 
@@ -538,7 +518,7 @@ export default function CheckupClient() {
                 aria-hidden
               />
               <p className="text-xs font-bold text-text-muted uppercase tracking-widest mb-2">
-                {name ? `${name}'s ` : ""}Seerah Clarity Score
+                {name ? `${name}'s ` : "Your "}Seerah Clarity Score
               </p>
               <p className="text-8xl font-extrabold text-gold tracking-tight leading-none mb-2">
                 {score}<span className="text-3xl text-gold/60 font-bold">%</span>
@@ -553,17 +533,13 @@ export default function CheckupClient() {
               <p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-4">Your three areas</p>
               <div className="space-y-3">
                 {[
-                  { key: "knowledge",    label: "Knowledge Depth",    data: insights.knowledge    },
-                  { key: "timeline",     label: "Timeline Accuracy",  data: insights.timeline     },
-                  { key: "consistency",  label: "Learning Consistency", data: insights.consistency  },
+                  { key: "knowledge",   label: "Knowledge Depth",      data: insights.knowledge    },
+                  { key: "timeline",    label: "Timeline Accuracy",     data: insights.timeline     },
+                  { key: "consistency", label: "Learning Consistency",  data: insights.consistency  },
                 ].map(({ key, label, data }) => (
                   <div
                     key={key}
-                    className={`p-4 rounded-xl border ${
-                      data.weak
-                        ? "border-amber-500/30 bg-amber-500/5"
-                        : "border-emerald-500/30 bg-emerald-500/5"
-                    }`}
+                    className={`p-4 rounded-xl border ${data.weak ? "border-amber-500/30 bg-amber-500/5" : "border-emerald-500/30 bg-emerald-500/5"}`}
                   >
                     <p className={`text-xs font-bold uppercase tracking-wider mb-1 ${data.weak ? "text-amber-400" : "text-emerald-400"}`}>
                       {data.weak ? "⚠ " : "✓ "}{label}
@@ -609,7 +585,6 @@ export default function CheckupClient() {
                   {rec.lifetimeLabel}
                 </Link>
               </p>
-
               <p className="text-xs text-center text-text-muted mt-4">
                 Secure checkout · Instant access · Cancel anytime · 7-day refund guarantee
               </p>
@@ -626,7 +601,7 @@ export default function CheckupClient() {
 
             <div className="text-center">
               <button
-                onClick={() => { setStep("contact"); setCurrentQ(0); setAnswers({}); scrollTop(); }}
+                onClick={() => { setStep("questions"); setCurrentQ(0); setAnswers({}); scrollTop(); }}
                 className="text-sm text-text-muted/50 hover:text-text-muted transition-colors underline underline-offset-2"
               >
                 Retake the checkup
