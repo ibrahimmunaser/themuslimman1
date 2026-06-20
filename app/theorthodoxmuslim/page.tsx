@@ -177,7 +177,7 @@ export default async function TheOrthodoxMuslimPage() {
               data-track="orthodox_checkup_start_click"
               className="block w-full py-4 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-base text-center transition-colors shadow-lg shadow-gold/25"
             >
-              Get Your Real Score →
+              Reveal My Seerah Score →
             </Link>
             <p className="text-xs text-center text-text-muted/60 mt-2">Free · No payment required</p>
           </div>

@@ -299,7 +299,6 @@ export default function CheckupClient() {
   const [answers, setAnswers]   = useState<Record<number, number>>({});
   const [name, setName]         = useState("");
   const [email, setEmail]       = useState("");
-  const [phone, setPhone]       = useState("");
   const [emailErr, setEmailErr] = useState("");
   const topRef = useRef<HTMLDivElement>(null);
 
@@ -345,7 +344,7 @@ export default function CheckupClient() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        name: name || null, email, phone: phone || null,
+        name: name || null, email, phone: null,
         answers, score, resultType, recommendedPlan: rec.plan,
         source: "theorthodoxmuslim",
         utmSource: params.get("utm_source"), utmMedium: params.get("utm_medium"),
@@ -450,7 +449,7 @@ export default function CheckupClient() {
                 Your score is ready
               </h2>
               <p className="text-base text-text-secondary">
-                Enter your email to reveal your Seerah Clarity Score and personalised next step.
+                Enter your email to save your result and reveal your recommended next step.
               </p>
             </div>
 
@@ -493,16 +492,6 @@ export default function CheckupClient() {
                   className="w-full px-4 py-3.5 rounded-xl border border-border bg-surface text-text placeholder:text-text-muted focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/30 text-base transition-colors"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-text mb-1.5">
-                  Phone <span className="text-xs text-text-muted/50 font-normal ml-1">optional</span>
-                </label>
-                <input
-                  type="tel" autoComplete="tel" value={phone}
-                  onChange={(e) => setPhone(e.target.value)} placeholder="+1 (555) 000-0000"
-                  className="w-full px-4 py-3.5 rounded-xl border border-border bg-surface text-text placeholder:text-text-muted focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/30 text-base transition-colors"
-                />
-              </div>
               {emailErr && <p className="text-sm text-red-400">{emailErr}</p>}
               <button
                 type="submit"
@@ -512,7 +501,7 @@ export default function CheckupClient() {
                 <ArrowRight className="w-5 h-5" />
               </button>
               <p className="text-xs text-center text-text-muted/60">
-                Your result is shown instantly. We do not sell your information.
+                Instant result. No spam.
               </p>
             </form>
           </div>
@@ -536,6 +525,7 @@ export default function CheckupClient() {
                 {score}<span className="text-3xl text-gold/60 font-bold">%</span>
               </p>
               <p className={`text-xl font-bold mb-4 ${result.color}`}>{result.label}</p>
+              <p className="text-sm text-text-muted/60 mb-3">Most people know pieces. The point is to find where to start.</p>
               <p className="text-base text-text-secondary leading-relaxed">{result.tagline}</p>
               <p className="text-base font-semibold text-text mt-3">{result.keyLine}</p>
             </div>
@@ -565,6 +555,11 @@ export default function CheckupClient() {
             {/* Recommended path + CTAs */}
             <div className="rounded-2xl border border-border bg-surface p-6">
               <p className="text-xs font-bold text-gold uppercase tracking-widest mb-3">Your recommended path</p>
+              <p className="text-sm text-text-secondary mb-4 leading-relaxed">
+                {rec.isFamily
+                  ? "Based on your answers, the best next step is a structured path you can follow with your household."
+                  : "Based on your answers, the best next step is to start from Part 1 and follow one clear path in order."}
+              </p>
               <h3 className="text-lg font-bold text-text mb-1">
                 {rec.isFamily ? "Family Access — $9.99/month" : "Individual Access — $4.99/month"}
               </h3>
@@ -575,7 +570,7 @@ export default function CheckupClient() {
                 onClick={() => track("orthodox_checkup_paid_cta_click", { plan: rec.plan })}
                 className="block w-full py-4 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-base text-center transition-colors shadow-lg shadow-gold/25 mb-3"
               >
-                {rec.label}
+                {rec.isFamily ? "Unlock Family Access — $9.99/month" : "Unlock Individual Access — $4.99/month"}
               </Link>
 
               <a
