@@ -101,6 +101,23 @@ export function TextViewer({
     }
   }, [readProgress, partNumber, previewMode, assetId]);
 
+  if (previewMode) {
+    return (
+      <div className="relative max-h-72 overflow-hidden rounded-lg">
+        <div className={`article-shell ${className ?? ""}`} ref={articleRef}>
+          <div className="article-container">
+            <div className="formatted-text" dangerouslySetInnerHTML={{ __html: html }} />
+          </div>
+        </div>
+        {/* Fade-out overlay */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-surface to-transparent" />
+        <p className="absolute bottom-2 left-0 right-0 text-center text-xs text-text-muted/60">
+          Full lesson available after signup
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className={`article-shell ${className ?? ""}`} ref={articleRef}>
       {/* Fixed reading progress bar — sticks to viewport top as user scrolls through article.

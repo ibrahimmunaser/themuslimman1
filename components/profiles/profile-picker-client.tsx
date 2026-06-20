@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Settings, Check, LogOut } from "lucide-react";
 import { switchProfile } from "@/app/actions/profiles";
@@ -85,11 +86,12 @@ export function ProfilePickerClient({
         transition={{ duration: 0.5, ease: [0, 0, 0.2, 1] }}
         className="text-center mb-12 sm:mb-16"
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src="/images/logodashboard.png"
           alt="Complete Seerah"
-          className="w-10 h-10 rounded-xl mx-auto mb-6 opacity-80"
+          width={40}
+          height={40}
+          className="rounded-xl mx-auto mb-6 opacity-80"
         />
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight">
           Who is learning today?

@@ -13,6 +13,7 @@ interface ListenOnTheGoProps {
 
 export function ListenOnTheGo({ audioUrl, title, partNumber, previewMode, videoCompleted }: ListenOnTheGoProps) {
   if (!audioUrl) return null;
+  if (previewMode) return null;
 
   return (
     <div className="mt-4 space-y-2">

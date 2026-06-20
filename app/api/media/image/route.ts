@@ -20,6 +20,15 @@ function getMimeType(key: string): string {
 }
 
 export async function GET(req: NextRequest) {
+  // In production all images are served via short-lived signed R2 URLs.
+  // This proxy route exists only for local development environments.
+  if (process.env.NODE_ENV === "production") {
+    return new NextResponse(
+      "Deprecated: use the direct R2 signed URL returned by getPartAssetUrls()",
+      { status: 410 }
+    );
+  }
+
   const { searchParams } = req.nextUrl;
   const relPath = searchParams.get("p");
 

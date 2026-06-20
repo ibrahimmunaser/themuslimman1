@@ -40,11 +40,6 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
               }`}
             >
               Monthly
-              {tab === "monthly" && (
-                <span className="absolute -top-2.5 -right-2.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-green-500 text-white leading-none">
-                  Popular
-                </span>
-              )}
             </button>
             <button
               onClick={() => setTab("lifetime")}
@@ -83,8 +78,12 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
                 </div>
                 <div>
                   <p className="text-base font-bold text-text leading-tight">Individual Membership</p>
-                  <p className="text-xs text-text-muted">For you · cancel anytime</p>
+                  <p className="text-xs text-text-muted">cancel anytime</p>
                 </div>
+              </div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/10 border border-gold/20 mb-4 self-start">
+                <User className="w-3.5 h-3.5 text-gold" />
+                <span className="text-sm font-semibold text-gold">1 person</span>
               </div>
 
               <div className="mb-5">
@@ -144,8 +143,12 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
                 </div>
                 <div>
                   <p className="text-base font-bold text-text leading-tight">Family Membership</p>
-                  <p className="text-xs text-text-muted">For parents, spouse, and children</p>
+                  <p className="text-xs text-text-muted">cancel anytime</p>
                 </div>
+              </div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/10 border border-gold/20 mb-4 self-start">
+                <Users className="w-3.5 h-3.5 text-gold/80" />
+                <span className="text-sm font-semibold text-gold/90">Up to 5 members</span>
               </div>
 
               <div className="mb-5">
@@ -207,6 +210,10 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
                   <p className="text-base font-bold text-text leading-tight">For Me</p>
                   <p className="text-xs text-text-muted">Individual lifetime access</p>
                 </div>
+              </div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/10 border border-gold/20 mb-4 self-start">
+                <User className="w-3.5 h-3.5 text-gold" />
+                <span className="text-sm font-semibold text-gold">1 person</span>
               </div>
 
               <div className="mb-5">
@@ -278,6 +285,10 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
                   <p className="text-xs text-text-muted">Up to 5 learner profiles</p>
                 </div>
               </div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/10 border border-gold/20 mb-4 self-start">
+                <Users className="w-3.5 h-3.5 text-gold/80" />
+                <span className="text-sm font-semibold text-gold/90">Up to 5 members</span>
+              </div>
 
               <div className="mb-5">
                 <div className="flex items-baseline gap-1.5 mb-0.5">
@@ -293,7 +304,6 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
                   "Up to 5 separate learner profiles",
                   "Each profile tracks progress independently",
                   "Full access for every family member",
-                  "Weekly parent progress reports",
                   "One payment — no recurring charges",
                 ].map((f) => (
                   <li key={f} className="flex items-start gap-2">

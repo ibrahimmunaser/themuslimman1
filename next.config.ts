@@ -61,6 +61,14 @@ const nextConfig: NextConfig = {
           { key: "Cache-Control", value: "private, no-store" },
         ],
       },
+      // Public images — cache aggressively at the CDN edge.
+      // These files are versioned via query string when they change.
+      {
+        source: "/images/:path*",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, stale-while-revalidate=86400" },
+        ],
+      },
     ];
   },
   turbopack: {

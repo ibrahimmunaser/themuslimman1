@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
@@ -69,11 +70,12 @@ export function LoginForm() {
     <div className="min-h-screen bg-background px-4 py-16 flex flex-col items-center justify-start">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src="/images/logodashboard.png"
             alt="Complete Seerah"
-            className="w-12 h-12 rounded-xl mx-auto mb-4"
+            width={48}
+            height={48}
+            className="rounded-xl mx-auto mb-4"
           />
           <h1 className="text-2xl font-bold text-text mb-2">Sign in to Seerah</h1>
           <p className="text-text-secondary text-sm">

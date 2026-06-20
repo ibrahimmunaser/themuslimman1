@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, Calendar, Infinity, ShieldCheck, Lock, Zap } from "lucide-react";
+import { CheckCircle2, Calendar, Infinity, ShieldCheck, Lock, Zap, User, Users } from "lucide-react";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -25,6 +25,8 @@ interface InfluencerPricingToggleProps {
   // Optional regular (pre-discount) prices — only shown when higher than actual price
   regularIndividualPriceCents?: number;
   regularFamilyPriceCents?: number;
+  /** When set, prefixes all data-track values, e.g. "orthodox" → "orthodox_monthly_individual_click" */
+  trackingPrefix?: string;
 }
 
 type Tab = "monthly" | "lifetime";
@@ -46,8 +48,10 @@ export function InfluencerPricingToggle({
   familyLifetimePriceCents,
   regularIndividualPriceCents,
   regularFamilyPriceCents,
+  trackingPrefix,
 }: InfluencerPricingToggleProps) {
   const [tab, setTab] = useState<Tab>("monthly");
+  const ev = (name: string) => trackingPrefix ? `${trackingPrefix}_${name}` : name;
 
 
   const indLifetime    = fmtPrice(individualLifetimePriceCents);
@@ -58,8 +62,27 @@ export function InfluencerPricingToggle({
   const showFamStrike  = !!(regularFamilyPriceCents     && regularFamilyPriceCents     > familyLifetimePriceCents);
 
   return (
-    <section id="pricing" className="pb-12 scroll-mt-16">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6">
+    <section id="pricing" className="pb-14 scroll-mt-16">
+      <div className="max-w-5xl mx-auto px-6 sm:px-8">
+
+        {/* ── Reactive headline ───────────────────────────────────── */}
+        <div className="text-center mb-6">
+          {tab === "monthly" ? (
+            <>
+              <p className="text-3xl sm:text-4xl font-extrabold text-gold tracking-tight">
+                Start for $4.99/month
+              </p>
+              <p className="text-sm text-text-muted mt-1">Cancel anytime. No commitment.</p>
+            </>
+          ) : (
+            <>
+              <p className="text-3xl sm:text-4xl font-extrabold text-gold tracking-tight">
+                Lifetime access from {indLifetime}
+              </p>
+              <p className="text-sm text-text-muted mt-1">Pay once. No renewal ever.</p>
+            </>
+          )}
+        </div>
 
         {/* ── Toggle ──────────────────────────────────────────────── */}
         <div className="flex justify-center mb-8">
@@ -73,11 +96,6 @@ export function InfluencerPricingToggle({
               }`}
             >
               Monthly
-              {tab === "monthly" && (
-                <span className="absolute -top-2.5 -right-2.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-green-500 text-white leading-none">
-                  Popular
-                </span>
-              )}
             </button>
             <button
               onClick={() => setTab("lifetime")}
@@ -95,45 +113,44 @@ export function InfluencerPricingToggle({
         {/* ── Monthly cards ───────────────────────────────────────── */}
         {tab === "monthly" && (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 items-start">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-7 items-stretch">
 
-              {/* Individual Monthly — primary */}
-              <div className="relative rounded-2xl border-2 border-gold/60 bg-surface shadow-lg shadow-gold/10 p-6 flex flex-col">
-                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap">
-                  <span className="px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-gold text-ink shadow-sm">
-                    Most Popular
-                  </span>
+              {/* Individual Monthly — secondary */}
+              <div className="relative min-h-[520px] sm:min-h-[640px] rounded-3xl border border-border bg-surface/70 p-6 sm:p-9 flex flex-col">
+                <p className="text-xl font-bold text-text mb-1">For Me</p>
+                <p className="text-sm text-text-muted mb-4">Individual Monthly Membership</p>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/10 border border-gold/20 mb-4 self-start">
+                  <User className="w-3.5 h-3.5 text-gold" />
+                  <span className="text-sm font-semibold text-gold">1 person</span>
                 </div>
-                <p className="text-xl font-bold text-text mb-0.5">For Me</p>
-                <p className="text-xs text-text-muted mb-4">Individual Monthly Membership</p>
-                <div className="mb-5">
+                <div className="mb-7">
                   <div className="flex items-baseline gap-1.5">
-                    <span className="text-5xl font-bold text-gold">$4.99</span>
+                    <span className="text-8xl font-extrabold tracking-tight text-gold">$4.99</span>
                     <span className="text-sm text-text-muted">/month</span>
                   </div>
-                  <p className="text-xs text-gold/60 mt-1">cancel anytime</p>
+                  <p className="text-sm text-text-muted mt-2">cancel anytime</p>
                 </div>
-                <ul className="space-y-2 mb-7 flex-1">
+                <ul className="space-y-3 mb-8 flex-1">
                   {[
                     "Start today. Continue at your own pace.",
                     "Videos, quizzes, flashcards, mind maps",
                     "Progress dashboard · Mobile friendly",
+                    "Structured 100-part Seerah path",
                     "Cancel anytime — no commitment",
                   ].map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-xs text-text-secondary">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-gold flex-shrink-0 mt-0.5" />
+                    <li key={f} className="flex items-start gap-2.5 text-sm text-text-secondary">
+                      <CheckCircle2 className="w-4 h-4 text-gold/60 flex-shrink-0 mt-0.5" />
                       {f}
                     </li>
                   ))}
                 </ul>
                 <Link
                   href={individualMonthlyUrl}
-                  data-track="individual_monthly_cta_clicked"
+                  data-track={ev("monthly_individual_click")}
                   data-plan="individual-monthly"
-                  className="block w-full py-4 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-base text-center transition-colors shadow-lg shadow-gold/25"
+                  className="block w-full py-4 rounded-2xl border-2 border-gold/50 text-gold font-bold text-base text-center hover:border-gold hover:bg-gold/5 transition-colors"
                 >
-                  Start Learning
-                  <span className="ml-1">→</span>
+                  Start Learning — $4.99/month
                 </Link>
                 <div className="mt-3 flex items-center justify-center gap-1.5 text-xs text-text-muted">
                   <Calendar className="w-3.5 h-3.5" />
@@ -141,42 +158,47 @@ export function InfluencerPricingToggle({
                 </div>
               </div>
 
-              {/* Family Monthly — secondary */}
-              <div className="relative rounded-2xl border border-border bg-surface/50 p-5 flex flex-col">
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap">
-                  <span className="px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-surface border border-border text-text-muted">
-                    For Households
+              {/* Family Monthly — primary / hero */}
+              <div className="relative min-h-[520px] sm:min-h-[640px] rounded-3xl border-2 border-gold bg-gradient-to-b from-gold/8 to-surface shadow-2xl shadow-gold/10 p-6 sm:p-9 flex flex-col gold-glow">
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap">
+                  <span className="px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-gold text-ink shadow-sm">
+                    Most Popular
                   </span>
                 </div>
-                <p className="text-base font-bold text-text mb-0.5">For My Family</p>
-                <p className="text-xs text-text-muted mb-4">Family Monthly · up to 5 profiles</p>
-                <div className="mb-4">
+                <p className="text-2xl font-bold text-text mb-1">For My Family</p>
+                <p className="text-sm text-text-muted mb-4">Family Monthly · up to 5 profiles</p>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/10 border border-gold/20 mb-4 self-start">
+                  <Users className="w-3.5 h-3.5 text-gold/80" />
+                  <span className="text-sm font-semibold text-gold/90">Up to 5 members</span>
+                </div>
+                <div className="mb-7">
                   <div className="flex items-baseline gap-1.5">
-                    <span className="text-3xl font-bold text-gold">$9.99</span>
+                    <span className="text-8xl font-extrabold tracking-tight text-gold">$9.99</span>
                     <span className="text-sm text-text-muted">/month</span>
                   </div>
-                  <p className="text-xs text-text-muted mt-0.5">cancel anytime</p>
+                  <p className="text-sm font-medium text-gold/70 mt-2">cancel anytime</p>
                 </div>
-                <ul className="space-y-1.5 mb-5 flex-1">
+                <ul className="space-y-3 mb-8 flex-1">
                   {[
                     "Everything in Individual",
-                    "5 separate learner profiles",
-                    "One payment for the whole household",
-                    "Cancel anytime",
+                    "Up to 5 separate learner profiles",
+                    "Each profile tracks progress independently",
+                    "Structured 100-part Seerah path",
+                    "Cancel anytime — no commitment",
                   ].map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-xs text-text-secondary">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-gold/60 flex-shrink-0 mt-0.5" />
+                    <li key={f} className="flex items-start gap-2.5 text-sm text-text-secondary">
+                      <CheckCircle2 className="w-4 h-4 text-gold flex-shrink-0 mt-0.5" />
                       {f}
                     </li>
                   ))}
                 </ul>
                 <Link
                   href={familyMonthlyUrl}
-                  data-track="family_monthly_cta_clicked"
+                  data-track={ev("monthly_family_click")}
                   data-plan="family-monthly"
-                  className="block w-full py-3 rounded-xl border border-gold/30 text-gold font-semibold text-sm text-center hover:bg-gold/5 transition-colors"
+                  className="block w-full py-5 rounded-2xl bg-gold hover:bg-gold-light text-ink font-extrabold text-base text-center transition-colors shadow-lg shadow-gold/25"
                 >
-                  Start Family Membership
+                  Start Family Membership →
                 </Link>
                 <div className="mt-3 flex items-center justify-center gap-1.5 text-xs text-text-muted">
                   <Calendar className="w-3.5 h-3.5" />
@@ -202,42 +224,47 @@ export function InfluencerPricingToggle({
         {/* ── Lifetime cards ──────────────────────────────────────── */}
         {tab === "lifetime" && (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 items-start">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-7 items-stretch">
 
-              {/* Individual Lifetime — primary */}
-              <div className="relative rounded-2xl border-2 border-gold/60 bg-surface shadow-lg shadow-gold/10 p-6 flex flex-col">
+              {/* Individual Lifetime — primary / hero */}
+              <div className="relative min-h-[520px] sm:min-h-[640px] rounded-3xl border-2 border-gold bg-gradient-to-b from-gold/8 to-surface shadow-2xl shadow-gold/10 p-6 sm:p-9 flex flex-col gold-glow">
                 <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap">
                   <span className="px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-gold text-ink shadow-sm">
-                    Best Value
+                    Most Popular
                   </span>
                 </div>
-                <p className="text-xl font-bold text-text mb-0.5">For Me</p>
-                <p className="text-xs text-text-muted mb-4">Individual Lifetime Access</p>
-                <div className="mb-5">
-                  {showIndStrike && <span className="text-xs text-text-muted line-through mr-2">{regInd}</span>}
-                  <span className="text-5xl font-bold text-gold">{indLifetime}</span>
-                  <p className="text-xs text-gold/60 mt-1">one-time · no renewal ever</p>
+                <p className="text-2xl font-bold text-text mb-1">For Me</p>
+                <p className="text-sm text-text-muted mb-4">Individual Lifetime Access</p>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/10 border border-gold/20 mb-4 self-start">
+                  <User className="w-3.5 h-3.5 text-gold" />
+                  <span className="text-sm font-semibold text-gold">1 person</span>
                 </div>
-                <ul className="space-y-2 mb-7 flex-1">
+                <div className="mb-7">
+                  {showIndStrike && <span className="text-xs text-text-muted line-through mr-2">{regInd}</span>}
+                  <span className="text-8xl font-extrabold tracking-tight text-gold">{indLifetime}</span>
+                  <p className="text-sm font-medium text-gold/70 mt-2">one-time · no renewal ever</p>
+                </div>
+                <ul className="space-y-3 mb-8 flex-1">
                   {[
                     "Pay once — yours forever",
                     "Full access, start anytime",
                     "Videos, quizzes, flashcards, mind maps",
+                    "Structured 100-part Seerah path",
                     "Progress dashboard · Mobile friendly",
                   ].map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-xs text-text-secondary">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-gold flex-shrink-0 mt-0.5" />
+                    <li key={f} className="flex items-start gap-2.5 text-sm text-text-secondary">
+                      <CheckCircle2 className="w-4 h-4 text-gold flex-shrink-0 mt-0.5" />
                       {f}
                     </li>
                   ))}
                 </ul>
                 <Link
                   href={individualLifetimeUrl}
-                  data-track="individual_lifetime_cta_clicked"
+                  data-track={ev("lifetime_individual_click")}
                   data-plan="individual"
-                  className="block w-full py-4 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-base text-center transition-colors shadow-lg shadow-gold/25"
+                  className="block w-full py-5 rounded-2xl bg-gold hover:bg-gold-light text-ink font-extrabold text-base text-center transition-colors shadow-lg shadow-gold/25"
                 >
-                  Get Lifetime Access — {indLifetime}
+                  Get Lifetime Access — {indLifetime} →
                 </Link>
                 <div className="mt-3 flex items-center justify-center gap-1.5 text-xs text-text-muted">
                   <Infinity className="w-3.5 h-3.5" />
@@ -246,42 +273,48 @@ export function InfluencerPricingToggle({
               </div>
 
               {/* Family Lifetime — secondary */}
-              <div className="relative rounded-2xl border border-border bg-surface/50 p-5 flex flex-col">
+              <div className="relative min-h-[520px] sm:min-h-[640px] rounded-3xl border border-border bg-surface/70 p-6 sm:p-9 flex flex-col">
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap">
                   <span className="px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-surface border border-border text-text-muted">
-                    For Households
+                    Best Value for Families
                   </span>
                 </div>
-                <p className="text-base font-bold text-text mb-0.5">For My Family</p>
-                <p className="text-xs text-text-muted mb-4">Family Lifetime · up to 5 profiles</p>
-                <div className="mb-4">
-                  {showFamStrike && <span className="text-xs text-text-muted line-through mr-2">{regFam}</span>}
-                  <span className="text-3xl font-bold text-gold">{famLifetime}</span>
-                  <p className="text-xs text-text-muted mt-0.5">one-time</p>
+                <p className="text-xl font-bold text-text mb-1">For My Family</p>
+                <p className="text-sm text-text-muted mb-4">Family Lifetime · up to 5 profiles</p>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/10 border border-gold/20 mb-4 self-start">
+                  <Users className="w-3.5 h-3.5 text-gold/80" />
+                  <span className="text-sm font-semibold text-gold/90">Up to 5 members</span>
                 </div>
-                <ul className="space-y-1.5 mb-5 flex-1">
+                <div className="mb-7">
+                  {showFamStrike && <span className="text-xs text-text-muted line-through mr-2">{regFam}</span>}
+                  <span className="text-8xl font-extrabold tracking-tight text-gold">{famLifetime}</span>
+                  <p className="text-sm text-gold/60 mt-2">one-time · no renewal ever</p>
+                </div>
+                <ul className="space-y-3 mb-8 flex-1">
                   {[
-                    "Everything in Individual",
-                    "5 separate learner profiles",
-                    "One payment for the whole household",
+                    "Everything in the Individual plan",
+                    "Up to 5 separate learner profiles",
+                    "Each profile tracks progress independently",
+                    "Full access for every family member",
+                    "One payment — no recurring charges",
                   ].map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-xs text-text-secondary">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-gold/60 flex-shrink-0 mt-0.5" />
+                    <li key={f} className="flex items-start gap-2.5 text-sm text-text-secondary">
+                      <CheckCircle2 className="w-4 h-4 text-gold/60 flex-shrink-0 mt-0.5" />
                       {f}
                     </li>
                   ))}
                 </ul>
                 <Link
                   href={familyLifetimeUrl}
-                  data-track="family_lifetime_cta_clicked"
+                  data-track={ev("lifetime_family_click")}
                   data-plan="family"
-                  className="block w-full py-3 rounded-xl border border-gold/30 text-gold font-semibold text-sm text-center hover:bg-gold/5 transition-colors"
+                  className="block w-full py-4 rounded-2xl border border-gold/30 text-gold font-bold text-base text-center hover:bg-gold/5 transition-colors"
                 >
-                  Get Family Access — {famLifetime}
+                  Get Family Access — {famLifetime} →
                 </Link>
                 <div className="mt-3 flex items-center justify-center gap-1.5 text-xs text-text-muted">
                   <Infinity className="w-3.5 h-3.5" />
-                  One-time payment
+                  One-time payment · yours forever
                 </div>
               </div>
 
@@ -300,11 +333,14 @@ export function InfluencerPricingToggle({
           </>
         )}
 
-        {/* ── Trust row ───────────────────────────────────────────── */}
-        <div className="flex items-center justify-center gap-4 sm:gap-6 flex-wrap text-xs text-text-muted mt-5">
-          <span className="flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-gold/60" />7-day refund guarantee</span>
-          <span className="flex items-center gap-1.5"><Lock className="w-3.5 h-3.5 text-gold/60" />Secure checkout</span>
-          <span className="flex items-center gap-1.5"><Zap className="w-3.5 h-3.5 text-gold/60" />Instant access</span>
+        {/* ── Reassurance below cards ──────────────────────────────── */}
+        <p className="text-center text-sm font-medium text-text-muted mt-6">
+          Secure checkout · Instant access after payment · 7-day refund guarantee
+        </p>
+        <div className="flex items-center justify-center gap-4 sm:gap-6 flex-wrap text-xs text-text-muted mt-3">
+          <span className="flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-gold/60" />No card needed for Part 1</span>
+          <span className="flex items-center gap-1.5"><Lock className="w-3.5 h-3.5 text-gold/60" />Cancel anytime</span>
+          <span className="flex items-center gap-1.5"><Zap className="w-3.5 h-3.5 text-gold/60" />Start in under 60 seconds</span>
         </div>
 
       </div>

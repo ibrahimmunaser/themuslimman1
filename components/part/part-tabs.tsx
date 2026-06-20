@@ -561,19 +561,25 @@ interface PartTabsProps {
   initialVideoCompleted?: boolean;
   initialVideoPercent?: number;
   initialQuizBestScore?: number;
+  /** Force a specific tab to be active on first render, overriding URL param and default. */
+  forcedInitialMode?: ModeId;
+  /** Hide the mode/tab navigation row entirely (used in marketing previews to reduce friction). */
+  hideTabNav?: boolean;
 }
 
-export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initialAssetUrls, initialVideoCompleted, initialVideoPercent, initialQuizBestScore }: PartTabsProps) {
+export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initialAssetUrls, initialVideoCompleted, initialVideoPercent, initialQuizBestScore, forcedInitialMode, hideTabNav = false }: PartTabsProps) {
   const availableModes = MODES.filter((m) => getModeSubTabs(m, part).length > 0);
   const defaultMode = availableModes[0] ?? MODES[0];
 
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  // Initialise from ?mode= URL param so deep links and browser back/fwd work
+  // Initialise from ?mode= URL param so deep links and browser back/fwd work.
+  // forcedInitialMode takes highest precedence (used by the free preview to default to Watch).
   const modeParam = searchParams.get("mode") as ModeId | null;
-  const resolvedInitialMode: ModeId =
-    modeParam && availableModes.some((m) => m.id === modeParam) ? modeParam : defaultMode.id;
+  const resolvedInitialMode: ModeId = forcedInitialMode && availableModes.some((m) => m.id === forcedInitialMode)
+    ? forcedInitialMode
+    : modeParam && availableModes.some((m) => m.id === modeParam) ? modeParam : defaultMode.id;
 
   const [activeMode, setActiveMode] = useState<ModeId>(resolvedInitialMode);
   const currentMode = MODES.find((m) => m.id === activeMode) ?? defaultMode;
@@ -636,8 +642,8 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
 
       <div className="space-y-6">
 
-          {/* Mode selector strip */}
-          <div className="space-y-1.5 sm:space-y-0">
+          {/* Mode selector strip — hidden in marketing preview contexts */}
+          <div className={`space-y-1.5 sm:space-y-0${hideTabNav ? " hidden" : ""}`}>
             {/* Mobile: two rows — primary (Watch/Read/Slides) then secondary */}
             {/* Desktop: single row with all tabs */}
             <div className="sm:hidden space-y-2">

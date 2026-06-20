@@ -684,6 +684,29 @@ model SupportTicket {
   @@index([status])
 }
 
+model SeerahCheckupLead {
+  id              String   @id @default(cuid())
+  name            String
+  email           String
+  phone           String?
+  answers         Json
+  score           Int
+  resultType      String   // "scattered" | "partial" | "strong"
+  recommendedPlan String
+  openText        String?
+  clickedCheckout Boolean  @default(false)
+  source          String?
+  utmSource       String?
+  utmMedium       String?
+  utmCampaign     String?
+  utmContent      String?
+  createdAt       DateTime @default(now())
+
+  @@index([email])
+  @@index([createdAt])
+  @@index([source])
+}
+
 model User {
   id                                              String           @id
   fullName                                        String

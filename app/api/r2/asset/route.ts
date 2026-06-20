@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { r2StreamFile, r2GetMetadata, generateETag, isCached } from "@/lib/r2";
+import { r2StreamFile, r2GetMetadata, generateETag, isCached, generateSignedR2Url, IMAGE_URL_EXPIRY } from "@/lib/r2";
 import { requirePartAccess, extractPartNumberFromR2Key } from "@/lib/part-access";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// NOTE: This route proxies binary content through the Next.js server rather than
-// issuing signed R2 URLs directly. This is intentional for cases where the client
-// cannot receive a redirect (e.g. <img src> in certain WebViews, Safari range
-// requests). The trade-off is higher server bandwidth and latency compared to
-// direct signed URLs. For the primary video/audio player, prefer the
-// /api/part/[partNumber]/assets route which returns pre-signed URLs instead.
+// In production this route issues a 307 redirect to a short-lived signed R2 URL
+// so that all media bandwidth is charged to Cloudflare R2, not Vercel.
+// In local development (no R2 credentials) it falls through to the proxy path below.
 
 const MIME_TYPES: Record<string, string> = {
   ".mp4": "video/mp4",
@@ -49,6 +46,18 @@ export async function GET(req: NextRequest) {
   } else {
     // Key does not match a known part — deny by default to avoid arbitrary R2 access.
     return new NextResponse("Forbidden", { status: 403 });
+  }
+
+  // In production, redirect to a signed R2 URL so bandwidth is served directly
+  // by Cloudflare R2 and does not count against Vercel Fast Data Transfer.
+  if (process.env.NODE_ENV === "production") {
+    try {
+      const signedUrl = await generateSignedR2Url(key, IMAGE_URL_EXPIRY);
+      return NextResponse.redirect(signedUrl, { status: 307 });
+    } catch (error) {
+      console.error("[r2/asset] Failed to generate signed URL for redirect:", error);
+      return new NextResponse("Failed to generate media URL", { status: 500 });
+    }
   }
 
   try {

@@ -335,25 +335,8 @@ export function SimpleResourceContent({
     }
   }, [resourceType]);
 
-  // Preload adjacent images for faster navigation
-  useEffect(() => {
-    if (!selectedPart || !resourceUrl || resourceType === "slides" || resourceType === "flashcard") return;
-    
-    // Preload next part's image
-    const currentIndex = PARTS.findIndex(p => p.partNumber === selectedPart.partNumber);
-    if (currentIndex !== -1 && currentIndex < PARTS.length - 1) {
-      const nextPart = PARTS[currentIndex + 1];
-      const nextUrl = resourceType === "mindmap"
-        ? `/api/r2/asset?key=${encodeURIComponent(`mindmaps/Part ${nextPart.partNumber} - Mindmap.webp`)}`
-        : `/api/r2/asset?key=${encodeURIComponent(`Infographics-Bento-Grid/Part ${nextPart.partNumber}.webp`)}`;
-      
-      const webpUrl = webpVariant(nextUrl);
-      if (webpUrl) {
-        const img = new Image();
-        img.src = webpUrl;
-      }
-    }
-  }, [selectedPart, resourceUrl, resourceType]);
+  // Adjacent image preload intentionally removed — preloading via /api/r2/asset
+  // proxied bandwidth through Vercel. Resources now load on demand via fetchSignedUrl.
 
   const handleOpenResource = async (part: typeof PARTS[0]) => {
     setSelectedPart({ 

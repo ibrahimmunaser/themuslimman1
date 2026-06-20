@@ -101,6 +101,17 @@ export async function Part1FullPreview({
         )}
       </div>
 
+      {/* Learning path descriptor — replaces the hidden tab row */}
+      <div className="px-4 sm:px-6 py-3 border-b border-border/50 bg-surface-raised/40">
+        <p className="text-sm font-semibold text-center text-text">
+          Every lesson follows one simple path:{" "}
+          <span className="text-gold">Watch → Study → Review</span>
+        </p>
+        <p className="text-xs text-text-muted text-center mt-0.5">
+          Video lesson · reading · slides · mind map · flashcards · quiz
+        </p>
+      </div>
+
       {/* Full Part 1 Content — PartTabs is lazy-loaded in a separate JS chunk */}
       <div className="bg-surface px-4 sm:px-6 py-6">
         <Part1PreviewTabs part={part} initialAssetUrls={initialAssetUrls} />
