@@ -374,12 +374,24 @@ export default function CheckupClient() {
       {/* Header */}
       <header className="py-4 px-4 sm:px-6 border-b border-border/30 bg-ink sticky top-0 z-40">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <Link href="/theorthodoxmuslim" className="text-sm text-text-muted hover:text-text transition-colors">
+          <Link href="/theorthodoxmuslim" className="text-sm text-text-muted hover:text-text transition-colors flex-shrink-0">
             ← Back
           </Link>
-          <span className="text-xs font-semibold text-gold uppercase tracking-wider">Free Seerah Checkup</span>
-          <span className="text-xs text-text-muted">
-            {step === "questions" ? `${currentQ + 1}/10` : step === "email" ? "Almost done" : "Your result"}
+
+          {/* Step indicator */}
+          <div className="flex items-center gap-2 text-xs font-semibold">
+            <span className={step === "questions" ? "text-gold" : "text-text-muted/40"}>
+              Free Seerah Checkup
+            </span>
+            <span className="text-text-muted/25">›</span>
+            <span className={step === "email" || step === "result" ? "text-gold font-bold" : "text-text-muted/40"}>
+              Your Result
+            </span>
+          </div>
+
+          {/* Right side counter / status */}
+          <span className="text-xs text-text-muted flex-shrink-0">
+            {step === "questions" ? `${currentQ + 1}/10` : ""}
           </span>
         </div>
       </header>
