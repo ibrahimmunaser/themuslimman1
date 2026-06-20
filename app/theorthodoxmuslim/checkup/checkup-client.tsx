@@ -378,12 +378,12 @@ export default function CheckupClient() {
           </Link>
 
           {/* Step indicator — absolutely centred so it never overlaps side elements */}
-          <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap pointer-events-none">
-            <span className={step === "questions" ? "text-gold" : "text-text-muted/40"}>
+          <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 text-xs font-semibold whitespace-nowrap pointer-events-none">
+            <span className={step === "questions" ? "text-gold" : "text-text-muted/60"}>
               Free Seerah Checkup
             </span>
-            <span className="text-text-muted/25">›</span>
-            <span className={step === "email" || step === "result" ? "text-gold font-bold" : "text-text-muted/40"}>
+            <span className="text-text-muted/50">›</span>
+            <span className={step === "email" || step === "result" ? "text-gold font-bold" : "text-text-muted/60"}>
               Your Result
             </span>
           </div>
