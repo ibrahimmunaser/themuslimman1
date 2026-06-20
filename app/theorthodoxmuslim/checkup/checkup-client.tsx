@@ -372,13 +372,13 @@ export default function CheckupClient() {
 
       {/* Header */}
       <header className="py-4 px-4 sm:px-6 border-b border-border/30 bg-ink sticky top-0 z-40">
-        <div className="max-w-2xl mx-auto flex items-center justify-between">
+        <div className="max-w-2xl mx-auto flex items-center justify-between relative">
           <Link href="/theorthodoxmuslim" className="text-sm text-text-muted hover:text-text transition-colors flex-shrink-0">
             ← Back
           </Link>
 
-          {/* Step indicator */}
-          <div className="flex items-center gap-2 text-xs font-semibold">
+          {/* Step indicator — absolutely centred so it never overlaps side elements */}
+          <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap pointer-events-none">
             <span className={step === "questions" ? "text-gold" : "text-text-muted/40"}>
               Free Seerah Checkup
             </span>
@@ -388,7 +388,7 @@ export default function CheckupClient() {
             </span>
           </div>
 
-          {/* Right side counter / status */}
+          {/* Right side counter */}
           <span className="text-xs text-text-muted flex-shrink-0">
             {step === "questions" ? `${currentQ + 1}/10` : ""}
           </span>
