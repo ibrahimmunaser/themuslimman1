@@ -12,7 +12,7 @@ import {
 } from "@stripe/react-stripe-js";
 import {
   Check, Lock, User, Users, ArrowLeft, ArrowRight,
-  Shield, Star, Tag, X, Eye, EyeOff, RefreshCw,
+  Tag, Eye, EyeOff, RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
 import { PLANS, formatPrice } from "@/lib/stripe-config";
@@ -355,13 +355,13 @@ function CheckoutForm({
       ? "Start Free Trial — $0 Today"
       : billing === "monthly"
       ? audience === "family"
-        ? `Start Family Learning — ${formatPrice(finalPrice)}/month`
-        : `Start Learning — ${formatPrice(finalPrice)}/month`
+        ? `Start Family Access — ${formatPrice(finalPrice)}/month`
+        : `Start Individual Access — ${formatPrice(finalPrice)}/month`
       : isAnnArborStudent
         ? `Get Student Lifetime Access — ${formatPrice(finalPrice)}`
         : audience === "family"
           ? `Get Family Lifetime Access — ${formatPrice(finalPrice)}`
-          : `Get Lifetime Access — ${formatPrice(finalPrice)}`;
+          : `Get Individual Lifetime Access — ${formatPrice(finalPrice)}`;
 
   const trustBadges =
     billing === "trial"
@@ -393,14 +393,14 @@ function CheckoutForm({
         ]
       : billing === "monthly"
       ? [
-          "Instant access right after payment — start today.",
-          "Cancel anytime — no long-term commitment.",
-          "We'll email you a link to set your password.",
+          "Get instant access after payment.",
+          "Set your password from your email.",
+          "Start Part 1 and continue at your own pace.",
         ]
       : [
-          "You get instant access to the full course.",
-          "No recurring charges — this is a one-time payment.",
-          "Set your password via email to activate your account.",
+          "Get instant access after payment.",
+          "Set your password from your email.",
+          "Start Part 1 and continue at your own pace.",
         ];
 
   return (
@@ -465,12 +465,6 @@ function CheckoutForm({
           </div>
         )}
 
-        {/* Source credibility — shown before payment for all plans */}
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-3 text-xs text-zinc-400 leading-relaxed">
-          <p className="font-semibold text-zinc-300 mb-1">Grounded in authentic sources</p>
-          <p>Based on Qur&apos;an, authentic hadith, and classical Seerah sources. Structured for learning, not random clips. This is an educational tool, not a fatwa site or replacement for scholars.</p>
-        </div>
-
         <button
           type="submit"
           disabled={!stripe || processing}
@@ -493,7 +487,7 @@ function CheckoutForm({
         {/* Safety valve — give hesitant users a free path instead of losing them */}
         <p className="text-center text-xs text-zinc-500">
           Not ready yet?{" "}
-          <a href="/pricing#preview" className="underline hover:text-zinc-300 transition-colors">
+          <a href="/watch-free" className="underline hover:text-zinc-300 transition-colors">
             Watch Part 1 free first
           </a>
         </p>
@@ -512,6 +506,10 @@ function CheckoutForm({
             ))}
           </ol>
         </div>
+
+        <p className="text-xs text-zinc-600 text-center leading-relaxed">
+          Built from Qur&apos;an, authentic hadith, and classical Seerah sources. Educational tool · Not a fatwa site.
+        </p>
 
         <p className="text-xs text-zinc-600 text-center leading-relaxed">
           By {billing === "trial" ? "starting your trial" : billing === "monthly" ? "subscribing" : "purchasing"} you agree to our{" "}
@@ -552,6 +550,16 @@ interface CheckoutPageClientProps {
    * the user sees a simple "Your selected offer" confirmation view instead.
    */
   initialSourceParam?: string | null;
+  /**
+   * Email collected upstream (e.g. Seerah Checkup funnel email gate).
+   * Pre-fills the guest checkout form and auto-starts the Stripe intent.
+   */
+  initialEmail?: string | null;
+  /**
+   * First name collected upstream. Used alongside initialEmail to skip the
+   * name field. Only effective when initialEmail is also provided.
+   */
+  initialName?: string | null;
 }
 
 // ── Main checkout content ─────────────────────────────────────────────────────
@@ -588,6 +596,8 @@ function CheckoutPageContent({
   initialPromoParam = null,
   initialSourceParam = null,
   isLifetimeUpgrade = false,
+  initialEmail = null,
+  initialName  = null,
 }: CheckoutPageClientProps) {
   // promoParam comes from the server prop — no useSearchParams() needed.
   // This guarantees server and client render the same initial HTML.
@@ -641,7 +651,12 @@ function CheckoutPageContent({
   const [authEmail,  setAuthEmail]   = useState(userEmail);
   const [authMode,   setAuthMode]    = useState<AuthMode>("signup");
   const [showPass,   setShowPass]    = useState(false);
-  const [authForm,   setAuthForm]    = useState({ fullName: "", email: "", password: "", confirmPassword: "" });
+  const [authForm,   setAuthForm]    = useState({
+    fullName:        initialName  ?? "",
+    email:           initialEmail ?? "",
+    password:        "",
+    confirmPassword: "",
+  });
   const [authError,  setAuthError]   = useState("");
   const [authLoading,setAuthLoading] = useState(false);
   const [needsVerification, setNeedsVerification] = useState(false);
@@ -1067,6 +1082,20 @@ function CheckoutPageContent({
     }, 600);
   };
 
+  // When arriving from the Seerah Checkup funnel with a pre-filled email + name,
+  // auto-start the guest checkout flow immediately — the user doesn't need to
+  // re-enter details they already gave the funnel.
+  useEffect(() => {
+    if (!initialEmail || isAuthenticated) return;
+    const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(initialEmail);
+    if (!validEmail) return;
+    const prefillName = (initialName ?? "").trim();
+    if (prefillName.length < 2) return;
+    setAutoIntentStarted(true);
+    runGuestCheckout(prefillName, initialEmail);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // run once on mount; initial values are stable
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError("");
@@ -1188,14 +1217,13 @@ function CheckoutPageContent({
     : (guestCreatorDiscount || discountAmount);
   const displayPrice    = displayBase - displayDiscount;
 
-  // ── Left column ────────────────────────────────────────────────────────────
+  // ── Plan summary (top of single-column checkout) ──────────────────────────
 
   const audienceOptions: { id: Audience; Icon: typeof User; label: string }[] = [
     { id: "individual", Icon: User,  label: "Individual" },
     { id: "family",     Icon: Users, label: "Family" },
   ];
 
-  // Monthly is the default/first option; lifetime is available as a secondary option.
   const allBillingOptions: { id: Billing; label: string; price: number; priceSuffix?: string; priceOverride?: string; sub: string; badge?: string }[] = audience === "individual"
     ? [
         { id: "monthly",  label: "Monthly",  price: PLANS.monthly.price,   priceSuffix: "/mo", sub: "Cancel anytime",          badge: "Most Popular" },
@@ -1208,13 +1236,10 @@ function CheckoutPageContent({
 
   const billingOptions = allBillingOptions;
 
-  const LeftColumn = (
-    <div className="order-2 lg:order-1 lg:w-1/2 bg-zinc-900/50 lg:border-r border-zinc-800 px-6 sm:px-12 py-12 flex flex-col justify-center border-t lg:border-t-0">
-
-      {/* In-app browser warning — Instagram/TikTok/Facebook WebViews can block Stripe.
-          Only shown when a social-app browser is detected on mobile. */}
+  const PlanSummary = (
+    <div>
       {isInApp && (
-        <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-sm leading-relaxed">
+        <div className="mb-5 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-sm leading-relaxed">
           <p className="font-semibold mb-1">⚠️ Payment may not work in this browser</p>
           <p className="text-amber-300/80 text-xs">
             To complete your purchase, please open this page in Safari or Chrome.{" "}
@@ -1222,83 +1247,68 @@ function CheckoutPageContent({
           </p>
         </div>
       )}
-      {/* Back link — hidden for influencer traffic (no escape hatch mid-funnel) */}
-      {!isInfluencerMode && (
-        <Link href="/pricing" className="inline-flex items-center gap-1.5 text-xs text-zinc-600 hover:text-zinc-400 transition-colors mb-8">
-          <ArrowLeft className="w-3 h-3" />
-          Back to pricing
-        </Link>
-      )}
 
-      <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">Complete Seerah</h1>
-      <p className="text-zinc-400 text-base mb-8 leading-relaxed">
-        {audience === "family"
-          ? "One household account with up to 5 learner profiles, each with their own progress."
-          : "Full access to the complete Seerah of the Prophet ﷺ."}
-      </p>
-
-      {/* ── Selected offer confirmation — always shown until user taps "Change plan" */}
-      {!showPlanSelector && (
-        <div className="mb-8">
-          <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">Your selected plan</p>
-          <div className="border border-gold/30 bg-gold/5 rounded-xl p-4 space-y-3">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-base font-bold text-white">
-                  {isAnnArborStudent
-                    ? "Ann Arbor Student Lifetime Access"
-                    : billing === "monthly"
-                      ? audience === "family"
-                        ? "Family Monthly Membership"
-                        : "Individual Monthly Membership"
-                      : audience === "family"
-                        ? "Family Lifetime Access"
-                        : "Individual Lifetime Access"}
-                </p>
-                <p className="text-xs text-zinc-400 mt-0.5">
-                  {audience === "family" ? "Up to 5 learner profiles · " : ""}
-                  {billing === "monthly"
-                    ? "Billed monthly · Cancel anytime"
-                    : "One-time payment · No subscription · Lifetime access"}
-                </p>
-              </div>
-              <p className="text-xl font-bold text-gold whitespace-nowrap">
-                {formatPrice(displayPrice)}{billing === "monthly" ? "/mo" : ""}
+      {!showPlanSelector ? (
+        <div className="rounded-xl border border-gold/30 bg-gold/5 p-4 sm:p-5">
+          <div className="flex items-start justify-between gap-4 mb-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-lg font-bold text-white leading-snug">
+                {isAnnArborStudent
+                  ? "Ann Arbor Student Lifetime"
+                  : billing === "monthly"
+                    ? audience === "family" ? "Family Access" : "Individual Access"
+                    : audience === "family" ? "Family Lifetime Access" : "Individual Lifetime Access"}
+              </p>
+              <p className="text-sm text-zinc-400 mt-0.5 leading-snug">
+                {audience === "family"
+                  ? "Up to 5 profiles · separate progress · one household plan."
+                  : "Continue the full 100-part Seerah path."}
+              </p>
+              <p className="text-xs text-zinc-600 mt-1.5">
+                Videos · quizzes · flashcards · summaries · progress tracking
               </p>
             </div>
-            {displayDiscount > 0 && (
-              <div className="flex items-center gap-2 text-xs text-green-400">
-                <Check className="w-3.5 h-3.5 flex-shrink-0" />
-                Special offer discount applied — saving {formatPrice(displayDiscount)}
-              </div>
-            )}
-            <div className="flex flex-wrap gap-x-4 gap-y-1">
-              {(billing === "monthly"
-                ? ["Cancel anytime", "Instant access", "7-day refund guarantee"]
-                : ["One-time payment", "No subscription", "7-day refund guarantee", "Instant access"]
-              ).map((t) => (
-                <span key={t} className="flex items-center gap-1 text-xs text-zinc-400">
-                  <Check className="w-3 h-3 text-zinc-600 flex-shrink-0" />
-                  {t}
-                </span>
-              ))}
+            <div className="text-right flex-shrink-0">
+              <p className="text-2xl sm:text-3xl font-extrabold text-gold leading-none">
+                {formatPrice(displayPrice)}
+              </p>
+              {billing === "monthly" && <p className="text-xs text-zinc-500 mt-0.5">/month</p>}
             </div>
           </div>
+
+          <div className="flex flex-wrap gap-x-4 gap-y-1.5 pt-3 border-t border-zinc-800/60">
+            {(billing === "monthly"
+              ? ["Cancel anytime", "Instant access", "7-day refund"]
+              : isLifetime
+                ? ["One-time payment", "No subscription", "7-day refund", "Instant access"]
+                : ["No charge today", "Cancel anytime"]
+            ).map((t) => (
+              <span key={t} className="flex items-center gap-1 text-xs text-zinc-400">
+                <Check className="w-3 h-3 text-zinc-600 flex-shrink-0" />
+                {t}
+              </span>
+            ))}
+          </div>
+
+          {displayDiscount > 0 && (
+            <div className="flex items-center gap-1.5 text-xs text-green-400 mt-2.5">
+              <Check className="w-3.5 h-3.5 flex-shrink-0" />
+              Discount applied — saving {formatPrice(displayDiscount)}
+            </div>
+          )}
+
           <button
             onClick={() => {
               setShowPlanSelector(true);
               sendCheckoutEvent(initialSourceParam ?? "unknown", "change_plan_clicked", { plan: `${audience}-${billing}` });
             }}
-            className="mt-2 text-[10px] text-zinc-800 hover:text-zinc-600 transition-colors"
+            className="mt-3 text-[10px] text-zinc-700 hover:text-zinc-500 transition-colors"
           >
-            Change plan
+            Change plan →
           </button>
         </div>
-      )}
-
-      {/* ── Plan selector — only shown when user explicitly taps "Need a different plan?" */}
-      {showPlanSelector && (
-        <>
+      ) : (
+        <div className="rounded-xl border border-zinc-700 bg-zinc-900 p-4 sm:p-5">
           <div className="flex items-center gap-2 mb-4">
             <button
               onClick={() => setShowPlanSelector(false)}
@@ -1309,8 +1319,7 @@ function CheckoutPageContent({
             </button>
           </div>
 
-          {/* Audience tabs */}
-          <div className="flex gap-1 bg-zinc-900 border border-zinc-800 rounded-xl p-1 mb-6">
+          <div className="flex gap-1 bg-zinc-950 border border-zinc-800 rounded-xl p-1 mb-4">
             {audienceOptions.map(({ id, Icon, label }) => (
               <button
                 key={id}
@@ -1337,8 +1346,7 @@ function CheckoutPageContent({
             ))}
           </div>
 
-          {/* Billing options */}
-          <div className="space-y-3 mb-8">
+          <div className="space-y-2.5">
             {billingOptions.map(({ id, label, price, priceSuffix, priceOverride, sub, badge }) => (
               <button
                 key={id}
@@ -1380,41 +1388,8 @@ function CheckoutPageContent({
               </button>
             ))}
           </div>
-        </>
+        </div>
       )}
-
-      {/* Features */}
-      <ul className="space-y-2.5">
-        {(billing === "monthly" ? [
-          "Short video lessons — one focused topic per part",
-          "Quiz after each lesson to retain what you learned",
-          "Flashcards to review key names and events",
-          "Summaries and mind maps to remember the timeline",
-          "Progress tracking so you always know where to continue",
-          "Cancel anytime — no long-term commitment",
-        ] : currentPlan.features).map((f) => (
-          <li key={f} className="flex items-start gap-3">
-            <div className="w-5 h-5 rounded-full bg-gold/15 flex items-center justify-center flex-shrink-0 mt-0.5">
-              <Check className="w-3 h-3 text-gold" />
-            </div>
-            <span className="text-sm text-zinc-300">{f}</span>
-          </li>
-        ))}
-      </ul>
-
-      {/* Trust badges */}
-      <div className="mt-8 pt-6 border-t border-zinc-800 flex flex-wrap gap-4">
-        {[
-          { Icon: Shield, text: isTrial ? "Cancel anytime" : isLifetime ? "7-day refund guarantee" : "Cancel anytime" },
-          { Icon: Lock,   text: "Secure payment" },
-          { Icon: Star,   text: isTrial ? "7-day trial access" : isLifetime ? "Lifetime access" : "Full access while subscribed" },
-        ].map(({ Icon, text }) => (
-          <div key={text} className="flex items-center gap-2 text-xs text-zinc-500">
-            <Icon className="w-4 h-4 text-zinc-600" />
-            {text}
-          </div>
-        ))}
-      </div>
     </div>
   );
 
@@ -1521,51 +1496,48 @@ function CheckoutPageContent({
     };
 
     return (
-      <div className="min-h-screen bg-zinc-950 flex flex-col lg:flex-row">
-        {LeftColumn}
-        <div className="order-1 lg:order-2 lg:w-1/2 px-6 sm:px-12 py-12 flex flex-col justify-center">
-          <div className="max-w-md w-full mx-auto space-y-4">
-            <div className="p-6 rounded-xl bg-gold/10 border border-gold/25 text-center space-y-3">
-              <p className="text-lg font-bold text-white">
-                {isOnFamily ? "You already have Family Access" : "Free trial already used"}
-              </p>
-              <p className="text-sm text-zinc-400">
-                {isOnFamily
-                  ? "Your Family plan already includes everything. Manage it from your billing page."
-                  : "You've already used your free trial. Upgrade your plan below."}
-              </p>
-              <Link href="/seerah" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gold hover:bg-gold-light text-ink font-semibold text-sm transition-colors">
-                Go to Dashboard <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-
-            {!isOnFamily && (
-              <div className="p-5 rounded-xl border border-amber-500/20 bg-amber-500/5 space-y-3">
-                <p className="font-semibold text-white text-sm">Upgrade to Family Access</p>
-                <p className="text-xs text-zinc-400 leading-relaxed">
-                  One household account · up to 5 learner profiles · separate progress for every learner.
-                </p>
-                {upgradeError && (
-                  <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{upgradeError}</p>
-                )}
-                <div className="flex flex-col gap-2">
-                  <button
-                    onClick={handleSwitchToFamilyMonthly}
-                    disabled={upgradeLoading}
-                    className="inline-flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm transition-colors disabled:opacity-50"
-                  >
-                    {upgradeLoading ? "Upgrading…" : <>Switch to Family Monthly — $9.99/mo <ArrowRight className="w-3.5 h-3.5" /></>}
-                  </button>
-                  <button
-                    onClick={() => { setTrialAlreadyUsed(false); setAudience("family"); setBilling("lifetime"); }}
-                    className="inline-flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl border border-amber-500/40 hover:border-amber-500/70 text-amber-400 font-semibold text-sm transition-colors"
-                  >
-                    Family Lifetime — $99 one-time
-                  </button>
-                </div>
-              </div>
-            )}
+      <div className="min-h-screen bg-zinc-950 py-10 px-4">
+        <div className="max-w-[520px] mx-auto space-y-4">
+          <div className="p-6 rounded-xl bg-gold/10 border border-gold/25 text-center space-y-3">
+            <p className="text-lg font-bold text-white">
+              {isOnFamily ? "You already have Family Access" : "Free trial already used"}
+            </p>
+            <p className="text-sm text-zinc-400">
+              {isOnFamily
+                ? "Your Family plan already includes everything. Manage it from your billing page."
+                : "You've already used your free trial. Upgrade your plan below."}
+            </p>
+            <Link href="/seerah" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gold hover:bg-gold-light text-ink font-semibold text-sm transition-colors">
+              Go to Dashboard <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
+
+          {!isOnFamily && (
+            <div className="p-5 rounded-xl border border-amber-500/20 bg-amber-500/5 space-y-3">
+              <p className="font-semibold text-white text-sm">Upgrade to Family Access</p>
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                One household account · up to 5 learner profiles · separate progress for every learner.
+              </p>
+              {upgradeError && (
+                <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{upgradeError}</p>
+              )}
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={handleSwitchToFamilyMonthly}
+                  disabled={upgradeLoading}
+                  className="inline-flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm transition-colors disabled:opacity-50"
+                >
+                  {upgradeLoading ? "Upgrading…" : <>Switch to Family Monthly — $9.99/mo <ArrowRight className="w-3.5 h-3.5" /></>}
+                </button>
+                <button
+                  onClick={() => { setTrialAlreadyUsed(false); setAudience("family"); setBilling("lifetime"); }}
+                  className="inline-flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl border border-amber-500/40 hover:border-amber-500/70 text-amber-400 font-semibold text-sm transition-colors"
+                >
+                  Family Lifetime — $99 one-time
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -1593,77 +1565,74 @@ function CheckoutPageContent({
     const showUpgradeCta = isOnIndividual && audience === "individual";
 
     return (
-      <div className="min-h-screen bg-zinc-950 flex flex-col lg:flex-row">
-        {LeftColumn}
-        <div className="order-1 lg:order-2 lg:w-1/2 px-6 sm:px-12 py-12 flex flex-col justify-center">
-          <div className="max-w-md w-full mx-auto space-y-4">
-            <div className="p-6 rounded-xl bg-gold/10 border border-gold/25 text-center space-y-4">
-              <RefreshCw className="w-10 h-10 text-gold mx-auto" />
-              <p className="text-lg font-bold text-white">
-                {isDowngrade || familyDuplicate ? "You already have Family Access" : "You already have this plan"}
-              </p>
-              <p className="text-sm text-zinc-400">
-                {isDowngrade
-                  ? "Your Family plan already includes everything in the Individual plan — plus up to 5 learner profiles. There's nothing to downgrade to."
-                  : familyDuplicate
-                    ? "You already have an active Family plan. Head to your dashboard to continue learning."
-                    : showUpgradeCta
-                      ? "You're already on an individual trial. Head to your dashboard or upgrade to a family plan."
-                      : "Your account is already active. Head to your dashboard to continue learning."}
-              </p>
-              <Link
-                href="/seerah"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gold hover:bg-gold-light text-ink font-semibold text-sm transition-colors"
+      <div className="min-h-screen bg-zinc-950 py-10 px-4">
+        <div className="max-w-[520px] mx-auto space-y-4">
+          <div className="p-6 rounded-xl bg-gold/10 border border-gold/25 text-center space-y-4">
+            <RefreshCw className="w-10 h-10 text-gold mx-auto" />
+            <p className="text-lg font-bold text-white">
+              {isDowngrade || familyDuplicate ? "You already have Family Access" : "You already have this plan"}
+            </p>
+            <p className="text-sm text-zinc-400">
+              {isDowngrade
+                ? "Your Family plan already includes everything in the Individual plan — plus up to 5 learner profiles. There's nothing to downgrade to."
+                : familyDuplicate
+                  ? "You already have an active Family plan. Head to your dashboard to continue learning."
+                  : showUpgradeCta
+                    ? "You're already on an individual trial. Head to your dashboard or upgrade to a family plan."
+                    : "Your account is already active. Head to your dashboard to continue learning."}
+            </p>
+            <Link
+              href="/seerah"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gold hover:bg-gold-light text-ink font-semibold text-sm transition-colors"
+            >
+              Go to Dashboard <ArrowRight className="w-4 h-4" />
+            </Link>
+            {isDowngrade && (
+              <button
+                onClick={() => { setAudience("family"); }}
+                className="block w-full text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
               >
-                Go to Dashboard <ArrowRight className="w-4 h-4" />
-              </Link>
-              {isDowngrade && (
-                <button
-                  onClick={() => { setAudience("family"); }}
-                  className="block w-full text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
-                >
-                  View Family plan options →
-                </button>
-              )}
-            </div>
-            {showUpgradeCta && !familyDuplicate && (
-              <div className="p-5 rounded-xl border border-amber-500/20 bg-amber-500/5 space-y-3">
-                <p className="font-semibold text-white text-sm">Upgrade to Family Access</p>
-                <p className="text-xs text-zinc-400">
-                  One household account with up to 5 learner profiles and individual progress tracking.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    onClick={() => { setAudience("family"); setBilling("monthly"); }}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm transition-colors"
-                  >
-                    Switch to Family Monthly — $9.99/mo <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() => { setAudience("family"); setBilling("lifetime"); }}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-amber-500/40 hover:border-amber-500/70 text-amber-400 font-semibold text-sm transition-colors"
-                  >
-                    Lifetime — $49
-                  </button>
-                </div>
-              </div>
+                View Family plan options →
+              </button>
             )}
           </div>
+          {showUpgradeCta && !familyDuplicate && (
+            <div className="p-5 rounded-xl border border-amber-500/20 bg-amber-500/5 space-y-3">
+              <p className="font-semibold text-white text-sm">Upgrade to Family Access</p>
+              <p className="text-xs text-zinc-400">
+                One household account with up to 5 learner profiles and individual progress tracking.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => { setAudience("family"); setBilling("monthly"); }}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm transition-colors"
+                >
+                  Switch to Family Monthly — $9.99/mo <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => { setAudience("family"); setBilling("lifetime"); }}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-amber-500/40 hover:border-amber-500/70 text-amber-400 font-semibold text-sm transition-colors"
+                >
+                  Lifetime — $49
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
   }
 
-  // ── Unified right column: name/email → payment → price ────────────────────
-  // Layout order: 1) name/email  2) payment options  3) price summary
-
-  // No longer used — payment form is always shown via deferred Elements.
+  // ── Single-column checkout ─────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col lg:flex-row">
-      {LeftColumn}
-      <div className="order-1 lg:order-2 lg:w-1/2 px-6 sm:px-12 py-12 flex flex-col justify-center">
-        <div className="max-w-md w-full mx-auto space-y-4">
+    <div className="min-h-screen bg-zinc-950 py-8 px-4">
+      <div className="max-w-[520px] mx-auto space-y-5">
+
+        {/* Plan summary — always first */}
+        {PlanSummary}
+
+        <div className="space-y-4">
 
           {/* ── 1. Name + email (only shown for unauthenticated guests) ── */}
           {!isAuthenticated && authMode === "signup" && (
@@ -1892,7 +1861,7 @@ function CheckoutPageContent({
                       mode: "payment" as const,
                       amount: finalPrice > 0 ? finalPrice : 1, // must be > 0 for payment mode
                       currency: "usd",
-                      ...(billing === "monthly" ? { paymentMethodTypes: ["card", "link", "upi"] } : {}),
+                      ...(billing === "monthly" ? { paymentMethodTypes: ["card", "link"] } : {}),
                       appearance: elementsAppearance,
                     };
                 return (
@@ -1926,9 +1895,6 @@ function CheckoutPageContent({
               })()}
             </>
           )}
-
-          {/* ── 3. Price summary at the bottom ── */}
-          {OrderSummary}
 
         </div>
       </div>

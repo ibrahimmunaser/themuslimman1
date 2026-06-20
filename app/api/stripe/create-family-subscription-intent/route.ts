@@ -180,7 +180,7 @@ export async function POST(request: NextRequest) {
       payment_settings: {
         // Restrict to card and link only — Cash App and similar wallets cannot be
         // saved off-session and would fail renewal charges.
-        payment_method_types: ["card", "link", "upi"],
+        payment_method_types: ["card", "link"],
         save_default_payment_method: "on_subscription",
       },
       description: "Seerah Family Monthly — TheMuslimMan",

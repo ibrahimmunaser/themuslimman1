@@ -2,15 +2,15 @@
 
 import { SeerahCheckupClient } from "@/components/funnel/seerah-checkup-client";
 
-const UTM = "utm_source=youtube&utm_medium=influencer&utm_campaign=seerah_checkup&utm_content=theorthodoxmuslim";
-const SRC = "source=theorthodoxmuslim";
+const UTM = "utm_source=youtube&utm_medium=influencer&utm_campaign=seerah_checkup&utm_content=deenresponds";
+const SRC = "source=deenresponds";
 
-export default function OrthodoxFunnelClient() {
+export default function DeenFunnelClient() {
   return (
     <SeerahCheckupClient
-      creator="theorthodoxmuslim"
-      sourceBadge="As seen on The Orthodox Muslim"
-      eventPrefix="orthodox_"
+      creator="deenresponds"
+      sourceBadge="As seen on Deen Responds"
+      eventPrefix="deen_"
       urls={{
         individualMonthly:  `/checkout?plan=individual-monthly&${SRC}&${UTM}`,
         familyMonthly:      `/checkout?plan=family-monthly&${SRC}&${UTM}`,

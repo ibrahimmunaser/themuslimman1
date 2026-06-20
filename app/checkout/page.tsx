@@ -19,7 +19,7 @@ const LEGACY_PLAN_ALIASES: Record<string, string> = {
 };
 
 interface Props {
-  searchParams: Promise<{ plan?: string; billing?: string; audience?: string; promo?: string; source?: string }>;
+  searchParams: Promise<{ plan?: string; billing?: string; audience?: string; promo?: string; source?: string; email?: string; name?: string }>;
 }
 
 export default async function CheckoutPage({ searchParams }: Props) {
@@ -176,6 +176,12 @@ export default async function CheckoutPage({ searchParams }: Props) {
   const promoParamProp  = params.promo?.trim().toUpperCase() ?? null;
   const sourceParamProp = params.source?.trim().toLowerCase() ?? null;
 
+  // Pre-fill name/email when the user arrives from the Seerah Checkup funnel.
+  // Only pass these when the user is not already signed in (no point pre-filling
+  // an auth form that won't be shown).
+  const prefillEmail = !user ? (params.email?.trim() ?? null) : null;
+  const prefillName  = !user ? (params.name?.trim()  ?? null) : null;
+
   return (
     <CheckoutClientPage
       userEmail={user?.email ?? ""}
@@ -192,6 +198,8 @@ export default async function CheckoutPage({ searchParams }: Props) {
       initialPromoParam={promoParamProp}
       initialSourceParam={sourceParamProp}
       isLifetimeUpgrade={isLifetimeUpgrade}
+      initialEmail={prefillEmail}
+      initialName={prefillName}
     />
   );
 }

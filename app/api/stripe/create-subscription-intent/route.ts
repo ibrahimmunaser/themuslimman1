@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
         // Restrict to card and link only — Apple Pay/Google Pay work because they
         // confirm against a card network. Cash App and similar wallets cannot be
         // saved off-session and would fail all renewal charges.
-        payment_method_types: ["card", "link", "upi"],
+        payment_method_types: ["card", "link"],
         save_default_payment_method: "on_subscription",
       },
       description: "Seerah Individual Monthly — TheMuslimMan",
