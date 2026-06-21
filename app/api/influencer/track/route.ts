@@ -8,6 +8,7 @@ const KNOWN_CREATORS = [
   "community",
   "deenresponds",
   "annarbor",
+  "dearborn",
   "theorthodoxmuslim",
   "homepage",
 ] as const;

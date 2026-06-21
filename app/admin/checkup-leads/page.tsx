@@ -11,6 +11,7 @@ const SOURCE_LABELS: Record<string, string> = {
   browniesaadi:      "Brownie Saadi",
   community:         "Community",
   annarbor:          "Ann Arbor Students",
+  dearborn:          "Dearborn Community",
 };
 
 export default async function CheckupLeadsPage() {

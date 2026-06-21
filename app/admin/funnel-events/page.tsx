@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Funnel Events | Admin" };
 
-const CREATORS = ["homepage", "theorthodoxmuslim", "deenresponds", "browniesaadi", "community", "annarbor"] as const;
+const CREATORS = ["homepage", "theorthodoxmuslim", "deenresponds", "browniesaadi", "community", "annarbor", "dearborn"] as const;
 const CREATOR_LABELS: Record<string, string> = {
   homepage:          "Homepage (main + checkup)",
   theorthodoxmuslim: "The Orthodox Muslim",
@@ -11,6 +11,7 @@ const CREATOR_LABELS: Record<string, string> = {
   browniesaadi:      "Brownie Saadi",
   community:         "Community",
   annarbor:          "Ann Arbor Students",
+  dearborn:          "Dearborn Community",
 };
 
 const CHECKOUT_EVENTS = [
