@@ -102,7 +102,8 @@ export function CourseDashboardTabs({
       <div className="sticky top-0 z-50 border-b border-border bg-surface shadow-sm">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex" role="tablist" aria-label="Course sections">
-            {TABS.map((tab) => {
+            {/* Dashboard, Lessons, Resources tabs */}
+            {TABS.slice(0, 3).map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
 
@@ -143,6 +144,35 @@ export function CourseDashboardTabs({
                 <span className="hidden min-[480px]:inline">Reference</span>
               </span>
             </a>
+
+            {/* Progress tab */}
+            {TABS.slice(3).map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+
+              return (
+                <button
+                  key={tab.id}
+                  id={`tab-${tab.id}`}
+                  role="tab"
+                  aria-selected={isActive}
+                  aria-controls={`tab-panel-${tab.id}`}
+                  onClick={() => switchTab(tab.id)}
+                  className={clsx(
+                    "flex-1 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 px-1 sm:px-6 py-3 sm:py-4 min-h-[44px] text-xs sm:text-sm font-medium transition-all border-b-2",
+                    isActive
+                      ? "border-gold text-gold"
+                      : "border-transparent text-text-muted hover:text-text-secondary hover:border-border"
+                  )}
+                >
+                  <Icon className="w-4 h-4 flex-shrink-0" />
+                  <span className="truncate">
+                    <span className="min-[480px]:hidden">{tab.shortLabel}</span>
+                    <span className="hidden min-[480px]:inline">{tab.label}</span>
+                  </span>
+                </button>
+              );
+            })}
 
             {/* Account tab — mobile only; opens the sidebar account section */}
             <button
