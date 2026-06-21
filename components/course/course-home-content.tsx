@@ -5,7 +5,7 @@ import {
   Play, ArrowRight,
   Video, Headphones, FileText, Map, Layers, Brain, ClipboardCheck,
   Clock, Milestone, HelpCircle, Mail,
-  Image as ImageIcon, Info, CheckCircle2,
+  Image as ImageIcon, Info, CheckCircle2, BookOpen,
 } from "lucide-react";
 import { PrefetchPartLink } from "@/components/course/prefetch-part-link";
 import { FadeUp, StaggerChildren, AnimatedCounter, AnimatedProgressBar, AnimatedCard } from "@/components/motion";
@@ -211,6 +211,30 @@ export function CourseHomeContent({
             />
           </AnimatedCard>
       </StaggerChildren>
+
+      {/* ── Reference Library ─────────────────────────────────────────────── */}
+      <FadeUp as="section">
+        <Link
+          href="/reference"
+          className="block p-5 sm:p-6 rounded-2xl border-2 border-border bg-surface hover:border-gold/30 hover:bg-surface-raised transition-all group"
+        >
+          <div className="flex items-start gap-4">
+            <div className="p-2.5 rounded-lg bg-gold/10 border border-gold/20 group-hover:bg-gold/15 transition-colors">
+              <BookOpen className="w-5 h-5 text-gold" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-base font-bold text-text mb-1.5 group-hover:text-gold transition-colors">
+                Reference Library
+              </h3>
+              <p className="text-sm text-text-secondary leading-relaxed">
+                Extra Seerah reference guides, timelines, people, places, and historical notes to
+                help you understand the life of the Prophet ﷺ more clearly.
+              </p>
+            </div>
+            <ArrowRight className="w-5 h-5 text-text-muted group-hover:text-gold transition-colors shrink-0 mt-0.5" />
+          </div>
+        </Link>
+      </FadeUp>
 
       {/* ── Course Roadmap ────────────────────────────────────────────────── */}
       <section id="roadmap">
