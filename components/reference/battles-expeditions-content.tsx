@@ -627,7 +627,7 @@ const EVENTS_DATA: Event[] = [
   },
 ];
 
-const TREATY_EVENTS = [
+const TREATY_EVENTS: Event[] = [
   {
     id: 101,
     name: "Constitution of Madinah",
@@ -637,10 +637,10 @@ const TREATY_EVENTS = [
     relatedParties: "Muslims, Jewish tribes, and other Madinan groups",
     summary: "A foundational agreement organizing the Madinan community.",
     keyLesson: "Governance, rights, duties, and social order.",
-    importance: "Major" as const,
-    fightingOccurred: "No" as const,
+    importance: "Major",
+    fightingOccurred: "No",
     categoryTags: ["Treaty Events", "Madinah-Related", "Jewish Tribes of Madinah", "No Fighting", "Early Madinan Period"],
-    section: "treaties" as const,
+    section: "treaties",
   },
   {
     id: 102,
@@ -651,10 +651,10 @@ const TREATY_EVENTS = [
     relatedParties: "Muslims and Quraysh",
     summary: "A peace treaty that appeared difficult but became a clear opening for Islam.",
     keyLesson: "Strategic patience and trust in Allah's plan.",
-    importance: "Major" as const,
-    fightingOccurred: "No" as const,
+    importance: "Major",
+    fightingOccurred: "No",
     categoryTags: ["Treaty Events", "Makkah-Related", "Quraysh", "No Fighting", "Late Madinan Period"],
-    section: "treaties" as const,
+    section: "treaties",
   },
   {
     id: 103,
@@ -665,10 +665,10 @@ const TREATY_EVENTS = [
     relatedParties: "Regional rulers and empires",
     summary: "The Prophet ﷺ sent letters inviting rulers to Islam.",
     keyLesson: "Global da'wah and confident leadership.",
-    importance: "Major" as const,
-    fightingOccurred: "No" as const,
+    importance: "Major",
+    fightingOccurred: "No",
     categoryTags: ["Treaty Events", "No Fighting", "Late Madinan Period"],
-    section: "treaties" as const,
+    section: "treaties",
   },
   {
     id: 104,
@@ -679,10 +679,10 @@ const TREATY_EVENTS = [
     relatedParties: "Arab tribes",
     summary: "Tribes from across Arabia came to Madinah to meet the Prophet ﷺ.",
     keyLesson: "Islam spreading through teaching, leadership, and diplomacy.",
-    importance: "Major" as const,
-    fightingOccurred: "No" as const,
+    importance: "Major",
+    fightingOccurred: "No",
     categoryTags: ["Treaty Events", "Madinah-Related", "No Fighting", "Late Madinan Period"],
-    section: "treaties" as const,
+    section: "treaties",
   },
 ];
 
