@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
-import { LayoutDashboard, BookOpen, FolderOpen, TrendingUp, CircleUser } from "lucide-react";
+import { LayoutDashboard, BookOpen, FolderOpen, TrendingUp, Library, CircleUser } from "lucide-react";
 import { clsx } from "clsx";
 
 interface CourseDashboardTabsProps {
@@ -129,6 +129,20 @@ export function CourseDashboardTabs({
                 </button>
               );
             })}
+
+            {/* Reference tab — navigates to separate /reference page */}
+            <a
+              href="/reference"
+              className={clsx(
+                "flex-1 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 px-1 sm:px-6 py-3 sm:py-4 min-h-[44px] text-xs sm:text-sm font-medium transition-all border-b-2 border-transparent text-text-muted hover:text-text-secondary hover:border-border"
+              )}
+            >
+              <Library className="w-4 h-4 flex-shrink-0" />
+              <span className="truncate">
+                <span className="min-[480px]:hidden">Ref</span>
+                <span className="hidden min-[480px]:inline">Reference</span>
+              </span>
+            </a>
 
             {/* Account tab — mobile only; opens the sidebar account section */}
             <button
