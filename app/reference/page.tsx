@@ -38,8 +38,8 @@ const REFERENCE_CARDS: ReferenceCard[] = [
     slug: "key-people",
     title: "Key People in the Seerah",
     description: "Companions, leaders, and figures whose roles shaped the early Muslim community.",
-    cta: "Coming soon",
-    available: false,
+    cta: "View Key People",
+    available: true,
   },
   {
     slug: "tribes-lineage",
