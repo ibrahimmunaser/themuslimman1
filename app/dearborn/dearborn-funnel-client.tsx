@@ -14,9 +14,9 @@ export default function DearbornFunnelClient() {
       urls={{
         individualMonthly:  `/checkout?plan=individual-monthly&${SRC}&${UTM}`,
         familyMonthly:      `/checkout?plan=family-monthly&${SRC}&${UTM}`,
-        individualLifetime: `/checkout?plan=individual-lifetime&${SRC}&${UTM}`,
-        familyLifetime:     `/checkout?plan=family-lifetime&${SRC}&${UTM}`,
-        watchFree:          "/watch-free",
+        individualLifetime: `/checkout?plan=individual-lifetime&${SRC}&promo=DEARBORN20&${UTM}`,
+        familyLifetime:     `/checkout?plan=family-lifetime&${SRC}&promo=DEARBORN20&${UTM}`,
+        watchFree:          `/watch-free?${SRC}`,
       }}
     />
   );

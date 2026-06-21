@@ -657,7 +657,7 @@ function CheckoutPageContent({
   // code, and the plan is a lifetime plan. In this mode the plan selector is hidden
   // by default — the user sees "Your selected offer" and a "Change plan" link.
   const INFLUENCER_SOURCES = new Set([
-    "browniesaadi", "deenresponds", "community", "annarbor", "theorthodoxmuslim",
+    "browniesaadi", "deenresponds", "community", "annarbor", "dearborn", "theorthodoxmuslim",
   ]);
   const isInfluencerMode = !!(
     (initialSourceParam && INFLUENCER_SOURCES.has(initialSourceParam)) ||

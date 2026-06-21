@@ -12,12 +12,13 @@ const PROMO_CODE   = "ANNARBOR29";
 const DISPLAY_NAME = "Ann Arbor";
 
 const FUNNEL_STEPS: FunnelStep[] = [
-  { key: "annarbor_landing_page_view",       label: "Landing Views"              },
-  { key: "student_lifetime_cta_clicked",     label: "Clicked Student Lifetime CTA" },
-  { key: "watch_part1_clicked",              label: "Clicked Watch Part 1 Free"  },
-  { key: "checkout_loaded_student_lifetime", label: "Checkout — Student Lifetime" },
-  { key: "change_plan_clicked",              label: "Clicked Change Plan"         },
-  { key: "checkout_form_submitted",          label: "Submitted Payment Form"      },
+  { key: "landing_page_view",            label: "Page Views"               },
+  { key: "quiz_started",                 label: "Quiz Started"             },
+  { key: "quiz_completed",               label: "Quiz Completed"           },
+  { key: "quiz_email_submitted",         label: "Email Submitted"          },
+  { key: "quiz_recommended_cta_clicked", label: "CTA Clicked"              },
+  { key: "checkout_loaded",              label: "Checkout Loaded"          },
+  { key: "payment_succeeded",            label: "Payment Succeeded"        },
 ];
 
 export default async function AnnArborStatsPage({
@@ -64,7 +65,7 @@ export default async function AnnArborStatsPage({
       trials={[]}
       lastUpdated={now}
       funnelSteps={FUNNEL_STEPS}
-      landingEventKey="annarbor_landing_page_view"
+      landingEventKey="landing_page_view"
       commissionPerSale={0}
     />
   );

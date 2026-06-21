@@ -14,9 +14,9 @@ export default function CommunityFunnelClient() {
       urls={{
         individualMonthly:  `/checkout?plan=individual-monthly&${SRC}&${UTM}`,
         familyMonthly:      `/checkout?plan=family-monthly&${SRC}&${UTM}`,
-        individualLifetime: `/checkout?plan=individual-lifetime&${SRC}&${UTM}`,
-        familyLifetime:     `/checkout?plan=family-lifetime&${SRC}&${UTM}`,
-        watchFree:          "/watch-free",
+        individualLifetime: `/checkout?plan=individual-lifetime&${SRC}&promo=COMMUNITY49&${UTM}`,
+        familyLifetime:     `/checkout?plan=family-lifetime&${SRC}&promo=COMMUNITY99&${UTM}`,
+        watchFree:          `/watch-free?${SRC}`,
       }}
     />
   );

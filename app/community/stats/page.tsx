@@ -12,14 +12,13 @@ const PROMO_CODE   = "COMMUNITY49 / COMMUNITY99";
 const DISPLAY_NAME = "Community";
 
 const FUNNEL_STEPS: FunnelStep[] = [
-  { key: "landing_page_view",                   label: "Landing Views"                   },
-  { key: "individual_lifetime_cta_clicked",     label: "Clicked Individual Lifetime CTA" },
-  { key: "family_lifetime_cta_clicked",         label: "Clicked Family Lifetime CTA"     },
-  { key: "watch_part1_clicked",                 label: "Clicked Watch Part 1 Free"       },
-  { key: "checkout_loaded_individual_lifetime", label: "Checkout — Individual Lifetime"  },
-  { key: "checkout_loaded_family_lifetime",     label: "Checkout — Family Lifetime"      },
-  { key: "change_plan_clicked",                 label: "Clicked Change Plan"             },
-  { key: "checkout_form_submitted",             label: "Submitted Payment Form"          },
+  { key: "landing_page_view",            label: "Page Views"               },
+  { key: "quiz_started",                 label: "Quiz Started"             },
+  { key: "quiz_completed",               label: "Quiz Completed"           },
+  { key: "quiz_email_submitted",         label: "Email Submitted"          },
+  { key: "quiz_recommended_cta_clicked", label: "CTA Clicked"              },
+  { key: "checkout_loaded",              label: "Checkout Loaded"          },
+  { key: "payment_succeeded",            label: "Payment Succeeded"        },
 ];
 
 export default async function CommunityStatsPage({

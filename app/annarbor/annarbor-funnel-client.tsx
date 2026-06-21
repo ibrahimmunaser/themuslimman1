@@ -14,9 +14,9 @@ export default function AnnArborFunnelClient() {
       urls={{
         individualMonthly:  `/checkout?plan=individual-monthly&${SRC}&${UTM}`,
         familyMonthly:      `/checkout?plan=family-monthly&${SRC}&${UTM}`,
-        individualLifetime: `/checkout?plan=individual-lifetime&${SRC}&${UTM}`,
+        individualLifetime: `/checkout?plan=individual-lifetime&${SRC}&promo=ANNARBOR29&${UTM}`,
         familyLifetime:     `/checkout?plan=family-lifetime&${SRC}&${UTM}`,
-        watchFree:          "/watch-free",
+        watchFree:          `/watch-free?${SRC}`,
       }}
     />
   );
