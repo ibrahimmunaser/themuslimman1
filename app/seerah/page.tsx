@@ -13,6 +13,7 @@ import { ResendVerificationButton } from "@/app/verify-email-pending/resend-butt
 import { CourseDashboardTabs } from "@/components/course/course-dashboard-tabs";
 import { CourseHomeContent } from "@/components/course/course-home-content";
 import { CourseProgressContent } from "@/components/course/course-progress-content";
+import { CourseReferenceContent } from "@/components/course/course-reference-content";
 import { LessonsPathView } from "@/components/course/lessons-path-view";
 import { ResourcesTabs } from "@/components/resources/resources-tabs";
 import { VideoResourceContent } from "@/components/resources/video-resource-content";
@@ -441,6 +442,7 @@ export default async function LearnIndexPage({
           />
         }
         lessonsContent={lessonsContent}
+        referenceContent={<CourseReferenceContent />}
         resourcesContent={
           <ResourcesTabs
             videosContent={

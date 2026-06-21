@@ -149,7 +149,7 @@ export function StudentSidebar({
     { id: "dashboard",  label: "Dashboard",  href: "/seerah",               icon: LayoutDashboard, tabId: "home"      },
     { id: "lessons",    label: "Lessons",    href: "/seerah?tab=lessons",   icon: BookOpen,        tabId: "lessons"   },
     { id: "resources",  label: "Resources",  href: "/seerah?tab=resources", icon: FolderOpen,      tabId: "resources" },
-    { id: "reference",  label: "Reference",  href: "/reference",            icon: Library },
+    { id: "reference",  label: "Reference",  href: "/seerah?tab=reference", icon: Library,         tabId: "reference" },
     { id: "progress",   label: "Progress",   href: "/seerah?tab=progress",  icon: TrendingUp,      tabId: "progress"  },
   ];
 
