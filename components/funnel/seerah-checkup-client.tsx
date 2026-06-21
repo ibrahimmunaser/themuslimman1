@@ -912,13 +912,11 @@ export function SeerahCheckupClient({
               <BarChart2 className="w-5 h-5" />
               Start My Free Seerah Checkup
             </button>
-            <p className="text-xs text-text-muted/70 mt-3 mb-5">10 questions · 2 minutes · instant result · no payment</p>
-
-            <p className="text-sm text-text-muted/60">
-              Not ready?{" "}
+            <p className="text-sm text-text-muted/60 mt-3 mb-5">
+              Prefer to watch first?{" "}
               <Link href={watchFreeUrl} onClick={() => track("watch_part1_clicked")}
                 className="text-text-muted hover:text-gold underline underline-offset-2 transition-colors">
-                Watch Part 1 free first
+                Watch Part 1 free
               </Link>
             </p>
 
@@ -1099,11 +1097,11 @@ export function SeerahCheckupClient({
                     <p className="text-sm text-center text-text-muted/65 mb-4">{rec.primarySupport}</p>
                   )}
                   <p className="text-sm text-center text-text-muted/55 mb-4">
-                    Not ready?{" "}
+                    Prefer to watch first?{" "}
                     <Link href={watchFreeUrl}
                       onClick={() => track("watch_part1_clicked")}
                       className="text-text-muted hover:text-gold underline underline-offset-2 transition-colors">
-                      Watch Part 1 free first
+                      Watch Part 1 free
                     </Link>
                   </p>
                   {rec.lifetimeUrl && rec.lifetimeLabel && (
