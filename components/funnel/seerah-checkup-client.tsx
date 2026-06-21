@@ -956,7 +956,7 @@ export function SeerahCheckupClient({
       ══════════════════════════════════════════════════════ */}
       <div
         ref={quizRef}
-        className="scroll-mt-20 max-w-[700px] mx-auto w-full px-4 sm:px-6 pb-24"
+        className="scroll-mt-20 max-w-[700px] mx-auto w-full px-4 sm:px-6"
         id="quiz"
       >
 
