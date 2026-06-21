@@ -43,7 +43,6 @@ export function Part1PreviewTabs({ part, initialAssetUrls }: Part1PreviewTabsPro
       userPlan="essentials"
       previewMode={true}
       initialAssetUrls={initialAssetUrls}
-      forcedInitialMode="watch"
       hideTabNav={true}
     />
   );

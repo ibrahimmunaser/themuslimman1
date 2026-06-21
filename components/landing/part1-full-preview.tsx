@@ -2,8 +2,8 @@ import { getPartById } from "@/lib/content";
 import { getPartPageData } from "@/lib/part-content-cache";
 import type { Part, Quiz } from "@/lib/types";
 import { Part1PreviewTabs } from "@/components/landing/part1-preview-tabs";
+import { Part1PreviewNav } from "@/components/landing/part1-preview-nav";
 import { Badge } from "@/components/ui/badge";
-import { Video, FileText, Layers, Map, Layers2, HelpCircle } from "lucide-react";
 
 function stripQuizAnswers(quiz: Quiz | null | undefined): Quiz | null | undefined {
   if (!quiz) return quiz;
@@ -103,56 +103,7 @@ export async function Part1FullPreview({
       </div>
 
       {/* Learning path descriptor with quick navigation */}
-      <div className="px-4 sm:px-6 py-3 border-b border-border/50 bg-surface-raised/40">
-        <p className="text-sm font-semibold text-center text-text mb-3">
-          Every lesson follows one simple path:{" "}
-          <span className="text-gold">Watch → Study → Review</span>
-        </p>
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          <a
-            href="#preview?mode=watch"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-surface hover:border-gold/40 hover:bg-surface-raised text-xs font-medium text-text-secondary hover:text-text transition-colors"
-          >
-            <Video className="w-3.5 h-3.5" />
-            Video
-          </a>
-          <a
-            href="#preview?mode=read"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-surface hover:border-gold/40 hover:bg-surface-raised text-xs font-medium text-text-secondary hover:text-text transition-colors"
-          >
-            <FileText className="w-3.5 h-3.5" />
-            Reading
-          </a>
-          <a
-            href="#preview?mode=slides"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-surface hover:border-gold/40 hover:bg-surface-raised text-xs font-medium text-text-secondary hover:text-text transition-colors"
-          >
-            <Layers className="w-3.5 h-3.5" />
-            Slides
-          </a>
-          <a
-            href="#preview?mode=mindmap"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-surface hover:border-gold/40 hover:bg-surface-raised text-xs font-medium text-text-secondary hover:text-text transition-colors"
-          >
-            <Map className="w-3.5 h-3.5" />
-            Mind Map
-          </a>
-          <a
-            href="#preview?mode=flashcards"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-surface hover:border-gold/40 hover:bg-surface-raised text-xs font-medium text-text-secondary hover:text-text transition-colors"
-          >
-            <Layers2 className="w-3.5 h-3.5" />
-            Flashcards
-          </a>
-          <a
-            href="#preview?mode=quiz"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-surface hover:border-gold/40 hover:bg-surface-raised text-xs font-medium text-text-secondary hover:text-text transition-colors"
-          >
-            <HelpCircle className="w-3.5 h-3.5" />
-            Quiz
-          </a>
-        </div>
-      </div>
+      <Part1PreviewNav />
 
       {/* Full Part 1 Content — PartTabs is lazy-loaded in a separate JS chunk */}
       <div className="bg-surface px-4 sm:px-6 py-6">
