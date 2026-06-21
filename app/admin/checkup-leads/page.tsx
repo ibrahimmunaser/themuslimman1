@@ -39,7 +39,7 @@ export default async function CheckupLeadsPage() {
   const sourceBreakdown = await prisma.seerahCheckupLead.groupBy({
     by: ["source"],
     _count: { _all: true },
-    orderBy: { _count: { _all: "desc" } },
+    orderBy: { source: "asc" },
   });
 
   const sourceCheckout = await prisma.seerahCheckupLead.groupBy({
