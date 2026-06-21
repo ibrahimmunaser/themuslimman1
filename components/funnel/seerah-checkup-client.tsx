@@ -605,13 +605,10 @@ export function SeerahCheckupClient({
           quizStartedRef.current  = true;
           phaseRef.current        = "quiz";
         } else if (!isStale && answeredCount >= QUESTIONS.length) {
-          // All questions answered but email not yet submitted — restore to email gate
-          setAnswers(restoredAnswers);
-          setPhase("email");
-          answersRef.current      = restoredAnswers;
-          maxQRef.current         = QUESTIONS.length;
-          quizStartedRef.current  = true;
-          phaseRef.current        = "email";
+          // Quiz was fully completed in a previous session but email wasn't submitted.
+          // Clear the stale progress so the user starts fresh rather than landing
+          // directly on the email gate without going through the quiz.
+          try { localStorage.removeItem(`checkup_progress_${creator}`); } catch { /* ignore */ }
         }
       }
     } catch { /* corrupt or missing — start fresh */ }
