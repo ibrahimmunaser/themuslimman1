@@ -52,8 +52,8 @@ const REFERENCE_CARDS: ReferenceCard[] = [
     slug: "places-maps",
     title: "Places and Maps",
     description: "A reference to the key cities, routes, and locations mentioned in the Seerah.",
-    cta: "Coming soon",
-    available: false,
+    cta: "View Places & Maps",
+    available: true,
   },
   {
     slug: "battles",
