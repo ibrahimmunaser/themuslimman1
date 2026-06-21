@@ -35,7 +35,7 @@ export default async function FunnelEventsPage() {
   const eventCounts = await prisma.influencerEvent.groupBy({
     by: ["creator", "eventType"],
     _count: { _all: true },
-    orderBy: { _count: { _all: "desc" } },
+    orderBy: { creator: "asc" },
   });
 
   // ── Unique visitor + session counts per creator ──────────────────────────
