@@ -66,8 +66,8 @@ const REFERENCE_CARDS: ReferenceCard[] = [
     slug: "miracles",
     title: "Miracles and Signs",
     description: "Verified narrations of miracles and signs granted to the Prophet ﷺ.",
-    cta: "Coming soon",
-    available: false,
+    cta: "View Miracles & Signs",
+    available: true,
   },
   {
     slug: "important-terms",
