@@ -9,6 +9,7 @@ const KNOWN_CREATORS = [
   "deenresponds",
   "annarbor",
   "theorthodoxmuslim",
+  "homepage",
 ] as const;
 
 const KNOWN_EVENT_TYPES = [
@@ -60,6 +61,20 @@ const KNOWN_EVENT_TYPES = [
   "checkout_escape_clicked",
   "express_checkout_visible",
   "payment_element_loaded",
+  // Homepage funnel
+  "hero_watch_part1_clicked",
+  "hero_score_clicked",
+  "hero_card_watch_clicked",
+  "part1_preview_viewed",
+  "part1_play_clicked",
+  "part1_continue_clicked",
+  "plan_selected",
+  "homepage_checkup_preprice_click",
+  "final_watch_part1_clicked",
+  "final_checkout_clicked",
+  "homepage_pricing_view",
+  "homepage_lifetime_click",
+  "pricing_viewed",
 ] as const;
 
 export async function POST(req: NextRequest) {

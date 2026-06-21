@@ -57,7 +57,7 @@ export default async function LandingPage() {
       {/* ============================================================
           HERO
       ============================================================ */}
-      <section className="relative pt-10 pb-12 sm:pt-14 sm:pb-16 md:pt-20 md:pb-20 overflow-hidden">
+      <section className="relative pt-10 pb-4 sm:pt-14 sm:pb-16 md:pt-20 md:pb-20 overflow-hidden">
         <div className="absolute inset-0 geo-pattern opacity-40" />
         <IslamicPatternBackground className="absolute inset-0" opacity={0.025} />
         <FloatingGlow className="absolute -top-20 left-1/2 -translate-x-1/2" width={700} height={400} duration={10} />
@@ -68,10 +68,10 @@ export default async function LandingPage() {
         />
 
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="xl:grid xl:grid-cols-[1fr_420px] xl:gap-16 xl:items-center">
+          <div className="xl:grid xl:grid-cols-[1fr_400px] xl:gap-16 xl:items-center">
 
             {/* Left: headline + CTAs */}
-            <div className="text-center xl:text-left py-4 xl:py-10">
+            <div className="text-center xl:text-left xl:py-10">
               <FadeUp delay={0}>
                 <h1 className="text-[1.85rem] sm:text-5xl md:text-6xl xl:text-5xl 2xl:text-6xl font-bold tracking-tight leading-[1.2] sm:leading-tight mb-5">
                   Most Muslims only know fragments of the Seerah.{" "}
@@ -87,133 +87,104 @@ export default async function LandingPage() {
               </FadeUp>
 
               <FadeUp delay={0.2}>
-                <div className="flex flex-col items-center xl:items-start gap-3 mb-4">
-                  <Link
-                    href="/watch-free"
-                    data-track="homepage_watch_part1_click"
+                <div className="flex flex-col items-center xl:items-start gap-3">
+                  {/* Primary CTA — scrolls to Part 1 preview */}
+                  <a
+                    href="#preview"
+                    data-track="hero_watch_part1_clicked"
                     className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-10 py-4 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-lg transition-colors shadow-xl shadow-gold/25"
                   >
                     <Play className="w-5 h-5 fill-current" />
                     Watch Part 1 Free
-                  </Link>
-                  <p className="text-sm sm:text-base text-text-muted/80 text-center xl:text-left font-medium">
-                    Part 1 is free · No signup required · Start in minutes
-                  </p>
-                  <p className="text-sm text-text-muted/50 text-center xl:text-left">
-                    Not sure where you stand?{" "}
-                    <Link
-                      href="/theorthodoxmuslim"
-                      data-track="homepage_checkup_click"
-                      className="inline-flex items-center gap-1 text-text-muted hover:text-gold transition-colors underline underline-offset-2"
-                    >
-                      <BarChart2 className="w-3.5 h-3.5" />
-                      Take the free Seerah Checkup
-                    </Link>
+                  </a>
+                  {/* Secondary CTA — smaller, clearly secondary */}
+                  <a
+                    href="/checkup"
+                    data-track="hero_score_clicked"
+                    className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-3 rounded-xl bg-surface border border-border hover:border-gold/40 text-text-secondary hover:text-text font-semibold text-base transition-colors"
+                  >
+                    <BarChart2 className="w-4 h-4 text-gold" />
+                    See My Seerah Score
+                  </a>
+                  <p className="text-sm sm:text-base text-text-muted text-center xl:text-left font-medium">
+                    Part 1 is free · Score takes 2 minutes · No payment required
                   </p>
                 </div>
               </FadeUp>
             </div>
 
-            {/* Right: product visual — xl+ only */}
+            {/* Right: static course structure preview — desktop only */}
             <div className="hidden xl:block">
               <div className="rounded-2xl border border-border/60 bg-surface shadow-2xl shadow-black/50 overflow-hidden">
-                <div className="bg-surface-raised border-b border-border px-4 py-2.5 flex items-center gap-2">
-                  <div className="flex gap-1.5">
-                    <div className="w-2.5 h-2.5 rounded-full bg-red-500/50" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/50" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-green-500/50" />
+
+                {/* Header */}
+                <div className="px-5 py-4 bg-surface-raised border-b border-border flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-bold text-gold uppercase tracking-widest mb-0.5">Complete Seerah Path</p>
+                    <p className="text-sm font-semibold text-text">100 structured lessons · one connected story</p>
                   </div>
-                  <div className="flex-1 flex justify-center">
-                    <span className="text-[10px] text-text-muted bg-surface px-2.5 py-0.5 rounded border border-border/50">
-                      themuslimman.com/seerah/part-1
-                    </span>
+                  <span className="text-xs font-bold bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-2.5 py-1 rounded-full flex-shrink-0">
+                    Part 1 Free
+                  </span>
+                </div>
+
+                {/* Progress visual */}
+                <div className="px-5 pt-4 pb-3 border-b border-border/40">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-xs text-text-muted">Your progress</span>
+                    <span className="text-xs font-semibold text-gold">Part 1 of 100</span>
+                  </div>
+                  <div className="h-2 bg-surface-raised rounded-full overflow-hidden">
+                    <div className="h-full w-[1%] bg-gold rounded-full" />
+                  </div>
+                  <div className="flex gap-1.5 mt-2.5 flex-wrap">
+                    {Array.from({ length: 20 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className={`h-1.5 flex-1 rounded-full ${i === 0 ? "bg-gold" : "bg-surface-raised"}`}
+                      />
+                    ))}
+                    <span className="text-[10px] text-text-muted ml-1 self-center">···</span>
                   </div>
                 </div>
 
-                <div className="p-4">
-                  <div className="flex gap-1.5 mb-3">
+                {/* What's in each lesson */}
+                <div className="px-5 py-4">
+                  <p className="text-xs text-text-muted uppercase tracking-wider font-semibold mb-3">Every lesson includes</p>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2">
                     {[
-                      { label: "Video",      active: true  },
-                      { label: "Read",       active: false },
-                      { label: "Slides",     active: false },
-                      { label: "Quiz",       active: false },
-                      { label: "Flashcards", active: false },
-                    ].map(({ label, active }) => (
-                      <span
-                        key={label}
-                        className={`text-[10px] px-2 py-1 rounded-md border ${
-                          active
-                            ? "bg-gold/15 text-gold border-gold/30 font-semibold"
-                            : "text-text-muted border-border/30"
-                        }`}
-                      >
-                        {label}
-                      </span>
-                    ))}
-                  </div>
-
-                  <div className="relative aspect-video rounded-xl overflow-hidden mb-3">
-                    <div
-                      className="absolute inset-0"
-                      style={{ background: "radial-gradient(ellipse 80% 60% at 50% 40%, #2a1f0a 0%, #130e04 50%, #0a0804 100%)" }}
-                    />
-                    <div
-                      className="absolute inset-0 opacity-[0.06]"
-                      style={{
-                        backgroundImage: "repeating-linear-gradient(45deg, #c9a84c 0, #c9a84c 1px, transparent 0, transparent 50%)",
-                        backgroundSize: "20px 20px",
-                      }}
-                    />
-                    <div className="absolute top-0 inset-x-0 flex items-center justify-between px-3 pt-2.5 pb-6"
-                         style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, transparent 100%)" }}>
-                      <span className="text-[9px] font-semibold text-gold/80 uppercase tracking-widest">Part 1 of 100</span>
-                      <span className="text-[9px] font-bold text-text-muted/70 border border-border/50 px-1 rounded">HD</span>
-                    </div>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-14 h-14 rounded-full bg-gold/20 border-2 border-gold/50 flex items-center justify-center shadow-lg shadow-gold/20 backdrop-blur-sm">
-                        <div className="w-0 h-0 ml-1"
-                             style={{ borderTop: "8px solid transparent", borderBottom: "8px solid transparent", borderLeft: "14px solid #c9a84c" }} />
+                      "Video lesson",
+                      "Reading",
+                      "Slides",
+                      "Quiz",
+                      "Flashcards",
+                      "Mind map",
+                      "Summary",
+                      "Progress tracking",
+                    ].map((f) => (
+                      <div key={f} className="flex items-center gap-2">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-gold/70 flex-shrink-0" />
+                        <span className="text-sm text-text-secondary">{f}</span>
                       </div>
-                    </div>
-                    <div className="absolute bottom-0 inset-x-0 px-3 pb-2.5 pt-6"
-                         style={{ background: "linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%)" }}>
-                      <p className="text-[10px] font-semibold text-white/90 mb-1.5 truncate">
-                        The World Before the Prophet ﷺ
-                      </p>
-                      <div className="relative h-[3px] bg-white/20 rounded-full">
-                        <div className="absolute left-0 top-0 h-full w-[38%] bg-gold rounded-full" />
-                        <div className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-gold shadow shadow-gold/40"
-                             style={{ left: "calc(38% - 5px)" }} />
-                      </div>
-                      <div className="flex justify-between mt-1">
-                        <span className="text-[9px] text-white/50">4:53</span>
-                        <span className="text-[9px] text-white/40">12:47</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-2 mb-3 px-0.5">
-                    {[
-                      { val: "Free", sub: "Part 1"   },
-                      { val: "∞",    sub: "Access"   },
-                      { val: "✓",    sub: "Your pace" },
-                    ].map(({ val, sub }) => (
-                      <div key={sub} className="text-center py-2 rounded-lg bg-surface-raised border border-border/40">
-                        <p className="text-sm font-bold text-gold leading-none">{val}</p>
-                        <p className="text-[10px] text-text-muted mt-0.5">{sub}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="flex flex-wrap gap-1.5">
-                    {["Video", "Reading", "Slides", "Quiz", "Flashcards", "Mind maps"].map((f) => (
-                      <span key={f} className="flex items-center gap-1 text-[10px] text-text-secondary bg-surface-raised border border-border/40 px-2 py-0.5 rounded-full">
-                        <CheckCircle2 className="w-2.5 h-2.5 text-gold/60 flex-shrink-0" aria-hidden />
-                        {f}
-                      </span>
                     ))}
                   </div>
                 </div>
+
+                {/* Free badge footer */}
+                <div className="px-5 pb-4 border-t border-border/30 pt-3 flex items-center justify-between">
+                  <p className="text-xs text-text-muted">
+                    <span className="text-gold font-semibold">Part 1 is free.</span> No account, no payment.
+                  </p>
+                  <a
+                    href="#preview"
+                    data-track="hero_card_watch_clicked"
+                    className="text-xs font-semibold text-gold hover:text-gold-light transition-colors flex items-center gap-1"
+                  >
+                    <Play className="w-3 h-3 fill-current" />
+                    Watch now
+                  </a>
+                </div>
+
               </div>
             </div>
           </div>
@@ -223,18 +194,22 @@ export default async function LandingPage() {
       {/* ============================================================
           FREE PART 1 PREVIEW
       ============================================================ */}
-      <section id="preview" className="py-16 border-t border-border">
+      <section id="preview" className="pt-8 pb-12 sm:py-16 border-t border-border">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <FadeUp className="text-center mb-10">
+          <FadeUp className="text-center mb-8" data-track="part1_preview_viewed">
             <p className="text-gold text-sm font-medium uppercase tracking-widest mb-3">
               Free to watch — no account required
             </p>
             <h2 className="text-3xl sm:text-4xl font-bold mb-3">
               Part 1 is completely free
             </h2>
-            <p className="text-text-secondary max-w-xl mx-auto">
+            <p className="text-text-secondary max-w-xl mx-auto mb-2">
               The full first lesson — video, reading, slides, quiz, and flashcards.
               This is exactly what every lesson in the course looks like.
+            </p>
+            <p className="text-sm font-medium">
+              <span className="text-gold">Part 1 is free.</span>{" "}
+              <span className="text-text-muted">Full access unlocks the complete 100-part path.</span>
             </p>
           </FadeUp>
 
@@ -256,7 +231,29 @@ export default async function LandingPage() {
       </section>
 
       {/* ============================================================
-          PRICING — immediately after preview
+          COMPACT CHECKUP BRIDGE — before pricing
+      ============================================================ */}
+      <div className="border-t border-border bg-surface/40 py-8">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="text-center sm:text-left">
+              <p className="font-semibold text-text">Not sure how much Seerah you actually know?</p>
+              <p className="text-sm text-text-muted mt-0.5">See your clarity score in 2 minutes · free · no account needed</p>
+            </div>
+            <a
+              href="/checkup"
+              data-track="homepage_checkup_preprice_click"
+              className="flex-shrink-0 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-surface border border-gold/30 hover:border-gold/60 hover:bg-gold/5 text-text font-semibold text-sm transition-all whitespace-nowrap"
+            >
+              <BarChart2 className="w-4 h-4 text-gold" />
+              See My Seerah Score
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {/* ============================================================
+          PRICING
       ============================================================ */}
       <PricingSection
         hasLifetime={!!(user?.hasPaid)}
@@ -446,17 +443,17 @@ export default async function LandingPage() {
           </p>
 
           <div className="flex flex-col items-center gap-3 mb-5">
-            <Link
-              href="/watch-free"
-              data-track="homepage_watch_part1_click"
+            <a
+              href="#preview"
+              data-track="final_watch_part1_clicked"
               className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-10 py-4 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-lg transition-colors shadow-xl shadow-gold/20"
             >
               <Play className="w-5 h-5 fill-current" />
               Watch Part 1 Free
-            </Link>
+            </a>
             <Link
               href="/checkout?plan=individual-monthly"
-              data-track="homepage_checkout_click"
+              data-track="final_checkout_clicked"
               className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-10 py-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white font-bold text-base transition-colors"
             >
               Start Full Access — $4.99/month

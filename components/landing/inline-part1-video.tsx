@@ -14,11 +14,12 @@ interface Part1PreviewData {
 export interface InlinePart1VideoProps {
   checkoutUrl: string;
   checkoutLabel?: string;
+  hideCta?: boolean;
   onVideoStart?: () => void;
   onUnlockClick?: () => void;
 }
 
-export function InlinePart1Video({ checkoutUrl, checkoutLabel, onVideoStart, onUnlockClick }: InlinePart1VideoProps) {
+export function InlinePart1Video({ checkoutUrl, checkoutLabel, hideCta = false, onVideoStart, onUnlockClick }: InlinePart1VideoProps) {
   const [data, setData]       = useState<Part1PreviewData | null>(null);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed]   = useState(false);
@@ -130,24 +131,26 @@ export function InlinePart1Video({ checkoutUrl, checkoutLabel, onVideoStart, onU
       </div>
 
       {/* CTA */}
-      <div className="px-5 py-7 bg-surface text-center">
-        <p className="text-base font-semibold text-text mb-1">
-          Like this format? Continue the full 100-part path.
-        </p>
-        <p className="text-sm text-text-secondary mb-5">
-          Every lesson follows the same structure — video, reading, flashcards, quiz.
-        </p>
-        <Link
-          href={checkoutUrl}
-          onClick={onUnlockClick}
-          className="flex items-center justify-center w-full py-5 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-lg transition-colors shadow-lg shadow-gold/25 mb-2"
-        >
-          {checkoutLabel ?? "Unlock Individual Access — $4.99/month"}
-        </Link>
-        <p className="text-xs text-text-muted/70">
-          Secure checkout · Instant access · Cancel anytime · 7-day refund guarantee
-        </p>
-      </div>
+      {!hideCta && (
+        <div className="px-5 py-7 bg-surface text-center">
+          <p className="text-base font-semibold text-text mb-1">
+            Like this format? Continue the full 100-part path.
+          </p>
+          <p className="text-sm text-text-secondary mb-5">
+            Every lesson follows the same structure — video, reading, flashcards, quiz.
+          </p>
+          <Link
+            href={checkoutUrl}
+            onClick={onUnlockClick}
+            className="flex items-center justify-center w-full py-5 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-lg transition-colors shadow-lg shadow-gold/25 mb-2"
+          >
+            {checkoutLabel ?? "Unlock Individual Access — $4.99/month"}
+          </Link>
+          <p className="text-xs text-text-muted/70">
+            Secure checkout · Instant access · Cancel anytime · 7-day refund guarantee
+          </p>
+        </div>
+      )}
     </div>
   );
 }

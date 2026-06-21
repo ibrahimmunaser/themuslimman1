@@ -55,7 +55,7 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
 
           <p className="text-xs text-text-muted mt-3">
             {tab === "monthly"
-              ? "Cancel anytime · Start with the Seerah"
+              ? "Cancel anytime · 7-day refund · Instant access"
               : "One-time payment · No recurring charges · 7-day guarantee"}
           </p>
         </FadeUp>
@@ -81,15 +81,20 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
               <p className="text-sm text-text-muted mb-5">For one learner · cancel anytime</p>
 
               {/* Features */}
-              <ul className="space-y-2.5 mb-6 flex-1">
+              <ul className="space-y-3 mb-6 flex-1">
                 {[
-                  "Full 100-part path",
-                  "Video, quiz, flashcards",
-                  "Progress tracking",
+                  { title: "Full 100-part Seerah path", sub: "From birth to the Farewell Hajj — every major event covered" },
+                  { title: "Video lessons + quizzes + flashcards", sub: "Reinforce every lesson with active recall" },
+                  { title: "Progress tracking dashboard", sub: "See exactly where you are and what's next" },
+                  { title: "New content added regularly", sub: "Your access grows as the course expands" },
+                  { title: "Access on any device", sub: "Phone, tablet, or desktop — pick up anywhere" },
                 ].map((f) => (
-                  <li key={f} className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-gold flex-shrink-0" />
-                    <span className="text-sm font-medium text-text">{f}</span>
+                  <li key={f.title} className="flex items-start gap-2.5">
+                    <CheckCircle2 className="w-4 h-4 text-gold flex-shrink-0 mt-0.5" />
+                    <span className="text-sm">
+                      <span className="font-semibold text-text">{f.title}</span>
+                      <span className="block text-xs text-text-muted mt-0.5">{f.sub}</span>
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -102,7 +107,11 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
               ) : (
                 <Link
                   href="/checkout?plan=individual-monthly"
-                  data-track="homepage_individual_click"
+                  data-track="plan_selected"
+                  data-plan="individual-monthly"
+                  data-plan-type="individual"
+                  data-billing="monthly"
+                  data-price="499"
                   className={buttonClass("primary", "xl", "w-full justify-center shadow-lg shadow-gold/20")}
                 >
                   Start Learning
@@ -126,18 +135,25 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
                 <span className="text-4xl font-bold text-text">$9.99</span>
                 <span className="text-sm text-text-muted">/month</span>
               </div>
-              <p className="text-sm font-semibold text-gold/75 mb-5">Up to 5 profiles · separate progress</p>
+              <p className="text-sm font-bold text-gold mb-5">
+                Up to 5 profiles · separate progress · one household plan
+              </p>
 
               {/* Features */}
-              <ul className="space-y-2.5 mb-6 flex-1">
+              <ul className="space-y-3 mb-6 flex-1">
                 {[
-                  "Separate progress per profile",
-                  "One plan for your household",
-                  "Everything in Individual",
+                  { title: "Everything in Individual", sub: "All 100 lessons, quizzes, flashcards, and tracking" },
+                  { title: "Up to 5 separate learner profiles", sub: "Each family member gets their own account" },
+                  { title: "Independent progress per profile", sub: "No one loses their place when someone else logs in" },
+                  { title: "One shared subscription", sub: "Single billing · cancel from one place" },
+                  { title: "Great for kids learning together", sub: "Teach your whole household the Seerah" },
                 ].map((f) => (
-                  <li key={f} className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-gold/70 flex-shrink-0" />
-                    <span className="text-sm font-medium text-text-secondary">{f}</span>
+                  <li key={f.title} className="flex items-start gap-2.5">
+                    <CheckCircle2 className="w-4 h-4 text-gold/70 flex-shrink-0 mt-0.5" />
+                    <span className="text-sm">
+                      <span className="font-semibold text-text-secondary">{f.title}</span>
+                      <span className="block text-xs text-text-muted mt-0.5">{f.sub}</span>
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -150,7 +166,11 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
               ) : (
                 <Link
                   href="/checkout?plan=family-monthly"
-                  data-track="homepage_family_click"
+                  data-track="plan_selected"
+                  data-plan="family-monthly"
+                  data-plan-type="family"
+                  data-billing="monthly"
+                  data-price="999"
                   className={buttonClass("ghost", "xl", "w-full justify-center border border-gold/30 text-gold hover:bg-gold/5")}
                 >
                   Start Family Membership
@@ -190,16 +210,20 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
                 <p className="text-xs text-text-secondary">Pay once · access forever</p>
               </div>
 
-              <ul className="space-y-2 mb-6 flex-1">
+              <ul className="space-y-3 mb-6 flex-1">
                 {[
-                  "Pay once — yours forever",
-                  "Full access — video, quiz, flashcards, mind maps",
-                  "Progress tracking dashboard",
-                  "No recurring charges",
+                  { title: "Pay once — yours forever", sub: "No monthly charges, ever. Access never expires." },
+                  { title: "Full 100-part Seerah path", sub: "Video lessons, quizzes, flashcards, and mind maps" },
+                  { title: "Progress tracking dashboard", sub: "Resume exactly where you left off, any time" },
+                  { title: "All future content included", sub: "As the course grows, you get it automatically" },
+                  { title: "Access on any device", sub: "Phone, tablet, or desktop — always available" },
                 ].map((f) => (
-                  <li key={f} className="flex items-start gap-2">
+                  <li key={f.title} className="flex items-start gap-2.5">
                     <CheckCircle2 className="w-3.5 h-3.5 text-gold flex-shrink-0 mt-0.5" />
-                    <span className="text-sm text-text">{f}</span>
+                    <span className="text-sm">
+                      <span className="font-semibold text-text">{f.title}</span>
+                      <span className="block text-xs text-text-muted mt-0.5">{f.sub}</span>
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -265,17 +289,20 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
                 <p className="text-xs text-text-secondary">One payment for the whole household</p>
               </div>
 
-              <ul className="space-y-2 mb-6 flex-1">
+              <ul className="space-y-3 mb-6 flex-1">
                 {[
-                  "Everything in the Individual plan",
-                  "Up to 5 separate learner profiles",
-                  "Each profile tracks progress independently",
-                  "Full access for every family member",
-                  "One payment — no recurring charges",
+                  { title: "Everything in Individual Lifetime", sub: "All 100 lessons, quizzes, flashcards, and mind maps" },
+                  { title: "Up to 5 separate learner profiles", sub: "Each family member gets their own login" },
+                  { title: "Fully independent progress tracking", sub: "No one overwrites anyone else's place" },
+                  { title: "All future content for the whole family", sub: "New lessons automatically available to all profiles" },
+                  { title: "One payment — no recurring charges", sub: "Pay once for the whole household, forever" },
                 ].map((f) => (
-                  <li key={f} className="flex items-start gap-2">
+                  <li key={f.title} className="flex items-start gap-2.5">
                     <CheckCircle2 className="w-3.5 h-3.5 text-gold/70 flex-shrink-0 mt-0.5" />
-                    <span className="text-sm text-text-secondary">{f}</span>
+                    <span className="text-sm">
+                      <span className="font-semibold text-text-secondary">{f.title}</span>
+                      <span className="block text-xs text-text-muted mt-0.5">{f.sub}</span>
+                    </span>
                   </li>
                 ))}
               </ul>

@@ -7,9 +7,10 @@ import { Menu, X } from "lucide-react";
 interface NavbarMobileMenuProps {
   user: { fullName: string } | null;
   firstName: string | null;
+  hasPaid?: boolean;
 }
 
-export function NavbarMobileMenu({ user }: NavbarMobileMenuProps) {
+export function NavbarMobileMenu({ user, hasPaid }: NavbarMobileMenuProps) {
   const [open, setOpen] = useState(false);
 
   // Lock body scroll when menu is open
@@ -66,7 +67,7 @@ export function NavbarMobileMenu({ user }: NavbarMobileMenuProps) {
               </Link>
               {user && (
                 <Link
-                  href="/seerah"
+                  href={hasPaid ? "/seerah" : "/pricing"}
                   onClick={close}
                   className="flex items-center px-5 min-h-[48px] text-sm text-text-secondary hover:text-text hover:bg-surface/50 transition-colors"
                 >

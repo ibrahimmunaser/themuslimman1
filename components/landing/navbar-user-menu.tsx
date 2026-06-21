@@ -7,9 +7,10 @@ import { NavbarUserButton } from "./navbar-user-button";
 interface NavbarUserMenuProps {
   user: { fullName: string } | null;
   firstName: string | null;
+  hasPaid?: boolean;
 }
 
-export function NavbarUserMenu({ user, firstName }: NavbarUserMenuProps) {
+export function NavbarUserMenu({ user, firstName, hasPaid }: NavbarUserMenuProps) {
   if (!user) {
     // Not logged in - show Login button (hidden on mobile)
     return (
@@ -27,10 +28,13 @@ export function NavbarUserMenu({ user, firstName }: NavbarUserMenuProps) {
   // Logged in - show user menu with dropdown (hidden on mobile)
   return (
     <>
-      <Link href="/seerah" className="hidden md:block text-sm text-text-secondary hover:text-text transition-colors">
+      <Link
+        href={hasPaid ? "/seerah" : "/pricing"}
+        className="hidden md:block text-sm text-text-secondary hover:text-text transition-colors"
+      >
         My Courses
       </Link>
-      <NavbarUserButton firstName={firstName!} />
+      <NavbarUserButton firstName={firstName!} hasPaid={hasPaid} />
     </>
   );
 }

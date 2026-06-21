@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { User, LogOut, ChevronDown } from "lucide-react";
 
-export function NavbarUserButton({ firstName }: { firstName: string }) {
+export function NavbarUserButton({ firstName, hasPaid }: { firstName: string; hasPaid?: boolean }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -38,7 +38,7 @@ export function NavbarUserButton({ firstName }: { firstName: string }) {
           />
           <div className="absolute right-0 mt-2 w-48 rounded-lg bg-surface border border-border shadow-xl overflow-hidden z-20">
             <Link
-              href="/seerah"
+              href={hasPaid ? "/seerah" : "/pricing"}
               onClick={() => setOpen(false)}
               className="block px-4 py-3 text-sm text-text hover:bg-surface-raised transition-colors"
             >

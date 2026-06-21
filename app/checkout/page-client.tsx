@@ -149,6 +149,12 @@ function CheckoutForm({
     e.preventDefault();
     if (!stripe || !elements || processing || authInProgress) return;
 
+    // ── Guard: full name required ──────────────────────────────────────────────
+    if (!authFormRef.current?.fullName?.trim()) {
+      setError("Please enter your full name to continue.");
+      return;
+    }
+
     // ── Guard: amount must be positive ────────────────────────────────────────
     if (finalPrice <= 0) {
       setError("Something went wrong with your order. Please refresh and try again.");
@@ -279,8 +285,15 @@ function CheckoutForm({
 
     // Wallet payments may provide billing details (name/email from Apple/Google Wallet).
     // Use those to create an account if the user hasn't filled in the name/email fields yet.
-    const walletName  = event.billingDetails?.name  ?? authFormRef.current?.fullName ?? "";
-    const walletEmail = event.billingDetails?.email ?? authFormRef.current?.email    ?? "";
+    const walletName  = event.billingDetails?.name?.trim() || authFormRef.current?.fullName?.trim() || "";
+    const walletEmail = event.billingDetails?.email ?? authFormRef.current?.email ?? "";
+
+    if (!walletName) {
+      event.paymentFailed({ reason: "fail" });
+      setProcessing(false);
+      setError("Please enter your full name in the form above before using express checkout.");
+      return;
+    }
 
     // ── Step 1: Ensure account + intent ───────────────────────────────────────
     let clientSecret: string;
@@ -1334,7 +1347,7 @@ function CheckoutPageContent({
           <button
             onClick={() => {
               setShowPlanSelector(true);
-              const src = initialSourceParam ?? "unknown";
+              const src = initialSourceParam ?? "homepage";
               sendCheckoutEvent(src, "change_plan_clicked",      { plan: `${audience}-${billing}` });
               sendCheckoutEvent(src, "checkout_escape_clicked",  { escape_type: "change_plan", plan: `${audience}-${billing}` });
             }}
@@ -1675,19 +1688,22 @@ function CheckoutPageContent({
 
         <div className="space-y-4">
 
-          {/* ── 1. Name + email (only shown for unauthenticated guests) ── */}
+          {/* ── Full name — always visible ── */}
+          <input
+            suppressHydrationWarning
+            type="text"
+            placeholder="Full name"
+            required
+            autoComplete="name"
+            inputMode="text"
+            value={authForm.fullName}
+            onChange={(e) => setAuthForm((f) => ({ ...f, fullName: e.target.value }))}
+            className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm"
+          />
+
+          {/* ── 1. Email (only shown for unauthenticated guests) ── */}
           {!isAuthenticated && authMode === "signup" && (
             <form onSubmit={handleGuestCheckout} className="space-y-3">
-              <input
-                type="text" placeholder="Full name" required
-                autoComplete="name"
-                inputMode="text"
-                value={authForm.fullName}
-                onChange={(e) => {
-                  setAuthForm((f) => ({ ...f, fullName: e.target.value }));
-                }}
-                className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm"
-              />
               {emailLocked ? (
                 /* Locked — email came from the quiz funnel; show as read-only */
                 <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900/60">
@@ -1924,32 +1940,30 @@ function CheckoutPageContent({
                       ...(billing === "monthly" ? { paymentMethodTypes: ["card", "link"] } : {}),
                       appearance: elementsAppearance,
                     };
-                // Fire tracker for any influencer/quiz source, not just promo-code creators
-              const trackerCreator = checkoutCreator ?? initialSourceParam ?? null;
+                // Default to "homepage" so organic checkout visitors are also tracked
+              const trackerCreator = checkoutCreator ?? initialSourceParam ?? "homepage";
               return (
                   <Elements
                     stripe={stripePromise}
                     key={`${audience}-${billing}`}
                     options={elementsOptions}
                   >
-                    {trackerCreator && (
-                      <CheckoutFunnelTracker
-                        creator={trackerCreator}
-                        plan={`${audience}-${billing}`}
-                        interval={billing}
-                        price={finalPrice}
-                        promoCode={code || null}
-                        source={initialSourceParam}
-                        influencer={checkoutCreator ?? initialSourceParam}
-                        quizScore={initialQuizScore}
-                        resultType={initialResultType}
-                      />
-                    )}
+                    <CheckoutFunnelTracker
+                      creator={trackerCreator}
+                      plan={`${audience}-${billing}`}
+                      interval={billing}
+                      price={finalPrice}
+                      promoCode={code || null}
+                      source={initialSourceParam}
+                      influencer={checkoutCreator ?? initialSourceParam}
+                      quizScore={initialQuizScore}
+                      resultType={initialResultType}
+                    />
                     <CheckoutForm
                       audience={audience}
                       billing={billing}
                       finalPrice={finalPrice}
-                      creator={checkoutCreator ?? undefined}
+                      creator={trackerCreator}
                       promoCode={code || undefined}
                       getOrCreateClientSecret={getOrCreateClientSecret}
                       isAuthenticated={isAuthenticated}

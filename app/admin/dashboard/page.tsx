@@ -12,6 +12,7 @@ import {
   DollarSign,
   ShoppingCart,
   ClipboardList,
+  BarChart2,
 } from "lucide-react";
 import { requireAdmin } from "@/lib/auth";
 import { getAdminDashboardData } from "@/lib/queries/admin";
@@ -126,6 +127,13 @@ export default async function AdminDashboardPage() {
             >
               <ClipboardList className="w-4 h-4 text-gold" />
               Quiz Leads
+            </Link>
+            <Link
+              href="/admin/funnel-events"
+              className="flex items-center gap-2 p-3 rounded-xl border border-border bg-surface-raised hover:border-gold/30 transition-all text-sm text-text-secondary hover:text-text"
+            >
+              <BarChart2 className="w-4 h-4 text-gold" />
+              Funnel Events
             </Link>
             <Link
               href="/admin/support"
