@@ -31,8 +31,8 @@ const REFERENCE_CARDS: ReferenceCard[] = [
     slug: "timeline",
     title: "Timeline of the Seerah",
     description: "A chronological timeline of major events in the life of the Prophet ﷺ.",
-    cta: "Coming soon",
-    available: false,
+    cta: "View Timeline",
+    available: true,
   },
   {
     slug: "key-people",
