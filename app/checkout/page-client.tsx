@@ -1723,7 +1723,6 @@ function CheckoutPageContent({
             inputMode="text"
             value={authForm.fullName}
             onChange={(e) => setAuthForm((f) => ({ ...f, fullName: e.target.value }))}
-            onFocus={() => logStage("checkout_field_interacted", { field_name: "full_name" })}
             className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm"
           />
 

@@ -48,20 +48,6 @@ function parseMeta(raw: string | null): Record<string, unknown> {
   try { return JSON.parse(raw ?? "{}"); } catch { return {}; }
 }
 
-function badge(v: string | number, color: "gold" | "green" | "red" | "blue" | "zinc") {
-  const colors = {
-    gold:  "bg-amber-500/15 text-amber-400 border-amber-500/25",
-    green: "bg-green-500/15 text-green-400 border-green-500/25",
-    red:   "bg-red-500/15   text-red-400   border-red-500/25",
-    blue:  "bg-blue-500/15  text-blue-400  border-blue-500/25",
-    zinc:  "bg-zinc-800     text-zinc-300   border-zinc-700",
-  };
-  return (
-    <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold border ${colors[color]}`}>
-      {v}
-    </span>
-  );
-}
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 

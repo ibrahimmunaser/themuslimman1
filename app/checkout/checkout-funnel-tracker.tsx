@@ -194,6 +194,8 @@ export default function CheckoutFunnelTracker({
     // Abandonment: fires when the user navigates away without purchasing.
     const handleLeave = () => {
       if (purchasedRef.current) return;
+      // Re-check sessionStorage — markPurchased() may have written it after mount
+      if (sessionStorage.getItem("checkout_purchased") === "1") return;
       try {
         const paymentStarted = sessionStorage.getItem(SK_PAYMENT_STARTED) === "1";
         const paymentMethod  = sessionStorage.getItem(SK_PAYMENT_METHOD) ?? null;
