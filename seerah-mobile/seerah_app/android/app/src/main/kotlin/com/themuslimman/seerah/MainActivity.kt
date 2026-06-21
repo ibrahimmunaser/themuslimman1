@@ -1,4 +1,4 @@
-package com.example.seerah_app
+package com.themuslimman.seerah
 
 import io.flutter.embedding.android.FlutterActivity
 
