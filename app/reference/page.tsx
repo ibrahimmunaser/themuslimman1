@@ -45,8 +45,8 @@ const REFERENCE_CARDS: ReferenceCard[] = [
     slug: "tribes-lineage",
     title: "Tribes and Lineage",
     description: "The major Arab tribes, their relationships, and the Prophet's ﷺ lineage traced back.",
-    cta: "Coming soon",
-    available: false,
+    cta: "View Tribes & Lineage",
+    available: true,
   },
   {
     slug: "places-maps",
