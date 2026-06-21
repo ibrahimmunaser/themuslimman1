@@ -136,6 +136,13 @@ export default async function AdminDashboardPage() {
               Funnel Events
             </Link>
             <Link
+              href="/admin/checkout-analytics"
+              className="flex items-center gap-2 p-3 rounded-xl border border-border bg-surface-raised hover:border-gold/30 transition-all text-sm text-text-secondary hover:text-text"
+            >
+              <ShoppingCart className="w-4 h-4 text-gold" />
+              Checkout Analytics
+            </Link>
+            <Link
               href="/admin/support"
               className="flex items-center gap-2 p-3 rounded-xl border border-border bg-surface-raised hover:border-gold/30 transition-all text-sm text-text-secondary hover:text-text col-span-2"
             >

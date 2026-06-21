@@ -63,6 +63,9 @@ const KNOWN_EVENT_TYPES = [
   "checkout_escape_clicked",
   "express_checkout_visible",
   "payment_element_loaded",
+  // Checkout detailed analytics
+  "payment_method_available",
+  "checkout_field_interacted",
   // Homepage funnel
   "hero_watch_part1_clicked",
   "hero_score_clicked",

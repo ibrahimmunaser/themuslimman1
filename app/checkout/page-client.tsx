@@ -17,7 +17,7 @@ import {
 import Link from "next/link";
 import { PLANS, formatPrice } from "@/lib/stripe-config";
 import { clearCreatorPromo, getCreatorPromo, getCreatorPromoConfig } from "@/lib/creator-promos";
-import CheckoutFunnelTracker, { sendCheckoutEvent } from "./checkout-funnel-tracker";
+import CheckoutFunnelTracker, { sendCheckoutEvent, markPaymentStartedInSession, markPaymentMethodInSession } from "./checkout-funnel-tracker";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
@@ -135,13 +135,25 @@ function CheckoutForm({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [finalPrice]);
 
-  // Lightweight checkout stage logger. Always emits to console so stages appear
-  // in browser DevTools and Vercel server logs (for server-rendered events).
-  // Also calls sendCheckoutEvent for creator attribution tracking.
+  // Track which payment method the user has selected (card / applePay / googlePay).
+  const selectedMethodRef = useRef<string | null>(null);
+
+  // Lightweight checkout stage logger. Enriches each event with plan context.
+  // Wrapped in try/catch — tracking must never crash checkout.
   const logStage = (stage: string, extra?: Record<string, unknown>) => {
-    const ctx = { plan: `${audience}-${billing}`, amount: finalPrice, ...extra };
-    console.log(`[CHECKOUT:${stage}]`, ctx);
-    if (creator) sendCheckoutEvent(creator, stage, { ...ctx, promoCode });
+    try {
+      const ctx = {
+        plan:             `${audience}-${billing}`,
+        plan_type:        audience,
+        billing_interval: billing,
+        amount:           finalPrice,
+        currency:         "usd",
+        payment_method:   selectedMethodRef.current ?? undefined,
+        ...extra,
+      };
+      console.log(`[CHECKOUT:${stage}]`, ctx);
+      if (creator) sendCheckoutEvent(creator, stage, { ...ctx, promoCode });
+    } catch { /* never block checkout */ }
   };
 
   // Called by the card form submit button
@@ -163,8 +175,11 @@ function CheckoutForm({
 
     setProcessing(true);
     setError(null);
-    logStage("payment_started");
-    logStage("payment_submitted");
+    const fullNamePresent = !!(authFormRef.current?.fullName?.trim());
+    const emailPresent    = !!(authFormRef.current?.email?.trim() || isAuthenticated);
+    markPaymentStartedInSession(selectedMethodRef.current ?? undefined);
+    logStage("payment_started", { full_name_present: fullNamePresent, email_prefilled: emailPresent });
+    logStage("payment_submitted", { full_name_present: fullNamePresent, email_prefilled: emailPresent });
 
     // ── Step 1: Ensure account + intent exist (deferred pattern) ──────────────
     let clientSecret: string;
@@ -336,7 +351,8 @@ function CheckoutForm({
     }
 
     setError(null);
-    logStage("payment_started", { method: "express" });
+    markPaymentStartedInSession("express");
+    logStage("payment_started", { method: "express", full_name_present: !!walletName, email_prefilled: !!walletEmail });
     try {
       const { error: confirmError, paymentIntent } = await stripe.confirmPayment({
         elements,
@@ -460,10 +476,19 @@ function CheckoutForm({
             <ExpressCheckoutElement
               onConfirm={handleExpressConfirm}
               onReady={({ availablePaymentMethods }) => {
-                if (availablePaymentMethods && Object.keys(availablePaymentMethods).length > 0) {
+                const methods = availablePaymentMethods ? Object.keys(availablePaymentMethods) : [];
+                const hasApplePay  = methods.includes("applePay");
+                const hasGooglePay = methods.includes("googlePay");
+                if (methods.length > 0) {
                   setShowExpressCheckout(true);
-                  logStage("express_checkout_visible", { methods: Object.keys(availablePaymentMethods) });
+                  logStage("express_checkout_visible", { methods });
                 }
+                logStage("payment_method_available", {
+                  available_methods:    methods.length > 0 ? methods : ["card"],
+                  apple_pay_available:  hasApplePay,
+                  google_pay_available: hasGooglePay,
+                  card_available:       true,
+                });
               }}
               options={{
                 paymentMethods: { applePay: "auto", googlePay: "auto", link: "auto" },
@@ -490,6 +515,8 @@ function CheckoutForm({
           onReady={() => logStage("payment_element_loaded")}
           onChange={(e) => {
             if (e.value?.type) {
+              selectedMethodRef.current = e.value.type;
+              markPaymentMethodInSession(e.value.type);
               logStage("payment_method_selected", { method: e.value.type });
             }
           }}
@@ -1696,6 +1723,7 @@ function CheckoutPageContent({
             inputMode="text"
             value={authForm.fullName}
             onChange={(e) => setAuthForm((f) => ({ ...f, fullName: e.target.value }))}
+            onFocus={() => logStage("checkout_field_interacted", { field_name: "full_name" })}
             className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm"
           />
 
@@ -1956,6 +1984,8 @@ function CheckoutPageContent({
                       influencer={checkoutCreator ?? initialSourceParam}
                       quizScore={initialQuizScore}
                       resultType={initialResultType}
+                      emailPrefilled={!!(initialEmail || isAuthenticated)}
+                      fromQuiz={!!(initialQuizScore !== null || initialResultType)}
                     />
                     <CheckoutForm
                       audience={audience}
