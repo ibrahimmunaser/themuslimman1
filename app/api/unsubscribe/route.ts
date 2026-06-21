@@ -13,23 +13,29 @@ export async function GET(req: NextRequest) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://themuslimman.com";
 
   if (!token) {
-    return NextResponse.redirect(`${appUrl}/?unsubscribed=invalid`);
+    return NextResponse.redirect(`${appUrl}/unsubscribed?status=invalid`);
   }
 
   const existing = await prisma.emailUnsubscribe.findUnique({ where: { token } });
   if (!existing) {
-    return NextResponse.redirect(`${appUrl}/?unsubscribed=invalid`);
+    return NextResponse.redirect(`${appUrl}/unsubscribed?status=invalid`);
   }
 
   // Mark as unsubscribed (idempotent — safe to click multiple times)
   if (!existing.unsubscribed) {
+    const now = new Date();
     await prisma.emailUnsubscribe.update({
       where: { token },
-      data:  { unsubscribed: true, unsubscribedAt: new Date() },
+      data:  { unsubscribed: true, unsubscribedAt: now },
+    });
+    // Propagate unsubscribe timestamp to any quiz leads with this email
+    await prisma.seerahCheckupLead.updateMany({
+      where: { email: existing.email, unsubscribedAt: null },
+      data:  { unsubscribedAt: now },
     });
   }
 
-  return NextResponse.redirect(`${appUrl}/?unsubscribed=1`);
+  return NextResponse.redirect(`${appUrl}/unsubscribed?status=ok`);
 }
 
 /**

@@ -32,7 +32,7 @@ export default async function BrowniesaadiStatsPage({
       orderBy: { createdAt: "desc" },
       select: {
         id: true, eventType: true, sessionId: true, visitorId: true,
-        plan: true, promoCode: true, amount: true, userEmail: true, createdAt: true,
+        plan: true, promoCode: true, amount: true, userEmail: true, metadata: true, createdAt: true,
       },
     }),
 

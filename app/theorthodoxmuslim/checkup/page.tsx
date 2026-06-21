@@ -1,13 +1,9 @@
-import type { Metadata } from "next";
-import CheckupClient from "./checkup-client";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Free Seerah Checkup — The Muslim Man",
-  description:
-    "Take the 2-minute Seerah Checkup and see where your understanding is strong, where it is scattered, and what to study next.",
-  robots: { index: false, follow: false },
-};
-
+/**
+ * Legacy Seerah Checkup entry point.
+ * The quiz has moved to the main Orthodox Muslim funnel page.
+ */
 export default function CheckupPage() {
-  return <CheckupClient />;
+  redirect("/theorthodoxmuslim");
 }

@@ -10,8 +10,8 @@ const COOKIE_NAME = "seerah_session";
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 
 const GuestCheckoutSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-  fullName: z.string().trim().min(2, "Name must be at least 2 characters").max(100),
+  email:    z.string().email("Please enter a valid email address"),
+  fullName: z.string().trim().max(100).optional(),
 });
 
 async function createInlineSession(userId: string, role: string) {
@@ -76,8 +76,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { email, fullName } = parsed.data;
+    const { email, fullName: rawName } = parsed.data;
     const normalizedEmail = email.toLowerCase().trim();
+    // Derive a display name from the email prefix when the user doesn't provide one.
+    const fullName = rawName?.trim() || normalizedEmail.split("@")[0] || "Student";
 
     const existing = await prisma.user.findUnique({
       where: { email: normalizedEmail },

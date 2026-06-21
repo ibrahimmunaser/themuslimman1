@@ -9,7 +9,7 @@ export default function BrownieFunnelClient() {
   return (
     <SeerahCheckupClient
       creator="browniesaadi"
-      sourceBadge="Brownie Saadi Special"
+      sourceBadge="For Browniesaadi viewers"
       eventPrefix="brownie_"
       urls={{
         individualMonthly:  `/checkout?plan=individual-monthly&${SRC}&${UTM}`,

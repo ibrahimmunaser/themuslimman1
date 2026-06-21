@@ -16,6 +16,7 @@ interface FunnelEvent {
   promoCode: string | null;
   amount: number | null;
   userEmail: string | null;
+  metadata?: string | null;
   createdAt: Date;
 }
 
@@ -245,6 +246,9 @@ export function BrownieStatsDashboard({
           </p>
         </div>
 
+        {/* ── Quiz funnel drop-off ───────────────────────────────── */}
+        <QuizFunnelSection events={events} />
+
         {/* ── Purchase history ───────────────────────────────────── */}
         <div>
           <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">Purchase History</p>
@@ -354,6 +358,168 @@ export function BrownieStatsDashboard({
 
       </div>
     </div>
+  );
+}
+
+// ── Quiz Funnel Section ────────────────────────────────────────────────────────
+
+const QUIZ_QUESTION_COUNT = 10;
+
+function parseMeta(raw: string | null | undefined): Record<string, unknown> {
+  if (!raw) return {};
+  try { return JSON.parse(raw) as Record<string, unknown>; } catch { return {}; }
+}
+
+function QuizFunnelSection({ events }: { events: FunnelEvent[] }) {
+  const quizEvents = events.filter((e) =>
+    e.eventType === "quiz_started"              ||
+    e.eventType === "quiz_question_viewed"      ||
+    e.eventType === "quiz_question_answered"    ||
+    e.eventType === "quiz_completed"            ||
+    e.eventType === "quiz_email_reveal_viewed"  ||
+    e.eventType === "quiz_email_submitted"      ||
+    e.eventType === "quiz_result_viewed"        ||
+    e.eventType === "quiz_recommended_cta_clicked" ||
+    e.eventType === "quiz_abandoned"
+  );
+
+  if (quizEvents.length === 0) {
+    return (
+      <div>
+        <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">
+          Quiz Funnel Drop-off
+        </p>
+        <EmptyState
+          label="No quiz funnel events yet."
+          sub="Events will appear after users start the Seerah Checkup."
+        />
+      </div>
+    );
+  }
+
+  // Unique sessions per event type
+  const sessionsByType = new Map<string, Set<string>>();
+  for (const e of quizEvents) {
+    const s = sessionsByType.get(e.eventType) ?? new Set<string>();
+    s.add(e.sessionId);
+    sessionsByType.set(e.eventType, s);
+  }
+  const uniq = (key: string) => sessionsByType.get(key)?.size ?? 0;
+
+  // Per-question unique session sets (from question_number in metadata)
+  const qViewedSessions   = new Map<number, Set<string>>();
+  const qAnsweredSessions = new Map<number, Set<string>>();
+  for (const e of quizEvents) {
+    const meta = parseMeta(e.metadata);
+    const qn   = typeof meta.question_number === "number" ? meta.question_number : null;
+    if (qn === null) continue;
+    if (e.eventType === "quiz_question_viewed") {
+      const s = qViewedSessions.get(qn) ?? new Set<string>();
+      s.add(e.sessionId);
+      qViewedSessions.set(qn, s);
+    } else if (e.eventType === "quiz_question_answered") {
+      const s = qAnsweredSessions.get(qn) ?? new Set<string>();
+      s.add(e.sessionId);
+      qAnsweredSessions.set(qn, s);
+    }
+  }
+
+  const starts        = uniq("quiz_started");
+  const completions   = uniq("quiz_completed");
+  const emailViews    = uniq("quiz_email_reveal_viewed");
+  const emailSubmits  = uniq("quiz_email_submitted");
+  const resultViews   = uniq("quiz_result_viewed");
+  const ctaClicks     = uniq("quiz_recommended_cta_clicked");
+  const abandonments  = uniq("quiz_abandoned");
+  const pct = (n: number) =>
+    starts > 0 ? `${((n / starts) * 100).toFixed(1)}%` : "—";
+
+  // Average answered count before abandonment
+  let totalAnsweredOnAbandon = 0;
+  let abandonCount = 0;
+  for (const e of quizEvents) {
+    if (e.eventType !== "quiz_abandoned") continue;
+    const m = parseMeta(e.metadata);
+    const c = typeof m.answered_count === "number" ? m.answered_count : 0;
+    totalAnsweredOnAbandon += c;
+    abandonCount++;
+  }
+  const avgAnsweredOnAbandon =
+    abandonCount > 0 ? (totalAnsweredOnAbandon / abandonCount).toFixed(1) : "—";
+
+  return (
+    <div className="space-y-6">
+      <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+        Quiz Funnel Drop-off
+      </p>
+
+      {/* Summary metrics */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <MetricCard label="Quiz Starts"      value={fmt(starts)}      note="Clicked Start" />
+        <MetricCard label="Completions"      value={fmt(completions)} note={`${pct(completions)} of starts`} />
+        <MetricCard label="Abandons"         value={fmt(abandonments)} note={`Avg ${avgAnsweredOnAbandon} Qs answered`} />
+        <MetricCard label="CTA Clicks"       value={fmt(ctaClicks)}   note={`${pct(ctaClicks)} of starts`} />
+      </div>
+
+      {/* Drop-off table */}
+      <div className="border border-zinc-800 rounded-xl overflow-hidden overflow-x-auto">
+        <table className="w-full text-sm min-w-[480px]">
+          <thead>
+            <tr className="border-b border-zinc-800 bg-zinc-900/60">
+              <th className="text-left px-4 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Stage</th>
+              <th className="text-right px-4 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Uniq Sessions</th>
+              <th className="text-right px-4 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider">vs Quiz Start</th>
+            </tr>
+          </thead>
+          <tbody>
+            <DropRow label="Quiz started"              sessions={starts}       baseline={starts} separator />
+            {Array.from({ length: QUIZ_QUESTION_COUNT }, (_, i) => {
+              const n = i + 1;
+              const vSessions = qViewedSessions.get(n)?.size   ?? 0;
+              const aSessions = qAnsweredSessions.get(n)?.size ?? 0;
+              return (
+                <React.Fragment key={n}>
+                  <DropRow label={`Q${n} viewed`}   sessions={vSessions} baseline={starts} />
+                  <DropRow label={`Q${n} answered`}  sessions={aSessions} baseline={starts} />
+                </React.Fragment>
+              );
+            })}
+            <DropRow label="Email reveal viewed"       sessions={emailViews}   baseline={starts} separator />
+            <DropRow label="Email submitted"           sessions={emailSubmits} baseline={starts} />
+            <DropRow label="Result viewed"             sessions={resultViews}  baseline={starts} />
+            <DropRow label="Paid CTA clicked"          sessions={ctaClicks}    baseline={starts} />
+          </tbody>
+        </table>
+      </div>
+      <p className="text-xs text-zinc-600">
+        All counts are unique sessions per stage. Requires quiz funnel events to be firing (new as of the quiz analytics update).
+      </p>
+    </div>
+  );
+}
+
+function DropRow({
+  label,
+  sessions,
+  baseline,
+  separator = false,
+}: {
+  label: string;
+  sessions: number;
+  baseline: number;
+  separator?: boolean;
+}) {
+  const pct = baseline > 0 ? ((sessions / baseline) * 100).toFixed(1) : "—";
+  return (
+    <tr
+      className={`border-b border-zinc-800/60 last:border-0 hover:bg-zinc-900/50 transition-colors ${separator ? "border-t-2 border-zinc-700" : ""}`}
+    >
+      <td className="px-4 py-2.5 text-zinc-300 text-xs">{label}</td>
+      <td className="px-4 py-2.5 text-right text-white font-semibold text-xs">{fmt(sessions)}</td>
+      <td className="px-4 py-2.5 text-right text-amber-400 text-xs">
+        {pct === "—" ? "—" : `${pct}%`}
+      </td>
+    </tr>
   );
 }
 

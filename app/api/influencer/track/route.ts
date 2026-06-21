@@ -38,6 +38,28 @@ const KNOWN_EVENT_TYPES = [
   "purchase_completed",
   // Payment failure events
   "checkout_payment_failed",
+  // Seerah Checkup quiz funnel
+  "quiz_started",
+  "quiz_question_viewed",
+  "quiz_question_answered",
+  "quiz_progress_saved",
+  "quiz_abandoned",
+  "quiz_completed",
+  "quiz_email_reveal_viewed",
+  "quiz_email_submitted",
+  "quiz_result_viewed",
+  "quiz_recommended_cta_clicked",
+  // Checkout funnel v3
+  "payment_started",
+  "payment_submitted",
+  "payment_method_selected",
+  "payment_succeeded",
+  "payment_failed",
+  "payment_skipped_already_has_access",
+  "checkout_abandoned",
+  "checkout_escape_clicked",
+  "express_checkout_visible",
+  "payment_element_loaded",
 ] as const;
 
 export async function POST(req: NextRequest) {

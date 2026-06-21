@@ -122,6 +122,11 @@ function CheckoutForm({
 
   const returnUrl = toReturnUrl(audience, billing);
 
+  /** Flag the session as purchased so the abandonment tracker won't fire. */
+  const markPurchased = () => {
+    try { sessionStorage.setItem("checkout_purchased", "1"); } catch { /* storage blocked */ }
+  };
+
   // Keep Stripe's internal amount in sync when a promo is applied so Apple Pay /
   // Google Pay show the correct amount in the wallet sheet without remounting.
   useEffect(() => {
@@ -152,6 +157,7 @@ function CheckoutForm({
 
     setProcessing(true);
     setError(null);
+    logStage("payment_started");
     logStage("payment_submitted");
 
     // ── Step 1: Ensure account + intent exist (deferred pattern) ──────────────
@@ -219,6 +225,7 @@ function CheckoutForm({
           setProcessing(false);
         } else if (setupIntent?.status === "succeeded") {
           // Setup completed in-page — navigate to success
+          markPurchased();
           window.location.href = returnUrl;
         }
         // If redirect happened, browser navigates away — no further action needed
@@ -236,21 +243,25 @@ function CheckoutForm({
           setProcessing(false);
         } else if (paymentIntent?.status === "succeeded") {
           logStage("payment_succeeded");
-          // Payment completed in-page (no redirect) — navigate manually
+          markPurchased();
           const url = new URL(returnUrl, window.location.origin);
           url.searchParams.set("payment_intent", paymentIntent.id);
           url.searchParams.set("payment_intent_client_secret", paymentIntent.client_secret ?? "");
           url.searchParams.set("redirect_status", "succeeded");
           window.location.href = url.toString();
         } else if (paymentIntent?.status === "processing") {
-          // Some payment methods (e.g. bank transfers) take time to process.
-          // Redirect to the success page — it will poll for confirmation.
           logStage("payment_submitted", { status: "processing" });
+          markPurchased();
           const url = new URL(returnUrl, window.location.origin);
           url.searchParams.set("payment_intent", paymentIntent.id);
           url.searchParams.set("payment_intent_client_secret", paymentIntent.client_secret ?? "");
           url.searchParams.set("redirect_status", "processing");
           window.location.href = url.toString();
+        } else if (paymentIntent) {
+          // Stripe returned an unexpected status — unlock the UI so the user can retry.
+          logStage("payment_failed", { errorCode: paymentIntent.status });
+          setError("Payment could not be completed. Please try again or use a different payment method.");
+          setProcessing(false);
         }
         // If Stripe redirected the browser (3DS etc.), no further action needed.
       }
@@ -263,6 +274,8 @@ function CheckoutForm({
   // Called by Apple Pay / Google Pay / Samsung Pay / Link after wallet auth
   const handleExpressConfirm = async (event: StripeExpressCheckoutElementConfirmEvent) => {
     if (!stripe || !elements || processing || authInProgress) return;
+    // Lock immediately — prevents duplicate PIs from rapid double-tap on wallet button.
+    setProcessing(true);
 
     // Wallet payments may provide billing details (name/email from Apple/Google Wallet).
     // Use those to create an account if the user hasn't filled in the name/email fields yet.
@@ -275,6 +288,7 @@ function CheckoutForm({
       clientSecret = await getOrCreateClientSecret(walletName, walletEmail);
     } catch (err) {
       event.paymentFailed({ reason: "fail" });
+      setProcessing(false);
       const msg = err instanceof Error ? err.message : "";
       if (msg === "__FREE_ACCESS__" || msg === "__AUTH_FAILED__") return;
       // Google Pay / Apple Pay may not provide an email in some setups.
@@ -292,6 +306,7 @@ function CheckoutForm({
       const sessionRes = await fetch("/api/stripe/check-access");
       if (sessionRes.status === 401) {
         event.paymentFailed({ reason: "fail" });
+        setProcessing(false);
         setError("Your session has expired. Please refresh the page to continue.");
         return;
       }
@@ -307,8 +322,8 @@ function CheckoutForm({
       // Network error — proceed; Stripe handles idempotency.
     }
 
-    setProcessing(true);
     setError(null);
+    logStage("payment_started", { method: "express" });
     try {
       const { error: confirmError, paymentIntent } = await stripe.confirmPayment({
         elements,
@@ -324,6 +339,7 @@ function CheckoutForm({
         setProcessing(false);
       } else if (paymentIntent?.status === "succeeded") {
         logStage("payment_succeeded", { method: "express" });
+        markPurchased();
         const url = new URL(returnUrl, window.location.origin);
         url.searchParams.set("payment_intent", paymentIntent.id);
         url.searchParams.set("payment_intent_client_secret", paymentIntent.client_secret ?? "");
@@ -331,11 +347,17 @@ function CheckoutForm({
         window.location.href = url.toString();
       } else if (paymentIntent?.status === "processing") {
         logStage("payment_submitted", { status: "processing", method: "express" });
+        markPurchased();
         const url = new URL(returnUrl, window.location.origin);
         url.searchParams.set("payment_intent", paymentIntent.id);
         url.searchParams.set("payment_intent_client_secret", paymentIntent.client_secret ?? "");
         url.searchParams.set("redirect_status", "processing");
         window.location.href = url.toString();
+      } else if (paymentIntent) {
+        event.paymentFailed({ reason: "fail" });
+        logStage("payment_failed", { errorCode: paymentIntent.status, method: "express" });
+        setError("Payment could not be completed. Please try again or use a different card.");
+        setProcessing(false);
       }
     } catch {
       event.paymentFailed({ reason: "fail" });
@@ -431,9 +453,10 @@ function CheckoutForm({
                 }
               }}
               options={{
-                buttonType: { applePay: "buy", googlePay: "buy" },
+                paymentMethods: { applePay: "auto", googlePay: "auto", link: "auto" },
+                buttonType:  { applePay: "buy", googlePay: "buy" },
                 buttonTheme: { applePay: "white-outline", googlePay: "white" },
-                layout: { maxColumns: 1, maxRows: 5, overflow: "auto" },
+                layout: { maxColumns: 1, maxRows: 3, overflow: "auto" },
               }}
             />
           </div>
@@ -452,11 +475,13 @@ function CheckoutForm({
             Cash App requires setup_future_usage=off_session to be absent; hide it on trial. */}
         <PaymentElement
           onReady={() => logStage("payment_element_loaded")}
+          onChange={(e) => {
+            if (e.value?.type) {
+              logStage("payment_method_selected", { method: e.value.type });
+            }
+          }}
           options={{
             wallets: { applePay: "never", googlePay: "never", link: "never" },
-            ...(billing === "trial" || billing === "monthly"
-              ? { paymentMethodOrder: ["card"] }
-              : {}),
           }}
         />
         {error && (
@@ -487,7 +512,11 @@ function CheckoutForm({
         {/* Safety valve — give hesitant users a free path instead of losing them */}
         <p className="text-center text-xs text-zinc-500">
           Not ready yet?{" "}
-          <a href="/watch-free" className="underline hover:text-zinc-300 transition-colors">
+          <a
+            href="/watch-free"
+            onClick={() => creator && sendCheckoutEvent(creator, "checkout_escape_clicked", { escape_type: "watch_free", plan: `${audience}-${billing}` })}
+            className="underline hover:text-zinc-300 transition-colors"
+          >
             Watch Part 1 free first
           </a>
         </p>
@@ -560,6 +589,10 @@ interface CheckoutPageClientProps {
    * name field. Only effective when initialEmail is also provided.
    */
   initialName?: string | null;
+  /** Quiz score from the Seerah Checkup funnel (0–100). */
+  initialQuizScore?: number | null;
+  /** Result type from the quiz ("scattered" | "partial" | "strong"). */
+  initialResultType?: string | null;
 }
 
 // ── Main checkout content ─────────────────────────────────────────────────────
@@ -598,6 +631,8 @@ function CheckoutPageContent({
   isLifetimeUpgrade = false,
   initialEmail = null,
   initialName  = null,
+  initialQuizScore  = null,
+  initialResultType = null,
 }: CheckoutPageClientProps) {
   // promoParam comes from the server prop — no useSearchParams() needed.
   // This guarantees server and client render the same initial HTML.
@@ -659,6 +694,9 @@ function CheckoutPageContent({
   });
   const [authError,  setAuthError]   = useState("");
   const [authLoading,setAuthLoading] = useState(false);
+  // When a quiz-funnel email arrives via URL param, lock the field so the user
+  // sees it's already set and only needs to enter their name.
+  const [emailLocked, setEmailLocked] = useState(!!(initialEmail && !userEmail));
   const [needsVerification, setNeedsVerification] = useState(false);
   const [resendState, setResendState] = useState<"idle" | "loading" | "sent" | "error">("idle");
   // Auto-trigger: fires when the email field blurs with a valid name + email so the
@@ -861,17 +899,13 @@ function CheckoutPageContent({
     // free-claim UI is shown instead of attempting confirmPayment.
     if (freeAccessRef.current) throw new Error("__FREE_ACCESS__");
 
-    // Validate name + email before doing any network calls.
+    // Validate email before doing any network calls.
     if (!isAuthenticatedRef.current) {
-      if (!name.trim() || name.trim().length < 2)
-        throw new Error("Please enter your full name to continue.");
       if (!email.includes("@"))
         throw new Error("Please enter a valid email address to continue.");
 
-      // Create guest account. If this fails (409 existing account, network error,
-      // etc.) runGuestCheckout sets authError state but returns silently. We check
-      // the ref afterwards — if still not authenticated, propagate the error.
-      await runGuestCheckout(name, email);
+      // Name is optional — the API derives it from email if not provided.
+      await runGuestCheckout(name || "", email);
 
       if (!isAuthenticatedRef.current) {
         // Auth failed — authError state may have been set with the reason.
@@ -1062,37 +1096,32 @@ function CheckoutPageContent({
   const handleGuestCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError("");
-    if (authForm.fullName.trim().length < 2) { setAuthError("Please enter your full name"); return; }
-    if (!authForm.email.includes("@"))       { setAuthError("Please enter a valid email address"); return; }
+    if (!authForm.email.includes("@")) { setAuthError("Please enter a valid email address"); return; }
     if (autoIntentStarted) return; // already in progress from auto-trigger
     setAutoIntentStarted(true);
     await runGuestCheckout(authForm.fullName, authForm.email);
   };
 
-  // Auto-trigger: starts the guest account + payment intent as soon as a valid
-  // name + email are entered, so the Stripe form is ready without a button click.
-  const triggerAutoCheckout = (name: string, email: string) => {
+  // Auto-trigger: fires once a valid email is entered (name is optional).
+  const triggerAutoCheckout = (_name: string, email: string) => {
     if (isAuthenticated || autoIntentStarted || authLoading) return;
     if (autoDebounceRef.current) clearTimeout(autoDebounceRef.current);
     const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    if (name.trim().length < 2 || !validEmail) return;
+    if (!validEmail) return;
     autoDebounceRef.current = setTimeout(() => {
       setAutoIntentStarted(true);
-      runGuestCheckout(name, email);
+      runGuestCheckout(authForm.fullName, email);
     }, 600);
   };
 
-  // When arriving from the Seerah Checkup funnel with a pre-filled email + name,
-  // auto-start the guest checkout flow immediately — the user doesn't need to
-  // re-enter details they already gave the funnel.
+  // When arriving from the Seerah Checkup funnel with a pre-filled email,
+  // auto-start the guest checkout flow immediately — name is no longer required.
   useEffect(() => {
     if (!initialEmail || isAuthenticated) return;
     const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(initialEmail);
     if (!validEmail) return;
-    const prefillName = (initialName ?? "").trim();
-    if (prefillName.length < 2) return;
     setAutoIntentStarted(true);
-    runGuestCheckout(prefillName, initialEmail);
+    runGuestCheckout(initialName ?? "", initialEmail);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // run once on mount; initial values are stable
 
@@ -1134,6 +1163,9 @@ function CheckoutPageContent({
   const handleApplyCoupon = async () => {
     const code = couponInput.trim();
     if (!code) return;
+    // Clear the existing intent so getOrCreateClientSecret creates a new one with the discount.
+    clientSecretRef.current = null;
+    setClientSecret(null);
     setCouponLoading(true);
     setCouponError(null);
     try {
@@ -1170,6 +1202,8 @@ function CheckoutPageContent({
 
   const handleRemoveCoupon = async () => {
     clearCreatorPromo();
+    clientSecretRef.current = null;
+    setClientSecret(null);
     setAppliedCoupon(null);
     setCouponInput("");
     setCouponError(null);
@@ -1300,7 +1334,9 @@ function CheckoutPageContent({
           <button
             onClick={() => {
               setShowPlanSelector(true);
-              sendCheckoutEvent(initialSourceParam ?? "unknown", "change_plan_clicked", { plan: `${audience}-${billing}` });
+              const src = initialSourceParam ?? "unknown";
+              sendCheckoutEvent(src, "change_plan_clicked",      { plan: `${audience}-${billing}` });
+              sendCheckoutEvent(src, "checkout_escape_clicked",  { escape_type: "change_plan", plan: `${audience}-${billing}` });
             }}
             className="mt-3 text-[10px] text-zinc-700 hover:text-zinc-500 transition-colors"
           >
@@ -1327,6 +1363,9 @@ function CheckoutPageContent({
                 onClick={() => {
                   if (isLifetimeUpgrade && id !== "family") return;
                   setAudience(id);
+                  // Clear immediately so getOrCreateClientSecret can't return a stale intent.
+                  clientSecretRef.current = null;
+                  setClientSecret(null);
                   setAppliedCoupon(null); setGuestPromo(null); setDiscountAmount(0); setCouponInput(""); setCouponError(null);
                   const newPlan = PLANS[toPlanKey(id, billing)];
                   const snap = billing === "trial" ? (newPlan as typeof PLANS.individualTrial).trialFeeAmount ?? newPlan.price : newPlan.price;
@@ -1352,6 +1391,8 @@ function CheckoutPageContent({
                 key={id}
                 onClick={() => {
                   setBilling(id);
+                  clientSecretRef.current = null;
+                  setClientSecret(null);
                   setAppliedCoupon(null); setGuestPromo(null); setDiscountAmount(0); setCouponInput(""); setCouponError(null);
                   const newPlan = PLANS[toPlanKey(audience, id)];
                   const snap = id === "trial" ? (newPlan as typeof PLANS.individualTrial).trialFeeAmount ?? newPlan.price : newPlan.price;
@@ -1613,7 +1654,7 @@ function CheckoutPageContent({
                   onClick={() => { setAudience("family"); setBilling("lifetime"); }}
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-amber-500/40 hover:border-amber-500/70 text-amber-400 font-semibold text-sm transition-colors"
                 >
-                  Lifetime — $49
+                  Family Lifetime — {formatPrice(PLANS.family.price)} one-time
                 </button>
               </div>
             </div>
@@ -1643,25 +1684,44 @@ function CheckoutPageContent({
                 inputMode="text"
                 value={authForm.fullName}
                 onChange={(e) => {
-                  const name = e.target.value;
-                  setAuthForm((f) => ({ ...f, fullName: name }));
-                  triggerAutoCheckout(name, authForm.email);
+                  setAuthForm((f) => ({ ...f, fullName: e.target.value }));
                 }}
                 className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm"
               />
-              <input
-                type="email" placeholder="Email address" required
-                autoComplete="email"
-                inputMode="email"
-                value={authForm.email}
-                onChange={(e) => {
-                  const email = e.target.value;
-                  setAuthForm((f) => ({ ...f, email }));
-                  triggerAutoCheckout(authForm.fullName, email);
-                }}
-                onBlur={(e) => triggerAutoCheckout(authForm.fullName, e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm"
-              />
+              {emailLocked ? (
+                /* Locked — email came from the quiz funnel; show as read-only */
+                <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900/60">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Lock className="w-3.5 h-3.5 text-zinc-500 flex-shrink-0" />
+                    <span className="text-white text-sm truncate">{authForm.email}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (autoDebounceRef.current) clearTimeout(autoDebounceRef.current);
+                      setEmailLocked(false);
+                      setAuthForm((f) => ({ ...f, email: "" }));
+                    }}
+                    className="text-xs text-zinc-500 hover:text-gold transition-colors whitespace-nowrap flex-shrink-0"
+                  >
+                    Use a different email
+                  </button>
+                </div>
+              ) : (
+                <input
+                  type="email" placeholder="Email address" required
+                  autoComplete="email"
+                  inputMode="email"
+                  value={authForm.email}
+                  onChange={(e) => {
+                    const email = e.target.value;
+                    setAuthForm((f) => ({ ...f, email }));
+                    triggerAutoCheckout("", email);
+                  }}
+                  onBlur={(e) => triggerAutoCheckout("", e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm"
+                />
+              )}
               {authError === "__existing_account__" ? (
                 <div className="p-4 rounded-xl bg-gold/10 border border-gold/25 text-sm space-y-2">
                   <p className="font-semibold text-white">You already have an account</p>
@@ -1864,19 +1924,25 @@ function CheckoutPageContent({
                       ...(billing === "monthly" ? { paymentMethodTypes: ["card", "link"] } : {}),
                       appearance: elementsAppearance,
                     };
-                return (
+                // Fire tracker for any influencer/quiz source, not just promo-code creators
+              const trackerCreator = checkoutCreator ?? initialSourceParam ?? null;
+              return (
                   <Elements
                     stripe={stripePromise}
                     key={`${audience}-${billing}`}
                     options={elementsOptions}
                   >
-                    {checkoutCreator && (
+                    {trackerCreator && (
                       <CheckoutFunnelTracker
-                        creator={checkoutCreator}
+                        creator={trackerCreator}
                         plan={`${audience}-${billing}`}
+                        interval={billing}
+                        price={finalPrice}
                         promoCode={code || null}
-                        amount={finalPrice}
-                        userEmail={authEmail}
+                        source={initialSourceParam}
+                        influencer={checkoutCreator ?? initialSourceParam}
+                        quizScore={initialQuizScore}
+                        resultType={initialResultType}
                       />
                     )}
                     <CheckoutForm

@@ -38,7 +38,7 @@ export interface SeerahCheckupUrls {
 export interface SeerahCheckupClientProps {
   /** Creator slug used for analytics payloads and API submit source. */
   creator: string;
-  /** Badge text shown above the headline, e.g. "As seen on Deen Responds". */
+  /** Badge text shown above the headline, e.g. "For Deen Responds viewers". */
   sourceBadge: string;
   /** Analytics event prefix, e.g. "deen_". Must end with underscore. */
   eventPrefix: string;
@@ -409,7 +409,7 @@ function ScoreGauge({ score, resultType, name }: { score: number; resultType: Re
         <circle cx={t39.x} cy={t39.y} r="5" fill="#0d0d0d" stroke="rgba(255,255,255,0.28)" strokeWidth="1.5" />
         <circle cx={t70.x} cy={t70.y} r="5" fill="#0d0d0d" stroke="rgba(255,255,255,0.28)" strokeWidth="1.5" />
         <text x={cx-r+2}  y={cy+24} fontSize="11" fill="rgba(255,255,255,0.38)" textAnchor="start">Scattered</text>
-        <text x={cx}      y={cy-r-10} fontSize="11" fill="rgba(255,255,255,0.38)" textAnchor="middle">Partial</text>
+        <text x={cx}      y={cy-r-20} fontSize="11" fill="rgba(255,255,255,0.38)" textAnchor="middle">Partial</text>
         <text x={cx+r-2}  y={cy+24} fontSize="11" fill="rgba(255,255,255,0.38)" textAnchor="end">Strong</text>
         <g transform={`rotate(${needleAngle}, ${cx}, ${cy})`}>
           <line x1={cx} y1={cy-16} x2={cx} y2={cy-r+14}
@@ -438,8 +438,15 @@ function ProgressBar({ current, total }: { current: number; total: number }) {
   const pct = Math.round((current / total) * 100);
   return (
     <div className="w-full mb-6">
-      <p className="text-xs text-text-muted/60 mb-1.5">Question {current} of {total}</p>
-      <div className="h-1 bg-surface-raised rounded-full overflow-hidden">
+      <p className="text-xs text-text-muted/60 mb-1.5" aria-hidden="true">Question {current} of {total}</p>
+      <div
+        role="progressbar"
+        aria-valuenow={current}
+        aria-valuemin={0}
+        aria-valuemax={total}
+        aria-label={`Question ${current} of ${total}`}
+        className="h-1 bg-surface-raised rounded-full overflow-hidden"
+      >
         <div className="h-full bg-gold rounded-full transition-all duration-500" style={{ width: `${pct}%` }} />
       </div>
     </div>
@@ -468,19 +475,7 @@ export function SeerahCheckupClient({
 }: SeerahCheckupClientProps) {
   const watchFreeUrl = urls.watchFree ?? "/watch-free";
 
-  // ── Analytics ──────────────────────────────────────────────────────────────
-  function track(event: string, props?: Record<string, unknown>) {
-    try {
-      if (typeof window === "undefined") return;
-      if (process.env.NODE_ENV === "development") console.log(`[${creator}]`, event, props);
-      const payload = JSON.stringify({ creator, eventType: event, ...props });
-      if (navigator.sendBeacon) {
-        navigator.sendBeacon("/api/influencer/track", new Blob([payload], { type: "application/json" }));
-      } else {
-        fetch("/api/influencer/track", { method: "POST", headers: { "Content-Type": "application/json" }, body: payload, keepalive: true }).catch(() => {});
-      }
-    } catch { /* never block */ }
-  }
+  // ── UI state ───────────────────────────────────────────────────────────────
 
   const [phase, setPhase]                   = useState<Phase>("idle");
   const [currentQ, setCurrentQ]             = useState(0);
@@ -488,6 +483,7 @@ export function SeerahCheckupClient({
   const [name, setName]                     = useState("");
   const [email, setEmail]                   = useState("");
   const [emailErr, setEmailErr]             = useState("");
+  const [emailSubmitting, setEmailSubmitting] = useState(false);
   const [faqOpen, setFaqOpen]               = useState<number | null>(null);
   const [showInlinePreview, setShowInline]  = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -495,62 +491,329 @@ export function SeerahCheckupClient({
   const quizRef   = useRef<HTMLDivElement>(null);
   const inlineRef = useRef<HTMLDivElement>(null);
 
-  // Fire once on mount — `track` and `eventPrefix` are stable for the
-  // lifetime of this page, so the empty dep array is intentional.
+  // ── Quiz funnel tracking refs ───────────────────────────────────────────────
+  // Refs (not state) so pagehide / visibilitychange handlers always see the
+  // latest values without stale-closure issues.
+
+  const sessionIdRef    = useRef("");   // unique per page load; set on mount
+  const visitorIdRef    = useRef("");   // persisted in localStorage across sessions
+  const quizStartedRef  = useRef(false);
+  const quizRevealedRef = useRef(false); // true after email submit → result shown
+  const phaseRef        = useRef<Phase>("idle");
+  const maxQRef         = useRef(0);    // highest 1-indexed question number reached
+  const answersRef      = useRef<Record<number, number>>({});
+  const showInlineRef   = useRef(false);
+  const leadIdRef           = useRef<string | null>(null); // set after checkup/submit succeeds
+  const pendingActivityRef  = useRef<Array<"checkout_clicked" | "part1_clicked">>([]); // queued before lead ID arrives
+  const abandonSentRef      = useRef(false); // prevents bfcache double-fire on quiz_abandoned
+
+  // ── Analytics send ─────────────────────────────────────────────────────────
+
+  function track(event: string, meta?: Record<string, unknown>) {
+    try {
+      if (typeof window === "undefined") return;
+      const payload = JSON.stringify({
+        creator,
+        eventType: event,
+        sessionId: sessionIdRef.current || "pending",
+        visitorId: visitorIdRef.current || "pending",
+        route: window.location.pathname,
+        metadata: JSON.stringify({ source: creator, ...meta }),
+      });
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon(
+          "/api/influencer/track",
+          new Blob([payload], { type: "application/json" }),
+        );
+      } else {
+        fetch("/api/influencer/track", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: payload,
+          keepalive: true,
+        }).catch(() => {});
+      }
+      // Mirror high-value events to the lead record for email automation
+      if (event === "quiz_recommended_cta_clicked") recordLeadActivity("checkout_clicked");
+      if (event === "watch_part1_clicked") recordLeadActivity("part1_clicked");
+    } catch { /* never block */ }
+  }
+
+  // ── Lead activity (checkout / part1 clicks) ────────────────────────────────
+
+  function recordLeadActivity(event: "checkout_clicked" | "part1_clicked") {
+    const id = leadIdRef.current;
+    if (!id) {
+      // Lead ID not yet back from the submit API — queue and flush when it arrives.
+      if (!pendingActivityRef.current.includes(event)) {
+        pendingActivityRef.current.push(event);
+      }
+      return;
+    }
+    fetch("/api/checkup/activity", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ leadId: id, event }),
+      keepalive: true,
+    }).catch(() => {});
+  }
+
+  // ── Init: session identity + landing view + progress restore ─────────────────
+  // Must be the first effect so sessionId/visitorId are ready for everything
+  // that follows. The empty dep array is intentional.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { track(`${eventPrefix}landing_view`); }, []);
+  useEffect(() => {
+    sessionIdRef.current =
+      `chk_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+    try {
+      const KEY    = "seerah_visitor_id";
+      const stored = localStorage.getItem(KEY);
+      if (stored) {
+        visitorIdRef.current = stored;
+      } else {
+        const vid = `v_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+        localStorage.setItem(KEY, vid);
+        visitorIdRef.current = vid;
+      }
+    } catch {
+      visitorIdRef.current = `v_${Date.now().toString(36)}`;
+    }
+
+    // Restore in-progress quiz from localStorage if it exists and is < 24h old.
+    try {
+      const raw = localStorage.getItem(`checkup_progress_${creator}`);
+      if (raw) {
+        const saved = JSON.parse(raw) as {
+          answers?: Record<number, number>;
+          answered_count?: number;
+          max_question_reached?: number;
+          savedAt?: string;
+        };
+        const savedAt = saved.savedAt ? new Date(saved.savedAt).getTime() : 0;
+        const isStale = Date.now() - savedAt > 24 * 60 * 60 * 1000;
+        const restoredAnswers = saved.answers ?? {};
+        const answeredCount   = saved.answered_count ?? Object.keys(restoredAnswers).length;
+
+        if (!isStale && answeredCount > 0 && answeredCount < QUESTIONS.length) {
+          // Restore to the next unanswered question (0-indexed currentQ)
+          const nextQ = Math.min(answeredCount, QUESTIONS.length - 1);
+          setAnswers(restoredAnswers);
+          setCurrentQ(nextQ);
+          setPhase("quiz");
+          answersRef.current      = restoredAnswers;
+          maxQRef.current         = saved.max_question_reached ?? answeredCount;
+          quizStartedRef.current  = true;
+          phaseRef.current        = "quiz";
+        } else if (!isStale && answeredCount >= QUESTIONS.length) {
+          // All questions answered but email not yet submitted — restore to email gate
+          setAnswers(restoredAnswers);
+          setPhase("email");
+          answersRef.current      = restoredAnswers;
+          maxQRef.current         = QUESTIONS.length;
+          quizStartedRef.current  = true;
+          phaseRef.current        = "email";
+        }
+      }
+    } catch { /* corrupt or missing — start fresh */ }
+
+    track("landing_page_view");
+  }, []);
 
   function startQuiz() {
-    track(`${eventPrefix}quiz_start`);
+    quizStartedRef.current = true;
+    phaseRef.current       = "quiz";
+    track("quiz_started", {
+      page_path:       typeof window !== "undefined" ? window.location.pathname : "",
+      total_questions: QUESTIONS.length,
+    });
     setPhase("quiz");
     setTimeout(() => quizRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
   }
 
   function handleAnswer(optionIndex: number) {
-    const q = QUESTIONS[currentQ];
+    const q           = QUESTIONS[currentQ];
+    const qNumber     = currentQ + 1; // 1-indexed
+    const isScored    = q.id <= SCORED_COUNT;
+    const updated     = { ...answers, [q.id]: optionIndex };
+    const newMaxQ     = Math.max(maxQRef.current, qNumber);
+    const answeredCount = Object.keys(updated).length;
+    const currentScore  = computeScore(updated);
+
     setSelectedAnswer(optionIndex);
-    const updated = { ...answers, [q.id]: optionIndex };
     setAnswers(updated);
-    track(`${eventPrefix}quiz_question_answered`, { questionId: q.id, optionIndex });
+    answersRef.current = updated;
+    maxQRef.current    = newMaxQ;
+
+    // quiz_question_answered
+    track("quiz_question_answered", {
+      question_number:       qNumber,
+      question_id:           q.id,
+      selected_answer_key:   String(optionIndex),
+      selected_answer_label: q.options[optionIndex],
+      ...(isScored ? { is_correct: optionIndex === q.correctAnswer } : {}),
+      total_questions:       QUESTIONS.length,
+    });
+
+    // quiz_progress_saved — write to localStorage so progress survives a page reload
+    const progressPayload = {
+      last_answered_question: qNumber,
+      max_question_reached:   newMaxQ,
+      answered_count:         answeredCount,
+      total_questions:        QUESTIONS.length,
+      // Score excluded from localStorage — it's available via analytics beacons but
+      // should not be trivially readable by opening DevTools before the email gate.
+    };
+    track("quiz_progress_saved", { ...progressPayload, current_score: currentScore });
+    try {
+      localStorage.setItem(
+        `checkup_progress_${creator}`,
+        JSON.stringify({ ...progressPayload, answers: updated, savedAt: new Date().toISOString() }),
+      );
+    } catch { /* storage blocked */ }
+
     if (currentQ < QUESTIONS.length - 1) {
       setTimeout(() => { setSelectedAnswer(null); setCurrentQ(n => n + 1); }, 260);
     } else {
-      track(`${eventPrefix}quiz_completed`);
+      // All 10 questions answered — derive recommendation_type from Q9 + Q10
+      const q9  = updated[9]  ?? 3;
+      const q10 = updated[10] ?? 0;
+      const isFamily      = q10 === 1 || q10 === 2;
+      const recType       = (q9 === 0 || q9 === 4) ? "free_preview"
+                          : isFamily                ? "family"
+                          :                          "individual";
+
+      track("quiz_completed", {
+        total_questions:     QUESTIONS.length,
+        answered_count:      answeredCount,
+        score:               currentScore,
+        result_type:         getResultType(currentScore),
+        recommendation_type: recType,
+      });
+      phaseRef.current = "email";
       setTimeout(() => { setSelectedAnswer(null); setPhase("email"); }, 260);
     }
   }
 
   async function handleEmailSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (emailSubmitting) return;
     if (!email.trim()) { setEmailErr("Please enter your email."); return; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setEmailErr("Please enter a valid email."); return; }
     setEmailErr("");
+    setEmailSubmitting(true);
 
     const score      = computeScore(answers);
     const resultType = getResultType(score);
     const rec        = getRecommendation(answers, urls, eventPrefix);
     const params     = new URLSearchParams(window.location.search);
+    // Derive recommended plan from the actual CTA URL so it's accurate for lifetime plans too
+    const recommendedPlan = planFromUrl(rec.primaryUrl);
 
-    track(`${eventPrefix}email_reveal_submit`);
+    track("quiz_email_submitted", {
+      score,
+      result_type:   resultType,
+      email_present: true,
+    });
 
     fetch("/api/checkup/submit", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: name || null, email, phone: null, answers, score, resultType,
-        recommendedPlan: rec.trackEvent.includes("lifetime")
-          ? (answers[10] === 1 || answers[10] === 2 ? "family-lifetime" : "individual-lifetime")
-          : (answers[10] === 1 || answers[10] === 2 ? "family-monthly" : "individual-monthly"),
+        recommendedPlan,
         source: creator,
+        sessionId: sessionIdRef.current || null,
+        quizVersion: "1.0",
         utmSource: params.get("utm_source"), utmMedium: params.get("utm_medium"),
         utmCampaign: params.get("utm_campaign"), utmContent: params.get("utm_content"),
       }),
-    }).catch(() => {});
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then((data: { id?: string } | null) => {
+        if (data?.id) {
+          leadIdRef.current = data.id;
+          // Flush any activity calls that arrived before the lead ID was ready.
+          const queued = pendingActivityRef.current.splice(0);
+          for (const act of queued) recordLeadActivity(act);
+        }
+      })
+      .catch(() => {});
 
-    track(`${eventPrefix}result_view`, { score, resultType });
+    track("quiz_result_viewed", {
+      score,
+      result_type:      resultType,
+      recommended_plan: recommendedPlan,
+    });
+
+    quizRevealedRef.current = true;
+    phaseRef.current        = "result";
+
+    try { localStorage.removeItem(`checkup_progress_${creator}`); } catch { /* storage blocked */ }
+
     setPhase("result");
     setTimeout(() => quizRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
   }
+
+  // ── quiz_question_viewed ───────────────────────────────────────────────────
+  // Fires whenever a new question appears. Also keeps maxQRef current so the
+  // abandonment handler always knows the furthest question reached.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (phase !== "quiz") return;
+    const q = QUESTIONS[currentQ];
+    if (!q) return;
+    const qNumber = currentQ + 1;
+    maxQRef.current = Math.max(maxQRef.current, qNumber);
+    track("quiz_question_viewed", {
+      question_number: qNumber,
+      question_id:     q.id,
+      question_type:   q.id <= SCORED_COUNT ? "scored" : "recommendation",
+      total_questions: QUESTIONS.length,
+    });
+  }, [phase, currentQ]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── quiz_email_reveal_viewed ───────────────────────────────────────────────
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (phase !== "email") return;
+    const s = computeScore(answers);
+    track("quiz_email_reveal_viewed", {
+      score:       s,
+      result_type: getResultType(s),
+    });
+  }, [phase]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── quiz_abandoned (pagehide) ──────────────────────────────────────────────
+  // Fires via sendBeacon when the browser unloads the page.
+  // Only fires when the quiz was started but the result was not yet revealed.
+  // abandonSentRef prevents duplicate events from bfcache restore/eviction cycles.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    function handlePageHide() {
+      if (!quizStartedRef.current || quizRevealedRef.current) return;
+      if (abandonSentRef.current) return;
+      abandonSentRef.current = true;
+      const p     = phaseRef.current;
+      const stage = p === "quiz"  ? "during_quiz"
+                  : p === "email" ? "email_reveal"
+                  : p === "idle"  ? "before_start"
+                  :                 "result_viewed";
+      const ans    = answersRef.current;
+      const aCount = Object.keys(ans).length;
+      track("quiz_abandoned", {
+        max_question_reached:   maxQRef.current,
+        last_answered_question: aCount,
+        answered_count:         aCount,
+        total_questions:        QUESTIONS.length,
+        abandonment_stage:      stage,
+        ...(aCount > 0 ? { current_score: computeScore(ans) } : {}),
+      });
+    }
+    window.addEventListener("pagehide", handlePageHide);
+    return () => window.removeEventListener("pagehide", handlePageHide);
+  }, []); // reads only refs — dep array intentionally empty
+
+  // ── Derived values ─────────────────────────────────────────────────────────
 
   const score      = computeScore(answers);
   const resultType = getResultType(score);
@@ -558,14 +821,24 @@ export function SeerahCheckupClient({
   const insights   = getInsights(answers);
   const rec        = getRecommendation(answers, urls, eventPrefix);
 
-  // After the email gate, enrich checkout links with the collected email/name
-  // so the checkout page can pre-fill and skip asking for them again.
+  // After the email gate, enrich checkout links with the collected email/name/score
+  // so the checkout page can pre-fill, skip re-entry, and capture quiz context.
   function withUserParams(url: string): string {
     if (!email) return url;
     const sep = url.includes("?") ? "&" : "?";
     let out = `${url}${sep}email=${encodeURIComponent(email)}`;
     if (name.trim()) out += `&name=${encodeURIComponent(name.trim())}`;
+    out += `&score=${score}`;
+    out += `&result_type=${encodeURIComponent(resultType)}`;
     return out;
+  }
+
+  // Helper: derive plan type from a checkout URL string.
+  function planFromUrl(url: string): string {
+    if (url.includes("family-lifetime"))    return "family-lifetime";
+    if (url.includes("individual-lifetime")) return "individual-lifetime";
+    if (url.includes("family-monthly"))     return "family-monthly";
+    return "individual-monthly";
   }
 
   const isResultPhase = phase === "result";
@@ -581,7 +854,27 @@ export function SeerahCheckupClient({
           </Link>
           {isResultPhase && (
             <button
-              onClick={() => { setPhase("quiz"); setCurrentQ(0); setAnswers({}); setName(""); setEmail(""); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+              type="button"
+              onClick={() => {
+                quizStartedRef.current  = true;
+                quizRevealedRef.current = false;
+                phaseRef.current        = "quiz";
+                maxQRef.current         = 0;
+                answersRef.current      = {};
+                showInlineRef.current   = false;
+                track("quiz_started", {
+                  page_path:       window.location.pathname,
+                  total_questions: QUESTIONS.length,
+                  is_retake:       true,
+                });
+                setPhase("quiz"); setCurrentQ(0); setAnswers({}); setName(""); setEmail(""); setEmailSubmitting(false);
+                setShowInline(false);
+                // Reset lead tracking refs so the retake creates a fresh lead
+                leadIdRef.current          = null;
+                pendingActivityRef.current = [];
+                abandonSentRef.current     = false;
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
               className="text-xs text-text-muted/50 hover:text-text-muted transition-colors underline underline-offset-2">
               Retake checkup
             </button>
@@ -612,6 +905,7 @@ export function SeerahCheckupClient({
             </p>
 
             <button
+              type="button"
               onClick={startQuiz}
               className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-12 py-5 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-lg transition-colors shadow-lg shadow-gold/25"
             >
@@ -622,7 +916,7 @@ export function SeerahCheckupClient({
 
             <p className="text-sm text-text-muted/60">
               Not ready?{" "}
-              <Link href={watchFreeUrl} onClick={() => track(`${eventPrefix}watch_free_click`)}
+              <Link href={watchFreeUrl} onClick={() => track("watch_part1_clicked")}
                 className="text-text-muted hover:text-gold underline underline-offset-2 transition-colors">
                 Watch Part 1 free first
               </Link>
@@ -646,6 +940,7 @@ export function SeerahCheckupClient({
                 </div>
               ))}
               <button
+                type="button"
                 onClick={startQuiz}
                 className="mt-4 w-full py-3 rounded-xl bg-gold/10 border border-gold/30 text-gold font-semibold text-sm hover:bg-gold/15 transition-colors"
               >
@@ -681,8 +976,10 @@ export function SeerahCheckupClient({
                 return (
                   <button
                     key={option}
+                    type="button"
                     onClick={() => handleAnswer(idx)}
                     disabled={selectedAnswer !== null}
+                    aria-pressed={isSelected}
                     className={`w-full text-left px-5 py-4 rounded-xl border transition-all text-base font-medium
                       ${isSelected
                         ? "border-gold bg-gold/10 text-gold scale-[0.99]"
@@ -712,14 +1009,12 @@ export function SeerahCheckupClient({
                 onChange={e => setEmail(e.target.value)} placeholder="Email address"
                 autoFocus
                 className="w-full px-4 py-4 rounded-xl border border-border bg-surface text-text placeholder:text-text-muted focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/30 text-base transition-colors" />
-              <input type="text" autoComplete="given-name" value={name}
-                onChange={e => setName(e.target.value)} placeholder="First name (optional)"
-                className="w-full px-4 py-3.5 rounded-xl border border-border bg-surface text-text placeholder:text-text-muted focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/30 text-base transition-colors" />
               {emailErr && <p className="text-sm text-red-400">{emailErr}</p>}
               <button type="submit"
-                className="w-full py-4 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-lg transition-colors shadow-lg shadow-gold/25 flex items-center justify-center gap-2">
-                Reveal My Seerah Score
-                <ArrowRight className="w-5 h-5" />
+                disabled={emailSubmitting}
+                className="w-full py-4 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-lg transition-colors shadow-lg shadow-gold/25 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
+                {emailSubmitting ? "Loading…" : "Reveal My Seerah Score"}
+                {!emailSubmitting && <ArrowRight className="w-5 h-5" />}
               </button>
               <p className="text-xs text-center text-text-muted/55">Instant result. No spam.</p>
             </form>
@@ -754,7 +1049,7 @@ export function SeerahCheckupClient({
                 <>
                   <button
                     onClick={() => {
-                      track(`${eventPrefix}result_watch_part1_expand`);
+                      showInlineRef.current = true;
                       setShowInline(true);
                       setTimeout(() => inlineRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
                     }}
@@ -772,7 +1067,13 @@ export function SeerahCheckupClient({
                         <p className="text-sm text-center text-text-muted/65 mb-2">{rec.secondaryPreamble}</p>
                       )}
                       <Link href={withUserParams(rec.secondaryUrl)}
-                        onClick={() => track(`${eventPrefix}recommended_plan_click`)}
+                        onClick={() => track("quiz_recommended_cta_clicked", {
+                          score,
+                          result_type:      resultType,
+                          recommended_plan: planFromUrl(rec.secondaryUrl ?? ""),
+                          cta_label:        rec.secondaryLabel ?? "",
+                          destination:      rec.secondaryUrl ?? "",
+                        })}
                         className="block w-full py-4 rounded-xl border-2 border-gold/35 text-gold font-bold text-base text-center hover:border-gold/60 hover:bg-gold/5 transition-colors mb-2">
                         {rec.secondaryLabel}
                       </Link>
@@ -783,7 +1084,13 @@ export function SeerahCheckupClient({
               ) : (
                 <>
                   <Link href={withUserParams(rec.primaryUrl)}
-                    onClick={() => track(rec.trackEvent, { plan: rec.primaryUrl })}
+                    onClick={() => track("quiz_recommended_cta_clicked", {
+                      score,
+                      result_type:      resultType,
+                      recommended_plan: planFromUrl(rec.primaryUrl),
+                      cta_label:        rec.primaryLabel,
+                      destination:      rec.primaryUrl,
+                    })}
                     className="block w-full py-5 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-xl text-center transition-colors shadow-lg shadow-gold/30 mb-2">
                     {rec.primaryLabel}
                   </Link>
@@ -794,7 +1101,7 @@ export function SeerahCheckupClient({
                   <p className="text-sm text-center text-text-muted/55 mb-4">
                     Not ready?{" "}
                     <Link href={watchFreeUrl}
-                      onClick={() => track(`${eventPrefix}watch_free_click`)}
+                      onClick={() => track("watch_part1_clicked")}
                       className="text-text-muted hover:text-gold underline underline-offset-2 transition-colors">
                       Watch Part 1 free first
                     </Link>
@@ -802,7 +1109,13 @@ export function SeerahCheckupClient({
                   {rec.lifetimeUrl && rec.lifetimeLabel && (
                     <p className="text-sm text-center text-text-muted/55">
                       <Link href={withUserParams(rec.lifetimeUrl)}
-                        onClick={() => track(`${eventPrefix}lifetime_click`)}
+                        onClick={() => track("quiz_recommended_cta_clicked", {
+                          score,
+                          result_type:      resultType,
+                          recommended_plan: planFromUrl(rec.lifetimeUrl ?? ""),
+                          cta_label:        rec.lifetimeLabel ?? "",
+                          destination:      rec.lifetimeUrl ?? "",
+                        })}
                         className="underline underline-offset-2 hover:text-text-muted transition-colors">
                         {rec.lifetimeLabel}
                       </Link>
@@ -820,8 +1133,14 @@ export function SeerahCheckupClient({
                 <InlinePart1Video
                   checkoutUrl={withUserParams(rec.secondaryUrl ?? urls.individualMonthly)}
                   checkoutLabel={rec.secondaryLabel}
-                  onVideoStart={() => track(`${eventPrefix}inline_part1_started`)}
-                  onUnlockClick={() => track(`${eventPrefix}inline_part1_unlock_click`)}
+                  onVideoStart={() => track("watch_part1_clicked")}
+                  onUnlockClick={() => track("quiz_recommended_cta_clicked", {
+                    score,
+                    result_type:      resultType,
+                    recommended_plan: planFromUrl(rec.secondaryUrl ?? urls.individualMonthly),
+                    cta_label:        rec.secondaryLabel ?? "Unlock Access",
+                    destination:      rec.secondaryUrl ?? urls.individualMonthly,
+                  })}
                 />
               </div>
             )}
@@ -847,20 +1166,36 @@ export function SeerahCheckupClient({
             <div>
               <p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-4">Quick questions</p>
               <div className="space-y-2">
-                {FAQ.map(({ q, a }, i) => (
-                  <div key={q} className="rounded-xl border border-border bg-surface overflow-hidden">
-                    <button
-                      onClick={() => setFaqOpen(faqOpen === i ? null : i)}
-                      className="w-full flex items-center justify-between px-5 py-4 text-left"
-                    >
-                      <span className="text-sm font-semibold text-text">{q}</span>
-                      <ChevronRight className={`w-4 h-4 text-text-muted transition-transform flex-shrink-0 ml-2 ${faqOpen === i ? "rotate-90" : ""}`} />
-                    </button>
-                    {faqOpen === i && (
-                      <p className="px-5 pb-4 text-sm text-text-secondary leading-relaxed">{a}</p>
-                    )}
-                  </div>
-                ))}
+                {FAQ.map(({ q, a }, i) => {
+                  const isOpen   = faqOpen === i;
+                  const panelId  = `faq-panel-${i}`;
+                  const buttonId = `faq-btn-${i}`;
+                  return (
+                    <div key={q} className="rounded-xl border border-border bg-surface overflow-hidden">
+                      <button
+                        id={buttonId}
+                        type="button"
+                        aria-expanded={isOpen}
+                        aria-controls={panelId}
+                        onClick={() => setFaqOpen(isOpen ? null : i)}
+                        className="w-full flex items-center justify-between px-5 py-4 text-left"
+                      >
+                        <span className="text-sm font-semibold text-text">{q}</span>
+                        <ChevronRight className={`w-4 h-4 text-text-muted transition-transform flex-shrink-0 ml-2 ${isOpen ? "rotate-90" : ""}`} />
+                      </button>
+                      {isOpen && (
+                        <p
+                          id={panelId}
+                          role="region"
+                          aria-labelledby={buttonId}
+                          className="px-5 pb-4 text-sm text-text-secondary leading-relaxed"
+                        >
+                          {a}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -883,11 +1218,11 @@ export function SeerahCheckupClient({
       {/* ── Mobile sticky bar ── */}
       {phase === "idle" && (
         <div className="fixed bottom-0 left-0 right-0 z-50 sm:hidden bg-ink/95 border-t border-gold/20 backdrop-blur-sm px-3 py-2.5 flex gap-2">
-          <Link href={watchFreeUrl} onClick={() => track(`${eventPrefix}watch_free_click`)}
+          <Link href={watchFreeUrl} onClick={() => track("watch_part1_clicked")}
             className="flex-1 flex items-center justify-center py-3 rounded-xl border border-gold/40 text-gold font-bold text-sm transition-colors hover:bg-gold/5">
             Watch Free
           </Link>
-          <button onClick={startQuiz}
+          <button type="button" onClick={startQuiz}
             className="flex-1 flex items-center justify-center py-3 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-sm transition-colors shadow-lg shadow-gold/20">
             Seerah Checkup
           </button>
@@ -899,7 +1234,7 @@ export function SeerahCheckupClient({
           {rec.showFreePrimary && !showInlinePreview ? (
             <button
               onClick={() => {
-                track(`${eventPrefix}result_watch_part1_expand`);
+                showInlineRef.current = true;
                 setShowInline(true);
                 setTimeout(() => inlineRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
               }}
@@ -910,13 +1245,25 @@ export function SeerahCheckupClient({
           ) : rec.showFreePrimary && showInlinePreview ? (
             <Link
               href={withUserParams(rec.secondaryUrl ?? urls.individualMonthly)}
-              onClick={() => track(`${eventPrefix}recommended_plan_click`)}
+              onClick={() => track("quiz_recommended_cta_clicked", {
+                score,
+                result_type:      resultType,
+                recommended_plan: planFromUrl(rec.secondaryUrl ?? urls.individualMonthly),
+                cta_label:        rec.secondaryUrl?.includes("family") ? "Unlock Family Access — $9.99/mo" : "Unlock Individual Access — $4.99/mo",
+                destination:      rec.secondaryUrl ?? urls.individualMonthly,
+              })}
               className="flex w-full items-center justify-center py-3 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-sm transition-colors shadow-lg shadow-gold/20">
               {rec.secondaryUrl?.includes("family") ? "Unlock Family Access — $9.99/mo" : "Unlock Individual Access — $4.99/mo"}
             </Link>
           ) : (
             <Link href={withUserParams(rec.primaryUrl)}
-              onClick={() => track(rec.trackEvent)}
+              onClick={() => track("quiz_recommended_cta_clicked", {
+                score,
+                result_type:      resultType,
+                recommended_plan: planFromUrl(rec.primaryUrl),
+                cta_label:        rec.primaryUrl.includes("family") ? "Unlock Family Access — $9.99/mo" : "Unlock Individual Access — $4.99/mo",
+                destination:      rec.primaryUrl,
+              })}
               className="flex w-full items-center justify-center py-3 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-sm transition-colors shadow-lg shadow-gold/20">
               {rec.primaryUrl.includes("family") ? "Unlock Family Access — $9.99/mo" : "Unlock Individual Access — $4.99/mo"}
             </Link>

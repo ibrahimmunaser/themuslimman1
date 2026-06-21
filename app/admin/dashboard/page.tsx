@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   DollarSign,
   ShoppingCart,
+  ClipboardList,
 } from "lucide-react";
 import { requireAdmin } from "@/lib/auth";
 import { getAdminDashboardData } from "@/lib/queries/admin";
@@ -118,6 +119,13 @@ export default async function AdminDashboardPage() {
             >
               <Activity className="w-4 h-4 text-gold" />
               Analytics
+            </Link>
+            <Link
+              href="/admin/checkup-leads"
+              className="flex items-center gap-2 p-3 rounded-xl border border-border bg-surface-raised hover:border-gold/30 transition-all text-sm text-text-secondary hover:text-text"
+            >
+              <ClipboardList className="w-4 h-4 text-gold" />
+              Quiz Leads
             </Link>
             <Link
               href="/admin/support"

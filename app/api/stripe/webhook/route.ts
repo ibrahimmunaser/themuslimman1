@@ -330,6 +330,31 @@ async function handleTrialFeePayment(pi: Stripe.PaymentIntent) {
   console.log(`[WEBHOOK] handleTrialFeePayment: Welcome email queued for user ${userId}`);
 }
 
+/**
+ * Stamps purchasedAt on any SeerahCheckupLead rows matching this email.
+ * Called after both one-time lifetime payments and first subscription activations.
+ * Idempotent — only updates rows where purchasedAt is still null.
+ */
+async function markCheckupLeadPurchased(userId: string): Promise<void> {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true },
+    });
+    if (!user?.email) return;
+    const result = await prisma.seerahCheckupLead.updateMany({
+      where: { email: user.email, purchasedAt: null },
+      data:  { purchasedAt: new Date() },
+    });
+    if (result.count > 0) {
+      console.log(`[WEBHOOK] markCheckupLeadPurchased: stamped ${result.count} lead(s) for ${user.email}`);
+    }
+  } catch (err) {
+    // Non-critical: don't let lead stamping fail the payment webhook.
+    console.error("[WEBHOOK] markCheckupLeadPurchased: failed (non-blocking):", err);
+  }
+}
+
 async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
   const startTime = Date.now();
   const { userId, planId, planName } = paymentIntent.metadata;
@@ -445,6 +470,9 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
 
     const elapsed = Date.now() - startTime;
     console.log(`[WEBHOOK] handlePaymentSuccess: Purchase recorded for user ${userId}: ${planName ?? planId} [${elapsed}ms]`);
+
+    // Stamp purchasedAt on any quiz funnel leads — non-blocking.
+    markCheckupLeadPurchased(userId).catch(() => {});
 
     // Send purchase confirmation email — non-blocking, only on first processing
     // to avoid duplicate emails when Stripe retries the webhook.
@@ -821,6 +849,11 @@ async function upsertSubscription(userId: string, sub: Stripe.Subscription) {
         console.error("[WEBHOOK] upsertSubscription: ensureFamilyProfiles failed:", e)
       );
     }
+  }
+
+  // Stamp purchasedAt on quiz funnel leads on first activation — non-blocking.
+  if (isFirstActivation) {
+    markCheckupLeadPurchased(userId).catch(() => {});
   }
 
   // Send a welcome email the first time a subscription becomes active/trialing.

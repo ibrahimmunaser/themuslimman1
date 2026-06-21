@@ -9,7 +9,7 @@ export default function OrthodoxFunnelClient() {
   return (
     <SeerahCheckupClient
       creator="theorthodoxmuslim"
-      sourceBadge="As seen on The Orthodox Muslim"
+      sourceBadge="For The Orthodox Muslim viewers"
       eventPrefix="orthodox_"
       urls={{
         individualMonthly:  `/checkout?plan=individual-monthly&${SRC}&${UTM}`,

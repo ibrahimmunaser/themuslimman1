@@ -65,45 +65,31 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
           <div className="grid sm:grid-cols-2 gap-5 max-w-3xl mx-auto">
 
             {/* Individual Monthly */}
-            <div className="relative p-6 rounded-2xl border-2 border-gold bg-gradient-to-b from-gold/8 to-surface flex flex-col gold-glow">
+            <div className="relative pt-8 pb-6 px-6 rounded-2xl border-2 border-gold bg-gradient-to-b from-gold/8 to-surface flex flex-col gold-glow">
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap">
                 <span className="px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-gold text-ink shadow-sm">
                   Most Popular
                 </span>
               </div>
 
-              <div className="flex items-center gap-2 mb-3 mt-1">
-                <div className="w-8 h-8 rounded-lg bg-gold/15 border border-gold/25 flex items-center justify-center">
-                  <User className="w-4 h-4 text-gold" />
-                </div>
-                <div>
-                  <p className="text-base font-bold text-text leading-tight">Individual Membership</p>
-                  <p className="text-xs text-text-muted">cancel anytime</p>
-                </div>
+              {/* Header */}
+              <p className="text-lg font-bold text-text mb-1">Individual</p>
+              <div className="flex items-baseline gap-1 mb-1">
+                <span className="text-4xl font-bold text-text">$4.99</span>
+                <span className="text-sm text-text-muted">/month</span>
               </div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/10 border border-gold/20 mb-4 self-start">
-                <User className="w-3.5 h-3.5 text-gold" />
-                <span className="text-sm font-semibold text-gold">1 person</span>
-              </div>
+              <p className="text-sm text-text-muted mb-5">For one learner · cancel anytime</p>
 
-              <div className="mb-5">
-                <div className="flex items-baseline gap-1.5 mb-0.5">
-                  <span className="text-4xl font-bold text-text">$4.99</span>
-                  <span className="text-sm text-text-muted">/month</span>
-                </div>
-                <p className="text-xs text-gold/70">Start learning today</p>
-              </div>
-
-              <ul className="space-y-2 mb-6 flex-1">
+              {/* Features */}
+              <ul className="space-y-2.5 mb-6 flex-1">
                 {[
-                  "Start today. Continue at your own pace.",
-                  "Videos, quizzes, flashcards, mind maps",
-                  "Progress dashboard · Mobile friendly",
-                  "Cancel anytime — no commitment",
+                  "Full 100-part path",
+                  "Video, quiz, flashcards",
+                  "Progress tracking",
                 ].map((f) => (
-                  <li key={f} className="flex items-start gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-gold flex-shrink-0 mt-0.5" />
-                    <span className="text-sm text-text">{f}</span>
+                  <li key={f} className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-gold flex-shrink-0" />
+                    <span className="text-sm font-medium text-text">{f}</span>
                   </li>
                 ))}
               </ul>
@@ -116,59 +102,42 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
               ) : (
                 <Link
                   href="/checkout?plan=individual-monthly"
-                  className={buttonClass("primary", "lg", "w-full justify-center shadow-lg shadow-gold/20")}
+                  data-track="homepage_individual_click"
+                  className={buttonClass("primary", "xl", "w-full justify-center shadow-lg shadow-gold/20")}
                 >
                   Start Learning
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               )}
-
-              <div className="mt-3 flex items-center justify-center gap-2 text-xs text-text-muted">
-                <Calendar className="w-3.5 h-3.5" />
-                <span>Cancel anytime · No commitment</span>
-              </div>
+              <p className="text-xs text-text-muted/60 text-center mt-2.5">Cancel anytime · No commitment</p>
             </div>
 
             {/* Family Monthly */}
-            <div className="relative p-6 rounded-2xl border border-border bg-surface flex flex-col">
+            <div className="relative pt-8 pb-6 px-6 rounded-2xl border border-border bg-surface flex flex-col">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap">
                 <span className="px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-surface border border-border text-text-muted">
                   For Households
                 </span>
               </div>
 
-              <div className="flex items-center gap-2 mb-3 mt-1">
-                <div className="w-8 h-8 rounded-lg bg-gold/10 border border-gold/15 flex items-center justify-center">
-                  <Users className="w-4 h-4 text-gold/80" />
-                </div>
-                <div>
-                  <p className="text-base font-bold text-text leading-tight">Family Membership</p>
-                  <p className="text-xs text-text-muted">cancel anytime</p>
-                </div>
+              {/* Header */}
+              <p className="text-lg font-bold text-text mb-1">Family</p>
+              <div className="flex items-baseline gap-1 mb-1">
+                <span className="text-4xl font-bold text-text">$9.99</span>
+                <span className="text-sm text-text-muted">/month</span>
               </div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/10 border border-gold/20 mb-4 self-start">
-                <Users className="w-3.5 h-3.5 text-gold/80" />
-                <span className="text-sm font-semibold text-gold/90">Up to 5 members</span>
-              </div>
+              <p className="text-sm font-semibold text-gold/75 mb-5">Up to 5 profiles · separate progress</p>
 
-              <div className="mb-5">
-                <div className="flex items-baseline gap-1.5 mb-0.5">
-                  <span className="text-4xl font-bold text-text">$9.99</span>
-                  <span className="text-sm text-text-muted">/month</span>
-                </div>
-                <p className="text-xs text-text-muted">Up to 5 learner profiles</p>
-              </div>
-
-              <ul className="space-y-2 mb-6 flex-1">
+              {/* Features */}
+              <ul className="space-y-2.5 mb-6 flex-1">
                 {[
-                  "Everything in Individual Membership",
-                  "Up to 5 separate learner profiles",
-                  "Each profile tracks progress independently",
-                  "Cancel anytime",
+                  "Separate progress per profile",
+                  "One plan for your household",
+                  "Everything in Individual",
                 ].map((f) => (
-                  <li key={f} className="flex items-start gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-gold/60 flex-shrink-0 mt-0.5" />
-                    <span className="text-sm text-text-secondary">{f}</span>
+                  <li key={f} className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-gold/70 flex-shrink-0" />
+                    <span className="text-sm font-medium text-text-secondary">{f}</span>
                   </li>
                 ))}
               </ul>
@@ -181,16 +150,13 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
               ) : (
                 <Link
                   href="/checkout?plan=family-monthly"
-                  className={buttonClass("ghost", "lg", "w-full justify-center border border-gold/30 text-gold hover:bg-gold/5")}
+                  data-track="homepage_family_click"
+                  className={buttonClass("ghost", "xl", "w-full justify-center border border-gold/30 text-gold hover:bg-gold/5")}
                 >
                   Start Family Membership
                 </Link>
               )}
-
-              <div className="mt-3 flex items-center justify-center gap-2 text-xs text-text-muted">
-                <Calendar className="w-3.5 h-3.5" />
-                <span>Cancel anytime</span>
-              </div>
+              <p className="text-xs text-text-muted/60 text-center mt-2.5">Cancel anytime</p>
             </div>
 
           </div>
@@ -247,6 +213,7 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
                 <div className="space-y-2">
                   <Link
                     href="/checkout?plan=individual-lifetime"
+                    data-track="homepage_lifetime_click"
                     className={buttonClass("primary", "lg", "w-full justify-center shadow-lg shadow-gold/20")}
                   >
                     Get Lifetime Access — $49
@@ -322,6 +289,7 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
                 <div className="space-y-2">
                   <Link
                     href="/checkout?plan=family-lifetime"
+                    data-track="homepage_lifetime_click"
                     className={buttonClass("primary", "lg", "w-full justify-center shadow-lg shadow-gold/20")}
                   >
                     Get Family Lifetime — $99

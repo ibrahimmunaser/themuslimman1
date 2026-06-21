@@ -9,7 +9,7 @@ export default function DeenFunnelClient() {
   return (
     <SeerahCheckupClient
       creator="deenresponds"
-      sourceBadge="As seen on Deen Responds"
+      sourceBadge="For Deen Responds viewers"
       eventPrefix="deen_"
       urls={{
         individualMonthly:  `/checkout?plan=individual-monthly&${SRC}&${UTM}`,

@@ -685,26 +685,57 @@ model SupportTicket {
 }
 
 model SeerahCheckupLead {
-  id              String   @id @default(cuid())
-  name            String
-  email           String
-  phone           String?
-  answers         Json
-  score           Int
-  resultType      String   // "scattered" | "partial" | "strong"
-  recommendedPlan String
-  openText        String?
-  clickedCheckout Boolean  @default(false)
-  source          String?
-  utmSource       String?
-  utmMedium       String?
-  utmCampaign     String?
-  utmContent      String?
-  createdAt       DateTime @default(now())
+  id                String    @id @default(cuid())
+  name              String?
+  email             String
+  phone             String?
+  answers           Json
+  score             Int
+  resultType        String    // "scattered" | "partial" | "strong"
+  recommendedPlan   String
+  openText          String?
+  sessionId         String?
+  mainObjection     String?
+  audienceType      String?   // "self" | "family" | "self_and_family" | "group"
+  influencer        String?
+  quizVersion       String?   @default("1.0")
+  source            String?
+  utmSource         String?
+  utmMedium         String?
+  utmCampaign       String?
+  utmContent        String?
+  clickedCheckout   Boolean   @default(false)
+  checkoutClickedAt DateTime?
+  part1ClickedAt    DateTime?
+  purchasedAt       DateTime?
+  unsubscribedAt    DateTime?
+  createdAt         DateTime  @default(now())
+  checkupEmailEvents CheckupEmailEvent[]
 
   @@index([email])
   @@index([createdAt])
   @@index([source])
+  @@index([checkoutClickedAt])
+}
+
+model CheckupEmailEvent {
+  id        String            @id
+  leadId    String
+  email     String
+  flowType  String            // "CHECKUP_FOLLOWUP"
+  step      Int               // 1=2h, 2=24h, 3=72h, 4=checkout_recovery
+  subject   String
+  status    String            // "SENT" | "FAILED" | "SKIPPED"
+  sentAt    DateTime          @default(now())
+  error     String?
+  createdAt DateTime          @default(now())
+  lead      SeerahCheckupLead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@unique([leadId, flowType, step])
+  @@index([flowType, step, status])
+  @@index([leadId])
+  @@index([sentAt])
+  @@index([email])
 }
 
 model User {

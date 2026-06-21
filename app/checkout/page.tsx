@@ -19,7 +19,7 @@ const LEGACY_PLAN_ALIASES: Record<string, string> = {
 };
 
 interface Props {
-  searchParams: Promise<{ plan?: string; billing?: string; audience?: string; promo?: string; source?: string; email?: string; name?: string }>;
+  searchParams: Promise<{ plan?: string; billing?: string; audience?: string; promo?: string; source?: string; email?: string; name?: string; score?: string; result_type?: string }>;
 }
 
 export default async function CheckoutPage({ searchParams }: Props) {
@@ -182,6 +182,10 @@ export default async function CheckoutPage({ searchParams }: Props) {
   const prefillEmail = !user ? (params.email?.trim() ?? null) : null;
   const prefillName  = !user ? (params.name?.trim()  ?? null) : null;
 
+  const rawScore     = parseInt(params.score ?? "", 10);
+  const initialQuizScore  = !isNaN(rawScore) && rawScore >= 0 && rawScore <= 100 ? rawScore : null;
+  const initialResultType = params.result_type?.trim() ?? null;
+
   return (
     <CheckoutClientPage
       userEmail={user?.email ?? ""}
@@ -200,6 +204,8 @@ export default async function CheckoutPage({ searchParams }: Props) {
       isLifetimeUpgrade={isLifetimeUpgrade}
       initialEmail={prefillEmail}
       initialName={prefillName}
+      initialQuizScore={initialQuizScore}
+      initialResultType={initialResultType}
     />
   );
 }

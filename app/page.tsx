@@ -4,16 +4,15 @@ import { Suspense } from "react";
 import {
   CheckCircle2,
   ChevronDown,
-  ArrowRight,
-  Lock,
   Play,
+  BarChart2,
 } from "lucide-react";
 import { FadeUp, StaggerChildren, AnimatedCard, FloatingGlow, IslamicPatternBackground } from "@/components/motion";
 import { PricingSection } from "@/components/pricing/pricing-section";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
 import { Part1FullPreview } from "@/components/landing/part1-full-preview";
-import { buttonClass } from "@/components/ui/button";
+import { HomepageTracker } from "@/components/landing/homepage-tracker";
 import { getCurrentUser } from "@/lib/auth";
 import { hasActiveCourseAccess } from "@/lib/access";
 import { CreatorPromoTracker } from "@/components/promo/creator-promo-tracker";
@@ -23,11 +22,11 @@ export const dynamic = "force-dynamic";
 export const metadata = {
   title: "Complete Seerah | Learn the Life of Prophet Muhammad ﷺ",
   description:
-    "Learn the life of Prophet Muhammad ﷺ in order — 100 lessons, one connected story. Lifetime access for $49. One-time payment, no subscription.",
+    "Learn the life of Prophet Muhammad ﷺ in order — 100 structured lessons with video, reading, quizzes, and flashcards. Start with Part 1 free.",
   openGraph: {
     title: "Complete Seerah | Learn the Life of Prophet Muhammad ﷺ",
     description:
-      "Learn the life of Prophet Muhammad ﷺ in order — 100 lessons, one connected story. Lifetime access for $49.",
+      "Learn the life of Prophet Muhammad ﷺ in order — 100 lessons, one connected story.",
     url: process.env.NEXT_PUBLIC_APP_URL ?? "https://themuslimman.com",
     siteName: "Complete Seerah",
   },
@@ -51,13 +50,14 @@ export default async function LandingPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-ink text-text">
+      <HomepageTracker />
       <Navbar />
       <CreatorPromoTracker />
 
-      {/* ============================================
+      {/* ============================================================
           HERO
-      ============================================ */}
-      <section className="relative pt-16 pb-16 md:pt-20 md:pb-20 overflow-hidden">
+      ============================================================ */}
+      <section className="relative pt-10 pb-12 sm:pt-14 sm:pb-16 md:pt-20 md:pb-20 overflow-hidden">
         <div className="absolute inset-0 geo-pattern opacity-40" />
         <IslamicPatternBackground className="absolute inset-0" opacity={0.025} />
         <FloatingGlow className="absolute -top-20 left-1/2 -translate-x-1/2" width={700} height={400} duration={10} />
@@ -73,45 +73,43 @@ export default async function LandingPage() {
             {/* Left: headline + CTAs */}
             <div className="text-center xl:text-left py-4 xl:py-10">
               <FadeUp delay={0}>
-                <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-6xl xl:text-5xl 2xl:text-6xl font-bold tracking-tight leading-tight mb-6">
+                <h1 className="text-[1.85rem] sm:text-5xl md:text-6xl xl:text-5xl 2xl:text-6xl font-bold tracking-tight leading-[1.2] sm:leading-tight mb-5">
                   Most Muslims only know fragments of the Seerah.{" "}
                   <span className="text-gradient-gold">Learn it as one connected story.</span>
                 </h1>
               </FadeUp>
 
               <FadeUp delay={0.1}>
-                <p className="text-lg sm:text-xl text-text-secondary max-w-2xl mx-auto xl:mx-0 mb-4 leading-relaxed">
-                  A guided course that takes you through the Prophet&apos;s ﷺ life in order — from before his birth to the final days. Start with Part 1 free.
-                </p>
-              </FadeUp>
-
-              <FadeUp delay={0.15}>
-                <p className="text-sm text-gold/80 font-medium mb-8 xl:text-left text-center">
-                  Cancel anytime · Start with Part 1 free
+                <p className="text-base sm:text-xl text-text-secondary max-w-2xl mx-auto xl:mx-0 mb-6 leading-relaxed">
+                  Start with Part 1 free, then continue through a structured 100-part path
+                  with video, reading, quizzes, flashcards, and progress tracking.
                 </p>
               </FadeUp>
 
               <FadeUp delay={0.2}>
-                <div className="flex flex-col items-center xl:items-start gap-3 mb-5">
+                <div className="flex flex-col items-center xl:items-start gap-3 mb-4">
                   <Link
-                    href="/checkout?plan=individual-monthly"
-                    className={buttonClass("primary", "xl", "shadow-2xl shadow-gold/20 w-full sm:w-auto")}
+                    href="/watch-free"
+                    data-track="homepage_watch_part1_click"
+                    className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-10 py-4 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-lg transition-colors shadow-xl shadow-gold/25"
                   >
-                    Start Learning
-                    <ArrowRight className="w-5 h-5" />
+                    <Play className="w-5 h-5 fill-current" />
+                    Watch Part 1 Free
                   </Link>
-                  <div className="flex flex-wrap items-center justify-center xl:justify-start gap-x-4 gap-y-1 text-sm text-text-muted/60">
-                    <span className="flex items-center gap-1.5"><Lock className="w-3.5 h-3.5" /> Secure checkout</span>
-                    <span aria-hidden>·</span>
-                    <a href="#preview" className="inline-flex items-center gap-1 hover:text-text-muted transition-colors">
-                      <Play className="w-3 h-3" />
-                      Watch Part 1 free first
-                    </a>
-                    <span aria-hidden>·</span>
-                    <a href="#pricing" className="hover:text-text-muted transition-colors">
-                      See pricing →
-                    </a>
-                  </div>
+                  <p className="text-sm sm:text-base text-text-muted/80 text-center xl:text-left font-medium">
+                    Part 1 is free · No signup required · Start in minutes
+                  </p>
+                  <p className="text-sm text-text-muted/50 text-center xl:text-left">
+                    Not sure where you stand?{" "}
+                    <Link
+                      href="/theorthodoxmuslim"
+                      data-track="homepage_checkup_click"
+                      className="inline-flex items-center gap-1 text-text-muted hover:text-gold transition-colors underline underline-offset-2"
+                    >
+                      <BarChart2 className="w-3.5 h-3.5" />
+                      Take the free Seerah Checkup
+                    </Link>
+                  </p>
                 </div>
               </FadeUp>
             </div>
@@ -196,8 +194,8 @@ export default async function LandingPage() {
 
                   <div className="grid grid-cols-3 gap-2 mb-3 px-0.5">
                     {[
-                      { val: "Free", sub: "Part 1"  },
-                      { val: "∞",    sub: "Access"  },
+                      { val: "Free", sub: "Part 1"   },
+                      { val: "∞",    sub: "Access"   },
                       { val: "✓",    sub: "Your pace" },
                     ].map(({ val, sub }) => (
                       <div key={sub} className="text-center py-2 rounded-lg bg-surface-raised border border-border/40">
@@ -208,7 +206,7 @@ export default async function LandingPage() {
                   </div>
 
                   <div className="flex flex-wrap gap-1.5">
-                    {["Video", "Reading", "Slides", "Audio", "Quiz", "Flashcards", "Mind maps"].map((f) => (
+                    {["Video", "Reading", "Slides", "Quiz", "Flashcards", "Mind maps"].map((f) => (
                       <span key={f} className="flex items-center gap-1 text-[10px] text-text-secondary bg-surface-raised border border-border/40 px-2 py-0.5 rounded-full">
                         <CheckCircle2 className="w-2.5 h-2.5 text-gold/60 flex-shrink-0" aria-hidden />
                         {f}
@@ -222,21 +220,21 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* ============================================
-          PREVIEW PART 1 — see it before buying
-      ============================================ */}
+      {/* ============================================================
+          FREE PART 1 PREVIEW
+      ============================================================ */}
       <section id="preview" className="py-16 border-t border-border">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <FadeUp className="text-center mb-10">
             <p className="text-gold text-sm font-medium uppercase tracking-widest mb-3">
-              Watch Before You Buy
+              Free to watch — no account required
             </p>
             <h2 className="text-3xl sm:text-4xl font-bold mb-3">
               Part 1 is completely free
             </h2>
             <p className="text-text-secondary max-w-xl mx-auto">
-              Watch the full first lesson — video, reading, and learning tools included.
-              No account required. This is exactly what the full course looks like.
+              The full first lesson — video, reading, slides, quiz, and flashcards.
+              This is exactly what every lesson in the course looks like.
             </p>
           </FadeUp>
 
@@ -245,51 +243,50 @@ export default async function LandingPage() {
               <div className="space-y-4">
                 <div className="h-6 bg-surface-raised rounded w-1/3" />
                 <div className="h-4 bg-surface-raised rounded w-1/2" />
-                <div className="h-4 bg-surface-raised rounded w-3/4" />
                 <div className="mt-6 aspect-video bg-surface-raised rounded-xl" />
               </div>
             </div>
           }>
             <Part1FullPreview
               checkoutHref="/checkout?plan=individual-monthly"
-              ctaLabel="Continue After Part 1"
-              hideCta
+              ctaLabel="Continue the full 100-part path"
             />
           </Suspense>
         </div>
       </section>
 
-      {/* ============================================
+      {/* ============================================================
           PRICING — immediately after preview
-      ============================================ */}
+      ============================================================ */}
       <PricingSection
         hasLifetime={!!(user?.hasPaid)}
         hasMonthly={false}
         hasFamily={user?.planType === "family"}
       />
 
-      {/* ============================================
-          WHY SCATTERED VIDEOS DON'T WORK
-      ============================================ */}
+      {/* ============================================================
+          WHY SCATTERED VIDEOS DO NOT WORK
+      ============================================================ */}
       <section className="py-16 border-t border-border bg-surface/30">
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-10">
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              Why scattered videos don&apos;t work
+              Why scattered videos do not work
             </h2>
             <p className="text-lg text-text-secondary max-w-2xl mx-auto leading-relaxed">
-              Most Seerah content gives you isolated stories. This course gives you the full timeline.
-              You learn what happened, what came before, what came after, and why each event mattered.
+              Most people watch random clips about the Prophet ﷺ but never build the full
+              timeline. The issue is not interest. The issue is structure.
+              This course solves that — one path, in order, from Part 1 to Part 100.
             </p>
           </div>
 
           <StaggerChildren className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto" stagger={0.07}>
             {[
-              { label: "Video lessons, in chronological order" },
-              { label: "Short quizzes to make it stick" },
-              { label: "Flashcards for easy review" },
-              { label: "Mind maps to see the full picture" },
-              { label: "Visual slides and infographics" },
+              { label: "100 lessons in chronological order" },
+              { label: "Each part builds on the one before" },
+              { label: "Quizzes reinforce what you just learned" },
+              { label: "Flashcards help you retain key events" },
+              { label: "Mind maps show the full picture" },
               { label: "Your own pace — no deadlines" },
             ].map(({ label }) => (
               <AnimatedCard key={label} lift className="flex items-center gap-3 p-4 rounded-xl border border-border bg-surface hover:border-gold/20 transition-colors">
@@ -301,66 +298,68 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* ============================================
-          TOOLS — built to help you remember
-      ============================================ */}
+      {/* ============================================================
+          WHAT EVERY LESSON INCLUDES
+      ============================================================ */}
       <section className="py-16 border-t border-border">
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-10">
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              Built to help you remember, not overwhelm you
+              What every lesson includes
             </h2>
             <p className="text-lg text-text-secondary max-w-2xl mx-auto">
-              Every lesson comes with a set of learning tools — not to add more work, but to make the story stick.
+              Eight learning tools per lesson — not to add more work, but to make the story stick.
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 max-w-4xl mx-auto">
             {[
-              { icon: "🗂️", title: "Flashcards",           desc: "Quick recall for names, dates, and key events — revisit any time." },
-              { icon: "📝", title: "Short quizzes",        desc: "Quick checkpoints to help the story stick — at your own pace." },
-              { icon: "🗺️", title: "Mind maps",            desc: "See how events connect — the big picture in one view." },
-              { icon: "📊", title: "Slides & infographics", desc: "Visual tools — ideal for teaching family or halaqah." },
-              { icon: "📧", title: "Parent reports",        desc: "Weekly summaries showing what your child watched and completed." },
-              { icon: "📖", title: "Lesson summaries",      desc: "Written summaries for every part — read whenever you like." },
+              { icon: "▶",  title: "Video lesson"      },
+              { icon: "📖", title: "Reading"            },
+              { icon: "🖼", title: "Slides"             },
+              { icon: "📝", title: "Quiz"               },
+              { icon: "🗂", title: "Flashcards"         },
+              { icon: "🗺", title: "Mind map"           },
+              { icon: "📋", title: "Summary"            },
+              { icon: "📊", title: "Progress tracking"  },
             ].map((item) => (
               <div
                 key={item.title}
-                className="p-5 rounded-xl border border-border bg-surface hover:border-gold/20 transition-colors"
+                className="flex items-center gap-2.5 p-3 rounded-xl border border-border bg-surface hover:border-gold/20 transition-colors"
               >
-                <div className="text-3xl mb-3">{item.icon}</div>
-                <h3 className="font-semibold text-text text-sm mb-2">{item.title}</h3>
-                <p className="text-xs sm:text-sm text-text-secondary/80 leading-relaxed">{item.desc}</p>
+                <span className="text-xl flex-shrink-0">{item.icon}</span>
+                <span className="text-sm font-medium text-text leading-tight">{item.title}</span>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ============================================
+      {/* ============================================================
           WHAT HAPPENS AFTER YOU BUY
-      ============================================ */}
+      ============================================================ */}
       <section className="py-16 border-t border-border bg-surface/30">
         <div className="max-w-xl mx-auto px-4 sm:px-6 text-center">
           <h2 className="text-3xl sm:text-4xl font-bold mb-2">
             What happens after you buy?
           </h2>
-          <p className="text-text-secondary mb-10">Instant access. No waiting.</p>
+          <p className="text-text-secondary mb-10">Instant access. Under 60 seconds to your first lesson.</p>
 
           <div className="flex flex-col sm:flex-row items-stretch justify-center gap-4">
             {[
-              { step: "1", text: "Create your account" },
-              { step: "2", text: "Get instant access" },
-              { step: "3", text: "Start Part 1" },
+              { step: "1", title: "Create your account",    sub: "Set your password from the email we send." },
+              { step: "2", title: "Get instant access",     sub: "Start immediately — no waiting." },
+              { step: "3", title: "Continue lesson by lesson", sub: "Go at your own pace. Progress saves automatically." },
             ].map((item) => (
               <div
                 key={item.step}
-                className="flex-1 flex flex-col items-center gap-3 p-5 rounded-xl border border-border bg-surface"
+                className="flex-1 flex flex-col items-center gap-2 p-5 rounded-xl border border-border bg-surface"
               >
-                <div className="w-10 h-10 rounded-full bg-gold/10 border border-gold/25 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-gold/10 border border-gold/25 flex items-center justify-center mb-1">
                   <span className="text-gold font-bold">{item.step}</span>
                 </div>
-                <p className="text-sm font-medium text-text">{item.text}</p>
+                <p className="text-sm font-bold text-text">{item.title}</p>
+                <p className="text-xs text-text-muted leading-relaxed">{item.sub}</p>
               </div>
             ))}
           </div>
@@ -371,46 +370,42 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* ============================================
+      {/* ============================================================
           FAQ
-      ============================================ */}
+      ============================================================ */}
       <section id="faq" className="py-16 border-t border-border">
         <div className="max-w-3xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-10">
             <h2 className="text-3xl sm:text-4xl font-bold mb-3">
-              Frequently Asked Questions
+              Quick questions
             </h2>
           </div>
 
           <div className="space-y-2">
             {[
               {
-                q: "What does Complete Seerah include?",
-                a: "Every lesson comes with a video, reading, visual slides, flashcards, and a short quiz. You go at your own pace — no deadlines, no pressure.",
+                q: "Is Part 1 free?",
+                a: "Yes — full video, reading, slides, flashcards, and quiz. No account or payment required.",
               },
               {
-                q: "What are my options?",
-                a: "Individual Membership is $4.99/month (cancel anytime). Family Membership is $9.99/month for up to 5 learner profiles. If you prefer to pay once, individual lifetime is $49 and family lifetime is $99 — no recurring charges.",
+                q: "Can I cancel anytime?",
+                a: "Yes. Cancel in 2 clicks from your dashboard. No call required. Monthly billing stops immediately.",
               },
               {
-                q: "Is the course self-paced?",
-                a: "Yes. You learn at your own pace. Your progress is saved automatically so you can continue exactly where you left off.",
+                q: "Is there a refund?",
+                a: "Yes — 7-day clarity guarantee. If the course does not feel right, email us within 7 days for a full refund. No questions asked.",
               },
               {
-                q: "Can I preview it before buying?",
-                a: "Yes — Part 1 is completely free. The full lesson is on this page: video, briefing, mind map, quiz, and flashcards. No account required.",
+                q: "Can my family use it?",
+                a: "Yes. The family plan includes up to 5 separate learner profiles, each tracking their own progress independently.",
               },
               {
-                q: "Who is the family plan for?",
-                a: "The family plan is for parents, spouses, and children learning together. One payment covers up to 5 separate learner profiles, each with their own progress tracking.",
+                q: "Can I use it on mobile?",
+                a: "Yes. Works on phone, tablet, and desktop. Many students learn during commutes or before bed.",
               },
               {
-                q: "Is this suitable for parents and teachers?",
-                a: "Yes. The slides, infographics, briefings, and mind maps are designed for teaching children, halaqah lessons, or classroom use. The family plan includes parent progress reports.",
-              },
-              {
-                q: "What if I do not feel the course helps me?",
-                a: "We offer a 7-Day Clarity Guarantee. If you do not feel the Seerah is becoming clearer and more connected, email us within 7 days for a full refund. No questions asked.",
+                q: "What happens after I buy?",
+                a: "You get instant access. Set your password from the email we send, create your profile, and start Part 1 — all in under 60 seconds.",
               },
             ].map((item, i) => (
               <details
@@ -434,45 +429,42 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* ============================================
+      {/* ============================================================
           FINAL CTA
-      ============================================ */}
+      ============================================================ */}
       <section className="py-20 md:py-28 border-t border-border relative overflow-hidden">
         <div className="absolute inset-0 geo-pattern opacity-30" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-gold/5 rounded-full blur-3xl" />
 
         <div className="relative max-w-2xl mx-auto px-4 sm:px-6 text-center">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 leading-tight">
-            Start learning the Prophet&apos;s ﷺ life in order.
+            Start the Prophet&apos;s ﷺ Life in Order
           </h2>
-          <p className="text-base text-gold/80 mb-8">
-            Cancel anytime · 7-day refund guarantee
+          <p className="text-base text-text-secondary mb-8 max-w-lg mx-auto">
+            Part 1 is free and starts immediately — no account, no payment.
+            When you&apos;re ready, unlock the full 100-part path.
           </p>
 
-          <Link
-            href="/checkout?plan=individual-monthly"
-            className={buttonClass("primary", "xl", "shadow-2xl shadow-gold/20 w-full sm:w-auto")}
-          >
-            Start Learning Today
-            <ArrowRight className="w-5 h-5" />
-          </Link>
-
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-text-muted/60">
-            <span className="flex items-center gap-1"><Lock className="w-3 h-3" /> Secure checkout</span>
-            <span aria-hidden>·</span>
-            <span>Cancel anytime</span>
-            <span aria-hidden>·</span>
-            <span>7-day refund guarantee</span>
+          <div className="flex flex-col items-center gap-3 mb-5">
+            <Link
+              href="/watch-free"
+              data-track="homepage_watch_part1_click"
+              className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-10 py-4 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-lg transition-colors shadow-xl shadow-gold/20"
+            >
+              <Play className="w-5 h-5 fill-current" />
+              Watch Part 1 Free
+            </Link>
+            <Link
+              href="/checkout?plan=individual-monthly"
+              data-track="homepage_checkout_click"
+              className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-10 py-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white font-bold text-base transition-colors"
+            >
+              Start Full Access — $4.99/month
+            </Link>
           </div>
 
-          <p className="mt-5 text-sm text-text-muted/50 flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
-            <a href="#pricing" className="hover:text-text-muted transition-colors underline underline-offset-2">
-              See all plans →
-            </a>
-            <span aria-hidden>·</span>
-            <a href="#preview" className="hover:text-text-muted transition-colors underline underline-offset-2">
-              Watch Part 1 free first
-            </a>
+          <p className="text-xs text-text-muted/50">
+            Cancel anytime · 7-day refund guarantee · Secure checkout
           </p>
         </div>
       </section>

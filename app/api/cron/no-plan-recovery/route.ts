@@ -15,7 +15,10 @@ const STEP_2_DELAY_MS  = 24 * 60 * 60 * 1000; // 24 hours after step 1
 
 function requireCronAuth(req: NextRequest): boolean {
   const secret = process.env.CRON_SECRET;
-  if (!secret) return false; // never allow if secret not configured
+  if (!secret) {
+    console.error("[CRON] CRON_SECRET is not set — all cron requests will be rejected. Set this env var in Vercel dashboard.");
+    return false;
+  }
   const auth = req.headers.get("authorization") ?? "";
   return auth === `Bearer ${secret}`;
 }
