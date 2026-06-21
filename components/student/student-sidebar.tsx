@@ -10,6 +10,7 @@ import {
   BookOpen,
   FolderOpen,
   TrendingUp,
+  Library,
   HelpCircle,
   User,
   Users,
@@ -149,6 +150,7 @@ export function StudentSidebar({
     { id: "lessons",    label: "Lessons",    href: "/seerah?tab=lessons",   icon: BookOpen,        tabId: "lessons"   },
     { id: "resources",  label: "Resources",  href: "/seerah?tab=resources", icon: FolderOpen,      tabId: "resources" },
     { id: "progress",   label: "Progress",   href: "/seerah?tab=progress",  icon: TrendingUp,      tabId: "progress"  },
+    { id: "reference",  label: "Reference",  href: "/reference",            icon: Library },
   ];
 
   const isFamily = planType === "family";
