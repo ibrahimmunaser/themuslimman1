@@ -6,13 +6,17 @@ import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/signup_screen.dart';
 import '../../features/shell/app_shell.dart';
 import '../../features/home/screens/landing_screen.dart';
+import '../../features/dashboard/screens/dashboard_screen.dart';
 import '../../features/course/screens/course_screen.dart';
 import '../../features/course/screens/part_screen.dart';
+import '../../features/resources/screens/resources_screen.dart';
+import '../../features/reference/screens/reference_screen.dart';
+import '../../features/reference/screens/reference_detail_screen.dart';
+import '../../features/progress/screens/progress_screen.dart';
 import '../../features/pricing/screens/pricing_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
 
 /// Listens to auth state changes and notifies GoRouter to re-evaluate redirects.
-/// Keeps the GoRouter instance stable (Bug 1 fix: no new GoRouter per auth event).
 class _RouterNotifier extends ChangeNotifier {
   final Ref _ref;
   _RouterNotifier(this._ref) {
@@ -22,7 +26,6 @@ class _RouterNotifier extends ChangeNotifier {
 
 final routerProvider = Provider<GoRouter>((ref) {
   final notifier = _RouterNotifier(ref);
-  // Ensure the ChangeNotifier is disposed when the provider is torn down.
   ref.onDispose(notifier.dispose);
 
   return GoRouter(
@@ -45,11 +48,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
       // Logged-in on auth pages: route by access
       if (isLoggedIn && isOnAuth) {
-        return authState.hasAccess ? '/course' : '/pricing';
+        return '/dashboard';
       }
-      // Logged-in on landing: route by access
+      // Logged-in on landing: go to dashboard
       if (isLoggedIn && loc == '/landing') {
-        return authState.hasAccess ? '/course' : '/pricing';
+        return '/dashboard';
       }
       return null;
     },
@@ -70,30 +73,55 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/signup',
         builder: (ctx, state) => const SignupScreen(),
       ),
+
+      // ── Shell with bottom nav ──────────────────────────────────────────────
       ShellRoute(
         builder: (ctx, state, child) => AppShell(child: child),
         routes: [
+          GoRoute(
+            path: '/dashboard',
+            builder: (ctx, state) => const DashboardScreen(),
+          ),
           GoRoute(
             path: '/course',
             builder: (ctx, state) => const CourseScreen(),
           ),
           GoRoute(
+            path: '/resources',
+            builder: (ctx, state) => const ResourcesScreen(),
+          ),
+          GoRoute(
+            path: '/reference',
+            builder: (ctx, state) => const ReferenceScreen(),
+          ),
+          GoRoute(
+            path: '/progress',
+            builder: (ctx, state) => const ProgressScreen(),
+          ),
+          GoRoute(
             path: '/pricing',
             builder: (ctx, state) => const PricingScreen(),
           ),
-          GoRoute(
-            path: '/profile',
-            builder: (ctx, state) => const ProfileScreen(),
-          ),
         ],
+      ),
+
+      // ── Full-screen routes (outside shell) ────────────────────────────────
+      GoRoute(
+        path: '/profile',
+        builder: (ctx, state) => const ProfileScreen(),
       ),
       GoRoute(
         path: '/part/:partNumber',
         builder: (ctx, state) {
-          // Bug 7 fix: use tryParse to prevent crash on invalid param
           final n = int.tryParse(state.pathParameters['partNumber'] ?? '') ?? 1;
-          final clamped = n.clamp(1, 100);
-          return PartScreen(partNumber: clamped);
+          return PartScreen(partNumber: n.clamp(1, 100));
+        },
+      ),
+      GoRoute(
+        path: '/reference/:sectionId',
+        builder: (ctx, state) {
+          final id = state.pathParameters['sectionId'] ?? '';
+          return ReferenceDetailScreen(sectionId: id);
         },
       ),
     ],
@@ -107,7 +135,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             Text('Page not found', style: Theme.of(ctx).textTheme.titleLarge),
             const SizedBox(height: 8),
             TextButton(
-              onPressed: () => ctx.go('/'),
+              onPressed: () => ctx.go('/dashboard'),
               child: const Text('Go Home'),
             ),
           ],

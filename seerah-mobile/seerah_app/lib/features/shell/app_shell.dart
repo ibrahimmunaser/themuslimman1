@@ -8,9 +8,13 @@ class AppShell extends StatelessWidget {
 
   int _currentIndex(BuildContext context) {
     final loc = GoRouterState.of(context).uri.path;
-    if (loc.startsWith('/course')) return 0;
-    if (loc.startsWith('/pricing')) return 1;
-    if (loc.startsWith('/profile')) return 2;
+    if (loc.startsWith('/dashboard')) return 0;
+    if (loc.startsWith('/course'))    return 1;
+    if (loc.startsWith('/resources')) return 2;
+    if (loc.startsWith('/reference')) return 3;
+    if (loc.startsWith('/progress'))  return 4;
+    if (loc.startsWith('/pricing'))   return 1; // fallback to lessons tab
+    if (loc.startsWith('/profile'))   return 0; // profile is accessible via header
     return 0;
   }
 
@@ -23,30 +27,45 @@ class AppShell extends StatelessWidget {
         decoration: const BoxDecoration(
           border: Border(top: BorderSide(color: AppColors.border)),
         ),
-        child: BottomNavigationBar(
-          currentIndex: idx,
-          onTap: (i) {
+        child: NavigationBar(
+          selectedIndex: idx,
+          onDestinationSelected: (i) {
             switch (i) {
-              case 0: context.go('/course'); break;
-              case 1: context.go('/pricing'); break;
-              case 2: context.go('/profile'); break;
+              case 0: context.go('/dashboard'); break;
+              case 1: context.go('/course'); break;
+              case 2: context.go('/resources'); break;
+              case 3: context.go('/reference'); break;
+              case 4: context.go('/progress'); break;
             }
           },
-          items: const [
-            BottomNavigationBarItem(
+          backgroundColor: AppColors.surface,
+          indicatorColor: AppColors.goldFaded,
+          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+          destinations: const [
+            NavigationDestination(
+              icon: Icon(Icons.home_outlined),
+              selectedIcon: Icon(Icons.home, color: AppColors.gold),
+              label: 'Home',
+            ),
+            NavigationDestination(
               icon: Icon(Icons.menu_book_outlined),
-              activeIcon: Icon(Icons.menu_book),
-              label: 'Course',
+              selectedIcon: Icon(Icons.menu_book, color: AppColors.gold),
+              label: 'Lessons',
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.star_outline),
-              activeIcon: Icon(Icons.star),
-              label: 'Plans',
+            NavigationDestination(
+              icon: Icon(Icons.folder_outlined),
+              selectedIcon: Icon(Icons.folder, color: AppColors.gold),
+              label: 'Resources',
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline),
-              activeIcon: Icon(Icons.person),
-              label: 'Profile',
+            NavigationDestination(
+              icon: Icon(Icons.library_books_outlined),
+              selectedIcon: Icon(Icons.library_books, color: AppColors.gold),
+              label: 'Reference',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.bar_chart_outlined),
+              selectedIcon: Icon(Icons.bar_chart, color: AppColors.gold),
+              label: 'Progress',
             ),
           ],
         ),
