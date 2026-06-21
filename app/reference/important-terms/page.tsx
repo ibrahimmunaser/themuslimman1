@@ -1,6 +1,4 @@
-import { Navbar } from "@/components/landing/navbar";
-import { Footer } from "@/components/landing/footer";
-import { ImportantTermsContent } from "@/components/reference/important-terms-content";
+import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -10,11 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function ImportantTermsPage() {
-  return (
-    <>
-      <Navbar />
-      <ImportantTermsContent />
-      <Footer />
-    </>
-  );
+  redirect("/seerah?tab=reference&section=important-terms");
 }

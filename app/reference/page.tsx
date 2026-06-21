@@ -1,14 +1,15 @@
-import { Navbar } from "@/components/landing/navbar";
-import { Footer } from "@/components/landing/footer";
-import Link from "next/link";
+import { redirect } from "next/navigation";
 import type { Metadata } from "next";
-import { BookOpen, ChevronRight } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Reference Library — Complete Seerah",
   description:
     "Extra Seerah reference guides, timelines, people, places, and historical notes to help you understand the life of the Prophet ﷺ more clearly.",
 };
+
+export default function ReferenceLibraryPage() {
+  redirect("/seerah?tab=reference");
+}
 
 interface ReferenceCard {
   slug: string;
@@ -80,9 +81,7 @@ const REFERENCE_CARDS: ReferenceCard[] = [
 
 export default function ReferenceLibraryPage() {
   return (
-    <>
-      <Navbar />
-      <main className="min-h-screen bg-ink py-16">
+    <main className="min-h-screen bg-ink py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
 
           {/* Page header */}
@@ -165,7 +164,5 @@ export default function ReferenceLibraryPage() {
 
         </div>
       </main>
-      <Footer />
-    </>
   );
 }

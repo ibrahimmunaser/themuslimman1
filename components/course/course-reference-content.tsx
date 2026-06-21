@@ -1,7 +1,14 @@
 "use client";
 
-import Link from "next/link";
-import { BookOpen, ChevronRight } from "lucide-react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { BookOpen, ChevronRight, ArrowLeft } from "lucide-react";
+import { FamilyHouseholdContent } from "@/components/reference/family-household-content";
+import { KeyPeopleContent } from "@/components/reference/key-people-content";
+import { TribesLineageContent } from "@/components/reference/tribes-lineage-content";
+import { BattlesExpeditionsContent } from "@/components/reference/battles-expeditions-content";
+import { MiraclesSignsContent } from "@/components/reference/miracles-signs-content";
+import { ImportantTermsContent } from "@/components/reference/important-terms-content";
+import { PlacesMapsContent } from "@/components/reference/places-maps-content";
 
 interface ReferenceCard {
   slug: string;
@@ -22,7 +29,7 @@ const REFERENCE_CARDS: ReferenceCard[] = [
     slug: "timeline",
     title: "Timeline of the Seerah",
     description: "A chronological timeline of major events in the life of the Prophet ﷺ.",
-    available: true,
+    available: false, // TODO: Extract timeline content component
   },
   {
     slug: "key-people",
@@ -62,7 +69,7 @@ const REFERENCE_CARDS: ReferenceCard[] = [
   },
 ];
 
-export function CourseReferenceContent() {
+function ReferenceIndex({ onSelectSection }: { onSelectSection: (slug: string) => void }) {
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
       {/* Header */}
@@ -82,10 +89,10 @@ export function CourseReferenceContent() {
       {/* Cards grid */}
       <div className="grid sm:grid-cols-2 gap-4">
         {REFERENCE_CARDS.filter((card) => card.available).map((card) => (
-          <Link
+          <button
             key={card.slug}
-            href={`/reference/${card.slug}`}
-            className="relative p-5 rounded-2xl border bg-surface border-border hover:border-gold/30 transition-colors group"
+            onClick={() => onSelectSection(card.slug)}
+            className="relative p-5 rounded-2xl border bg-surface border-border hover:border-gold/30 transition-colors group text-left"
           >
             <div className="flex items-start gap-3">
               <div className="p-2 rounded-lg border bg-gold/10 border-gold/20 flex-shrink-0">
@@ -105,7 +112,7 @@ export function CourseReferenceContent() {
               View {card.title}
               <ChevronRight className="w-3.5 h-3.5" />
             </div>
-          </Link>
+          </button>
         ))}
       </div>
 
@@ -118,4 +125,70 @@ export function CourseReferenceContent() {
       </div>
     </div>
   );
+}
+
+export function CourseReferenceContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const section = searchParams.get("section");
+
+  const handleSelectSection = (slug: string) => {
+    router.replace(`/seerah?tab=reference&section=${slug}`, { scroll: false });
+  };
+
+  const handleBackToIndex = () => {
+    router.replace(`/seerah?tab=reference`, { scroll: true });
+  };
+
+  // If a section is selected, render it inline
+  if (section) {
+    let DetailComponent: React.ComponentType | null = null;
+
+    switch (section) {
+      case "family-household":
+        DetailComponent = FamilyHouseholdContent;
+        break;
+      case "key-people":
+        DetailComponent = KeyPeopleContent;
+        break;
+      case "tribes-lineage":
+        DetailComponent = TribesLineageContent;
+        break;
+      case "battles":
+        DetailComponent = BattlesExpeditionsContent;
+        break;
+      case "miracles":
+        DetailComponent = MiraclesSignsContent;
+        break;
+      case "important-terms":
+        DetailComponent = ImportantTermsContent;
+        break;
+      case "places-maps":
+        DetailComponent = PlacesMapsContent;
+        break;
+    }
+
+    if (DetailComponent) {
+      return (
+        <div>
+          {/* Back button */}
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-8">
+            <button
+              onClick={handleBackToIndex}
+              className="inline-flex items-center gap-1.5 text-sm text-text-secondary hover:text-text transition-colors mb-6"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              Back to Reference Library
+            </button>
+          </div>
+
+          {/* Detail content */}
+          <DetailComponent />
+        </div>
+      );
+    }
+  }
+
+  // Otherwise show the index
+  return <ReferenceIndex onSelectSection={handleSelectSection} />;
 }

@@ -1,6 +1,4 @@
-import { Navbar } from "@/components/landing/navbar";
-import { Footer } from "@/components/landing/footer";
-import { MiraclesSignsContent } from "@/components/reference/miracles-signs-content";
+import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -10,11 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function MiraclesSignsPage() {
-  return (
-    <>
-      <Navbar />
-      <MiraclesSignsContent />
-      <Footer />
-    </>
-  );
+  redirect("/seerah?tab=reference&section=miracles");
 }

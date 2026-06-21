@@ -1,6 +1,4 @@
-import { Navbar } from "@/components/landing/navbar";
-import { Footer } from "@/components/landing/footer";
-import { BattlesExpeditionsContent } from "@/components/reference/battles-expeditions-content";
+import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -10,11 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function BattlesExpeditionsPage() {
-  return (
-    <>
-      <Navbar />
-      <BattlesExpeditionsContent />
-      <Footer />
-    </>
-  );
+  redirect("/seerah?tab=reference&section=battles");
 }

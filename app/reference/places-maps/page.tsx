@@ -1,6 +1,4 @@
-import { Navbar } from "@/components/landing/navbar";
-import { Footer } from "@/components/landing/footer";
-import { PlacesMapsContent } from "@/components/reference/places-maps-content";
+import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -10,11 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function PlacesMapsPage() {
-  return (
-    <>
-      <Navbar />
-      <PlacesMapsContent />
-      <Footer />
-    </>
-  );
+  redirect("/seerah?tab=reference&section=places-maps");
 }

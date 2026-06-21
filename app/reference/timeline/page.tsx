@@ -1,14 +1,15 @@
-import { Navbar } from "@/components/landing/navbar";
-import { Footer } from "@/components/landing/footer";
-import Link from "next/link";
+import { redirect } from "next/navigation";
 import type { Metadata } from "next";
-import { ArrowLeft, Calendar } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Timeline of the Seerah — Seerah Reference",
   description:
     "A chronological timeline of major events in the life of the Prophet Muhammad ﷺ from birth to passing.",
 };
+
+export default function TimelinePage() {
+  redirect("/seerah?tab=reference&section=timeline");
+}
 
 interface TimelineEvent {
   date: string;
@@ -111,9 +112,7 @@ const TIMELINE_EVENTS: TimelineEvent[] = [
 
 export default function TimelinePage() {
   return (
-    <>
-      <Navbar />
-      <main className="min-h-screen bg-ink py-16">
+    <main className="min-h-screen bg-ink py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
 
           {/* Back link */}
@@ -208,7 +207,5 @@ export default function TimelinePage() {
 
         </div>
       </main>
-      <Footer />
-    </>
   );
 }
