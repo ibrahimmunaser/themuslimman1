@@ -58,9 +58,9 @@ const REFERENCE_CARDS: ReferenceCard[] = [
   {
     slug: "battles",
     title: "Battles and Expeditions",
-    description: "A clear reference to the major battles, raids, and expeditions of the Prophet ﷺ.",
-    cta: "Coming soon",
-    available: false,
+    description: "A clear reference to the major battles, campaigns, and expeditions of the Prophet ﷺ.",
+    cta: "View Battles & Expeditions",
+    available: true,
   },
   {
     slug: "miracles",
