@@ -235,8 +235,8 @@ export function StudentSidebar({
           )}
         </div>
 
-        {/* Active learner profile indicator */}
-        {!collapsed && activeProfileName && (
+        {/* Active learner profile indicator - only for family plans */}
+        {!collapsed && planType === "family" && activeProfileName && (
           <div className="mt-2 pt-2 border-t border-border/60">
             <div className="flex items-center justify-between gap-1">
               <div className="flex items-center gap-1.5 min-w-0">
@@ -386,8 +386,8 @@ export function StudentSidebar({
               </span>
             </div>
           </div>
-          {/* Active learner profile */}
-          {activeProfileName && (
+          {/* Active learner profile - only for family plans */}
+          {planType === "family" && activeProfileName && (
             <div className="mt-2.5 pt-2.5 border-t border-border/50 flex items-center justify-between gap-2">
               <div className="flex items-center gap-1.5 min-w-0">
                 <UserCircle className="w-3.5 h-3.5 text-text-muted flex-shrink-0" />
