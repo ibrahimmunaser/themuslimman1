@@ -92,7 +92,7 @@ function ReferenceIndex({ onSelectSection }: { onSelectSection: (slug: string) =
           <button
             key={card.slug}
             onClick={() => onSelectSection(card.slug)}
-            className="relative p-5 rounded-2xl border bg-surface border-border hover:border-gold/30 transition-colors group text-left"
+            className="relative p-5 rounded-2xl border bg-surface border-border hover:border-gold/30 transition-colors group text-left cursor-pointer"
           >
             <div className="flex items-start gap-3">
               <div className="p-2 rounded-lg border bg-gold/10 border-gold/20 flex-shrink-0">
