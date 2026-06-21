@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import {
-  CheckCircle2, ArrowRight, Lock, Gift, Users, User, Calendar, Infinity,
+  CheckCircle2, ArrowRight, Lock, Gift, Users, User, Infinity,
 } from "lucide-react";
 import { buttonClass } from "@/components/ui/button";
 import { FadeUp } from "@/components/motion";
@@ -237,7 +237,10 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
                 <div className="space-y-2">
                   <Link
                     href="/checkout?plan=individual-lifetime"
-                    data-track="homepage_lifetime_click"
+                    data-track="plan_selected"
+                    data-plan="individual-lifetime"
+                    data-billing="lifetime"
+                    data-price="4900"
                     className={buttonClass("primary", "lg", "w-full justify-center shadow-lg shadow-gold/20")}
                   >
                     Get Lifetime Access — $49
@@ -316,7 +319,10 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
                 <div className="space-y-2">
                   <Link
                     href="/checkout?plan=family-lifetime"
-                    data-track="homepage_lifetime_click"
+                    data-track="plan_selected"
+                    data-plan="family-lifetime"
+                    data-billing="lifetime"
+                    data-price="9900"
                     className={buttonClass("primary", "lg", "w-full justify-center shadow-lg shadow-gold/20")}
                   >
                     Get Family Lifetime — $99

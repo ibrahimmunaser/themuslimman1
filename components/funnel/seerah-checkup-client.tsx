@@ -1046,6 +1046,7 @@ export function SeerahCheckupClient({
                 <>
                   <button
                     onClick={() => {
+                      track("watch_part1_clicked");
                       showInlineRef.current = true;
                       setShowInline(true);
                       setTimeout(() => inlineRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 60);

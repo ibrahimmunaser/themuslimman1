@@ -3,31 +3,28 @@ import { prisma } from "@/lib/db";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Funnel Events | Admin" };
 
-const CREATORS = ["homepage", "theorthodoxmuslim", "deenresponds", "browniesaadi"] as const;
+const CREATORS = ["homepage", "theorthodoxmuslim", "deenresponds", "browniesaadi", "community", "annarbor"] as const;
 const CREATOR_LABELS: Record<string, string> = {
-  homepage:         "Homepage (/checkup)",
+  homepage:          "Homepage (main + checkup)",
   theorthodoxmuslim: "The Orthodox Muslim",
-  deenresponds:     "Deen Responds",
-  browniesaadi:     "Brownie Saadi",
+  deenresponds:      "Deen Responds",
+  browniesaadi:      "Brownie Saadi",
+  community:         "Community",
+  annarbor:          "Ann Arbor Students",
 };
-
-const QUIZ_FUNNEL_EVENTS = [
-  "quiz_started",
-  "quiz_completed",
-  "quiz_email_submitted",
-  "quiz_result_viewed",
-  "quiz_recommended_cta_clicked",
-  "quiz_abandoned",
-] as const;
 
 const CHECKOUT_EVENTS = [
   "checkout_loaded",
   "payment_started",
   "payment_submitted",
+  "payment_method_selected",
   "payment_succeeded",
   "payment_failed",
+  "express_checkout_visible",
+  "payment_element_loaded",
   "checkout_abandoned",
   "checkout_escape_clicked",
+  "payment_skipped_already_has_access",
 ] as const;
 
 export default async function FunnelEventsPage() {

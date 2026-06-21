@@ -170,11 +170,17 @@ export function buildStep3Html(opts: {
 }): string {
   const { firstName, score, recommendedPlan, audienceType, source, unsubscribeUrl } = opts;
   const isFamily   = recommendedPlan.includes("family") || audienceType === "family" || audienceType === "self_and_family";
-  const planLabel  = isFamily ? "Family Plan — $9.99/mo" : "Individual Plan — $4.99/mo";
+  const isLifetime = recommendedPlan.includes("lifetime");
+  const planKey    = isFamily
+    ? (isLifetime ? "family-lifetime" : "family-monthly")
+    : (isLifetime ? "individual-lifetime" : "individual-monthly");
+  const planLabel  = isFamily
+    ? (isLifetime ? "Family Lifetime — $99 one-time" : "Family Plan — $9.99/mo")
+    : (isLifetime ? "Individual Lifetime — $49 one-time" : "Individual Plan — $4.99/mo");
   const planNote   = isFamily
-    ? "Full access for you and your family — one payment."
-    : "Full access to all 100 parts — one low monthly cost.";
-  const ctaUrl     = checkoutUrl(isFamily ? "family-monthly" : "individual-monthly", source, 3);
+    ? (isLifetime ? "Lifetime access for your whole family — pay once, done." : "Full access for you and your family — cancel anytime.")
+    : (isLifetime ? "Full lifetime access to all 100 parts — pay once, done." : "Full access to all 100 parts — cancel anytime.");
+  const ctaUrl     = checkoutUrl(planKey, source, 3);
 
   return `<!DOCTYPE html>
 <html>

@@ -26,6 +26,7 @@ const KNOWN_EVENT_TYPES = [
   // v2 simplified funnel events
   "brownie_landing_page_view",
   "landing_page_view",
+  "pricing_viewed",
   // Ann Arbor student funnel events
   "annarbor_landing_page_view",
   "student_lifetime_cta_clicked",
@@ -72,9 +73,6 @@ const KNOWN_EVENT_TYPES = [
   "homepage_checkup_preprice_click",
   "final_watch_part1_clicked",
   "final_checkout_clicked",
-  "homepage_pricing_view",
-  "homepage_lifetime_click",
-  "pricing_viewed",
 ] as const;
 
 export async function POST(req: NextRequest) {

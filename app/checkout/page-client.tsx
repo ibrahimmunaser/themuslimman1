@@ -710,8 +710,6 @@ function CheckoutPageContent({
   // When a quiz-funnel email arrives via URL param, lock the field so the user
   // sees it's already set and only needs to enter their name.
   const [emailLocked, setEmailLocked] = useState(!!(initialEmail && !userEmail));
-  const [needsVerification, setNeedsVerification] = useState(false);
-  const [resendState, setResendState] = useState<"idle" | "loading" | "sent" | "error">("idle");
   // Auto-trigger: fires when the email field blurs with a valid name + email so the
   // Stripe payment form loads without requiring a separate "Continue to Payment" click.
   const autoDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);

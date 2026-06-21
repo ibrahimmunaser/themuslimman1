@@ -6,6 +6,7 @@ import {
   Settings,
   Library,
   BarChart3,
+  BarChart2,
   ShieldCheck,
   HardDrive,
   ShoppingCart,
@@ -13,6 +14,7 @@ import {
   BookOpen,
   Mail,
   Send,
+  ClipboardList,
 } from "lucide-react";
 import { ROLES, type Role } from "./roles";
 
@@ -40,6 +42,8 @@ export const ADMIN_NAV: NavItem[] = [
   { href: "/admin/support",    label: "Support",         icon: MessageCircle },
   { href: "/admin/email-outreach",   label: "Email Outreach",   icon: Send },
   { href: "/admin/email-automation", label: "Email Automation", icon: Mail },
+  { href: "/admin/checkup-leads",    label: "Quiz Leads",        icon: ClipboardList },
+  { href: "/admin/funnel-events",    label: "Funnel Events",     icon: BarChart2 },
   { href: "/admin/r2",         label: "R2 Storage",      icon: HardDrive },
   { href: "/admin/settings",   label: "Settings",        icon: ShieldCheck },
 ];

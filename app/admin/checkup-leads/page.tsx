@@ -9,6 +9,8 @@ const SOURCE_LABELS: Record<string, string> = {
   theorthodoxmuslim: "The Orthodox Muslim",
   deenresponds:      "Deen Responds",
   browniesaadi:      "Brownie Saadi",
+  community:         "Community",
+  annarbor:          "Ann Arbor Students",
 };
 
 export default async function CheckupLeadsPage() {
