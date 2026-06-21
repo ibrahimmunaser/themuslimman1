@@ -73,8 +73,8 @@ const REFERENCE_CARDS: ReferenceCard[] = [
     slug: "important-terms",
     title: "Important Terms",
     description: "A glossary of Arabic and historical terms used throughout the Seerah.",
-    cta: "Coming soon",
-    available: false,
+    cta: "View Glossary",
+    available: true,
   },
 ];
 
