@@ -1,4 +1,4 @@
-import { Video, FileText, Image, Map, Layers, Brain, Headphones, ClipboardCheck, BookOpen, GraduationCap, BarChart2 } from "lucide-react";
+import { Video, FileText, Image, Map, Layers, Brain, Headphones, ClipboardCheck, BookOpen, GraduationCap, BarChart2, Library } from "lucide-react";
 import Link from "next/link";
 
 interface CourseResourcesContentProps {
@@ -15,6 +15,7 @@ export function CourseResourcesContent({ userPlan: _userPlan }: CourseResourcesC
     { icon: Map, label: "Mind Maps", description: "Visual maps connecting people and events", href: "/seerah/resources/mind-maps" },
     { icon: Brain, label: "Flashcards", description: "Easy, Medium, and Hard flashcard sets", href: "/seerah/resources/flashcards" },
     { icon: ClipboardCheck, label: "Quizzes", description: "Test your knowledge for each part", href: "/seerah/resources/quizzes" },
+    { icon: Library, label: "Reference Library", description: "Terms, people, places, battles, and more", href: "/reference" },
     { icon: BookOpen, label: "Reports", description: "Comprehensive reports for each lesson", href: "/seerah/resources/reports" },
     { icon: GraduationCap, label: "Study Guides", description: "Detailed study guides for review", href: "/seerah/resources/study-guides" },
     { icon: BarChart2, label: "Facts", description: "Quick reference facts for each part", href: "/seerah/resources/statement-of-facts" },
