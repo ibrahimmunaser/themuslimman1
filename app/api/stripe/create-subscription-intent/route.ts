@@ -117,10 +117,12 @@ export async function POST(request: NextRequest) {
       items: [{ price: MONTHLY_PRICE_ID }],
       payment_behavior: "default_incomplete",
       payment_settings: {
-        // Restrict to card and link only — Apple Pay/Google Pay work because they
-        // confirm against a card network. Cash App and similar wallets cannot be
-        // saved off-session and would fail all renewal charges.
-        payment_method_types: ["card", "link"],
+        // Card only — Link is excluded because Stripe.js injects
+        // setup_future_usage: "off_session" when Link is present, which
+        // conflicts with subscription invoice PIs (setup_future_usage: null)
+        // and causes a 400 mismatch on confirmPayment. Apple Pay / Google Pay
+        // work fine through card networks; Cash App cannot be saved off-session.
+        payment_method_types: ["card"],
         save_default_payment_method: "on_subscription",
       },
       description: "Seerah Individual Monthly — TheMuslimMan",

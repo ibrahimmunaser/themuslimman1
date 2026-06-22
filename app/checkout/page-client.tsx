@@ -354,8 +354,17 @@ function CheckoutForm({
           logStage("payment_failed", { errorCode: paymentIntent.status });
           setError("Payment could not be completed. Please try again or use a different payment method.");
           setProcessing(false);
+        } else {
+          // confirmPayment returned neither an error nor a paymentIntent.
+          // This means Stripe initiated a browser redirect (3DS, bank redirect).
+          // If the browser is still here after 6 seconds, navigate to the success
+          // page ourselves so the polling logic can handle access grant.
+          setTimeout(() => {
+            if (!window.location.pathname.includes("/payment/success")) {
+              window.location.href = returnUrl;
+            }
+          }, 6000);
         }
-        // If Stripe redirected the browser (3DS etc.), no further action needed.
       }
     } catch {
       setError("Connection lost. Please check your internet and try again.");
@@ -458,6 +467,14 @@ function CheckoutForm({
         logStage("payment_failed", { errorCode: paymentIntent.status, method: "express" });
         setError("Payment could not be completed. Please try again or use a different card.");
         setProcessing(false);
+      } else {
+        // No error, no paymentIntent — Stripe is likely redirecting (3DS / bank).
+        // Navigate to the success page after 6s if the browser is still here.
+        setTimeout(() => {
+          if (!window.location.pathname.includes("/payment/success")) {
+            window.location.href = returnUrl;
+          }
+        }, 6000);
       }
     } catch {
       event.paymentFailed({ reason: "fail" });
@@ -562,7 +579,16 @@ function CheckoutForm({
                 });
               }}
               options={{
-                paymentMethods: { applePay: "auto", googlePay: "auto", link: "auto" },
+                paymentMethods: {
+                  applePay: "auto",
+                  googlePay: "auto",
+                  // Link must be disabled for monthly subscriptions.
+                  // When Link is enabled, Stripe.js injects setup_future_usage: "off_session"
+                  // into confirmPayment. Subscription invoice PaymentIntents have
+                  // setup_future_usage: null, causing a 400 mismatch rejection.
+                  // This mirrors the fix already applied to the PaymentElement.
+                  link: billing === "monthly" ? "never" : "auto",
+                },
                 buttonType:  { applePay: "buy", googlePay: "buy" },
                 buttonTheme: { applePay: "white-outline", googlePay: "white" },
                 layout: { maxColumns: 1, maxRows: 3, overflow: "auto" },

@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/button";
 
 type SuccessType = "lifetime" | "subscription" | "family" | "family-subscription" | "family-lifetime";
 
-const MAX_POLL_MS = 20_000;
+// 60s gives enough headroom for Stripe webhook delivery variance (P99 ~30s).
+// Lifetime payments bypass polling entirely via verify-payment.
+const MAX_POLL_MS = 60_000;
 const POLL_INTERVAL_MS = 2_000;
 
 function PaymentSuccessPageContent() {
@@ -157,7 +159,7 @@ function PaymentSuccessPageContent() {
           <div className="w-16 h-16 border-2 border-gold border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="text-text-secondary">
             {isAnySubscription
-              ? "Confirming your subscription…"
+              ? "Confirming your subscription… (this can take up to 60 seconds)"
               : "Verifying your payment…"}
           </p>
         </div>
