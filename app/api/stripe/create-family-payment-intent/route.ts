@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     // users — they're upgrading from Individual to Family.
 
     const body = await request.json();
-    const { promoCode, isUpgrade } = body as { promoCode?: string; isUpgrade?: boolean };
+    const { promoCode, isUpgrade, creator: creatorFromSource } = body as { promoCode?: string; isUpgrade?: boolean; creator?: string };
 
     // Individual Lifetime → Family Lifetime upgrade.
     // Verified server-side: user must have hasPaid=true and not already be on family plan.
@@ -121,8 +121,9 @@ export async function POST(request: NextRequest) {
       finalAmount = baseAmount;
     }
 
-    // Resolve creator metadata from the promo code (if it's a creator code)
+    // Resolve creator: prefer promo-code config; fall back to source attribution from checkout
     const creatorConfig = appliedPromoCode ? getCreatorPromoConfig(appliedPromoCode) : null;
+    const resolvedCreator = creatorConfig?.creator ?? (typeof creatorFromSource === "string" && creatorFromSource ? creatorFromSource : null);
 
     // Free access: skip Stripe entirely when code makes it $0
     if (finalAmount === 0) {
@@ -172,9 +173,9 @@ export async function POST(request: NextRequest) {
         ...(appliedPromoCode
           ? { promoCode: appliedPromoCode, promoDiscountAmount: String(promoDiscountAmount) }
           : {}),
+        ...(resolvedCreator ? { creator: resolvedCreator } : {}),
         ...(creatorConfig
           ? {
-              creator: creatorConfig.creator,
               utm_source: creatorConfig.utm_source,
               utm_medium: creatorConfig.utm_medium,
               utm_campaign: creatorConfig.utm_campaign,

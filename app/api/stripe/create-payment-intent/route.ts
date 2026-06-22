@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     // Only "complete" is sold during early access — silently upgrade any other plan
     const planId: PlanId = "complete";
-    const { promoCode } = body as { promoCode?: string };
+    const { promoCode, creator: creatorFromSource } = body as { promoCode?: string; creator?: string };
 
     const plan = PLANS[planId];
 
@@ -120,8 +120,9 @@ export async function POST(request: NextRequest) {
       appliedPromoCode = normalized;
     }
 
-    // Resolve creator metadata from the promo code (if it's a creator code)
+    // Resolve creator: prefer promo-code config; fall back to source attribution from checkout
     const creatorConfig = appliedPromoCode ? getCreatorPromoConfig(appliedPromoCode) : null;
+    const resolvedCreator = creatorConfig?.creator ?? (typeof creatorFromSource === "string" && creatorFromSource ? creatorFromSource : null);
 
     // ── Free access: skip Stripe entirely ──────────────────────────────────
     if (finalAmount === 0) {
@@ -154,9 +155,9 @@ export async function POST(request: NextRequest) {
               promoDiscountAmount: String(promoDiscountAmount),
             }
           : {}),
+        ...(resolvedCreator ? { creator: resolvedCreator } : {}),
         ...(creatorConfig
           ? {
-              creator: creatorConfig.creator,
               utm_source: creatorConfig.utm_source,
               utm_medium: creatorConfig.utm_medium,
               utm_campaign: creatorConfig.utm_campaign,

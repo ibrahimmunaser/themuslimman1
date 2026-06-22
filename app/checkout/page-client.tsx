@@ -782,6 +782,7 @@ function CheckoutPageContent({
   // by default — the user sees "Your selected offer" and a "Change plan" link.
   const INFLUENCER_SOURCES = new Set([
     "browniesaadi", "deenresponds", "community", "annarbor", "dearborn", "theorthodoxmuslim",
+    "korra", "itachi",
   ]);
   const isInfluencerMode = !!(
     (initialSourceParam && INFLUENCER_SOURCES.has(initialSourceParam)) ||
@@ -926,21 +927,20 @@ function CheckoutPageContent({
       // correct amount regardless of what the client sends here.
       if (aud === "family" && bill === "lifetime") body.isUpgrade = true;
 
-      // Pass creator attribution for trial and monthly subscriptions so Subscription.creator
-      // and Subscription.promoCode are set — enabling influencer commission tracking.
-      if (bill === "trial" || bill === "monthly") {
+      // Pass creator attribution for all billing types so Purchase.creator /
+      // Subscription.creator are recorded — enabling influencer conversion tracking
+      // without requiring a promo code.
+      {
         const storedPromo = promoCode ?? getCreatorPromo();
-        if (storedPromo) {
-          const cfg = getCreatorPromoConfig(storedPromo);
-          if (cfg?.creator) {
-            body.creator   = cfg.creator;
-            body.promoCode = storedPromo;
-          }
+        const cfg = storedPromo ? getCreatorPromoConfig(storedPromo) : null;
+        if (cfg?.creator) {
+          body.creator   = cfg.creator;
+          if (bill !== "lifetime") body.promoCode = storedPromo;
+        } else if (initialSourceParam && INFLUENCER_SOURCES.has(initialSourceParam)) {
+          body.creator = initialSourceParam;
         }
-        // Pass the landing-page source (e.g. "browniesaadi") so we know which
-        // influencer page drove the subscription, even without a promo code.
-        if (initialSourceParam) body.source = initialSourceParam;
       }
+      if (initialSourceParam) body.source = initialSourceParam;
 
       const res  = await fetch(endpoint, {
         method:  "POST",

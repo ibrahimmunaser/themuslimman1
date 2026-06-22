@@ -12,14 +12,13 @@ const PROMO_CODE   = "DEEN";
 const DISPLAY_NAME = "Deen Responds";
 
 const FUNNEL_STEPS: FunnelStep[] = [
-  { key: "landing_page_view",                   label: "Landing Views"                   },
-  { key: "individual_lifetime_cta_clicked",     label: "Clicked Individual Lifetime CTA" },
-  { key: "family_lifetime_cta_clicked",         label: "Clicked Family Lifetime CTA"     },
-  { key: "watch_part1_clicked",                 label: "Clicked Watch Part 1 Free"       },
-  { key: "checkout_loaded_individual_lifetime", label: "Checkout — Individual Lifetime"  },
-  { key: "checkout_loaded_family_lifetime",     label: "Checkout — Family Lifetime"      },
-  { key: "change_plan_clicked",                 label: "Clicked Change Plan"             },
-  { key: "checkout_form_submitted",             label: "Submitted Payment Form"          },
+  { key: "influencer_page_view",          label: "Page Views"           },
+  { key: "influencer_primary_cta_click",  label: "Clicked Checkout CTA" },
+  { key: "influencer_part1_cta_click",    label: "Clicked Watch Part 1" },
+  { key: "influencer_part1_started",      label: "Started Part 1"       },
+  { key: "influencer_checkout_cta_click", label: "Part 1 → Checkout"    },
+  { key: "payment_started",               label: "Started Payment"      },
+  { key: "payment_succeeded",             label: "Payment Succeeded"    },
 ];
 
 export default async function DeenRespondsStatsPage({
@@ -75,7 +74,7 @@ export default async function DeenRespondsStatsPage({
       trials={trials.map((t) => ({ ...t, userEmail: t.user.email }))}
       lastUpdated={now}
       funnelSteps={FUNNEL_STEPS}
-      landingEventKey="landing_page_view"
+      landingEventKey="influencer_page_view"
     />
   );
 }
