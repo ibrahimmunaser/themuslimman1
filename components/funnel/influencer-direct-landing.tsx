@@ -2,7 +2,6 @@
 
 import { useRef, useEffect, useState, useCallback } from "react";
 import { nanoid } from "nanoid";
-import { CheckCircle } from "lucide-react";
 import { InlinePart1Video } from "@/components/landing/inline-part1-video";
 
 // ── Analytics ──────────────────────────────────────────────────────────────────
@@ -57,7 +56,7 @@ export interface InfluencerDirectConfig {
   creatorName: string;
   /** Hero headline, e.g. "You came from The Orthodox Muslim." */
   heroHeadline: string;
-  /** Price shown in hero + offer card, e.g. "$4.99/month" */
+  /** Price shown in hero, e.g. "$4.99/month" */
   price?: string;
   /** Full checkout URL */
   checkoutUrl: string;
@@ -65,7 +64,7 @@ export interface InfluencerDirectConfig {
   watchFreeUrl?: string;
   /** Analytics event prefix */
   eventPrefix: string;
-  /** Defaults to "Start Now" */
+  /** Defaults to "Start the Full Course" */
   checkoutButtonLabel?: string;
   // Legacy fields silently ignored in this layout
   heroSubheadline?: string;
@@ -78,86 +77,68 @@ export interface InfluencerDirectConfig {
 
 export function InfluencerDirectLanding({ config }: { config: InfluencerDirectConfig }) {
   const heroRef  = useRef<HTMLElement>(null);
-  const offerRef = useRef<HTMLDivElement>(null);
   const part1Ref = useRef<HTMLDivElement>(null);
 
-  // True once user scrolls past the initial hero fold
-  const [scrolledPast, setScrolledPast]         = useState(false);
-  // True when any primary CTA section is in the viewport
-  const [anyCTAVisible, setAnyCTAVisible]        = useState(true);
-  // Analytics: fire offer_viewed once
-  const [offerViewed, setOfferViewed]            = useState(false);
+  const [scrolledPast, setScrolledPast] = useState(false);
+  const [anyCTAVisible, setAnyCTAVisible] = useState(true);
 
   const price    = config.price ?? "$4.99/month";
-  const btnLabel = config.checkoutButtonLabel ?? "Start Now";
+  const btnLabel = config.checkoutButtonLabel ?? "Start the Full Course";
 
-  // Sticky bar is visible only when: user has scrolled past hero AND no CTA section is in view
+  // Sticky only shown when user has scrolled past hero AND no CTA section is on screen
   const showSticky = scrolledPast && !anyCTAVisible;
 
-  // ── Page view + scroll-past-hero detection ─────────────────────────────────
+  // Page view + scroll detection
   useEffect(() => {
     safeTrack(config.creator, "influencer_page_view");
-
     const onScroll = () => setScrolledPast(window.scrollY > 300);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, [config.creator]);
 
-  // ── Watch all CTA sections — hide sticky whenever any is in view ────────────
+  // Hide sticky whenever hero or Part 1 section is visible
   useEffect(() => {
-    const sections = [heroRef.current, offerRef.current, part1Ref.current].filter(
+    const sections = [heroRef.current, part1Ref.current].filter(
       (el): el is HTMLElement => el !== null
     );
     if (sections.length === 0) return;
 
-    // Per-element visibility map — sticky hides the moment any element intersects
     const visible = new Map<Element, boolean>(sections.map((el) => [el, false]));
-
     const obs = new IntersectionObserver(
       (entries) => {
         entries.forEach((e) => visible.set(e.target, e.isIntersecting));
         setAnyCTAVisible(Array.from(visible.values()).some(Boolean));
-
-        // Fire offer_viewed analytics once
-        const offerEntry = entries.find((e) => e.target === offerRef.current);
-        if (offerEntry?.isIntersecting && !offerViewed) {
-          setOfferViewed(true);
-          safeTrack(config.creator, "influencer_offer_viewed");
-        }
       },
       { threshold: 0.1 }
     );
-
     sections.forEach((el) => obs.observe(el));
     return () => obs.disconnect();
-  }, [config.creator, offerViewed]);
-
-  const scrollToOffer = useCallback(() => {
-    offerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    safeTrack(config.creator, "influencer_primary_cta_click");
-  }, [config.creator]);
+  }, []);
 
   const scrollToPart1 = useCallback(() => {
     part1Ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     safeTrack(config.creator, "influencer_part1_cta_click");
   }, [config.creator]);
 
+  const onCheckoutClick = useCallback(() => {
+    safeTrack(config.creator, "influencer_primary_cta_click");
+  }, [config.creator]);
+
   const onPart1Started = useCallback(() => {
     safeTrack(config.creator, "influencer_part1_started");
   }, [config.creator]);
 
-  const onCheckoutCta = useCallback(() => {
+  const onPart1CheckoutClick = useCallback(() => {
     safeTrack(config.creator, "influencer_checkout_cta_click");
   }, [config.creator]);
 
   return (
     <div
       className="min-h-screen bg-background text-text"
-      // Add bottom padding when sticky bar is shown so it never covers content
       style={showSticky ? { paddingBottom: "calc(72px + env(safe-area-inset-bottom))" } : undefined}
     >
 
-      {/* ── 1. HERO ────────────────────────────────────────────────────────── */}
+      {/* ── HERO ──────────────────────────────────────────────────────────────── */}
       <section ref={heroRef} className="bg-gradient-to-b from-surface to-background px-5 pt-12 pb-10">
         <div className="max-w-xl mx-auto">
 
@@ -172,7 +153,7 @@ export function InfluencerDirectLanding({ config }: { config: InfluencerDirectCo
             {config.heroHeadline}
           </h1>
 
-          {/* Pain + solution */}
+          {/* Compact pain + solution */}
           <div className="space-y-3 text-base text-text-secondary leading-relaxed mb-5">
             <p>
               Most Muslims know scattered stories from the life of the Prophet ﷺ. But if we had
@@ -190,16 +171,19 @@ export function InfluencerDirectLanding({ config }: { config: InfluencerDirectCo
           </div>
 
           {/* Price */}
-          <p className="text-3xl font-extrabold text-text tracking-tight mb-5">{price}</p>
+          <p className="text-3xl font-extrabold text-text tracking-tight mb-4">{price}</p>
 
-          {/* CTAs */}
-          <button
-            onClick={scrollToOffer}
-            className="w-full py-4 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-base transition-colors shadow-lg shadow-gold/20 mb-3"
+          {/* Primary CTA */}
+          <a
+            href={config.checkoutUrl}
+            onClick={onCheckoutClick}
+            className="block w-full py-4 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-base text-center transition-colors shadow-lg shadow-gold/20 mb-3"
           >
-            Start the Full Course
-          </button>
-          <div className="text-center">
+            {btnLabel}
+          </a>
+
+          {/* Secondary link */}
+          <div className="text-center mb-4">
             <button
               onClick={scrollToPart1}
               className="text-sm text-text-muted hover:text-gold transition-colors underline underline-offset-2"
@@ -207,56 +191,15 @@ export function InfluencerDirectLanding({ config }: { config: InfluencerDirectCo
               Or watch Part 1 free first
             </button>
           </div>
+
+          {/* Reassurance — replaces the offer card */}
+          <p className="text-xs text-text-muted text-center">
+            Cancel anytime · 7-day refund · Instant access
+          </p>
         </div>
       </section>
 
-      {/* ── 2. OFFER CARD ──────────────────────────────────────────────────── */}
-      <section ref={offerRef} id="offer" className="bg-background px-5 py-8">
-        <div className="max-w-md mx-auto">
-          <div className="rounded-2xl border border-gold/30 bg-surface overflow-hidden shadow-xl shadow-black/20">
-            <div className="px-5 py-6">
-              <h2 className="text-lg font-bold text-text mb-3">
-                Start the Full Seerah Course Today
-              </h2>
-
-              <p className="text-sm text-text-secondary leading-relaxed mb-4">
-                Complete 100-part Seerah course — videos, readings, quizzes, flashcards,
-                summaries, progress tracking, and family profiles.
-              </p>
-
-              <ul className="space-y-2 mb-5">
-                {[
-                  "Full 100-part structured Seerah path",
-                  "Video, reading, quiz, flashcards per lesson",
-                  "Progress tracking + family profiles",
-                  "Start immediately — instant access",
-                ].map((b) => (
-                  <li key={b} className="flex items-center gap-2.5 text-sm text-text-secondary">
-                    <CheckCircle className="w-4 h-4 text-gold flex-shrink-0" />
-                    {b}
-                  </li>
-                ))}
-              </ul>
-
-              <p className="text-2xl font-extrabold text-text mb-1">{price}</p>
-              <p className="text-xs text-text-muted mb-5">
-                Cancel anytime · 7-day refund · Start immediately
-              </p>
-
-              <a
-                href={config.checkoutUrl}
-                onClick={onCheckoutCta}
-                className="flex items-center justify-center w-full py-4 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-base transition-colors shadow-lg shadow-gold/25 mb-2"
-              >
-                {btnLabel}
-              </a>
-              <p className="text-xs text-text-muted text-center">Secure checkout · Instant access</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── 3. PART 1 FREE PREVIEW ─────────────────────────────────────────── */}
+      {/* ── PART 1 FREE PREVIEW ───────────────────────────────────────────────── */}
       <section ref={part1Ref} id="part1" className="bg-surface px-5 py-10 border-t border-border">
         <div className="max-w-xl mx-auto">
           <div className="text-center mb-6">
@@ -265,39 +208,38 @@ export function InfluencerDirectLanding({ config }: { config: InfluencerDirectCo
             </p>
             <h2 className="text-xl font-bold text-text mb-1">Watch Part 1 Free</h2>
             <p className="text-sm text-text-secondary">
-              Not ready yet? Get a real taste of the course before you start the full program.
+              Watch a real lesson before you start.
             </p>
           </div>
 
           {/*
-            InlinePart1Video already renders its own "Start the Full Course" CTA inside.
-            Do NOT add another button here — it stacks duplicate CTAs on mobile.
+            InlinePart1Video renders its own "Start the Full Course" CTA internally.
+            Do not add another button after it.
           */}
           <InlinePart1Video
             checkoutUrl={config.checkoutUrl}
             checkoutLabel="Start the Full Course"
             onVideoStart={onPart1Started}
-            onUnlockClick={onCheckoutCta}
+            onUnlockClick={onPart1CheckoutClick}
           />
         </div>
       </section>
 
-      {/* ── Mobile sticky CTA ──────────────────────────────────────────────────
-          Only shown on mobile (sm:hidden) and only when no CTA section is in view.
-          Bottom padding on the wrapper div above ensures this never covers content.
-      ──────────────────────────────────────────────────────────────────────── */}
+      {/* ── Mobile sticky CTA (only when no CTA section is visible) ──────────── */}
       {showSticky && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pt-3 bg-background/95 backdrop-blur-sm border-t border-border sm:hidden"
+        <div
+          className="fixed bottom-0 left-0 right-0 z-50 px-4 pt-3 bg-background/95 backdrop-blur-sm border-t border-border sm:hidden"
           style={{ paddingBottom: "calc(16px + env(safe-area-inset-bottom))" }}
         >
           <div className="flex items-center gap-3">
             <p className="flex-1 text-xs text-text-muted truncate min-w-0">{price}</p>
-            <button
-              onClick={scrollToOffer}
+            <a
+              href={config.checkoutUrl}
+              onClick={onCheckoutClick}
               className="flex-shrink-0 py-3 px-6 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-sm transition-colors"
             >
               Start the Course
-            </button>
+            </a>
           </div>
         </div>
       )}
