@@ -194,7 +194,7 @@ export function InfluencerDirectLanding({ config, part1Preview }: InfluencerDire
                 key={plan}
                 href={planUrl(config.checkoutUrl, plan)}
                 onClick={() => safeTrack(config.creator, "influencer_primary_cta_click", { plan })}
-                className="flex flex-col justify-between rounded-xl border border-border/60 bg-surface/60 p-3 hover:border-gold/50 hover:bg-surface transition-colors"
+                className="flex flex-col justify-between rounded-xl border border-border bg-surface/60 p-3 hover:border-gold/60 hover:bg-surface transition-colors"
               >
                 <span className="text-[10px] font-bold text-gold uppercase tracking-widest leading-tight">{label}</span>
                 <span className="text-xl font-extrabold text-text mt-1 leading-none">{planPrice}</span>
