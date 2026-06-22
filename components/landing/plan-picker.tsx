@@ -125,23 +125,17 @@ export function PlanPicker({
                         : "border-border bg-surface/40 hover:border-gold/40",
                     ].join(" ")}
                   >
-                    {/* Badge */}
-                    {plan.badge && (
-                      <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-background border border-gold text-gold">
-                        {plan.badge}
+                    {/* Top row: label + checkmark */}
+                    <div className="flex items-center justify-between w-full mb-0.5">
+                      <span className={`text-[10px] font-bold uppercase tracking-widest ${isSelected ? "text-gold" : "text-text-muted"}`}>
+                        {plan.label}
                       </span>
-                    )}
-
-                    {/* Checkmark when selected */}
-                    {isSelected && (
-                      <span className="absolute top-2 right-2 w-4 h-4 rounded-full bg-gold flex items-center justify-center flex-shrink-0">
-                        <Check className="w-2.5 h-2.5 text-ink stroke-[3]" />
-                      </span>
-                    )}
-
-                    <span className={`text-[10px] font-bold uppercase tracking-widest mb-0.5 ${isSelected ? "text-gold" : "text-text-muted"}`}>
-                      {plan.label}
-                    </span>
+                      {isSelected && (
+                        <span className="w-4 h-4 rounded-full bg-gold flex items-center justify-center flex-shrink-0">
+                          <Check className="w-2.5 h-2.5 text-ink stroke-[3]" />
+                        </span>
+                      )}
+                    </div>
 
                     <span className="text-xl font-extrabold text-text leading-none">
                       {plan.price}
@@ -151,6 +145,13 @@ export function PlanPicker({
                     <span className="text-[11px] text-text-muted mt-1 leading-tight">
                       {plan.detail}
                     </span>
+
+                    {/* Badge — inline at the bottom */}
+                    {plan.badge && (
+                      <span className="mt-2 self-start px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border border-gold text-gold">
+                        {plan.badge}
+                      </span>
+                    )}
                   </button>
                 );
               })}
