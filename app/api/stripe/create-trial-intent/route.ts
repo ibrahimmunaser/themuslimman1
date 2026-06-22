@@ -170,9 +170,11 @@ export async function POST(request: NextRequest) {
         },
       },
       payment_settings: {
-        // Restrict to methods that support off-session recurring charges.
-        // Cash App Pay cannot be saved for future subscription billing — exclude it.
-        payment_method_types: ["card", "link"],
+        // Card only — Link excluded for the same reason as monthly subscriptions:
+        // Link causes Stripe.js to inject setup_future_usage: off_session on
+        // confirmPayment/confirmSetup, which mismatches the subscription intent's
+        // setup_future_usage: null and results in a Stripe 400 rejection.
+        payment_method_types: ["card"],
         save_default_payment_method: "on_subscription",
       },
       expand: ["pending_setup_intent"],
@@ -244,7 +246,7 @@ export async function POST(request: NextRequest) {
       );
       const si = await stripe.setupIntents.create({
         customer: customerId,
-        payment_method_types: ["card", "link"],
+        payment_method_types: ["card"],
         usage: "off_session",
         metadata: { userId: user.id, subscriptionId: subscription.id },
       });

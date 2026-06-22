@@ -9,6 +9,9 @@ interface Props {
 // Old family checkout — permanently redirect to unified /checkout page.
 export default async function FamilyCheckoutPage({ searchParams }: Props) {
   const params = await searchParams;
-  const billing = params.cycle === "monthly" ? "monthly" : "lifetime";
-  redirect(`/checkout?plan=family&billing=${billing}`);
+  // Use plan=family-monthly / plan=family-lifetime directly.
+  // plan=family&billing=monthly would be silently broken: LEGACY_PLAN_ALIASES["family"]
+  // maps to "family-lifetime", ignoring the billing param entirely.
+  const plan = params.cycle === "monthly" ? "family-monthly" : "family-lifetime";
+  redirect(`/checkout?plan=${plan}`);
 }
