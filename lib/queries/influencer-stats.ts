@@ -4,17 +4,18 @@ import { prisma } from "@/lib/db";
  * Fetch all succeeded purchases attributed to a creator.
  *
  * Primary match:   Purchase.creator = creator  (set by Stripe metadata / webhook)
- * Fallback match:  Purchase.user.email appears in any InfluencerEvent for this
- *                  creator (covers purchases made before the server-side creator
- *                  attribution was wired up, as long as the checkout tracker
- *                  fired a payment_succeeded event with the user's email).
+ * Fallback match:  A `payment_succeeded` InfluencerEvent was recorded for THIS
+ *                  creator with the user's email.  This event fires at the moment
+ *                  of payment and carries the exact creator that drove the session,
+ *                  so it is safe to use without risking cross-influencer pollution.
  *
  * Duplicates are removed so a purchase that matches both criteria is counted once.
  */
 export async function getInfluencerPurchases(creator: string) {
-  // Collect every distinct email that appeared in a funnel event for this creator.
+  // Only use emails from `payment_succeeded` events — fired once, for the exact
+  // creator that was active in the checkout session.
   const emailRows = await prisma.influencerEvent.findMany({
-    where:  { creator, userEmail: { not: null } },
+    where:  { creator, eventType: "payment_succeeded", userEmail: { not: null } },
     select: { userEmail: true },
     distinct: ["userEmail"],
   });
@@ -50,11 +51,11 @@ export async function getInfluencerPurchases(creator: string) {
 
 /**
  * Fetch all subscriptions attributed to a creator, with the same
- * email-based fallback as getInfluencerPurchases.
+ * payment_succeeded-scoped email fallback as getInfluencerPurchases.
  */
 export async function getInfluencerSubscriptions(creator: string) {
   const emailRows = await prisma.influencerEvent.findMany({
-    where:  { creator, userEmail: { not: null } },
+    where:  { creator, eventType: "payment_succeeded", userEmail: { not: null } },
     select: { userEmail: true },
     distinct: ["userEmail"],
   });
