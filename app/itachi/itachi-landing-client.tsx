@@ -2,8 +2,8 @@
 
 import { InfluencerDirectLanding } from "@/components/funnel/influencer-direct-landing";
 
-const UTM = "utm_source=tiktok&utm_medium=influencer&utm_campaign=seerah_launch&utm_content=itachi";
 const SRC = "source=itachi";
+const UTM = "utm_source=tiktok&utm_medium=influencer&utm_campaign=seerah_launch&utm_content=itachi";
 
 export default function ItachiLandingClient() {
   return (
@@ -12,9 +12,8 @@ export default function ItachiLandingClient() {
         creator:     "itachi",
         creatorName: "Itachi",
         heroHeadline: "You came from Itachi.",
-        discountLabel: "Your Itachi discount is already applied — 20% off lifetime access.",
-        discountCode: "ITACHI20",
-        checkoutUrl:  `/checkout?plan=individual-lifetime&${SRC}&promo=ITACHI20&${UTM}`,
+        price:        "$4.99/month",
+        checkoutUrl:  `/checkout?plan=individual-monthly&${SRC}&${UTM}`,
         watchFreeUrl: "/watch-free",
         eventPrefix:  "itachi_",
         checkoutButtonLabel: "Start Now",

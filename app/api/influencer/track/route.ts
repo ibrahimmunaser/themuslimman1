@@ -68,16 +68,27 @@ const KNOWN_EVENT_TYPES = [
   // Checkout detailed analytics
   "payment_method_available",
   "checkout_field_interacted",
-  // Influencer direct landing page events (no-quiz flow)
+  // Influencer direct landing page events
   "influencer_page_view",
   "influencer_primary_cta_click",
   "influencer_part1_cta_click",
   "influencer_part1_started",
+  "influencer_offer_viewed",
   "influencer_checkout_viewed",
   "influencer_checkout_cta_click",
+  "influencer_checkout_started",
+  "influencer_purchase_completed",
   "optional_quiz_started",
   "optional_quiz_completed",
   // Homepage funnel
+  "homepage_view",
+  "homepage_primary_cta_click",
+  "homepage_pricing_viewed",
+  "homepage_part1_cta_click",
+  "homepage_part1_bottom_cta_click",
+  "homepage_checkout_started",
+  "homepage_purchase_completed",
+  // Legacy homepage events (kept for backward compat)
   "hero_watch_part1_clicked",
   "hero_score_clicked",
   "hero_card_watch_clicked",

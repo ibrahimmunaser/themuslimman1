@@ -2,8 +2,8 @@
 
 import { InfluencerDirectLanding } from "@/components/funnel/influencer-direct-landing";
 
-const UTM = "utm_source=direct&utm_medium=promo&utm_campaign=seerah_launch&utm_content=annarbor";
 const SRC = "source=annarbor";
+const UTM = "utm_source=direct&utm_medium=promo&utm_campaign=seerah_launch&utm_content=annarbor";
 
 export default function AnnArborFunnelClient() {
   return (
@@ -12,10 +12,8 @@ export default function AnnArborFunnelClient() {
         creator:     "annarbor",
         creatorName: "Ann Arbor Students",
         heroHeadline: "A Special Offer for Ann Arbor Students.",
-        discountLabel: "Your Ann Arbor student discount is already applied.",
-        discountCode: "ANNARBOR29",
-        price:        "$29 one-time",
-        checkoutUrl:  `/checkout?plan=individual-lifetime&${SRC}&promo=ANNARBOR29&${UTM}`,
+        price:        "$4.99/month",
+        checkoutUrl:  `/checkout?plan=individual-monthly&${SRC}&${UTM}`,
         watchFreeUrl: `/watch-free?${SRC}`,
         eventPrefix:  "annarbor_",
         checkoutButtonLabel: "Start Now",

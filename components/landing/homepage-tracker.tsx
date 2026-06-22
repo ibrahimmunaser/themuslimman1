@@ -59,6 +59,7 @@ function send(eventType: string, extra?: Record<string, unknown>) {
 export function HomepageTracker() {
   useEffect(() => {
     send("landing_page_view");
+    send("homepage_view");
 
     // ── Click delegation ────────────────────────────────────────────────────
     function handleClick(e: MouseEvent) {
@@ -102,6 +103,7 @@ export function HomepageTracker() {
 
     observeOnce("preview", "part1_preview_viewed");
     observeOnce("pricing", "pricing_viewed");
+    observeOnce("pricing", "homepage_pricing_viewed");
 
     // ── Part 1 video play ────────────────────────────────────────────────────
     let part1PlayFired = false;

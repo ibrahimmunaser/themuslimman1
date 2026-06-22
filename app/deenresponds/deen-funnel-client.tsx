@@ -2,8 +2,8 @@
 
 import { InfluencerDirectLanding } from "@/components/funnel/influencer-direct-landing";
 
-const UTM = "utm_source=youtube&utm_medium=influencer&utm_campaign=seerah_launch&utm_content=deenresponds";
 const SRC = "source=deenresponds";
+const UTM = "utm_source=youtube&utm_medium=influencer&utm_campaign=seerah_launch&utm_content=deenresponds";
 
 export default function DeenFunnelClient() {
   return (
@@ -12,7 +12,6 @@ export default function DeenFunnelClient() {
         creator:     "deenresponds",
         creatorName: "Deen Responds",
         heroHeadline: "You came from Deen Responds.",
-        discountLabel: "The Deen Responds discount is already applied.",
         price:        "$4.99/month",
         checkoutUrl:  `/checkout?plan=individual-monthly&${SRC}&${UTM}`,
         watchFreeUrl: "/watch-free",
