@@ -81,10 +81,10 @@ export interface InfluencerDirectLandingProps {
 // ── Plan grid data ─────────────────────────────────────────────────────────────
 
 const PLAN_CARDS = [
-  { plan: "individual-monthly",  label: "Monthly",         price: "$4.99/mo", detail: "1 person"           },
-  { plan: "individual-lifetime", label: "Lifetime",        price: "$49",      detail: "1 person · one-time" },
-  { plan: "family-monthly",      label: "Family Monthly",  price: "$9.99/mo", detail: "Up to 5 members"     },
-  { plan: "family-lifetime",     label: "Family Lifetime", price: "$99",      detail: "5 members · one-time" },
+  { plan: "individual-monthly",  label: "Monthly",         price: "$4.99/mo", detail: "1 person",            border: "border-sky-500/70",     label_color: "text-sky-400"    },
+  { plan: "individual-lifetime", label: "Lifetime",        price: "$49",      detail: "1 person · one-time", border: "border-amber-400/80",   label_color: "text-amber-400"  },
+  { plan: "family-monthly",      label: "Family Monthly",  price: "$9.99/mo", detail: "Up to 5 members",     border: "border-violet-500/70",  label_color: "text-violet-400" },
+  { plan: "family-lifetime",     label: "Family Lifetime", price: "$99",      detail: "5 members · one-time", border: "border-emerald-500/70", label_color: "text-emerald-400" },
 ] as const;
 
 /** Swap the `plan` search param while preserving all other params (source, UTMs…). */
@@ -189,14 +189,14 @@ export function InfluencerDirectLanding({ config, part1Preview }: InfluencerDire
 
           {/* Plan grid */}
           <div className="grid grid-cols-2 gap-2 mb-4">
-            {PLAN_CARDS.map(({ plan, label, price: planPrice, detail }) => (
+            {PLAN_CARDS.map(({ plan, label, price: planPrice, detail, border, label_color }) => (
               <a
                 key={plan}
                 href={planUrl(config.checkoutUrl, plan)}
                 onClick={() => safeTrack(config.creator, "influencer_primary_cta_click", { plan })}
-                className="flex flex-col justify-between rounded-xl border border-border bg-surface/60 p-3 hover:border-gold/60 hover:bg-surface transition-colors"
+                className={`flex flex-col justify-between rounded-xl border-2 ${border} bg-surface/60 p-3 hover:bg-surface transition-colors`}
               >
-                <span className="text-[10px] font-bold text-gold uppercase tracking-widest leading-tight">{label}</span>
+                <span className={`text-[10px] font-bold ${label_color} uppercase tracking-widest leading-tight`}>{label}</span>
                 <span className="text-xl font-extrabold text-text mt-1 leading-none">{planPrice}</span>
                 <span className="text-[11px] text-text-muted mt-1 leading-tight">{detail}</span>
               </a>
