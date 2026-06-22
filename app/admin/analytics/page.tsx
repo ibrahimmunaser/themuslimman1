@@ -10,10 +10,13 @@ import {
   BarChart2,
   CreditCard,
   RefreshCw,
+  Mail,
+  Send,
+  UserX,
 } from "lucide-react";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
-import { getAdminAnalyticsData } from "@/lib/queries/admin";
+import { getAdminAnalyticsData, getAdminEmailStats } from "@/lib/queries/admin";
 
 export const metadata = { title: "Analytics | Admin", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
@@ -52,7 +55,10 @@ const PLAN_LABELS: Record<string, string> = {
 
 export default async function AdminAnalyticsPage() {
   await requireAdmin();
-  const data = await getAdminAnalyticsData();
+  const [data, emailStats] = await Promise.all([
+    getAdminAnalyticsData(),
+    getAdminEmailStats(),
+  ]);
   const { funnel, planStats, subStats, recentAbandoned } = data;
 
   const activeSubCount = subStats.filter((s) => s.status === "active" || s.status === "trialing").reduce((a, b) => a + b.count, 0);
@@ -297,8 +303,112 @@ export default async function AdminAnalyticsPage() {
         )}
       </section>
 
-      {/* Footer link to students page */}
-      <div className="flex justify-end">
+      {/* Email overview */}
+      <section>
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+          <h2 className="text-sm font-semibold text-text-muted uppercase tracking-wider flex items-center gap-2">
+            <Mail className="w-4 h-4 text-gold" /> Email Overview
+          </h2>
+          <Link
+            href="/admin/email-automation"
+            className="inline-flex items-center gap-1 text-xs text-gold hover:text-gold-light transition-colors"
+          >
+            Go to Email Automation <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+
+        {/* KPI cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+          <div className="rounded-2xl border border-border bg-surface p-5">
+            <div className="flex items-center gap-2 mb-2">
+              <UserX className="w-4 h-4 text-amber-400" />
+              <p className="text-xs text-text-muted uppercase tracking-wider">Non-purchasers</p>
+            </div>
+            <p className="text-3xl font-bold text-amber-400 tabular-nums">{emailStats.totalNonPurchasers}</p>
+            <p className="text-xs text-text-muted mt-1">verified, no plan</p>
+          </div>
+
+          <div className="rounded-2xl border border-border bg-surface p-5">
+            <div className="flex items-center gap-2 mb-2">
+              <Send className="w-4 h-4 text-blue-400" />
+              <p className="text-xs text-text-muted uppercase tracking-wider">Emails sent</p>
+            </div>
+            <p className="text-3xl font-bold text-blue-400 tabular-nums">{emailStats.totalSent}</p>
+            <p className="text-xs text-text-muted mt-1">across all flows</p>
+          </div>
+
+          <div className="rounded-2xl border border-border bg-surface p-5">
+            <div className="flex items-center gap-2 mb-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+              <p className="text-xs text-text-muted uppercase tracking-wider">Coverage</p>
+            </div>
+            <p className="text-3xl font-bold text-emerald-400 tabular-nums">{emailStats.coveragePct}%</p>
+            <p className="text-xs text-text-muted mt-1">non-purchasers contacted</p>
+          </div>
+
+          <div className="rounded-2xl border border-border bg-surface p-5">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle className="w-4 h-4 text-red-400" />
+              <p className="text-xs text-text-muted uppercase tracking-wider">Unreached</p>
+            </div>
+            <p className={`text-3xl font-bold tabular-nums ${emailStats.uncontacted > 0 ? "text-red-400" : "text-text"}`}>
+              {emailStats.uncontacted}
+            </p>
+            <p className="text-xs text-text-muted mt-1">never emailed</p>
+          </div>
+        </div>
+
+        {/* Breakdown row */}
+        <div className="rounded-xl border border-border bg-surface p-4">
+          <p className="text-xs text-text-muted uppercase tracking-wider mb-3">Breakdown by flow</p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+            <div>
+              <p className="text-text-muted text-xs mb-0.5">Auto Step 1</p>
+              <p className="font-semibold text-text tabular-nums">{emailStats.autoSentStep1}</p>
+            </div>
+            <div>
+              <p className="text-text-muted text-xs mb-0.5">Auto Step 2</p>
+              <p className="font-semibold text-text tabular-nums">{emailStats.autoSentStep2}</p>
+            </div>
+            <div>
+              <p className="text-text-muted text-xs mb-0.5">Manual Outreach</p>
+              <p className="font-semibold text-text tabular-nums">{emailStats.manualSent}</p>
+            </div>
+            <div>
+              <p className="text-text-muted text-xs mb-0.5">Failed (all flows)</p>
+              <p className={`font-semibold tabular-nums ${emailStats.totalFailed > 0 ? "text-red-400" : "text-text"}`}>
+                {emailStats.totalFailed}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {emailStats.uncontacted > 0 && (
+          <div className="mt-3 rounded-xl border border-amber-500/25 bg-amber-500/5 p-4 flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0" />
+              <p className="text-sm text-amber-300">
+                <strong>{emailStats.uncontacted}</strong> non-purchasers have never received an email.
+              </p>
+            </div>
+            <Link
+              href="/admin/email-automation"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-xs font-semibold transition-colors flex-shrink-0"
+            >
+              Send emails <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        )}
+      </section>
+
+      {/* Footer links */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <Link
+          href="/admin/email-automation"
+          className="inline-flex items-center gap-1.5 text-sm text-gold hover:text-gold-light transition-colors"
+        >
+          View Email Automation <ArrowRight className="w-4 h-4" />
+        </Link>
         <Link
           href="/admin/students"
           className="inline-flex items-center gap-1.5 text-sm text-gold hover:text-gold-light transition-colors"

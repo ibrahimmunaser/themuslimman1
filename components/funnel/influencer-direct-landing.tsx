@@ -2,7 +2,6 @@
 
 import { useRef, useEffect, useState, useCallback } from "react";
 import { nanoid } from "nanoid";
-import { InlinePart1Video } from "@/components/landing/inline-part1-video";
 
 // ── Analytics ──────────────────────────────────────────────────────────────────
 
@@ -73,9 +72,15 @@ export interface InfluencerDirectConfig {
   discountLabel?: string;
 }
 
+export interface InfluencerDirectLandingProps {
+  config: InfluencerDirectConfig;
+  /** Server-rendered Part 1 preview (all asset tabs). If omitted, falls back to video-only card. */
+  part1Preview?: React.ReactNode;
+}
+
 // ── Component ──────────────────────────────────────────────────────────────────
 
-export function InfluencerDirectLanding({ config }: { config: InfluencerDirectConfig }) {
+export function InfluencerDirectLanding({ config, part1Preview }: InfluencerDirectLandingProps) {
   const heroRef  = useRef<HTMLElement>(null);
   const part1Ref = useRef<HTMLDivElement>(null);
 
@@ -122,14 +127,6 @@ export function InfluencerDirectLanding({ config }: { config: InfluencerDirectCo
 
   const onCheckoutClick = useCallback(() => {
     safeTrack(config.creator, "influencer_primary_cta_click");
-  }, [config.creator]);
-
-  const onPart1Started = useCallback(() => {
-    safeTrack(config.creator, "influencer_part1_started");
-  }, [config.creator]);
-
-  const onPart1CheckoutClick = useCallback(() => {
-    safeTrack(config.creator, "influencer_checkout_cta_click");
   }, [config.creator]);
 
   return (
@@ -201,27 +198,18 @@ export function InfluencerDirectLanding({ config }: { config: InfluencerDirectCo
 
       {/* ── PART 1 FREE PREVIEW ───────────────────────────────────────────────── */}
       <section ref={part1Ref} id="part1" className="bg-surface px-5 py-10 border-t border-border">
-        <div className="max-w-xl mx-auto">
+        <div className="max-w-3xl mx-auto">
           <div className="text-center mb-6">
             <p className="text-xs font-bold text-gold uppercase tracking-widest mb-1.5">
               Free · No Signup Required
             </p>
-            <h2 className="text-xl font-bold text-text mb-1">Watch Part 1 Free</h2>
+            <h2 className="text-xl font-bold text-text mb-1">Try the Full Lesson — Part 1</h2>
             <p className="text-sm text-text-secondary">
-              Watch a real lesson before you start.
+              Video, reading, slides, mind map, flashcards, and quiz. All free, no signup.
             </p>
           </div>
 
-          {/*
-            InlinePart1Video renders its own "Start the Full Course" CTA internally.
-            Do not add another button after it.
-          */}
-          <InlinePart1Video
-            checkoutUrl={config.checkoutUrl}
-            checkoutLabel="Start the Full Course"
-            onVideoStart={onPart1Started}
-            onUnlockClick={onPart1CheckoutClick}
-          />
+          {part1Preview}
         </div>
       </section>
 

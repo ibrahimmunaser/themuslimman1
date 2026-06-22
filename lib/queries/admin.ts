@@ -194,6 +194,65 @@ export async function getAdminAnalyticsData() {
   };
 }
 
+export async function getAdminEmailStats() {
+  const ACTIVE_SUB = ["active", "trialing"] as const;
+
+  const [
+    totalNonPurchasers,
+    uncontacted,
+    autoSentStep1,
+    autoSentStep2,
+    manualSent,
+    autoFailed,
+    manualFailed,
+  ] = await Promise.all([
+    // All verified students with no paid access
+    prisma.user.count({
+      where: {
+        role: "student",
+        emailVerified: true,
+        isActive: true,
+        hasPaid: false,
+        subscriptions: { none: { status: { in: [...ACTIVE_SUB] } } },
+      },
+    }),
+    // Never contacted by any email flow
+    prisma.user.count({
+      where: {
+        role: "student",
+        emailVerified: true,
+        isActive: true,
+        hasPaid: false,
+        subscriptions: { none: { status: { in: [...ACTIVE_SUB] } } },
+        emailAutomationEvents: { none: {} },
+        emailOutreachLogs:     { none: {} },
+      },
+    }),
+    prisma.emailAutomationEvent.count({ where: { flowType: "NO_PLAN_RECOVERY", step: 1, status: "SENT" } }),
+    prisma.emailAutomationEvent.count({ where: { flowType: "NO_PLAN_RECOVERY", step: 2, status: "SENT" } }),
+    prisma.emailOutreachLog.count({ where: { status: "SENT" } }),
+    prisma.emailAutomationEvent.count({ where: { status: "FAILED" } }),
+    prisma.emailOutreachLog.count({ where: { status: "FAILED" } }),
+  ]);
+
+  const totalSent      = autoSentStep1 + autoSentStep2 + manualSent;
+  const contacted      = totalNonPurchasers - uncontacted;
+  const coveragePct    = totalNonPurchasers > 0
+    ? Math.round((contacted / totalNonPurchasers) * 100)
+    : 0;
+
+  return {
+    totalNonPurchasers,
+    uncontacted,
+    totalSent,
+    autoSentStep1,
+    autoSentStep2,
+    manualSent,
+    totalFailed: autoFailed + manualFailed,
+    coveragePct,
+  };
+}
+
 export async function getAdminOrdersData() {
   const startTime = Date.now();
   console.log(`[ADMIN_QUERY] getAdminOrdersData: Starting orders data fetch...`);

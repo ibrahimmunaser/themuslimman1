@@ -1,9 +1,9 @@
 "use client";
 
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { Video, FileText, Layers, Map, Layers2, HelpCircle } from "lucide-react";
+import { Video, FileText, Layers, Map, Layers2, HelpCircle, Image } from "lucide-react";
 
-type ModeId = "watch" | "read" | "slides" | "mindmap" | "flashcards" | "quiz";
+type ModeId = "watch" | "read" | "slides" | "mindmap" | "infographic" | "flashcards" | "quiz";
 
 interface NavButton {
   id: ModeId;
@@ -12,12 +12,13 @@ interface NavButton {
 }
 
 const NAV_BUTTONS: NavButton[] = [
-  { id: "watch",      label: "Video",      icon: Video },
-  { id: "read",       label: "Reading",    icon: FileText },
-  { id: "slides",     label: "Slides",     icon: Layers },
-  { id: "mindmap",    label: "Mind Map",   icon: Map },
-  { id: "flashcards", label: "Flashcards", icon: Layers2 },
-  { id: "quiz",       label: "Quiz",       icon: HelpCircle },
+  { id: "watch",       label: "Video",        icon: Video },
+  { id: "slides",      label: "Slides",       icon: Layers },
+  { id: "infographic", label: "Infographics", icon: Image },
+  { id: "read",        label: "Reading",      icon: FileText },
+  { id: "mindmap",     label: "Mind Map",     icon: Map },
+  { id: "flashcards",  label: "Flashcards",   icon: Layers2 },
+  { id: "quiz",        label: "Quiz",         icon: HelpCircle },
 ];
 
 export function Part1PreviewNav() {
