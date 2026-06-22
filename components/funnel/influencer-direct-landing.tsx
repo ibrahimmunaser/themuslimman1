@@ -78,6 +78,26 @@ export interface InfluencerDirectLandingProps {
   part1Preview?: React.ReactNode;
 }
 
+// ── Plan grid data ─────────────────────────────────────────────────────────────
+
+const PLAN_CARDS = [
+  { plan: "individual-monthly",  label: "Monthly",         price: "$4.99/mo", detail: "1 person"           },
+  { plan: "individual-lifetime", label: "Lifetime",        price: "$49",      detail: "1 person · one-time" },
+  { plan: "family-monthly",      label: "Family Monthly",  price: "$9.99/mo", detail: "Up to 5 members"     },
+  { plan: "family-lifetime",     label: "Family Lifetime", price: "$99",      detail: "5 members · one-time" },
+] as const;
+
+/** Swap the `plan` search param while preserving all other params (source, UTMs…). */
+function planUrl(baseUrl: string, plan: string): string {
+  try {
+    const u = new URL(baseUrl, "https://x.com");
+    u.searchParams.set("plan", plan);
+    return u.pathname + u.search;
+  } catch {
+    return baseUrl;
+  }
+}
+
 // ── Component ──────────────────────────────────────────────────────────────────
 
 export function InfluencerDirectLanding({ config, part1Preview }: InfluencerDirectLandingProps) {
@@ -167,8 +187,21 @@ export function InfluencerDirectLanding({ config, part1Preview }: InfluencerDire
             </p>
           </div>
 
-          {/* Price */}
-          <p className="text-3xl font-extrabold text-text tracking-tight mb-4">{price}</p>
+          {/* Plan grid */}
+          <div className="grid grid-cols-2 gap-2 mb-4">
+            {PLAN_CARDS.map(({ plan, label, price: planPrice, detail }) => (
+              <a
+                key={plan}
+                href={planUrl(config.checkoutUrl, plan)}
+                onClick={() => safeTrack(config.creator, "influencer_primary_cta_click", { plan })}
+                className="flex flex-col justify-between rounded-xl border border-border/60 bg-surface/60 p-3 hover:border-gold/50 hover:bg-surface transition-colors"
+              >
+                <span className="text-[10px] font-bold text-gold uppercase tracking-widest leading-tight">{label}</span>
+                <span className="text-xl font-extrabold text-text mt-1 leading-none">{planPrice}</span>
+                <span className="text-[11px] text-text-muted mt-1 leading-tight">{detail}</span>
+              </a>
+            ))}
+          </div>
 
           {/* Primary CTA */}
           <a
@@ -176,7 +209,7 @@ export function InfluencerDirectLanding({ config, part1Preview }: InfluencerDire
             onClick={onCheckoutClick}
             className="block w-full py-4 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-base text-center transition-colors shadow-lg shadow-gold/20 mb-3"
           >
-            {btnLabel}
+            {btnLabel} — {price}
           </a>
 
           {/* Secondary link */}
