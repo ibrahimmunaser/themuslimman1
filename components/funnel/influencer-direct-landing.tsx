@@ -81,8 +81,8 @@ export interface InfluencerDirectLandingProps {
 // ── Plan grid data ─────────────────────────────────────────────────────────────
 
 const PLAN_CARDS = [
-  { plan: "individual-monthly",  label: "Monthly",         price: "$4.99/mo", detail: "1 person"            },
-  { plan: "individual-lifetime", label: "Lifetime",        price: "$49",      detail: "1 person · one-time" },
+  { plan: "individual-monthly",  label: "Individual Monthly",  price: "$4.99/mo", detail: "1 person"            },
+  { plan: "individual-lifetime", label: "Individual Lifetime", price: "$49",      detail: "1 person · one-time" },
   { plan: "family-monthly",      label: "Family Monthly",  price: "$9.99/mo", detail: "Up to 5 members"     },
   { plan: "family-lifetime",     label: "Family Lifetime", price: "$99",      detail: "5 members · one-time" },
 ] as const;
