@@ -2032,11 +2032,10 @@ function CheckoutPageContent({
                 </div>
               )}
 
-              {/* Deferred intent: Elements renders immediately without clientSecret.
-                  The form collects payment details upfront; we create the server-side
-                  intent only when the user clicks the pay button. key remounts the form
-                  on plan-type changes (audience/billing) but NOT on price changes —
-                  those are handled via elements.update() inside CheckoutForm. */}
+              {/* Lifetime uses deferred intent (mode + amount) so the form renders
+                  immediately. Monthly MUST use clientSecret-based Elements — deferred
+                  mode causes Stripe.js to inject setup_future_usage: off_session, which
+                  conflicts with subscription invoice PIs (setup_future_usage: null). */}
               {(() => {
                 const code = appliedCoupon?.code ?? resolvedPromoParam ?? "";
                 const cfg = code ? getCreatorPromoConfig(code) : null;
@@ -2052,26 +2051,46 @@ function CheckoutPageContent({
                     borderRadius: "12px",
                   },
                 };
-                // Stripe discriminated union: "setup" mode must not include amount.
-                // NOTE: Do NOT pass paymentMethodTypes: ["card", "link"] for monthly.
-                // Including "link" causes Stripe.js to inject setup_future_usage: "off_session"
-                // into confirmPayment, which conflicts with subscription invoice PaymentIntents
-                // that have setup_future_usage: null — Stripe rejects the mismatch with a 400.
-                // Link is already suppressed in PaymentElement via wallets: { link: "never" }.
-                const elementsOptions = billing === "trial"
-                  ? { mode: "setup" as const, currency: "usd", appearance: elementsAppearance }
-                  : {
-                      mode: "payment" as const,
-                      amount: finalPrice > 0 ? finalPrice : 1, // must be > 0 for payment mode
-                      currency: "usd",
-                      appearance: elementsAppearance,
-                    };
+                const isMonthlyBilling = billing === "monthly";
+
+                // Wait for subscription clientSecret before mounting Elements for monthly.
+                if (isMonthlyBilling && !clientSecret) {
+                  return (
+                    <div className="flex flex-col items-center justify-center py-10 gap-3">
+                      <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
+                      <p className="text-sm text-zinc-400 text-center">
+                        {loading
+                          ? "Setting up secure checkout…"
+                          : isAuthenticated
+                            ? "Preparing payment form…"
+                            : "Enter your email above to continue"}
+                      </p>
+                    </div>
+                  );
+                }
+
+                const elementsOptions =
+                  billing === "trial"
+                    ? { mode: "setup" as const, currency: "usd", appearance: elementsAppearance }
+                    : isMonthlyBilling
+                    ? { clientSecret: clientSecret!, appearance: elementsAppearance }
+                    : {
+                        mode: "payment" as const,
+                        amount: finalPrice > 0 ? finalPrice : 1,
+                        currency: "usd",
+                        appearance: elementsAppearance,
+                      };
+
+                const elementsKey = isMonthlyBilling
+                  ? `${audience}-${billing}-${clientSecret}`
+                  : `${audience}-${billing}`;
+
                 // Default to "homepage" so organic checkout visitors are also tracked
               const trackerCreator = checkoutCreator ?? initialSourceParam ?? "homepage";
               return (
                   <Elements
                     stripe={stripePromise}
-                    key={`${audience}-${billing}`}
+                    key={elementsKey}
                     options={elementsOptions}
                   >
                     <CheckoutFunnelTracker
