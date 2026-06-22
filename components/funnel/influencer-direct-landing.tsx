@@ -197,7 +197,7 @@ export function InfluencerDirectLanding({ config, part1Preview }: InfluencerDire
               { heading: "Lifetime Plan", plans: LIFETIME_PLANS },
             ].map(({ heading, plans }) => (
               <div key={heading}>
-                <p className="text-xs font-semibold text-text-muted uppercase tracking-widest mb-1.5 text-center">{heading}</p>
+                <p className="text-xs font-semibold text-gold uppercase tracking-widest mb-1.5 text-center">{heading}</p>
                 <div className="grid grid-cols-2 gap-2">
                   {plans.map(({ plan, label, price: planPrice, detail }) => (
                     <a
