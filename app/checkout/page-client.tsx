@@ -2055,15 +2055,15 @@ function CheckoutPageContent({
 
                 // Wait for subscription clientSecret before mounting Elements for monthly.
                 if (isMonthlyBilling && !clientSecret) {
+                  // Only show a spinner once the user has triggered checkout initialisation
+                  // (i.e. they are authenticated / loading). Before that, show nothing so the
+                  // page doesn't feel broken while the user is still filling in their email.
+                  if (!loading && !isAuthenticated) return null;
                   return (
                     <div className="flex flex-col items-center justify-center py-10 gap-3">
                       <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
                       <p className="text-sm text-zinc-400 text-center">
-                        {loading
-                          ? "Setting up secure checkout…"
-                          : isAuthenticated
-                            ? "Preparing payment form…"
-                            : "Enter your email above to continue"}
+                        {loading ? "Setting up secure checkout…" : "Preparing payment form…"}
                       </p>
                     </div>
                   );
