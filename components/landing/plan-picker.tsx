@@ -127,7 +127,7 @@ export function PlanPicker({
                   >
                     {/* Badge */}
                     {plan.badge && (
-                      <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-background border border-gold/30 text-gold/80">
+                      <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-background border border-gold text-gold">
                         {plan.badge}
                       </span>
                     )}
