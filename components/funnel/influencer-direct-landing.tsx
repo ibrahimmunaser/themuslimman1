@@ -77,32 +77,58 @@ export interface InfluencerDirectConfig {
 // ── Component ──────────────────────────────────────────────────────────────────
 
 export function InfluencerDirectLanding({ config }: { config: InfluencerDirectConfig }) {
-  const offerRef  = useRef<HTMLDivElement>(null);
-  const part1Ref  = useRef<HTMLDivElement>(null);
-  const [showSticky, setShowSticky]       = useState(false);
-  const [offerViewed, setOfferViewed]     = useState(false);
+  const heroRef  = useRef<HTMLElement>(null);
+  const offerRef = useRef<HTMLDivElement>(null);
+  const part1Ref = useRef<HTMLDivElement>(null);
+
+  // True once user scrolls past the initial hero fold
+  const [scrolledPast, setScrolledPast]         = useState(false);
+  // True when any primary CTA section is in the viewport
+  const [anyCTAVisible, setAnyCTAVisible]        = useState(true);
+  // Analytics: fire offer_viewed once
+  const [offerViewed, setOfferViewed]            = useState(false);
 
   const price    = config.price ?? "$4.99/month";
   const btnLabel = config.checkoutButtonLabel ?? "Start Now";
 
-  // Page view + sticky scroll listener
+  // Sticky bar is visible only when: user has scrolled past hero AND no CTA section is in view
+  const showSticky = scrolledPast && !anyCTAVisible;
+
+  // ── Page view + scroll-past-hero detection ─────────────────────────────────
   useEffect(() => {
     safeTrack(config.creator, "influencer_page_view");
-    const onScroll = () => setShowSticky(window.scrollY > 280);
+
+    const onScroll = () => setScrolledPast(window.scrollY > 300);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, [config.creator]);
 
-  // Fire influencer_offer_viewed once
+  // ── Watch all CTA sections — hide sticky whenever any is in view ────────────
   useEffect(() => {
-    if (!offerRef.current) return;
-    const obs = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting && !offerViewed) {
-        setOfferViewed(true);
-        safeTrack(config.creator, "influencer_offer_viewed");
-      }
-    }, { threshold: 0.2 });
-    obs.observe(offerRef.current);
+    const sections = [heroRef.current, offerRef.current, part1Ref.current].filter(
+      (el): el is HTMLElement => el !== null
+    );
+    if (sections.length === 0) return;
+
+    // Per-element visibility map — sticky hides the moment any element intersects
+    const visible = new Map<Element, boolean>(sections.map((el) => [el, false]));
+
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => visible.set(e.target, e.isIntersecting));
+        setAnyCTAVisible(Array.from(visible.values()).some(Boolean));
+
+        // Fire offer_viewed analytics once
+        const offerEntry = entries.find((e) => e.target === offerRef.current);
+        if (offerEntry?.isIntersecting && !offerViewed) {
+          setOfferViewed(true);
+          safeTrack(config.creator, "influencer_offer_viewed");
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    sections.forEach((el) => obs.observe(el));
     return () => obs.disconnect();
   }, [config.creator, offerViewed]);
 
@@ -125,10 +151,14 @@ export function InfluencerDirectLanding({ config }: { config: InfluencerDirectCo
   }, [config.creator]);
 
   return (
-    <div className="min-h-screen bg-background text-text">
+    <div
+      className="min-h-screen bg-background text-text"
+      // Add bottom padding when sticky bar is shown so it never covers content
+      style={showSticky ? { paddingBottom: "calc(72px + env(safe-area-inset-bottom))" } : undefined}
+    >
 
       {/* ── 1. HERO ────────────────────────────────────────────────────────── */}
-      <section className="bg-gradient-to-b from-surface to-background px-5 pt-12 pb-10">
+      <section ref={heroRef} className="bg-gradient-to-b from-surface to-background px-5 pt-12 pb-10">
         <div className="max-w-xl mx-auto">
 
           {/* Source badge */}
@@ -142,7 +172,7 @@ export function InfluencerDirectLanding({ config }: { config: InfluencerDirectCo
             {config.heroHeadline}
           </h1>
 
-          {/* Compact pain + solution */}
+          {/* Pain + solution */}
           <div className="space-y-3 text-base text-text-secondary leading-relaxed mb-5">
             <p>
               Most Muslims know scattered stories from the life of the Prophet ﷺ. But if we had
@@ -239,31 +269,29 @@ export function InfluencerDirectLanding({ config }: { config: InfluencerDirectCo
             </p>
           </div>
 
+          {/*
+            InlinePart1Video already renders its own "Start the Full Course" CTA inside.
+            Do NOT add another button here — it stacks duplicate CTAs on mobile.
+          */}
           <InlinePart1Video
             checkoutUrl={config.checkoutUrl}
             checkoutLabel="Start the Full Course"
             onVideoStart={onPart1Started}
             onUnlockClick={onCheckoutCta}
           />
-
-          <div className="mt-5 text-center">
-            <button
-              onClick={scrollToOffer}
-              className="inline-flex items-center justify-center py-3.5 px-7 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-sm transition-colors shadow-md shadow-gold/20"
-            >
-              Start the Full Course
-            </button>
-          </div>
         </div>
       </section>
 
-      {/* ── Mobile sticky CTA ──────────────────────────────────────────────── */}
+      {/* ── Mobile sticky CTA ──────────────────────────────────────────────────
+          Only shown on mobile (sm:hidden) and only when no CTA section is in view.
+          Bottom padding on the wrapper div above ensures this never covers content.
+      ──────────────────────────────────────────────────────────────────────── */}
       {showSticky && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-4 pt-3 bg-background/95 backdrop-blur-sm border-t border-border sm:hidden">
+        <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pt-3 bg-background/95 backdrop-blur-sm border-t border-border sm:hidden"
+          style={{ paddingBottom: "calc(16px + env(safe-area-inset-bottom))" }}
+        >
           <div className="flex items-center gap-3">
-            <div className="flex-1 min-w-0">
-              <p className="text-xs text-text-muted truncate">{price}</p>
-            </div>
+            <p className="flex-1 text-xs text-text-muted truncate min-w-0">{price}</p>
             <button
               onClick={scrollToOffer}
               className="flex-shrink-0 py-3 px-6 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-sm transition-colors"
