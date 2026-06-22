@@ -80,11 +80,14 @@ export interface InfluencerDirectLandingProps {
 
 // ── Plan grid data ─────────────────────────────────────────────────────────────
 
-const PLAN_CARDS = [
-  { plan: "individual-monthly",  label: "Individual Monthly",  price: "$4.99/mo", detail: "1 person"            },
-  { plan: "individual-lifetime", label: "Individual Lifetime", price: "$49",      detail: "1 person · one-time" },
-  { plan: "family-monthly",      label: "Family Monthly",  price: "$9.99/mo", detail: "Up to 5 members"     },
-  { plan: "family-lifetime",     label: "Family Lifetime", price: "$99",      detail: "5 members · one-time" },
+const MONTHLY_PLANS = [
+  { plan: "individual-monthly", label: "Individual", price: "$4.99/mo", detail: "1 person"        },
+  { plan: "family-monthly",     label: "Family",     price: "$9.99/mo", detail: "Up to 5 members" },
+] as const;
+
+const LIFETIME_PLANS = [
+  { plan: "individual-lifetime", label: "Individual", price: "$49", detail: "1 person · one-time" },
+  { plan: "family-lifetime",     label: "Family",     price: "$99", detail: "5 members · one-time" },
 ] as const;
 
 /** Swap the `plan` search param while preserving all other params (source, UTMs…). */
@@ -188,18 +191,28 @@ export function InfluencerDirectLanding({ config, part1Preview }: InfluencerDire
           </div>
 
           {/* Plan grid */}
-          <div className="grid grid-cols-2 gap-2 mb-4">
-            {PLAN_CARDS.map(({ plan, label, price: planPrice, detail }) => (
-              <a
-                key={plan}
-                href={planUrl(config.checkoutUrl, plan)}
-                onClick={() => safeTrack(config.creator, "influencer_primary_cta_click", { plan })}
-                className="flex flex-col justify-between rounded-xl border-2 border-gold bg-surface/60 p-3 hover:bg-surface transition-colors"
-              >
-                <span className="text-[10px] font-bold text-gold uppercase tracking-widest leading-tight">{label}</span>
-                <span className="text-xl font-extrabold text-text mt-1 leading-none">{planPrice}</span>
-                <span className="text-[11px] text-text-muted mt-1 leading-tight">{detail}</span>
-              </a>
+          <div className="space-y-3 mb-4">
+            {[
+              { heading: "Monthly Plan", plans: MONTHLY_PLANS },
+              { heading: "Lifetime Plan", plans: LIFETIME_PLANS },
+            ].map(({ heading, plans }) => (
+              <div key={heading}>
+                <p className="text-xs font-semibold text-text-muted uppercase tracking-widest mb-1.5">{heading}</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {plans.map(({ plan, label, price: planPrice, detail }) => (
+                    <a
+                      key={plan}
+                      href={planUrl(config.checkoutUrl, plan)}
+                      onClick={() => safeTrack(config.creator, "influencer_primary_cta_click", { plan })}
+                      className="flex flex-col justify-between rounded-xl border-2 border-gold bg-surface/60 p-3 hover:bg-surface transition-colors"
+                    >
+                      <span className="text-[10px] font-bold text-gold uppercase tracking-widest leading-tight">{label}</span>
+                      <span className="text-xl font-extrabold text-text mt-1 leading-none">{planPrice}</span>
+                      <span className="text-[11px] text-text-muted mt-1 leading-tight">{detail}</span>
+                    </a>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
 
