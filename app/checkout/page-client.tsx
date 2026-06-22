@@ -40,22 +40,89 @@ interface AppliedCoupon {
  * the user to retry or try Apple Pay / Google Pay.
  */
 function friendlyPaymentError(err: { code?: string; decline_code?: string; message?: string }): string {
+  const code         = err.code ?? "";
+  const declineCode  = err.decline_code ?? "";
+  const msgLower     = (err.message ?? "").toLowerCase();
+
+  // ── 3DS / authentication failures ────────────────────────────────────────
   const authCodes = new Set([
     "payment_intent_authentication_failure",
     "authentication_required",
     "card_authentication_required",
   ]);
   const isAuthFailure =
-    (err.code && authCodes.has(err.code)) ||
-    (err.decline_code && authCodes.has(err.decline_code)) ||
-    err.message?.toLowerCase().includes("authentication") ||
-    err.message?.toLowerCase().includes("3d secure") ||
-    err.message?.toLowerCase().includes("3ds");
+    authCodes.has(code) ||
+    authCodes.has(declineCode) ||
+    msgLower.includes("authentication") ||
+    msgLower.includes("3d secure") ||
+    msgLower.includes("3ds");
 
   if (isAuthFailure) {
     return "Your bank could not verify this payment. Please try again, use a different card, or use Apple Pay / Google Pay if available.";
   }
-  return err.message ?? "Payment failed. Please try again.";
+
+  // ── Bank blocked / international transaction ──────────────────────────────
+  // "do_not_honor" is the most common decline for international cards (e.g. AU banks
+  // that block cross-border online transactions by default).
+  if (
+    declineCode === "do_not_honor" ||
+    declineCode === "transaction_not_allowed" ||
+    declineCode === "card_not_supported" ||
+    declineCode === "service_not_allowed"
+  ) {
+    return "Your bank declined this payment. This often happens when your bank blocks international or online transactions. Please contact your bank to enable these, then try again — or use a different card or Apple Pay / Google Pay.";
+  }
+
+  // ── Insufficient funds ───────────────────────────────────────────────────
+  if (declineCode === "insufficient_funds") {
+    return "Your card has insufficient funds. Please use a different card.";
+  }
+
+  // ── Expired card ─────────────────────────────────────────────────────────
+  if (code === "expired_card" || declineCode === "expired_card") {
+    return "Your card has expired. Please use a different card.";
+  }
+
+  // ── Wrong CVC / number ───────────────────────────────────────────────────
+  if (code === "incorrect_cvc" || declineCode === "incorrect_cvc") {
+    return "Your card's security code (CVV/CVC) is incorrect. Please double-check the 3-digit code on the back of your card.";
+  }
+  if (code === "incorrect_number" || code === "invalid_number") {
+    return "Your card number is invalid. Please double-check all 16 digits and try again.";
+  }
+
+  // ── Too many attempts ────────────────────────────────────────────────────
+  if (declineCode === "card_velocity_exceeded") {
+    return "Too many payment attempts on this card. Please wait a few minutes and try again, or use a different card.";
+  }
+
+  // ── Generic / unknown decline — keep Stripe's message, add guidance ───────
+  const base = err.message ?? "Your payment was declined.";
+  return `${base} Please try again, use a different card, or contact support at support@themuslimman.com.`;
+}
+
+/**
+ * Converts Stripe elements.submit() validation errors into actionable messages.
+ * These fire before any server call — purely client-side card field validation.
+ */
+function friendlySubmitError(err: { code?: string; message?: string }): string {
+  switch (err.code) {
+    case "incomplete_number":
+      return "Your card number is incomplete. Please enter all digits on your card.";
+    case "invalid_number":
+      return "Your card number appears to be invalid. Please double-check the number and try again.";
+    case "incomplete_expiry":
+      return "Your card's expiration date is incomplete.";
+    case "invalid_expiry_year_past":
+      return "Your card's expiration year is in the past. Please use a different card.";
+    case "incomplete_cvc":
+      return "Your card's security code (CVV/CVC) is incomplete.";
+    case "incomplete_zip":
+      return "Please enter your card's billing postal code.";
+    default:
+      // Fall back to Stripe's own message — it's usually descriptive enough.
+      return err.message ?? "Please check your card details and try again.";
+  }
 }
 
 /** Derive the canonical plan key from audience + billing. */
@@ -181,7 +248,19 @@ function CheckoutForm({
     logStage("payment_started", { full_name_present: fullNamePresent, email_prefilled: emailPresent });
     logStage("payment_submitted", { full_name_present: fullNamePresent, email_prefilled: emailPresent });
 
-    // ── Step 1: Ensure account + intent exist (deferred pattern) ──────────────
+    // ── Step 1: Validate card details first (Stripe deferred intent pattern) ──
+    // Per Stripe docs, elements.submit() must be called BEFORE creating the server
+    // intent. It validates card fields, locks the UI, and collects any required
+    // user actions (e.g. BECS OTP). Doing this first gives immediate feedback if
+    // the card number is incomplete — before any network calls.
+    const { error: submitError } = await elements.submit();
+    if (submitError) {
+      setError(friendlySubmitError(submitError));
+      setProcessing(false);
+      return;
+    }
+
+    // ── Step 2: Ensure account + intent exist ─────────────────────────────────
     let clientSecret: string;
     try {
       const name  = authFormRef.current?.fullName ?? "";
@@ -204,7 +283,7 @@ function CheckoutForm({
       return;
     }
 
-    // ── Step 2: Pre-flight guards ──────────────────────────────────────────────
+    // ── Step 3: Pre-flight guard — skip charge if user already has access ──────
     try {
       const sessionRes = await fetch("/api/stripe/check-access");
       if (sessionRes.status === 401) {
@@ -222,14 +301,6 @@ function CheckoutForm({
       }
     } catch {
       // Network error — proceed; Stripe handles idempotency.
-    }
-
-    // ── Step 3: Validate Elements (card number, expiry, etc.) ─────────────────
-    const { error: submitError } = await elements.submit();
-    if (submitError) {
-      setError(submitError.message ?? "An error occurred");
-      setProcessing(false);
-      return;
     }
 
     try {
@@ -1956,13 +2027,17 @@ function CheckoutPageContent({
                   },
                 };
                 // Stripe discriminated union: "setup" mode must not include amount.
+                // NOTE: Do NOT pass paymentMethodTypes: ["card", "link"] for monthly.
+                // Including "link" causes Stripe.js to inject setup_future_usage: "off_session"
+                // into confirmPayment, which conflicts with subscription invoice PaymentIntents
+                // that have setup_future_usage: null — Stripe rejects the mismatch with a 400.
+                // Link is already suppressed in PaymentElement via wallets: { link: "never" }.
                 const elementsOptions = billing === "trial"
                   ? { mode: "setup" as const, currency: "usd", appearance: elementsAppearance }
                   : {
                       mode: "payment" as const,
                       amount: finalPrice > 0 ? finalPrice : 1, // must be > 0 for payment mode
                       currency: "usd",
-                      ...(billing === "monthly" ? { paymentMethodTypes: ["card", "link"] } : {}),
                       appearance: elementsAppearance,
                     };
                 // Default to "homepage" so organic checkout visitors are also tracked

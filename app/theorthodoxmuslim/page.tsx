@@ -5,9 +5,9 @@ import OrthodoxFunnelClient from "./orthodox-funnel-client";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Complete Seerah — The Orthodox Muslim",
+  title: "Complete Seerah Course — The Orthodox Muslim",
   description:
-    "Do you know the Prophet's ﷺ life in order — or only scattered stories? Take the free 2-minute Seerah Checkup and find out.",
+    "Recommended by The Orthodox Muslim. Start the complete 100-part Seerah course. Watch Part 1 free — no signup required. Discount already applied.",
   robots: { index: false, follow: false },
 };
 

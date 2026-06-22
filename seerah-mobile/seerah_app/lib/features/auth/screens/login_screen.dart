@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/app_logo.dart';
+import '../../../core/widgets/ui_kit.dart';
 import '../widgets/auth_field.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -27,6 +31,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
+  void _openForgotPassword(BuildContext context) {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => _ForgotPasswordScreen(),
+    ));
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() { _loading = true; _error = null; });
@@ -44,8 +54,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
+      body: AppGradientBackground(
+        child: SafeArea(
+          child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Form(
             key: _formKey,
@@ -56,22 +67,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 // Logo / Brand
                 Column(
                   children: [
-                    Container(
-                      width: 64, height: 64,
-                      decoration: BoxDecoration(
-                        color: AppColors.goldFaded,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.gold, width: 1.5),
-                      ),
-                      child: const Icon(Icons.book_outlined, color: AppColors.gold, size: 28),
-                    ),
+                    const AppLogo(size: 48),
                     const SizedBox(height: 20),
-                    Text('The Muslim Man',
+                    Text('Sign in to Seerah',
                       style: Theme.of(context).textTheme.displayMedium,
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 6),
-                    Text('Sign in to your account',
+                    Text('Use your email to continue learning',
                       style: Theme.of(context).textTheme.bodyMedium,
                       textAlign: TextAlign.center,
                     ),
@@ -101,7 +104,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
-                    onPressed: () {},
+                    onPressed: () => _openForgotPassword(context),
                     child: const Text('Forgot password?'),
                   ),
                 ),
@@ -111,9 +114,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.error.withOpacity(0.1),
+                      color: AppColors.error.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppColors.error.withOpacity(0.3)),
+                      border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
                     ),
                     child: Text(_error!, style: const TextStyle(color: AppColors.error, fontSize: 13)),
                   ),
@@ -145,6 +148,66 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ),
           ),
         ),
+      ),
+    ),
+    );
+  }
+}
+
+class _ForgotPasswordScreen extends StatefulWidget {
+  @override
+  State<_ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
+}
+
+class _ForgotPasswordScreenState extends State<_ForgotPasswordScreen> {
+  late final WebViewController _ctrl;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setBackgroundColor(AppColors.background)
+      ..setNavigationDelegate(NavigationDelegate(
+        onPageStarted: (_) { if (mounted) setState(() => _loading = true); },
+        onPageFinished: (_) async {
+          if (mounted) setState(() => _loading = false);
+          await _ctrl.runJavaScript('''
+            (function() {
+              var s = document.createElement('style');
+              s.textContent = '[aria-controls="mobile-drawer"] { display: none !important; } aside { display: none !important; } main { margin-left: 0 !important; width: 100% !important; }';
+              document.head.appendChild(s);
+            })();
+          ''');
+        },
+      ))
+      ..loadRequest(Uri.parse('${AppConstants.baseUrl}/change-password'));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.surface,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: const Text('Forgot Password',
+          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(height: 1, color: AppColors.border),
+        ),
+      ),
+      body: Stack(
+        children: [
+          WebViewWidget(controller: _ctrl),
+          if (_loading)
+            const Center(child: CircularProgressIndicator(color: AppColors.gold)),
+        ],
       ),
     );
   }

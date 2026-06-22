@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/app_logo.dart';
 
 class LandingScreen extends StatelessWidget {
   const LandingScreen({super.key});
@@ -31,14 +32,7 @@ class LandingScreen extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('The Muslim Man',
-                        style: TextStyle(
-                          color: AppColors.gold,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
+                      const AppWordmark(height: 36),
                       TextButton(
                         onPressed: () => context.go('/login'),
                         child: const Text('Sign In'),
@@ -62,7 +56,7 @@ class LandingScreen extends StatelessWidget {
                               decoration: BoxDecoration(
                                 color: AppColors.goldFaded,
                                 borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: AppColors.gold.withOpacity(0.4)),
+                                border: Border.all(color: AppColors.gold.withValues(alpha: 0.4)),
                               ),
                               child: const Text('100 Parts • Complete Seerah',
                                 style: TextStyle(color: AppColors.gold, fontSize: 12, fontWeight: FontWeight.w500),
@@ -111,10 +105,13 @@ class LandingScreen extends StatelessWidget {
                         // Features
                         Column(
                           children: [
-                            _FeatureRow(icon: Icons.play_circle_outline, title: 'Watch', desc: 'Video lessons for every part'),
-                            _FeatureRow(icon: Icons.menu_book_outlined, title: 'Read', desc: 'Briefings, study guides & facts'),
-                            _FeatureRow(icon: Icons.style_outlined, title: 'Flashcards', desc: 'Memory review across 3 difficulty levels'),
-                            _FeatureRow(icon: Icons.quiz_outlined, title: 'Quiz', desc: 'Test your knowledge after each part'),
+                            _FeatureRow(icon: Icons.play_circle_outline, title: 'Video', desc: 'Full video lessons for every part'),
+                            _FeatureRow(icon: Icons.headphones_outlined, title: 'Audio', desc: 'Listen on the go, offline-ready'),
+                            _FeatureRow(icon: Icons.article_outlined, title: 'Briefings', desc: 'In-depth study notes & key facts'),
+                            _FeatureRow(icon: Icons.view_carousel_outlined, title: 'Slides', desc: 'Visual slide decks & infographics'),
+                            _FeatureRow(icon: Icons.account_tree_outlined, title: 'Mindmaps', desc: 'Visual overviews of every lesson'),
+                            _FeatureRow(icon: Icons.style_outlined, title: 'Flashcards', desc: 'Spaced-repetition memory review'),
+                            _FeatureRow(icon: Icons.quiz_outlined, title: 'Quizzes', desc: 'Test your knowledge after each part'),
                           ],
                         ).animate().fadeIn(delay: 350.ms, duration: 500.ms),
 
@@ -220,9 +217,11 @@ class _FeatureRow extends StatelessWidget {
               Text(title, style: const TextStyle(
                 color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.w600,
               )),
-              Text(desc, style: const TextStyle(
-                color: AppColors.textSecondary, fontSize: 13,
-              )),
+              Text(desc,
+                style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
             ],
           ),
         ],

@@ -163,11 +163,11 @@ class _QuizTabState extends ConsumerState<QuizTab> {
                       if (_submitted) {
                         if (isCorrect) {
                           borderColor = AppColors.success;
-                          bgColor = AppColors.success.withOpacity(0.1);
+                          bgColor = AppColors.success.withValues(alpha: 0.1);
                           textColor = AppColors.success;
                         } else if (isSelected) {
                           borderColor = AppColors.error;
-                          bgColor = AppColors.error.withOpacity(0.1);
+                          bgColor = AppColors.error.withValues(alpha: 0.1);
                           textColor = AppColors.error;
                         }
                       } else if (isSelected) {
@@ -193,8 +193,8 @@ class _QuizTabState extends ConsumerState<QuizTab> {
                                   width: 28, height: 28,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    color: (_submitted && isCorrect) ? AppColors.success.withOpacity(0.2)
-                                        : (_submitted && isSelected) ? AppColors.error.withOpacity(0.2)
+                                    color: (_submitted && isCorrect) ? AppColors.success.withValues(alpha: 0.2)
+                                        : (_submitted && isSelected) ? AppColors.error.withValues(alpha: 0.2)
                                         : isSelected ? AppColors.goldFaded
                                         : AppColors.surface,
                                     border: Border.all(color: borderColor),
@@ -229,7 +229,7 @@ class _QuizTabState extends ConsumerState<QuizTab> {
                         decoration: BoxDecoration(
                           color: AppColors.goldFaded,
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: AppColors.gold.withOpacity(0.3)),
+                          border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
                         ),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -284,17 +284,16 @@ class _ResultsScreen extends StatelessWidget {
     final pct = (score / total * 100).round();
     final passed = pct >= 80;
 
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(32),
+      child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
               width: 100, height: 100,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: (passed ? AppColors.success : AppColors.error).withOpacity(0.1),
+                color: (passed ? AppColors.success : AppColors.error).withValues(alpha: 0.1),
                 border: Border.all(
                   color: passed ? AppColors.success : AppColors.error, width: 2,
                 ),
@@ -337,7 +336,6 @@ class _ResultsScreen extends StatelessWidget {
             ),
           ],
         ),
-      ),
     );
   }
 }

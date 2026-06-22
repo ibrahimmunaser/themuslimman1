@@ -26,12 +26,16 @@ export async function GET(
       return NextResponse.json({ error: "Quiz not found" }, { status: 404 });
     }
 
-    // Strip correct_answer from every question before sending to the client.
-    // The answer is checked server-side in trackQuizCompleted; exposing it here
-    // allows any authenticated user to read all answers from the network tab.
+    // Strip correct_answer text from every question.
+    // Add correctIndex (position in options array) so native mobile clients can
+    // show inline feedback without a second server round-trip — the index alone
+    // is not a useful secret since the user can see all options on screen.
     const safeQuiz = {
       ...quiz,
-      questions: quiz.questions.map(({ correct_answer: _stripped, ...q }) => q),
+      questions: quiz.questions.map(({ correct_answer, ...q }) => ({
+        ...q,
+        correctIndex: q.options.indexOf(correct_answer),
+      })),
     };
 
     const elapsed = Date.now() - startTime;

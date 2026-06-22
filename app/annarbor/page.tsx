@@ -5,9 +5,9 @@ import AnnArborFunnelClient from "./annarbor-funnel-client";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Seerah Checkup — Ann Arbor Students",
+  title: "Complete Seerah Course — Ann Arbor Students",
   description:
-    "Do you know the Prophet's ﷺ life in order — or only scattered stories? Take the free 2-minute Seerah Checkup and find out.",
+    "A special offer for Ann Arbor students. Start the complete 100-part Seerah course. Watch Part 1 free — no signup required. Discount already applied.",
   robots: { index: false, follow: false },
 };
 

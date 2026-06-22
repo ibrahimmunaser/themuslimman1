@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/app_logo.dart';
+import '../../../core/widgets/ui_kit.dart';
 import '../widgets/auth_field.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
@@ -44,8 +46,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
+      body: AppGradientBackground(
+        child: SafeArea(
+          child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Form(
             key: _formKey,
@@ -55,15 +58,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 const SizedBox(height: 64),
                 Column(
                   children: [
-                    Container(
-                      width: 64, height: 64,
-                      decoration: BoxDecoration(
-                        color: AppColors.goldFaded,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.gold, width: 1.5),
-                      ),
-                      child: const Icon(Icons.book_outlined, color: AppColors.gold, size: 28),
-                    ),
+                    const AppLogo(size: 48),
                     const SizedBox(height: 20),
                     Text('Create Account', style: Theme.of(context).textTheme.displayMedium, textAlign: TextAlign.center),
                     const SizedBox(height: 6),
@@ -101,9 +96,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.error.withOpacity(0.1),
+                      color: AppColors.error.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppColors.error.withOpacity(0.3)),
+                      border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
                     ),
                     child: Text(_error!, style: const TextStyle(color: AppColors.error, fontSize: 13)),
                   ),
@@ -141,6 +136,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
           ),
         ),
       ),
+    ),
     );
   }
 }

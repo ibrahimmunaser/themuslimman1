@@ -46,12 +46,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (!isLoggedIn && !isOnAuth && loc != '/landing') {
         return '/landing';
       }
-      // Logged-in on auth pages: route by access
-      if (isLoggedIn && isOnAuth) {
-        return '/dashboard';
-      }
-      // Logged-in on landing: go to dashboard
-      if (isLoggedIn && loc == '/landing') {
+      // Logged-in anywhere outside the main shell → go to dashboard
+      // (covers '/' splash, '/landing', and auth screens)
+      if (isLoggedIn && (isOnAuth || loc == '/' || loc == '/landing')) {
         return '/dashboard';
       }
       return null;
@@ -114,7 +111,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/part/:partNumber',
         builder: (ctx, state) {
           final n = int.tryParse(state.pathParameters['partNumber'] ?? '') ?? 1;
-          return PartScreen(partNumber: n.clamp(1, 100));
+          final tab = state.uri.queryParameters['tab'];
+          return PartScreen(partNumber: n.clamp(1, 100), initialTab: tab);
         },
       ),
       GoRoute(

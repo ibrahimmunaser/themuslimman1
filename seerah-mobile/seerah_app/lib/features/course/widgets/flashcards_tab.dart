@@ -192,8 +192,9 @@ class _FlipCardState extends State<_FlipCard> with SingleTickerProviderStateMixi
     return AnimatedBuilder(
       animation: _anim,
       builder: (ctx, _) {
-        final showFront = _anim.value < 0.5;
-        final angle = showFront ? _anim.value * math.pi : (_anim.value - 1) * math.pi;
+        final showFront = _anim.value <= 0.5;
+        // Single 0→π sweep: front rotates away, back counter-rotates by π to face forward
+        final angle = _anim.value * math.pi;
 
         return Transform(
           transform: Matrix4.identity()
@@ -227,39 +228,47 @@ class _CardFace extends StatelessWidget {
         color: isQuestion ? AppColors.card : AppColors.goldFaded,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isQuestion ? AppColors.border : AppColors.gold.withOpacity(0.5),
+          color: isQuestion ? AppColors.border : AppColors.gold.withValues(alpha: 0.5),
           width: isQuestion ? 1 : 1.5,
         ),
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            isQuestion ? 'QUESTION' : 'ANSWER',
-            style: TextStyle(
-              color: isQuestion ? AppColors.textMuted : AppColors.gold,
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1.5,
+      child: LayoutBuilder(
+        builder: (ctx, constraints) => SingleChildScrollView(
+          padding: const EdgeInsets.all(0),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  isQuestion ? 'QUESTION' : 'ANSWER',
+                  style: TextStyle(
+                    color: isQuestion ? AppColors.textMuted : AppColors.gold,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  text,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                    height: 1.5,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  isQuestion ? 'Tap to reveal answer' : '',
+                  style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 20),
-          Text(
-            text,
-            style: TextStyle(
-              color: isQuestion ? AppColors.textPrimary : AppColors.textPrimary,
-              fontSize: 18,
-              fontWeight: FontWeight.w500,
-              height: 1.5,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 20),
-          Text(
-            isQuestion ? 'Tap to reveal answer' : '',
-            style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -321,7 +330,7 @@ class _FlipButton extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: AppColors.goldFaded,
-          border: Border.all(color: AppColors.gold.withOpacity(0.5)),
+          border: Border.all(color: AppColors.gold.withValues(alpha: 0.5)),
         ),
         child: Icon(
           showing ? Icons.visibility_off_outlined : Icons.flip,

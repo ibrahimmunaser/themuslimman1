@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/network/cookie_helper.dart' as cookies;
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/ui_kit.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -16,7 +18,7 @@ class ProfileScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Profile')),
-      body: ListView(
+      body: AppGradientBackground(child: ListView(
         padding: const EdgeInsets.all(20),
         children: [
           // Avatar & info
@@ -53,10 +55,10 @@ class ProfileScreen extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                   decoration: BoxDecoration(
-                    color: auth.hasAccess ? AppColors.success.withOpacity(0.1) : AppColors.goldFaded,
+                    color: auth.hasAccess ? AppColors.success.withValues(alpha: 0.1) : AppColors.goldFaded,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: auth.hasAccess ? AppColors.success.withOpacity(0.5) : AppColors.gold.withOpacity(0.4),
+                      color: auth.hasAccess ? AppColors.success.withValues(alpha: 0.5) : AppColors.gold.withValues(alpha: 0.4),
                     ),
                   ),
                   child: Text(
@@ -79,12 +81,12 @@ class ProfileScreen extends ConsumerWidget {
           _SettingsItem(
             icon: Icons.lock_outline,
             label: 'Change Password',
-            onTap: () => _launchUrl('${AppConstants.baseUrl}/change-password'),
+            onTap: () => _launchUrl('${AppConstants.baseUrl}/change-password', context),
           ),
           _SettingsItem(
             icon: Icons.receipt_outlined,
             label: 'Billing & Subscription',
-            onTap: () => _launchUrl('${AppConstants.baseUrl}/billing'),
+            onTap: () => _launchUrl('${AppConstants.baseUrl}/billing', context),
           ),
 
           const SizedBox(height: 20),
@@ -93,12 +95,12 @@ class ProfileScreen extends ConsumerWidget {
           _SettingsItem(
             icon: Icons.help_outline,
             label: 'Help & FAQ',
-            onTap: () => _launchUrl('${AppConstants.baseUrl}/help'),
+            onTap: () => _launchUrl('${AppConstants.baseUrl}/help', context),
           ),
           _SettingsItem(
             icon: Icons.contact_support_outlined,
             label: 'Contact Us',
-            onTap: () => _launchUrl('${AppConstants.baseUrl}/contact'),
+            onTap: () => _launchUrl('${AppConstants.baseUrl}/contact', context),
           ),
 
           const SizedBox(height: 20),
@@ -107,12 +109,12 @@ class ProfileScreen extends ConsumerWidget {
           _SettingsItem(
             icon: Icons.policy_outlined,
             label: 'Privacy Policy',
-            onTap: () => _launchUrl('${AppConstants.baseUrl}/privacy'),
+            onTap: () => _launchUrl('${AppConstants.baseUrl}/privacy', context),
           ),
           _SettingsItem(
             icon: Icons.gavel_outlined,
             label: 'Terms of Service',
-            onTap: () => _launchUrl('${AppConstants.baseUrl}/terms'),
+            onTap: () => _launchUrl('${AppConstants.baseUrl}/terms', context),
           ),
 
           const SizedBox(height: 32),
@@ -136,7 +138,7 @@ class ProfileScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 40),
         ],
-      ),
+      )),
     );
   }
 
@@ -150,9 +152,24 @@ class ProfileScreen extends ConsumerWidget {
     return 'U';
   }
 
-  Future<void> _launchUrl(String url) async {
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) await launchUrl(uri, mode: LaunchMode.externalApplication);
+  void _launchUrl(String url, [BuildContext? context]) {
+    if (context == null || !context.mounted) return;
+    final title = _titleForUrl(url);
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => _InAppWebScreen(url: url, title: title),
+      ),
+    );
+  }
+
+  String _titleForUrl(String url) {
+    if (url.contains('change-password')) return 'Change Password';
+    if (url.contains('billing'))         return 'Billing & Subscription';
+    if (url.contains('help'))            return 'Help & FAQ';
+    if (url.contains('contact'))         return 'Contact Us';
+    if (url.contains('privacy'))         return 'Privacy Policy';
+    if (url.contains('terms'))           return 'Terms of Service';
+    return 'themuslimman.com';
   }
 
   Future<void> _confirmLogout(BuildContext context, WidgetRef ref) async {
@@ -177,6 +194,104 @@ class ProfileScreen extends ConsumerWidget {
     }
   }
 }
+
+// ── In-app WebView screen ─────────────────────────────────────────────────────
+
+class _InAppWebScreen extends StatefulWidget {
+  final String url;
+  final String title;
+  const _InAppWebScreen({required this.url, required this.title});
+
+  @override
+  State<_InAppWebScreen> createState() => _InAppWebScreenState();
+}
+
+class _InAppWebScreenState extends State<_InAppWebScreen> {
+  late final WebViewController _ctrl;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setBackgroundColor(AppColors.background)
+      ..setNavigationDelegate(NavigationDelegate(
+        onPageStarted: (_) { if (mounted) setState(() => _loading = true); },
+        onPageFinished: (_) async {
+          if (mounted) setState(() => _loading = false);
+          // Hide the desktop sidebar and the floating mobile "Menu" button so
+          // the page feels like a native app screen rather than a browser tab.
+          await _ctrl.runJavaScript('''
+            (function() {
+              var s = document.createElement('style');
+              s.textContent = [
+                /* Floating mobile Menu/Account trigger */
+                '[aria-controls="mobile-drawer"] { display: none !important; }',
+                /* Drawer overlay and the sidebar itself */
+                '#mobile-drawer, [aria-label="mobile-drawer"] { display: none !important; }',
+                /* Desktop sidebar (aside that is a flex sibling of main) */
+                'aside { display: none !important; }',
+                /* Let main fill the full width */
+                'main { margin-left: 0 !important; padding-left: 0 !important; width: 100% !important; }',
+                /* Remove any fixed-position overlay backdrop */
+                '.lg\\\\:hidden.fixed.inset-0 { display: none !important; }'
+              ].join(' ');
+              document.head.appendChild(s);
+            })();
+          ''');
+        },
+      ));
+    _injectCookiesAndLoad();
+  }
+
+  Future<void> _injectCookiesAndLoad() async {
+    // Copy the app's auth session cookies into the WebView so the user
+    // doesn't have to sign in again.
+    final jar = cookies.getCurrentCookies();
+    final cookieManager = WebViewCookieManager();
+    for (final entry in jar.entries) {
+      await cookieManager.setCookie(WebViewCookie(
+        name: entry.key,
+        value: entry.value,
+        domain: 'themuslimman.com',
+        path: '/',
+      ));
+    }
+    await _ctrl.loadRequest(Uri.parse(widget.url));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.surface,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(widget.title,
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+        centerTitle: false,
+        elevation: 0,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(height: 1, color: AppColors.border),
+        ),
+      ),
+      body: Stack(
+        children: [
+          WebViewWidget(controller: _ctrl),
+          if (_loading)
+            const Center(child: CircularProgressIndicator(color: AppColors.gold)),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 class _SectionHeader extends StatelessWidget {
   final String title;

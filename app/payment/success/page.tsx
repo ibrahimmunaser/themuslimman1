@@ -83,8 +83,9 @@ function PaymentSuccessPageContent() {
 
         if (Date.now() - start >= MAX_POLL_MS) {
           setError(
-            "Payment received. We're finishing setup — this usually takes a few seconds. " +
-              "Refresh the page or go to the dashboard. If access is missing, contact support."
+            "Your payment was received. We are still finishing setup — this usually takes a few seconds. " +
+              "Please refresh the page or go to your dashboard. " +
+              "If your access has not appeared within a few minutes, email us at support@themuslimman.com and we will fix it immediately."
           );
           setLoading(false);
           return;

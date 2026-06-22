@@ -5,9 +5,9 @@ import DeenFunnelClient from "./deen-funnel-client";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Complete Seerah — Deen Responds",
+  title: "Complete Seerah Course — Deen Responds",
   description:
-    "Do you know the Prophet's ﷺ life in order — or only scattered stories? Take the free 2-minute Seerah Checkup and find out. As recommended by Deen Responds.",
+    "Recommended by Deen Responds. Start the complete 100-part Seerah course. Watch Part 1 free — no signup required. Discount already applied.",
   robots: { index: false, follow: false },
 };
 

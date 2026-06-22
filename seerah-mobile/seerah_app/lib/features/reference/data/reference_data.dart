@@ -1,10 +1,40 @@
 // Reference Library data — mirrors the web app's reference sections
 
+import 'package:flutter/material.dart';
+
 class ReferenceSection {
   final String id;
   final String title;
   final String description;
   const ReferenceSection({required this.id, required this.title, required this.description});
+}
+
+IconData referenceSectionIcon(String id) {
+  switch (id) {
+    case 'family-household': return Icons.family_restroom_rounded;
+    case 'timeline':         return Icons.timeline_rounded;
+    case 'key-people':       return Icons.people_alt_rounded;
+    case 'tribes-lineage':   return Icons.account_tree_rounded;
+    case 'battles':          return Icons.shield_rounded;
+    case 'miracles':         return Icons.auto_awesome_rounded;
+    case 'important-terms':  return Icons.menu_book_rounded;
+    case 'places-maps':      return Icons.map_rounded;
+    default:                 return Icons.auto_stories_rounded;
+  }
+}
+
+Color referenceSectionColor(String id) {
+  switch (id) {
+    case 'family-household': return const Color(0xFFB08040);
+    case 'timeline':         return const Color(0xFF5A90B0);
+    case 'key-people':       return const Color(0xFF4AA87E);
+    case 'tribes-lineage':   return const Color(0xFF9A7AB8);
+    case 'battles':          return const Color(0xFFC06060);
+    case 'miracles':         return const Color(0xFFD4A017);
+    case 'important-terms':  return const Color(0xFF6B8E9B);
+    case 'places-maps':      return const Color(0xFF7A9E6B);
+    default:                 return const Color(0xFFD4A017);
+  }
 }
 
 const kReferenceSections = [

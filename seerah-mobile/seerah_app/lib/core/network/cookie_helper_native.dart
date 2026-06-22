@@ -36,6 +36,9 @@ Future<void> clearAllCookies() async {
   await _store.delete(key: _kStorageKey);
 }
 
+/// Returns a copy of the current in-memory cookie map for injection into WebView.
+Map<String, String> getCurrentCookies() => Map.unmodifiable(_mem);
+
 // ── Persistence helpers ───────────────────────────────────────────────────────
 
 /// Reads the JSON cookie blob from secure storage into [_mem].

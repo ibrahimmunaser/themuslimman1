@@ -5,93 +5,131 @@ import '../../../core/theme/app_colors.dart';
 class PartCard extends StatelessWidget {
   final PartModel part;
   final VoidCallback onTap;
-
-  /// Bug 5 fix: when [isLocked] is true a lock badge is shown and the card
-  /// is visually dimmed — free users cannot accidentally think paid parts are open.
   final bool isLocked;
+  /// When true, renders as a grouped-list row (no standalone card border).
+  /// Pass isFirst/isLast to round the appropriate corners.
+  final bool grouped;
+  final bool isFirst;
+  final bool isLast;
 
   const PartCard({
     super.key,
     required this.part,
     required this.onTap,
     this.isLocked = false,
+    this.grouped = false,
+    this.isFirst = false,
+    this.isLast = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final color = AppColors.forEra(part.era);
-    return Opacity(
-      opacity: isLocked ? 0.65 : 1.0,
+
+    final row = Material(
+      color: AppColors.card,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: AppColors.card,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.border),
-          ),
-          child: Row(
-            children: [
-              // Part number badge
-              Container(
-                width: 44, height: 44,
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: color.withOpacity(0.3)),
-                ),
-                child: Center(
-                  child: Text(
-                    '${part.partNumber}',
-                    style: TextStyle(
-                      color: color,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                    ),
+        borderRadius: grouped
+            ? BorderRadius.vertical(
+                top: isFirst ? const Radius.circular(14) : Radius.zero,
+                bottom: isLast ? const Radius.circular(14) : Radius.zero,
+              )
+            : BorderRadius.circular(14),
+        child: Opacity(
+          opacity: isLocked ? 0.72 : 1.0,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Container(
+                  width: 38, height: 38,
+                  decoration: BoxDecoration(
+                    color: isLocked
+                        ? AppColors.border.withValues(alpha: 0.2)
+                        : color.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Center(
+                    child: isLocked
+                        ? Icon(Icons.lock_rounded,
+                            color: color.withValues(alpha: 0.6), size: 16)
+                        : Text(
+                            '${part.partNumber}',
+                            style: TextStyle(
+                              color: color,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              // Title & subtitle
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      part.title,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        height: 1.3,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        part.title,
+                        style: TextStyle(
+                          color: isLocked
+                              ? AppColors.textSecondary
+                              : AppColors.textPrimary,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          height: 1.3,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      part.subtitle,
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 12,
+                      const SizedBox(height: 2),
+                      Text(
+                        part.subtitle,
+                        style: const TextStyle(
+                            color: AppColors.textMuted, fontSize: 12),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              if (isLocked)
-                const Icon(Icons.lock_outline, color: AppColors.textMuted, size: 18)
-              else
-                const Icon(Icons.chevron_right, color: AppColors.textMuted, size: 20),
-            ],
+                const SizedBox(width: 8),
+                Icon(
+                  isLocked
+                      ? Icons.lock_outline_rounded
+                      : Icons.chevron_right_rounded,
+                  color: AppColors.textMuted,
+                  size: 18,
+                ),
+              ],
+            ),
           ),
         ),
       ),
+    );
+
+    if (!grouped) {
+      // Standalone card (search results)
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: row,
+      );
+    }
+
+    // Grouped row — caller wraps in ClipRRect for the group container
+    return Column(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.vertical(
+            top: isFirst ? const Radius.circular(14) : Radius.zero,
+            bottom: isLast ? const Radius.circular(14) : Radius.zero,
+          ),
+          child: row,
+        ),
+        if (!isLast)
+          const Divider(
+              height: 1, thickness: 1, color: AppColors.border, indent: 66),
+      ],
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/ui_kit.dart';
 import '../data/reference_data.dart';
 
 class ReferenceDetailScreen extends StatelessWidget {
@@ -15,8 +16,12 @@ class ReferenceDetailScreen extends StatelessWidget {
     );
 
     return Scaffold(
-      appBar: AppBar(title: Text(section.title)),
-      body: _buildContent(context),
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        title: Text(section.title),
+      ),
+      body: AppGradientBackground(child: SafeArea(child: _buildContent(context))),
     );
   }
 
@@ -184,7 +189,7 @@ class _TimelineItem extends StatelessWidget {
                 if (!isLast)
                   Expanded(child: Container(
                     width: 1.5,
-                    color: AppColors.gold.withOpacity(0.2),
+                    color: AppColors.gold.withValues(alpha: 0.2),
                   )),
               ],
             ),
@@ -359,7 +364,7 @@ class _BattlesContent extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: AppColors.goldFaded,
                           borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: AppColors.gold.withOpacity(0.3)),
+                          border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
                         ),
                         child: Text(b.type,
                           style: const TextStyle(color: AppColors.gold, fontSize: 10, fontWeight: FontWeight.w600)),
@@ -433,9 +438,9 @@ class _MiraclesContent extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                         decoration: BoxDecoration(
-                          color: isQuran ? AppColors.goldFaded : AppColors.success.withOpacity(0.1),
+                          color: isQuran ? AppColors.goldFaded : AppColors.success.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: isQuran ? AppColors.gold.withOpacity(0.4) : AppColors.success.withOpacity(0.4)),
+                          border: Border.all(color: isQuran ? AppColors.gold.withValues(alpha: 0.4) : AppColors.success.withValues(alpha: 0.4)),
                         ),
                         child: Text(m.source,
                           style: TextStyle(
@@ -701,7 +706,7 @@ class _LineageCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.gold.withOpacity(0.3)),
+        border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: chain.asMap().entries.map((e) {
@@ -824,7 +829,7 @@ class _NoteCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.goldFaded,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.gold.withOpacity(0.25)),
+        border: Border.all(color: AppColors.gold.withValues(alpha: 0.25)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,

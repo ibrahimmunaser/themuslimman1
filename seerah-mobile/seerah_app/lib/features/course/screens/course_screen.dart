@@ -6,6 +6,7 @@ import '../../../core/data/parts_data.dart';
 import '../../../core/models/part_model.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/ui_kit.dart';
 import '../widgets/part_card.dart';
 
 class CourseScreen extends ConsumerStatefulWidget {
@@ -31,31 +32,30 @@ class _CourseScreenState extends ConsumerState<CourseScreen> {
     final hasAccess = ref.watch(authProvider).hasAccess;
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text('Seerah Course'),
+        backgroundColor: Colors.transparent,
+        title: const Text('Lessons'),
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(64),
+          preferredSize: const Size.fromHeight(72),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-            child: TextField(
+            child: AppSearchField(
               controller: _searchCtrl,
               onChanged: (v) => setState(() => _search = v.toLowerCase()),
-              decoration: InputDecoration(
-                hintText: 'Search parts…',
-                prefixIcon: const Icon(Icons.search, size: 20, color: AppColors.textMuted),
-                suffixIcon: _search.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.close, size: 18, color: AppColors.textMuted),
-                        onPressed: () { _searchCtrl.clear(); setState(() => _search = ''); },
-                      )
-                    : null,
-                contentPadding: const EdgeInsets.symmetric(vertical: 10),
-              ),
+              onClear: _search.isNotEmpty
+                  ? () { _searchCtrl.clear(); setState(() => _search = ''); }
+                  : null,
+              hint: 'Search parts…',
             ),
           ),
         ),
       ),
-      body: _search.isNotEmpty ? _buildSearchResults(hasAccess) : _buildEraList(hasAccess),
+      body: AppGradientBackground(
+        child: SafeArea(
+          child: _search.isNotEmpty ? _buildSearchResults(hasAccess) : _buildEraList(hasAccess),
+        ),
+      ),
     );
   }
 
@@ -85,30 +85,27 @@ class _CourseScreenState extends ConsumerState<CourseScreen> {
     ).toList();
 
     if (results.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.search_off, size: 48, color: AppColors.textMuted),
-            const SizedBox(height: 12),
-            Text('No parts found for "$_search"',
-              style: const TextStyle(color: AppColors.textSecondary)),
-          ],
-        ),
+      return const EmptyState(
+        icon: Icons.search_off_rounded,
+        title: 'No parts found',
+        subtitle: 'Try a different search term or browse by era.',
       );
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       itemCount: results.length,
       itemBuilder: (ctx, i) {
         final p = results[i];
         final locked = p.partNumber > 1 && !hasAccess;
         return Padding(
-          padding: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.only(bottom: 1),
           child: PartCard(
             part: p,
             isLocked: locked,
+            grouped: true,
+            isFirst: i == 0,
+            isLast: i == results.length - 1,
             onTap: () => context.push('/part/${p.partNumber}'),
           ),
         );
@@ -188,17 +185,19 @@ class _EraSectionState extends State<_EraSection> {
         AnimatedCrossFade(
           firstChild: const SizedBox.shrink(),
           secondChild: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
             child: Column(
-              children: widget.parts.map((p) {
+              children: widget.parts.asMap().entries.map((e) {
+                final i = e.key;
+                final p = e.value;
                 final locked = p.partNumber > 1 && !widget.hasAccess;
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: PartCard(
-                    part: p,
-                    isLocked: locked,
-                    onTap: () => context.push('/part/${p.partNumber}'),
-                  ),
+                return PartCard(
+                  part: p,
+                  isLocked: locked,
+                  grouped: true,
+                  isFirst: i == 0,
+                  isLast: i == widget.parts.length - 1,
+                  onTap: () => context.push('/part/${p.partNumber}'),
                 );
               }).toList(),
             ),

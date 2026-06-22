@@ -60,19 +60,28 @@ class FlashcardModel {
 
   factory FlashcardModel.fromJson(Map<String, dynamic> json) {
     return FlashcardModel(
-      question: json['question'] as String? ?? json['front'] as String? ?? '',
-      answer: json['answer'] as String? ?? json['back'] as String? ?? '',
+      // Server returns side1/side2 (Flashcard type). Fall back to legacy keys.
+      question: json['side1'] as String?
+          ?? json['question'] as String?
+          ?? json['front'] as String?
+          ?? '',
+      answer: json['side2'] as String?
+          ?? json['answer'] as String?
+          ?? json['back'] as String?
+          ?? '',
     );
   }
 }
 
 class QuizQuestion {
+  final String id;
   final String question;
   final List<String> options;
   final int correctIndex;
   final String? explanation;
 
   const QuizQuestion({
+    required this.id,
     required this.question,
     required this.options,
     required this.correctIndex,
@@ -82,8 +91,10 @@ class QuizQuestion {
   factory QuizQuestion.fromJson(Map<String, dynamic> json) {
     final options = (json['options'] as List?)?.cast<String>() ?? [];
     return QuizQuestion(
+      id: json['id'] as String? ?? '',
       question: json['question'] as String? ?? '',
       options: options,
+      // Server now sends correctIndex directly; fall back to 0 if absent.
       correctIndex: json['correctIndex'] as int? ?? 0,
       explanation: json['explanation'] as String?,
     );

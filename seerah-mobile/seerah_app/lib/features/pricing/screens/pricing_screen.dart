@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/providers/auth_provider.dart';
@@ -287,40 +288,43 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
             ctaText: _isProductMissing(iap, _monthlySelected, true)
                 ? 'Unavailable'
                 : _monthlySelected ? 'Subscribe — Family' : 'Buy Now — Family',
-            ctaEnabled: !isBusy && !_isProductMissing(iap, _monthlySelected, true),
+            ctaEnabled: !hasAccess && !isBusy && !_isProductMissing(iap, _monthlySelected, true),
             isBusy: isBusy,
-            onTap: () => _buy(iap, _monthlySelected, true),
+            onTap: hasAccess ? null : () => _buy(iap, _monthlySelected, true),
             accent: AppColors.eraBirthEarlyLife,
           ).animate(delay: 200.ms).fadeIn(duration: 400.ms).slideY(begin: 0.05, end: 0),
 
           const SizedBox(height: 20),
 
           // ── Free Part 1 ────────────────────────────────────────────────────
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.card,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: const Row(
-              children: [
-                _FreePartBadge(),
-                SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Part 1 is Always Free',
-                        style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 15)),
-                      SizedBox(height: 2),
-                      Text('Start learning right now — no purchase needed',
-                        style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-                    ],
+          GestureDetector(
+            onTap: () => context.go('/part/1'),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.card,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: const Row(
+                children: [
+                  _FreePartBadge(),
+                  SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Part 1 is Always Free',
+                          style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 15)),
+                        SizedBox(height: 2),
+                        Text('Start learning right now — no purchase needed',
+                          style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                      ],
+                    ),
                   ),
-                ),
-                Icon(Icons.chevron_right, color: AppColors.textMuted),
-              ],
+                  Icon(Icons.chevron_right, color: AppColors.textMuted),
+                ],
+              ),
             ),
           ).animate(delay: 300.ms).fadeIn(duration: 400.ms),
 

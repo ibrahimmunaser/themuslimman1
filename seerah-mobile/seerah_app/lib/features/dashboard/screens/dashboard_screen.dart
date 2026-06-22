@@ -3,8 +3,11 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/data/parts_data.dart';
+import '../../../core/models/part_model.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/app_logo.dart';
+import '../../../core/widgets/ui_kit.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -17,68 +20,109 @@ class DashboardScreen extends ConsumerWidget {
     final firstName = _firstName(user?.name);
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        titleSpacing: 16,
         title: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Image.asset('assets/images/logo.png', height: 28, errorBuilder: (_, __, ___) =>
-              const Text('☾', style: TextStyle(fontSize: 22, color: AppColors.gold))),
-            const SizedBox(width: 8),
+            const AppLogo(size: 28, borderRadius: 8),
+            const SizedBox(width: 10),
             const Text('Complete Seerah'),
           ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.person_outline),
-            onPressed: () => context.push('/profile'),
-            tooltip: 'Profile',
+          GestureDetector(
+            onTap: () => context.push('/profile'),
+            child: Container(
+              margin: const EdgeInsets.only(right: 16),
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: AppColors.card,
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.border),
+              ),
+              child: const Icon(Icons.person_outline_rounded, size: 20, color: AppColors.textPrimary),
+            ),
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // Welcome header
-          _WelcomeCard(firstName: firstName, hasAccess: hasAccess)
-              .animate().fadeIn(duration: 400.ms).slideY(begin: -0.05, end: 0),
+      body: AppGradientBackground(
+        child: SafeArea(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(0, 4, 0, 32),
+            children: [
+              // ── Welcome hero ───────────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: _WelcomeCard(firstName: firstName, hasAccess: hasAccess)
+                    .animate().fadeIn(duration: 400.ms).slideY(begin: -0.05, end: 0),
+              ),
 
-          const SizedBox(height: 16),
+              // ── At-a-glance stats strip ────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  decoration: BoxDecoration(
+                    color: AppColors.card,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Row(
+                    children: [
+                      _InlineStat(value: '100', label: 'Parts', color: AppColors.gold),
+                      _StatDivider(),
+                      const _InlineStat(value: '8', label: 'Eras', color: AppColors.success),
+                      _StatDivider(),
+                      const _InlineStat(value: '8', label: 'Resources', color: Color(0xFF5A90B0)),
+                      _StatDivider(),
+                      const _InlineStat(value: '∞', label: 'Reference', color: Color(0xFF4AA87E)),
+                    ],
+                  ),
+                ).animate(delay: 70.ms).fadeIn(duration: 400.ms),
+              ),
 
-          // Stats row
-          _StatsRow().animate(delay: 100.ms).fadeIn(duration: 400.ms),
+              // ── Continue learning ──────────────────────────────────────────
+              const SectionHeader(
+                title: 'Continue Learning',
+                subtitle: 'Pick up where you left off',
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: _ContinueLearningCard(hasAccess: hasAccess)
+                    .animate(delay: 120.ms).fadeIn(duration: 400.ms),
+              ),
 
-          const SizedBox(height: 20),
+              // ── Quick access ───────────────────────────────────────────────
+              const SectionHeader(title: 'Quick Access'),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: _QuickAccessGrid()
+                    .animate(delay: 160.ms).fadeIn(duration: 400.ms),
+              ),
 
-          // Continue learning
-          _SectionTitle('Continue Learning'),
-          const SizedBox(height: 10),
-          _ContinueLearningCard(hasAccess: hasAccess)
-              .animate(delay: 150.ms).fadeIn(duration: 400.ms),
+              // ── Upgrade prompt ─────────────────────────────────────────────
+              if (!hasAccess) ...[
+                const SizedBox(height: 16),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: _UpgradeBanner()
+                      .animate(delay: 200.ms).fadeIn(duration: 400.ms),
+                ),
+              ],
 
-          const SizedBox(height: 20),
-
-          // Quick access
-          _SectionTitle('Quick Access'),
-          const SizedBox(height: 10),
-          _QuickAccessGrid()
-              .animate(delay: 200.ms).fadeIn(duration: 400.ms),
-
-          const SizedBox(height: 20),
-
-          // Upgrade banner (free users only)
-          if (!hasAccess) ...[
-            _UpgradeBanner()
-                .animate(delay: 250.ms).fadeIn(duration: 400.ms),
-            const SizedBox(height: 20),
-          ],
-
-          // Recent parts
-          _SectionTitle('All 8 Eras'),
-          const SizedBox(height: 10),
-          _EraOverviewList(hasAccess: hasAccess)
-              .animate(delay: 300.ms).fadeIn(duration: 400.ms),
-
-          const SizedBox(height: 32),
-        ],
+              // ── Era overview ───────────────────────────────────────────────
+              const SectionHeader(
+                title: 'Course Overview',
+                subtitle: 'All 8 eras of the Seerah',
+              ),
+              _EraOverviewList(hasAccess: hasAccess)
+                  .animate(delay: 240.ms).fadeIn(duration: 400.ms),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -89,7 +133,7 @@ class DashboardScreen extends ConsumerWidget {
   }
 }
 
-// ── Welcome Card ──────────────────────────────────────────────────────────────
+// ── Welcome hero card ─────────────────────────────────────────────────────────
 
 class _WelcomeCard extends StatelessWidget {
   final String firstName;
@@ -100,35 +144,54 @@ class _WelcomeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.goldFaded, AppColors.surface],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.gold.withOpacity(0.3)),
-      ),
+      decoration: AppDecorations.goldHero(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Row(
+            children: [
+              const GoldBadge('Complete Seerah'),
+              const Spacer(),
+              if (hasAccess)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: AppColors.success.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(Icons.check_circle_rounded, color: AppColors.success, size: 12),
+                      SizedBox(width: 4),
+                      Text('Full Access',
+                        style: TextStyle(color: AppColors.success, fontSize: 10, fontWeight: FontWeight.w700)),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
           Text(
-            'As-salamu alaykum, $firstName ✦',
+            'As-salamu alaykum,\n$firstName',
             style: const TextStyle(
               color: AppColors.textPrimary,
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
+              fontSize: 24,
+              fontWeight: FontWeight.w800,
+              height: 1.2,
+              letterSpacing: -0.3,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           Text(
             hasAccess
-                ? 'Continue your journey through the Seerah of the Prophet ﷺ'
-                : 'Part 1 is free — begin the life of the Prophet ﷺ today',
+                ? 'Continue your journey through the life of the Prophet ﷺ.'
+                : 'Part 1 is free — begin the Seerah today.',
             style: const TextStyle(
               color: AppColors.textSecondary,
               fontSize: 14,
-              height: 1.4,
+              height: 1.45,
             ),
           ),
         ],
@@ -137,50 +200,7 @@ class _WelcomeCard extends StatelessWidget {
   }
 }
 
-// ── Stats Row ─────────────────────────────────────────────────────────────────
-
-class _StatsRow extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final stats = [
-      {'value': '100', 'label': 'Parts'},
-      {'value': '8',   'label': 'Eras'},
-      {'value': '1,400+', 'label': 'Years'},
-      {'value': '∞',   'label': 'Lessons'},
-    ];
-
-    return Row(
-      children: stats.map((s) => Expanded(
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 4),
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          decoration: BoxDecoration(
-            color: AppColors.card,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.border),
-          ),
-          child: Column(
-            children: [
-              Text(s['value']!, style: const TextStyle(
-                color: AppColors.gold,
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-              )),
-              const SizedBox(height: 2),
-              Text(s['label']!, style: const TextStyle(
-                color: AppColors.textMuted,
-                fontSize: 10,
-                fontWeight: FontWeight.w500,
-              )),
-            ],
-          ),
-        ),
-      )).toList(),
-    );
-  }
-}
-
-// ── Continue Learning Card ────────────────────────────────────────────────────
+// ── Continue learning card ────────────────────────────────────────────────────
 
 class _ContinueLearningCard extends StatelessWidget {
   final bool hasAccess;
@@ -188,96 +208,124 @@ class _ContinueLearningCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final part = PARTS.first; // Start with Part 1 for simplicity
+    // Always start from Part 1 until we have local progress tracking
+    final PartModel part = PARTS.first;
     final eraColor = AppColors.forEra(part.era);
 
-    return GestureDetector(
-      onTap: () => context.push('/part/1'),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.card,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: eraColor.withOpacity(0.3)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 48, height: 48,
-              decoration: BoxDecoration(
-                color: eraColor.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: eraColor.withOpacity(0.4)),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => context.push('/part/1'),
+        borderRadius: BorderRadius.circular(16),
+        child: Ink(
+          padding: const EdgeInsets.all(16),
+          decoration: AppDecorations.eraAccent(eraColor),
+          child: Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: eraColor.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: eraColor.withValues(alpha: 0.4)),
+                ),
+                child: Center(
+                  child: Text('1',
+                    style: TextStyle(color: eraColor, fontSize: 20, fontWeight: FontWeight.w800)),
+                ),
               ),
-              child: Center(
-                child: Text('1',
-                  style: TextStyle(color: eraColor, fontSize: 18, fontWeight: FontWeight.w800)),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      hasAccess ? 'Part 1 — Pre-Islamic Era' : 'Free — Start Here',
+                      style: const TextStyle(color: AppColors.gold, fontSize: 11, fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(part.title,
+                      style: const TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.w700),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis),
+                    const SizedBox(height: 2),
+                    Text(part.subtitle,
+                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Start Here — Part 1 is Free',
-                    style: TextStyle(color: AppColors.gold, fontSize: 11, fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 2),
-                  Text(part.title,
-                    style: const TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.w700)),
-                  const SizedBox(height: 2),
-                  Text(part.subtitle,
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-                ],
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.gold.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
+                ),
+                child: const Icon(Icons.play_arrow_rounded, color: AppColors.gold, size: 20),
               ),
-            ),
-            const Icon(Icons.play_circle_outline, color: AppColors.gold, size: 28),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-// ── Quick Access Grid ─────────────────────────────────────────────────────────
+// ── Quick access grid ─────────────────────────────────────────────────────────
 
 class _QuickAccessGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = [
-      {'icon': Icons.menu_book_outlined, 'label': 'All Lessons', 'route': '/course'},
-      {'icon': Icons.folder_outlined, 'label': 'Resources', 'route': '/resources'},
-      {'icon': Icons.library_books_outlined, 'label': 'Reference', 'route': '/reference'},
-      {'icon': Icons.bar_chart_outlined, 'label': 'My Progress', 'route': '/progress'},
+      (Icons.menu_book_rounded, 'Lessons', '/course', AppColors.gold),
+      (Icons.folder_rounded, 'Resources', '/resources', const Color(0xFF5A90B0)),
+      (Icons.library_books_rounded, 'Reference', '/reference', const Color(0xFF4AA87E)),
+      (Icons.insights_rounded, 'My Progress', '/progress', const Color(0xFFB08040)),
     ];
 
     return GridView.count(
       crossAxisCount: 2,
       crossAxisSpacing: 10,
       mainAxisSpacing: 10,
-      childAspectRatio: 2.5,
+      childAspectRatio: 2.1,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       children: items.map((item) {
-        return GestureDetector(
-          onTap: () => context.go(item['route'] as String),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: AppColors.card,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Row(
-              children: [
-                Icon(item['icon'] as IconData, color: AppColors.gold, size: 20),
-                const SizedBox(width: 10),
-                Text(item['label'] as String,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  )),
-              ],
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => context.go(item.$3),
+            borderRadius: BorderRadius.circular(14),
+            child: Ink(
+              decoration: AppDecorations.card(borderColor: item.$4.withValues(alpha: 0.25)),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: item.$4.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(item.$1, color: item.$4, size: 20),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(item.$2,
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 2,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -286,48 +334,78 @@ class _QuickAccessGrid extends StatelessWidget {
   }
 }
 
-// ── Upgrade Banner ────────────────────────────────────────────────────────────
+// ── Inline stat helpers ───────────────────────────────────────────────────────
+
+class _InlineStat extends StatelessWidget {
+  final String value;
+  final String label;
+  final Color color;
+  const _InlineStat({required this.value, required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Column(
+        children: [
+          Text(value,
+            style: TextStyle(color: color, fontSize: 20, fontWeight: FontWeight.w800)),
+          const SizedBox(height: 3),
+          Text(label,
+            style: const TextStyle(
+              color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w500)),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatDivider extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(width: 1, height: 30, color: AppColors.border);
+  }
+}
+
+// ── Upgrade banner ────────────────────────────────────────────────────────────
 
 class _UpgradeBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.goldDark.withOpacity(0.3), AppColors.goldFaded],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.gold.withOpacity(0.4)),
-      ),
-      child: Row(
+      padding: const EdgeInsets.all(18),
+      decoration: AppDecorations.goldHero(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.star, color: AppColors.gold, size: 28),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text('Unlock All 100 Parts',
-                  style: TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.w700)),
-                SizedBox(height: 2),
-                Text('Get lifetime access to the full Seerah course',
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-              ],
-            ),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.gold.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.lock_open_rounded, color: AppColors.gold, size: 20),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text('Unlock All 100 Parts',
+                  style: TextStyle(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.w700)),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => context.go('/pricing'),
-            style: TextButton.styleFrom(
-              backgroundColor: AppColors.gold,
-              foregroundColor: AppColors.background,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          const SizedBox(height: 10),
+          const Text(
+            'Get lifetime access to the full Seerah course — videos, reading notes, flashcards, and quizzes for every part.',
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.4),
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => context.go('/pricing'),
+              child: const Text('View Plans'),
             ),
-            child: const Text('View Plans', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
           ),
         ],
       ),
@@ -335,7 +413,7 @@ class _UpgradeBanner extends StatelessWidget {
   }
 }
 
-// ── Era Overview List ─────────────────────────────────────────────────────────
+// ── Era overview list ─────────────────────────────────────────────────────────
 
 class _EraOverviewList extends StatelessWidget {
   final bool hasAccess;
@@ -344,68 +422,78 @@ class _EraOverviewList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final groups = getEraGroups();
-    return Column(
-      children: groups.asMap().entries.map((entry) {
-        final i = entry.key;
-        final group = entry.value;
-        final era = group['era'] as dynamic;
-        final parts = group['parts'] as List;
-        final color = AppColors.forEra(era.id as String);
-
-        return GestureDetector(
-          onTap: () => context.go('/course'),
-          child: Container(
-            margin: const EdgeInsets.only(bottom: 8),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              color: AppColors.card,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Row(
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: Column(
+          children: groups.asMap().entries.map((entry) {
+            final i = entry.key;
+            final isLast = i == groups.length - 1;
+            final group = entry.value;
+            final era = group['era'] as EraModel;
+            final parts = group['parts'] as List;
+            final color = AppColors.forEra(era.id);
+            return Column(
               children: [
-                Container(
-                  width: 4, height: 40,
-                  decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: BorderRadius.circular(2),
+                Material(
+                  color: AppColors.card,
+                  child: InkWell(
+                    onTap: () => context.go('/course'),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 13),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 36, height: 36,
+                            decoration: BoxDecoration(
+                              color: color.withValues(alpha: 0.16),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Center(
+                              child: Text('${i + 1}',
+                                style: TextStyle(
+                                  color: color, fontSize: 14,
+                                  fontWeight: FontWeight.w800)),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(era.name,
+                                  style: const TextStyle(
+                                    color: AppColors.textPrimary,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                Text('${parts.length} parts',
+                                  style: TextStyle(
+                                    color: color, fontSize: 12,
+                                    fontWeight: FontWeight.w500)),
+                              ],
+                            ),
+                          ),
+                          const Icon(Icons.chevron_right_rounded,
+                            color: AppColors.textMuted, size: 18),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Era ${i + 1}: ${era.name}',
-                        style: const TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w600)),
-                      const SizedBox(height: 2),
-                      Text('${parts.length} parts',
-                        style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w500)),
-                    ],
-                  ),
-                ),
-                const Icon(Icons.chevron_right, color: AppColors.textMuted, size: 18),
+                if (!isLast)
+                  const Divider(height: 1, thickness: 1,
+                    color: AppColors.border, indent: 64),
               ],
-            ),
-          ),
-        );
-      }).toList(),
+            );
+          }).toList(),
+        ),
+      ),
     );
-  }
-}
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-class _SectionTitle extends StatelessWidget {
-  final String text;
-  const _SectionTitle(this.text);
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(text, style: const TextStyle(
-      color: AppColors.textPrimary,
-      fontSize: 16,
-      fontWeight: FontWeight.w700,
-    ));
   }
 }

@@ -45,6 +45,8 @@ dependencies:
 
   # Splash (runtime: main.dart calls FlutterNativeSplash.preserve/remove)
   flutter_native_splash: ^2.4.3
+  flutter_markdown: ^0.7.7+1
+  webview_flutter: ^4.13.0
 
 dev_dependencies:
   flutter_test:
@@ -55,43 +57,32 @@ dev_dependencies:
 # ── App icon configuration ────────────────────────────────────────────────────
 # Run: dart run flutter_launcher_icons
 flutter_launcher_icons:
-  # Use the same source image for iOS and legacy Android (pre-API 26)
-  image_path: "assets/images/app_icon.png"
+  # Same square logo as the web/desktop dashboard sidebar
+  image_path: "assets/images/logodashboard.png"
 
   android: true
   ios: true
   min_sdk_android: 23
 
-  # Android adaptive icon (API 26+): dark background + foreground crescent
   adaptive_icon_background: "#0A0A0F"
-  adaptive_icon_foreground: "assets/images/app_icon_foreground.png"
+  adaptive_icon_foreground: "assets/images/logodashboard.png"
 
-  # Remove any old default icon
   remove_alpha_ios: true
 
 # ── Native splash screen configuration ───────────────────────────────────────
 # Run: dart run flutter_native_splash:create
 flutter_native_splash:
-  # Background color matches app dark theme
   color: "#0A0A0F"
   color_dark: "#0A0A0F"
 
-  # Centered logo shown during launch
   image: assets/images/splash_logo.png
   image_dark: assets/images/splash_logo.png
 
-  # Branding (shown at bottom on iOS; ignored on Android 12+)
-  branding: assets/images/splash_logo.png
-  branding_dark: assets/images/splash_logo.png
-  branding_bottom_padding: 24
-
-  # Android 12+ splash screen
   android_12:
     color: "#0A0A0F"
     color_dark: "#0A0A0F"
-    image: assets/images/app_icon_foreground.png
-    image_dark: assets/images/app_icon_foreground.png
-    # Icon background is the same dark color
+    image: assets/images/splash_logo.png
+    image_dark: assets/images/splash_logo.png
     icon_background_color: "#0A0A0F"
     icon_background_color_dark: "#0A0A0F"
 

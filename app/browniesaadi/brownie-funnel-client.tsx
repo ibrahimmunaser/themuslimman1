@@ -1,22 +1,24 @@
 "use client";
 
-import { SeerahCheckupClient } from "@/components/funnel/seerah-checkup-client";
+import { InfluencerDirectLanding } from "@/components/funnel/influencer-direct-landing";
 
-const UTM = "utm_source=youtube&utm_medium=influencer&utm_campaign=seerah_checkup&utm_content=browniesaadi";
+const UTM = "utm_source=youtube&utm_medium=influencer&utm_campaign=seerah_launch&utm_content=browniesaadi";
 const SRC = "source=browniesaadi";
 
 export default function BrownieFunnelClient() {
   return (
-    <SeerahCheckupClient
-      creator="browniesaadi"
-      sourceBadge="For Browniesaadi viewers"
-      eventPrefix="brownie_"
-      urls={{
-        individualMonthly:  `/checkout?plan=individual-monthly&${SRC}&${UTM}`,
-        familyMonthly:      `/checkout?plan=family-monthly&${SRC}&${UTM}`,
-        individualLifetime: `/checkout?plan=individual-lifetime&${SRC}&${UTM}`,
-        familyLifetime:     `/checkout?plan=family-lifetime&${SRC}&${UTM}`,
-        watchFree:          "/watch-free",
+    <InfluencerDirectLanding
+      config={{
+        creator:         "browniesaadi",
+        creatorName:     "Brownie Saadi",
+        heroHeadline:    "You came from Brownie Saadi.",
+        heroSubheadline: "So you probably already know this is important.",
+        discountCode:    "BROWNIE59",
+        discountLabel:   "The Brownie Saadi discount is already applied.",
+        checkoutUrl:     `/checkout?plan=individual-lifetime&${SRC}&promo=BROWNIE59&${UTM}`,
+        watchFreeUrl:    "/watch-free",
+        eventPrefix:     "brownie_",
+        checkoutButtonLabel: "Start Now",
       }}
     />
   );

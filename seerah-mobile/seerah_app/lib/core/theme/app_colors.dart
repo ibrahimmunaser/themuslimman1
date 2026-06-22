@@ -18,6 +18,16 @@ class AppColors {
   static const textSecondary = Color(0xFF9A9A9A);
   static const textMuted = Color(0xFF5A5A5A);
 
+  // Surfaces
+  static const surfaceRaised = Color(0xFF1A1A1A);
+
+  // Gradients
+  static const backgroundGradient = RadialGradient(
+    center: Alignment(0, -0.5),
+    radius: 1.3,
+    colors: [Color(0xFF141008), background],
+  );
+
   // Status
   static const success = Color(0xFF4CAF50);
   static const error = Color(0xFFEF5350);

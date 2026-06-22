@@ -1,22 +1,24 @@
 "use client";
 
-import { SeerahCheckupClient } from "@/components/funnel/seerah-checkup-client";
+import { InfluencerDirectLanding } from "@/components/funnel/influencer-direct-landing";
 
-const UTM = "utm_source=direct&utm_medium=promo&utm_campaign=seerah_checkup&utm_content=annarbor";
+const UTM = "utm_source=direct&utm_medium=promo&utm_campaign=seerah_launch&utm_content=annarbor";
 const SRC = "source=annarbor";
 
 export default function AnnArborFunnelClient() {
   return (
-    <SeerahCheckupClient
-      creator="annarbor"
-      sourceBadge="For Ann Arbor Students"
-      eventPrefix="annarbor_"
-      urls={{
-        individualMonthly:  `/checkout?plan=individual-monthly&${SRC}&${UTM}`,
-        familyMonthly:      `/checkout?plan=family-monthly&${SRC}&${UTM}`,
-        individualLifetime: `/checkout?plan=individual-lifetime&${SRC}&promo=ANNARBOR29&${UTM}`,
-        familyLifetime:     `/checkout?plan=family-lifetime&${SRC}&${UTM}`,
-        watchFree:          `/watch-free?${SRC}`,
+    <InfluencerDirectLanding
+      config={{
+        creator:         "annarbor",
+        creatorName:     "Ann Arbor Students",
+        heroHeadline:    "A Special Offer for Ann Arbor Students.",
+        heroSubheadline: "You already care. This course makes it easy to act on that.",
+        discountCode:    "ANNARBOR29",
+        discountLabel:   "Your Ann Arbor student discount is already applied.",
+        checkoutUrl:     `/checkout?plan=individual-lifetime&${SRC}&promo=ANNARBOR29&${UTM}`,
+        watchFreeUrl:    `/watch-free?${SRC}`,
+        eventPrefix:     "annarbor_",
+        checkoutButtonLabel: "Start Now",
       }}
     />
   );

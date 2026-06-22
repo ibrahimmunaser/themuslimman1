@@ -3,28 +3,108 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/data/parts_data.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../core/providers/part_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../widgets/video_tab.dart';
 import '../widgets/read_tab.dart';
 import '../widgets/flashcards_tab.dart';
 import '../widgets/quiz_tab.dart';
+import '../widgets/slides_tab.dart';
+import '../widgets/audio_tab.dart';
+import '../widgets/mindmap_tab.dart';
 
-class PartScreen extends ConsumerWidget {
+// ── Part overview screen ──────────────────────────────────────────────────────
+
+class PartScreen extends ConsumerStatefulWidget {
   final int partNumber;
-  const PartScreen({super.key, required this.partNumber});
+  /// When set, automatically opens this asset viewer immediately after mount.
+  /// Values: 'video' | 'read' | 'flashcards' | 'quiz' | 'slides' | 'audio' | 'mindmap'
+  final String? initialTab;
+  const PartScreen({super.key, required this.partNumber, this.initialTab});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PartScreen> createState() => _PartScreenState();
+}
+
+class _PartScreenState extends ConsumerState<PartScreen> {
+  int get partNumber => widget.partNumber;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialTab != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _autoOpen());
+    }
+  }
+
+  void _autoOpen() {
+    if (!mounted) return;
+    final tab = widget.initialTab;
+    switch (tab) {
+      case 'video':
+        _open(context, title: 'Watch — Part $partNumber', child: VideoTab(partNumber: partNumber));
+      case 'briefing':
+        _open(context, title: 'Briefing — Part $partNumber', child: ReadTab(partNumber: partNumber, initialSection: 0));
+      case 'facts':
+        _open(context, title: 'Key Facts — Part $partNumber', child: ReadTab(partNumber: partNumber, initialSection: 1));
+      case 'read':
+        _open(context, title: 'Read — Part $partNumber', child: ReadTab(partNumber: partNumber));
+      case 'flashcards':
+        _open(context, title: 'Flashcards — Part $partNumber', child: FlashcardsTab(partNumber: partNumber));
+      case 'quiz':
+        _open(context, title: 'Quiz — Part $partNumber', child: QuizTab(partNumber: partNumber));
+      case 'slides':
+        _open(context, title: 'Slides — Part $partNumber', child: SlidesTab(partNumber: partNumber, initialDeck: 1));
+      case 'infographics':
+        _open(context, title: 'Infographics — Part $partNumber', child: SlidesTab(partNumber: partNumber, initialDeck: 0));
+      case 'audio':
+        _openAssetWhenReady(
+          urlGetter: (a) => a.audioUrl,
+          title: 'Audio — Part $partNumber',
+          builder: (url) => AudioTab(audioUrl: url, partTitle: PARTS.firstWhere((p) => p.partNumber == partNumber, orElse: () => PARTS.first).title),
+        );
+      case 'mindmap':
+        _openAssetWhenReady(
+          urlGetter: (a) => a.mindmapUrl,
+          title: 'Mindmap — Part $partNumber',
+          builder: (url) => MindmapTab(mindmapUrl: url),
+        );
+    }
+  }
+
+  /// Waits up to 8s for the partAssetsProvider to resolve, then opens the viewer.
+  Future<void> _openAssetWhenReady({
+    required String? Function(PartAssets) urlGetter,
+    required String title,
+    required Widget Function(String url) builder,
+  }) async {
+    final existing = ref.read(partAssetsProvider(partNumber)).valueOrNull;
+    if (existing != null) {
+      final url = urlGetter(existing);
+      if (url != null && mounted) _open(context, title: title, child: builder(url));
+      return;
+    }
+    // Assets are still loading — wait for them
+    for (var i = 0; i < 16; i++) {
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+      if (!mounted) return;
+      final assets = ref.read(partAssetsProvider(partNumber)).valueOrNull;
+      if (assets != null) {
+        final url = urlGetter(assets);
+        if (url != null && mounted) _open(context, title: title, child: builder(url));
+        return;
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final part = PARTS.firstWhere(
       (p) => p.partNumber == partNumber,
       orElse: () => PARTS.first,
     );
     final eraColor = AppColors.forEra(part.era);
 
-    // Bug 3 fix: check access before rendering any paid content.
-    // Part 1 is free; Parts 2-100 require a paid subscription.
-    // This prevents all 4 tab widgets from mounting and firing API calls
-    // for users who don't have access.
     final authState = ref.watch(authProvider);
     final isPaidPart = partNumber > 1;
     final hasAccess = authState.hasAccess;
@@ -37,96 +117,238 @@ class PartScreen extends ConsumerWidget {
       );
     }
 
-    return DefaultTabController(
-      length: 4,
-      child: Scaffold(
-        body: NestedScrollView(
-          headerSliverBuilder: (ctx, _) => [
-            SliverAppBar(
-              expandedHeight: 160,
-              pinned: true,
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () => context.pop(),
-              ),
-              flexibleSpace: FlexibleSpaceBar(
-                background: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        eraColor.withOpacity(0.2),
-                        AppColors.background,
-                      ],
-                    ),
-                  ),
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: eraColor.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: eraColor.withOpacity(0.4)),
-                        ),
-                        child: Text(
-                          'Part $partNumber • ${_eraName(part.era)}',
-                          style: TextStyle(color: eraColor, fontSize: 11, fontWeight: FontWeight.w500),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        part.title,
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          height: 1.25,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        part.subtitle,
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 13,
-                        ),
-                      ),
-                      const SizedBox(height: 14),
+    final assetsAsync = ref.watch(partAssetsProvider(partNumber));
+
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: CustomScrollView(
+        slivers: [
+          // ── Hero header ──────────────────────────────────────────────────
+          SliverAppBar(
+            expandedHeight: 190,
+            pinned: true,
+            backgroundColor: AppColors.background,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+              onPressed: () => context.pop(),
+            ),
+            flexibleSpace: FlexibleSpaceBar(
+              collapseMode: CollapseMode.pin,
+              background: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      eraColor.withValues(alpha: 0.18),
+                      AppColors.background,
                     ],
                   ),
                 ),
-              ),
-              bottom: TabBar(
-                tabs: const [
-                  Tab(icon: Icon(Icons.play_circle_outline, size: 18), text: 'Watch'),
-                  Tab(icon: Icon(Icons.menu_book_outlined, size: 18), text: 'Read'),
-                  Tab(icon: Icon(Icons.style_outlined, size: 18), text: 'Cards'),
-                  Tab(icon: Icon(Icons.quiz_outlined, size: 18), text: 'Quiz'),
-                ],
-                labelStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-                unselectedLabelStyle: const TextStyle(fontSize: 11),
-                indicatorColor: eraColor,
-                labelColor: eraColor,
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Era + part badge row
+                    Row(
+                      children: [
+                        _Pill(
+                          label: 'Part $partNumber',
+                          color: eraColor,
+                        ),
+                        const SizedBox(width: 8),
+                        _Pill(
+                          label: _eraName(part.era),
+                          color: eraColor,
+                          faint: true,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      part.title,
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                        height: 1.2,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      part.subtitle,
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
             ),
-          ],
-          body: TabBarView(
-            children: [
-              VideoTab(partNumber: partNumber),
-              ReadTab(partNumber: partNumber),
-              FlashcardsTab(partNumber: partNumber),
-              QuizTab(partNumber: partNumber),
-            ],
           ),
-        ),
-        bottomNavigationBar: _PartNavBar(partNumber: partNumber),
+
+          // ── Body ─────────────────────────────────────────────────────────
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                // Section label
+                _SectionLabel(text: 'Study Materials', color: eraColor),
+                const SizedBox(height: 12),
+
+                // ── Video — full-width hero ──────────────────────────────
+                _AssetHero(
+                  icon: Icons.play_circle_fill_rounded,
+                  iconColor: const Color(0xFF5A90B0),
+                  title: 'Watch',
+                  subtitle: 'Full video lecture',
+                  description: 'Watch the complete lesson with visuals',
+                  accentColor: const Color(0xFF5A90B0),
+                  available: assetsAsync.whenOrNull(data: (a) => a.videoUrl != null) ?? false,
+                  onTap: () => _open(
+                    context,
+                    title: 'Watch — Part $partNumber',
+                    child: VideoTab(partNumber: partNumber),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // ── Audio + Read — 2 col ─────────────────────────────────
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: _AssetCard(
+                        icon: Icons.headphones_rounded,
+                        iconColor: const Color(0xFF9A7AB8),
+                        title: 'Listen',
+                        subtitle: 'Audio lesson',
+                        available: assetsAsync.whenOrNull(data: (a) => a.audioUrl != null) ?? false,
+                        onTap: () {
+                          final assets = assetsAsync.valueOrNull;
+                          if (assets?.audioUrl == null) return;
+                          _open(
+                            context,
+                            title: 'Listen — Part $partNumber',
+                            child: AudioTab(audioUrl: assets!.audioUrl!, partTitle: part.title),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _AssetCard(
+                        icon: Icons.menu_book_rounded,
+                        iconColor: const Color(0xFF4AA87E),
+                        title: 'Read',
+                        subtitle: 'Study notes',
+                        available: true,
+                        onTap: () => _open(
+                          context,
+                          title: 'Read — Part $partNumber',
+                          child: ReadTab(partNumber: partNumber),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                // ── Slides + Mindmap — 2 col ─────────────────────────────
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: _AssetCard(
+                        icon: Icons.view_carousel_rounded,
+                        iconColor: const Color(0xFFD4A017),
+                        title: 'Slides',
+                        subtitle: 'Visual presentation',
+                        available: true,
+                        onTap: () => _open(
+                          context,
+                          title: 'Slides — Part $partNumber',
+                          child: SlidesTab(partNumber: partNumber),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _AssetCard(
+                        icon: Icons.account_tree_rounded,
+                        iconColor: const Color(0xFFC06060),
+                        title: 'Mindmap',
+                        subtitle: 'Visual overview',
+                        available: assetsAsync.whenOrNull(data: (a) => a.mindmapUrl != null) ?? false,
+                        onTap: () {
+                          final assets = assetsAsync.valueOrNull;
+                          if (assets?.mindmapUrl == null) return;
+                          _open(
+                            context,
+                            title: 'Mindmap — Part $partNumber',
+                            child: MindmapTab(mindmapUrl: assets!.mindmapUrl!),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+
+                _SectionLabel(text: 'Practice & Review', color: eraColor),
+                const SizedBox(height: 12),
+
+                // ── Flashcards — full width ──────────────────────────────
+                _AssetHero(
+                  icon: Icons.style_rounded,
+                  iconColor: const Color(0xFF6AAE50),
+                  title: 'Flashcards',
+                  subtitle: 'Spaced-repetition cards',
+                  description: 'Review key facts with flip cards',
+                  accentColor: const Color(0xFF6AAE50),
+                  available: true,
+                  onTap: () => _open(
+                    context,
+                    title: 'Flashcards — Part $partNumber',
+                    child: FlashcardsTab(partNumber: partNumber),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // ── Quiz — full width ────────────────────────────────────
+                _AssetHero(
+                  icon: Icons.quiz_rounded,
+                  iconColor: const Color(0xFFE8C040),
+                  title: 'Quiz',
+                  subtitle: 'Test your knowledge',
+                  description: 'Multiple-choice questions with instant feedback',
+                  accentColor: const Color(0xFFE8C040),
+                  available: true,
+                  onTap: () => _open(
+                    context,
+                    title: 'Quiz — Part $partNumber',
+                    child: QuizTab(partNumber: partNumber),
+                  ),
+                ),
+              ]),
+            ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: _PartNavBar(partNumber: partNumber),
+    );
+  }
+
+  void _open(BuildContext context, {required String title, required Widget child}) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => _AssetViewerScreen(title: title, child: child),
       ),
     );
   }
@@ -137,7 +359,305 @@ class PartScreen extends ConsumerWidget {
   }
 }
 
-// ── Paywall ──────────────────────────────────────────────────────────────────
+// ── Asset viewer screen ───────────────────────────────────────────────────────
+
+class _AssetViewerScreen extends StatelessWidget {
+  final String title;
+  final Widget child;
+
+  const _AssetViewerScreen({required this.title, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.surface,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(title,
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+        centerTitle: false,
+        elevation: 0,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(height: 1, color: AppColors.border),
+        ),
+      ),
+      body: child,
+    );
+  }
+}
+
+// ── UI components ─────────────────────────────────────────────────────────────
+
+class _Pill extends StatelessWidget {
+  final String label;
+  final Color color;
+  final bool faint;
+
+  const _Pill({required this.label, required this.color, this.faint = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: faint ? 0.08 : 0.14),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: faint ? 0.25 : 0.45)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: faint ? color.withValues(alpha: 0.75) : color,
+          fontSize: 11,
+          fontWeight: FontWeight.w500,
+          letterSpacing: 0.2,
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionLabel extends StatelessWidget {
+  final String text;
+  final Color color;
+
+  const _SectionLabel({required this.text, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 3,
+          height: 14,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          text,
+          style: const TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.8,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Full-width hero card for primary assets (Video, Flashcards, Quiz).
+class _AssetHero extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String title;
+  final String subtitle;
+  final String description;
+  final Color accentColor;
+  final bool available;
+  final VoidCallback onTap;
+
+  const _AssetHero({
+    required this.icon,
+    required this.iconColor,
+    required this.title,
+    required this.subtitle,
+    required this.description,
+    required this.accentColor,
+    required this.available,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: available ? onTap : null,
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 200),
+        opacity: available ? 1.0 : 0.45,
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.card,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Stack(
+            children: [
+              // Accent glow
+              Positioned(
+                left: 0,
+                top: 0,
+                bottom: 0,
+                child: Container(
+                  width: 4,
+                  decoration: BoxDecoration(
+                    color: accentColor,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(16),
+                      bottomLeft: Radius.circular(16),
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 16, 16),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: iconColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: iconColor.withValues(alpha: 0.25)),
+                      ),
+                      child: Icon(icon, color: iconColor, size: 26),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(title,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            )),
+                          const SizedBox(height: 2),
+                          Text(subtitle,
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            )),
+                          const SizedBox(height: 4),
+                          Text(description,
+                            style: const TextStyle(
+                              color: AppColors.textMuted,
+                              fontSize: 12,
+                            )),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    available
+                        ? Icon(Icons.chevron_right_rounded,
+                            color: AppColors.textMuted, size: 22)
+                        : const Icon(Icons.lock_outline_rounded,
+                            color: AppColors.textMuted, size: 18),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Compact 2-col card for secondary assets (Audio, Read, Slides, Mindmap).
+class _AssetCard extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String title;
+  final String subtitle;
+  final bool available;
+  final VoidCallback onTap;
+
+  const _AssetCard({
+    required this.icon,
+    required this.iconColor,
+    required this.title,
+    required this.subtitle,
+    required this.available,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: available ? onTap : null,
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 200),
+        opacity: available ? 1.0 : 0.45,
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: AppColors.card,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: iconColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: iconColor.withValues(alpha: 0.2)),
+                    ),
+                    child: Icon(icon, color: iconColor, size: 20),
+                  ),
+                  available
+                      ? Icon(Icons.chevron_right_rounded,
+                          color: AppColors.textMuted, size: 18)
+                      : const Icon(Icons.lock_outline_rounded,
+                          color: AppColors.textMuted, size: 14),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(title,
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                )),
+              const SizedBox(height: 2),
+              Text(subtitle,
+                style: const TextStyle(
+                  color: AppColors.textMuted,
+                  fontSize: 11,
+                )),
+              if (!available) ...[
+                const SizedBox(height: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: AppColors.textMuted.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: const Text('Not available',
+                    style: TextStyle(
+                      color: AppColors.textMuted,
+                      fontSize: 10,
+                    )),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Paywall ───────────────────────────────────────────────────────────────────
 
 class _PaywallScreen extends StatelessWidget {
   final int partNumber;
@@ -155,7 +675,7 @@ class _PaywallScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
           onPressed: () => context.pop(),
         ),
         title: Text('Part $partNumber'),
@@ -239,7 +759,7 @@ class _PartNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      padding: EdgeInsets.fromLTRB(16, 10, 16, MediaQuery.of(context).padding.bottom + 10),
       decoration: const BoxDecoration(
         color: AppColors.surface,
         border: Border(top: BorderSide(color: AppColors.border)),
@@ -250,17 +770,41 @@ class _PartNavBar extends StatelessWidget {
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: () => context.pushReplacement('/part/${partNumber - 1}'),
-                icon: const Icon(Icons.arrow_back, size: 16),
-                label: const Text('Previous'),
+                icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 14),
+                label: Text('Part ${partNumber - 1}'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.textSecondary,
+                  side: const BorderSide(color: AppColors.border),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
               ),
             ),
-          if (partNumber > 1) const SizedBox(width: 12),
+          if (partNumber > 1 && partNumber < 100) const SizedBox(width: 12),
           if (partNumber < 100)
             Expanded(
-              child: ElevatedButton.icon(
+              child: ElevatedButton(
                 onPressed: () => context.pushReplacement('/part/${partNumber + 1}'),
-                icon: const Text('Next'),
-                label: const Icon(Icons.arrow_forward, size: 16),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.gold,
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('Part ${partNumber + 1}',
+                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: Colors.black)),
+                    const SizedBox(width: 6),
+                    const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.black),
+                  ],
+                ),
               ),
             ),
         ],

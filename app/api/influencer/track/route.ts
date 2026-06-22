@@ -11,6 +11,8 @@ const KNOWN_CREATORS = [
   "dearborn",
   "theorthodoxmuslim",
   "homepage",
+  "korra",
+  "itachi",
 ] as const;
 
 const KNOWN_EVENT_TYPES = [
@@ -66,6 +68,15 @@ const KNOWN_EVENT_TYPES = [
   // Checkout detailed analytics
   "payment_method_available",
   "checkout_field_interacted",
+  // Influencer direct landing page events (no-quiz flow)
+  "influencer_page_view",
+  "influencer_primary_cta_click",
+  "influencer_part1_cta_click",
+  "influencer_part1_started",
+  "influencer_checkout_viewed",
+  "influencer_checkout_cta_click",
+  "optional_quiz_started",
+  "optional_quiz_completed",
   // Homepage funnel
   "hero_watch_part1_clicked",
   "hero_score_clicked",

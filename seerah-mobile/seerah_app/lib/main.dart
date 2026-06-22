@@ -75,6 +75,19 @@ class _SeerahAppState extends ConsumerState<SeerahApp>
       debugShowCheckedModeBanner: false,
       theme: AppTheme.dark,
       routerConfig: router,
+      // Cap text scale to prevent accessibility font sizes from breaking layouts.
+      builder: (context, child) {
+        final mq = MediaQuery.of(context);
+        return MediaQuery(
+          data: mq.copyWith(
+            textScaler: mq.textScaler.clamp(
+              minScaleFactor: 0.85,
+              maxScaleFactor: 1.15,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
   }
 }

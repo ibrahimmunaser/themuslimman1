@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/data/parts_data.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/ui_kit.dart';
 
 class ProgressScreen extends ConsumerWidget {
   const ProgressScreen({super.key});
@@ -15,71 +16,49 @@ class ProgressScreen extends ConsumerWidget {
     final hasAccess = auth.hasAccess;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('My Progress')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // Header card
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [AppColors.goldFaded, AppColors.surface],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.gold.withOpacity(0.3)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('YOUR JOURNEY',
-                  style: TextStyle(color: AppColors.gold, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1.2)),
-                const SizedBox(height: 6),
-                const Text('Track Your Seerah Progress',
-                  style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.w700)),
-                const SizedBox(height: 4),
-                Text(
-                  hasAccess
-                      ? 'You have full access to all 100 parts. Keep going!'
-                      : 'Part 1 is free. Upgrade to unlock all 100 parts.',
-                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.4),
-                ),
-              ],
-            ),
-          ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.05, end: 0),
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        title: const Text('My Progress'),
+      ),
+      body: AppGradientBackground(
+        child: SafeArea(
+          child: ListView(
+            padding: const EdgeInsets.only(bottom: 24),
+            children: [
+              // Overview stats
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _OverviewStats(hasAccess: hasAccess)
+                .animate(delay: 100.ms).fadeIn(duration: 400.ms),
+          ),
 
-          const SizedBox(height: 20),
+          const SectionHeader(title: 'Course Map'),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _CourseMap(hasAccess: hasAccess)
+                .animate(delay: 150.ms).fadeIn(duration: 400.ms),
+          ),
 
-          // Overview stats
-          _OverviewStats(hasAccess: hasAccess)
-              .animate(delay: 100.ms).fadeIn(duration: 400.ms),
-
-          const SizedBox(height: 20),
-
-          // Course map - era breakdown
-          const _SectionTitle('Course Map'),
-          const SizedBox(height: 10),
-          _CourseMap(hasAccess: hasAccess)
-              .animate(delay: 150.ms).fadeIn(duration: 400.ms),
-
-          const SizedBox(height: 20),
-
-          // Upgrade CTA for free users
           if (!hasAccess) ...[
-            _UpgradeCta()
-                .animate(delay: 200.ms).fadeIn(duration: 400.ms),
-            const SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _UpgradeCta()
+                  .animate(delay: 200.ms).fadeIn(duration: 400.ms),
+            ),
+            const SizedBox(height: 12),
           ],
 
-          // Tips
-          const _SectionTitle('Learning Tips'),
-          const SizedBox(height: 10),
-          _LearningTips().animate(delay: 250.ms).fadeIn(duration: 400.ms),
+          const SectionHeader(title: 'Learning Tips'),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _LearningTips().animate(delay: 250.ms).fadeIn(duration: 400.ms),
+          ),
 
           const SizedBox(height: 32),
-        ],
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -98,25 +77,32 @@ class _OverviewStats extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionTitle('Overview'),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            _StatCard(value: '$accessible', label: 'Parts\nAccessible', color: AppColors.gold),
-            const SizedBox(width: 10),
-            _StatCard(value: '8', label: 'Eras to\nExplore', color: AppColors.success),
-            const SizedBox(width: 10),
-            _StatCard(value: '4', label: 'Resource\nTypes', color: const Color(0xFF5A90B0)),
-          ],
-        ),
-        const SizedBox(height: 10),
-        // Access bar
+        // Inline stats strip — native feel, no individual borders
         Container(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
           decoration: BoxDecoration(
             color: AppColors.card,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.border),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Row(
+            children: [
+              _StatPill(value: '$accessible', label: 'Parts', color: AppColors.gold),
+              _Divider(),
+              const _StatPill(value: '8', label: 'Eras', color: AppColors.success),
+              _Divider(),
+              const _StatPill(value: '8', label: 'Resources', color: Color(0xFF5A90B0)),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 10),
+
+        // Access progress bar — inline without card border
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: AppColors.card,
+            borderRadius: BorderRadius.circular(14),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -125,12 +111,16 @@ class _OverviewStats extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text('Course Unlocked',
-                    style: TextStyle(color: AppColors.textPrimary, fontSize: 13, fontWeight: FontWeight.w600)),
-                  Text('${accessible}/100 parts',
-                    style: const TextStyle(color: AppColors.gold, fontSize: 13, fontWeight: FontWeight.w700)),
+                    style: TextStyle(
+                      color: AppColors.textPrimary, fontSize: 14,
+                      fontWeight: FontWeight.w600)),
+                  Text('$accessible/100 parts',
+                    style: const TextStyle(
+                      color: AppColors.gold, fontSize: 13,
+                      fontWeight: FontWeight.w700)),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               ClipRRect(
                 borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(
@@ -148,35 +138,33 @@ class _OverviewStats extends StatelessWidget {
   }
 }
 
-class _StatCard extends StatelessWidget {
+class _StatPill extends StatelessWidget {
   final String value;
   final String label;
   final Color color;
-  const _StatCard({required this.value, required this.label, required this.color});
+  const _StatPill({required this.value, required this.label, required this.color});
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          color: AppColors.card,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Column(
-          children: [
-            Text(value, style: TextStyle(
-              color: color, fontSize: 22, fontWeight: FontWeight.w800)),
-            const SizedBox(height: 4),
-            Text(label,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: AppColors.textMuted, fontSize: 10, fontWeight: FontWeight.w500, height: 1.3)),
-          ],
-        ),
+      child: Column(
+        children: [
+          Text(value,
+            style: TextStyle(color: color, fontSize: 22, fontWeight: FontWeight.w800)),
+          const SizedBox(height: 3),
+          Text(label,
+            style: const TextStyle(
+              color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w500)),
+        ],
       ),
     );
+  }
+}
+
+class _Divider extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(width: 1, height: 32, color: AppColors.border);
   }
 }
 
@@ -190,62 +178,68 @@ class _CourseMap extends StatelessWidget {
   Widget build(BuildContext context) {
     final groups = getEraGroups();
 
-    return Column(
-      children: groups.asMap().entries.map((entry) {
-        final i = entry.key;
-        final group = entry.value;
-        final era = group['era'] as dynamic;
-        final parts = group['parts'] as List;
-        final color = AppColors.forEra(era.id as String);
-        final accessible = hasAccess ? parts.length : (i == 0 ? parts.length : 0);
-        final progress = parts.isEmpty ? 0.0 : accessible / parts.length;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(14),
+      child: Column(
+        children: groups.asMap().entries.map((entry) {
+          final i = entry.key;
+          final isLast = i == groups.length - 1;
+          final group = entry.value;
+          final era = group['era'] as dynamic;
+          final parts = group['parts'] as List;
+          final color = AppColors.forEra(era.id as String);
+          final accessible = hasAccess ? parts.length : (i == 0 ? parts.length : 0);
+          final progress = parts.isEmpty ? 0.0 : accessible / parts.length;
 
-        return Container(
-          margin: const EdgeInsets.only(bottom: 8),
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: AppColors.card,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.border),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          return Column(
             children: [
-              Row(
-                children: [
-                  Container(width: 4, height: 32, decoration: BoxDecoration(
-                    color: color, borderRadius: BorderRadius.circular(2))),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+              Container(
+                color: AppColors.card,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       children: [
-                        Text(era.name as String,
-                          style: const TextStyle(color: AppColors.textPrimary, fontSize: 13, fontWeight: FontWeight.w700)),
-                        Text('${parts.length} parts',
-                          style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w500)),
+                        Container(
+                          width: 4, height: 30,
+                          decoration: BoxDecoration(
+                            color: color, borderRadius: BorderRadius.circular(2))),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(era.name as String,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600)),
+                        ),
+                        Text('$accessible/${parts.length}',
+                          style: TextStyle(
+                            color: color, fontSize: 13,
+                            fontWeight: FontWeight.w700)),
                       ],
                     ),
-                  ),
-                  Text('$accessible/${parts.length}',
-                    style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w700)),
-                ],
-              ),
-              const SizedBox(height: 8),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(3),
-                child: LinearProgressIndicator(
-                  value: progress,
-                  backgroundColor: AppColors.border,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    hasAccess || i == 0 ? color : AppColors.border),
-                  minHeight: 4,
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(3),
+                      child: LinearProgressIndicator(
+                        value: progress,
+                        backgroundColor: AppColors.border,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          hasAccess || i == 0 ? color : AppColors.border),
+                        minHeight: 4,
+                      ),
+                    ),
+                  ],
                 ),
               ),
+              if (!isLast)
+                const Divider(height: 1, thickness: 1, color: AppColors.border,
+                  indent: 20, endIndent: 0),
             ],
-          ),
-        );
-      }).toList(),
+          );
+        }).toList(),
+      ),
     );
   }
 }
@@ -259,10 +253,10 @@ class _UpgradeCta extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppColors.goldDark.withOpacity(0.3), AppColors.goldFaded],
+          colors: [AppColors.goldDark.withValues(alpha: 0.3), AppColors.goldFaded],
         ),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.gold.withOpacity(0.4)),
+        border: Border.all(color: AppColors.gold.withValues(alpha: 0.4)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -306,8 +300,11 @@ class _LearningTips extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const tips = [
-      ['Watch first', 'Start each part by watching the video. It gives you the context for everything else.'],
-      ['Read after', 'Use the briefing and study guide to review key points from the video.'],
+      ['Watch first', 'Start each part by watching the video. It gives you the full context and narrative.'],
+      ['Listen on the go', 'Use the audio version while commuting or doing other tasks to reinforce what you learned.'],
+      ['Read the briefing', 'Go through the briefing notes and key facts to solidify the main points.'],
+      ['Study the slides', 'Review the slide decks and infographics for a visual summary of each lesson.'],
+      ['Check the mindmap', 'Use the mindmap to see how concepts in a lesson connect to each other.'],
       ['Review with flashcards', 'Go through the flashcards to lock in the most important facts.'],
       ['Test yourself', 'Take the quiz to see what you\'ve truly retained. Aim for 80%+.'],
       ['Go in order', 'The Seerah is a connected story. Each era builds on the one before.'],
@@ -359,13 +356,3 @@ class _LearningTips extends StatelessWidget {
   }
 }
 
-class _SectionTitle extends StatelessWidget {
-  final String text;
-  const _SectionTitle(this.text);
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(text, style: const TextStyle(
-      color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.w700));
-  }
-}
