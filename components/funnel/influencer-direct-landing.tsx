@@ -2,6 +2,8 @@
 
 import { useRef, useEffect, useState, useCallback } from "react";
 import { nanoid } from "nanoid";
+import { PlanPicker } from "@/components/landing/plan-picker";
+import type { PlanId } from "@/components/landing/plan-picker";
 
 // ── Analytics ──────────────────────────────────────────────────────────────────
 
@@ -78,29 +80,6 @@ export interface InfluencerDirectLandingProps {
   part1Preview?: React.ReactNode;
 }
 
-// ── Plan grid data ─────────────────────────────────────────────────────────────
-
-const MONTHLY_PLANS = [
-  { plan: "individual-monthly", label: "Individual", price: "$4.99/mo", detail: "1 person"        },
-  { plan: "family-monthly",     label: "Family",     price: "$9.99/mo", detail: "Up to 5 members" },
-] as const;
-
-const LIFETIME_PLANS = [
-  { plan: "individual-lifetime", label: "Individual", price: "$49", detail: "1 person · one-time" },
-  { plan: "family-lifetime",     label: "Family",     price: "$99", detail: "5 members · one-time" },
-] as const;
-
-/** Swap the `plan` search param while preserving all other params (source, UTMs…). */
-function planUrl(baseUrl: string, plan: string): string {
-  try {
-    const u = new URL(baseUrl, "https://x.com");
-    u.searchParams.set("plan", plan);
-    return u.pathname + u.search;
-  } catch {
-    return baseUrl;
-  }
-}
-
 // ── Component ──────────────────────────────────────────────────────────────────
 
 export function InfluencerDirectLanding({ config, part1Preview }: InfluencerDirectLandingProps) {
@@ -110,8 +89,7 @@ export function InfluencerDirectLanding({ config, part1Preview }: InfluencerDire
   const [scrolledPast, setScrolledPast] = useState(false);
   const [anyCTAVisible, setAnyCTAVisible] = useState(true);
 
-  const price    = config.price ?? "$4.99/month";
-  const btnLabel = config.checkoutButtonLabel ?? "Start the Full Course";
+  const price = config.price ?? "$4.99/month";
 
   // Sticky only shown when user has scrolled past hero AND no CTA section is on screen
   const showSticky = scrolledPast && !anyCTAVisible;
@@ -148,8 +126,8 @@ export function InfluencerDirectLanding({ config, part1Preview }: InfluencerDire
     safeTrack(config.creator, "influencer_part1_cta_click");
   }, [config.creator]);
 
-  const onCheckoutClick = useCallback(() => {
-    safeTrack(config.creator, "influencer_primary_cta_click");
+  const onCheckoutClick = useCallback((plan: PlanId) => {
+    safeTrack(config.creator, "influencer_primary_cta_click", { plan });
   }, [config.creator]);
 
   return (
@@ -190,43 +168,14 @@ export function InfluencerDirectLanding({ config, part1Preview }: InfluencerDire
             </p>
           </div>
 
-          {/* Plan grid */}
-          <div className="space-y-3 mb-4">
-            {[
-              { heading: "Monthly Plan", plans: MONTHLY_PLANS },
-              { heading: "Lifetime Plan", plans: LIFETIME_PLANS },
-            ].map(({ heading, plans }) => (
-              <div key={heading}>
-                <p className="text-xs font-semibold text-gold uppercase tracking-widest mb-1.5 text-center">{heading}</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {plans.map(({ plan, label, price: planPrice, detail }) => (
-                    <a
-                      key={plan}
-                      href={planUrl(config.checkoutUrl, plan)}
-                      onClick={() => safeTrack(config.creator, "influencer_primary_cta_click", { plan })}
-                      className="flex flex-col justify-between rounded-xl border-2 border-gold bg-surface/60 p-3 hover:bg-surface transition-colors"
-                    >
-                      <span className="text-[10px] font-bold text-gold uppercase tracking-widest leading-tight">{label}</span>
-                      <span className="text-xl font-extrabold text-text mt-1 leading-none">{planPrice}</span>
-                      <span className="text-[11px] text-text-muted mt-1 leading-tight">{detail}</span>
-                    </a>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Primary CTA */}
-          <a
-            href={config.checkoutUrl}
-            onClick={onCheckoutClick}
-            className="block w-full py-4 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-base text-center transition-colors shadow-lg shadow-gold/20 mb-3"
-          >
-            {btnLabel} — {price}
-          </a>
+          {/* Plan picker */}
+          <PlanPicker
+            checkoutBaseUrl={config.checkoutUrl}
+            onCtaClick={onCheckoutClick}
+          />
 
           {/* Secondary link */}
-          <div className="text-center mb-4">
+          <div className="text-center mt-3">
             <button
               onClick={scrollToPart1}
               className="text-sm text-text-muted hover:text-gold transition-colors underline underline-offset-2"
@@ -234,11 +183,6 @@ export function InfluencerDirectLanding({ config, part1Preview }: InfluencerDire
               Or watch Part 1 free first
             </button>
           </div>
-
-          {/* Reassurance — replaces the offer card */}
-          <p className="text-xs text-text-muted text-center">
-            Cancel anytime · 7-day refund · Instant access
-          </p>
         </div>
       </section>
 

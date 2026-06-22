@@ -1,12 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import {
-  CheckCircle2, ArrowRight, Lock, Gift, Users, User, Infinity,
-} from "lucide-react";
-import { buttonClass } from "@/components/ui/button";
+import { CheckCircle2, Gift } from "lucide-react";
 import { FadeUp } from "@/components/motion";
+import { PlanPicker } from "@/components/landing/plan-picker";
 
 interface PricingSectionProps {
   hasLifetime: boolean;
@@ -14,364 +11,68 @@ interface PricingSectionProps {
   hasFamily: boolean;
 }
 
-type Tab = "monthly" | "lifetime";
+const INCLUDED = [
+  "Full 100-part Seerah — every major event in order",
+  "Video lessons, quizzes, flashcards, and mind maps",
+  "Reading summaries and structured notes",
+  "Progress tracking dashboard",
+  "Access on any device — phone, tablet, or desktop",
+  "All future content included automatically",
+];
 
 export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSectionProps) {
   const hasAnyAccess = hasLifetime || hasMonthly || hasFamily;
-  const [tab, setTab] = useState<Tab>("monthly");
 
   return (
     <section className="py-10 border-t border-border" id="pricing">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6">
+      <div className="max-w-lg mx-auto px-4 sm:px-6">
 
-        <FadeUp className="text-center mb-8">
-          <h2 className="text-2xl sm:text-3xl font-bold text-text mb-5">
-            {tab === "monthly" ? "Start learning for less than $5/month" : "Own it forever — pay once"}
+        <FadeUp className="text-center mb-6">
+          <h2 className="text-2xl sm:text-3xl font-bold text-text mb-2">
+            Choose your plan
           </h2>
-
-          {/* ── Tab toggle ───────────────────────────────────────────── */}
-          <div className="inline-flex items-center p-1 rounded-xl bg-surface border border-border gap-1">
-            <button
-              onClick={() => setTab("monthly")}
-              className={`relative px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
-                tab === "monthly"
-                  ? "bg-gold text-ink shadow-sm"
-                  : "text-text-muted hover:text-text"
-              }`}
-            >
-              Monthly
-            </button>
-            <button
-              onClick={() => setTab("lifetime")}
-              className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
-                tab === "lifetime"
-                  ? "bg-gold text-ink shadow-sm"
-                  : "text-text-muted hover:text-text"
-              }`}
-            >
-              Lifetime
-            </button>
-          </div>
-
-          <p className="text-xs text-text-muted mt-3">
-            {tab === "monthly"
-              ? "Cancel anytime · 7-day refund · Instant access"
-              : "One-time payment · No recurring charges · 7-day guarantee"}
+          <p className="text-sm text-text-secondary">
+            Monthly or lifetime · individual or family · cancel anytime
           </p>
         </FadeUp>
 
-        {/* ── Monthly cards ─────────────────────────────────────────── */}
-        {tab === "monthly" && (
-          <div className="grid sm:grid-cols-2 gap-5 max-w-3xl mx-auto">
+        <FadeUp delay={0.05}>
+          <PlanPicker
+            checkoutBaseUrl="/checkout"
+            hasAccess={hasAnyAccess}
+          />
+        </FadeUp>
 
-            {/* Individual Monthly */}
-            <div className="relative pt-8 pb-6 px-6 rounded-2xl border-2 border-gold bg-gradient-to-b from-gold/8 to-surface flex flex-col gold-glow">
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap">
-                <span className="px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-gold text-ink shadow-sm">
-                  Most Popular
-                </span>
-              </div>
-
-              {/* Header */}
-              <p className="text-lg font-bold text-text mb-1">Individual</p>
-              <div className="flex items-baseline gap-1 mb-1">
-                <span className="text-4xl font-bold text-text">$4.99</span>
-                <span className="text-sm text-text-muted">/month</span>
-              </div>
-              <p className="text-sm text-text-muted mb-5">For one learner · cancel anytime</p>
-
-              {/* Features */}
-              <ul className="space-y-3 mb-6 flex-1">
-                {[
-                  { title: "Full 100-part Seerah path", sub: "From birth to the Farewell Hajj — every major event covered" },
-                  { title: "Video lessons + quizzes + flashcards", sub: "Reinforce every lesson with active recall" },
-                  { title: "Progress tracking dashboard", sub: "See exactly where you are and what's next" },
-                  { title: "New content added regularly", sub: "Your access grows as the course expands" },
-                  { title: "Access on any device", sub: "Phone, tablet, or desktop — pick up anywhere" },
-                ].map((f) => (
-                  <li key={f.title} className="flex items-start gap-2.5">
-                    <CheckCircle2 className="w-4 h-4 text-gold flex-shrink-0 mt-0.5" />
-                    <span className="text-sm">
-                      <span className="font-semibold text-text">{f.title}</span>
-                      <span className="block text-xs text-text-muted mt-0.5">{f.sub}</span>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-
-              {hasLifetime || hasMonthly ? (
-                <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-center">
-                  <p className="text-sm text-green-400 font-medium">✓ Access Active</p>
-                  <Link href="/seerah" className="text-xs text-gold mt-1 hover:underline block">Go to course →</Link>
-                </div>
-              ) : (
-                <Link
-                  href="/checkout?plan=individual-monthly"
-                  data-track="plan_selected"
-                  data-plan="individual-monthly"
-                  data-plan-type="individual"
-                  data-billing="monthly"
-                  data-price="499"
-                  className={buttonClass("primary", "xl", "w-full justify-center shadow-lg shadow-gold/20")}
-                >
-                  Start Learning
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-              )}
-              <p className="text-xs text-text-muted/60 text-center mt-2.5">Cancel anytime · No commitment</p>
-            </div>
-
-            {/* Family Monthly */}
-            <div className="relative pt-8 pb-6 px-6 rounded-2xl border border-border bg-surface flex flex-col">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap">
-                <span className="px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-surface border border-border text-text-muted">
-                  For Households
-                </span>
-              </div>
-
-              {/* Header */}
-              <p className="text-lg font-bold text-text mb-1">Family</p>
-              <div className="flex items-baseline gap-1 mb-1">
-                <span className="text-4xl font-bold text-text">$9.99</span>
-                <span className="text-sm text-text-muted">/month</span>
-              </div>
-              <p className="text-sm font-bold text-gold mb-5">
-                Up to 5 profiles · separate progress · one household plan
-              </p>
-
-              {/* Features */}
-              <ul className="space-y-3 mb-6 flex-1">
-                {[
-                  { title: "Everything in Individual", sub: "All 100 lessons, quizzes, flashcards, and tracking" },
-                  { title: "Up to 5 separate learner profiles", sub: "Each family member gets their own account" },
-                  { title: "Independent progress per profile", sub: "No one loses their place when someone else logs in" },
-                  { title: "One shared subscription", sub: "Single billing · cancel from one place" },
-                  { title: "Great for kids learning together", sub: "Teach your whole household the Seerah" },
-                ].map((f) => (
-                  <li key={f.title} className="flex items-start gap-2.5">
-                    <CheckCircle2 className="w-4 h-4 text-gold/70 flex-shrink-0 mt-0.5" />
-                    <span className="text-sm">
-                      <span className="font-semibold text-text-secondary">{f.title}</span>
-                      <span className="block text-xs text-text-muted mt-0.5">{f.sub}</span>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-
-              {hasFamily ? (
-                <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-center">
-                  <p className="text-sm text-green-400 font-medium">✓ Family Access Active</p>
-                  <Link href="/student/profiles" className="text-xs text-gold mt-1 hover:underline block">Manage profiles →</Link>
-                </div>
-              ) : (
-                <Link
-                  href="/checkout?plan=family-monthly"
-                  data-track="plan_selected"
-                  data-plan="family-monthly"
-                  data-plan-type="family"
-                  data-billing="monthly"
-                  data-price="999"
-                  className={buttonClass("ghost", "xl", "w-full justify-center border border-gold/30 text-gold hover:bg-gold/5")}
-                >
-                  Start Family Membership
-                </Link>
-              )}
-              <p className="text-xs text-text-muted/60 text-center mt-2.5">Cancel anytime</p>
-            </div>
-
-          </div>
+        {/* Gift option */}
+        {!hasAnyAccess && (
+          <FadeUp delay={0.1} className="mt-4 text-center">
+            <Link
+              href="/gift-checkout"
+              className="inline-flex items-center gap-1.5 text-xs text-text-muted hover:text-gold transition-colors"
+            >
+              <Gift className="w-3.5 h-3.5" />
+              Gift this course to someone
+            </Link>
+          </FadeUp>
         )}
 
-        {/* ── Lifetime cards ────────────────────────────────────────── */}
-        {tab === "lifetime" && (
-          <div className="grid sm:grid-cols-2 gap-5 max-w-3xl mx-auto">
-
-            {/* Individual Lifetime */}
-            <div className="relative p-6 rounded-2xl border border-border bg-gradient-to-b from-gold/5 to-surface flex flex-col sm:scale-[1.03] sm:origin-center">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 rounded-lg bg-gold/15 border border-gold/25 flex items-center justify-center">
-                  <User className="w-4 h-4 text-gold" />
-                </div>
-                <div>
-                  <p className="text-base font-bold text-text leading-tight">For Me</p>
-                  <p className="text-xs text-text-muted">Individual lifetime access</p>
-                </div>
-              </div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/10 border border-gold/20 mb-4 self-start">
-                <User className="w-3.5 h-3.5 text-gold" />
-                <span className="text-sm font-semibold text-gold">1 person</span>
-              </div>
-
-              <div className="mb-5">
-                <div className="flex items-baseline gap-1.5 mb-0.5">
-                  <span className="text-4xl font-bold text-text">$49</span>
-                  <span className="text-sm text-text-muted">one-time</span>
-                </div>
-                <p className="text-xs text-text-secondary">Pay once · access forever</p>
-              </div>
-
-              <ul className="space-y-3 mb-6 flex-1">
-                {[
-                  { title: "Pay once — yours forever", sub: "No monthly charges, ever. Access never expires." },
-                  { title: "Full 100-part Seerah path", sub: "Video lessons, quizzes, flashcards, and mind maps" },
-                  { title: "Progress tracking dashboard", sub: "Resume exactly where you left off, any time" },
-                  { title: "All future content included", sub: "As the course grows, you get it automatically" },
-                  { title: "Access on any device", sub: "Phone, tablet, or desktop — always available" },
-                ].map((f) => (
-                  <li key={f.title} className="flex items-start gap-2.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-gold flex-shrink-0 mt-0.5" />
-                    <span className="text-sm">
-                      <span className="font-semibold text-text">{f.title}</span>
-                      <span className="block text-xs text-text-muted mt-0.5">{f.sub}</span>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-
-              {hasAnyAccess ? (
-                <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-center">
-                  <p className="text-sm text-green-400 font-medium">✓ Access Active</p>
-                  <Link href="/seerah" className="text-xs text-gold mt-1 hover:underline block">Go to course →</Link>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <Link
-                    href="/checkout?plan=individual-lifetime"
-                    data-track="plan_selected"
-                    data-plan="individual-lifetime"
-                    data-billing="lifetime"
-                    data-price="4900"
-                    className={buttonClass("primary", "lg", "w-full justify-center shadow-lg shadow-gold/20")}
-                  >
-                    Get Lifetime Access — $49
-                    <ArrowRight className="w-4 h-4" />
-                  </Link>
-                  <Link
-                    href="/gift-checkout"
-                    className={buttonClass("ghost", "sm", "w-full justify-center border border-gold/20 text-gold/70 hover:bg-gold/5 text-xs min-h-[40px]")}
-                  >
-                    <Gift className="w-3.5 h-3.5" />
-                    Gift This Course
-                  </Link>
-                </div>
-              )}
-
-              <div className="mt-3 flex items-center justify-center gap-2 text-xs text-text-muted">
-                <Infinity className="w-3.5 h-3.5" />
-                <span>Lifetime access · 7-day guarantee</span>
-              </div>
-            </div>
-
-            {/* Family Lifetime */}
-            <div className="relative p-6 rounded-2xl border-2 border-gold bg-surface flex flex-col gold-glow">
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap">
-                <span className="px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-gold text-ink shadow-sm">
-                  Best for Families
-                </span>
-              </div>
-
-              <div className="flex items-center gap-2 mb-3 mt-1">
-                <div className="w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center">
-                  <Users className="w-4 h-4 text-gold/80" />
-                </div>
-                <div>
-                  <p className="text-base font-bold text-text leading-tight">For My Family</p>
-                  <p className="text-xs text-text-muted">Up to 5 learner profiles</p>
-                </div>
-              </div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/10 border border-gold/20 mb-4 self-start">
-                <Users className="w-3.5 h-3.5 text-gold/80" />
-                <span className="text-sm font-semibold text-gold/90">Up to 5 members</span>
-              </div>
-
-              <div className="mb-5">
-                <div className="flex items-baseline gap-1.5 mb-0.5">
-                  <span className="text-4xl font-bold text-text">$99</span>
-                  <span className="text-sm text-text-muted">one-time</span>
-                </div>
-                <p className="text-xs text-text-secondary">One payment for the whole household</p>
-              </div>
-
-              <ul className="space-y-3 mb-6 flex-1">
-                {[
-                  { title: "Everything in Individual Lifetime", sub: "All 100 lessons, quizzes, flashcards, and mind maps" },
-                  { title: "Up to 5 separate learner profiles", sub: "Each family member gets their own login" },
-                  { title: "Fully independent progress tracking", sub: "No one overwrites anyone else's place" },
-                  { title: "All future content for the whole family", sub: "New lessons automatically available to all profiles" },
-                  { title: "One payment — no recurring charges", sub: "Pay once for the whole household, forever" },
-                ].map((f) => (
-                  <li key={f.title} className="flex items-start gap-2.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-gold/70 flex-shrink-0 mt-0.5" />
-                    <span className="text-sm">
-                      <span className="font-semibold text-text-secondary">{f.title}</span>
-                      <span className="block text-xs text-text-muted mt-0.5">{f.sub}</span>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-
-              {hasFamily ? (
-                <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-center">
-                  <p className="text-sm text-green-400 font-medium">✓ Family Access Active</p>
-                  <Link href="/student/profiles" className="text-xs text-gold mt-1 hover:underline block">Manage profiles →</Link>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <Link
-                    href="/checkout?plan=family-lifetime"
-                    data-track="plan_selected"
-                    data-plan="family-lifetime"
-                    data-billing="lifetime"
-                    data-price="9900"
-                    className={buttonClass("primary", "lg", "w-full justify-center shadow-lg shadow-gold/20")}
-                  >
-                    Get Family Lifetime — $99
-                    <ArrowRight className="w-4 h-4" />
-                  </Link>
-                  <Link
-                    href="/gift-checkout"
-                    className={buttonClass("ghost", "sm", "w-full justify-center border border-gold/20 text-gold/70 hover:bg-gold/5 text-xs min-h-[40px]")}
-                  >
-                    <Gift className="w-3.5 h-3.5" />
-                    Gift This Course
-                  </Link>
-                </div>
-              )}
-
-              <div className="mt-3 flex items-center justify-center gap-2 text-xs text-text-muted">
-                <Lock className="w-3.5 h-3.5" />
-                <span>Secure payment · 7-day guarantee</span>
-              </div>
-            </div>
-
-          </div>
-        )}
-
-        {/* ── Cross-tab footnote ────────────────────────────────────── */}
-        <p className="text-center text-xs text-text-muted/50 mt-6">
-          {tab === "monthly" ? (
-            <>
-              Prefer to pay once?{" "}
-              <button
-                onClick={() => setTab("lifetime")}
-                className="underline underline-offset-2 hover:text-text-muted transition-colors"
-              >
-                View lifetime options →
-              </button>
-            </>
-          ) : (
-            <>
-              Want to start smaller?{" "}
-              <button
-                onClick={() => setTab("monthly")}
-                className="underline underline-offset-2 hover:text-text-muted transition-colors"
-              >
-                Start at $4.99/month →
-              </button>
-            </>
-
-          )}
-        </p>
+        {/* What's included */}
+        <FadeUp delay={0.15} className="mt-8 border-t border-border pt-6">
+          <p className="text-xs font-bold text-gold uppercase tracking-widest text-center mb-4">
+            Everything included in every plan
+          </p>
+          <ul className="space-y-2.5">
+            {INCLUDED.map((item) => (
+              <li key={item} className="flex items-start gap-2.5">
+                <CheckCircle2 className="w-4 h-4 text-gold flex-shrink-0 mt-0.5" />
+                <span className="text-sm text-text-secondary">{item}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="text-xs text-text-muted text-center mt-4">
+            Family plans include up to 5 separate learner profiles with independent progress tracking.
+          </p>
+        </FadeUp>
 
       </div>
     </section>
