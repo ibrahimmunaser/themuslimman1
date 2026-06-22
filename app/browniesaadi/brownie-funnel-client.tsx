@@ -9,15 +9,14 @@ export default function BrownieFunnelClient() {
   return (
     <InfluencerDirectLanding
       config={{
-        creator:         "browniesaadi",
-        creatorName:     "Brownie Saadi",
-        heroHeadline:    "You came from Brownie Saadi.",
-        heroSubheadline: "So you probably already know this is important.",
-        discountCode:    "BROWNIE59",
-        discountLabel:   "The Brownie Saadi discount is already applied.",
-        checkoutUrl:     `/checkout?plan=individual-lifetime&${SRC}&promo=BROWNIE59&${UTM}`,
-        watchFreeUrl:    "/watch-free",
-        eventPrefix:     "brownie_",
+        creator:     "browniesaadi",
+        creatorName: "Brownie Saadi",
+        heroHeadline: "You came from Brownie Saadi.",
+        discountLabel: "The Brownie Saadi discount is already applied.",
+        price:        "$4.99/month",
+        checkoutUrl:  `/checkout?plan=individual-monthly&${SRC}&${UTM}`,
+        watchFreeUrl: "/watch-free",
+        eventPrefix:  "brownie_",
         checkoutButtonLabel: "Start Now",
       }}
     />

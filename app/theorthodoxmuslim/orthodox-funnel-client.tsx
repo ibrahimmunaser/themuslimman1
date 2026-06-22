@@ -9,15 +9,14 @@ export default function OrthodoxFunnelClient() {
   return (
     <InfluencerDirectLanding
       config={{
-        creator:         "theorthodoxmuslim",
-        creatorName:     "The Orthodox Muslim",
-        heroHeadline:    "You came from The Orthodox Muslim.",
-        heroSubheadline: "So you probably already know this is important.",
-        discountCode:    "ORTHODOX59",
-        discountLabel:   "The Orthodox Muslim discount is already applied.",
-        checkoutUrl:     `/checkout?plan=individual-lifetime&${SRC}&promo=ORTHODOX59&${UTM}`,
-        watchFreeUrl:    "/watch-free",
-        eventPrefix:     "orthodox_",
+        creator:     "theorthodoxmuslim",
+        creatorName: "The Orthodox Muslim",
+        heroHeadline: "You came from The Orthodox Muslim.",
+        discountLabel: "The Orthodox Muslim discount is already applied.",
+        price:        "$4.99/month",
+        checkoutUrl:  `/checkout?plan=individual-monthly&${SRC}&${UTM}`,
+        watchFreeUrl: "/watch-free",
+        eventPrefix:  "orthodox_",
         checkoutButtonLabel: "Start Now",
       }}
     />

@@ -9,15 +9,14 @@ export default function DeenFunnelClient() {
   return (
     <InfluencerDirectLanding
       config={{
-        creator:         "deenresponds",
-        creatorName:     "Deen Responds",
-        heroHeadline:    "You came from Deen Responds.",
-        heroSubheadline: "So you probably already know this is important.",
-        discountCode:    "DEEN59",
-        discountLabel:   "The Deen Responds discount is already applied.",
-        checkoutUrl:     `/checkout?plan=individual-lifetime&${SRC}&promo=DEEN59&${UTM}`,
-        watchFreeUrl:    "/watch-free",
-        eventPrefix:     "deen_",
+        creator:     "deenresponds",
+        creatorName: "Deen Responds",
+        heroHeadline: "You came from Deen Responds.",
+        discountLabel: "The Deen Responds discount is already applied.",
+        price:        "$4.99/month",
+        checkoutUrl:  `/checkout?plan=individual-monthly&${SRC}&${UTM}`,
+        watchFreeUrl: "/watch-free",
+        eventPrefix:  "deen_",
         checkoutButtonLabel: "Start Now",
       }}
     />

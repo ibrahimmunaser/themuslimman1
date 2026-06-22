@@ -9,15 +9,15 @@ export default function CommunityFunnelClient() {
   return (
     <InfluencerDirectLanding
       config={{
-        creator:         "community",
-        creatorName:     "Our Community",
-        heroHeadline:    "A Special Offer for Our Community.",
-        heroSubheadline: "You already care. This course makes it easy to act on that.",
-        discountCode:    "COMMUNITY49",
-        discountLabel:   "Your community discount is already applied.",
-        checkoutUrl:     `/checkout?plan=individual-lifetime&${SRC}&promo=COMMUNITY49&${UTM}`,
-        watchFreeUrl:    `/watch-free?${SRC}`,
-        eventPrefix:     "community_",
+        creator:     "community",
+        creatorName: "Our Community",
+        heroHeadline: "A Special Offer for Our Community.",
+        discountLabel: "Your community discount is already applied.",
+        discountCode: "COMMUNITY49",
+        price:        "$49 one-time",
+        checkoutUrl:  `/checkout?plan=individual-lifetime&${SRC}&promo=COMMUNITY49&${UTM}`,
+        watchFreeUrl: `/watch-free?${SRC}`,
+        eventPrefix:  "community_",
         checkoutButtonLabel: "Start Now",
       }}
     />

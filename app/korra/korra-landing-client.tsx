@@ -9,15 +9,14 @@ export default function KorraLandingClient() {
   return (
     <InfluencerDirectLanding
       config={{
-        creator:         "korra",
-        creatorName:     "Korra",
-        heroHeadline:    "You came from Korra.",
-        heroSubheadline: "So you probably already know this is important.",
-        discountCode:    "KORRA20",
-        discountLabel:   "Your Korra discount is already applied — 20% off lifetime access.",
-        checkoutUrl:     `/checkout?plan=individual-lifetime&${SRC}&promo=KORRA20&${UTM}`,
-        watchFreeUrl:    "/watch-free",
-        eventPrefix:     "korra_",
+        creator:     "korra",
+        creatorName: "Korra",
+        heroHeadline: "You came from Korra.",
+        discountLabel: "Your Korra discount is already applied — 20% off lifetime access.",
+        discountCode: "KORRA20",
+        checkoutUrl:  `/checkout?plan=individual-lifetime&${SRC}&promo=KORRA20&${UTM}`,
+        watchFreeUrl: "/watch-free",
+        eventPrefix:  "korra_",
         checkoutButtonLabel: "Start Now",
       }}
     />

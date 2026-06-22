@@ -9,15 +9,15 @@ export default function AnnArborFunnelClient() {
   return (
     <InfluencerDirectLanding
       config={{
-        creator:         "annarbor",
-        creatorName:     "Ann Arbor Students",
-        heroHeadline:    "A Special Offer for Ann Arbor Students.",
-        heroSubheadline: "You already care. This course makes it easy to act on that.",
-        discountCode:    "ANNARBOR29",
-        discountLabel:   "Your Ann Arbor student discount is already applied.",
-        checkoutUrl:     `/checkout?plan=individual-lifetime&${SRC}&promo=ANNARBOR29&${UTM}`,
-        watchFreeUrl:    `/watch-free?${SRC}`,
-        eventPrefix:     "annarbor_",
+        creator:     "annarbor",
+        creatorName: "Ann Arbor Students",
+        heroHeadline: "A Special Offer for Ann Arbor Students.",
+        discountLabel: "Your Ann Arbor student discount is already applied.",
+        discountCode: "ANNARBOR29",
+        price:        "$29 one-time",
+        checkoutUrl:  `/checkout?plan=individual-lifetime&${SRC}&promo=ANNARBOR29&${UTM}`,
+        watchFreeUrl: `/watch-free?${SRC}`,
+        eventPrefix:  "annarbor_",
         checkoutButtonLabel: "Start Now",
       }}
     />

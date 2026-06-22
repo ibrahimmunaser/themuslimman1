@@ -9,15 +9,14 @@ export default function DearbornFunnelClient() {
   return (
     <InfluencerDirectLanding
       config={{
-        creator:         "dearborn",
-        creatorName:     "Dearborn Community",
-        heroHeadline:    "A Special Offer for the Dearborn Community.",
-        heroSubheadline: "You already care. This course makes it easy to act on that.",
-        discountCode:    "DEARBORN20",
-        discountLabel:   "Your Dearborn community discount is already applied.",
-        checkoutUrl:     `/checkout?plan=individual-lifetime&${SRC}&promo=DEARBORN20&${UTM}`,
-        watchFreeUrl:    `/watch-free?${SRC}`,
-        eventPrefix:     "dearborn_",
+        creator:     "dearborn",
+        creatorName: "Dearborn Community",
+        heroHeadline: "A Special Offer for the Dearborn Community.",
+        discountLabel: "Your Dearborn community discount is already applied.",
+        discountCode: "DEARBORN20",
+        checkoutUrl:  `/checkout?plan=individual-lifetime&${SRC}&promo=DEARBORN20&${UTM}`,
+        watchFreeUrl: `/watch-free?${SRC}`,
+        eventPrefix:  "dearborn_",
         checkoutButtonLabel: "Start Now",
       }}
     />
