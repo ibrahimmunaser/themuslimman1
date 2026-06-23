@@ -250,7 +250,7 @@ async function handleTrialFeePayment(pi: Stripe.PaymentIntent) {
   const isFamily = planId === "familyTrial";
 
   // Attach the payment method as default only if it supports off-session recurring charges.
-  // Card and Link are saveable; other methods (e.g. Cash App) are not and must not be set.
+  // Card and Link are saveable; redirect-based wallets must not be set as default.
   if (pi.payment_method && customerId) {
     try {
       const pm = await stripe.paymentMethods.retrieve(pi.payment_method as string);

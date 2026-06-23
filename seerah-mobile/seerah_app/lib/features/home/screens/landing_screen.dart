@@ -85,7 +85,7 @@ class LandingScreen extends ConsumerStatefulWidget {
 }
 
 class _LandingScreenState extends ConsumerState<LandingScreen> {
-  PlanId _selected = PlanId.individualLifetime;
+  PlanId? _purchasingPlanId;
 
   @override
   void initState() {
@@ -96,18 +96,22 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
   String _price(IAPState iap, _Plan plan) =>
       iap.productFor(plan.iapId)?.price ?? plan.fallbackPrice;
 
-  _Plan get _selectedPlan => _plans.firstWhere((p) => p.id == _selected);
-
-  void _buy(IAPState iap) {
+  void _buyPlan(IAPState iap, _Plan plan) {
+    if (iap.status == IAPStatus.purchasing ||
+        iap.status == IAPStatus.verifying ||
+        iap.status == IAPStatus.loading) {
+      return;
+    }
     if (!iap.isAvailable) {
       _snack('Store unavailable — please sign in to the App Store or Google Play.');
       return;
     }
-    final product = iap.productFor(_selectedPlan.iapId);
+    final product = iap.productFor(plan.iapId);
     if (product == null) {
       _snack('This product is temporarily unavailable. Please try again.');
       return;
     }
+    setState(() => _purchasingPlanId = plan.id);
     ref.read(iapProvider.notifier).buy(product);
   }
 
@@ -120,16 +124,19 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
   void _onIAP(IAPState? prev, IAPState next) {
     if (next.status == IAPStatus.pendingAccountSetup &&
         prev?.status != IAPStatus.pendingAccountSetup) {
+      if (mounted) setState(() => _purchasingPlanId = null);
       context.push('/account-setup');
     }
     if (next.status == IAPStatus.error &&
         next.errorMessage != null &&
         prev?.errorMessage != next.errorMessage) {
+      if (mounted) setState(() => _purchasingPlanId = null);
       _snack(next.errorMessage!);
       ref.read(iapProvider.notifier).clearError();
     }
     if (next.status == IAPStatus.cancelled &&
         prev?.status == IAPStatus.purchasing) {
+      if (mounted) setState(() => _purchasingPlanId = null);
       _snack('Purchase cancelled.');
     }
   }
@@ -141,12 +148,6 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
     final busy = iap.status == IAPStatus.purchasing ||
         iap.status == IAPStatus.verifying ||
         iap.status == IAPStatus.loading;
-
-    final selected = _selectedPlan;
-    final price = _price(iap, selected);
-    final ctaLabel = selected.period == '/mo'
-        ? 'Start for $price${selected.period}'
-        : 'Get Lifetime Access — $price';
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -193,44 +194,17 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                     // ── Plan cards ────────────────────────────────────────
                     ...List.generate(_plans.length, (i) {
                       final plan = _plans[i];
-                      final isSelected = _selected == plan.id;
                       return _PlanTile(
                         plan: plan,
                         price: _price(iap, plan),
-                        isSelected: isSelected,
-                        onTap: () => setState(() => _selected = plan.id),
+                        isLoading: _purchasingPlanId == plan.id && busy,
+                        enabled: !busy,
+                        onTap: () => _buyPlan(iap, plan),
                         bottomMargin: i < _plans.length - 1 ? 10 : 0,
                       );
                     }),
 
-                    const SizedBox(height: 24),
-
-                    // ── CTA ───────────────────────────────────────────────
-                    FilledButton(
-                      onPressed: busy ? null : () => _buy(iap),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.gold,
-                        foregroundColor: Colors.black,
-                        minimumSize: const Size.fromHeight(52),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                      child: busy
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2.5, color: Colors.black54),
-                            )
-                          : Text(
-                              ctaLabel,
-                              style: const TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.w700),
-                            ),
-                    ),
-
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 16),
                     const Text(
                       '7-day refund guarantee  ·  Instant access  ·  Cancel anytime',
                       textAlign: TextAlign.center,
@@ -340,129 +314,124 @@ class _HeroSection extends StatelessWidget {
 class _PlanTile extends StatelessWidget {
   final _Plan plan;
   final String price;
-  final bool isSelected;
+  final bool isLoading;
+  final bool enabled;
   final VoidCallback onTap;
   final double bottomMargin;
 
   const _PlanTile({
     required this.plan,
     required this.price,
-    required this.isSelected,
+    required this.isLoading,
+    required this.enabled,
     required this.onTap,
     this.bottomMargin = 0,
   });
 
   @override
   Widget build(BuildContext context) {
-    final borderColor = isSelected ? AppColors.gold : AppColors.border;
-    final bgColor = isSelected
-        ? AppColors.gold.withValues(alpha: 0.07)
-        : AppColors.card;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        margin: EdgeInsets.only(bottom: bottomMargin),
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: borderColor,
-            width: isSelected ? 1.8 : 1.2,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: enabled && !isLoading ? onTap : null,
+        borderRadius: BorderRadius.circular(14),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          margin: EdgeInsets.only(bottom: bottomMargin),
+          decoration: BoxDecoration(
+            color: AppColors.card,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.border, width: 1.2),
           ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              // Radio indicator
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 150),
-                width: 22,
-                height: 22,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: isSelected ? AppColors.gold : AppColors.border,
-                    width: isSelected ? 6 : 2,
-                  ),
-                  color: isSelected ? AppColors.gold : Colors.transparent,
-                ),
-              ),
-
-              const SizedBox(width: 14),
-
-              // Plan info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          plan.name,
-                          style: TextStyle(
-                            color: isSelected
-                                ? AppColors.textPrimary
-                                : AppColors.textSecondary,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        if (plan.badge != null) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 7, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: AppColors.goldFaded,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
                             child: Text(
-                              plan.badge!,
+                              plan.name,
                               style: const TextStyle(
-                                color: AppColors.gold,
-                                fontSize: 10,
+                                color: AppColors.textPrimary,
+                                fontSize: 15,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),
+                          if (plan.badge != null) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 7, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: AppColors.goldFaded,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                plan.badge!,
+                                style: const TextStyle(
+                                  color: AppColors.gold,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
                         ],
-                      ],
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      plan.description,
-                      style: const TextStyle(
-                          color: AppColors.textMuted, fontSize: 12.5),
-                    ),
-                  ],
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        plan.description,
+                        style: const TextStyle(
+                            color: AppColors.textMuted, fontSize: 12.5),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-
-              const SizedBox(width: 12),
-
-              // Price
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    price,
-                    style: TextStyle(
-                      color: isSelected ? AppColors.gold : AppColors.textPrimary,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
+                const SizedBox(width: 12),
+                if (isLoading)
+                  const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: AppColors.gold,
                     ),
+                  )
+                else
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        price,
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      Text(
+                        plan.period,
+                        style: const TextStyle(
+                            color: AppColors.textMuted, fontSize: 11),
+                      ),
+                    ],
                   ),
-                  Text(
-                    plan.period,
-                    style: const TextStyle(
-                        color: AppColors.textMuted, fontSize: 11),
-                  ),
-                ],
-              ),
-            ],
+                const SizedBox(width: 10),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  size: 14,
+                  color: enabled
+                      ? AppColors.textMuted
+                      : AppColors.textMuted.withValues(alpha: 0.4),
+                ),
+              ],
+            ),
           ),
         ),
       ),

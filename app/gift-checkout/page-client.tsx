@@ -672,6 +672,7 @@ function GiftCheckoutContent({ purchaserEmail, purchaserName: _purchaserName }: 
                 stripe={stripePromise}
                 options={{
                   clientSecret,
+                  allowRedirects: "never",
                   appearance: {
                     theme: "night",
                     variables: {

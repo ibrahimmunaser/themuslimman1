@@ -140,10 +140,14 @@ export default async function CheckoutPage({ searchParams }: Props) {
         initialFreeAccess = true;
       } else {
         const creatorConfig = appliedPromoCode ? getCreatorPromoConfig(appliedPromoCode) : null;
+        // Resolve creator: promo config takes priority, then ?source= param for
+        // influencer links that don't carry a promo code.
+        const sourceParam = params.source?.trim().toLowerCase() ?? null;
+        const resolvedCreator = creatorConfig?.creator ?? sourceParam ?? null;
         const paymentIntent = await stripe.paymentIntents.create({
           amount:               finalAmount,
           currency:             "usd",
-          automatic_payment_methods: { enabled: true },
+          payment_method_types: ["card"],
           metadata: {
             userId:   user.id,
             planId:   "complete",
@@ -154,8 +158,8 @@ export default async function CheckoutPage({ searchParams }: Props) {
               promoCode:           appliedPromoCode,
               promoDiscountAmount: String(promoDiscount),
             } : {}),
+            ...(resolvedCreator ? { creator: resolvedCreator } : {}),
             ...(creatorConfig ? {
-              creator:      creatorConfig.creator,
               utm_source:   creatorConfig.utm_source   ?? "",
               utm_medium:   creatorConfig.utm_medium   ?? "",
               utm_campaign: creatorConfig.utm_campaign ?? "",

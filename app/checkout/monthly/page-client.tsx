@@ -571,6 +571,7 @@ function MonthlyCheckoutContent({ userEmail }: Props) {
               stripe={stripePromise}
               options={{
                 clientSecret,
+                allowRedirects: "never",
                 appearance: {
                   theme: "night",
                   variables: {

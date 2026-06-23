@@ -7,8 +7,6 @@ import { getCreatorPromoConfig } from "@/lib/creator-promos";
 import { getUserAccessInfo } from "@/lib/access";
 import { checkRateLimit, getIP } from "@/lib/rate-limit";
 
-/** Individual lifetime price in cents ($49). */
-const BASE_PRICE = 4900;
 
 /**
  * Gets the existing Stripe Customer ID for a user, or creates one and saves it.
@@ -98,7 +96,7 @@ export async function POST(request: NextRequest) {
     const plan = PLANS[planId];
 
     // Server decides the price — always $49 (4900 cents), client cannot override.
-    const baseAmount: number = BASE_PRICE;
+    const baseAmount: number = PLANS.complete.price;
 
     // ── Apply promo code if provided ──
     let finalAmount: number = baseAmount;
@@ -142,7 +140,7 @@ export async function POST(request: NextRequest) {
       amount: finalAmount,
       currency: "usd",
       customer: customerId,
-      automatic_payment_methods: { enabled: true },
+      payment_method_types: ["card"],
       metadata: {
         userId: user.id,
         planId: plan.id,

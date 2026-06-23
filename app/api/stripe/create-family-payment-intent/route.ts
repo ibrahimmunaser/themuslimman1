@@ -158,7 +158,7 @@ export async function POST(request: NextRequest) {
       amount: finalAmount,
       currency: "usd",
       customer: customerId,
-      automatic_payment_methods: { enabled: true },
+      payment_method_types: ["card"],
       metadata: {
         userId: user.id,
         planId: FAMILY_PLAN.id,                    // "family" — drives planType in webhook

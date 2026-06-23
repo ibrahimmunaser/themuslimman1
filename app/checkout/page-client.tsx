@@ -334,7 +334,7 @@ function CheckoutForm({
           setError(friendlyPaymentError(confirmError));
           setProcessing(false);
         } else if (paymentIntent?.status === "succeeded") {
-          logStage("payment_succeeded", { userEmail: authFormRef.current?.email || "" });
+          logStage("payment_succeeded", { userEmail: authFormRef.current?.email || authEmail || "" });
           markPurchased();
           const url = new URL(returnUrl, window.location.origin);
           url.searchParams.set("payment_intent", paymentIntent.id);
@@ -447,7 +447,7 @@ function CheckoutForm({
           setError(friendlyPaymentError(confirmError));
         setProcessing(false);
       } else if (paymentIntent?.status === "succeeded") {
-        logStage("payment_succeeded", { method: "express", userEmail: walletEmail || authFormRef.current?.email || "" });
+        logStage("payment_succeeded", { method: "express", userEmail: walletEmail || authFormRef.current?.email || authEmail || "" });
         markPurchased();
         const url = new URL(returnUrl, window.location.origin);
         url.searchParams.set("payment_intent", paymentIntent.id);
@@ -606,8 +606,7 @@ function CheckoutForm({
       )}
 
       <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Apple Pay, Google Pay, Link appear above via ExpressCheckoutElement — suppress duplicates.
-            Cash App requires setup_future_usage=off_session to be absent; hide it on trial. */}
+        {/* Apple Pay, Google Pay, Link appear above via ExpressCheckoutElement — suppress duplicates. */}
         <PaymentElement
           onReady={() => logStage("payment_element_loaded")}
           onChange={(e) => {
@@ -736,10 +735,6 @@ interface CheckoutPageClientProps {
 
 // Plan-specific promo codes that must be resolved to the correct variant based on
 // the selected audience. Add any new plan-paired codes here.
-// All creator / location discounts have been removed. No active promo codes apply.
-// Legacy codes are still recognised server-side for backward compatibility
-// (recovery emails, old bookmarks) but no new URLs embed promo= params.
-const COMMUNITY_CODE_MAP: Partial<Record<string, Record<"individual" | "family", string>>> = {};
 
 /** Returns true when running inside an Instagram / TikTok / Facebook in-app browser. */
 function useIsInAppBrowser() {
@@ -798,11 +793,7 @@ function CheckoutPageContent({
   // Ann Arbor student offer: customise labels in the offer panel and buttons
   const isAnnArborStudent = initialSourceParam === "annarbor" && billing === "lifetime" && audience === "individual";
 
-  // Community codes are plan-specific: resolve to the correct variant based on
-  // the selected audience (defined at module level to avoid per-render allocation).
-  const resolvedPromoParam = promoParam
-    ? (COMMUNITY_CODE_MAP[promoParam.toUpperCase()]?.[audience] ?? promoParam)
-    : null;
+  const resolvedPromoParam = promoParam ?? null;
 
   const planKey   = toPlanKey(audience, billing);
   const currentPlan = PLANS[planKey];
@@ -1155,12 +1146,10 @@ function CheckoutPageContent({
 
     if (billing === "lifetime") {
       const couponCode = appliedCoupon?.code;
-      const resolveCode = (code: string) =>
-        COMMUNITY_CODE_MAP[code.toUpperCase()]?.[audience] ?? code;
-      if (promoParam) { autoApply(resolveCode(promoParam)); return; }
+      if (promoParam) { autoApply(promoParam); return; }
       const stored = getCreatorPromo();
-      if (stored) { autoApply(resolveCode(stored), clearCreatorPromo); return; }
-      if (couponCode) { autoApply(resolveCode(couponCode)); return; }
+      if (stored) { autoApply(stored, clearCreatorPromo); return; }
+      if (couponCode) { autoApply(couponCode); return; }
     }
 
     createIntent(audience, billing, undefined);
@@ -2069,19 +2058,31 @@ function CheckoutPageContent({
                   );
                 }
 
+                // For lifetime plans: use clientSecret-based Elements when a PI is
+                // already available (pre-created server-side or lazy-created after
+                // auth). This makes Stripe respect payment_method_types: ["card"] on
+                // the PI, hiding non-card methods.
+                // Fall back to deferred mode only while the user is still unauthenticated
+                // and no PI exists yet.
                 const elementsOptions =
                   billing === "trial"
-                    ? { mode: "setup" as const, currency: "usd", appearance: elementsAppearance }
+                    ? { mode: "setup" as const, currency: "usd", appearance: elementsAppearance, allowRedirects: "never" as const }
                     : isMonthlyBilling
-                    ? { clientSecret: clientSecret!, appearance: elementsAppearance }
+                    ? { clientSecret: clientSecret!, appearance: elementsAppearance, allowRedirects: "never" as const }
+                    : clientSecret
+                    ? { clientSecret, appearance: elementsAppearance, allowRedirects: "never" as const }
                     : {
                         mode: "payment" as const,
                         amount: finalPrice > 0 ? finalPrice : 1,
                         currency: "usd",
                         appearance: elementsAppearance,
+                        allowRedirects: "never" as const,
+                        paymentMethodTypes: ["card"],
                       };
 
                 const elementsKey = isMonthlyBilling
+                  ? `${audience}-${billing}-${clientSecret}`
+                  : clientSecret
                   ? `${audience}-${billing}-${clientSecret}`
                   : `${audience}-${billing}`;
 

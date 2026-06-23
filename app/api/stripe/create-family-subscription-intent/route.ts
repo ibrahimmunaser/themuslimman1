@@ -101,6 +101,8 @@ export async function POST(request: NextRequest) {
       // Also clear cancel_at_period_end: if the user previously cancelled and is
       // now upgrading, we must re-activate renewal — otherwise the sub would still
       // cancel at period end at the new family price instead of renewing.
+      // Resolve creator from request body (same priority as new-subscription path).
+      const upgradedCreator = creator?.trim() || source?.trim() || null;
       await stripe.subscriptions.update(activeSub.stripeSubscriptionId, {
         items: [{ id: existingItemId, price: FAMILY_MONTHLY_PRICE_ID }],
         proration_behavior: "create_prorations",
@@ -110,6 +112,7 @@ export async function POST(request: NextRequest) {
           planId: FAMILY_MONTHLY_PLAN.id,
           planType: "family",
           type: "subscription",
+          ...(upgradedCreator ? { creator: upgradedCreator } : {}),
         },
       });
 

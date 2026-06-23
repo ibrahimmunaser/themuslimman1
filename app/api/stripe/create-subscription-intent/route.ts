@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
         // setup_future_usage: "off_session" when Link is present, which
         // conflicts with subscription invoice PIs (setup_future_usage: null)
         // and causes a 400 mismatch on confirmPayment. Apple Pay / Google Pay
-        // work fine through card networks; Cash App cannot be saved off-session.
+        // Card only — Apple/Google Pay are handled via Express Checkout above.
         payment_method_types: ["card"],
         save_default_payment_method: "on_subscription",
       },

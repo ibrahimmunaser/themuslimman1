@@ -77,7 +77,7 @@ class PricingScreen extends ConsumerStatefulWidget {
 }
 
 class _PricingScreenState extends ConsumerState<PricingScreen> {
-  PlanId _selected = PlanId.individualLifetime;
+  PlanId? _purchasingPlanId;
 
   @override
   void initState() {
@@ -88,18 +88,22 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
   String _price(IAPState iap, _Plan plan) =>
       iap.productFor(plan.iapId)?.price ?? plan.fallbackPrice;
 
-  _Plan get _selectedPlan => _plans.firstWhere((p) => p.id == _selected);
-
-  void _buy(IAPState iap) {
+  void _buyPlan(IAPState iap, _Plan plan) {
+    if (iap.status == IAPStatus.purchasing ||
+        iap.status == IAPStatus.verifying ||
+        iap.status == IAPStatus.loading) {
+      return;
+    }
     if (!iap.isAvailable) {
       _snack('Store unavailable — please sign in to the App Store or Google Play.');
       return;
     }
-    final product = iap.productFor(_selectedPlan.iapId);
+    final product = iap.productFor(plan.iapId);
     if (product == null) {
       _snack('This product is temporarily unavailable. Tap Retry to reload.');
       return;
     }
+    setState(() => _purchasingPlanId = plan.id);
     ref.read(iapProvider.notifier).buy(product);
   }
 
@@ -112,21 +116,25 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
   void _onIAP(IAPState? prev, IAPState next) {
     if (next.status == IAPStatus.success &&
         prev?.status != IAPStatus.success) {
+      if (mounted) setState(() => _purchasingPlanId = null);
       _showSuccessSheet();
       ref.read(iapProvider.notifier).clearSuccess();
     }
     if (next.status == IAPStatus.error &&
         next.errorMessage != null &&
         prev?.errorMessage != next.errorMessage) {
+      if (mounted) setState(() => _purchasingPlanId = null);
       _snack(next.errorMessage!);
       ref.read(iapProvider.notifier).clearError();
     }
     if (next.status == IAPStatus.cancelled &&
         prev?.status == IAPStatus.purchasing) {
+      if (mounted) setState(() => _purchasingPlanId = null);
       _snack('Purchase cancelled.');
     }
     if (next.status == IAPStatus.restoreEmpty &&
         prev?.status != IAPStatus.restoreEmpty) {
+      if (mounted) setState(() => _purchasingPlanId = null);
       _snack('No previous purchases found to restore.');
       ref.read(iapProvider.notifier).clearError();
     }
@@ -216,12 +224,10 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
         title: const Text('Plans & Pricing'),
         centerTitle: true,
       ),
-      body: Column(
+      body: ListView(
+        padding: EdgeInsets.fromLTRB(
+            20, 8, 20, MediaQuery.of(context).padding.bottom + 24),
         children: [
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-              children: [
 
                 // ── Access banner ────────────────────────────────────────
                 if (hasAccess) ...[
@@ -271,8 +277,9 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
                   return _PlanTile(
                     plan: plan,
                     price: _price(iap, plan),
-                    isSelected: _selected == plan.id,
-                    onTap: () => setState(() => _selected = plan.id),
+                    isLoading: _purchasingPlanId == plan.id && busy,
+                    enabled: !hasAccess && !busy,
+                    onTap: () => _buyPlan(iap, plan),
                     bottomMargin: i < _plans.length - 1 ? 10 : 0,
                   );
                 }),
@@ -351,68 +358,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
                 const SizedBox(height: 24),
               ],
             ),
-          ),
-
-          // ── Sticky CTA ───────────────────────────────────────────────
-          if (!hasAccess)
-            Container(
-              padding: EdgeInsets.fromLTRB(
-                  20, 12, 20, MediaQuery.of(context).padding.bottom + 12),
-              decoration: BoxDecoration(
-                color: AppColors.background,
-                border: Border(
-                    top: BorderSide(
-                        color: AppColors.border.withValues(alpha: 0.5))),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  FilledButton(
-                    onPressed: busy ? null : () => _buy(iap),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.gold,
-                      foregroundColor: Colors.black,
-                      minimumSize: const Size.fromHeight(52),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                    child: busy
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2.5, color: Colors.black54),
-                          )
-                        : Text(
-                            _ctaLabel(iap),
-                            style: const TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.w700),
-                          ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    _selectedPlan.period == '/mo'
-                        ? 'Subscription renews monthly. Cancel anytime in device settings.'
-                        : 'One-time purchase. Lifetime access. No subscription.',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                        color: AppColors.textMuted, fontSize: 11),
-                  ),
-                ],
-              ),
-            ),
-        ],
-      ),
     );
-  }
-
-  String _ctaLabel(IAPState iap) {
-    final plan = _selectedPlan;
-    final price = _price(iap, plan);
-    return plan.period == '/mo'
-        ? 'Subscribe — $price/mo'
-        : 'Get Lifetime Access — $price';
   }
 }
 
@@ -421,115 +367,119 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
 class _PlanTile extends StatelessWidget {
   final _Plan plan;
   final String price;
-  final bool isSelected;
+  final bool isLoading;
+  final bool enabled;
   final VoidCallback onTap;
   final double bottomMargin;
 
   const _PlanTile({
     required this.plan,
     required this.price,
-    required this.isSelected,
+    required this.isLoading,
+    required this.enabled,
     required this.onTap,
     this.bottomMargin = 0,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        margin: EdgeInsets.only(bottom: bottomMargin),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.gold.withValues(alpha: 0.07)
-              : AppColors.card,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: isSelected ? AppColors.gold : AppColors.border,
-            width: isSelected ? 1.8 : 1.2,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: enabled && !isLoading ? onTap : null,
+        borderRadius: BorderRadius.circular(14),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          margin: EdgeInsets.only(bottom: bottomMargin),
+          decoration: BoxDecoration(
+            color: AppColors.card,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.border, width: 1.2),
           ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 150),
-                width: 22,
-                height: 22,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: isSelected ? AppColors.gold : AppColors.border,
-                    width: isSelected ? 6 : 2,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            plan.name,
-                            style: TextStyle(
-                              color: isSelected
-                                  ? AppColors.textPrimary
-                                  : AppColors.textSecondary,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                        if (plan.badge != null) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 7, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: AppColors.goldFaded,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
                             child: Text(
-                              plan.badge!,
+                              plan.name,
                               style: const TextStyle(
-                                  color: AppColors.gold,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600),
+                                color: AppColors.textPrimary,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
+                          if (plan.badge != null) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 7, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: AppColors.goldFaded,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                plan.badge!,
+                                style: const TextStyle(
+                                    color: AppColors.gold,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ],
                         ],
-                      ],
-                    ),
-                    const SizedBox(height: 3),
-                    Text(plan.description,
-                        style: const TextStyle(
-                            color: AppColors.textMuted, fontSize: 12.5)),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    price,
-                    style: TextStyle(
-                      color: isSelected ? AppColors.gold : AppColors.textPrimary,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                    ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(plan.description,
+                          style: const TextStyle(
+                              color: AppColors.textMuted, fontSize: 12.5)),
+                    ],
                   ),
-                  Text(plan.period,
-                      style: const TextStyle(
-                          color: AppColors.textMuted, fontSize: 11)),
-                ],
-              ),
-            ],
+                ),
+                const SizedBox(width: 12),
+                if (isLoading)
+                  const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: AppColors.gold,
+                    ),
+                  )
+                else
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        price,
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      Text(plan.period,
+                          style: const TextStyle(
+                              color: AppColors.textMuted, fontSize: 11)),
+                    ],
+                  ),
+                const SizedBox(width: 10),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  size: 14,
+                  color: enabled
+                      ? AppColors.textMuted
+                      : AppColors.textMuted.withValues(alpha: 0.4),
+                ),
+              ],
+            ),
           ),
         ),
       ),

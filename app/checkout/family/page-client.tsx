@@ -768,6 +768,7 @@ function FamilyCheckoutContent({
               stripe={stripePromise}
               options={{
                 clientSecret,
+                allowRedirects: "never",
                 appearance: {
                   theme: "night",
                   variables: {
