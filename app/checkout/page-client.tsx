@@ -334,7 +334,7 @@ function CheckoutForm({
           setError(friendlyPaymentError(confirmError));
           setProcessing(false);
         } else if (paymentIntent?.status === "succeeded") {
-          logStage("payment_succeeded", { userEmail: email || authFormRef.current?.email || "" });
+          logStage("payment_succeeded", { userEmail: authFormRef.current?.email || "" });
           markPurchased();
           const url = new URL(returnUrl, window.location.origin);
           url.searchParams.set("payment_intent", paymentIntent.id);
