@@ -12,13 +12,14 @@ import '../widgets/quiz_tab.dart';
 import '../widgets/slides_tab.dart';
 import '../widgets/audio_tab.dart';
 import '../widgets/mindmap_tab.dart';
+import '../widgets/infographics_tab.dart';
 
 // ── Part overview screen ──────────────────────────────────────────────────────
 
 class PartScreen extends ConsumerStatefulWidget {
   final int partNumber;
   /// When set, automatically opens this asset viewer immediately after mount.
-  /// Values: 'video' | 'read' | 'flashcards' | 'quiz' | 'slides' | 'audio' | 'mindmap'
+  /// Values: 'video' | 'read' | 'flashcards' | 'quiz' | 'slides' | 'infographics' | 'audio' | 'mindmap'
   final String? initialTab;
   const PartScreen({super.key, required this.partNumber, this.initialTab});
 
@@ -56,7 +57,7 @@ class _PartScreenState extends ConsumerState<PartScreen> {
       case 'slides':
         _open(context, title: 'Slides — Part $partNumber', child: SlidesTab(partNumber: partNumber, initialDeck: 1));
       case 'infographics':
-        _open(context, title: 'Infographics — Part $partNumber', child: SlidesTab(partNumber: partNumber, initialDeck: 0));
+        _open(context, title: 'Infographics — Part $partNumber', child: InfographicsTab(partNumber: partNumber));
       case 'audio':
         _openAssetWhenReady(
           urlGetter: (a) => a.audioUrl,
@@ -118,6 +119,18 @@ class _PartScreenState extends ConsumerState<PartScreen> {
     }
 
     final assetsAsync = ref.watch(partAssetsProvider(partNumber));
+    final infographicsAsync = ref.watch(infographicsProvider(partNumber));
+    final isFreePart = partNumber == 1;
+
+    bool assetAvailable(bool Function(PartAssets) hasUrl) {
+      if (isFreePart) return true;
+      return assetsAsync.whenOrNull(data: hasUrl) ?? false;
+    }
+
+    bool infographicAvailable() {
+      if (isFreePart) return true;
+      return infographicsAsync.whenOrNull(data: (s) => s.hasAny) ?? false;
+    }
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -210,7 +223,7 @@ class _PartScreenState extends ConsumerState<PartScreen> {
                   subtitle: 'Full video lecture',
                   description: 'Watch the complete lesson with visuals',
                   accentColor: const Color(0xFF5A90B0),
-                  available: assetsAsync.whenOrNull(data: (a) => a.videoUrl != null) ?? false,
+                  available: assetAvailable((a) => a.videoUrl != null),
                   onTap: () => _open(
                     context,
                     title: 'Watch — Part $partNumber',
@@ -229,15 +242,22 @@ class _PartScreenState extends ConsumerState<PartScreen> {
                         iconColor: const Color(0xFF9A7AB8),
                         title: 'Listen',
                         subtitle: 'Audio lesson',
-                        available: assetsAsync.whenOrNull(data: (a) => a.audioUrl != null) ?? false,
+                        available: assetAvailable((a) => a.audioUrl != null),
                         onTap: () {
                           final assets = assetsAsync.valueOrNull;
-                          if (assets?.audioUrl == null) return;
-                          _open(
-                            context,
-                            title: 'Listen — Part $partNumber',
-                            child: AudioTab(audioUrl: assets!.audioUrl!, partTitle: part.title),
-                          );
+                          if (assets?.audioUrl != null) {
+                            _open(
+                              context,
+                              title: 'Listen — Part $partNumber',
+                              child: AudioTab(audioUrl: assets!.audioUrl!, partTitle: part.title),
+                            );
+                          } else if (isFreePart) {
+                            _openAssetWhenReady(
+                              urlGetter: (a) => a.audioUrl,
+                              title: 'Listen — Part $partNumber',
+                              builder: (url) => AudioTab(audioUrl: url, partTitle: part.title),
+                            );
+                          }
                         },
                       ),
                     ),
@@ -260,7 +280,7 @@ class _PartScreenState extends ConsumerState<PartScreen> {
                 ),
                 const SizedBox(height: 12),
 
-                // ── Slides + Mindmap — 2 col ─────────────────────────────
+                // ── Slides + Infographics — 2 col ──────────────────────────
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -281,23 +301,45 @@ class _PartScreenState extends ConsumerState<PartScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: _AssetCard(
-                        icon: Icons.account_tree_rounded,
-                        iconColor: const Color(0xFFC06060),
-                        title: 'Mindmap',
-                        subtitle: 'Visual overview',
-                        available: assetsAsync.whenOrNull(data: (a) => a.mindmapUrl != null) ?? false,
-                        onTap: () {
-                          final assets = assetsAsync.valueOrNull;
-                          if (assets?.mindmapUrl == null) return;
-                          _open(
-                            context,
-                            title: 'Mindmap — Part $partNumber',
-                            child: MindmapTab(mindmapUrl: assets!.mindmapUrl!),
-                          );
-                        },
+                        icon: Icons.auto_awesome_mosaic_outlined,
+                        iconColor: const Color(0xFFB08040),
+                        title: 'Infographics',
+                        subtitle: 'Visual summary',
+                        available: infographicAvailable(),
+                        onTap: () => _open(
+                          context,
+                          title: 'Infographics — Part $partNumber',
+                          child: InfographicsTab(partNumber: partNumber),
+                        ),
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 12),
+
+                // ── Mindmap — full width ─────────────────────────────────
+                _AssetCard(
+                  icon: Icons.account_tree_rounded,
+                  iconColor: const Color(0xFFC06060),
+                  title: 'Mindmap',
+                  subtitle: 'Visual overview of key concepts',
+                  available: assetAvailable((a) => a.mindmapUrl != null),
+                  onTap: () {
+                    final assets = assetsAsync.valueOrNull;
+                    if (assets?.mindmapUrl != null) {
+                      _open(
+                        context,
+                        title: 'Mindmap — Part $partNumber',
+                        child: MindmapTab(mindmapUrl: assets!.mindmapUrl!),
+                      );
+                    } else if (isFreePart) {
+                      _openAssetWhenReady(
+                        urlGetter: (a) => a.mindmapUrl,
+                        title: 'Mindmap — Part $partNumber',
+                        builder: (url) => MindmapTab(mindmapUrl: url),
+                      );
+                    }
+                  },
                 ),
                 const SizedBox(height: 20),
 

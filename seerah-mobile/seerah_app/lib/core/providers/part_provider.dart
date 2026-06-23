@@ -103,3 +103,27 @@ final partAssetsProvider = FutureProvider.family<PartAssets, int>((ref, partNumb
     thumbnailUrl: data['thumbnailUrl'] as String?,
   );
 });
+
+// Infographic image URLs (concise, standard, bento grid) from dedicated API.
+class InfographicSet {
+  final String? concise;
+  final String? standard;
+  final String? bentoGrid;
+
+  const InfographicSet({this.concise, this.standard, this.bentoGrid});
+
+  bool get hasAny =>
+      (concise?.isNotEmpty ?? false) ||
+      (standard?.isNotEmpty ?? false) ||
+      (bentoGrid?.isNotEmpty ?? false);
+}
+
+final infographicsProvider = FutureProvider.family<InfographicSet, int>((ref, partNumber) async {
+  final response = await ApiClient.instance.dio.get('/api/infographics/$partNumber');
+  final data = response.data as Map<String, dynamic>;
+  return InfographicSet(
+    concise: data['concise'] as String?,
+    standard: data['standard'] as String?,
+    bentoGrid: data['bentoGrid'] as String?,
+  );
+});

@@ -22,11 +22,11 @@ class AppConstants {
     keyCookies,
   ];
 
-  // Plans
-  static const lifetimePrice = 99;
-  static const familyLifetimePrice = 199;
-  static const monthlyPrice = 9;
-  static const familyMonthlyPrice = 19;
+  // Plans — fallback prices shown while store products load
+  static const String monthlyPrice        = '4.99';
+  static const String familyMonthlyPrice  = '9.99';
+  static const String lifetimePrice       = '49';
+  static const String familyLifetimePrice = '99';
 
   // In-App Purchase product IDs
   // These must match exactly what is registered in App Store Connect and Google Play Console.

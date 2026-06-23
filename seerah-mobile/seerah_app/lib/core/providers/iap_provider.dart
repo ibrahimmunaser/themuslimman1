@@ -19,6 +19,8 @@ enum IAPStatus {
   purchasing,
   verifying,
   success,
+  /// Purchase completed but no account yet — waiting for account setup.
+  pendingAccountSetup,
   error,
   cancelled,
   /// restorePurchases() completed with no prior purchases found.
@@ -31,6 +33,9 @@ class IAPState {
   final List<ProductDetails> products;
   final String? errorMessage;
   final String? successProductId;
+  /// Stored when IAP succeeds before the user has an account.
+  /// Used by AccountSetupScreen to verify after signup.
+  final PurchaseDetails? pendingPurchase;
 
   const IAPState({
     this.status = IAPStatus.loading,
@@ -38,6 +43,7 @@ class IAPState {
     this.products = const [],
     this.errorMessage,
     this.successProductId,
+    this.pendingPurchase,
   });
 
   IAPState copyWith({
@@ -46,6 +52,8 @@ class IAPState {
     List<ProductDetails>? products,
     String? errorMessage,
     String? successProductId,
+    PurchaseDetails? pendingPurchase,
+    bool clearPendingPurchase = false,
   }) {
     return IAPState(
       status: status ?? this.status,
@@ -53,6 +61,7 @@ class IAPState {
       products: products ?? this.products,
       errorMessage: errorMessage,
       successProductId: successProductId ?? this.successProductId,
+      pendingPurchase: clearPendingPurchase ? null : (pendingPurchase ?? this.pendingPurchase),
     );
   }
 
@@ -204,6 +213,18 @@ class IAPNotifier extends StateNotifier<IAPState> {
   }
 
   Future<void> _completePurchase(PurchaseDetails purchase) async {
+    // If the user is not logged in yet, store the purchase and ask them to
+    // create an account.  We intentionally do NOT finalize the transaction
+    // here — it will be finalized after the backend verifies it post-signup.
+    final isLoggedIn = _ref.read(authProvider).isLoggedIn;
+    if (!isLoggedIn) {
+      state = state.copyWith(
+        status: IAPStatus.pendingAccountSetup,
+        pendingPurchase: purchase,
+      );
+      return;
+    }
+
     state = state.copyWith(status: IAPStatus.verifying);
 
     try {
@@ -228,6 +249,36 @@ class IAPNotifier extends StateNotifier<IAPState> {
         await _finalize(purchase);
       }
     }
+  }
+
+  /// Called by AccountSetupScreen after signup to verify the stored pending
+  /// purchase and link it to the newly-created account.
+  Future<void> verifyPendingPurchase() async {
+    final purchase = state.pendingPurchase;
+    if (purchase == null) return;
+
+    state = state.copyWith(status: IAPStatus.verifying);
+    try {
+      await _verifyWithBackend(purchase);
+      await _finalize(purchase);
+      state = state.copyWith(clearPendingPurchase: true);
+    } catch (e) {
+      debugPrint('[IAP] pending purchase verify error: $e');
+      final message = e is Exception
+          ? e.toString().replaceFirst('Exception: ', '')
+          : 'Could not verify your purchase. Please contact support.';
+      state = state.copyWith(status: IAPStatus.error, errorMessage: message);
+      if (!kIsWeb && Platform.isIOS) {
+        await _finalize(purchase);
+      }
+    }
+  }
+
+  void clearPendingAccountSetup() {
+    state = state.copyWith(
+      status: IAPStatus.idle,
+      clearPendingPurchase: true,
+    );
   }
 
   Future<void> _verifyWithBackend(PurchaseDetails purchase) async {

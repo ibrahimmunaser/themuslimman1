@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
+import '../providers/iap_provider.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/signup_screen.dart';
+import '../../features/auth/screens/account_setup_screen.dart';
+import '../../features/auth/screens/verify_email_screen.dart';
 import '../../features/shell/app_shell.dart';
 import '../../features/home/screens/landing_screen.dart';
 import '../../features/dashboard/screens/dashboard_screen.dart';
@@ -16,11 +19,12 @@ import '../../features/progress/screens/progress_screen.dart';
 import '../../features/pricing/screens/pricing_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
 
-/// Listens to auth state changes and notifies GoRouter to re-evaluate redirects.
+/// Listens to auth + IAP state changes and notifies GoRouter to re-evaluate redirects.
 class _RouterNotifier extends ChangeNotifier {
   final Ref _ref;
   _RouterNotifier(this._ref) {
     _ref.listen(authProvider, (_, __) => notifyListeners());
+    _ref.listen(iapProvider, (_, __) => notifyListeners());
   }
 }
 
@@ -33,22 +37,33 @@ final routerProvider = Provider<GoRouter>((ref) {
     refreshListenable: notifier,
     redirect: (context, state) {
       final authState = ref.read(authProvider);
+      final iapState  = ref.read(iapProvider);
 
       if (authState.isLoading) return null;
 
       final isLoggedIn = authState.isLoggedIn;
       final loc = state.uri.path;
 
-      final authRoutes = ['/login', '/signup'];
+      // If purchase succeeded without an account, force account-setup flow.
+      if (iapState.status == IAPStatus.pendingAccountSetup &&
+          !isLoggedIn &&
+          loc != '/account-setup') {
+        return '/account-setup';
+      }
+
+      final authRoutes = ['/login', '/signup', '/account-setup', '/verify-email'];
       final isOnAuth = authRoutes.contains(loc);
 
-      // Logged-out: push to landing except for auth screens
-      if (!isLoggedIn && !isOnAuth && loc != '/landing') {
+      // Part 1 is always free — allow logged-out users through directly.
+      final isFreePartRoute = loc == '/part/1';
+
+      // Logged-out: push to landing except for auth screens and Part 1
+      if (!isLoggedIn && !isOnAuth && loc != '/landing' && !isFreePartRoute) {
         return '/landing';
       }
       // Logged-in anywhere outside the main shell → go to dashboard
-      // (covers '/' splash, '/landing', and auth screens)
-      if (isLoggedIn && (isOnAuth || loc == '/' || loc == '/landing')) {
+      // (covers '/' splash, '/landing', and login/signup screens)
+      if (isLoggedIn && (loc == '/login' || loc == '/signup' || loc == '/' || loc == '/landing')) {
         return '/dashboard';
       }
       return null;
@@ -69,6 +84,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/signup',
         builder: (ctx, state) => const SignupScreen(),
+      ),
+      GoRoute(
+        path: '/account-setup',
+        builder: (ctx, state) => const AccountSetupScreen(),
+      ),
+      GoRoute(
+        path: '/verify-email',
+        builder: (ctx, state) => const VerifyEmailScreen(),
       ),
 
       // ── Shell with bottom nav ──────────────────────────────────────────────

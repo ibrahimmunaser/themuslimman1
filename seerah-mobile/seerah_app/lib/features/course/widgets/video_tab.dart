@@ -16,7 +16,9 @@ class VideoTab extends ConsumerWidget {
     return assetsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator(color: AppColors.gold)),
       error: (e, _) => _ErrorState(
-        message: 'Unable to load video.\nMake sure you\'re signed in with an active subscription.',
+        message: partNumber == 1
+            ? 'Unable to load video.\nPlease check your connection and try again.'
+            : 'Unable to load video.\nMake sure you\'re signed in with an active subscription.',
         onRetry: () => ref.invalidate(partAssetsProvider(partNumber)),
       ),
       data: (assets) {
