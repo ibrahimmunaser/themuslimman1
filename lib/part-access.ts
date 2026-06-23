@@ -5,7 +5,9 @@ import { hasActiveCourseAccess } from "@/lib/access";
 /**
  * Server-side access guard for paid content/media API routes.
  *
- * All parts (including Part 1) require an authenticated user who has:
+ * Part 1 is always free — no account or subscription required.
+ *
+ * Parts 2–100 require an authenticated user who has:
  *   1. A verified email address (emailVerified = true)
  *   2. Active course access (lifetime purchase OR active/trialing subscription)
  *
@@ -21,6 +23,11 @@ import { hasActiveCourseAccess } from "@/lib/access";
  *   if (deny) return deny;
  */
 export async function requirePartAccess(partNumber: number): Promise<NextResponse | null> {
+  // Part 1 is always free — no auth or subscription required.
+  if (partNumber === 1) {
+    return null;
+  }
+
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json(
