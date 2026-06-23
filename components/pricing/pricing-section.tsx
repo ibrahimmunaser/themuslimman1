@@ -24,15 +24,15 @@ export function PricingSection({ hasLifetime, hasMonthly, hasFamily }: PricingSe
   const hasAnyAccess = hasLifetime || hasMonthly || hasFamily;
 
   return (
-    <section className="py-10 border-t border-border" id="pricing">
-      <div className="max-w-lg mx-auto px-4 sm:px-6">
+    <section className="py-10 sm:py-12 md:py-14 border-t border-border" id="pricing">
+      <div className="max-w-lg md:max-w-2xl mx-auto px-4 sm:px-6">
 
         <FadeUp className="text-center mb-6">
           <h2 className="text-2xl sm:text-3xl font-bold text-text mb-2">
             Choose your plan
           </h2>
           <p className="text-sm text-text-secondary">
-            Monthly or lifetime · individual or family · cancel anytime
+            Start monthly or save with lifetime access. Individual and family options available.
           </p>
         </FadeUp>
 

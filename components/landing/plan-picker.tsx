@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { Check } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -11,53 +10,52 @@ export type PlanId =
   | "individual-lifetime"
   | "family-lifetime";
 
+const RECOMMENDED_PLAN: PlanId = "family-monthly";
+
 // ── Plan data ──────────────────────────────────────────────────────────────────
 
 const PLANS = [
   {
     id:     "individual-monthly"  as PlanId,
     group:  "Monthly",
-    label:  "Individual",
+    label:  "Individual Monthly",
     price:  "$4.99",
     period: "/month",
-    detail: "1 person",
+    tagline: "Start learning his life step by step",
     badge:  undefined as string | undefined,
+    cta:    "Continue monthly",
   },
   {
     id:     "family-monthly" as PlanId,
     group:  "Monthly",
-    label:  "Family",
+    label:  "Family Monthly",
     price:  "$9.99",
     period: "/month",
-    detail: "Up to 5 members",
-    badge:  "Best for families",
+    tagline: "Learn the full story as a family",
+    badge:  "Most Popular",
+    cta:    "Continue with Family",
   },
   {
     id:     "individual-lifetime" as PlanId,
     group:  "Lifetime",
-    label:  "Individual",
+    label:  "Individual Lifetime",
     price:  "$49",
     period: "one-time",
-    detail: "1 person",
+    tagline: "Own the complete course for life",
     badge:  undefined as string | undefined,
+    cta:    "Continue lifetime",
   },
   {
     id:     "family-lifetime" as PlanId,
     group:  "Lifetime",
-    label:  "Family",
+    label:  "Family Lifetime",
     price:  "$99",
     period: "one-time",
-    detail: "Up to 5 members",
+    tagline: "Give your family lifetime access",
     badge:  "Best value",
+    cta:    "Continue lifetime",
   },
 ];
-
-const CTA_TEXT: Record<PlanId, string> = {
-  "individual-monthly":  "Start Now — $4.99/month",
-  "family-monthly":      "Start Now — $9.99/month",
-  "individual-lifetime": "Start Now — $49 one-time",
-  "family-lifetime":     "Start Now — $99 one-time",
-};
 
 // ── URL helper ─────────────────────────────────────────────────────────────────
 
@@ -77,7 +75,7 @@ interface PlanPickerProps {
   /** Base checkout URL — all existing params (source, UTMs) are preserved. */
   checkoutBaseUrl?: string;
   defaultPlan?: PlanId;
-  /** Called when the user clicks the main CTA. Use for analytics. */
+  /** Called when the user clicks a plan card. Use for analytics. */
   onCtaClick?: (plan: PlanId, url: string) => void;
   /** Show a "you already have access" message for this plan set. */
   hasAccess?: boolean;
@@ -85,13 +83,9 @@ interface PlanPickerProps {
 
 export function PlanPicker({
   checkoutBaseUrl = "/checkout",
-  defaultPlan = "individual-monthly",
   onCtaClick,
   hasAccess = false,
 }: PlanPickerProps) {
-  const [selected, setSelected] = useState<PlanId>(defaultPlan);
-  const ctaUrl = buildUrl(checkoutBaseUrl, selected);
-
   if (hasAccess) {
     return (
       <div className="rounded-xl border border-green-500/30 bg-green-500/5 p-5 text-center">
@@ -103,73 +97,85 @@ export function PlanPicker({
 
   return (
     <div>
-      {/* ── Two groups: Monthly / Lifetime ──────────────────────────────── */}
-      <div className="space-y-3">
-        {(["Monthly", "Lifetime"] as const).map((group) => (
-          <div key={group}>
-            <p className="text-xs font-bold text-gold uppercase tracking-widest text-center mb-1.5">
-              {group} Plan
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              {PLANS.filter((p) => p.group === group).map((plan) => {
-                const isSelected = selected === plan.id;
-                return (
-                  <button
-                    key={plan.id}
-                    type="button"
-                    onClick={() => setSelected(plan.id)}
-                    className={[
-                      "relative flex flex-col items-start rounded-xl border-2 p-3 text-left transition-all cursor-pointer",
-                      isSelected
-                        ? "border-gold bg-gold/10"
-                        : "border-border bg-surface/40 hover:border-gold/40",
-                    ].join(" ")}
-                  >
-                    {/* Top row: label + checkmark */}
-                    <div className="flex items-center justify-between w-full mb-0.5">
-                      <span className={`text-[10px] font-bold uppercase tracking-widest ${isSelected ? "text-gold" : "text-text-muted"}`}>
-                        {plan.label}
-                      </span>
-                      {isSelected && (
-                        <span className="w-4 h-4 rounded-full bg-gold flex items-center justify-center flex-shrink-0">
-                          <Check className="w-2.5 h-2.5 text-ink stroke-[3]" />
+      <div className="space-y-4 sm:space-y-6">
+        {(["Monthly", "Lifetime"] as const).map((group) => {
+          const groupPlans = PLANS.filter((p) => p.group === group);
+          const hasRecommended = groupPlans.some((p) => p.id === RECOMMENDED_PLAN);
+
+          return (
+            <div key={group}>
+              <p className="text-xs font-bold text-gold uppercase tracking-widest text-center mb-2 sm:mb-3">
+                {group} Plan
+              </p>
+              <div className={["grid grid-cols-2 gap-3 sm:gap-4 md:gap-5", hasRecommended ? "pt-3 sm:pt-4" : ""].join(" ")}>
+                {groupPlans.map((plan) => {
+                  const href = buildUrl(checkoutBaseUrl, plan.id);
+                  const isRecommended = plan.id === RECOMMENDED_PLAN;
+
+                  return (
+                    <a
+                      key={plan.id}
+                      href={href}
+                      onClick={() => onCtaClick?.(plan.id, href)}
+                      className={[
+                        "group relative flex flex-col items-start rounded-xl border-2 text-left",
+                        "min-h-[128px] sm:min-h-[172px] md:min-h-[196px]",
+                        "p-3.5 sm:p-5 md:p-6",
+                        "transition-all duration-200 cursor-pointer no-underline",
+                        "active:translate-y-0 active:scale-[0.98]",
+                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-ink",
+                        isRecommended
+                          ? "bg-gradient-to-b from-gold/[0.14] to-surface-high border-gold shadow-xl shadow-gold/25 ring-2 ring-gold/20 hover:from-gold/[0.2] hover:shadow-2xl hover:shadow-gold/35 hover:-translate-y-1"
+                          : "bg-gradient-to-b from-surface-high to-surface-raised border-gold/25 shadow-md shadow-black/40 hover:border-gold/50 hover:from-gold/[0.08] hover:-translate-y-0.5",
+                      ].join(" ")}
+                    >
+                      {plan.badge === "Most Popular" && (
+                        <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-gold text-ink shadow-lg shadow-gold/30 whitespace-nowrap">
+                          Most Popular
                         </span>
                       )}
-                    </div>
 
-                    <span className="text-xl font-extrabold text-text leading-none">
-                      {plan.price}
-                      <span className="text-xs font-normal text-text-muted ml-1">{plan.period}</span>
-                    </span>
-
-                    <span className="text-[11px] text-text-muted mt-1 leading-tight">
-                      {plan.detail}
-                    </span>
-
-                    {/* Badge — inline at the bottom */}
-                    {plan.badge && (
-                      <span className="mt-2 self-start px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border border-gold text-gold">
-                        {plan.badge}
+                      <span className="text-sm sm:text-base font-bold text-text leading-snug mb-1 sm:mb-1.5">
+                        {plan.label}
                       </span>
-                    )}
-                  </button>
-                );
-              })}
+
+                      <span className="text-xl sm:text-2xl md:text-3xl font-extrabold text-text leading-none">
+                        {plan.price}
+                        <span className="text-xs sm:text-sm font-normal text-text-secondary ml-1">{plan.period}</span>
+                      </span>
+
+                      <span className="text-[11px] sm:text-sm text-gold mt-1.5 sm:mt-2 leading-snug">
+                        {plan.tagline}
+                      </span>
+
+                      {plan.badge && plan.badge !== "Most Popular" && (
+                        <span className="mt-2 self-start px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border border-gold/50 bg-gold/5 text-gold/90">
+                          {plan.badge}
+                        </span>
+                      )}
+
+                      <span
+                        className={[
+                          "mt-auto pt-3 sm:pt-4 md:pt-5 flex items-center gap-1",
+                          "text-xs sm:text-sm font-semibold transition-colors",
+                          isRecommended
+                            ? "text-gold group-hover:text-gold-light"
+                            : "text-text-muted group-hover:text-gold/75",
+                        ].join(" ")}
+                      >
+                        {plan.cta}
+                        <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform group-hover:translate-x-0.5" />
+                      </span>
+                    </a>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
-      {/* ── Single CTA ──────────────────────────────────────────────────── */}
-      <a
-        href={ctaUrl}
-        onClick={() => onCtaClick?.(selected, ctaUrl)}
-        className="mt-4 block w-full py-4 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-base text-center transition-colors shadow-lg shadow-gold/20"
-      >
-        {CTA_TEXT[selected]}
-      </a>
-
-      <p className="text-xs text-text-muted text-center mt-2">
+      <p className="text-xs text-text-muted text-center mt-4">
         Cancel anytime · 7-day refund · Instant access
       </p>
     </div>
