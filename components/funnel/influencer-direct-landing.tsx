@@ -213,7 +213,7 @@ export function InfluencerDirectLanding({ config, part1Preview }: InfluencerDire
             <p className="flex-1 text-xs text-text-muted truncate min-w-0">{price}</p>
             <a
               href={config.checkoutUrl}
-              onClick={onCheckoutClick}
+              onClick={() => onCheckoutClick("individual-monthly")}
               className="flex-shrink-0 py-3 px-6 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-sm transition-colors"
             >
               Start the Course
