@@ -334,7 +334,7 @@ function CheckoutForm({
           setError(friendlyPaymentError(confirmError));
           setProcessing(false);
         } else if (paymentIntent?.status === "succeeded") {
-          logStage("payment_succeeded");
+          logStage("payment_succeeded", { userEmail: email || authFormRef.current?.email || "" });
           markPurchased();
           const url = new URL(returnUrl, window.location.origin);
           url.searchParams.set("payment_intent", paymentIntent.id);
@@ -447,7 +447,7 @@ function CheckoutForm({
           setError(friendlyPaymentError(confirmError));
         setProcessing(false);
       } else if (paymentIntent?.status === "succeeded") {
-        logStage("payment_succeeded", { method: "express" });
+        logStage("payment_succeeded", { method: "express", userEmail: walletEmail || authFormRef.current?.email || "" });
         markPurchased();
         const url = new URL(returnUrl, window.location.origin);
         url.searchParams.set("payment_intent", paymentIntent.id);

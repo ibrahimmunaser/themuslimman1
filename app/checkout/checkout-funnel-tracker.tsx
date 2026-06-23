@@ -102,13 +102,19 @@ export function sendCheckoutEvent(
     const visitorId = getOrCreate(localStorage,   vidKey, 7 * 24 * 60 * 60 * 1000);
     const sessionId = getOrCreate(sessionStorage, sidKey);
 
+    // Pull userEmail out of extra so it is sent as a top-level field that
+    // the track API can read and persist in InfluencerEvent.userEmail.
+    // This enables fallback purchase attribution on the influencer stats pages.
+    const { userEmail, ...restExtra } = extra ?? {};
+
     const payload = JSON.stringify({
       creator,
       eventType,
       sessionId,
       visitorId,
       route: window.location.pathname,
-      metadata: JSON.stringify({ source: creator, ...extra }),
+      ...(typeof userEmail === "string" && userEmail ? { userEmail } : {}),
+      metadata: JSON.stringify({ source: creator, ...restExtra }),
     });
 
     if (navigator.sendBeacon) {

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { BrownieStatsDashboard } from "@/components/influencer/brownie-stats-dashboard";
 import type { FunnelStep } from "@/components/influencer/brownie-stats-dashboard";
+import { getInfluencerPurchases, getInfluencerSubscriptions } from "@/lib/queries/influencer-stats";
 
 export const metadata = { title: "Creator Stats", robots: { index: false, follow: false } };
 
@@ -45,23 +46,8 @@ export default async function DearbornStatsPage({
       },
     }),
 
-    prisma.purchase.findMany({
-      where: { creator: CREATOR, status: "succeeded" },
-      select: {
-        id: true, amount: true, createdAt: true, promoCode: true,
-        user: { select: { email: true } },
-      },
-      orderBy: { createdAt: "desc" },
-    }),
-
-    prisma.subscription.findMany({
-      where: { creator: CREATOR },
-      select: {
-        id: true, createdAt: true, promoCode: true,
-        user: { select: { email: true } },
-      },
-      orderBy: { createdAt: "desc" },
-    }),
+    getInfluencerPurchases(CREATOR),
+    getInfluencerSubscriptions(CREATOR),
   ]);
 
   return (
