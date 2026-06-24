@@ -7,7 +7,7 @@ import '../../../core/theme/app_colors.dart';
 
 class ReadTab extends ConsumerStatefulWidget {
   final int partNumber;
-  /// 0 = Briefing, 1 = Study Guide, 2 = Key Facts
+  /// 0 = Briefing, 1 = Key Facts
   final int initialSection;
   const ReadTab({super.key, required this.partNumber, this.initialSection = 0});
 
@@ -16,9 +16,8 @@ class ReadTab extends ConsumerStatefulWidget {
 }
 
 class _ReadTabState extends ConsumerState<ReadTab> {
-  late int _activeSection = widget.initialSection;
-  // 0 = Briefing, 1 = Study Guide, 2 = Key Facts
-  final List<String> _sections = ['Briefing', 'Study Guide', 'Key Facts'];
+  late int _activeSection = widget.initialSection.clamp(0, 1);
+  final List<String> _sections = ['Briefing', 'Key Facts'];
 
   @override
   Widget build(BuildContext context) {
@@ -71,19 +70,16 @@ class _ReadTabState extends ConsumerState<ReadTab> {
               onRetry: () => ref.invalidate(partContentProvider(widget.partNumber)),
             ),
             data: (content) {
-              // 0 = Briefing, 1 = Study Guide, 2 = Key Facts
               final text = _activeSection == 0
                   ? content.briefingText
-                  : _activeSection == 1
-                      ? content.studyGuideText
-                      : content.statementOfFactsText;
+                  : content.statementOfFactsText;
 
               if (text == null || text.isEmpty) {
                 return _EmptySection(section: _sections[_activeSection]);
               }
 
               // Key Facts: plain newline-separated sentences → individual fact cards
-              if (_activeSection == 2) {
+              if (_activeSection == 1) {
                 return _KeyFactsList(text: text);
               }
 

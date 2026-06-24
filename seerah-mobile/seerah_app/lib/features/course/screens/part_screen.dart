@@ -51,7 +51,7 @@ class _PartScreenState extends ConsumerState<PartScreen> {
       case 'briefing':
         _open(context, title: 'Briefing — Part $partNumber', child: ReadTab(partNumber: partNumber, initialSection: 0));
       case 'facts':
-        _open(context, title: 'Key Facts — Part $partNumber', child: ReadTab(partNumber: partNumber, initialSection: 2));
+        _open(context, title: 'Key Facts — Part $partNumber', child: ReadTab(partNumber: partNumber, initialSection: 1));
       case 'read':
         _open(context, title: 'Read — Part $partNumber', child: ReadTab(partNumber: partNumber));
       case 'flashcards':
