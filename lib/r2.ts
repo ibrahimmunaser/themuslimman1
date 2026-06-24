@@ -251,12 +251,28 @@ export async function r2ListFolders() {
 // ─── Asset Detection Helpers ───────────────────────────────────────────────────
 
 /**
- * Get video filename for a part number
+ * Get video filename for a part number.
+ * Tries common naming variants in parallel before falling back to a directory listing.
  */
 export async function r2GetVideoKey(partNum: number): Promise<string | null> {
-  const key = `videos/Part ${partNum}.mp4`;
-  const exists = await r2FileExists(key);
-  return exists ? key : null;
+  const pad = partNum < 10 ? `0${partNum}` : `${partNum}`;
+  const candidates = [
+    `videos/Part ${partNum}.mp4`,
+    `videos/Part ${partNum} (1).mp4`,
+    `videos/Part ${pad}.mp4`,
+    `videos/Part ${pad} (1).mp4`,
+  ];
+
+  const results = await Promise.all(candidates.map((k) => r2FileExists(k)));
+  const direct = candidates.find((_, i) => results[i]);
+  if (direct) return direct;
+
+  // Fallback: list the videos/ folder and match any mp4 for this part number.
+  // Catches non-standard suffixes (e.g. " - Final", " HD", etc.)
+  const files = await r2ListFiles("videos/");
+  const looseRe = new RegExp(`^videos/Part ${partNum}[^0-9]`, "i");
+  const loose = files.find((f) => f.key.endsWith(".mp4") && looseRe.test(f.key));
+  return loose?.key ?? null;
 }
 
 /**

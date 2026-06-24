@@ -161,6 +161,12 @@ async function loadPartData(n: number): Promise<CachedPartData> {
   };
 }
 
+/** Remove a specific part from the cache so the next request re-fetches from R2. */
+export function invalidatePartCache(n: number): void {
+  cache.delete(n);
+  inflight.delete(n);
+}
+
 export async function getPartPageData(n: number): Promise<CachedPartData> {
   const cached = cache.get(n);
   if (cached && Date.now() - cached.cachedAt < TTL_MS) return cached;
