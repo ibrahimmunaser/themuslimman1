@@ -2064,13 +2064,16 @@ function CheckoutPageContent({
                 // the PI, hiding non-card methods.
                 // Fall back to deferred mode only while the user is still unauthenticated
                 // and no PI exists yet.
+                // allowRedirects is only valid in deferred/mode-based Elements (no clientSecret).
+                // When clientSecret is present, payment_method_types on the PaymentIntent
+                // already restricts to ["card"] server-side, so no client-side flag is needed.
                 const elementsOptions =
                   billing === "trial"
                     ? { mode: "setup" as const, currency: "usd", appearance: elementsAppearance, allowRedirects: "never" as const }
                     : isMonthlyBilling
-                    ? { clientSecret: clientSecret!, appearance: elementsAppearance, allowRedirects: "never" as const }
+                    ? { clientSecret: clientSecret!, appearance: elementsAppearance }
                     : clientSecret
-                    ? { clientSecret, appearance: elementsAppearance, allowRedirects: "never" as const }
+                    ? { clientSecret, appearance: elementsAppearance }
                     : {
                         mode: "payment" as const,
                         amount: finalPrice > 0 ? finalPrice : 1,
