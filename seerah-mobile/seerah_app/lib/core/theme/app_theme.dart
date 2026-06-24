@@ -18,13 +18,24 @@ class AppTheme {
         onSurface: AppColors.textPrimary,
         outline: AppColors.border,
       ),
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: PredictiveBackPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+        },
+      ),
       appBarTheme: AppBarTheme(
         backgroundColor: AppColors.background,
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
         scrolledUnderElevation: 0,
-        systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
+        centerTitle: false,
+        systemOverlayStyle: const SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.light,
+          statusBarBrightness: Brightness.dark,
+          systemNavigationBarColor: AppColors.surface,
+          systemNavigationBarIconBrightness: Brightness.light,
         ),
         titleTextStyle: GoogleFonts.inter(
           color: AppColors.textPrimary,
@@ -127,6 +138,35 @@ class AppTheme {
         bodySmall: GoogleFonts.inter(
           color: AppColors.textMuted, fontSize: 12, height: 1.4,
         ),
+      ),
+      splashColor: AppColors.gold.withValues(alpha: 0.06),
+      highlightColor: AppColors.gold.withValues(alpha: 0.03),
+      focusColor: AppColors.gold.withValues(alpha: 0.08),
+      splashFactory: InkRipple.splashFactory,
+      dialogTheme: DialogTheme(
+        backgroundColor: AppColors.surface,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: AppColors.border),
+        ),
+        titleTextStyle: GoogleFonts.inter(
+          color: AppColors.textPrimary,
+          fontSize: 17,
+          fontWeight: FontWeight.w700,
+        ),
+        contentTextStyle: GoogleFonts.inter(
+          color: AppColors.textSecondary,
+          fontSize: 14,
+          height: 1.5,
+        ),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: const Color(0xFF2A2A2A),
+        contentTextStyle: GoogleFonts.inter(color: AppColors.textPrimary, fontSize: 14),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        elevation: 0,
       ),
       dividerTheme: const DividerThemeData(
         color: AppColors.border,

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { nanoid } from "nanoid";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db";
 import { checkRateLimit, getIP } from "@/lib/rate-limit";
 
 const KNOWN_CREATORS = [

@@ -378,12 +378,18 @@ class _PartScreenState extends ConsumerState<PartScreen> {
                     child: QuizTab(partNumber: partNumber),
                   ),
                 ),
+
+                // ── Continue CTA (Part 1 only, no access) ───────────────
+                if (isFreePart && !hasAccess) ...[
+                  const SizedBox(height: 28),
+                  _ContinueCTA(isLoggedIn: authState.isLoggedIn),
+                ],
               ]),
             ),
           ),
         ],
       ),
-      bottomNavigationBar: _PartNavBar(partNumber: partNumber),
+      bottomNavigationBar: _PartNavBar(partNumber: partNumber, hasAccess: hasAccess),
     );
   }
 
@@ -758,23 +764,28 @@ class _PaywallScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => context.go('/pricing'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.gold,
-                    foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+              Consumer(
+                builder: (context, ref, _) {
+                  final isLoggedIn = ref.watch(authProvider).isLoggedIn;
+                  return SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () => context.go(isLoggedIn ? '/pricing' : '/landing'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.gold,
+                        foregroundColor: Colors.black,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'View Plans',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                      ),
                     ),
-                  ),
-                  child: const Text(
-                    'View Plans',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-                  ),
-                ),
+                  );
+                },
               ),
               const SizedBox(height: 12),
               TextButton(
@@ -792,11 +803,82 @@ class _PaywallScreen extends StatelessWidget {
   }
 }
 
+// ── Continue CTA (Part 1 → unlock) ───────────────────────────────────────────
+
+class _ContinueCTA extends StatelessWidget {
+  final bool isLoggedIn;
+  const _ContinueCTA({required this.isLoggedIn});
+
+  @override
+  Widget build(BuildContext context) {
+    final paywall = isLoggedIn ? '/pricing' : '/landing';
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.goldFaded,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.gold.withValues(alpha: 0.30)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text(
+            'Continue the full 100-part course',
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              height: 1.25,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            'You started the path. Unlock the full course to continue learning the life of the Prophet PBUH step by step.',
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+              height: 1.55,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 18),
+          ElevatedButton(
+            onPressed: () => context.go(paywall),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.gold,
+              foregroundColor: Colors.black,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 0,
+            ),
+            child: const Text(
+              'Unlock full access',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextButton(
+            onPressed: () => context.pop(),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.textSecondary,
+            ),
+            child: const Text('Review Part 1 again'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // ── Part navigation bar ───────────────────────────────────────────────────────
 
 class _PartNavBar extends StatelessWidget {
   final int partNumber;
-  const _PartNavBar({required this.partNumber});
+  final bool hasAccess;
+  const _PartNavBar({required this.partNumber, required this.hasAccess});
 
   @override
   Widget build(BuildContext context) {
@@ -828,23 +910,46 @@ class _PartNavBar extends StatelessWidget {
           if (partNumber < 100)
             Expanded(
               child: ElevatedButton(
-                onPressed: () => context.pushReplacement('/part/${partNumber + 1}'),
+                onPressed: () {
+                  final nextPart = partNumber + 1;
+                  // Locked content — route to paywall directly for clarity
+                  if (!hasAccess && nextPart > 1) {
+                    context.go('/landing');
+                  } else {
+                    context.pushReplacement('/part/$nextPart');
+                  }
+                },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.gold,
-                  foregroundColor: Colors.black,
+                  backgroundColor: (!hasAccess && partNumber + 1 > 1)
+                      ? AppColors.surface
+                      : AppColors.gold,
+                  foregroundColor: (!hasAccess && partNumber + 1 > 1)
+                      ? AppColors.gold
+                      : Colors.black,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
+                    side: (!hasAccess && partNumber + 1 > 1)
+                        ? const BorderSide(color: AppColors.gold)
+                        : BorderSide.none,
                   ),
+                  elevation: 0,
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('Part ${partNumber + 1}',
-                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: Colors.black)),
-                    const SizedBox(width: 6),
-                    const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.black),
+                    if (!hasAccess && partNumber + 1 > 1) ...[
+                      const Icon(Icons.lock_outline_rounded, size: 14),
+                      const SizedBox(width: 6),
+                      const Text('Unlock to continue',
+                          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+                    ] else ...[
+                      Text('Part ${partNumber + 1}',
+                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: Colors.black)),
+                      const SizedBox(width: 6),
+                      const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.black),
+                    ],
                   ],
                 ),
               ),

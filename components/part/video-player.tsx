@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import { Play, Pause, Volume2, VolumeX, Maximize, RotateCcw, RotateCw } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, Maximize, RotateCcw, RotateCw, Gauge } from "lucide-react";
+
+const VIDEO_PLAYBACK_SPEEDS = [0.75, 1, 1.25, 1.5, 2];
 import { trackVideoProgress } from "@/app/actions/progress";
 
 // Report at these percent thresholds (once each per mount).
@@ -82,14 +84,31 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
     return () => window.removeEventListener("seerah:audioPlaying", handler);
   }, []);
 
-  const [started,  setStarted]  = useState(false);
-  const [playing,  setPlaying]  = useState(false);
-  const [muted,    setMuted]    = useState(false);
-  const [volume,   setVolume]   = useState(0.5);
-  const [progress, setProgress] = useState(0);
+  const [started,      setStarted]      = useState(false);
+  const [playing,      setPlaying]      = useState(false);
+  const [muted,        setMuted]        = useState(false);
+  const [volume,       setVolume]       = useState(0.5);
+  const [progress,     setProgress]     = useState(0);
+  const [playbackRate, setPlaybackRate] = useState(1);
+  const [showSpeedMenu, setShowSpeedMenu] = useState(false);
   const [controlsVisible, setControlsVisible] = useState(false);
   const [videoError, setVideoError] = useState(false);
   const controlsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Close speed menu on outside click
+  useEffect(() => {
+    if (!showSpeedMenu) return;
+    const handler = () => setShowSpeedMenu(false);
+    document.addEventListener("click", handler);
+    return () => document.removeEventListener("click", handler);
+  }, [showSpeedMenu]);
+
+  const changePlaybackRate = (rate: number) => {
+    if (!videoRef.current) return;
+    videoRef.current.playbackRate = rate;
+    setPlaybackRate(rate);
+    setShowSpeedMenu(false);
+  };
 
   const showControlsTemporarily = useCallback(() => {
     setControlsVisible(true);
@@ -445,6 +464,35 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
           </div>
 
           <div className="flex-1" />
+
+          {/* Playback speed */}
+          <div className="relative">
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowSpeedMenu(!showSpeedMenu); showControlsTemporarily(); }}
+              className="flex items-center gap-1 px-2 min-h-[44px] text-white/70 hover:text-white transition-colors"
+              aria-label={`Playback speed: ${playbackRate}x`}
+            >
+              <Gauge className="w-3.5 h-3.5" />
+              <span className="text-[11px] font-semibold tabular-nums">{playbackRate}x</span>
+            </button>
+            {showSpeedMenu && (
+              <div className="absolute right-0 bottom-full mb-1 py-1 rounded-lg bg-black/90 border border-white/10 shadow-xl z-20 min-w-[72px]">
+                {VIDEO_PLAYBACK_SPEEDS.map((speed) => (
+                  <button
+                    key={speed}
+                    onClick={() => changePlaybackRate(speed)}
+                    className={`w-full px-3 min-h-[40px] flex items-center text-sm transition-colors ${
+                      playbackRate === speed
+                        ? "bg-gold/20 text-gold font-semibold"
+                        : "text-white/80 hover:bg-white/10"
+                    }`}
+                  >
+                    {speed}x
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Fullscreen — 44px; iOS Safari requires webkitEnterFullscreen on the <video> element */}
           <button

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/providers/iap_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/ui_kit.dart';
 
 // ── Plan model ────────────────────────────────────────────────────────────────
 
@@ -23,7 +25,7 @@ class _Plan {
   final String fallbackPrice;
   final String period;
   final String? badge;
-  final bool isHighlighted;
+  final bool isRecommended;
 
   const _Plan({
     required this.id,
@@ -33,7 +35,7 @@ class _Plan {
     required this.fallbackPrice,
     required this.period,
     this.badge,
-    this.isHighlighted = false,
+    this.isRecommended = false,
   });
 }
 
@@ -53,7 +55,8 @@ const _plans = [
     description: 'Up to 5 members • cancel anytime',
     fallbackPrice: '\$${AppConstants.familyMonthlyPrice}',
     period: '/mo',
-    badge: 'Best for families',
+    badge: 'Most Popular',
+    isRecommended: true,
   ),
   _Plan(
     id: PlanId.individualLifetime,
@@ -62,7 +65,6 @@ const _plans = [
     description: '1 learner • pay once, own forever',
     fallbackPrice: '\$${AppConstants.lifetimePrice}',
     period: 'one-time',
-    isHighlighted: true,
   ),
   _Plan(
     id: PlanId.familyLifetime,
@@ -71,7 +73,7 @@ const _plans = [
     description: 'Up to 5 members • pay once, own forever',
     fallbackPrice: '\$${AppConstants.familyLifetimePrice}',
     period: 'one-time',
-    badge: 'Best value',
+    badge: 'Best Value',
   ),
 ];
 
@@ -151,7 +153,7 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
+      body: AppGradientBackground(child: SafeArea(
         child: Column(
           children: [
             // ── Top bar ───────────────────────────────────────────────────
@@ -201,6 +203,7 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                         enabled: !busy,
                         onTap: () => _buyPlan(iap, plan),
                         bottomMargin: i < _plans.length - 1 ? 10 : 0,
+                        isRecommended: plan.isRecommended,
                       );
                     }),
 
@@ -256,7 +259,7 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
             ),
           ],
         ),
-      ),
+      )),
     );
   }
 }
@@ -316,6 +319,7 @@ class _PlanTile extends StatelessWidget {
   final String price;
   final bool isLoading;
   final bool enabled;
+  final bool isRecommended;
   final VoidCallback onTap;
   final double bottomMargin;
 
@@ -325,58 +329,123 @@ class _PlanTile extends StatelessWidget {
     required this.isLoading,
     required this.enabled,
     required this.onTap,
+    this.isRecommended = false,
     this.bottomMargin = 0,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: enabled && !isLoading ? onTap : null,
-        borderRadius: BorderRadius.circular(14),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          margin: EdgeInsets.only(bottom: bottomMargin),
-          decoration: BoxDecoration(
-            color: AppColors.card,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.border, width: 1.2),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    return Padding(
+      padding: EdgeInsets.only(bottom: bottomMargin),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          onTap: enabled && !isLoading
+              ? () {
+                  HapticFeedback.mediumImpact();
+                  onTap();
+                }
+              : null,
+          borderRadius: BorderRadius.circular(16),
+          splashColor: AppColors.gold.withValues(alpha: 0.06),
+          highlightColor: AppColors.gold.withValues(alpha: 0.03),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: isRecommended
+                  ? LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        AppColors.gold.withValues(alpha: 0.14),
+                        AppColors.gold.withValues(alpha: 0.04),
+                      ],
+                    )
+                  : null,
+              color: isRecommended ? null : AppColors.card,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isRecommended
+                    ? AppColors.gold.withValues(alpha: 0.6)
+                    : AppColors.border,
+                width: isRecommended ? 1.5 : 1,
+              ),
+              boxShadow: isRecommended
+                  ? [
+                      BoxShadow(
+                        color: AppColors.gold.withValues(alpha: 0.12),
+                        blurRadius: 20,
+                        offset: const Offset(0, 6),
+                      ),
+                    ]
+                  : null,
+            ),
             child: Row(
               children: [
+                // Left — name + description + badge
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Flexible(
+                      if (isRecommended && plan.badge != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 6),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: AppColors.gold,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
                             child: Text(
-                              plan.name,
+                              plan.badge!,
                               style: const TextStyle(
-                                color: AppColors.textPrimary,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
+                                color: Colors.black,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.3,
                               ),
                             ),
                           ),
-                          if (plan.badge != null) ...[
-                            const SizedBox(width: 8),
+                        ),
+                      Text(
+                        plan.name,
+                        style: TextStyle(
+                          color: isRecommended
+                              ? AppColors.textPrimary
+                              : AppColors.textPrimary,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Row(
+                        children: [
+                          Text(
+                            plan.description,
+                            style: TextStyle(
+                              color: isRecommended
+                                  ? AppColors.textSecondary
+                                  : AppColors.textMuted,
+                              fontSize: 12.5,
+                            ),
+                          ),
+                          if (!isRecommended && plan.badge != null) ...[
+                            const SizedBox(width: 6),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 7, vertical: 2),
+                                  horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
                                 color: AppColors.goldFaded,
-                                borderRadius: BorderRadius.circular(6),
+                                borderRadius: BorderRadius.circular(5),
                               ),
                               child: Text(
                                 plan.badge!,
                                 style: const TextStyle(
                                   color: AppColors.gold,
-                                  fontSize: 10,
+                                  fontSize: 9.5,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -384,23 +453,20 @@ class _PlanTile extends StatelessWidget {
                           ],
                         ],
                       ),
-                      const SizedBox(height: 3),
-                      Text(
-                        plan.description,
-                        style: const TextStyle(
-                            color: AppColors.textMuted, fontSize: 12.5),
-                      ),
                     ],
                   ),
                 ),
+
                 const SizedBox(width: 12),
+
+                // Right — price + loading
                 if (isLoading)
-                  const SizedBox(
+                  SizedBox(
                     width: 22,
                     height: 22,
                     child: CircularProgressIndicator(
                       strokeWidth: 2.5,
-                      color: AppColors.gold,
+                      color: isRecommended ? AppColors.gold : AppColors.textMuted,
                     ),
                   )
                 else
@@ -409,26 +475,35 @@ class _PlanTile extends StatelessWidget {
                     children: [
                       Text(
                         price,
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 18,
+                        style: TextStyle(
+                          color: isRecommended
+                              ? AppColors.gold
+                              : AppColors.textPrimary,
+                          fontSize: 19,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
                       Text(
                         plan.period,
-                        style: const TextStyle(
-                            color: AppColors.textMuted, fontSize: 11),
+                        style: TextStyle(
+                          color: isRecommended
+                              ? AppColors.gold.withValues(alpha: 0.7)
+                              : AppColors.textMuted,
+                          fontSize: 11,
+                        ),
                       ),
                     ],
                   ),
+
                 const SizedBox(width: 10),
                 Icon(
-                  Icons.arrow_forward_ios,
-                  size: 14,
-                  color: enabled
-                      ? AppColors.textMuted
-                      : AppColors.textMuted.withValues(alpha: 0.4),
+                  Icons.arrow_forward_ios_rounded,
+                  size: 13,
+                  color: isRecommended
+                      ? AppColors.gold.withValues(alpha: 0.7)
+                      : (enabled
+                          ? AppColors.textMuted
+                          : AppColors.textMuted.withValues(alpha: 0.4)),
                 ),
               ],
             ),

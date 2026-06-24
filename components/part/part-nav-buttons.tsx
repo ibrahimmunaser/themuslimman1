@@ -18,7 +18,6 @@ interface PartNavButtonsProps {
   nextPart: NavPart | null;
   currentPart: number;
   totalParts: number;
-  initialQuizPassed: boolean;
 }
 
 export function PartNavButtons({

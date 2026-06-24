@@ -9,6 +9,7 @@ import '../../features/auth/screens/account_setup_screen.dart';
 import '../../features/auth/screens/verify_email_screen.dart';
 import '../../features/shell/app_shell.dart';
 import '../../features/home/screens/landing_screen.dart';
+import '../../features/home/screens/welcome_screen.dart';
 import '../../features/dashboard/screens/dashboard_screen.dart';
 import '../../features/course/screens/course_screen.dart';
 import '../../features/course/screens/part_screen.dart';
@@ -57,13 +58,25 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Part 1 is always free — allow logged-out users through directly.
       final isFreePartRoute = loc == '/part/1';
 
-      // Logged-out: push to landing except for auth screens and Part 1
-      if (!isLoggedIn && !isOnAuth && loc != '/landing' && !isFreePartRoute) {
+      // Logged-out routing:
+      // - /welcome and /landing are always allowed (welcome = first screen, landing = plan picker)
+      // - /part/1 allowed (free preview)
+      // - Auth routes always allowed
+      // - / (splash) → redirect to welcome screen on first open
+      // - Everything else (locked content) → plan picker (/landing)
+      if (!isLoggedIn && !isOnAuth && !isFreePartRoute) {
+        if (loc == '/welcome' || loc == '/landing') return null;
+        if (loc == '/') return '/welcome';
         return '/landing';
       }
-      // Logged-in anywhere outside the main shell → go to dashboard
-      // (covers '/' splash, '/landing', and login/signup screens)
-      if (isLoggedIn && (loc == '/login' || loc == '/signup' || loc == '/' || loc == '/landing')) {
+
+      // Logged-in on entry/auth screens → go to dashboard
+      if (isLoggedIn &&
+          (loc == '/' ||
+              loc == '/welcome' ||
+              loc == '/landing' ||
+              loc == '/login' ||
+              loc == '/signup')) {
         return '/dashboard';
       }
       return null;
@@ -72,6 +85,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/',
         builder: (ctx, state) => const _SplashScreen(),
+      ),
+      GoRoute(
+        path: '/welcome',
+        builder: (ctx, state) => const WelcomeScreen(),
       ),
       GoRoute(
         path: '/landing',

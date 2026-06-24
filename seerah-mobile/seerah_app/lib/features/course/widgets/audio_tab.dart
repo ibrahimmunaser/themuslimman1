@@ -12,10 +12,13 @@ class AudioTab extends StatefulWidget {
   State<AudioTab> createState() => _AudioTabState();
 }
 
+const _kSpeeds = [0.75, 1.0, 1.25, 1.5, 2.0];
+
 class _AudioTabState extends State<AudioTab> {
   VideoPlayerController? _ctrl;
   bool _loading = true;
   String? _error;
+  double _speed = 1.0;
 
   @override
   void initState() {
@@ -44,6 +47,11 @@ class _AudioTabState extends State<AudioTab> {
     final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
     final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
     return '$m:$s';
+  }
+
+  void _setSpeed(double speed) {
+    _ctrl?.setPlaybackSpeed(speed);
+    setState(() => _speed = speed);
   }
 
   @override
@@ -197,6 +205,39 @@ class _AudioTabState extends State<AudioTab> {
                   icon: const Icon(Icons.fast_forward_rounded, size: 32, color: AppColors.textSecondary),
                 ),
               ],
+            ),
+
+            const SizedBox(height: 24),
+
+            // Speed chips
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: _kSpeeds.map((speed) {
+                final selected = _speed == speed;
+                return GestureDetector(
+                  onTap: () => _setSpeed(speed),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 150),
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                    decoration: BoxDecoration(
+                      color: selected ? AppColors.gold : AppColors.surface,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: selected ? AppColors.gold : AppColors.border,
+                      ),
+                    ),
+                    child: Text(
+                      '${speed == speed.truncateToDouble() ? speed.toInt() : speed}×',
+                      style: TextStyle(
+                        color: selected ? Colors.black : AppColors.textSecondary,
+                        fontSize: 13,
+                        fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
             ),
           ],
         ),

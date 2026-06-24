@@ -68,6 +68,8 @@ class _VideoPlayerState extends State<_VideoPlayer> {
         looping: false,
         aspectRatio: 16 / 9,
         allowFullScreen: true,
+        showOptions: true,
+        playbackSpeeds: const [0.75, 1.0, 1.25, 1.5, 2.0],
         placeholder: Container(color: Colors.black),
         errorBuilder: (ctx, msg) => Center(
           child: Text(msg, style: const TextStyle(color: Colors.white)),

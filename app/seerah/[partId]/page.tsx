@@ -312,11 +312,6 @@ export default async function SeerahPartPage(props: Props) {
             nextPart={nextPart ? { id: nextPart.id, partNumber: nextPart.partNumber, title: nextPart.title, subtitle: nextPart.subtitle } : null}
             currentPart={n}
             totalParts={allParts.length}
-            initialQuizPassed={
-              (partProgress?.quizPassed ?? false) ||
-              partProgress?.status === "completed" ||
-              partProgress?.status === "mastered"
-            }
           />
         </div>
       </div>
