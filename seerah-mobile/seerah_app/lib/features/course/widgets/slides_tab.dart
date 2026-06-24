@@ -203,40 +203,44 @@ class _SlidesTabState extends ConsumerState<SlidesTab> {
             ),
 
             // ── Prev / Next buttons ───────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 6, 16, 20),
-              child: Row(
-                children: [
-                  _NavBtn(
-                    icon: Icons.arrow_back_ios_rounded,
-                    label: 'Prev',
-                    enabled: canPrev,
-                    onTap: canPrev
-                        ? () => _pageCtrl.previousPage(
-                            duration: const Duration(milliseconds: 250),
-                            curve: Curves.easeOut)
-                        : null,
-                  ),
-                  Expanded(
-                    child: Center(
-                      child: Text(
-                        'Swipe to navigate',
-                        style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
+            SafeArea(
+              top: false,
+              minimum: const EdgeInsets.only(bottom: 12),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 6, 16, 12),
+                child: Row(
+                  children: [
+                    _NavBtn(
+                      icon: Icons.arrow_back_ios_rounded,
+                      label: 'Prev',
+                      enabled: canPrev,
+                      onTap: canPrev
+                          ? () => _pageCtrl.previousPage(
+                              duration: const Duration(milliseconds: 250),
+                              curve: Curves.easeOut)
+                          : null,
+                    ),
+                    Expanded(
+                      child: Center(
+                        child: Text(
+                          'Swipe to navigate',
+                          style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
+                        ),
                       ),
                     ),
-                  ),
-                  _NavBtn(
-                    icon: Icons.arrow_forward_ios_rounded,
-                    label: 'Next',
-                    enabled: canNext,
-                    trailingIcon: true,
-                    onTap: canNext
-                        ? () => _pageCtrl.nextPage(
-                            duration: const Duration(milliseconds: 250),
-                            curve: Curves.easeOut)
-                        : null,
-                  ),
-                ],
+                    _NavBtn(
+                      icon: Icons.arrow_forward_ios_rounded,
+                      label: 'Next',
+                      enabled: canNext,
+                      trailingIcon: true,
+                      onTap: canNext
+                          ? () => _pageCtrl.nextPage(
+                              duration: const Duration(milliseconds: 250),
+                              curve: Curves.easeOut)
+                          : null,
+                    ),
+                  ],
+                ),
               ),
             ),
           ],

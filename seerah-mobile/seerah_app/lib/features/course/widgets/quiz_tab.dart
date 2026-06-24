@@ -257,19 +257,23 @@ class _QuizTabState extends ConsumerState<QuizTab> {
             ),
 
             // Submit / Next
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-              child: SizedBox(
-                width: double.infinity,
-                child: _submitted
-                    ? ElevatedButton(
-                        onPressed: () => _next(questions),
-                        child: Text(_currentQ < questions.length - 1 ? 'Next Question' : 'See Results'),
-                      )
-                    : ElevatedButton(
-                        onPressed: _selected != null ? () => _submit(questions) : null,
-                        child: const Text('Submit Answer'),
-                      ),
+            SafeArea(
+              top: false,
+              minimum: const EdgeInsets.only(bottom: 12),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: _submitted
+                      ? ElevatedButton(
+                          onPressed: () => _next(questions),
+                          child: Text(_currentQ < questions.length - 1 ? 'Next Question' : 'See Results'),
+                        )
+                      : ElevatedButton(
+                          onPressed: _selected != null ? () => _submit(questions) : null,
+                          child: const Text('Submit Answer'),
+                        ),
+                ),
               ),
             ),
           ],

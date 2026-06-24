@@ -122,24 +122,28 @@ class _FlashcardsTabState extends ConsumerState<FlashcardsTab> {
             ),
 
             // Controls
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _NavButton(
-                    icon: Icons.arrow_back,
-                    label: 'Prev',
-                    onPressed: _currentIndex > 0 ? () => _prev(cards) : null,
-                  ),
-                  _FlipButton(onTap: _flip, showing: _showingAnswer),
-                  _NavButton(
-                    icon: Icons.arrow_forward,
-                    label: isLast ? 'Done' : 'Next',
-                    onPressed: () => isLast ? _reset() : _next(cards),
-                    primary: isLast,
-                  ),
-                ],
+            SafeArea(
+              top: false,
+              minimum: const EdgeInsets.only(bottom: 12),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _NavButton(
+                      icon: Icons.arrow_back,
+                      label: 'Prev',
+                      onPressed: _currentIndex > 0 ? () => _prev(cards) : null,
+                    ),
+                    _FlipButton(onTap: _flip, showing: _showingAnswer),
+                    _NavButton(
+                      icon: Icons.arrow_forward,
+                      label: isLast ? 'Done' : 'Next',
+                      onPressed: () => isLast ? _reset() : _next(cards),
+                      primary: isLast,
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
