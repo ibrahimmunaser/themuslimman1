@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/part_model.dart';
 import '../../../core/providers/part_provider.dart';
+import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
 
 class QuizTab extends ConsumerStatefulWidget {
@@ -38,6 +39,12 @@ class _QuizTabState extends ConsumerState<QuizTab> {
     if (_currentQ < questions.length - 1) {
       setState(() { _currentQ++; _selected = null; _submitted = false; });
     } else {
+      // Save score before showing results screen.
+      final pct = questions.isEmpty
+          ? 0
+          : (_score / questions.length * 100).round();
+      ref.read(progressProvider.notifier)
+          .recordQuizScore(widget.partNumber, pct);
       setState(() => _done = true);
     }
   }

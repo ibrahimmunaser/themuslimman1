@@ -3,7 +3,9 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/data/parts_data.dart';
+import '../../../core/models/part_model.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/ui_kit.dart';
 
@@ -14,6 +16,7 @@ class ProgressScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final auth = ref.watch(authProvider);
     final hasAccess = auth.hasAccess;
+    final progressAsync = ref.watch(progressProvider);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -29,14 +32,14 @@ class ProgressScreen extends ConsumerWidget {
               // Overview stats
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: _OverviewStats(hasAccess: hasAccess)
+            child: _OverviewStats(hasAccess: hasAccess, progressAsync: progressAsync)
                 .animate(delay: 100.ms).fadeIn(duration: 400.ms),
           ),
 
           const SectionHeader(title: 'Course Map'),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: _CourseMap(hasAccess: hasAccess)
+            child: _CourseMap(hasAccess: hasAccess, progressAsync: progressAsync)
                 .animate(delay: 150.ms).fadeIn(duration: 400.ms),
           ),
 
@@ -68,16 +71,20 @@ class ProgressScreen extends ConsumerWidget {
 
 class _OverviewStats extends StatelessWidget {
   final bool hasAccess;
-  const _OverviewStats({required this.hasAccess});
+  final AsyncValue<ProgressState> progressAsync;
+  const _OverviewStats({required this.hasAccess, required this.progressAsync});
 
   @override
   Widget build(BuildContext context) {
-    final accessible = hasAccess ? 100 : 1;
+    final progress = progressAsync.valueOrNull;
+    final viewed    = progress?.totalViewed    ?? 0;
+    final completed = progress?.totalCompleted ?? 0;
+    final totalUnlocked = hasAccess ? 100 : 1;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Inline stats strip — native feel, no individual borders
+        // Stats strip
         Container(
           padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
           decoration: BoxDecoration(
@@ -86,18 +93,18 @@ class _OverviewStats extends StatelessWidget {
           ),
           child: Row(
             children: [
-              _StatPill(value: '$accessible', label: 'Parts', color: AppColors.gold),
+              _StatPill(value: '$viewed', label: 'Studied', color: AppColors.gold),
               _Divider(),
-              const _StatPill(value: '8', label: 'Eras', color: AppColors.success),
+              _StatPill(value: '$completed', label: 'Completed', color: AppColors.success),
               _Divider(),
-              const _StatPill(value: '8', label: 'Resources', color: Color(0xFF5A90B0)),
+              const _StatPill(value: '8', label: 'Eras', color: Color(0xFF5A90B0)),
             ],
           ),
         ),
 
         const SizedBox(height: 10),
 
-        // Access progress bar — inline without card border
+        // Viewed progress bar
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
@@ -110,11 +117,11 @@ class _OverviewStats extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Course Unlocked',
+                  const Text('Parts Studied',
                     style: TextStyle(
                       color: AppColors.textPrimary, fontSize: 14,
                       fontWeight: FontWeight.w600)),
-                  Text('$accessible/100 parts',
+                  Text('$viewed/$totalUnlocked',
                     style: const TextStyle(
                       color: AppColors.gold, fontSize: 13,
                       fontWeight: FontWeight.w700)),
@@ -124,12 +131,38 @@ class _OverviewStats extends StatelessWidget {
               ClipRRect(
                 borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(
-                  value: accessible / 100,
+                  value: totalUnlocked == 0 ? 0 : (viewed / totalUnlocked).clamp(0.0, 1.0),
                   backgroundColor: AppColors.border,
                   valueColor: const AlwaysStoppedAnimation<Color>(AppColors.gold),
                   minHeight: 6,
                 ),
               ),
+              if (completed > 0) ...[
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Quiz Completed',
+                      style: TextStyle(
+                        color: AppColors.textPrimary, fontSize: 14,
+                        fontWeight: FontWeight.w600)),
+                    Text('$completed/$totalUnlocked',
+                      style: const TextStyle(
+                        color: AppColors.success, fontSize: 13,
+                        fontWeight: FontWeight.w700)),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: totalUnlocked == 0 ? 0 : (completed / totalUnlocked).clamp(0.0, 1.0),
+                    backgroundColor: AppColors.border,
+                    valueColor: const AlwaysStoppedAnimation<Color>(AppColors.success),
+                    minHeight: 6,
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -172,11 +205,13 @@ class _Divider extends StatelessWidget {
 
 class _CourseMap extends StatelessWidget {
   final bool hasAccess;
-  const _CourseMap({required this.hasAccess});
+  final AsyncValue<ProgressState> progressAsync;
+  const _CourseMap({required this.hasAccess, required this.progressAsync});
 
   @override
   Widget build(BuildContext context) {
     final groups = getEraGroups();
+    final progress = progressAsync.valueOrNull;
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(14),
@@ -186,10 +221,16 @@ class _CourseMap extends StatelessWidget {
           final isLast = i == groups.length - 1;
           final group = entry.value;
           final era = group['era'] as dynamic;
-          final parts = group['parts'] as List;
+          final parts = (group['parts'] as List).cast<PartModel>();
           final color = AppColors.forEra(era.id as String);
-          final accessible = hasAccess ? parts.length : (i == 0 ? parts.length : 0);
-          final progress = parts.isEmpty ? 0.0 : accessible / parts.length;
+
+          // Count how many parts in this era the user has actually viewed.
+          final eraPartNumbers = parts.map((p) => p.partNumber).toList();
+          final viewedCount = progress?.viewedInEra(eraPartNumbers) ?? 0;
+          final completedCount = progress?.completedInEra(eraPartNumbers) ?? 0;
+          final isUnlocked = hasAccess || i == 0;
+          final displayCount = isUnlocked ? viewedCount : 0;
+          final fraction = parts.isEmpty ? 0.0 : (displayCount / parts.length).clamp(0.0, 1.0);
 
           return Column(
             children: [
@@ -204,18 +245,28 @@ class _CourseMap extends StatelessWidget {
                         Container(
                           width: 4, height: 30,
                           decoration: BoxDecoration(
-                            color: color, borderRadius: BorderRadius.circular(2))),
+                            color: isUnlocked ? color : AppColors.border,
+                            borderRadius: BorderRadius.circular(2))),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(era.name as String,
-                            style: const TextStyle(
-                              color: AppColors.textPrimary,
+                            style: TextStyle(
+                              color: isUnlocked
+                                  ? AppColors.textPrimary
+                                  : AppColors.textMuted,
                               fontSize: 14,
                               fontWeight: FontWeight.w600)),
                         ),
-                        Text('$accessible/${parts.length}',
+                        if (completedCount > 0) ...[
+                          const Icon(Icons.check_circle_rounded,
+                            color: AppColors.success, size: 13),
+                          const SizedBox(width: 4),
+                        ],
+                        Text(
+                          isUnlocked ? '$viewedCount/${parts.length}' : 'Locked',
                           style: TextStyle(
-                            color: color, fontSize: 13,
+                            color: isUnlocked ? color : AppColors.textMuted,
+                            fontSize: 13,
                             fontWeight: FontWeight.w700)),
                       ],
                     ),
@@ -223,10 +274,10 @@ class _CourseMap extends StatelessWidget {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(3),
                       child: LinearProgressIndicator(
-                        value: progress,
+                        value: fraction,
                         backgroundColor: AppColors.border,
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          hasAccess || i == 0 ? color : AppColors.border),
+                          isUnlocked ? color : AppColors.border),
                         minHeight: 4,
                       ),
                     ),

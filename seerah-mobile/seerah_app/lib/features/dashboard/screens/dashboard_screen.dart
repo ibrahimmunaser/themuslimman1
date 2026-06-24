@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/data/parts_data.dart';
 import '../../../core/models/part_model.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_logo.dart';
 import '../../../core/widgets/ui_kit.dart';
@@ -18,6 +19,7 @@ class DashboardScreen extends ConsumerWidget {
     final user = auth.user;
     final hasAccess = auth.hasAccess;
     final firstName = _firstName(user?.name);
+    final progressAsync = ref.watch(progressProvider);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -70,8 +72,8 @@ class DashboardScreen extends ConsumerWidget {
                     color: AppColors.card,
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: Row(
-                    children: [
+                  child: progressAsync.when(
+                    loading: () => Row(children: [
                       _InlineStat(value: '100', label: 'Parts', color: AppColors.gold),
                       _StatDivider(),
                       const _InlineStat(value: '8', label: 'Eras', color: AppColors.success),
@@ -79,7 +81,35 @@ class DashboardScreen extends ConsumerWidget {
                       const _InlineStat(value: '8', label: 'Resources', color: Color(0xFF5A90B0)),
                       _StatDivider(),
                       const _InlineStat(value: '∞', label: 'Reference', color: Color(0xFF4AA87E)),
-                    ],
+                    ]),
+                    error: (_, __) => Row(children: [
+                      _InlineStat(value: '100', label: 'Parts', color: AppColors.gold),
+                      _StatDivider(),
+                      const _InlineStat(value: '8', label: 'Eras', color: AppColors.success),
+                      _StatDivider(),
+                      const _InlineStat(value: '8', label: 'Resources', color: Color(0xFF5A90B0)),
+                      _StatDivider(),
+                      const _InlineStat(value: '∞', label: 'Reference', color: Color(0xFF4AA87E)),
+                    ]),
+                    data: (progress) => Row(
+                      children: [
+                        _InlineStat(
+                          value: '${progress.totalViewed}',
+                          label: 'Studied',
+                          color: AppColors.gold,
+                        ),
+                        _StatDivider(),
+                        _InlineStat(
+                          value: '${progress.totalCompleted}',
+                          label: 'Completed',
+                          color: AppColors.success,
+                        ),
+                        _StatDivider(),
+                        const _InlineStat(value: '8', label: 'Resources', color: Color(0xFF5A90B0)),
+                        _StatDivider(),
+                        const _InlineStat(value: '∞', label: 'Reference', color: Color(0xFF4AA87E)),
+                      ],
+                    ),
                   ),
                 ).animate(delay: 70.ms).fadeIn(duration: 400.ms),
               ),
@@ -91,7 +121,7 @@ class DashboardScreen extends ConsumerWidget {
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _ContinueLearningCard(hasAccess: hasAccess)
+                child: _ContinueLearningCard(hasAccess: hasAccess, progressAsync: progressAsync)
                     .animate(delay: 120.ms).fadeIn(duration: 400.ms),
               ),
 
@@ -204,35 +234,51 @@ class _WelcomeCard extends StatelessWidget {
 
 class _ContinueLearningCard extends StatelessWidget {
   final bool hasAccess;
-  const _ContinueLearningCard({required this.hasAccess});
+  final AsyncValue<ProgressState> progressAsync;
+  const _ContinueLearningCard({required this.hasAccess, required this.progressAsync});
 
   @override
   Widget build(BuildContext context) {
-    // Always start from Part 1 until we have local progress tracking
-    final PartModel part = PARTS.first;
-    final eraColor = AppColors.forEra(part.era);
+    // Use the last visited part from progress; fall back to Part 1 for new users.
+    final lastPartNumber = progressAsync.valueOrNull?.lastPartNumber ?? 1;
+    final partNum = lastPartNumber.clamp(1, PARTS.length);
+    // Determine which part to show next: if user visited lastPart and has
+    // access, suggest the next one (unless they're at the last part).
+    final isFirstVisit = progressAsync.valueOrNull?.totalViewed == 0;
+    final nextPartNum = (!isFirstVisit && hasAccess && partNum < PARTS.length)
+        ? partNum + 1
+        : partNum;
+    final PartModel nextPart = PARTS.firstWhere(
+      (p) => p.partNumber == nextPartNum,
+      orElse: () => PARTS.first,
+    );
+    final nextEraColor = AppColors.forEra(nextPart.era);
+
+    final label = isFirstVisit
+        ? (hasAccess ? 'Start here' : 'Free — Start Here')
+        : (nextPartNum == partNum ? 'Continue' : 'Up next');
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () => context.push('/part/1'),
+        onTap: () => context.push('/part/$nextPartNum'),
         borderRadius: BorderRadius.circular(16),
         child: Ink(
           padding: const EdgeInsets.all(16),
-          decoration: AppDecorations.eraAccent(eraColor),
+          decoration: AppDecorations.eraAccent(nextEraColor),
           child: Row(
             children: [
               Container(
                 width: 52,
                 height: 52,
                 decoration: BoxDecoration(
-                  color: eraColor.withValues(alpha: 0.18),
+                  color: nextEraColor.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: eraColor.withValues(alpha: 0.4)),
+                  border: Border.all(color: nextEraColor.withValues(alpha: 0.4)),
                 ),
                 child: Center(
-                  child: Text('1',
-                    style: TextStyle(color: eraColor, fontSize: 20, fontWeight: FontWeight.w800)),
+                  child: Text('$nextPartNum',
+                    style: TextStyle(color: nextEraColor, fontSize: 20, fontWeight: FontWeight.w800)),
                 ),
               ),
               const SizedBox(width: 14),
@@ -241,16 +287,16 @@ class _ContinueLearningCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      hasAccess ? 'Part 1 — Pre-Islamic Era' : 'Free — Start Here',
+                      '$label — ${nextPart.era}',
                       style: const TextStyle(color: AppColors.gold, fontSize: 11, fontWeight: FontWeight.w700),
                     ),
                     const SizedBox(height: 4),
-                    Text(part.title,
+                    Text(nextPart.title,
                       style: const TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.w700),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis),
                     const SizedBox(height: 2),
-                    Text(part.subtitle,
+                    Text(nextPart.subtitle,
                       style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis),

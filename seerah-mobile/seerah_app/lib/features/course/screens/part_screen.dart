@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/data/parts_data.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/part_provider.dart';
+import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../widgets/video_tab.dart';
 import '../widgets/read_tab.dart';
@@ -33,9 +34,11 @@ class _PartScreenState extends ConsumerState<PartScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.initialTab != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _autoOpen());
-    }
+    // Record visit for progress tracking as soon as the screen loads.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(progressProvider.notifier).markPartViewed(widget.partNumber);
+      if (widget.initialTab != null) _autoOpen();
+    });
   }
 
   void _autoOpen() {
@@ -47,7 +50,7 @@ class _PartScreenState extends ConsumerState<PartScreen> {
       case 'briefing':
         _open(context, title: 'Briefing — Part $partNumber', child: ReadTab(partNumber: partNumber, initialSection: 0));
       case 'facts':
-        _open(context, title: 'Key Facts — Part $partNumber', child: ReadTab(partNumber: partNumber, initialSection: 1));
+        _open(context, title: 'Key Facts — Part $partNumber', child: ReadTab(partNumber: partNumber, initialSection: 2));
       case 'read':
         _open(context, title: 'Read — Part $partNumber', child: ReadTab(partNumber: partNumber));
       case 'flashcards':
