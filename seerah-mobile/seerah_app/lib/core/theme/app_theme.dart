@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -51,7 +52,7 @@ class AppTheme {
         type: BottomNavigationBarType.fixed,
         elevation: 0,
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: AppColors.card,
         elevation: 0,
         shape: RoundedRectangleBorder(
@@ -143,7 +144,7 @@ class AppTheme {
       highlightColor: AppColors.gold.withValues(alpha: 0.03),
       focusColor: AppColors.gold.withValues(alpha: 0.08),
       splashFactory: InkRipple.splashFactory,
-      dialogTheme: DialogTheme(
+      dialogTheme: DialogThemeData(
         backgroundColor: AppColors.surface,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
@@ -173,7 +174,7 @@ class AppTheme {
         thickness: 1,
         space: 1,
       ),
-      tabBarTheme: TabBarTheme(
+      tabBarTheme: TabBarThemeData(
         labelColor: AppColors.gold,
         unselectedLabelColor: AppColors.textMuted,
         indicatorColor: AppColors.gold,
