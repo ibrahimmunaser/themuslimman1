@@ -40,7 +40,13 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       _passCtrl.text,
     );
     if (!mounted) return;
-    if (err != null) setState(() { _error = err; _loading = false; });
+    if (err != null) {
+      setState(() { _error = err; _loading = false; });
+    } else {
+      // Navigate to email verification screen instead of letting the router
+      // auto-redirect to /dashboard, so every new account sees the verify step.
+      context.go('/verify-email');
+    }
   }
 
   @override

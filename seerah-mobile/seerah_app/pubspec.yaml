@@ -11,7 +11,6 @@ dependencies:
     sdk: flutter
 
   cupertino_icons: ^1.0.8
-  supabase_flutter: ^2.5.6
 
   # Navigation
   go_router: ^14.0.0
@@ -41,12 +40,11 @@ dependencies:
 
   # Utils
   shared_preferences: ^2.3.4
-  url_launcher: ^6.3.1
 
   # Splash (runtime: main.dart calls FlutterNativeSplash.preserve/remove)
   flutter_native_splash: ^2.4.3
-  flutter_markdown: ^0.7.7+1
   webview_flutter: ^4.13.0
+  flutter_markdown_plus: ^1.0.7
 
 dev_dependencies:
   flutter_test:

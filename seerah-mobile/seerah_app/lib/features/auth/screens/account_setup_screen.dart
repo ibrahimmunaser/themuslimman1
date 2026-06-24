@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -145,6 +146,33 @@ class _AccountSetupScreenState extends ConsumerState<AccountSetupScreen> {
                             height: 1.5,
                           ),
                         ),
+
+                        // On Android, unacknowledged purchases are auto-refunded
+                        // after 3 days — prompt the user to complete setup now.
+                        if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) ...[
+                          const SizedBox(height: 16),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF59E0B).withValues(alpha: 0.10),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.35)),
+                            ),
+                            child: const Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(Icons.schedule_rounded, color: Color(0xFFF59E0B), size: 18),
+                                SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    'Complete setup within 3 days to keep your purchase. Google Play will automatically refund unlinked purchases after this window.',
+                                    style: TextStyle(color: Color(0xFFF59E0B), fontSize: 12.5, height: 1.5),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
 
                         const SizedBox(height: 36),
 

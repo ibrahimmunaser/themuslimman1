@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/app_constants.dart';
 import '../models/user_model.dart';
 import '../network/api_client.dart';
+import 'progress_provider.dart';
 
 class AuthState {
   final bool isLoggedIn;
@@ -37,7 +38,9 @@ class AuthState {
 }
 
 class AuthNotifier extends StateNotifier<AuthState> {
-  AuthNotifier() : super(const AuthState()) {
+  final Ref _ref;
+
+  AuthNotifier(this._ref) : super(const AuthState()) {
     _restore();
   }
 
@@ -172,12 +175,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
     } catch (_) {}
     await ApiClient.instance.clearCookies();
 
-    // Bug 6 fix: remove only auth-specific keys instead of prefs.clear()
-    // which would wipe preferences belonging to other packages.
+    // Remove only auth-specific keys instead of prefs.clear() to avoid
+    // wiping preferences belonging to other packages.
     final prefs = await SharedPreferences.getInstance();
     for (final key in AppConstants.authPrefKeys) {
       await prefs.remove(key);
     }
+
+    // Clear device-local progress so a different user signing in on the same
+    // device does not see the previous user's viewed parts and quiz scores.
+    await _ref.read(progressProvider.notifier).clearAll();
 
     state = const AuthState(isLoggedIn: false, isLoading: false);
   }
@@ -203,5 +210,5 @@ class AuthNotifier extends StateNotifier<AuthState> {
 }
 
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  return AuthNotifier();
+  return AuthNotifier(ref);
 });

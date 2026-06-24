@@ -125,14 +125,15 @@ class _PartScreenState extends ConsumerState<PartScreen> {
     final infographicsAsync = ref.watch(infographicsProvider(partNumber));
     final isFreePart = partNumber == 1;
 
+    // Returns true only once the API confirms the URL exists.
+    // While loading: free parts show as available (tap triggers wait-and-open),
+    // paid parts show as locked until confirmed.
     bool assetAvailable(bool Function(PartAssets) hasUrl) {
-      if (isFreePart) return true;
-      return assetsAsync.whenOrNull(data: hasUrl) ?? false;
+      return assetsAsync.whenOrNull(data: hasUrl) ?? isFreePart;
     }
 
     bool infographicAvailable() {
-      if (isFreePart) return true;
-      return infographicsAsync.whenOrNull(data: (s) => s.hasAny) ?? false;
+      return infographicsAsync.whenOrNull(data: (s) => s.hasAny) ?? isFreePart;
     }
 
     return Scaffold(

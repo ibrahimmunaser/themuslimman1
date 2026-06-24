@@ -1,7 +1,9 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/providers/iap_provider.dart';
@@ -253,6 +255,16 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                             style: TextStyle(fontSize: 12)),
                       ),
                     ),
+
+                    const SizedBox(height: 12),
+
+                    _SubscriptionLegalText(onOpenUrl: (url) {
+                      Navigator.of(context).push(MaterialPageRoute(
+                        builder: (_) => _LegalWebScreen(url: url),
+                      ));
+                    }),
+
+                    const SizedBox(height: 8),
                   ],
                 ),
               ),
@@ -488,6 +500,111 @@ class _PlanTile extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ── Subscription legal text ───────────────────────────────────────────────────
+
+class _SubscriptionLegalText extends StatelessWidget {
+  final void Function(String url) onOpenUrl;
+  const _SubscriptionLegalText({required this.onOpenUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    const baseUrl = AppConstants.baseUrl;
+    final style = const TextStyle(color: AppColors.textMuted, fontSize: 11, height: 1.5);
+    final linkStyle = style.copyWith(
+      color: AppColors.textSecondary,
+      decoration: TextDecoration.underline,
+      decorationColor: AppColors.textSecondary,
+    );
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: RichText(
+        textAlign: TextAlign.center,
+        text: TextSpan(style: style, children: [
+          const TextSpan(
+            text: 'Monthly subscriptions auto-renew unless cancelled at least '
+                '24 hours before the end of the current period. Manage or cancel '
+                'in your App Store or Google Play account settings. Payment will '
+                'be charged to your store account upon purchase confirmation. ',
+          ),
+          TextSpan(
+            text: 'Privacy Policy',
+            style: linkStyle,
+            recognizer: TapGestureRecognizer()
+              ..onTap = () => onOpenUrl('$baseUrl/privacy'),
+          ),
+          const TextSpan(text: '  ·  '),
+          TextSpan(
+            text: 'Terms of Service',
+            style: linkStyle,
+            recognizer: TapGestureRecognizer()
+              ..onTap = () => onOpenUrl('$baseUrl/terms'),
+          ),
+        ]),
+      ),
+    );
+  }
+}
+
+class _LegalWebScreen extends StatefulWidget {
+  final String url;
+  const _LegalWebScreen({required this.url});
+
+  @override
+  State<_LegalWebScreen> createState() => _LegalWebScreenState();
+}
+
+class _LegalWebScreenState extends State<_LegalWebScreen> {
+  late final WebViewController _ctrl;
+  bool _loading = true;
+
+  String get _title {
+    if (widget.url.contains('privacy')) return 'Privacy Policy';
+    if (widget.url.contains('terms')) return 'Terms of Service';
+    return 'themuslimman.com';
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setBackgroundColor(AppColors.background)
+      ..setNavigationDelegate(NavigationDelegate(
+        onPageStarted: (_) { if (mounted) setState(() => _loading = true); },
+        onPageFinished: (_) { if (mounted) setState(() => _loading = false); },
+      ))
+      ..loadRequest(Uri.parse(widget.url));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.surface,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(_title,
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(height: 1, color: AppColors.border),
+        ),
+      ),
+      body: Stack(
+        children: [
+          WebViewWidget(controller: _ctrl),
+          if (_loading)
+            const Center(child: CircularProgressIndicator(color: AppColors.gold)),
+        ],
       ),
     );
   }

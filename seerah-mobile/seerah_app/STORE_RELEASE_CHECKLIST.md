@@ -1,4 +1,4 @@
-# The Muslim Man — Store Release Checklist
+﻿# The Muslim Man — Store Release Checklist
 
 App: **The Muslim Man — Seerah Course**  
 Package: `com.themuslimman.seerah`  
@@ -126,12 +126,12 @@ Fill out the **Data Safety** section in Play Console:
 | Question | Answer |
 |----------|--------|
 | Does the app collect or share user data? | Yes |
-| Data types collected | Email address, Name |
+| Data types collected | Email address, Name, Purchase history |
 | Is data encrypted in transit? | Yes (HTTPS only) |
 | Can users request data deletion? | Yes (via account settings / support) |
-| Data shared with third parties? | No |
-| Is data collected required? | Yes (for account login) |
-| Purpose of collection | App functionality (authentication) |
+| Data shared with third parties? | Yes — purchase tokens shared with Google Play Billing for verification (via our backend) |
+| Is data collected required? | Yes (email for login; purchase history for access control) |
+| Purpose of collection | App functionality (authentication + subscription access) |
 
 ### Release
 - [ ] Upload signed AAB (`app-release.aab`)
@@ -170,10 +170,17 @@ Fill out the **Data Safety** section in Play Console:
 - [ ] App Privacy labels filled in (matches `PrivacyInfo.xcprivacy`):
   - **Email Address** — Collected, linked to identity, app functionality only
   - **Name** — Collected, linked to identity, app functionality only
+  - **Purchase History** — Collected, linked to identity, app functionality only (IAP receipt verified server-side)
   - Data not used for tracking
 
 ### App Review notes (optional but helpful)
-> *"This is an Islamic educational course app. Users must create a free account to browse Part 1. Full access requires a paid subscription purchased via the website (themuslimman.com). In-app payments are not available — no IAP integration. Test account: [provide a test account email/password if reviewer needs one]."*
+> *"This is an Islamic educational course app covering the biography of the Prophet Muhammad ﷺ in 100 structured parts. Part 1 is freely accessible without an account. Full access to Parts 2–100 requires a paid subscription purchased through in-app purchase (Apple StoreKit). Four plans are available: Individual Monthly, Family Monthly, Individual Lifetime, and Family Lifetime. After purchase the app verifies the receipt with our backend (themuslimman.com/api/mobile-purchases/verify) and unlocks the content. A Restore Purchases button is present on the paywall and pricing screens. Test account credentials: [provide a test account with full access — email + password]. No sign-in with Apple is used; authentication is email/password only."*
+
+> **Important:** The app uses `in_app_purchase` (Apple StoreKit). Product IDs registered in App Store Connect:
+> - `com.themuslimman.seerah.monthly.individual`
+> - `com.themuslimman.seerah.monthly.family`
+> - `com.themuslimman.seerah.lifetime.individual`
+> - `com.themuslimman.seerah.lifetime.family`
 
 ### Release
 - [ ] Upload IPA via Xcode or `xcrun altool`
@@ -187,10 +194,10 @@ Fill out the **Data Safety** section in Play Console:
 
 | Item | Detail |
 |------|--------|
-| Data collected | Email address (required for login), Name (optional, display only) |
+| Data collected | Email address (required for login), Name (optional, display only), Purchase history (IAP receipt verified server-side) |
 | Where stored | Server-side (Prisma/PostgreSQL on themuslimman.com) |
-| Stored on device | Email + Name in SharedPreferences (plaintext, not shared); session cookies in iOS Keychain / Android Keystore (encrypted) |
-| Third parties | Stripe (payment processing, server-side only — no Stripe SDK in app) |
+| Stored on device | Email + Name in SharedPreferences (plaintext, not shared); session cookies in iOS Keychain / Android Keystore (encrypted); viewed parts + quiz scores in SharedPreferences (local only, no PII) |
+| Third parties | Apple StoreKit (iOS IAP — receipt sent to our backend for verification); Google Play Billing (Android IAP — purchase token sent to our backend); Stripe (web-side only — no Stripe SDK in app) |
 | Analytics | None |
 | Advertising | None |
 | Tracking | None |
@@ -254,10 +261,14 @@ flutter run --release -d <device-id>
 - [ ] **Airplane mode during session verify**: Cached auth state shown; no logout
 - [ ] **401 from server**: User is logged out and sent to landing screen
 
-### Checkout flow
-- [ ] **Pricing screen**: Correct prices shown (Lifetime $99, Family $199, Monthly $9, Family Monthly $19)
-- [ ] **Tap any pricing button**: Opens `themuslimman.com` checkout in external browser
-- [ ] **Return from browser**: App resumes; if purchase completed, access refreshed automatically
+### Checkout flow (In-App Purchase)
+- [ ] **Pricing screen**: Correct prices loaded from the App Store / Google Play (not fallback hardcoded prices)
+- [ ] **Tap a plan**: Native payment sheet appears (Apple Sheet on iOS, Google Play sheet on Android)
+- [ ] **Complete purchase (sandbox account)**: Success sheet appears — "JazakAllahu Khayran!" — then dashboard shows Full Access badge
+- [ ] **Restore Purchases button**: Visible on pricing and landing screens; tapping it restores a prior sandbox purchase
+- [ ] **Guest purchase flow**: Buy while logged out → account-setup screen appears → create account → purchase linked to new account automatically
+- [ ] **Failed purchase / cancel**: Error snackbar shown, no broken state, can retry immediately
+- [ ] **No IAP on simulator**: Store unavailable banner shown gracefully (not a crash)
 
 ### Icons and branding
 - [ ] App icon visible on home screen (gold crescent on dark background)

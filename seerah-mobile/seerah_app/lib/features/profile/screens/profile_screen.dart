@@ -133,7 +133,7 @@ class ProfileScreen extends ConsumerWidget {
 
           const SizedBox(height: 16),
           Center(
-            child: Text('Version 1.0.0',
+            child: Text('Version ${AppConstants.appVersion}',
               style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
           ),
           const SizedBox(height: 40),
@@ -250,11 +250,12 @@ class _InAppWebScreenState extends State<_InAppWebScreen> {
     // doesn't have to sign in again.
     final jar = cookies.getCurrentCookies();
     final cookieManager = WebViewCookieManager();
+    final domain = Uri.parse(AppConstants.baseUrl).host;
     for (final entry in jar.entries) {
       await cookieManager.setCookie(WebViewCookie(
         name: entry.key,
         value: entry.value,
-        domain: 'themuslimman.com',
+        domain: domain,
         path: '/',
       ));
     }

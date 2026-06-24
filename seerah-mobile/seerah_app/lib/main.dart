@@ -24,10 +24,13 @@ Future<void> main() async {
   ]);
 
   // Initialize Dio + restore secure cookies before any provider reads the API.
-  await ApiClient.instance.init();
-
-  // Dismiss the native splash — Flutter will now render the first frame.
-  FlutterNativeSplash.remove();
+  // Wrapped in try-finally so the native splash is always removed even if
+  // init throws — prevents an infinite splash hang on startup failure.
+  try {
+    await ApiClient.instance.init();
+  } finally {
+    FlutterNativeSplash.remove();
+  }
 
   runApp(const ProviderScope(child: SeerahApp()));
 }

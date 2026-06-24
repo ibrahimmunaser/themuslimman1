@@ -1,0 +1,121 @@
+workflows:
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # ANDROID — builds a signed release AAB and uploads to Play Store internal track
+  # ────────────────────────────────────────────────────────────────────────────
+  android-release:
+    name: Android Release
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+
+    environment:
+      flutter: stable
+      java: 17
+      # Upload your keystore in Codemagic → Team Settings → Code Signing Identities
+      # → Android keystores, then put the reference name below.
+      android_signing:
+        - themuslimman_keystore
+      groups:
+        - google_play   # GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS (JSON key)
+
+    triggering:
+      events:
+        - tag
+      tag_patterns:
+        - pattern: 'v*'
+          include: true
+
+    scripts:
+      - name: Get Flutter packages
+        script: flutter pub get
+        working_directory: seerah-mobile/seerah_app
+
+      - name: Build release AAB
+        script: flutter build appbundle --release
+        working_directory: seerah-mobile/seerah_app
+
+    artifacts:
+      - seerah-mobile/seerah_app/build/app/outputs/bundle/release/app-release.aab
+
+    publishing:
+      email:
+        recipients:
+          - builds@themuslimman.com   # ← change to your email
+        notify:
+          success: true
+          failure: true
+      google_play:
+        credentials: $GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS
+        track: internal
+        submit_as_draft: true
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # iOS — builds a signed IPA and uploads to TestFlight
+  #
+  # Before first run, in Codemagic → Team Settings:
+  #   1. Team integrations → Apple Developer Portal → add App Store Connect API key
+  #      (needs App Manager role — download the .p8, note Issuer ID + Key ID)
+  #   2. Code Signing Identities → iOS certificates → Generate certificate
+  #      (type: Apple Distribution, using the API key above)
+  #   3. Code Signing Identities → iOS provisioning profiles → Fetch profiles
+  #      (App Store profile for com.themuslimman.seerah, give it reference name
+  #       "themuslimman_appstore")
+  #   4. Under this workflow → integrations → app_store_connect: set to the
+  #      name you gave the API key in step 1.
+  # ────────────────────────────────────────────────────────────────────────────
+  ios-release:
+    name: iOS Release
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+
+    integrations:
+      app_store_connect: App Store Connect API Key   # ← name from Codemagic Team Settings
+
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.themuslimman.seerah
+
+    triggering:
+      events:
+        - tag
+      tag_patterns:
+        - pattern: 'v*'
+          include: true
+
+    scripts:
+      - name: Get Flutter packages
+        script: flutter pub get
+        working_directory: seerah-mobile/seerah_app
+
+      - name: Install CocoaPods
+        script: find . -name "Podfile" -execdir pod install \;
+        working_directory: seerah-mobile/seerah_app
+
+      - name: Set up code signing
+        script: xcode-project use-profiles
+        working_directory: seerah-mobile/seerah_app
+
+      - name: Build IPA
+        script: |
+          flutter build ipa --release \
+            --export-options-plist=/Users/builder/export_options.plist
+        working_directory: seerah-mobile/seerah_app
+
+    artifacts:
+      - seerah-mobile/seerah_app/build/ios/ipa/*.ipa
+
+    publishing:
+      email:
+        recipients:
+          - builds@themuslimman.com   # ← change to your email
+        notify:
+          success: true
+          failure: true
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        expire_build_submitted_for_review: true

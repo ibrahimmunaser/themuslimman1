@@ -7,63 +7,45 @@ plugins {
 }
 
 // ── Release build detection ───────────────────────────────────────────────────
-// Checked at Gradle *configuration* time so we fail before any compilation
-// starts.  Matches "bundleRelease", "assembleRelease", "packageRelease", etc.
 val isReleaseBuild: Boolean =
     gradle.startParameter.taskNames.any { it.contains("release", ignoreCase = true) }
 
-// ── Keystore loading + hard fail for release builds ──────────────────────────
+// ── Signing source detection ──────────────────────────────────────────────────
+// On Codemagic CI: CM_KEYSTORE_PATH is injected automatically when a keystore
+// is linked in Code Signing Identities. CI=true is set by Codemagic.
+// Locally: falls back to android/key.properties (gitignored).
+val isCi: Boolean = System.getenv("CI")?.toBoolean() == true
+
 val keystorePropertiesFile: File = rootProject.file("key.properties")
 val keystoreProperties = Properties()
 
-if (keystorePropertiesFile.exists()) {
+if (isCi) {
+    // Codemagic injects CM_KEYSTORE_PATH, CM_KEYSTORE_PASSWORD, CM_KEY_ALIAS,
+    // CM_KEY_PASSWORD — nothing to load from disk.
+} else if (keystorePropertiesFile.exists()) {
     keystorePropertiesFile.inputStream().use { keystoreProperties.load(it) }
 } else if (isReleaseBuild) {
-    // Fail immediately with an actionable error before a single source file
-    // is compiled — prevents accidentally shipping a debug-signed release AAB.
     throw GradleException(
         buildString {
             appendLine()
             appendLine("  ┌─────────────────────────────────────────────────────────────────┐")
             appendLine("  │  RELEASE BUILD BLOCKED — android/key.properties not found       │")
             appendLine("  ├─────────────────────────────────────────────────────────────────┤")
-            appendLine("  │  Release builds require a production keystore.                  │")
-            appendLine("  │                                                                 │")
             appendLine("  │  1. Generate a keystore (one-time):                             │")
             appendLine("  │       keytool -genkey -v                                        │")
             appendLine("  │         -keystore ~/keys/themuslimman.jks                       │")
             appendLine("  │         -keyalg RSA -keysize 2048 -validity 10000               │")
             appendLine("  │         -alias themuslimman                                     │")
-            appendLine("  │                                                                 │")
-            appendLine("  │  2. Create android/key.properties:                              │")
-            appendLine("  │       cp android/key.properties.example android/key.properties  │")
-            appendLine("  │       # then fill in storeFile, storePassword,                  │")
-            appendLine("  │       # keyAlias, and keyPassword                               │")
-            appendLine("  │                                                                 │")
+            appendLine("  │  2. cp android/key.properties.example android/key.properties   │")
             appendLine("  │  key.properties is gitignored — NEVER commit it.               │")
-            appendLine("  │  See STORE_RELEASE_CHECKLIST.md Part 1 for full steps.         │")
             appendLine("  └─────────────────────────────────────────────────────────────────┘")
         }
     )
 }
 
-// Reads a required signing property and fails loudly if it is absent/blank.
-// Only validates when key.properties exists (the file-absent case is already
-// caught above).
-fun requiredProp(key: String): String {
-    val value = (keystoreProperties[key] as? String)?.trim()
-    if (value.isNullOrEmpty() && isReleaseBuild) {
-        throw GradleException(
-            buildString {
-                appendLine()
-                appendLine("  RELEASE BUILD BLOCKED — '$key' is missing or blank in android/key.properties.")
-                appendLine("  Required keys: storeFile, storePassword, keyAlias, keyPassword")
-                appendLine("  See android/key.properties.example for the expected format.")
-            }
-        )
-    }
-    return value.orEmpty()
-}
+fun signingValue(ciEnvKey: String, localPropKey: String): String =
+    if (isCi) System.getenv(ciEnvKey).orEmpty()
+    else (keystoreProperties[localPropKey] as? String)?.trim().orEmpty()
 
 // ── Android configuration ─────────────────────────────────────────────────────
 
@@ -83,15 +65,12 @@ android {
     }
 
     signingConfigs {
-        // The "release" config is only created when key.properties is present.
-        // For non-release builds without key.properties, this block is skipped
-        // entirely and the release buildType falls back to "debug" below.
-        if (keystorePropertiesFile.exists()) {
+        if (isCi || keystorePropertiesFile.exists()) {
             create("release") {
-                storeFile     = file(requiredProp("storeFile"))
-                storePassword = requiredProp("storePassword")
-                keyAlias      = requiredProp("keyAlias")
-                keyPassword   = requiredProp("keyPassword")
+                storeFile     = file(signingValue("CM_KEYSTORE_PATH", "storeFile"))
+                storePassword = signingValue("CM_KEYSTORE_PASSWORD", "storePassword")
+                keyAlias      = signingValue("CM_KEY_ALIAS", "keyAlias")
+                keyPassword   = signingValue("CM_KEY_PASSWORD", "keyPassword")
             }
         }
     }
@@ -108,14 +87,9 @@ android {
 
     buildTypes {
         release {
-            signingConfig = if (keystorePropertiesFile.exists()) {
-                // Production signing — key.properties validated above.
+            signingConfig = if (isCi || keystorePropertiesFile.exists()) {
                 signingConfigs.getByName("release")
             } else {
-                // Only reachable when isReleaseBuild == false (e.g. `flutter run`
-                // evaluates all buildTypes at config time even though it only
-                // assembles debug). The guard at the top already threw for any
-                // actual release task, so this path is safe.
                 signingConfigs.getByName("debug")
             }
 

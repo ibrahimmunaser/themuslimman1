@@ -97,7 +97,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   obscure: true,
                   textInputAction: TextInputAction.done,
                   onFieldSubmitted: (_) => _submit(),
-                  validator: (v) => (v == null || v.length < 6) ? 'Password too short' : null,
+                  validator: (v) => (v == null || v.length < 8) ? 'Password must be at least 8 characters' : null,
                 ),
 
                 const SizedBox(height: 8),
