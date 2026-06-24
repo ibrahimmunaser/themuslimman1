@@ -15,8 +15,9 @@ workflows:
       # → Android keystores, then put the reference name below.
       android_signing:
         - themuslimman_keystore
-      groups:
-        - google_play   # GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS (JSON key)
+      # Uncomment when Google Play JSON key is set up in Codemagic:
+      # groups:
+      #   - google_play   # GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS
 
     triggering:
       events:
@@ -44,10 +45,11 @@ workflows:
         notify:
           success: true
           failure: true
-      google_play:
-        credentials: $GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS
-        track: internal
-        submit_as_draft: true
+      # Uncomment after adding GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS in Codemagic:
+      # google_play:
+      #   credentials: $GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS
+      #   track: internal
+      #   submit_as_draft: true
 
   # ────────────────────────────────────────────────────────────────────────────
   # iOS — builds a signed IPA and uploads to TestFlight
