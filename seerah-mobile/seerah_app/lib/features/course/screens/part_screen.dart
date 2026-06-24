@@ -8,6 +8,7 @@ import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../widgets/video_tab.dart';
 import '../widgets/read_tab.dart';
+import '../../../core/utils/system_insets.dart';
 import '../widgets/flashcards_tab.dart';
 import '../widgets/quiz_tab.dart';
 import '../widgets/slides_tab.dart';
@@ -438,7 +439,10 @@ class _AssetViewerScreen extends StatelessWidget {
           child: Container(height: 1, color: AppColors.border),
         ),
       ),
-      body: child,
+      body: Padding(
+        padding: EdgeInsets.only(bottom: bottomSystemInset(context)),
+        child: child,
+      ),
     );
   }
 }
