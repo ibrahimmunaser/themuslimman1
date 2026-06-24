@@ -404,37 +404,33 @@ class _PlanTile extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Flexible(
+                      if (plan.badge != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 5),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 7, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppColors.goldFaded,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
                             child: Text(
-                              plan.name,
+                              plan.badge!,
                               style: const TextStyle(
-                                color: AppColors.textPrimary,
-                                fontSize: 15,
+                                color: AppColors.gold,
+                                fontSize: 10,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),
-                          if (plan.badge != null) ...[
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 7, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: AppColors.goldFaded,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                plan.badge!,
-                                style: const TextStyle(
-                                    color: AppColors.gold,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w600),
-                              ),
-                            ),
-                          ],
-                        ],
+                        ),
+                      Text(
+                        plan.name,
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       const SizedBox(height: 3),
                       Text(plan.description,

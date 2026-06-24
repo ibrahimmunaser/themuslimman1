@@ -384,25 +384,29 @@ class _PlanTile extends StatelessWidget {
             ),
             child: Row(
               children: [
-                // Left — name + description + badge
+                // Left — badge (if any) + name + description
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (isRecommended && plan.badge != null)
+                      if (plan.badge != null)
                         Padding(
                           padding: const EdgeInsets.only(bottom: 6),
                           child: Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                              color: AppColors.gold,
+                              color: isRecommended
+                                  ? AppColors.gold
+                                  : AppColors.goldFaded,
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
                               plan.badge!,
-                              style: const TextStyle(
-                                color: Colors.black,
+                              style: TextStyle(
+                                color: isRecommended
+                                    ? Colors.black
+                                    : AppColors.gold,
                                 fontSize: 10,
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: 0.3,
@@ -412,46 +416,21 @@ class _PlanTile extends StatelessWidget {
                         ),
                       Text(
                         plan.name,
-                        style: TextStyle(
-                          color: isRecommended
-                              ? AppColors.textPrimary
-                              : AppColors.textPrimary,
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
                       const SizedBox(height: 3),
-                      Row(
-                        children: [
-                          Text(
-                            plan.description,
-                            style: TextStyle(
-                              color: isRecommended
-                                  ? AppColors.textSecondary
-                                  : AppColors.textMuted,
-                              fontSize: 12.5,
-                            ),
-                          ),
-                          if (!isRecommended && plan.badge != null) ...[
-                            const SizedBox(width: 6),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: AppColors.goldFaded,
-                                borderRadius: BorderRadius.circular(5),
-                              ),
-                              child: Text(
-                                plan.badge!,
-                                style: const TextStyle(
-                                  color: AppColors.gold,
-                                  fontSize: 9.5,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ],
+                      Text(
+                        plan.description,
+                        style: TextStyle(
+                          color: isRecommended
+                              ? AppColors.textSecondary
+                              : AppColors.textMuted,
+                          fontSize: 12.5,
+                        ),
                       ),
                     ],
                   ),
