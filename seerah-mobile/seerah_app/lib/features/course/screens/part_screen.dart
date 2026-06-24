@@ -862,14 +862,6 @@ class _ContinueCTA extends StatelessWidget {
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
             ),
           ),
-          const SizedBox(height: 8),
-          TextButton(
-            onPressed: () => context.pop(),
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.textSecondary,
-            ),
-            child: const Text('Review Part 1 again'),
-          ),
         ],
       ),
     );
@@ -910,7 +902,9 @@ class _PartNavBar extends StatelessWidget {
               ),
             ),
           if (partNumber > 1 && partNumber < 100) const SizedBox(width: 12),
-          if (partNumber < 100)
+          // On Part 1 with no access the in-page CTA card already has the
+          // "Unlock full access" button — hide the nav bar duplicate.
+          if (partNumber < 100 && !(partNumber == 1 && !hasAccess))
             Expanded(
               child: ElevatedButton(
                 onPressed: () {
