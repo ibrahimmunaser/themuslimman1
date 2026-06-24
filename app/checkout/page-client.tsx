@@ -168,6 +168,7 @@ function CheckoutForm({
   promoCode,
   getOrCreateClientSecret,
   isAuthenticated,
+  userEmail,
   authFormRef,
   authLoading: authInProgress,
 }: {
@@ -178,6 +179,7 @@ function CheckoutForm({
   promoCode?: string;
   getOrCreateClientSecret: (name: string, email: string) => Promise<string>;
   isAuthenticated: boolean;
+  userEmail: string;
   authFormRef: React.RefObject<{ fullName: string; email: string; password: string; confirmPassword: string }>;
   authLoading: boolean;
 }) {
@@ -334,7 +336,7 @@ function CheckoutForm({
           setError(friendlyPaymentError(confirmError));
           setProcessing(false);
         } else if (paymentIntent?.status === "succeeded") {
-          logStage("payment_succeeded", { userEmail: authFormRef.current?.email || authEmail || "" });
+          logStage("payment_succeeded", { userEmail: authFormRef.current?.email || userEmail || "" });
           markPurchased();
           const url = new URL(returnUrl, window.location.origin);
           url.searchParams.set("payment_intent", paymentIntent.id);
@@ -447,7 +449,7 @@ function CheckoutForm({
           setError(friendlyPaymentError(confirmError));
         setProcessing(false);
       } else if (paymentIntent?.status === "succeeded") {
-        logStage("payment_succeeded", { method: "express", userEmail: walletEmail || authFormRef.current?.email || authEmail || "" });
+        logStage("payment_succeeded", { method: "express", userEmail: walletEmail || authFormRef.current?.email || userEmail || "" });
         markPurchased();
         const url = new URL(returnUrl, window.location.origin);
         url.searchParams.set("payment_intent", paymentIntent.id);
@@ -2118,6 +2120,7 @@ function CheckoutPageContent({
                       promoCode={code || undefined}
                       getOrCreateClientSecret={getOrCreateClientSecret}
                       isAuthenticated={isAuthenticated}
+                      userEmail={authEmail || ""}
                       authFormRef={authFormRef}
                       authLoading={authLoading}
                     />
