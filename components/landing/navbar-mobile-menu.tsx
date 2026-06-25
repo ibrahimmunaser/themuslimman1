@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 
 interface NavbarMobileMenuProps {
@@ -10,7 +11,13 @@ interface NavbarMobileMenuProps {
   hasPaid?: boolean;
 }
 
+function pricingHref(pathname: string): string {
+  if (pathname === "/" || pathname === "/pricing") return "#pricing";
+  return "/#pricing";
+}
+
 export function NavbarMobileMenu({ user, hasPaid }: NavbarMobileMenuProps) {
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
   // Lock body scroll when menu is open
@@ -109,7 +116,7 @@ export function NavbarMobileMenu({ user, hasPaid }: NavbarMobileMenuProps) {
                     Log In
                   </Link>
                   <Link
-                    href="/checkout?plan=individual-trial"
+                    href={pricingHref(pathname)}
                     onClick={close}
                     className="flex items-center justify-center min-h-[48px] px-4 rounded-lg bg-gold text-ink text-sm font-semibold hover:bg-gold-light transition-colors"
                   >
