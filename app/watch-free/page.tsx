@@ -14,7 +14,29 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default function WatchFreePage() {
+interface Props {
+  searchParams: Promise<{
+    source?: string;
+    utm_source?: string;
+    utm_medium?: string;
+    utm_campaign?: string;
+    utm_content?: string;
+  }>;
+}
+
+export default async function WatchFreePage({ searchParams }: Props) {
+  const params = await searchParams;
+
+  // Build checkout URL preserving any source/UTM attribution from the landing URL
+  const checkoutBase = "/checkout?plan=individual-monthly";
+  const extra: string[] = [];
+  if (params.source)       extra.push(`source=${encodeURIComponent(params.source)}`);
+  if (params.utm_source)   extra.push(`utm_source=${encodeURIComponent(params.utm_source)}`);
+  if (params.utm_medium)   extra.push(`utm_medium=${encodeURIComponent(params.utm_medium)}`);
+  if (params.utm_campaign) extra.push(`utm_campaign=${encodeURIComponent(params.utm_campaign)}`);
+  if (params.utm_content)  extra.push(`utm_content=${encodeURIComponent(params.utm_content)}`);
+  const checkoutHref = extra.length > 0 ? `${checkoutBase}&${extra.join("&")}` : checkoutBase;
+
   return (
     <div className="min-h-screen bg-ink text-text">
 
@@ -32,10 +54,10 @@ export default function WatchFreePage() {
             />
           </Link>
           <Link
-            href="/pricing"
-            className="text-sm font-semibold text-text-secondary hover:text-text transition-colors"
+            href={checkoutHref}
+            className="text-sm font-semibold text-gold hover:text-gold-light transition-colors"
           >
-            View Plans →
+            Start Full Course →
           </Link>
         </div>
       </header>
@@ -64,25 +86,37 @@ export default function WatchFreePage() {
             </div>
           }
         >
-          <Part1FullPreview hideCta />
+          <Part1FullPreview
+            checkoutHref={checkoutHref}
+            ctaLabel="Continue the Full Course — $4.99/month"
+          />
         </Suspense>
       </section>
 
       {/* ── Continuation CTA ─────────────────────────────────────────────────── */}
       <section className="border-t border-border bg-surface/50 py-14">
         <div className="max-w-2xl mx-auto px-4 text-center">
+          <h2 className="text-xl sm:text-2xl font-bold text-text mb-3">
+            Continue the full 100-part Seerah course
+          </h2>
           <p className="text-text-secondary text-sm sm:text-base leading-relaxed mb-7 max-w-lg mx-auto">
-            Continue the full structured course with videos, quizzes, flashcards, summaries, mind maps, and progress tracking.
+            Go step by step through the life of the Prophet ﷺ with videos, readings, quizzes,
+            flashcards, summaries, mind maps, and progress tracking.
           </p>
           <Link
-            href="/pricing"
+            href={checkoutHref}
             className="inline-flex items-center gap-2 bg-gold text-ink font-bold px-8 py-4 rounded-xl hover:bg-gold-light active:scale-[0.97] transition-all shadow-lg shadow-gold/20"
           >
-            View Plans
+            Continue for $4.99/month
             <ArrowRight className="w-5 h-5" />
           </Link>
           <p className="mt-3 text-xs text-text-muted">
-            From $4.99/month · Cancel anytime · 7-day guarantee
+            Cancel anytime · 7-day refund guarantee
+          </p>
+          <p className="mt-4">
+            <Link href="/pricing" className="text-xs text-text-muted hover:text-gold transition-colors underline underline-offset-2">
+              See all plans →
+            </Link>
           </p>
         </div>
       </section>

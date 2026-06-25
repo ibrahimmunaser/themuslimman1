@@ -14,9 +14,9 @@ function stripQuizAnswers(quiz: Quiz | null | undefined): Quiz | null | undefine
 }
 
 export async function Part1FullPreview({
-  checkoutHref = "/checkout?plan=individual-trial",
+  checkoutHref = "/checkout?plan=individual-monthly",
   hideCta = false,
-  ctaLabel = "Get Lifetime Access — $49",
+  ctaLabel = "Continue the Full Course — $4.99/month",
 }: {
   checkoutHref?: string;
   hideCta?: boolean;

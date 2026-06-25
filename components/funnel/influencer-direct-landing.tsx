@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useState, useCallback } from "react";
 import { nanoid } from "nanoid";
+import { Play, ArrowRight } from "lucide-react";
 import { PlanPicker } from "@/components/landing/plan-picker";
 import type { PlanId } from "@/components/landing/plan-picker";
 
@@ -55,7 +56,7 @@ export interface InfluencerDirectConfig {
   creator: string;
   /** Display name shown in "Recommended by" badge, e.g. "The Orthodox Muslim" */
   creatorName: string;
-  /** Hero headline, e.g. "You came from The Orthodox Muslim." */
+  /** Hero headline, e.g. "Learn the life of the Prophet ﷺ in order." */
   heroHeadline: string;
   /** Price shown in hero, e.g. "$4.99/month" */
   price?: string;
@@ -78,21 +79,50 @@ export interface InfluencerDirectLandingProps {
   config: InfluencerDirectConfig;
   /** Server-rendered Part 1 preview (all asset tabs). If omitted, falls back to video-only card. */
   part1Preview?: React.ReactNode;
+  /** Optional block rendered in its own section below Part 1 (e.g. embedded Seerah Checkup quiz). */
+  afterPart1Preview?: React.ReactNode;
 }
 
 // ── Component ──────────────────────────────────────────────────────────────────
 
-export function InfluencerDirectLanding({ config, part1Preview }: InfluencerDirectLandingProps) {
+/** Merge real landing-page UTMs into the checkout base URL so campaign-level
+ *  attribution survives even when the static CHECKOUT URL has placeholder UTMs. */
+function mergeRealUtms(checkoutUrl: string): string {
+  if (typeof window === "undefined") return checkoutUrl;
+  try {
+    const landing = new URLSearchParams(window.location.search);
+    const dest    = new URL(checkoutUrl, window.location.origin);
+    const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content"] as const;
+    for (const key of UTM_KEYS) {
+      const val = landing.get(key);
+      if (val) dest.searchParams.set(key, val);
+    }
+    return dest.pathname + dest.search;
+  } catch {
+    return checkoutUrl;
+  }
+}
+
+export function InfluencerDirectLanding({ config, part1Preview, afterPart1Preview }: InfluencerDirectLandingProps) {
   const heroRef  = useRef<HTMLElement>(null);
   const part1Ref = useRef<HTMLDivElement>(null);
+  const plansRef = useRef<HTMLDivElement>(null);
 
   const [scrolledPast, setScrolledPast] = useState(false);
   const [anyCTAVisible, setAnyCTAVisible] = useState(true);
+  // Enriched checkout URL — updated on mount to include real landing-page UTMs
+  const [checkoutUrl, setCheckoutUrl] = useState(config.checkoutUrl);
 
   const price = config.price ?? "$4.99/month";
 
   // Sticky only shown when user has scrolled past hero AND no CTA section is on screen
   const showSticky = scrolledPast && !anyCTAVisible;
+
+  // Merge real landing UTMs into checkout URL on mount
+  useEffect(() => {
+    const enriched = mergeRealUtms(config.checkoutUrl);
+    if (enriched !== config.checkoutUrl) setCheckoutUrl(enriched);
+  }, [config.checkoutUrl]);
 
   // Page view + scroll detection
   useEffect(() => {
@@ -102,9 +132,9 @@ export function InfluencerDirectLanding({ config, part1Preview }: InfluencerDire
     return () => window.removeEventListener("scroll", onScroll);
   }, [config.creator]);
 
-  // Hide sticky whenever hero or Part 1 section is visible
+  // Hide sticky whenever hero or plans section is visible
   useEffect(() => {
-    const sections = [heroRef.current, part1Ref.current].filter(
+    const sections = [heroRef.current, plansRef.current].filter(
       (el): el is HTMLElement => el !== null
     );
     if (sections.length === 0) return;
@@ -126,6 +156,11 @@ export function InfluencerDirectLanding({ config, part1Preview }: InfluencerDire
     safeTrack(config.creator, "influencer_part1_cta_click");
   }, [config.creator]);
 
+  const scrollToPlans = useCallback(() => {
+    plansRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    safeTrack(config.creator, "influencer_primary_cta_click", { plan: "scroll_to_plans" });
+  }, [config.creator]);
+
   const onCheckoutClick = useCallback((plan: PlanId) => {
     safeTrack(config.creator, "influencer_primary_cta_click", { plan });
   }, [config.creator]);
@@ -137,8 +172,8 @@ export function InfluencerDirectLanding({ config, part1Preview }: InfluencerDire
     >
 
       {/* ── HERO ──────────────────────────────────────────────────────────────── */}
-      <section ref={heroRef} className="bg-gradient-to-b from-surface to-background px-5 pt-12 pb-10">
-        <div className="max-w-xl mx-auto">
+      <section ref={heroRef} className="bg-gradient-to-b from-surface to-background px-5 pt-14 pb-14">
+        <div className="max-w-2xl mx-auto text-center">
 
           {/* Source badge */}
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gold/10 border border-gold/25 text-gold text-xs font-bold tracking-wide mb-6">
@@ -147,59 +182,95 @@ export function InfluencerDirectLanding({ config, part1Preview }: InfluencerDire
           </div>
 
           {/* Headline */}
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-text leading-tight mb-5">
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-text leading-tight mb-4">
             {config.heroHeadline}
           </h1>
 
-          {/* Compact pain + solution */}
-          <div className="space-y-3 text-base text-text-secondary leading-relaxed mb-5">
-            <p>
-              Most Muslims know scattered stories from the life of the Prophet ﷺ. But if we had
-              to explain his life from beginning to end, many of us would struggle.
-            </p>
-            <p>
-              Meanwhile, we and our children spend hours on shows, sports, anime, games, and
-              social media.{" "}
-              <span className="text-text font-semibold">That should bother us.</span>
-            </p>
-            <p>
-              TheMuslimMan.com gives you the full Seerah in 100 structured lessons — video,
-              reading, quiz, flashcards, summaries, progress tracking, and family profiles.
-            </p>
-          </div>
+          {/* Subheadline */}
+          <p className="text-base sm:text-lg text-text-secondary leading-relaxed mb-8 max-w-xl mx-auto">
+            A structured 100-part Seerah course with videos, quizzes, flashcards, summaries,
+            mind maps, and progress tracking for you and your family.
+          </p>
 
-          {/* Plan picker */}
-          <PlanPicker
-            checkoutBaseUrl={config.checkoutUrl}
-            onCtaClick={onCheckoutClick}
-          />
-
-          {/* Secondary link */}
-          <div className="text-center mt-3">
+          {/* Primary + Secondary CTAs */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-4">
             <button
               onClick={scrollToPart1}
-              className="text-sm text-text-muted hover:text-gold transition-colors underline underline-offset-2"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-base transition-colors shadow-lg shadow-gold/25"
             >
-              Or watch Part 1 free first
+              <Play className="w-4 h-4 fill-current" />
+              Watch Part 1 Free
+            </button>
+            <button
+              onClick={scrollToPlans}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl border border-gold/35 text-gold hover:border-gold/60 hover:bg-gold/5 font-bold text-base transition-colors"
+            >
+              Start Full Course
+              <ArrowRight className="w-4 h-4" />
             </button>
           </div>
+
+          {/* Friction reducer */}
+          <p className="text-xs text-text-muted">
+            Part 1 is free · No app required · Cancel anytime · 7-day refund guarantee
+          </p>
         </div>
       </section>
 
       {/* ── PART 1 FREE PREVIEW ───────────────────────────────────────────────── */}
-      <section ref={part1Ref} id="part1" className="bg-surface px-5 py-10 border-t border-border">
-        <div className="max-w-3xl mx-auto">
+      <section id="part1" className="bg-surface px-5 py-10 border-t border-border">
+        <div ref={part1Ref} className="max-w-3xl mx-auto">
           <div className="text-center mb-6">
             <p className="text-xs font-bold text-gold uppercase tracking-widest mb-1.5">
               Free · No Signup Required
             </p>
-            <h2 className="text-xl font-bold text-text mb-1">Try the Full Lesson — Part 1</h2>
+            <h2 className="text-xl font-bold text-text mb-1">Start with Part 1 free</h2>
             <p className="text-sm text-text-secondary">
-              Video, reading, slides, mind map, flashcards, and quiz. All free, no signup.
+              Watch the first lesson and see how the course works before choosing a plan.
             </p>
           </div>
 
           {part1Preview}
+        </div>
+      </section>
+
+      {/* ── SEERAH CHECKUP ────────────────────────────────────────────────────── */}
+      {afterPart1Preview && (
+        <section id="seerah-checkup" className="bg-background px-5 py-10 border-t border-border">
+          <div className="max-w-3xl mx-auto">
+            <div className="text-center mb-6">
+              <p className="text-xs font-bold text-gold uppercase tracking-widest mb-1.5">
+                Free Seerah Checkup
+              </p>
+              <h2 className="text-xl font-bold text-text mb-1">Seerah Clarity Checkup</h2>
+              <p className="text-sm text-text-secondary">
+                10 quick questions. Enter your email to reveal your clarity score.
+              </p>
+            </div>
+
+            {afterPart1Preview}
+          </div>
+        </section>
+      )}
+
+      {/* ── PLANS ─────────────────────────────────────────────────────────────── */}
+      <section id="plans" className="bg-surface px-5 py-12 border-t border-border">
+        <div ref={plansRef} className="max-w-xl mx-auto">
+          <div className="text-center mb-7">
+            <h2 className="text-xl sm:text-2xl font-bold text-text mb-2">
+              Ready to continue the full course?
+            </h2>
+            <p className="text-sm text-text-secondary max-w-md mx-auto leading-relaxed">
+              Part 1 is free. The full course includes 100 structured lessons with videos,
+              readings, quizzes, flashcards, summaries, mind maps, and progress tracking.
+            </p>
+          </div>
+
+          <PlanPicker
+            checkoutBaseUrl={checkoutUrl}
+            recommendedPlan="individual-monthly"
+            onCtaClick={onCheckoutClick}
+          />
         </div>
       </section>
 
@@ -212,7 +283,7 @@ export function InfluencerDirectLanding({ config, part1Preview }: InfluencerDire
           <div className="flex items-center gap-3">
             <p className="flex-1 text-xs text-text-muted truncate min-w-0">{price}</p>
             <a
-              href={config.checkoutUrl}
+              href={checkoutUrl}
               onClick={() => onCheckoutClick("individual-monthly")}
               className="flex-shrink-0 py-3 px-6 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-sm transition-colors"
             >

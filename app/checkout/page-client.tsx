@@ -748,6 +748,44 @@ function useIsInAppBrowser() {
   return inApp;
 }
 
+function getStoredQuizEmail(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const email = sessionStorage.getItem("checkup_checkout_email")?.trim() ?? "";
+    const score = sessionStorage.getItem("checkup_checkout_score");
+    const pending = sessionStorage.getItem("checkup_checkout_pending");
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return null;
+    if (!score && pending !== "1") return null;
+    return email;
+  } catch {
+    return null;
+  }
+}
+
+function resolveQuizCheckoutIdentity(
+  userEmail: string,
+  initialEmail: string | null,
+  initialQuizScore: number | null,
+  initialResultType: string | null,
+) {
+  const quizEmail = initialEmail?.trim() || null;
+  const sessionEmail = userEmail?.trim() || "";
+  const isQuizFunnel = !!quizEmail;
+  const preferQuizGuest = !!(
+    isQuizFunnel &&
+    (!sessionEmail || sessionEmail.toLowerCase() !== quizEmail!.toLowerCase())
+  );
+
+  return {
+    isAuthenticated: !!sessionEmail && !preferQuizGuest,
+    authEmail: preferQuizGuest ? "" : sessionEmail,
+    formEmail: quizEmail ?? sessionEmail,
+    emailLocked: !!quizEmail,
+    preferQuizGuest,
+    isQuizFunnel,
+  };
+}
+
 function CheckoutPageContent({
   userEmail = "",
   userPlanType = null,
@@ -768,6 +806,13 @@ function CheckoutPageContent({
   initialQuizScore  = null,
   initialResultType = null,
 }: CheckoutPageClientProps) {
+  const quizIdentity = resolveQuizCheckoutIdentity(
+    userEmail,
+    initialEmail,
+    initialQuizScore,
+    initialResultType,
+  );
+
   // promoParam comes from the server prop — no useSearchParams() needed.
   // This guarantees server and client render the same initial HTML.
   const promoParam = initialPromoParam;
@@ -813,13 +858,13 @@ function CheckoutPageContent({
     : 0;
 
   // ── Auth state ─────────────────────────────────────────────────────────────
-  const [isAuthenticated, setIsAuthenticated] = useState(!!userEmail);
-  const [authEmail,  setAuthEmail]   = useState(userEmail);
+  const [isAuthenticated, setIsAuthenticated] = useState(quizIdentity.isAuthenticated);
+  const [authEmail,  setAuthEmail]   = useState(quizIdentity.authEmail);
   const [authMode,   setAuthMode]    = useState<AuthMode>("signup");
   const [showPass,   setShowPass]    = useState(false);
   const [authForm,   setAuthForm]    = useState({
     fullName:        initialName  ?? "",
-    email:           initialEmail ?? "",
+    email:           quizIdentity.formEmail,
     password:        "",
     confirmPassword: "",
   });
@@ -827,7 +872,7 @@ function CheckoutPageContent({
   const [authLoading,setAuthLoading] = useState(false);
   // When a quiz-funnel email arrives via URL param, lock the field so the user
   // sees it's already set and only needs to enter their name.
-  const [emailLocked, setEmailLocked] = useState(!!(initialEmail && !userEmail));
+  const [emailLocked, setEmailLocked] = useState(quizIdentity.emailLocked);
   // Auto-trigger: fires when the email field blurs with a valid name + email so the
   // Stripe payment form loads without requiring a separate "Continue to Payment" click.
   const autoDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -882,7 +927,7 @@ function CheckoutPageContent({
 
   // Ref mirrors: always hold the latest value so async callbacks avoid stale closures.
   const clientSecretRef    = useRef<string | null>(initialClientSecret ?? null);
-  const isAuthenticatedRef = useRef<boolean>(!!userEmail);
+  const isAuthenticatedRef = useRef<boolean>(quizIdentity.isAuthenticated);
   const authFormRef        = useRef({ fullName: "", email: "", password: "", confirmPassword: "" });
 
   // Keep refs in sync with state.
@@ -1240,14 +1285,44 @@ function CheckoutPageContent({
     }, 600);
   };
 
-  // When arriving from the Seerah Checkup funnel with a pre-filled email,
-  // auto-start the guest checkout flow immediately — name is no longer required.
+  // When arriving from the Seerah Checkup funnel, use the quiz email — not the
+  // signed-in account — and auto-start guest checkout.
   useEffect(() => {
-    if (!initialEmail || isAuthenticated) return;
-    const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(initialEmail);
-    if (!validEmail) return;
-    setAutoIntentStarted(true);
-    runGuestCheckout(initialName ?? "", initialEmail);
+    const quizEmail = initialEmail?.trim() || getStoredQuizEmail();
+    if (!quizEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(quizEmail)) return;
+
+    const sessionEmail = userEmail?.trim() || "";
+    const emailsMatch = !!sessionEmail && sessionEmail.toLowerCase() === quizEmail.toLowerCase();
+
+    if (emailsMatch) {
+      setAuthForm((f) => (
+        f.email.toLowerCase() === quizEmail.toLowerCase() ? f : { ...f, email: quizEmail }
+      ));
+      return;
+    }
+
+    let cancelled = false;
+    (async () => {
+      if (sessionEmail) {
+        await fetch("/api/auth/signout", { method: "POST" });
+        if (cancelled) return;
+        ++intentGen.current;
+        intentAbortRef.current?.abort();
+        intentAbortRef.current = null;
+        setClientSecret(null);
+        clientSecretRef.current = null;
+        setIsAuthenticated(false);
+        setAuthEmail("");
+        isAuthenticatedRef.current = false;
+      }
+
+      setAuthForm((f) => ({ ...f, email: quizEmail }));
+      setEmailLocked(true);
+      setAutoIntentStarted(true);
+      await runGuestCheckout(initialName ?? authFormRef.current.fullName, quizEmail);
+    })();
+
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // run once on mount; initial values are stable
 

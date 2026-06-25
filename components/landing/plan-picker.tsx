@@ -10,7 +10,7 @@ export type PlanId =
   | "individual-lifetime"
   | "family-lifetime";
 
-const RECOMMENDED_PLAN: PlanId = "family-monthly";
+const DEFAULT_RECOMMENDED_PLAN: PlanId = "family-monthly";
 
 // ── Plan data ──────────────────────────────────────────────────────────────────
 
@@ -77,6 +77,8 @@ interface PlanPickerProps {
   /** Base checkout URL — all existing params (source, UTMs) are preserved. */
   checkoutBaseUrl?: string;
   defaultPlan?: PlanId;
+  /** Override which plan card is visually highlighted. Defaults to "family-monthly". */
+  recommendedPlan?: PlanId;
   /** Called when the user clicks a plan card. Use for analytics. */
   onCtaClick?: (plan: PlanId, url: string) => void;
   /** Show a "you already have access" message for this plan set. */
@@ -85,6 +87,7 @@ interface PlanPickerProps {
 
 export function PlanPicker({
   checkoutBaseUrl = "/checkout",
+  recommendedPlan = DEFAULT_RECOMMENDED_PLAN,
   onCtaClick,
   hasAccess = false,
 }: PlanPickerProps) {
@@ -112,7 +115,7 @@ export function PlanPicker({
               <div className={["grid grid-cols-2 gap-3 sm:gap-4 md:gap-5", hasTopBadge ? "pt-3 sm:pt-4" : ""].join(" ")}>
                 {groupPlans.map((plan) => {
                   const href = buildUrl(checkoutBaseUrl, plan.id);
-                  const isRecommended = plan.id === RECOMMENDED_PLAN;
+                  const isRecommended = plan.id === recommendedPlan;
 
                   return (
                     <a

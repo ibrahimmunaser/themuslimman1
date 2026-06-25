@@ -44,6 +44,8 @@ export interface SeerahCheckupClientProps {
   eventPrefix: string;
   /** Checkout + free-watch URLs. */
   urls: SeerahCheckupUrls;
+  /** Inline panel after Part 1 — quiz, email, and score stay in one spot. */
+  embedMode?: boolean;
 }
 
 // ── Questions ─────────────────────────────────────────────────────────────────
@@ -62,66 +64,101 @@ interface Question {
 const QUESTIONS: Question[] = [
   {
     id: 1,
-    text: "Where was the Prophet Muhammad ﷺ born?",
-    options: ["Makkah", "Madinah", "Ta'if", "Jerusalem"],
-    scores: [10, 0, 0, 0],
-    correctAnswer: 0,
-    category: "knowledge",
-  },
-  {
-    id: 2,
-    text: "What was the Prophet's father's name?",
-    options: ["Abdullah", "Abu Talib", "Abdul Muttalib", "Hamzah"],
-    scores: [10, 0, 0, 0],
-    correctAnswer: 0,
-    category: "knowledge",
-  },
-  {
-    id: 3,
-    text: "Who was the Prophet's first wife?",
-    options: ["Aisha", "Khadijah", "Hafsah", "Fatimah"],
+    text: "Before the first revelation, what major event in Makkah showed the Prophet ﷺ's trusted character among Quraysh?",
+    options: [
+      "He led Quraysh in battle",
+      "He resolved the dispute over placing the Black Stone",
+      "He rebuilt the Ka'bah by himself",
+      "He became the chief of Banu Hashim",
+    ],
     scores: [0, 10, 0, 0],
     correctAnswer: 1,
     category: "knowledge",
   },
   {
-    id: 4,
-    text: "Where did the first revelation come to the Prophet ﷺ?",
-    options: ["Cave Hira", "Mount Uhud", "Masjid al-Nabawi", "Ta'if"],
-    scores: [10, 0, 0, 0],
-    correctAnswer: 0,
+    id: 2,
+    text: "Which early Muslim was cut off from luxury and wealth by his mother after accepting Islam?",
+    options: ["Bilal ibn Rabah", "ʿAmmar ibn Yasir", "Musʿab ibn ʿUmayr", "Abu Bakr"],
+    scores: [0, 0, 10, 0],
+    correctAnswer: 2,
+    category: "knowledge",
+  },
+  {
+    id: 3,
+    text: "Why did the Prophet ﷺ send some Muslims to Abyssinia?",
+    options: [
+      "To build an army against Quraysh",
+      "To trade with the people of Abyssinia",
+      "To escape persecution under a just king",
+      "To spread Islam in Yemen",
+    ],
+    scores: [0, 0, 10, 0],
+    correctAnswer: 2,
     category: "timeline",
   },
   {
+    id: 4,
+    text: "Why did Quraysh become more aggressive after the Prophet ﷺ began calling publicly?",
+    options: [
+      "He asked to become king of Makkah",
+      "He attacked their trade routes",
+      "His message challenged their idols, inherited religion, and social power",
+      "He ordered the Muslims to fight them",
+    ],
+    scores: [0, 0, 10, 0],
+    correctAnswer: 2,
+    category: "knowledge",
+  },
+  {
     id: 5,
-    text: "What happened first in the Seerah?",
-    options: ["The first revelation", "The Hijrah", "The Battle of Badr", "The Conquest of Makkah"],
+    text: "What happened during the Year of Sorrow?",
+    options: [
+      "The Prophet ﷺ lost Khadijah and Abu Talib",
+      "The Muslims lost the Battle of Uhud",
+      "The Prophet ﷺ migrated to Madinah",
+      "The Treaty of Hudaybiyyah was broken",
+    ],
     scores: [10, 0, 0, 0],
     correctAnswer: 0,
     category: "timeline",
   },
   {
     id: 6,
-    text: "Which city did the Prophet ﷺ migrate to during the Hijrah?",
-    options: ["Madinah", "Ta'if", "Yemen", "Syria"],
-    scores: [10, 0, 0, 0],
-    correctAnswer: 0,
+    text: "What was the strategic importance of the Second Pledge of ʿAqabah?",
+    options: [
+      "It allowed Muslims to return from Abyssinia",
+      "It gave the Prophet ﷺ protection and support in Madinah",
+      "It ended the conflict with Quraysh",
+      "It made Abu Bakr the first caliph",
+    ],
+    scores: [0, 10, 0, 0],
+    correctAnswer: 1,
     category: "timeline",
   },
   {
     id: 7,
-    text: "Which happened first?",
-    options: ["The Hijrah", "The Battle of Badr", "The Treaty of Hudaybiyyah", "The Conquest of Makkah"],
-    scores: [10, 0, 0, 0],
-    correctAnswer: 0,
+    text: "At Badr, why were the Muslims not originally expecting a major battle?",
+    options: [
+      "They thought Quraysh had already accepted Islam",
+      "They were only traveling for Hajj",
+      "They had set out to intercept a caravan, not fight a full army",
+      "They were defending Madinah from a surprise attack",
+    ],
+    scores: [0, 0, 10, 0],
+    correctAnswer: 2,
     category: "timeline",
   },
   {
     id: 8,
-    text: "Which event happened before the Conquest of Makkah?",
-    options: ["Treaty of Hudaybiyyah", "Farewell Hajj", "Battle of Hunayn", "Death of the Prophet ﷺ"],
-    scores: [10, 0, 0, 0],
-    correctAnswer: 0,
+    text: "What mistake contributed to the Muslim setback at Uhud?",
+    options: [
+      "The Muslims did not bring weapons",
+      "Some archers left their assigned position too early",
+      "The Prophet ﷺ ordered a retreat at the beginning",
+      "The Muslims refused to defend Madinah",
+    ],
+    scores: [0, 10, 0, 0],
+    correctAnswer: 1,
     category: "timeline",
   },
   {
@@ -465,6 +502,15 @@ function TrustStrip() {
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 
+function persistQuizCheckoutEmail(value: string) {
+  const trimmed = value.trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) return;
+  try {
+    sessionStorage.setItem("checkup_checkout_email", trimmed);
+    sessionStorage.setItem("checkup_checkout_pending", "1");
+  } catch { /* storage blocked */ }
+}
+
 type Phase = "idle" | "quiz" | "email" | "result";
 
 export function SeerahCheckupClient({
@@ -472,6 +518,7 @@ export function SeerahCheckupClient({
   sourceBadge,
   eventPrefix,
   urls,
+  embedMode = false,
 }: SeerahCheckupClientProps) {
   const watchFreeUrl = urls.watchFree ?? "/watch-free";
 
@@ -580,7 +627,8 @@ export function SeerahCheckupClient({
     }
 
     // Restore in-progress quiz from localStorage if it exists and is < 24h old.
-    try {
+    // Skip on embed — influencer pages should always offer a clean start from idle.
+    if (!embedMode) try {
       const raw = localStorage.getItem(`checkup_progress_${creator}`);
       if (raw) {
         const saved = JSON.parse(raw) as {
@@ -617,14 +665,34 @@ export function SeerahCheckupClient({
   }, []);
 
   function startQuiz() {
-    quizStartedRef.current = true;
-    phaseRef.current       = "quiz";
+    if (embedMode) {
+      quizStartedRef.current  = true;
+      quizRevealedRef.current = false;
+      phaseRef.current        = "quiz";
+      maxQRef.current         = 0;
+      answersRef.current      = {};
+      leadIdRef.current       = null;
+      pendingActivityRef.current = [];
+      abandonSentRef.current  = false;
+      setCurrentQ(0);
+      setAnswers({});
+      setName("");
+      setEmail("");
+      setEmailSubmitting(false);
+      setSelectedAnswer(null);
+      try { localStorage.removeItem(`checkup_progress_${creator}`); } catch { /* ignore */ }
+    } else {
+      quizStartedRef.current = true;
+      phaseRef.current       = "quiz";
+    }
     track("quiz_started", {
       page_path:       typeof window !== "undefined" ? window.location.pathname : "",
       total_questions: QUESTIONS.length,
     });
     setPhase("quiz");
-    setTimeout(() => quizRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
+    if (!embedMode) {
+      setTimeout(() => quizRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
+    }
   }
 
   function handleAnswer(optionIndex: number) {
@@ -745,10 +813,18 @@ export function SeerahCheckupClient({
     quizRevealedRef.current = true;
     phaseRef.current        = "result";
 
-    try { localStorage.removeItem(`checkup_progress_${creator}`); } catch { /* storage blocked */ }
+    try {
+      localStorage.removeItem(`checkup_progress_${creator}`);
+      persistQuizCheckoutEmail(email);
+      sessionStorage.setItem("checkup_checkout_score", String(score));
+      sessionStorage.setItem("checkup_checkout_result_type", resultType);
+      sessionStorage.removeItem("checkup_checkout_pending");
+    } catch { /* storage blocked */ }
 
     setPhase("result");
-    setTimeout(() => quizRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
+    if (!embedMode) {
+      setTimeout(() => quizRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
+    }
   }
 
   // ── quiz_question_viewed ───────────────────────────────────────────────────
@@ -840,9 +916,24 @@ export function SeerahCheckupClient({
 
   const isResultPhase = phase === "result";
 
-  return (
-    <div className="flex flex-col min-h-screen bg-ink text-text">
+  const displayRec: Rec =
+    embedMode && rec.showFreePrimary
+      ? {
+          ...rec,
+          showFreePrimary: false,
+          primaryUrl: rec.secondaryUrl ?? urls.individualMonthly,
+          primaryLabel: rec.secondaryLabel ?? "Unlock Individual Access — $4.99/month",
+          primarySupport: "Cancel anytime. Instant access.",
+          secondaryUrl: undefined,
+          secondaryLabel: undefined,
+          secondaryPreamble: undefined,
+        }
+      : rec;
 
+  const panel = (
+    <>
+      {!embedMode && (
+      <>
       {/* ── Header ── */}
       <header className="py-4 px-4 sm:px-6 border-b border-border/30 bg-ink sticky top-0 z-40">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
@@ -947,15 +1038,40 @@ export function SeerahCheckupClient({
           </div>
         </section>
       )}
+      </>
+      )}
 
       {/* ══════════════════════════════════════════════════════
           QUIZ / EMAIL / RESULT
       ══════════════════════════════════════════════════════ */}
       <div
         ref={quizRef}
-        className="scroll-mt-20 max-w-[700px] mx-auto w-full px-4 sm:px-6"
-        id="quiz"
+        className={embedMode
+          ? "max-w-[700px] mx-auto w-full px-4 sm:px-6 min-h-[280px]"
+          : "scroll-mt-20 max-w-[700px] mx-auto w-full px-4 sm:px-6"}
+        id={embedMode ? "seerah-checkup" : "quiz"}
       >
+
+        {phase === "idle" && embedMode && (
+          <div className="py-8 sm:py-10 text-center">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gold/10 border border-gold/25 mb-4">
+              <BarChart2 className="w-5 h-5 text-gold" />
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold mb-2">Take the free Seerah Checkup</h2>
+            <p className="text-sm sm:text-base text-text-secondary mb-6 max-w-md mx-auto leading-relaxed">
+              10 quick questions. Enter your email to reveal your clarity score and see what to study next.
+            </p>
+            <button
+              type="button"
+              onClick={startQuiz}
+              className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-10 py-4 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-base transition-colors shadow-lg shadow-gold/25"
+            >
+              Start Seerah Checkup
+              <ArrowRight className="w-4 h-4" />
+            </button>
+            <p className="text-xs text-text-muted/60 mt-3">2 minutes · instant result · no payment</p>
+          </div>
+        )}
 
         {/* ── QUIZ ── */}
         {phase === "quiz" && currentQ < QUESTIONS.length && (
@@ -1003,7 +1119,11 @@ export function SeerahCheckupClient({
             </div>
             <form onSubmit={handleEmailSubmit} className="space-y-3">
               <input type="email" autoComplete="email" value={email}
-                onChange={e => setEmail(e.target.value)} placeholder="Email address"
+                onChange={e => {
+                  const value = e.target.value;
+                  setEmail(value);
+                  persistQuizCheckoutEmail(value);
+                }} placeholder="Email address"
                 autoFocus
                 className="w-full px-4 py-4 rounded-xl border border-border bg-surface text-text placeholder:text-text-muted focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/30 text-base transition-colors" />
               {emailErr && <p className="text-sm text-red-400">{emailErr}</p>}
@@ -1040,9 +1160,9 @@ export function SeerahCheckupClient({
             {/* 2. Recommendation card */}
             <div className="rounded-2xl border-2 border-gold/40 bg-gradient-to-b from-gold/[0.06] to-surface p-7 sm:p-9 shadow-xl shadow-gold/5">
               <p className="text-xl sm:text-2xl font-bold text-text mb-3">Your Best Next Step</p>
-              <p className="text-base sm:text-lg text-text-secondary leading-relaxed mb-7">{rec.bridgeCopy}</p>
+              <p className="text-base sm:text-lg text-text-secondary leading-relaxed mb-7">{displayRec.bridgeCopy}</p>
 
-              {rec.showFreePrimary ? (
+              {displayRec.showFreePrimary ? (
                 <>
                   <button
                     onClick={() => {
@@ -1054,26 +1174,26 @@ export function SeerahCheckupClient({
                     className="flex items-center justify-center gap-2 w-full py-5 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-xl transition-colors shadow-lg shadow-gold/30 mb-3"
                   >
                     <Play className="w-5 h-5 fill-current" />
-                    {rec.primaryLabel}
+                    {displayRec.primaryLabel}
                   </button>
-                  {rec.primarySupport && (
-                    <p className="text-sm text-center text-text-muted/65 mb-5">{rec.primarySupport}</p>
+                  {displayRec.primarySupport && (
+                    <p className="text-sm text-center text-text-muted/65 mb-5">{displayRec.primarySupport}</p>
                   )}
-                  {rec.secondaryUrl && rec.secondaryLabel && (
+                  {displayRec.secondaryUrl && displayRec.secondaryLabel && (
                     <>
-                      {rec.secondaryPreamble && (
-                        <p className="text-sm text-center text-text-muted/65 mb-2">{rec.secondaryPreamble}</p>
+                      {displayRec.secondaryPreamble && (
+                        <p className="text-sm text-center text-text-muted/65 mb-2">{displayRec.secondaryPreamble}</p>
                       )}
-                      <Link href={withUserParams(rec.secondaryUrl)}
+                      <Link href={withUserParams(displayRec.secondaryUrl)}
                         onClick={() => track("quiz_recommended_cta_clicked", {
                           score,
                           result_type:      resultType,
-                          recommended_plan: planFromUrl(rec.secondaryUrl ?? ""),
-                          cta_label:        rec.secondaryLabel ?? "",
-                          destination:      rec.secondaryUrl ?? "",
+                          recommended_plan: planFromUrl(displayRec.secondaryUrl ?? ""),
+                          cta_label:        displayRec.secondaryLabel ?? "",
+                          destination:      displayRec.secondaryUrl ?? "",
                         })}
                         className="block w-full py-4 rounded-xl border-2 border-gold/35 text-gold font-bold text-base text-center hover:border-gold/60 hover:bg-gold/5 transition-colors mb-2">
-                        {rec.secondaryLabel}
+                        {displayRec.secondaryLabel}
                       </Link>
                       <p className="text-xs text-center text-text-muted/55 mb-4">Start today. Continue at your own pace.</p>
                     </>
@@ -1081,21 +1201,22 @@ export function SeerahCheckupClient({
                 </>
               ) : (
                 <>
-                  <Link href={withUserParams(rec.primaryUrl)}
+                  <Link href={withUserParams(displayRec.primaryUrl)}
                     onClick={() => track("quiz_recommended_cta_clicked", {
                       score,
                       result_type:      resultType,
-                      recommended_plan: planFromUrl(rec.primaryUrl),
-                      cta_label:        rec.primaryLabel,
-                      destination:      rec.primaryUrl,
+                      recommended_plan: planFromUrl(displayRec.primaryUrl),
+                      cta_label:        displayRec.primaryLabel,
+                      destination:      displayRec.primaryUrl,
                     })}
                     className="block w-full py-5 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-xl text-center transition-colors shadow-lg shadow-gold/30 mb-2">
-                    {rec.primaryLabel}
+                    {displayRec.primaryLabel}
                   </Link>
                   <p className="text-xs text-center text-text-muted/55 mb-2">Start today. Continue at your own pace.</p>
-                  {rec.primarySupport && (
-                    <p className="text-sm text-center text-text-muted/65 mb-4">{rec.primarySupport}</p>
+                  {displayRec.primarySupport && (
+                    <p className="text-sm text-center text-text-muted/65 mb-4">{displayRec.primarySupport}</p>
                   )}
+                  {!embedMode && (
                   <p className="text-sm text-center text-text-muted/55 mb-4">
                     Prefer to watch first?{" "}
                     <Link href={watchFreeUrl}
@@ -1104,18 +1225,19 @@ export function SeerahCheckupClient({
                       Watch Part 1 free
                     </Link>
                   </p>
-                  {rec.lifetimeUrl && rec.lifetimeLabel && (
+                  )}
+                  {displayRec.lifetimeUrl && displayRec.lifetimeLabel && (
                     <p className="text-sm text-center text-text-muted/55">
-                      <Link href={withUserParams(rec.lifetimeUrl)}
+                      <Link href={withUserParams(displayRec.lifetimeUrl)}
                         onClick={() => track("quiz_recommended_cta_clicked", {
                           score,
                           result_type:      resultType,
-                          recommended_plan: planFromUrl(rec.lifetimeUrl ?? ""),
-                          cta_label:        rec.lifetimeLabel ?? "",
-                          destination:      rec.lifetimeUrl ?? "",
+                          recommended_plan: planFromUrl(displayRec.lifetimeUrl ?? ""),
+                          cta_label:        displayRec.lifetimeLabel ?? "",
+                          destination:      displayRec.lifetimeUrl ?? "",
                         })}
                         className="underline underline-offset-2 hover:text-text-muted transition-colors">
-                        {rec.lifetimeLabel}
+                        {displayRec.lifetimeLabel}
                       </Link>
                     </p>
                   )}
@@ -1126,7 +1248,7 @@ export function SeerahCheckupClient({
             </div>
 
             {/* Inline Part 1 preview */}
-            {showInlinePreview && (
+            {!embedMode && showInlinePreview && (
               <div ref={inlineRef} className="scroll-mt-24">
                 <InlinePart1Video
                   checkoutUrl={withUserParams(rec.secondaryUrl ?? urls.individualMonthly)}
@@ -1161,6 +1283,7 @@ export function SeerahCheckupClient({
             </div>
 
             {/* 4. FAQ */}
+            {!embedMode && (
             <div>
               <p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-4">Quick questions</p>
               <div className="space-y-2">
@@ -1196,11 +1319,37 @@ export function SeerahCheckupClient({
                 })}
               </div>
             </div>
+            )}
+
+            {embedMode && (
+              <div className="text-center pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    quizStartedRef.current = false;
+                    quizRevealedRef.current = false;
+                    phaseRef.current = "idle";
+                    maxQRef.current = 0;
+                    answersRef.current = {};
+                    leadIdRef.current = null;
+                    pendingActivityRef.current = [];
+                    abandonSentRef.current = false;
+                    setPhase("idle"); setCurrentQ(0); setAnswers({}); setName(""); setEmail(""); setEmailSubmitting(false);
+                    try { localStorage.removeItem(`checkup_progress_${creator}`); } catch { /* ignore */ }
+                  }}
+                  className="text-xs text-text-muted/50 hover:text-text-muted transition-colors underline underline-offset-2"
+                >
+                  Retake checkup
+                </button>
+              </div>
+            )}
 
           </div>
         )}
       </div>
 
+      {!embedMode && (
+      <>
       {isResultPhase ? (
         <footer className="mt-auto py-8 text-center">
           <p className="text-xs text-text-muted/40">
@@ -1268,6 +1417,22 @@ export function SeerahCheckupClient({
           )}
         </div>
       )}
+      </>
+      )}
+    </>
+  );
+
+  if (embedMode) {
+    return (
+      <div className="rounded-2xl border border-gold/20 bg-surface overflow-hidden">
+        {panel}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col min-h-screen bg-ink text-text">
+      {panel}
     </div>
   );
 }

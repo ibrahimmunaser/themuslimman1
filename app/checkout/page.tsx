@@ -112,10 +112,21 @@ export default async function CheckoutPage({ searchParams }: Props) {
   let initialAppliedPromoLabel: string | null = null;
   let initialFreeAccess = false;
 
+  const rawScore     = parseInt(params.score ?? "", 10);
+  const initialQuizScore  = !isNaN(rawScore) && rawScore >= 0 && rawScore <= 100 ? rawScore : null;
+  const initialResultType = params.result_type?.trim() ?? null;
+  const prefillEmail = params.email?.trim() ?? null;
+  const isQuizFunnelCheckout = !!prefillEmail;
+  const quizGuestOverride = !!(
+    user &&
+    isQuizFunnelCheckout &&
+    prefillEmail!.toLowerCase() !== user.email.toLowerCase()
+  );
+
   // Skip pre-creation for family plan users — create-payment-intent will block them
   // with isFamilyPlan=true anyway (individual lifetime is a downgrade from family).
   // Pre-creating a PI for them wastes a Stripe API call and leaves an abandoned PI.
-  if (user && initialAudience === "individual" && initialBilling === "lifetime" && user.planType !== "family") {
+  if (user && !quizGuestOverride && initialAudience === "individual" && initialBilling === "lifetime" && user.planType !== "family") {
     try {
       const promoParam = params.promo?.trim().toUpperCase() ?? null;
       let finalAmount    = initialBasePrice;
@@ -179,16 +190,7 @@ export default async function CheckoutPage({ searchParams }: Props) {
 
   const promoParamProp  = params.promo?.trim().toUpperCase() ?? null;
   const sourceParamProp = params.source?.trim().toLowerCase() ?? null;
-
-  // Pre-fill name/email when the user arrives from the Seerah Checkup funnel.
-  // Only pass these when the user is not already signed in (no point pre-filling
-  // an auth form that won't be shown).
-  const prefillEmail = !user ? (params.email?.trim() ?? null) : null;
-  const prefillName  = !user ? (params.name?.trim()  ?? null) : null;
-
-  const rawScore     = parseInt(params.score ?? "", 10);
-  const initialQuizScore  = !isNaN(rawScore) && rawScore >= 0 && rawScore <= 100 ? rawScore : null;
-  const initialResultType = params.result_type?.trim() ?? null;
+  const prefillName  = params.name?.trim()  ?? null;
 
   return (
     <CheckoutClientPage
