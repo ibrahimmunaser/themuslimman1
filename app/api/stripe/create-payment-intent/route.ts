@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     // Only "complete" is sold during early access — silently upgrade any other plan
     const planId: PlanId = "complete";
-    const { promoCode, creator: creatorFromSource, source } = body as { promoCode?: string; creator?: string; source?: string };
+    const { promoCode, creator: creatorFromSource, source, utmSource, utmMedium, utmCampaign, utmContent } = body as { promoCode?: string; creator?: string; source?: string; utmSource?: string; utmMedium?: string; utmCampaign?: string; utmContent?: string };
 
     const plan = PLANS[planId];
 
@@ -155,14 +155,11 @@ export async function POST(request: NextRequest) {
           : {}),
         ...(resolvedCreator ? { creator: resolvedCreator } : {}),
         ...(source          ? { source }                  : {}),
-        ...(creatorConfig
-          ? {
-              utm_source: creatorConfig.utm_source,
-              utm_medium: creatorConfig.utm_medium,
-              utm_campaign: creatorConfig.utm_campaign,
-              utm_content: creatorConfig.utm_content,
-            }
-          : {}),
+        // Body UTMs take priority; fall back to promo-code config UTMs when absent
+        ...(utmSource   ?? creatorConfig?.utm_source   ? { utmSource:   utmSource   ?? creatorConfig!.utm_source   } : {}),
+        ...(utmMedium   ?? creatorConfig?.utm_medium   ? { utmMedium:   utmMedium   ?? creatorConfig!.utm_medium   } : {}),
+        ...(utmCampaign ?? creatorConfig?.utm_campaign ? { utmCampaign: utmCampaign ?? creatorConfig!.utm_campaign } : {}),
+        ...(utmContent  ?? creatorConfig?.utm_content  ? { utmContent:  utmContent  ?? creatorConfig!.utm_content  } : {}),
       },
       description: `${plan.name} — TheMuslimMan${appliedPromoCode ? ` (${appliedPromoCode})` : ""}`,
       receipt_email: user.email,

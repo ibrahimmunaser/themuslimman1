@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     // users — they're upgrading from Individual to Family.
 
     const body = await request.json();
-    const { promoCode, isUpgrade, creator: creatorFromSource, source } = body as { promoCode?: string; isUpgrade?: boolean; creator?: string; source?: string };
+    const { promoCode, isUpgrade, creator: creatorFromSource, source, utmSource, utmMedium, utmCampaign, utmContent } = body as { promoCode?: string; isUpgrade?: boolean; creator?: string; source?: string; utmSource?: string; utmMedium?: string; utmCampaign?: string; utmContent?: string };
 
     // Individual Lifetime → Family Lifetime upgrade.
     // Verified server-side: user must have hasPaid=true and not already be on family plan.
@@ -175,14 +175,11 @@ export async function POST(request: NextRequest) {
           : {}),
         ...(resolvedCreator ? { creator: resolvedCreator } : {}),
         ...(source          ? { source }                  : {}),
-        ...(creatorConfig
-          ? {
-              utm_source: creatorConfig.utm_source,
-              utm_medium: creatorConfig.utm_medium,
-              utm_campaign: creatorConfig.utm_campaign,
-              utm_content: creatorConfig.utm_content,
-            }
-          : {}),
+        // Body UTMs take priority; fall back to promo-code config UTMs when absent
+        ...(utmSource   ?? creatorConfig?.utm_source   ? { utmSource:   utmSource   ?? creatorConfig!.utm_source   } : {}),
+        ...(utmMedium   ?? creatorConfig?.utm_medium   ? { utmMedium:   utmMedium   ?? creatorConfig!.utm_medium   } : {}),
+        ...(utmCampaign ?? creatorConfig?.utm_campaign ? { utmCampaign: utmCampaign ?? creatorConfig!.utm_campaign } : {}),
+        ...(utmContent  ?? creatorConfig?.utm_content  ? { utmContent:  utmContent  ?? creatorConfig!.utm_content  } : {}),
       },
       description: `${FAMILY_PLAN.name} — TheMuslimMan${appliedPromoCode ? ` (${appliedPromoCode})` : ""}`,
       receipt_email: user.email,
