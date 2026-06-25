@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     // Only "complete" is sold during early access — silently upgrade any other plan
     const planId: PlanId = "complete";
-    const { promoCode, creator: creatorFromSource } = body as { promoCode?: string; creator?: string };
+    const { promoCode, creator: creatorFromSource, source } = body as { promoCode?: string; creator?: string; source?: string };
 
     const plan = PLANS[planId];
 
@@ -154,6 +154,7 @@ export async function POST(request: NextRequest) {
             }
           : {}),
         ...(resolvedCreator ? { creator: resolvedCreator } : {}),
+        ...(source          ? { source }                  : {}),
         ...(creatorConfig
           ? {
               utm_source: creatorConfig.utm_source,

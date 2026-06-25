@@ -731,6 +731,11 @@ interface CheckoutPageClientProps {
   initialQuizScore?: number | null;
   /** Result type from the quiz ("scattered" | "partial" | "strong"). */
   initialResultType?: string | null;
+  /** UTM params from the landing page URL — forwarded into Stripe metadata. */
+  initialUtmSource?: string | null;
+  initialUtmMedium?: string | null;
+  initialUtmCampaign?: string | null;
+  initialUtmContent?: string | null;
 }
 
 // ── Main checkout content ─────────────────────────────────────────────────────
@@ -805,6 +810,10 @@ function CheckoutPageContent({
   initialName  = null,
   initialQuizScore  = null,
   initialResultType = null,
+  initialUtmSource   = null,
+  initialUtmMedium   = null,
+  initialUtmCampaign = null,
+  initialUtmContent  = null,
 }: CheckoutPageClientProps) {
   const quizIdentity = resolveQuizCheckoutIdentity(
     userEmail,
@@ -978,7 +987,11 @@ function CheckoutPageContent({
           body.creator = initialSourceParam;
         }
       }
-      if (initialSourceParam) body.source = initialSourceParam;
+      if (initialSourceParam)   body.source      = initialSourceParam;
+      if (initialUtmSource)     body.utmSource   = initialUtmSource;
+      if (initialUtmMedium)     body.utmMedium   = initialUtmMedium;
+      if (initialUtmCampaign)   body.utmCampaign = initialUtmCampaign;
+      if (initialUtmContent)    body.utmContent  = initialUtmContent;
 
       const res  = await fetch(endpoint, {
         method:  "POST",
@@ -1720,7 +1733,18 @@ function CheckoutPageContent({
       setUpgradeLoading(true);
       setUpgradeError(null);
       try {
-        const res  = await fetch("/api/stripe/create-family-subscription-intent", { method: "POST" });
+        const upgradeBody: Record<string, string> = {};
+        if (initialSourceParam && INFLUENCER_SOURCES.has(initialSourceParam)) upgradeBody.creator = initialSourceParam;
+        if (initialSourceParam)   upgradeBody.source      = initialSourceParam;
+        if (initialUtmSource)     upgradeBody.utmSource   = initialUtmSource;
+        if (initialUtmMedium)     upgradeBody.utmMedium   = initialUtmMedium;
+        if (initialUtmCampaign)   upgradeBody.utmCampaign = initialUtmCampaign;
+        if (initialUtmContent)    upgradeBody.utmContent  = initialUtmContent;
+        const res  = await fetch("/api/stripe/create-family-subscription-intent", {
+          method:  "POST",
+          headers: { "Content-Type": "application/json" },
+          body:    JSON.stringify(upgradeBody),
+        });
         const data = await res.json();
         if (data.upgraded) {
           window.location.href = "/payment/success?type=family-subscription";

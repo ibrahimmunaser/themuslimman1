@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     // users — they're upgrading from Individual to Family.
 
     const body = await request.json();
-    const { promoCode, isUpgrade, creator: creatorFromSource } = body as { promoCode?: string; isUpgrade?: boolean; creator?: string };
+    const { promoCode, isUpgrade, creator: creatorFromSource, source } = body as { promoCode?: string; isUpgrade?: boolean; creator?: string; source?: string };
 
     // Individual Lifetime → Family Lifetime upgrade.
     // Verified server-side: user must have hasPaid=true and not already be on family plan.
@@ -174,6 +174,7 @@ export async function POST(request: NextRequest) {
           ? { promoCode: appliedPromoCode, promoDiscountAmount: String(promoDiscountAmount) }
           : {}),
         ...(resolvedCreator ? { creator: resolvedCreator } : {}),
+        ...(source          ? { source }                  : {}),
         ...(creatorConfig
           ? {
               utm_source: creatorConfig.utm_source,

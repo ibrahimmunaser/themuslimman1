@@ -19,7 +19,7 @@ const LEGACY_PLAN_ALIASES: Record<string, string> = {
 };
 
 interface Props {
-  searchParams: Promise<{ plan?: string; billing?: string; audience?: string; promo?: string; source?: string; email?: string; name?: string; score?: string; result_type?: string }>;
+  searchParams: Promise<{ plan?: string; billing?: string; audience?: string; promo?: string; source?: string; email?: string; name?: string; score?: string; result_type?: string; utm_source?: string; utm_medium?: string; utm_campaign?: string; utm_content?: string }>;
 }
 
 export default async function CheckoutPage({ searchParams }: Props) {
@@ -191,6 +191,10 @@ export default async function CheckoutPage({ searchParams }: Props) {
   const promoParamProp  = params.promo?.trim().toUpperCase() ?? null;
   const sourceParamProp = params.source?.trim().toLowerCase() ?? null;
   const prefillName  = params.name?.trim()  ?? null;
+  const utmSourceProp   = params.utm_source?.trim()   ?? null;
+  const utmMediumProp   = params.utm_medium?.trim()   ?? null;
+  const utmCampaignProp = params.utm_campaign?.trim() ?? null;
+  const utmContentProp  = params.utm_content?.trim()  ?? null;
 
   return (
     <CheckoutClientPage
@@ -212,6 +216,10 @@ export default async function CheckoutPage({ searchParams }: Props) {
       initialName={prefillName}
       initialQuizScore={initialQuizScore}
       initialResultType={initialResultType}
+      initialUtmSource={utmSourceProp}
+      initialUtmMedium={utmMediumProp}
+      initialUtmCampaign={utmCampaignProp}
+      initialUtmContent={utmContentProp}
     />
   );
 }
