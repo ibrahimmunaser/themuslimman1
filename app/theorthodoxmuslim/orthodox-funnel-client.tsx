@@ -12,6 +12,7 @@ export default function OrthodoxFunnelClient() {
       config={{
         creator:     "theorthodoxmuslim",
         creatorName: "The Orthodox Muslim",
+        creatorAvatarUrl: "/images/libyano.png",
         heroHeadline: "Learn the life of the Prophet ﷺ in order — start with Part 1 free.",
         price:        "$4.99/month",
         checkoutUrl:  CHECKOUT,

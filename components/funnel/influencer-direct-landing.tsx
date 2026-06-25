@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useState, useCallback } from "react";
+import Image from "next/image";
 import { nanoid } from "nanoid";
 import { Play, ArrowRight } from "lucide-react";
 import { PlanPicker } from "@/components/landing/plan-picker";
@@ -56,6 +57,8 @@ export interface InfluencerDirectConfig {
   creator: string;
   /** Display name shown in "Recommended by" badge, e.g. "The Orthodox Muslim" */
   creatorName: string;
+  /** Optional circular avatar shown above/n beside the source badge */
+  creatorAvatarUrl?: string;
   /** Hero headline, e.g. "Learn the life of the Prophet ﷺ in order." */
   heroHeadline: string;
   /** Price shown in hero, e.g. "$4.99/month" */
@@ -175,10 +178,22 @@ export function InfluencerDirectLanding({ config, part1Preview, afterPart1Previe
       <section ref={heroRef} className="bg-gradient-to-b from-surface to-background px-5 pt-14 pb-14">
         <div className="max-w-2xl mx-auto text-center">
 
-          {/* Source badge */}
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gold/10 border border-gold/25 text-gold text-xs font-bold tracking-wide mb-6">
-            <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
-            Recommended by {config.creatorName}
+          {/* Creator avatar + source badge — single connected pill */}
+          <div className="mb-3 sm:mb-4 flex justify-center">
+            <div className="inline-flex items-center rounded-full bg-gold/10 border border-gold/25 text-gold text-xs font-bold tracking-wide pl-0.5 pr-3 py-0.5 gap-1.5 sm:gap-2">
+              {config.creatorAvatarUrl && (
+                <Image
+                  src={config.creatorAvatarUrl}
+                  alt={config.creatorName}
+                  width={64}
+                  height={64}
+                  className="w-12 h-12 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-gold/30 flex-shrink-0"
+                />
+              )}
+              <span className="inline-flex items-center py-1 pr-0.5">
+                Recommended by {config.creatorName}
+              </span>
+            </div>
           </div>
 
           {/* Headline */}
