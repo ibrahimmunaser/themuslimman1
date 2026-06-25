@@ -169,6 +169,8 @@ function CheckoutForm({
   getOrCreateClientSecret,
   isAuthenticated,
   userEmail,
+  fullName,
+  checkoutEmail,
   authFormRef,
   authLoading: authInProgress,
 }: {
@@ -180,6 +182,8 @@ function CheckoutForm({
   getOrCreateClientSecret: (name: string, email: string) => Promise<string>;
   isAuthenticated: boolean;
   userEmail: string;
+  fullName: string;
+  checkoutEmail: string;
   authFormRef: React.RefObject<{ fullName: string; email: string; password: string; confirmPassword: string }>;
   authLoading: boolean;
 }) {
@@ -190,6 +194,9 @@ function CheckoutForm({
   const [showExpressCheckout, setShowExpressCheckout] = useState(false);
 
   const returnUrl = toReturnUrl(audience, billing);
+  const hasFullName = fullName.trim().length > 0;
+  const hasEmail = checkoutEmail.trim().includes("@");
+  const canPurchase = hasFullName && hasEmail;
 
   /** Flag the session as purchased so the abandonment tracker won't fire. */
   const markPurchased = () => {
@@ -233,6 +240,12 @@ function CheckoutForm({
     // ── Guard: full name required ──────────────────────────────────────────────
     if (!authFormRef.current?.fullName?.trim()) {
       setError("Please enter your full name to continue.");
+      return;
+    }
+
+    const email = (authFormRef.current?.email?.trim() || userEmail || "").trim();
+    if (!email.includes("@")) {
+      setError("Please enter your email address to continue.");
       return;
     }
 
@@ -383,12 +396,19 @@ function CheckoutForm({
     // Wallet payments may provide billing details (name/email from Apple/Google Wallet).
     // Use those to create an account if the user hasn't filled in the name/email fields yet.
     const walletName  = event.billingDetails?.name?.trim() || authFormRef.current?.fullName?.trim() || "";
-    const walletEmail = event.billingDetails?.email ?? authFormRef.current?.email ?? "";
+    const walletEmail = event.billingDetails?.email?.trim() || authFormRef.current?.email?.trim() || userEmail || "";
 
     if (!walletName) {
       event.paymentFailed({ reason: "fail" });
       setProcessing(false);
       setError("Please enter your full name in the form above before using express checkout.");
+      return;
+    }
+
+    if (!walletEmail.includes("@")) {
+      event.paymentFailed({ reason: "fail" });
+      setProcessing(false);
+      setError("Please enter your email address in the form above before using express checkout.");
       return;
     }
 
@@ -630,7 +650,7 @@ function CheckoutForm({
 
         <button
           type="submit"
-          disabled={!stripe || processing}
+          disabled={!stripe || processing || !canPurchase || authInProgress}
           className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-gold hover:bg-gold-light disabled:opacity-60 text-ink font-bold text-base transition-colors shadow-lg shadow-gold/20"
         >
           <Lock className="w-4 h-4" />
@@ -1900,11 +1920,10 @@ function CheckoutPageContent({
 
         <div className="space-y-4">
 
-          {/* ── Full name — always visible ── */}
           <input
             suppressHydrationWarning
             type="text"
-            placeholder="Full name"
+            placeholder="Full name (required)"
             required
             autoComplete="name"
             inputMode="text"
@@ -1922,6 +1941,7 @@ function CheckoutPageContent({
                   <div className="flex items-center gap-2 min-w-0">
                     <Lock className="w-3.5 h-3.5 text-zinc-500 flex-shrink-0" />
                     <span className="text-white text-sm truncate">{authForm.email}</span>
+                    <span className="text-xs text-zinc-500 flex-shrink-0">(required)</span>
                   </div>
                   <button
                     type="button"
@@ -1937,7 +1957,7 @@ function CheckoutPageContent({
                 </div>
               ) : (
                 <input
-                  type="email" placeholder="Email address" required
+                  type="email" placeholder="Email address (required)" required
                   autoComplete="email"
                   inputMode="email"
                   value={authForm.email}
@@ -1998,7 +2018,7 @@ function CheckoutPageContent({
               </div>
               <form onSubmit={handleLogin} className="space-y-3">
                 <input
-                  type="email" placeholder="Email address" required
+                  type="email" placeholder="Email address (required)" required
                   autoComplete="email"
                   inputMode="email"
                   value={authForm.email}
@@ -2041,6 +2061,7 @@ function CheckoutPageContent({
                   <Check className="w-3 h-3 text-green-400" />
                 </span>
                 <span className="text-sm text-zinc-300 truncate">{authEmail}</span>
+                <span className="text-xs text-zinc-500 flex-shrink-0">(required)</span>
               </div>
               <button
                 type="button"
@@ -2220,6 +2241,8 @@ function CheckoutPageContent({
                       getOrCreateClientSecret={getOrCreateClientSecret}
                       isAuthenticated={isAuthenticated}
                       userEmail={authEmail || ""}
+                      fullName={authForm.fullName}
+                      checkoutEmail={isAuthenticated ? authEmail : authForm.email}
                       authFormRef={authFormRef}
                       authLoading={authLoading}
                     />
