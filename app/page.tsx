@@ -84,15 +84,15 @@ export default async function LandingPage() {
           <FadeUp delay={0.2}>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <a
-                href="#pricing"
-                data-track="homepage_primary_cta_click"
+                href="/checkout?plan=individual-monthly"
+                data-track="hero_cta_checkout_click"
                 className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-10 py-4 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-lg transition-colors shadow-xl shadow-gold/25"
               >
-                Start Learning Today
+                Start for $4.99/month
               </a>
               <a
                 href="#preview"
-                data-track="homepage_part1_cta_click"
+                data-track="hero_watch_free_click"
                 className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-4 rounded-xl bg-surface border border-border hover:border-gold/40 text-text font-semibold text-base transition-colors"
               >
                 <Play className="w-4 h-4 text-gold fill-current" />
@@ -140,7 +140,7 @@ export default async function LandingPage() {
       {/* ============================================================
           4. PART 1 FREE PREVIEW  (framed as secondary / proof)
       ============================================================ */}
-      <section id="preview" className="pt-8 pb-12 sm:py-14 border-t border-border bg-surface/30">
+      <section id="preview" className="pt-8 pb-10 sm:pb-12 border-t border-border bg-surface/30">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <FadeUp className="text-center mb-8">
             <p className="text-gold text-xs font-bold uppercase tracking-widest mb-2">
@@ -166,18 +166,19 @@ export default async function LandingPage() {
           }>
             <Part1FullPreview
               checkoutHref="/checkout?plan=individual-monthly"
-              ctaLabel="Start the Full Course — $4.99/month"
+              ctaLabel="Start for $4.99/month"
             />
           </Suspense>
 
           <div className="mt-6 text-center">
             <a
-              href="#pricing"
+              href="/checkout?plan=individual-monthly"
               data-track="homepage_part1_bottom_cta_click"
               className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-base transition-colors shadow-lg shadow-gold/20"
             >
-              Start the Full Course
+              Start for $4.99/month
             </a>
+            <p className="text-xs text-text-muted mt-2">Cancel anytime · 7-day refund guarantee</p>
           </div>
         </div>
       </section>
@@ -330,7 +331,7 @@ export default async function LandingPage() {
               data-track="final_checkout_clicked"
               className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-10 py-4 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-lg transition-colors shadow-xl shadow-gold/20"
             >
-              Start Learning Today
+              Start for $4.99/month
             </Link>
             <a
               href="#preview"

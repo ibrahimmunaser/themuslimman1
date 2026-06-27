@@ -88,6 +88,18 @@ const KNOWN_EVENT_TYPES = [
   "homepage_part1_bottom_cta_click",
   "homepage_checkout_started",
   "homepage_purchase_completed",
+  // Homepage funnel v2 — conversion improvements
+  "hero_cta_checkout_click",
+  "hero_watch_free_click",
+  "pricing_view",
+  "plan_card_click",
+  "selected_plan_checkout_click",
+  "checkout_start",
+  "after_part1_checkout_click",
+  // Part 1 video milestones
+  "part1_video_start",
+  "part1_video_50_percent",
+  "part1_video_90_percent",
   // Legacy homepage events (kept for backward compat)
   "hero_watch_part1_clicked",
   "hero_score_clicked",

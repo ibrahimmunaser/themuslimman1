@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:percent_indicator/circular_percent_indicator.dart';
 import '../../../core/data/parts_data.dart';
 import '../../../core/models/part_model.dart';
 import '../../../core/providers/auth_provider.dart';
@@ -80,33 +81,92 @@ class _OverviewStats extends StatelessWidget {
     final viewed    = progress?.totalViewed    ?? 0;
     final completed = progress?.totalCompleted ?? 0;
     final totalUnlocked = hasAccess ? 100 : 1;
+    final studiedPercent = (viewed / 100).clamp(0.0, 1.0);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Stats strip
+        // ── Circular hero ring ─────────────────────────────────────────────
         Container(
-          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-          decoration: BoxDecoration(
-            color: AppColors.card,
-            borderRadius: BorderRadius.circular(14),
-          ),
+          padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
+          decoration: AppDecorations.goldHero(),
           child: Row(
             children: [
-              _StatPill(value: '$viewed', label: 'Studied', color: AppColors.gold),
-              _Divider(),
-              _StatPill(value: '$completed', label: 'Completed', color: AppColors.success),
-              _Divider(),
-              const _StatPill(value: '8', label: 'Eras', color: Color(0xFF5A90B0)),
+              CircularPercentIndicator(
+                radius: 68,
+                lineWidth: 9,
+                percent: studiedPercent,
+                animation: true,
+                animationDuration: 1200,
+                circularStrokeCap: CircularStrokeCap.round,
+                progressColor: AppColors.gold,
+                backgroundColor: AppColors.border,
+                backgroundWidth: 3,
+                center: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('$viewed',
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 30,
+                          fontWeight: FontWeight.w800,
+                          height: 1,
+                          letterSpacing: -1.5,
+                        )),
+                    const Text('/ 100',
+                        style: TextStyle(
+                          color: AppColors.textMuted,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        )),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 24),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Parts Studied',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        )),
+                    const SizedBox(height: 4),
+                    Text('${(studiedPercent * 100).round()}% complete',
+                        style: const TextStyle(
+                          color: AppColors.gold,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.3,
+                        )),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        _MiniStat(
+                            value: '$completed',
+                            label: 'Quizzes',
+                            color: AppColors.success),
+                        const SizedBox(width: 20),
+                        const _MiniStat(
+                            value: '8',
+                            label: 'Eras',
+                            color: Color(0xFF5A90B0)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
 
         const SizedBox(height: 10),
 
-        // Viewed progress bar
+        // ── Detailed progress bars ─────────────────────────────────────────
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
             color: AppColors.card,
             borderRadius: BorderRadius.circular(14),
@@ -118,47 +178,57 @@ class _OverviewStats extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text('Parts Studied',
-                    style: TextStyle(
-                      color: AppColors.textPrimary, fontSize: 14,
-                      fontWeight: FontWeight.w600)),
+                      style: TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600)),
                   Text('$viewed/$totalUnlocked',
-                    style: const TextStyle(
-                      color: AppColors.gold, fontSize: 13,
-                      fontWeight: FontWeight.w700)),
+                      style: const TextStyle(
+                          color: AppColors.gold,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700)),
                 ],
               ),
               const SizedBox(height: 10),
               ClipRRect(
                 borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(
-                  value: totalUnlocked == 0 ? 0 : (viewed / totalUnlocked).clamp(0.0, 1.0),
+                  value: totalUnlocked == 0
+                      ? 0
+                      : (viewed / totalUnlocked).clamp(0.0, 1.0),
                   backgroundColor: AppColors.border,
-                  valueColor: const AlwaysStoppedAnimation<Color>(AppColors.gold),
+                  valueColor:
+                      const AlwaysStoppedAnimation<Color>(AppColors.gold),
                   minHeight: 6,
                 ),
               ),
               if (completed > 0) ...[
-                const SizedBox(height: 10),
+                const SizedBox(height: 14),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Quiz Completed',
-                      style: TextStyle(
-                        color: AppColors.textPrimary, fontSize: 14,
-                        fontWeight: FontWeight.w600)),
+                    const Text('Quizzes Passed',
+                        style: TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600)),
                     Text('$completed/$totalUnlocked',
-                      style: const TextStyle(
-                        color: AppColors.success, fontSize: 13,
-                        fontWeight: FontWeight.w700)),
+                        style: const TextStyle(
+                            color: AppColors.success,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700)),
                   ],
                 ),
                 const SizedBox(height: 10),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
-                    value: totalUnlocked == 0 ? 0 : (completed / totalUnlocked).clamp(0.0, 1.0),
+                    value: totalUnlocked == 0
+                        ? 0
+                        : (completed / totalUnlocked).clamp(0.0, 1.0),
                     backgroundColor: AppColors.border,
-                    valueColor: const AlwaysStoppedAnimation<Color>(AppColors.success),
+                    valueColor:
+                        const AlwaysStoppedAnimation<Color>(AppColors.success),
                     minHeight: 6,
                   ),
                 ),
@@ -171,33 +241,33 @@ class _OverviewStats extends StatelessWidget {
   }
 }
 
-class _StatPill extends StatelessWidget {
+class _MiniStat extends StatelessWidget {
   final String value;
   final String label;
   final Color color;
-  const _StatPill({required this.value, required this.label, required this.color});
+  const _MiniStat({required this.value, required this.label, required this.color});
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Column(
-        children: [
-          Text(value,
-            style: TextStyle(color: color, fontSize: 22, fontWeight: FontWeight.w800)),
-          const SizedBox(height: 3),
-          Text(label,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(value,
+            style: TextStyle(
+              color: color,
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              height: 1,
+            )),
+        const SizedBox(height: 2),
+        Text(label,
             style: const TextStyle(
-              color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w500)),
-        ],
-      ),
+              color: AppColors.textMuted,
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+            )),
+      ],
     );
-  }
-}
-
-class _Divider extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(width: 1, height: 32, color: AppColors.border);
   }
 }
 

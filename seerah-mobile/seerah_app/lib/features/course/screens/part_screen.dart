@@ -842,7 +842,7 @@ class _ContinueCTA extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           const Text(
-            'You started the path. Unlock the full course to continue learning the life of the Prophet PBUH step by step.',
+            'You started the path. Unlock the full course from \$4.99/month to continue the Seerah step by step.',
             style: TextStyle(
               color: AppColors.textSecondary,
               fontSize: 13,

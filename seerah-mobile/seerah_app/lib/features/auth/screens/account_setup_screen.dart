@@ -1,15 +1,13 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/providers/auth_provider.dart';
-import '../../../core/providers/iap_provider.dart';
 import '../../../core/theme/app_colors.dart';
 
-/// Shown after a successful IAP purchase when the user has no account yet.
-/// Collects name, email, and password → creates account → verifies the
-/// pending purchase receipt → navigates to email verification notice.
+/// Standalone account-creation screen — no IAP coupling.
+/// (Previously used for the post-purchase account setup flow; that flow has
+/// been removed. Authentication is now required *before* purchase.)
 class AccountSetupScreen extends ConsumerStatefulWidget {
   const AccountSetupScreen({super.key});
 
@@ -50,21 +48,6 @@ class _AccountSetupScreenState extends ConsumerState<AccountSetupScreen> {
       return;
     }
 
-    await ref.read(iapProvider.notifier).verifyPendingPurchase();
-    if (!mounted) return;
-
-    final iapState = ref.read(iapProvider);
-    if (iapState.status == IAPStatus.error) {
-      setState(() {
-        _error = iapState.errorMessage ??
-            'Account created but purchase could not be verified. '
-            'Please contact support@themuslimman.com';
-        _loading = false;
-      });
-      ref.read(iapProvider.notifier).clearError();
-      return;
-    }
-
     context.go('/verify-email');
   }
 
@@ -99,229 +82,134 @@ class _AccountSetupScreenState extends ConsumerState<AccountSetupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      child: Scaffold(
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
         backgroundColor: AppColors.background,
-        body: SafeArea(
-          child: Column(
-            children: [
-              // ── Progress indicator ──────────────────────────────────────
-              LinearProgressIndicator(
-                value: 0.7,
-                backgroundColor: AppColors.border,
-                color: AppColors.gold,
-                minHeight: 3,
-              ),
+        title: const Text('Create Account'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          onPressed: () => Navigator.of(context).maybePop(),
+        ),
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TextFormField(
+                  controller: _nameCtrl,
+                  keyboardType: TextInputType.name,
+                  textCapitalization: TextCapitalization.words,
+                  textInputAction: TextInputAction.next,
+                  style: const TextStyle(color: AppColors.textPrimary),
+                  decoration: _fieldDecoration('Full Name', Icons.person_outline_rounded),
+                  validator: (v) =>
+                      (v == null || v.trim().isEmpty) ? 'Enter your name' : null,
+                ),
+                const SizedBox(height: 14),
+                TextFormField(
+                  controller: _emailCtrl,
+                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
+                  autocorrect: false,
+                  style: const TextStyle(color: AppColors.textPrimary),
+                  decoration: _fieldDecoration('Email Address', Icons.email_outlined),
+                  validator: (v) =>
+                      (v == null || !v.contains('@')) ? 'Enter a valid email' : null,
+                ),
+                const SizedBox(height: 14),
+                TextFormField(
+                  controller: _passCtrl,
+                  obscureText: _obscurePass,
+                  textInputAction: TextInputAction.done,
+                  onFieldSubmitted: (_) => _loading ? null : _submit(),
+                  style: const TextStyle(color: AppColors.textPrimary),
+                  decoration: _fieldDecoration('Password', Icons.lock_outline_rounded)
+                      .copyWith(
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePass
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                        color: AppColors.textMuted,
+                        size: 20,
+                      ),
+                      onPressed: () =>
+                          setState(() => _obscurePass = !_obscurePass),
+                    ),
+                  ),
+                  validator: (v) =>
+                      (v == null || v.length < 8) ? 'At least 8 characters' : null,
+                ),
 
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                if (_error != null) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
                       children: [
-
-                        // ── Header ──────────────────────────────────────
-                        const Icon(Icons.check_circle_rounded,
-                            color: Color(0xFF4CAF50), size: 52),
-                        const SizedBox(height: 16),
-                        const Text(
-                          'Purchase Confirmed!',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 26,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Create your account to access the full course.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 15,
-                            height: 1.5,
-                          ),
-                        ),
-
-                        // On Android, unacknowledged purchases are auto-refunded
-                        // after 3 days — prompt the user to complete setup now.
-                        if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) ...[
-                          const SizedBox(height: 16),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF59E0B).withValues(alpha: 0.10),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.35)),
-                            ),
-                            child: const Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Icon(Icons.schedule_rounded, color: Color(0xFFF59E0B), size: 18),
-                                SizedBox(width: 10),
-                                Expanded(
-                                  child: Text(
-                                    'Complete setup within 3 days to keep your purchase. Google Play will automatically refund unlinked purchases after this window.',
-                                    style: TextStyle(color: Color(0xFFF59E0B), fontSize: 12.5, height: 1.5),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-
-                        const SizedBox(height: 36),
-
-                        // ── Fields ──────────────────────────────────────
-                        TextFormField(
-                          controller: _nameCtrl,
-                          keyboardType: TextInputType.name,
-                          textCapitalization: TextCapitalization.words,
-                          textInputAction: TextInputAction.next,
-                          style: const TextStyle(color: AppColors.textPrimary),
-                          decoration: _fieldDecoration('Full Name', Icons.person_outline_rounded),
-                          validator: (v) =>
-                              (v == null || v.trim().isEmpty) ? 'Enter your name' : null,
-                        ),
-
-                        const SizedBox(height: 14),
-
-                        TextFormField(
-                          controller: _emailCtrl,
-                          keyboardType: TextInputType.emailAddress,
-                          textInputAction: TextInputAction.next,
-                          autocorrect: false,
-                          style: const TextStyle(color: AppColors.textPrimary),
-                          decoration: _fieldDecoration('Email Address', Icons.email_outlined),
-                          validator: (v) => (v == null || !v.contains('@'))
-                              ? 'Enter a valid email'
-                              : null,
-                        ),
-
-                        const SizedBox(height: 14),
-
-                        TextFormField(
-                          controller: _passCtrl,
-                          obscureText: _obscurePass,
-                          textInputAction: TextInputAction.done,
-                          onFieldSubmitted: (_) => _loading ? null : _submit(),
-                          style: const TextStyle(color: AppColors.textPrimary),
-                          decoration: _fieldDecoration(
-                            'Create Password',
-                            Icons.lock_outline_rounded,
-                          ).copyWith(
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscurePass
-                                    ? Icons.visibility_outlined
-                                    : Icons.visibility_off_outlined,
-                                color: AppColors.textMuted,
-                                size: 20,
-                              ),
-                              onPressed: () =>
-                                  setState(() => _obscurePass = !_obscurePass),
-                            ),
-                          ),
-                          validator: (v) => (v == null || v.length < 8)
-                              ? 'Password must be at least 8 characters'
-                              : null,
-                        ),
-
-                        if (_error != null) ...[
-                          const SizedBox(height: 16),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 14, vertical: 12),
-                            decoration: BoxDecoration(
-                              color: AppColors.error.withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                  color: AppColors.error.withValues(alpha: 0.3)),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(Icons.error_outline_rounded,
-                                    color: AppColors.error, size: 18),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(_error!,
-                                      style: TextStyle(
-                                          color: AppColors.error, fontSize: 13)),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-
-                        const SizedBox(height: 28),
-
-                        FilledButton(
-                          onPressed: _loading ? null : _submit,
-                          style: FilledButton.styleFrom(
-                            backgroundColor: AppColors.gold,
-                            foregroundColor: Colors.black,
-                            minimumSize: const Size.fromHeight(52),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                          ),
-                          child: _loading
-                              ? const SizedBox(
-                                  height: 22,
-                                  width: 22,
-                                  child: CircularProgressIndicator(
-                                      strokeWidth: 2.5, color: Colors.black54),
-                                )
-                              : const Text('Create Account & Unlock Access',
-                                  style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w700)),
-                        ),
-
-                        const SizedBox(height: 20),
-
-                        const Text(
-                          'By creating an account you agree to our Terms of Service and Privacy Policy.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              color: AppColors.textMuted,
-                              fontSize: 11.5,
-                              height: 1.6),
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Text('Already have an account? ',
-                                style: TextStyle(
-                                    color: AppColors.textMuted, fontSize: 13)),
-                            GestureDetector(
-                              onTap: () {
-                                ref
-                                    .read(iapProvider.notifier)
-                                    .clearPendingAccountSetup();
-                                context.go('/login');
-                              },
-                              child: const Text('Sign In',
-                                  style: TextStyle(
-                                      color: AppColors.gold,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600)),
-                            ),
-                          ],
+                        Icon(Icons.error_outline_rounded, color: AppColors.error, size: 18),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(_error!,
+                              style: TextStyle(color: AppColors.error, fontSize: 13)),
                         ),
                       ],
                     ),
                   ),
+                ],
+
+                const SizedBox(height: 28),
+
+                FilledButton(
+                  onPressed: _loading ? null : _submit,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.gold,
+                    foregroundColor: Colors.black,
+                    minimumSize: const Size.fromHeight(52),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: _loading
+                      ? const SizedBox(
+                          height: 22,
+                          width: 22,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2.5, color: Colors.black54),
+                        )
+                      : const Text('Create Account',
+                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
                 ),
-              ),
-            ],
+
+                const SizedBox(height: 20),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text('Already have an account? ',
+                        style: TextStyle(color: AppColors.textMuted, fontSize: 13)),
+                    GestureDetector(
+                      onTap: () => context.go('/login'),
+                      child: const Text('Sign In',
+                          style: TextStyle(
+                              color: AppColors.gold,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600)),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

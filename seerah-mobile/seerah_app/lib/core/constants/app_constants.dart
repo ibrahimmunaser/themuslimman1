@@ -1,6 +1,6 @@
 class AppConstants {
   // App version — keep in sync with pubspec.yaml version field
-  static const String appVersion = '1.0.1';
+  static const String appVersion = '1.0.3';
 
   // API
   static const String baseUrl = 'https://themuslimman.com';
@@ -33,10 +33,10 @@ class AppConstants {
 
   // In-App Purchase product IDs
   // These must match exactly what is registered in App Store Connect and Google Play Console.
-  static const String iapMonthlyIndividual  = 'com.themuslimman.seerah.monthly.individual';
-  static const String iapMonthlyFamily      = 'com.themuslimman.seerah.monthly.family';
-  static const String iapLifetimeIndividual = 'com.themuslimman.seerah.lifetime.individual';
-  static const String iapLifetimeFamily     = 'com.themuslimman.seerah.lifetime.family';
+  static const String iapMonthlyIndividual  = 'seerah_monthly_individual';
+  static const String iapMonthlyFamily      = 'seerah_monthly_family';
+  static const String iapLifetimeIndividual = 'seerah_lifetime_individual';
+  static const String iapLifetimeFamily     = 'seerah_lifetime_family';
 
   static const Set<String> iapProductIds = {
     iapMonthlyIndividual,

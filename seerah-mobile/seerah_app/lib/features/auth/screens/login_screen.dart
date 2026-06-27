@@ -182,7 +182,7 @@ class _ForgotPasswordScreenState extends State<_ForgotPasswordScreen> {
           ''');
         },
       ))
-      ..loadRequest(Uri.parse('${AppConstants.baseUrl}/change-password'));
+      ..loadRequest(Uri.parse('${AppConstants.baseUrl}/forgot-password'));
   }
 
   @override

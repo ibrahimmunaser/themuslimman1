@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../../core/constants/app_constants.dart';
+import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/iap_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/ui_kit.dart';
@@ -49,16 +50,17 @@ const _plans = [
     description: '1 learner • cancel anytime',
     fallbackPrice: '\$${AppConstants.monthlyPrice}',
     period: '/mo',
+    badge: 'Recommended',
+    isRecommended: true,
   ),
   _Plan(
     id: PlanId.familyMonthly,
     iapId: AppConstants.iapMonthlyFamily,
     name: 'Family Monthly',
-    description: 'Up to 5 members • cancel anytime',
+    description: 'Up to 5 profiles • cancel anytime',
     fallbackPrice: '\$${AppConstants.familyMonthlyPrice}',
     period: '/mo',
-    badge: 'Most Popular',
-    isRecommended: true,
+    badge: 'For Families',
   ),
   _Plan(
     id: PlanId.individualLifetime,
@@ -72,7 +74,7 @@ const _plans = [
     id: PlanId.familyLifetime,
     iapId: AppConstants.iapLifetimeFamily,
     name: 'Family Lifetime',
-    description: 'Up to 5 members • pay once, own forever',
+    description: 'Up to 5 profiles • pay once, own forever',
     fallbackPrice: '\$${AppConstants.familyLifetimePrice}',
     period: 'one-time',
     badge: 'Best Value',
@@ -90,6 +92,7 @@ class LandingScreen extends ConsumerStatefulWidget {
 
 class _LandingScreenState extends ConsumerState<LandingScreen> {
   PlanId? _purchasingPlanId;
+  final _scrollCtrl = ScrollController();
 
   @override
   void initState() {
@@ -97,25 +100,45 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
     ref.read(iapProvider);
   }
 
+  @override
+  void dispose() {
+    _scrollCtrl.dispose();
+    super.dispose();
+  }
+
   String _price(IAPState iap, _Plan plan) =>
       iap.productFor(plan.iapId)?.price ?? plan.fallbackPrice;
 
-  void _buyPlan(IAPState iap, _Plan plan) {
+  Future<void> _buyPlan(IAPState iap, _Plan plan) async {
     if (iap.status == IAPStatus.purchasing ||
         iap.status == IAPStatus.verifying ||
         iap.status == IAPStatus.loading) {
       return;
     }
     if (!iap.isAvailable) {
-      _snack('Store unavailable — please sign in to the App Store or Google Play.');
+      _snack(ref.read(iapProvider).unavailableProductMessage());
       return;
     }
-    final product = iap.productFor(plan.iapId);
-    if (product == null) {
-      _snack('This product is temporarily unavailable. Please try again.');
+
+    // AUTH GATE — must be signed in before starting a purchase.
+    // Store the intent so the notifier auto-buys after successful login.
+    final isLoggedIn = ref.read(authProvider).isLoggedIn;
+    if (!isLoggedIn) {
+      ref.read(iapProvider.notifier).setPurchaseIntent(plan.iapId);
+      if (mounted) context.push('/login');
       return;
     }
+
     setState(() => _purchasingPlanId = plan.id);
+    final product = await ref.read(iapProvider.notifier).resolveProduct(plan.iapId);
+    if (!mounted) return;
+
+    if (product == null) {
+      setState(() => _purchasingPlanId = null);
+      _snack(ref.read(iapProvider).unavailableProductMessage());
+      return;
+    }
+
     ref.read(iapProvider.notifier).buy(product);
   }
 
@@ -126,10 +149,11 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
   }
 
   void _onIAP(IAPState? prev, IAPState next) {
-    if (next.status == IAPStatus.pendingAccountSetup &&
-        prev?.status != IAPStatus.pendingAccountSetup) {
+    if (next.status == IAPStatus.success &&
+        prev?.status != IAPStatus.success) {
       if (mounted) setState(() => _purchasingPlanId = null);
-      context.push('/account-setup');
+      _showSuccessSheet();
+      ref.read(iapProvider.notifier).clearSuccess();
     }
     if (next.status == IAPStatus.error &&
         next.errorMessage != null &&
@@ -145,6 +169,67 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
     }
   }
 
+  void _showSuccessSheet() {
+    if (!mounted) return;
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppColors.card,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.fromLTRB(28, 28, 28, 40),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                color: const Color(0xFF4CAF50).withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.check_rounded,
+                  color: Color(0xFF4CAF50), size: 32),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'JazakAllahu Khayran!',
+              style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'Your purchase was successful. Full access has been unlocked. May Allah bless your learning.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  color: AppColors.textSecondary, fontSize: 15, height: 1.5),
+            ),
+            const SizedBox(height: 28),
+            FilledButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                context.go('/dashboard');
+              },
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.gold,
+                foregroundColor: Colors.black,
+                minimumSize: const Size.fromHeight(50),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              child: const Text('Start Learning',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     ref.listen<IAPState>(iapProvider, _onIAP);
@@ -153,6 +238,10 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
         iap.status == IAPStatus.verifying ||
         iap.status == IAPStatus.loading;
 
+    final showStoreWarning = !iap.isAvailable && iap.status != IAPStatus.loading;
+    final showRetry = iap.needsProductReload;
+    final showRecovery = iap.hasPendingLink;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: AppGradientBackground(child: SafeArea(
@@ -160,10 +249,21 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
           children: [
             // ── Top bar ───────────────────────────────────────────────────
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              padding: const EdgeInsets.fromLTRB(20, 12, 16, 0),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const Spacer(),
+                  const Expanded(
+                    child: Text(
+                      'Choose your plan',
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                  ),
                   TextButton(
                     onPressed: () => context.push('/login'),
                     child: const Text('Sign In',
@@ -175,27 +275,44 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
 
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                controller: _scrollCtrl,
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // ── Hero ──────────────────────────────────────────────
-                    const SizedBox(height: 8),
-                    const _HeroSection(),
-                    const SizedBox(height: 32),
-
-                    // ── Section label ─────────────────────────────────────
-                    const Text(
-                      'Choose a plan',
-                      style: TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
+                    // ── Recovery banner — legacy unlinked purchase ─────────
+                    if (showRecovery) ...[
+                      _RecoveryBanner(
+                        onSignIn: () => context.push('/login'),
                       ),
-                    ),
-                    const SizedBox(height: 12),
+                      const SizedBox(height: 12),
+                    ],
 
-                    // ── Plan cards ────────────────────────────────────────
+                    if (showStoreWarning) ...[
+                      _StoreWarningBanner(
+                        text: iap.unavailableProductMessage(),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        iap.storeStatusLabel,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: AppColors.textMuted,
+                          fontSize: 11.5,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                    if (showRetry) ...[
+                      _ProductRetryBanner(
+                        status: iap.storeStatusLabel,
+                        onRetry: () =>
+                            ref.read(iapProvider.notifier).reloadProducts(),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+
+                    // ── Plans ─────────────────────────────────────────────
                     ...List.generate(_plans.length, (i) {
                       final plan = _plans[i];
                       return _PlanTile(
@@ -209,18 +326,65 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                       );
                     }),
 
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 14),
+
+                    // ── Guarantee strip ───────────────────────────────────
                     const Text(
                       '7-day refund guarantee  ·  Instant access  ·  Cancel anytime',
                       textAlign: TextAlign.center,
-                      style:
-                          TextStyle(color: AppColors.textMuted, fontSize: 11.5),
+                      style: TextStyle(color: AppColors.textMuted, fontSize: 11.5),
                     ),
 
-                    const Divider(height: 40, color: AppColors.border),
+                    const SizedBox(height: 20),
 
-                    // ── Free Part 1 ───────────────────────────────────────
-                    _FreePart1Tile(),
+                    // ── What's included ───────────────────────────────────
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.card,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('What\'s included',
+                              style: TextStyle(
+                                color: AppColors.textPrimary,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                              )),
+                          const SizedBox(height: 10),
+                          ...[
+                            (Icons.play_circle_outline_rounded, '100 structured video lessons'),
+                            (Icons.article_outlined, 'Reading notes & briefings'),
+                            (Icons.quiz_outlined, 'Quizzes & flashcards'),
+                            (Icons.insights_rounded, 'Progress tracking'),
+                            (Icons.all_inclusive_rounded, 'Lifetime access option available'),
+                          ].map((item) => Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Row(
+                              children: [
+                                Icon(item.$1, color: AppColors.gold, size: 16),
+                                const SizedBox(width: 10),
+                                Text(item.$2,
+                                    style: const TextStyle(
+                                      color: AppColors.textSecondary,
+                                      fontSize: 13,
+                                    )),
+                              ],
+                            ),
+                          )),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // ── Part 1 preview ────────────────────────────────────
+                    _Part1PreviewSection(
+                      onWatch: () => context.push('/part/1'),
+                    ),
 
                     const SizedBox(height: 20),
 
@@ -246,9 +410,18 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                       child: TextButton(
                         onPressed: busy
                             ? null
-                            : () => ref
-                                .read(iapProvider.notifier)
-                                .restorePurchases(),
+                            : () {
+                                // Restore requires an authenticated account.
+                                final isLoggedIn =
+                                    ref.read(authProvider).isLoggedIn;
+                                if (!isLoggedIn) {
+                                  context.push('/login');
+                                  return;
+                                }
+                                ref
+                                    .read(iapProvider.notifier)
+                                    .restorePurchases();
+                              },
                         style: TextButton.styleFrom(
                             foregroundColor: AppColors.textMuted),
                         child: const Text('Restore Purchases',
@@ -272,54 +445,6 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
           ],
         ),
       )),
-    );
-  }
-}
-
-// ── Hero section ──────────────────────────────────────────────────────────────
-
-class _HeroSection extends StatelessWidget {
-  const _HeroSection();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        // Gold pill
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-          decoration: BoxDecoration(
-            color: AppColors.goldFaded,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.gold.withValues(alpha: 0.35)),
-          ),
-          child: const Text(
-            '100-Part Seerah Course',
-            style: TextStyle(
-                color: AppColors.gold,
-                fontSize: 12,
-                fontWeight: FontWeight.w600),
-          ),
-        ),
-        const SizedBox(height: 16),
-        const Text(
-          'The Life of the\nProphet Muhammad ﷺ',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 28,
-            fontWeight: FontWeight.w800,
-            height: 1.2,
-          ),
-        ),
-        const SizedBox(height: 12),
-        const Text(
-          'Video · Audio · Reading · Slides · Mindmap · Flashcards · Quizzes',
-          textAlign: TextAlign.center,
-          style:
-              TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.5),
-        ),
-      ],
     );
   }
 }
@@ -610,54 +735,199 @@ class _LegalWebScreenState extends State<_LegalWebScreen> {
   }
 }
 
-// ── Free Part 1 tile ──────────────────────────────────────────────────────────
+// ── Part 1 preview section ────────────────────────────────────────────────────
 
-class _FreePart1Tile extends StatelessWidget {
+class _Part1PreviewSection extends StatelessWidget {
+  final VoidCallback onWatch;
+
+  const _Part1PreviewSection({required this.onWatch});
+
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () => context.push('/part/1'),
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: AppColors.goldFaded,
-                borderRadius: BorderRadius.circular(10),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          HapticFeedback.lightImpact();
+          onWatch();
+        },
+        borderRadius: BorderRadius.circular(16),
+        splashColor: AppColors.gold.withValues(alpha: 0.06),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: AppColors.goldFaded,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.gold.withValues(alpha: 0.25)),
+                ),
+                child: const Icon(Icons.play_circle_outline_rounded,
+                    color: AppColors.gold, size: 26),
               ),
-              child: const Icon(Icons.play_circle_outline,
-                  color: AppColors.gold, size: 24),
-            ),
-            const SizedBox(width: 14),
-            const Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Part 1 is Always Free',
+              const SizedBox(width: 14),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Part 1 — Always Free',
                       style: TextStyle(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14)),
-                  SizedBox(height: 2),
-                  Text('No account needed — start watching now',
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                      ),
+                    ),
+                    SizedBox(height: 3),
+                    Text(
+                      'The Pre-Islamic Arabian Context · No account needed',
                       style: TextStyle(
-                          color: AppColors.textSecondary, fontSize: 12.5)),
-                ],
+                        color: AppColors.textSecondary,
+                        fontSize: 12.5,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const Icon(Icons.arrow_forward_ios,
-                color: AppColors.textMuted, size: 14),
-          ],
+              const SizedBox(width: 8),
+              const Icon(Icons.arrow_forward_ios_rounded,
+                  color: AppColors.textMuted, size: 14),
+            ],
+          ),
         ),
+      ),
+    );
+  }
+}
+
+class _RecoveryBanner extends StatelessWidget {
+  final VoidCallback onSignIn;
+  const _RecoveryBanner({required this.onSignIn});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.gold.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.gold.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.receipt_long_rounded, color: AppColors.gold, size: 20),
+          const SizedBox(width: 10),
+          const Expanded(
+            child: Text(
+              'You have a pending purchase — sign in to claim your access.',
+              style: TextStyle(
+                  color: AppColors.textPrimary, fontSize: 13, height: 1.4),
+            ),
+          ),
+          const SizedBox(width: 8),
+          TextButton(
+            onPressed: onSignIn,
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: const Text('Sign In',
+                style: TextStyle(
+                    color: AppColors.gold,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StoreWarningBanner extends StatelessWidget {
+  final String text;
+  const _StoreWarningBanner({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.info_outline_rounded,
+              color: AppColors.textMuted, size: 18),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(text,
+                style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12.5,
+                    height: 1.45)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProductRetryBanner extends StatelessWidget {
+  final String status;
+  final VoidCallback onRetry;
+  const _ProductRetryBanner({required this.status, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.warning_amber_rounded,
+                  color: AppColors.textMuted, size: 18),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(status,
+                    style: const TextStyle(
+                        color: AppColors.textSecondary, fontSize: 13)),
+              ),
+              TextButton(
+                onPressed: onRetry,
+                style: TextButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    minimumSize: const Size(44, 36)),
+                child: const Text('Retry',
+                    style: TextStyle(color: AppColors.gold, fontSize: 13)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Install from Play Console internal testing. USB/APK installs cannot load plans.',
+            style: TextStyle(color: AppColors.textMuted, fontSize: 11.5, height: 1.4),
+          ),
+        ],
       ),
     );
   }

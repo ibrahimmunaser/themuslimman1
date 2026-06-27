@@ -16,7 +16,7 @@ function stripQuizAnswers(quiz: Quiz | null | undefined): Quiz | null | undefine
 export async function Part1FullPreview({
   checkoutHref = "/checkout?plan=individual-monthly",
   hideCta = false,
-  ctaLabel = "Continue the Full Course — $4.99/month",
+  ctaLabel = "Start for $4.99/month",
 }: {
   checkoutHref?: string;
   hideCta?: boolean;
@@ -113,20 +113,24 @@ export async function Part1FullPreview({
       {/* Call-to-Action — hidden on pages that provide their own post-preview hook */}
       {!hideCta && (
         <div className="p-8 border-t border-gold/20 bg-surface-raised text-center">
-          <p className="text-sm text-text-secondary mb-6">
-            That was Part 1 — every part of the course follows the same format. Continue at your own pace.
+          <p className="text-xs font-bold text-gold uppercase tracking-widest mb-2">
+            Ready for Part 2?
+          </p>
+          <h3 className="text-xl sm:text-2xl font-bold text-text mb-2">
+            Continue the full course.
+          </h3>
+          <p className="text-sm text-text-secondary mb-6 max-w-md mx-auto leading-relaxed">
+            Every part follows the same format — video, reading, slides, quiz, and flashcards.
+            100 parts. One connected story.
           </p>
           <a
             href={checkoutHref}
-            data-track="part1_continue_clicked"
+            data-track="after_part1_checkout_click"
             className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-gold to-gold-light hover:from-gold-light hover:to-gold text-ink font-bold text-base shadow-lg shadow-gold/30 transition-all hover:shadow-gold/40 hover:scale-[1.02] active:scale-[0.99]"
           >
             {ctaLabel}
           </a>
-          <p className="text-sm text-text-muted mt-4 max-w-lg mx-auto leading-relaxed">
-            Full Seerah access — video, reading, flashcards, and more. Start at $4.99/month or pay once.
-          </p>
-          <p className="text-xs text-text-muted mt-3">
+          <p className="text-xs text-text-muted mt-4">
             Cancel anytime · 7-day refund guarantee
           </p>
         </div>

@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:in_app_purchase_android/in_app_purchase_android.dart';
 
 import '../constants/app_constants.dart';
 import '../network/api_client.dart';
@@ -19,11 +20,12 @@ enum IAPStatus {
   purchasing,
   verifying,
   success,
-  /// Purchase completed but no account yet — waiting for account setup.
-  pendingAccountSetup,
+  /// An unacknowledged purchase arrived before the user authenticated.
+  /// Requires sign-in to claim. Shown as a recovery banner on the landing screen.
+  pendingLink,
   error,
   cancelled,
-  /// restorePurchases() completed with no prior purchases found.
+  /// restorePurchases() completed — no prior purchases found.
   restoreEmpty,
 }
 
@@ -31,37 +33,54 @@ class IAPState {
   final IAPStatus status;
   final bool isAvailable;
   final List<ProductDetails> products;
+  final List<String> notFoundIds;
   final String? errorMessage;
   final String? successProductId;
-  /// Stored when IAP succeeds before the user has an account.
-  /// Used by AccountSetupScreen to verify after signup.
-  final PurchaseDetails? pendingPurchase;
+
+  /// Product the user tapped before authentication.
+  /// The notifier auto-buys this after successful login.
+  final String? pendingIntentProductId;
+
+  /// A purchase that arrived via the OS stream before the user was logged in.
+  /// Shown as a recovery banner; verified automatically after sign-in.
+  final PurchaseDetails? pendingLinkPurchase;
 
   const IAPState({
     this.status = IAPStatus.loading,
     this.isAvailable = false,
     this.products = const [],
+    this.notFoundIds = const [],
     this.errorMessage,
     this.successProductId,
-    this.pendingPurchase,
+    this.pendingIntentProductId,
+    this.pendingLinkPurchase,
   });
 
   IAPState copyWith({
     IAPStatus? status,
     bool? isAvailable,
     List<ProductDetails>? products,
+    List<String>? notFoundIds,
     String? errorMessage,
     String? successProductId,
-    PurchaseDetails? pendingPurchase,
-    bool clearPendingPurchase = false,
+    String? pendingIntentProductId,
+    bool clearPendingIntent = false,
+    PurchaseDetails? pendingLinkPurchase,
+    bool clearPendingLink = false,
   }) {
     return IAPState(
       status: status ?? this.status,
       isAvailable: isAvailable ?? this.isAvailable,
       products: products ?? this.products,
+      notFoundIds: notFoundIds ?? this.notFoundIds,
       errorMessage: errorMessage,
       successProductId: successProductId ?? this.successProductId,
-      pendingPurchase: clearPendingPurchase ? null : (pendingPurchase ?? this.pendingPurchase),
+      pendingIntentProductId: clearPendingIntent
+          ? null
+          : (pendingIntentProductId ?? this.pendingIntentProductId),
+      pendingLinkPurchase: clearPendingLink
+          ? null
+          : (pendingLinkPurchase ?? this.pendingLinkPurchase),
     );
   }
 
@@ -71,6 +90,38 @@ class IAPState {
     } catch (_) {
       return null;
     }
+  }
+
+  bool get hasPendingLink => pendingLinkPurchase != null;
+
+  bool get needsProductReload =>
+      isAvailable &&
+      status != IAPStatus.loading &&
+      products.length < AppConstants.iapProductIds.length;
+
+  int get loadedProductCount => products.length;
+
+  String unavailableProductMessage() {
+    if (!isAvailable) {
+      return 'Google Play billing is unavailable on this install. '
+          'Install the app from your Play Console testing link — not via USB, APK, or flutter run.';
+    }
+    if (products.isEmpty) {
+      return 'No plans loaded from Google Play (0 of ${AppConstants.iapProductIds.length}). '
+          'Create all 4 products in Play Console, set them Active, upload a release to Internal testing, '
+          'then install from the Play Store link.';
+    }
+    if (notFoundIds.isNotEmpty) {
+      return 'Only $loadedProductCount of ${AppConstants.iapProductIds.length} plans loaded. '
+          'Missing product IDs in Play Console — they must match exactly and be Active.';
+    }
+    return 'This plan could not be loaded from Google Play. Tap Retry.';
+  }
+
+  String get storeStatusLabel {
+    if (status == IAPStatus.loading) return 'Loading plans from Google Play…';
+    if (!isAvailable) return 'Google Play billing unavailable';
+    return '$loadedProductCount of ${AppConstants.iapProductIds.length} plans loaded from Google Play';
   }
 }
 
@@ -83,7 +134,6 @@ class IAPNotifier extends StateNotifier<IAPState> {
   final InAppPurchase _iap = InAppPurchase.instance;
   StreamSubscription<List<PurchaseDetails>>? _purchaseSub;
 
-  /// Tracks whether any restored events arrived during a restorePurchases() call.
   bool _restoreReceivedEvents = false;
   Timer? _restoreTimer;
 
@@ -92,13 +142,22 @@ class IAPNotifier extends StateNotifier<IAPState> {
   }
 
   Future<void> _init() async {
-    // Attach purchase stream BEFORE anything else so no events are missed.
-    // This is critical for iOS subscription renewals and Android pending
-    // purchases that are delivered as soon as the billing client connects.
+    // Attach purchase stream before anything else — OS may deliver pending
+    // purchases (e.g. subscription renewals, unacknowledged prior purchases)
+    // as soon as the billing client connects.
     _purchaseSub = _iap.purchaseStream.listen(
       _handlePurchaseUpdates,
       onError: (err) => debugPrint('[IAP] stream error: $err'),
     );
+
+    // Watch auth state. When the user logs in:
+    //   1. Auto-execute any stored purchase intent (plan they tapped before auth).
+    //   2. Auto-verify any legacy unlinked purchase.
+    _ref.listen<AuthState>(authProvider, (prev, next) {
+      if (prev != null && !prev.isLoggedIn && next.isLoggedIn) {
+        _onUserLoggedIn();
+      }
+    });
 
     final available = await _iap.isAvailable();
     if (!available) {
@@ -113,21 +172,22 @@ class IAPNotifier extends StateNotifier<IAPState> {
     await _loadProducts();
   }
 
+  // ── Product loading ─────────────────────────────────────────────────────────
+
   Future<void> _loadProducts() async {
     state = state.copyWith(status: IAPStatus.loading, isAvailable: true);
     try {
       final response = await _iap.queryProductDetails(AppConstants.iapProductIds);
-
       if (response.error != null) {
         debugPrint('[IAP] queryProductDetails error: ${response.error}');
       }
       if (response.notFoundIDs.isNotEmpty) {
         debugPrint('[IAP] products not found in store: ${response.notFoundIDs}');
       }
-
       state = state.copyWith(
         status: IAPStatus.idle,
         products: response.productDetails,
+        notFoundIds: response.notFoundIDs,
         isAvailable: true,
       );
     } catch (e) {
@@ -140,38 +200,93 @@ class IAPNotifier extends StateNotifier<IAPState> {
     }
   }
 
-  /// Re-fetch products from the store (shown when first load fails).
   Future<void> reloadProducts() async {
     state = state.copyWith(status: IAPStatus.loading, errorMessage: null);
     await _loadProducts();
   }
 
-  /// Trigger a purchase for the given [ProductDetails].
+  Future<ProductDetails?> resolveProduct(String id) async {
+    final existing = state.productFor(id);
+    if (existing != null) return existing;
+    if (!state.isAvailable) return null;
+    await reloadProducts();
+    return state.productFor(id);
+  }
+
+  // ── Purchase intent (pre-auth) ──────────────────────────────────────────────
+
+  /// Store the product the user wants to buy before they are authenticated.
+  /// After successful login, [_onUserLoggedIn] auto-executes this intent.
+  void setPurchaseIntent(String productId) {
+    state = state.copyWith(pendingIntentProductId: productId);
+  }
+
+  void clearPurchaseIntent() {
+    state = state.copyWith(clearPendingIntent: true);
+  }
+
+  // ── Post-login auto-actions ─────────────────────────────────────────────────
+
+  Future<void> _onUserLoggedIn() async {
+    if (!mounted) return;
+
+    // First: verify any unlinked purchase that arrived before auth (legacy/edge).
+    final linkPurchase = state.pendingLinkPurchase;
+    if (linkPurchase != null) {
+      await _verifyAndLinkPurchase(linkPurchase);
+      return; // don't also auto-buy — one action at a time
+    }
+
+    // Then: execute the purchase intent the user had before logging in.
+    final intentId = state.pendingIntentProductId;
+    if (intentId != null) {
+      state = state.copyWith(clearPendingIntent: true);
+      final product = await resolveProduct(intentId);
+      if (product != null && mounted) {
+        await buy(product);
+      }
+    }
+  }
+
+  // ── Buying ──────────────────────────────────────────────────────────────────
+
+  /// Initiate a purchase. Caller MUST ensure the user is logged in before calling.
   Future<void> buy(ProductDetails product) async {
     if (!state.isAvailable) return;
+    assert(
+      _ref.read(authProvider).isLoggedIn,
+      'buy() must only be called when the user is authenticated',
+    );
     state = state.copyWith(status: IAPStatus.purchasing, errorMessage: null);
-    final param = PurchaseParam(productDetails: product);
-    // buyNonConsumable works for both non-consumables and subscriptions.
+    final PurchaseParam param;
+    if (!kIsWeb && Platform.isAndroid && product is GooglePlayProductDetails) {
+      // Subscriptions require the base-plan offer token on Google Play Billing 5+.
+      param = GooglePlayPurchaseParam(
+        productDetails: product,
+        offerToken: product.offerToken,
+      );
+    } else {
+      param = PurchaseParam(productDetails: product);
+    }
     await _iap.buyNonConsumable(purchaseParam: param);
     // Result arrives via _handlePurchaseUpdates.
   }
 
-  /// Restore previous purchases.
-  ///
-  /// Required by App Store review guidelines (iOS).
-  /// If no restored purchases arrive within [_kRestoreTimeout], transitions to
-  /// [IAPStatus.restoreEmpty] so the UI can show a "nothing found" message.
+  // ── Restore ─────────────────────────────────────────────────────────────────
+
+  /// Restore previous purchases. Caller MUST ensure the user is logged in.
   static const _kRestoreTimeout = Duration(seconds: 10);
 
   Future<void> restorePurchases() async {
     if (!state.isAvailable) return;
+    assert(
+      _ref.read(authProvider).isLoggedIn,
+      'restorePurchases() must only be called when the user is authenticated',
+    );
     _restoreReceivedEvents = false;
     _restoreTimer?.cancel();
-
     state = state.copyWith(status: IAPStatus.purchasing, errorMessage: null);
     await _iap.restorePurchases();
-
-    // Start a watchdog. If no restored events arrive in time, reset to idle.
     _restoreTimer = Timer(_kRestoreTimeout, () {
       if (!mounted) return;
       if (state.status == IAPStatus.purchasing && !_restoreReceivedEvents) {
@@ -190,7 +305,6 @@ class IAPNotifier extends StateNotifier<IAPState> {
 
         case PurchaseStatus.purchased:
         case PurchaseStatus.restored:
-          // Mark that at least one restore event was received (disarms watchdog).
           if (purchase.status == PurchaseStatus.restored) {
             _restoreReceivedEvents = true;
             _restoreTimer?.cancel();
@@ -202,7 +316,6 @@ class IAPNotifier extends StateNotifier<IAPState> {
             status: IAPStatus.error,
             errorMessage: purchase.error?.message ?? 'Purchase failed. Please try again.',
           );
-          // Always finalize on error to clear the transaction from the queue.
           await _finalize(purchase);
 
         case PurchaseStatus.canceled:
@@ -213,25 +326,27 @@ class IAPNotifier extends StateNotifier<IAPState> {
   }
 
   Future<void> _completePurchase(PurchaseDetails purchase) async {
-    // If the user is not logged in yet, store the purchase and ask them to
-    // create an account.  We intentionally do NOT finalize the transaction
-    // here — it will be finalized after the backend verifies it post-signup.
     final isLoggedIn = _ref.read(authProvider).isLoggedIn;
+
     if (!isLoggedIn) {
+      // Edge case: OS delivered a purchase without an authenticated session.
+      // This should not happen with the new auth-first flow, but can occur
+      // with OS-replayed pending purchases from a previous install.
+      // Store it — the recovery banner will prompt the user to sign in,
+      // and _onUserLoggedIn() will verify it automatically after login.
+      debugPrint('[IAP] purchase arrived without auth — storing for recovery');
       state = state.copyWith(
-        status: IAPStatus.pendingAccountSetup,
-        pendingPurchase: purchase,
+        status: IAPStatus.pendingLink,
+        pendingLinkPurchase: purchase,
       );
       return;
     }
 
     state = state.copyWith(status: IAPStatus.verifying);
-
     try {
       await _verifyWithBackend(purchase);
-      // Only acknowledge AFTER successful backend verification.
-      // Acknowledging before verification would prevent auto-refund on Android
-      // for purchases that could not be verified.
+      // Acknowledge only AFTER backend verification succeeds.
+      // On Android, unacknowledged purchases are auto-refunded after 3 days.
       await _finalize(purchase);
     } catch (e) {
       debugPrint('[IAP] backend verification error: $e');
@@ -239,34 +354,27 @@ class IAPNotifier extends StateNotifier<IAPState> {
           ? e.toString().replaceFirst('Exception: ', '')
           : 'Purchase verification failed. Please contact support if the issue persists.';
       state = state.copyWith(status: IAPStatus.error, errorMessage: message);
-
-      // Platform-specific finalize on error:
-      //   iOS   — complete the transaction to clear it from the StoreKit queue.
-      //           The user can re-attempt via Restore Purchases.
-      //   Android — do NOT acknowledge. Google Play auto-refunds unacknowledged
-      //             purchases after 3 days, the safe default for failed verification.
+      // iOS: finalize to clear from StoreKit queue (user can retry via Restore).
+      // Android: do NOT finalize — auto-refund is the safer default.
       if (!kIsWeb && Platform.isIOS) {
         await _finalize(purchase);
       }
     }
   }
 
-  /// Called by AccountSetupScreen after signup to verify the stored pending
-  /// purchase and link it to the newly-created account.
-  Future<void> verifyPendingPurchase() async {
-    final purchase = state.pendingPurchase;
-    if (purchase == null) return;
-
+  /// Verify a legacy unlinked purchase after the user has signed in.
+  Future<void> _verifyAndLinkPurchase(PurchaseDetails purchase) async {
+    if (!mounted) return;
     state = state.copyWith(status: IAPStatus.verifying);
     try {
       await _verifyWithBackend(purchase);
       await _finalize(purchase);
-      state = state.copyWith(clearPendingPurchase: true);
+      state = state.copyWith(clearPendingLink: true);
     } catch (e) {
-      debugPrint('[IAP] pending purchase verify error: $e');
+      debugPrint('[IAP] pending link verify error: $e');
       final message = e is Exception
           ? e.toString().replaceFirst('Exception: ', '')
-          : 'Could not verify your purchase. Please contact support.';
+          : 'Could not verify your purchase. Please contact support@themuslimman.com';
       state = state.copyWith(status: IAPStatus.error, errorMessage: message);
       if (!kIsWeb && Platform.isIOS) {
         await _finalize(purchase);
@@ -274,33 +382,25 @@ class IAPNotifier extends StateNotifier<IAPState> {
     }
   }
 
-  void clearPendingAccountSetup() {
-    state = state.copyWith(
-      status: IAPStatus.idle,
-      clearPendingPurchase: true,
-    );
-  }
+  // ── Backend verification ────────────────────────────────────────────────────
 
   Future<void> _verifyWithBackend(PurchaseDetails purchase) async {
-    final productId  = purchase.productID;
+    final productId = purchase.productID;
     final serverData = purchase.verificationData.serverVerificationData;
 
     final Map<String, dynamic> body;
-
     if (!kIsWeb && Platform.isIOS) {
-      // serverVerificationData on iOS is the base64-encoded App Store receipt.
       body = {
-        'platform':    'apple',
-        'productId':   productId,
+        'platform': 'apple',
+        'productId': productId,
         'receiptData': serverData,
       };
     } else {
-      // Android: serverVerificationData is the purchase token.
       body = {
-        'platform':      'google',
-        'productId':     productId,
+        'platform': 'google',
+        'productId': productId,
         'purchaseToken': serverData,
-        'orderId':       purchase.purchaseID ?? '',
+        'orderId': purchase.purchaseID ?? '',
       };
     }
 
@@ -308,17 +408,12 @@ class IAPNotifier extends StateNotifier<IAPState> {
       '/api/mobile-purchases/verify',
       data: body,
     );
-
     final data = response.data as Map<String, dynamic>;
 
-    // Check explicit server failure.
     if (data['success'] != true) {
       throw Exception(data['error'] ?? 'Verification failed');
     }
 
-    // B4 fix: also validate that the backend actually granted access.
-    // success:true but hasAccess:false indicates a cross-account collision or
-    // a backend logic error — neither should show a success dialog.
     final hasAccess = data['hasAccess'] as bool? ?? false;
     if (!hasAccess) {
       throw Exception(
@@ -327,7 +422,6 @@ class IAPNotifier extends StateNotifier<IAPState> {
       );
     }
 
-    // Refresh auth state so hasAccess updates throughout the app.
     await _ref.read(authProvider.notifier).refreshAccessAfterPurchase();
 
     state = state.copyWith(
@@ -336,15 +430,13 @@ class IAPNotifier extends StateNotifier<IAPState> {
     );
   }
 
-  /// Calls completePurchase() only when the OS requires acknowledgment.
-  ///
-  /// On iOS, this finishes the StoreKit transaction.
-  /// On Android, this acknowledges the purchase to prevent automatic refund.
   Future<void> _finalize(PurchaseDetails purchase) async {
     if (purchase.pendingCompletePurchase) {
       await _iap.completePurchase(purchase);
     }
   }
+
+  // ── UI helpers ──────────────────────────────────────────────────────────────
 
   void clearError() {
     state = state.copyWith(status: IAPStatus.idle, errorMessage: null);

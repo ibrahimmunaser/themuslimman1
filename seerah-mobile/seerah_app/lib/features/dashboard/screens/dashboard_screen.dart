@@ -182,47 +182,69 @@ class _WelcomeCard extends StatelessWidget {
             children: [
               const GoldBadge('Complete Seerah'),
               const Spacer(),
-              if (hasAccess)
+              Text('✦',
+                  style: TextStyle(
+                    color: AppColors.gold.withValues(alpha: 0.3),
+                    fontSize: 20,
+                  )),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text('As-salamu alaykum,',
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              )),
+          const SizedBox(height: 2),
+          Text(firstName,
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 28,
+                fontWeight: FontWeight.w800,
+                height: 1.0,
+                letterSpacing: -0.6,
+              )),
+          const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: Text(
+                  hasAccess
+                      ? 'Continue your journey through the life of the Prophet ﷺ.'
+                      : 'Part 1 is free — begin the Seerah today.',
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 13,
+                    height: 1.45,
+                  ),
+                ),
+              ),
+              if (hasAccess) ...[
+                const SizedBox(width: 12),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppColors.success.withValues(alpha: 0.12),
+                    color: AppColors.success.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
                   ),
-                  child: Row(
+                  child: const Row(
                     mainAxisSize: MainAxisSize.min,
-                    children: const [
-                      Icon(Icons.check_circle_rounded, color: AppColors.success, size: 12),
-                      SizedBox(width: 4),
+                    children: [
+                      Icon(Icons.check_circle_rounded, color: AppColors.success, size: 11),
+                      SizedBox(width: 3),
                       Text('Full Access',
-                        style: TextStyle(color: AppColors.success, fontSize: 10, fontWeight: FontWeight.w700)),
+                          style: TextStyle(
+                              color: AppColors.success,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700)),
                     ],
                   ),
                 ),
+              ],
             ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'As-salamu alaykum,\n$firstName',
-            style: const TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 24,
-              fontWeight: FontWeight.w800,
-              height: 1.2,
-              letterSpacing: -0.3,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            hasAccess
-                ? 'Continue your journey through the life of the Prophet ﷺ.'
-                : 'Part 1 is free — begin the Seerah today.',
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 14,
-              height: 1.45,
-            ),
           ),
         ],
       ),
@@ -346,33 +368,35 @@ class _QuickAccessGrid extends StatelessWidget {
           child: InkWell(
             onTap: () => context.go(item.$3),
             borderRadius: BorderRadius.circular(14),
-            child: Ink(
-              decoration: AppDecorations.card(borderColor: item.$4.withValues(alpha: 0.25)),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: item.$4.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(item.$1, color: item.$4, size: 20),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(item.$2,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
+              child: Ink(
+                  decoration: AppDecorations.card(borderColor: item.$4.withValues(alpha: 0.25)),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: item.$4.withValues(alpha: 0.14),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(item.$1, color: item.$4, size: 20),
                       ),
-                      maxLines: 2,
-                    ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(item.$2,
+                          style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 2,
+                        ),
+                      ),
+                      Icon(Icons.arrow_forward_ios_rounded,
+                          color: item.$4.withValues(alpha: 0.45), size: 11),
+                    ],
                   ),
-                ],
-              ),
-            ),
+                ),
           ),
         );
       }).toList(),

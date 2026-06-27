@@ -20,6 +20,7 @@ class _Plan {
   final String fallbackPrice;
   final String period;
   final String? badge;
+  final bool isRecommended;
 
   const _Plan({
     required this.id,
@@ -29,6 +30,7 @@ class _Plan {
     required this.fallbackPrice,
     required this.period,
     this.badge,
+    this.isRecommended = false,
   });
 }
 
@@ -40,15 +42,17 @@ const _plans = [
     description: '1 learner • cancel anytime',
     fallbackPrice: '\$${AppConstants.monthlyPrice}',
     period: '/mo',
+    badge: 'Recommended',
+    isRecommended: true,
   ),
   _Plan(
     id: PlanId.familyMonthly,
     iapId: AppConstants.iapMonthlyFamily,
     name: 'Family Monthly',
-    description: 'Up to 5 members • cancel anytime',
+    description: 'Up to 5 profiles • cancel anytime',
     fallbackPrice: '\$${AppConstants.familyMonthlyPrice}',
     period: '/mo',
-    badge: 'Best for families',
+    badge: 'For Families',
   ),
   _Plan(
     id: PlanId.individualLifetime,
@@ -62,10 +66,33 @@ const _plans = [
     id: PlanId.familyLifetime,
     iapId: AppConstants.iapLifetimeFamily,
     name: 'Family Lifetime',
-    description: 'Up to 5 members • pay once, own forever',
+    description: 'Up to 5 profiles • pay once, own forever',
     fallbackPrice: '\$${AppConstants.familyLifetimePrice}',
     period: 'one-time',
-    badge: 'Best value',
+    badge: 'Best Value',
+  ),
+];
+
+const _faqItems = [
+  (
+    q: 'What is included?',
+    a: 'Every plan includes the full 100-part Seerah course with video lessons, readings, quizzes, flashcards, summaries, mind maps, and progress tracking.',
+  ),
+  (
+    q: 'Can I cancel anytime?',
+    a: 'Yes. Monthly plans can be canceled anytime from your App Store or Google Play subscription settings.',
+  ),
+  (
+    q: 'Is there a refund guarantee?',
+    a: 'Yes. If the course is not what you expected, contact us within 7 days for a full refund.',
+  ),
+  (
+    q: 'Is Part 1 free?',
+    a: 'Yes. Part 1 is completely free with no account required. Watch it before choosing a plan.',
+  ),
+  (
+    q: 'Individual vs family?',
+    a: 'Individual is for one learner. Family supports up to 5 separate learner profiles with independent progress tracking.',
   ),
 ];
 
@@ -90,22 +117,27 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
   String _price(IAPState iap, _Plan plan) =>
       iap.productFor(plan.iapId)?.price ?? plan.fallbackPrice;
 
-  void _buyPlan(IAPState iap, _Plan plan) {
+  Future<void> _buyPlan(IAPState iap, _Plan plan) async {
     if (iap.status == IAPStatus.purchasing ||
         iap.status == IAPStatus.verifying ||
         iap.status == IAPStatus.loading) {
       return;
     }
     if (!iap.isAvailable) {
-      _snack('Store unavailable — please sign in to the App Store or Google Play.');
+      _snack(ref.read(iapProvider).unavailableProductMessage());
       return;
     }
-    final product = iap.productFor(plan.iapId);
-    if (product == null) {
-      _snack('This product is temporarily unavailable. Tap Retry to reload.');
-      return;
-    }
+
     setState(() => _purchasingPlanId = plan.id);
+    final product = await ref.read(iapProvider.notifier).resolveProduct(plan.iapId);
+    if (!mounted) return;
+
+    if (product == null) {
+      setState(() => _purchasingPlanId = null);
+      _snack(ref.read(iapProvider).unavailableProductMessage());
+      return;
+    }
+
     ref.read(iapProvider.notifier).buy(product);
   }
 
@@ -215,15 +247,13 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
         iap.status == IAPStatus.verifying ||
         iap.status == IAPStatus.loading;
 
-    final showRetry = iap.isAvailable &&
-        iap.status == IAPStatus.idle &&
-        iap.products.isEmpty;
+    final showRetry = iap.needsProductReload;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.background,
-        title: const Text('Plans & Pricing'),
+        title: const Text('Choose Your Plan'),
         centerTitle: true,
       ),
       body: ListView(
@@ -241,7 +271,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
                     borderColor: const Color(0xFF4CAF50).withValues(alpha: 0.3),
                     textColor: const Color(0xFF4CAF50),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
                 ],
 
                 // ── Store / retry warnings ───────────────────────────────
@@ -249,8 +279,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
                   _StatusBanner(
                     icon: Icons.info_outline_rounded,
                     iconColor: AppColors.textMuted,
-                    text:
-                        'Store unavailable. Sign in to the App Store or Google Play.',
+                    text: iap.unavailableProductMessage(),
                     bgColor: AppColors.surface,
                     borderColor: AppColors.border,
                     textColor: AppColors.textSecondary,
@@ -259,21 +288,14 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
                 ],
                 if (showRetry) ...[
                   _RetryBanner(
-                      onRetry: () =>
-                          ref.read(iapProvider.notifier).reloadProducts()),
+                    status: iap.storeStatusLabel,
+                    onRetry: () =>
+                        ref.read(iapProvider.notifier).reloadProducts(),
+                  ),
                   const SizedBox(height: 12),
                 ],
 
-                // ── Plan list ────────────────────────────────────────────
-                const Text(
-                  'Choose a plan',
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 12),
+                // ── Plan list (plans-first — these are warm in-app users) ─
                 ...List.generate(_plans.length, (i) {
                   final plan = _plans[i];
                   return _PlanTile(
@@ -283,12 +305,107 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
                     enabled: !hasAccess && !busy,
                     onTap: () => _buyPlan(iap, plan),
                     bottomMargin: i < _plans.length - 1 ? 10 : 0,
+                    isRecommended: plan.isRecommended,
                   );
                 }),
+
+                const SizedBox(height: 12),
+                const Text(
+                  '7-day refund guarantee  ·  Instant access  ·  Cancel anytime',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: AppColors.textMuted, fontSize: 11.5),
+                ),
+
+                const SizedBox(height: 28),
+
+                // ── What's included ──────────────────────────────────────
+                const Text(
+                  'What\'s included',
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.card,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Column(
+                    children: [
+                      ...[
+                        (Icons.play_circle_outline_rounded, '100 structured video lessons'),
+                        (Icons.article_outlined, 'Reading notes & briefings'),
+                        (Icons.quiz_outlined, 'Quizzes & flashcards'),
+                        (Icons.insights_rounded, 'Progress tracking across all 8 eras'),
+                        (Icons.map_outlined, 'Slides, mindmaps, and infographics'),
+                        (Icons.all_inclusive_rounded, 'Lifetime access option available'),
+                      ].map((item) => Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: Row(
+                          children: [
+                            Icon(item.$1, color: AppColors.gold, size: 16),
+                            const SizedBox(width: 12),
+                            Text(item.$2,
+                                style: const TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 13,
+                                )),
+                          ],
+                        ),
+                      )),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 28),
+
+                // ── Individual vs family ─────────────────────────────────
+                const Text(
+                  'Individual vs family',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const _ComparisonCard(
+                  title: 'Individual',
+                  bullets: [
+                    'One learner on your account',
+                    'Full course access and progress tracking',
+                    'Best if you are studying on your own',
+                  ],
+                ),
+                const SizedBox(height: 10),
+                const _ComparisonCard(
+                  title: 'Family',
+                  bullets: [
+                    'Up to 5 learner profiles in one household',
+                    'Each profile has independent progress',
+                    'Best for spouses, parents, and kids learning together',
+                  ],
+                  highlighted: true,
+                ),
 
                 const SizedBox(height: 28),
 
                 // ── Free Part 1 ──────────────────────────────────────────
+                const Text(
+                  'Want to preview first?',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 10),
                 InkWell(
                   onTap: () => context.go('/part/1'),
                   borderRadius: BorderRadius.circular(12),
@@ -322,7 +439,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
                                       fontWeight: FontWeight.w600,
                                       fontSize: 14)),
                               SizedBox(height: 2),
-                              Text('Start learning right now — no purchase needed',
+                              Text('Watch Part 1 free — no purchase needed',
                                   style: TextStyle(
                                       color: AppColors.textSecondary,
                                       fontSize: 12.5)),
@@ -335,6 +452,21 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
                     ),
                   ),
                 ),
+
+                const SizedBox(height: 28),
+
+                // ── FAQ ──────────────────────────────────────────────────
+                const Text(
+                  'Pricing questions',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ..._faqItems.map((item) => _FaqTile(question: item.q, answer: item.a)),
 
                 const SizedBox(height: 16),
 
@@ -379,6 +511,7 @@ class _PlanTile extends StatelessWidget {
   final String price;
   final bool isLoading;
   final bool enabled;
+  final bool isRecommended;
   final VoidCallback onTap;
   final double bottomMargin;
 
@@ -388,6 +521,7 @@ class _PlanTile extends StatelessWidget {
     required this.isLoading,
     required this.enabled,
     required this.onTap,
+    this.isRecommended = false,
     this.bottomMargin = 0,
   });
 
@@ -402,9 +536,24 @@ class _PlanTile extends StatelessWidget {
           duration: const Duration(milliseconds: 150),
           margin: EdgeInsets.only(bottom: bottomMargin),
           decoration: BoxDecoration(
-            color: AppColors.card,
+            gradient: isRecommended
+                ? LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      AppColors.gold.withValues(alpha: 0.14),
+                      AppColors.gold.withValues(alpha: 0.04),
+                    ],
+                  )
+                : null,
+            color: isRecommended ? null : AppColors.card,
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.border, width: 1.2),
+            border: Border.all(
+              color: isRecommended
+                  ? AppColors.gold.withValues(alpha: 0.6)
+                  : AppColors.border,
+              width: isRecommended ? 1.5 : 1.2,
+            ),
           ),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -421,15 +570,19 @@ class _PlanTile extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 7, vertical: 2),
                             decoration: BoxDecoration(
-                              color: AppColors.goldFaded,
+                              color: isRecommended
+                                  ? AppColors.gold
+                                  : AppColors.goldFaded,
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
                               plan.badge!,
-                              style: const TextStyle(
-                                color: AppColors.gold,
+                              style: TextStyle(
+                                color: isRecommended
+                                    ? Colors.black
+                                    : AppColors.gold,
                                 fontSize: 10,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
                           ),
@@ -465,15 +618,20 @@ class _PlanTile extends StatelessWidget {
                     children: [
                       Text(
                         price,
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
+                        style: TextStyle(
+                          color: isRecommended
+                              ? AppColors.gold
+                              : AppColors.textPrimary,
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
                       Text(plan.period,
-                          style: const TextStyle(
-                              color: AppColors.textMuted, fontSize: 11)),
+                          style: TextStyle(
+                              color: isRecommended
+                                  ? AppColors.gold.withValues(alpha: 0.7)
+                                  : AppColors.textMuted,
+                              fontSize: 11)),
                     ],
                   ),
                 const SizedBox(width: 10),
@@ -539,8 +697,9 @@ class _StatusBanner extends StatelessWidget {
 }
 
 class _RetryBanner extends StatelessWidget {
+  final String status;
   final VoidCallback onRetry;
-  const _RetryBanner({required this.onRetry});
+  const _RetryBanner({required this.status, required this.onRetry});
 
   @override
   Widget build(BuildContext context) {
@@ -551,22 +710,33 @@ class _RetryBanner extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: AppColors.border),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Icon(Icons.warning_amber_rounded,
-              color: AppColors.textMuted, size: 18),
-          const SizedBox(width: 10),
-          const Expanded(
-            child: Text('Products could not be loaded from the store.',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+          Row(
+            children: [
+              const Icon(Icons.warning_amber_rounded,
+                  color: AppColors.textMuted, size: 18),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(status,
+                    style: const TextStyle(
+                        color: AppColors.textSecondary, fontSize: 13)),
+              ),
+              TextButton(
+                onPressed: onRetry,
+                style: TextButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    minimumSize: const Size(44, 36)),
+                child: const Text('Retry',
+                    style: TextStyle(color: AppColors.gold, fontSize: 13)),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: onRetry,
-            style: TextButton.styleFrom(
-                padding: EdgeInsets.zero,
-                minimumSize: const Size(44, 36)),
-            child: const Text('Retry',
-                style: TextStyle(color: AppColors.gold, fontSize: 13)),
+          const SizedBox(height: 4),
+          const Text(
+            'Install from Play Console internal testing. USB/APK installs cannot load plans.',
+            style: TextStyle(color: AppColors.textMuted, fontSize: 11.5, height: 1.4),
           ),
         ],
       ),
@@ -585,10 +755,148 @@ class _GuaranteeRow extends StatelessWidget {
         Icon(Icons.shield_outlined, color: AppColors.gold, size: 18),
         SizedBox(width: 6),
         Text(
-          '30-Day Money Back Guarantee',
+          '7-day refund guarantee',
           style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
         ),
       ],
+    );
+  }
+}
+
+class _ComparisonCard extends StatelessWidget {
+  final String title;
+  final List<String> bullets;
+  final bool highlighted;
+
+  const _ComparisonCard({
+    required this.title,
+    required this.bullets,
+    this.highlighted = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: highlighted
+              ? AppColors.gold.withValues(alpha: 0.25)
+              : AppColors.border,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          ...bullets.map(
+            (b) => Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('•  ',
+                      style: TextStyle(
+                          color: AppColors.textMuted, fontSize: 13)),
+                  Expanded(
+                    child: Text(
+                      b,
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                        height: 1.45,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FaqTile extends StatefulWidget {
+  final String question;
+  final String answer;
+
+  const _FaqTile({required this.question, required this.answer});
+
+  @override
+  State<_FaqTile> createState() => _FaqTileState();
+}
+
+class _FaqTileState extends State<_FaqTile> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => setState(() => _expanded = !_expanded),
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        widget.question,
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    Icon(
+                      _expanded
+                          ? Icons.keyboard_arrow_up_rounded
+                          : Icons.keyboard_arrow_down_rounded,
+                      color: AppColors.textMuted,
+                      size: 22,
+                    ),
+                  ],
+                ),
+                if (_expanded) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    widget.answer,
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 13,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

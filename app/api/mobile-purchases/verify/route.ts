@@ -16,10 +16,16 @@ const PRODUCT_META: Record<
   string,
   { planType: "individual" | "family"; purchaseType: "lifetime" | "subscription" }
 > = {
-  "com.themuslimman.seerah.monthly.individual":  { planType: "individual", purchaseType: "subscription" },
-  "com.themuslimman.seerah.monthly.family":      { planType: "family",     purchaseType: "subscription" },
-  "com.themuslimman.seerah.lifetime.individual": { planType: "individual", purchaseType: "lifetime"     },
-  "com.themuslimman.seerah.lifetime.family":     { planType: "family",     purchaseType: "lifetime"     },
+  // Google Play / App Store product IDs (must match Play Console exactly)
+  seerah_monthly_individual:  { planType: "individual", purchaseType: "subscription" },
+  seerah_monthly_family:      { planType: "family",     purchaseType: "subscription" },
+  seerah_lifetime_individual: { planType: "individual", purchaseType: "lifetime"     },
+  seerah_lifetime_family:     { planType: "family",     purchaseType: "lifetime"     },
+  // Alternate IDs if recreated in Play Console later
+  individual_monthly:  { planType: "individual", purchaseType: "subscription" },
+  family_monthly:      { planType: "family",     purchaseType: "subscription" },
+  individual_lifetime: { planType: "individual", purchaseType: "lifetime"     },
+  family_lifetime:     { planType: "family",     purchaseType: "lifetime"     },
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
