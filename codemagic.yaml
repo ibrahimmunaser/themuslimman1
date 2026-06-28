@@ -54,16 +54,12 @@ workflows:
   # ────────────────────────────────────────────────────────────────────────────
   # iOS — builds a signed IPA and uploads to TestFlight
   #
-  # Before first run, in Codemagic → Team Settings:
-  #   1. Team integrations → Apple Developer Portal → add App Store Connect API key
-  #      (needs App Manager role — download the .p8, note Issuer ID + Key ID)
-  #   2. Code Signing Identities → iOS certificates → Generate certificate
-  #      (type: Apple Distribution, using the API key above)
-  #   3. Code Signing Identities → iOS provisioning profiles → Fetch profiles
-  #      (App Store profile for com.themuslimman.seerah, give it reference name
-  #       "themuslimman_appstore")
-  #   4. Under this workflow → integrations → app_store_connect: set to the
-  #      name you gave the API key in step 1.
+  # Prerequisites in Codemagic Team Settings (one-time):
+  #   1. Integrations → Apple Developer Portal → App Store Connect API key
+  #   2. Code signing → iOS certificates → Generate Apple Distribution cert
+  #
+  # Provisioning profile is created automatically during the build (--create).
+  # integrations.app_store_connect MUST match the API key name in Codemagic exactly.
   # ────────────────────────────────────────────────────────────────────────────
   ios-release:
     name: iOS Release
@@ -71,7 +67,8 @@ workflows:
     instance_type: mac_mini_m2
 
     integrations:
-      app_store_connect: App Store Connect API Key   # ← name from Codemagic Team Settings
+      # Must match the name you gave the key in Codemagic → Integrations
+      app_store_connect: Codemagic
 
     environment:
       flutter: stable
@@ -95,6 +92,13 @@ workflows:
 
       - name: Install CocoaPods
         script: find . -name "Podfile" -execdir pod install \;
+        working_directory: seerah-mobile/seerah_app
+
+      - name: Fetch signing files from App Store Connect
+        script: |
+          app-store-connect fetch-signing-files "com.themuslimman.seerah" \
+            --type IOS_APP_STORE \
+            --create
         working_directory: seerah-mobile/seerah_app
 
       - name: Set up code signing
