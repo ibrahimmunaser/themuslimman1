@@ -122,12 +122,10 @@ workflows:
   # ────────────────────────────────────────────────────────────────────────────
   # iOS — builds a signed IPA and uploads to TestFlight
   #
-  # One-time setup (in order):
+  # One-time setup:
   #   1. Integrations → Apple Developer Portal → API key named "Codemagic"
   #   2. Code signing → iOS certificates → "themuslimman certificate"
-  #   3. Run workflow "iOS Create Profile" once (if Fetch profiles shows 0)
-  #   4. Code signing → iOS provisioning profiles → Fetch profiles
-  #      → reference name: themuslimman_appstore
+  #   3. Run "iOS Create Profile" once if Fetch profiles shows 0, then fetch/upload profile
   # ────────────────────────────────────────────────────────────────────────────
   ios-release:
     name: iOS Release
@@ -144,11 +142,8 @@ workflows:
       vars:
         BUNDLE_ID: com.themuslimman.seerah
       ios_signing:
-        provisioning_profiles:
-          - profile: themuslimman_appstore
-            bundle_id: com.themuslimman.seerah
-        certificates:
-          - certificate: themuslimman certificate
+        distribution_type: app_store
+        bundle_identifier: com.themuslimman.seerah
 
     triggering:
       events:
