@@ -73,6 +73,13 @@ workflows:
         BUNDLE_ID: com.themuslimman.seerah
         PROFILE_NAME: TheMuslimMan App Store
 
+    triggering:
+      events:
+        - tag
+      tag_patterns:
+        - pattern: 'profile-*'
+          include: true
+
     scripts:
       - name: Create App Store provisioning profile on Apple
         script: |
