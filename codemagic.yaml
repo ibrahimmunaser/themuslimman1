@@ -55,11 +55,10 @@ workflows:
   # iOS — builds a signed IPA and uploads to TestFlight
   #
   # Prerequisites in Codemagic Team Settings (one-time):
-  #   1. Integrations → Apple Developer Portal → App Store Connect API key
-  #   2. Code signing → iOS certificates → Generate Apple Distribution cert
+  #   1. Integrations → Apple Developer Portal → API key named "Codemagic"
+  #   2. Code signing → iOS certificates → "themuslimman certificate" (production)
   #
-  # Provisioning profile is created automatically during the build (--create).
-  # integrations.app_store_connect MUST match the API key name in Codemagic exactly.
+  # Provisioning profile is created on Apple during the build (no manual upload).
   # ────────────────────────────────────────────────────────────────────────────
   ios-release:
     name: iOS Release
@@ -75,8 +74,10 @@ workflows:
       cocoapods: default
       vars:
         BUNDLE_ID: com.themuslimman.seerah
-      # NOTE: Do NOT use ios_signing.distribution_type here — that mode requires
-      # profiles pre-uploaded in Codemagic UI. We create/fetch profiles via CLI instead.
+      # Load the distribution cert (with private key) from Codemagic UI
+      ios_signing:
+        certificates:
+          - certificate: themuslimman certificate
 
     triggering:
       events:
@@ -97,15 +98,49 @@ workflows:
       - name: Set up keychain
         script: keychain initialize
 
-      - name: Fetch signing files from App Store Connect
-        script: |
-          app-store-connect fetch-signing-files "$BUNDLE_ID" \
-            --type IOS_APP_STORE \
-            --strict-match-identifier \
-            --create
-
-      - name: Add certificates to keychain
+      - name: Add distribution certificate to keychain
         script: keychain add-certificates
+
+      - name: Create App Store provisioning profile if missing
+        script: |
+          set -e
+
+          # Download existing profile from Apple (does not create a new certificate)
+          if app-store-connect fetch-signing-files "$BUNDLE_ID" \
+              --type IOS_APP_STORE \
+              --strict-match-identifier; then
+            echo "Provisioning profile downloaded from Apple"
+            exit 0
+          fi
+
+          echo "No profile found — creating one on Apple Developer Portal..."
+          BUNDLE_ID_RES=$(app-store-connect bundle-ids list --json | python3 -c "
+          import json, sys, os
+          bid = os.environ['BUNDLE_ID']
+          for item in json.load(sys.stdin):
+              attrs = item.get('attributes') or {}
+              if attrs.get('identifier') == bid:
+                  print(item['id'])
+                  break
+          else:
+              sys.exit('Bundle ID not found on Apple Developer Portal')
+          ")
+
+          CERT_ID=$(app-store-connect certificates list --certificate-type IOS_DISTRIBUTION --json | python3 -c "
+          import json, sys
+          certs = json.load(sys.stdin)
+          if not certs:
+              sys.exit('No IOS_DISTRIBUTION certificate found on Apple Developer Portal')
+          print(certs[0]['id'])
+          ")
+
+          app-store-connect profiles create "$BUNDLE_ID_RES" \
+            --certificate-ids "$CERT_ID" \
+            --type IOS_APP_STORE \
+            --name "TheMuslimMan App Store" \
+            --save
+
+          echo "Provisioning profile created and saved."
 
       - name: Set up code signing on Xcode project
         script: xcode-project use-profiles --project ios/Runner.xcodeproj
