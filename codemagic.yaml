@@ -23,7 +23,7 @@ workflows:
       events:
         - tag
       tag_patterns:
-        - pattern: 'v*'
+        - pattern: 'android-v*'
           include: true
 
     scripts:
@@ -109,12 +109,21 @@ workflows:
               sys.exit('Bundle ID not found on Apple Developer Portal')
           ")
 
-          CERT_ID=$(app-store-connect certificates list --type IOS_DISTRIBUTION --json | python3 -c "
+          CERT_ID=$(app-store-connect certificates list --json | python3 -c "
           import json, sys
           certs = json.load(sys.stdin)
-          if not certs:
-              sys.exit('No IOS_DISTRIBUTION certificate found on Apple Developer Portal')
-          print(certs[0]['id'])
+          preferred = ('IOS_DISTRIBUTION', 'DISTRIBUTION')
+          for cert_type in preferred:
+              for cert in certs:
+                  attrs = cert.get('attributes') or {}
+                  if attrs.get('certificateType') == cert_type:
+                      print(cert['id'])
+                      break
+              else:
+                  continue
+              break
+          else:
+              sys.exit('No distribution certificate found on Apple Developer Portal')
           ")
 
           app-store-connect profiles create "$BUNDLE_ID_RES" \
@@ -129,8 +138,10 @@ workflows:
   # ────────────────────────────────────────────────────────────────────────────
   # iOS — builds a signed IPA and uploads to TestFlight
   #
-  # Fully automated CLI signing — no pre-uploaded provisioning profile in Codemagic UI.
-  # Profile is created on Apple during the build; cert loaded from team settings.
+  # Prerequisites in Codemagic Team Settings (one-time):
+  #   1. Integrations → Apple Developer Portal → API key named "Codemagic"
+  #   2. Code signing → iOS certificates → "themuslimman certificate" (production)
+  #   3. Run ios-create-profile once, then Fetch profiles → reference: themuslimman_appstore
   # ────────────────────────────────────────────────────────────────────────────
   ios-release:
     name: iOS Release
@@ -146,6 +157,11 @@ workflows:
       cocoapods: default
       vars:
         BUNDLE_ID: com.themuslimman.seerah
+      ios_signing:
+        provisioning_profiles:
+          - themuslimman_appstore
+        certificates:
+          - themuslimman certificate
 
     triggering:
       events:
@@ -162,62 +178,6 @@ workflows:
       - name: Install CocoaPods
         script: find . -name "Podfile" -execdir pod install \;
         working_directory: seerah-mobile/seerah_app
-
-      - name: Set up keychain
-        script: keychain initialize
-
-      - name: Ensure App Store provisioning profile
-        script: |
-          set -e
-          PROFILE_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
-          mkdir -p "$PROFILE_DIR"
-
-          if compgen -G "$PROFILE_DIR"/*.mobileprovision > /dev/null; then
-            echo "Provisioning profile already on disk"
-            exit 0
-          fi
-
-          if app-store-connect profiles list \
-              --type IOS_APP_STORE \
-              --name "TheMuslimMan App Store" \
-              --profiles-dir "$PROFILE_DIR" \
-              --save && compgen -G "$PROFILE_DIR"/*.mobileprovision > /dev/null; then
-            echo "Downloaded existing provisioning profile from Apple"
-            exit 0
-          fi
-
-          echo "Creating App Store provisioning profile on Apple Developer Portal..."
-          BUNDLE_ID_RES=$(app-store-connect bundle-ids list --json | python3 -c "
-          import json, sys, os
-          bid = os.environ['BUNDLE_ID']
-          for item in json.load(sys.stdin):
-              attrs = item.get('attributes') or {}
-              if attrs.get('identifier') == bid:
-                  print(item['id'])
-                  break
-          else:
-              sys.exit('Bundle ID not found on Apple Developer Portal')
-          ")
-
-          CERT_ID=$(app-store-connect certificates list --type IOS_DISTRIBUTION --json | python3 -c "
-          import json, sys
-          certs = json.load(sys.stdin)
-          if not certs:
-              sys.exit('No IOS_DISTRIBUTION certificate found on Apple Developer Portal')
-          print(certs[0]['id'])
-          ")
-
-          app-store-connect profiles create "$BUNDLE_ID_RES" \
-            --certificate-ids "$CERT_ID" \
-            --type IOS_APP_STORE \
-            --name "TheMuslimMan App Store" \
-            --profiles-dir "$PROFILE_DIR" \
-            --save
-
-          echo "Provisioning profile created and saved."
-
-      - name: Add distribution certificate to keychain
-        script: keychain add-certificates
 
       - name: Set up code signing on Xcode project
         script: |
