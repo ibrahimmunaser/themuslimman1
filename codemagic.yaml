@@ -74,6 +74,9 @@ workflows:
       cocoapods: default
       vars:
         BUNDLE_ID: com.themuslimman.seerah
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.themuslimman.seerah
 
     triggering:
       events:
@@ -94,19 +97,29 @@ workflows:
       - name: Set up keychain
         script: keychain initialize
 
-      - name: Create App Store provisioning profile if missing
+      - name: Ensure App Store provisioning profile
         script: |
           set -e
+          PROFILE_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
+          mkdir -p "$PROFILE_DIR"
 
-          # Download existing profile from Apple (does not create a new certificate)
-          if app-store-connect fetch-signing-files "$BUNDLE_ID" \
-              --type IOS_APP_STORE \
-              --strict-match-identifier; then
-            echo "Provisioning profile downloaded from Apple"
+          # Skip if a profile is already on disk from a previous build
+          if compgen -G "$PROFILE_DIR"/*.mobileprovision > /dev/null; then
+            echo "Provisioning profile already on disk"
             exit 0
           fi
 
-          echo "No profile found — creating one on Apple Developer Portal..."
+          # Try downloading an existing profile from Apple (no certificate private key needed)
+          if app-store-connect profiles list \
+              --type IOS_APP_STORE \
+              --name "TheMuslimMan App Store" \
+              --profiles-dir "$PROFILE_DIR" \
+              --save && compgen -G "$PROFILE_DIR"/*.mobileprovision > /dev/null; then
+            echo "Downloaded existing provisioning profile from Apple"
+            exit 0
+          fi
+
+          echo "Creating App Store provisioning profile on Apple Developer Portal..."
           BUNDLE_ID_RES=$(app-store-connect bundle-ids list --json | python3 -c "
           import json, sys, os
           bid = os.environ['BUNDLE_ID']
@@ -119,7 +132,7 @@ workflows:
               sys.exit('Bundle ID not found on Apple Developer Portal')
           ")
 
-          CERT_ID=$(app-store-connect certificates list --certificate-type IOS_DISTRIBUTION --json | python3 -c "
+          CERT_ID=$(app-store-connect certificates list --type IOS_DISTRIBUTION --json | python3 -c "
           import json, sys
           certs = json.load(sys.stdin)
           if not certs:
@@ -131,6 +144,7 @@ workflows:
             --certificate-ids "$CERT_ID" \
             --type IOS_APP_STORE \
             --name "TheMuslimMan App Store" \
+            --profiles-dir "$PROFILE_DIR" \
             --save
 
           echo "Provisioning profile created and saved."
