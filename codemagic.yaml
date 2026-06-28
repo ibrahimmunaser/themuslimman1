@@ -57,8 +57,9 @@ workflows:
   # Prerequisites in Codemagic Team Settings (one-time):
   #   1. Integrations → Apple Developer Portal → API key named "Codemagic"
   #   2. Code signing → iOS certificates → "themuslimman certificate" (production)
-  #
-  # Provisioning profile is created on Apple during the build (no manual upload).
+  #   3. Code signing → iOS provisioning profiles → Fetch profiles
+  #      → App Store profile for com.themuslimman.seerah
+  #      → reference name: themuslimman_appstore
   # ────────────────────────────────────────────────────────────────────────────
   ios-release:
     name: iOS Release
@@ -75,8 +76,11 @@ workflows:
       vars:
         BUNDLE_ID: com.themuslimman.seerah
       ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.themuslimman.seerah
+        provisioning_profiles:
+          - profile: themuslimman_appstore
+            bundle_id: com.themuslimman.seerah
+        certificates:
+          - certificate: themuslimman certificate
 
     triggering:
       events:
@@ -94,66 +98,11 @@ workflows:
         script: find . -name "Podfile" -execdir pod install \;
         working_directory: seerah-mobile/seerah_app
 
-      - name: Set up keychain
-        script: keychain initialize
-
-      - name: Ensure App Store provisioning profile
-        script: |
-          set -e
-          PROFILE_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
-          mkdir -p "$PROFILE_DIR"
-
-          # Skip if a profile is already on disk from a previous build
-          if compgen -G "$PROFILE_DIR"/*.mobileprovision > /dev/null; then
-            echo "Provisioning profile already on disk"
-            exit 0
-          fi
-
-          # Try downloading an existing profile from Apple (no certificate private key needed)
-          if app-store-connect profiles list \
-              --type IOS_APP_STORE \
-              --name "TheMuslimMan App Store" \
-              --profiles-dir "$PROFILE_DIR" \
-              --save && compgen -G "$PROFILE_DIR"/*.mobileprovision > /dev/null; then
-            echo "Downloaded existing provisioning profile from Apple"
-            exit 0
-          fi
-
-          echo "Creating App Store provisioning profile on Apple Developer Portal..."
-          BUNDLE_ID_RES=$(app-store-connect bundle-ids list --json | python3 -c "
-          import json, sys, os
-          bid = os.environ['BUNDLE_ID']
-          for item in json.load(sys.stdin):
-              attrs = item.get('attributes') or {}
-              if attrs.get('identifier') == bid:
-                  print(item['id'])
-                  break
-          else:
-              sys.exit('Bundle ID not found on Apple Developer Portal')
-          ")
-
-          CERT_ID=$(app-store-connect certificates list --type IOS_DISTRIBUTION --json | python3 -c "
-          import json, sys
-          certs = json.load(sys.stdin)
-          if not certs:
-              sys.exit('No IOS_DISTRIBUTION certificate found on Apple Developer Portal')
-          print(certs[0]['id'])
-          ")
-
-          app-store-connect profiles create "$BUNDLE_ID_RES" \
-            --certificate-ids "$CERT_ID" \
-            --type IOS_APP_STORE \
-            --name "TheMuslimMan App Store" \
-            --profiles-dir "$PROFILE_DIR" \
-            --save
-
-          echo "Provisioning profile created and saved."
-
-      - name: Add distribution certificate to keychain
-        script: keychain add-certificates
-
       - name: Set up code signing on Xcode project
-        script: xcode-project use-profiles --project ios/Runner.xcodeproj
+        script: |
+          xcode-project use-profiles \
+            --project ios/Runner.xcodeproj \
+            --code-signing-setup-verbose-logging
         working_directory: seerah-mobile/seerah_app
 
       - name: Create export options plist
