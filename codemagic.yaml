@@ -21,7 +21,11 @@ workflows:
 
     triggering:
       events:
+        - push
         - tag
+      branch_patterns:
+        - pattern: main
+          include: true
       tag_patterns:
         - pattern: 'android-v*'
           include: true
@@ -35,8 +39,13 @@ workflows:
         script: flutter build appbundle --release
         working_directory: seerah-mobile/seerah_app
 
+      - name: Build release APK (for direct phone install)
+        script: flutter build apk --release --split-per-abi
+        working_directory: seerah-mobile/seerah_app
+
     artifacts:
       - seerah-mobile/seerah_app/build/app/outputs/bundle/release/app-release.aab
+      - seerah-mobile/seerah_app/build/app/outputs/flutter-apk/*-release.apk
 
     publishing:
       email:
@@ -165,10 +174,16 @@ workflows:
 
     triggering:
       events:
+        - push
         - tag
+      branch_patterns:
+        - pattern: main
+          include: true
       tag_patterns:
         - pattern: 'v*'
           include: true
+        - pattern: 'android-v*'
+          include: false
 
     scripts:
       - name: Get Flutter packages
