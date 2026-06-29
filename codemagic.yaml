@@ -15,9 +15,11 @@ workflows:
       # → Android keystores, then put the reference name below.
       android_signing:
         - themuslimman_keystore
-      # Uncomment when Google Play JSON key is set up in Codemagic:
-      # groups:
-      #   - google_play   # GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS
+      groups:
+        - google_play   # GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS (secret JSON key)
+      vars:
+        PACKAGE_NAME: com.themuslimman.seerah
+        GOOGLE_PLAY_TRACK: internal
 
     triggering:
       events:
@@ -54,11 +56,12 @@ workflows:
         notify:
           success: true
           failure: true
-      # Uncomment after adding GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS in Codemagic:
-      # google_play:
-      #   credentials: $GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS
-      #   track: internal
-      #   submit_as_draft: true
+      google_play:
+        credentials: $GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS
+        track: internal
+        # App is in Draft — upload as draft release on Internal Testing track
+        submit_as_draft: true
+        changes_not_sent_for_review: true
 
   # ────────────────────────────────────────────────────────────────────────────
   # iOS — one-time: create App Store provisioning profile on Apple
