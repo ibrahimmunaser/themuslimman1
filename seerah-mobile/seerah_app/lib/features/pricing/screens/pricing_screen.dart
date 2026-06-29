@@ -114,8 +114,21 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
     ref.read(iapProvider);
   }
 
-  String _price(IAPState iap, _Plan plan) =>
-      iap.productFor(plan.iapId)?.price ?? plan.fallbackPrice;
+  String _price(IAPState iap, _Plan plan) {
+    final raw = iap.productFor(plan.iapId)?.price ?? plan.fallbackPrice;
+    return _cleanPrice(raw);
+  }
+
+  /// Converts "$48.99" → "$49" and "$98.99" → "$99" for large lifetime prices.
+  /// Leaves monthly prices like "$4.99" and "$9.99" unchanged.
+  static String _cleanPrice(String price) {
+    final m = RegExp(r'^(\D*)(\d+)\.99$').firstMatch(price);
+    if (m != null) {
+      final dollars = int.parse(m.group(2)!);
+      if (dollars >= 10) return '${m.group(1)}${dollars + 1}';
+    }
+    return price;
+  }
 
   Future<void> _buyPlan(IAPState iap, _Plan plan) async {
     if (iap.status == IAPStatus.purchasing ||
