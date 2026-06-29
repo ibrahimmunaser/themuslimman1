@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/network/cookie_helper.dart' as cookies;
 import '../../../core/providers/auth_provider.dart';
+import '../../../core/providers/profiles_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/ui_kit.dart';
 
@@ -15,6 +17,8 @@ class ProfileScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final auth = ref.watch(authProvider);
     final user = auth.user;
+    final profilesState = ref.watch(profilesProvider).valueOrNull;
+    final activeProfile = profilesState?.activeProfile;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Profile')),
@@ -31,6 +35,29 @@ class ProfileScreen extends ConsumerWidget {
                 .slideY(begin: -0.08, end: 0),
 
             const SizedBox(height: 36),
+
+            // ── Learner profiles ───────────────────────────────────────────
+            const _GroupLabel('Learner Profile'),
+            _SettingsGroup(items: [
+              _SettingsDatum(
+                icon: Icons.person_outline_rounded,
+                label: activeProfile?.displayName ?? 'My Profile',
+                subtitle: activeProfile != null && (profilesState?.hasMultipleProfiles ?? false)
+                    ? 'Tap to switch learner'
+                    : null,
+                color: const Color(0xFF9A7AB8),
+                onTap: () => context.push('/profiles'),
+              ),
+              if (profilesState != null && (profilesState.canAddMore || profilesState.hasMultipleProfiles))
+                _SettingsDatum(
+                  icon: Icons.group_outlined,
+                  label: 'Manage Profiles',
+                  color: AppColors.gold,
+                  onTap: () => context.push('/profiles'),
+                ),
+            ]).animate(delay: 40.ms).fadeIn(duration: 350.ms),
+
+            const SizedBox(height: 20),
 
             // ── Account ────────────────────────────────────────────────────
             const _GroupLabel('Account'),
@@ -318,11 +345,13 @@ class _GroupLabel extends StatelessWidget {
 class _SettingsDatum {
   final IconData icon;
   final String label;
+  final String? subtitle;
   final Color color;
   final VoidCallback onTap;
   const _SettingsDatum({
     required this.icon,
     required this.label,
+    this.subtitle,
     required this.color,
     required this.onTap,
   });
@@ -364,12 +393,21 @@ class _SettingsGroup extends StatelessWidget {
                         ),
                         const SizedBox(width: 14),
                         Expanded(
-                          child: Text(item.label,
-                              style: const TextStyle(
-                                color: AppColors.textPrimary,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w500,
-                              )),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(item.label,
+                                  style: const TextStyle(
+                                    color: AppColors.textPrimary,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w500,
+                                  )),
+                              if (item.subtitle != null)
+                                Text(item.subtitle!,
+                                  style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                            ],
+                          ),
                         ),
                         const Icon(Icons.chevron_right_rounded,
                             color: AppColors.textMuted, size: 18),

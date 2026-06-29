@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/data/parts_data.dart';
 import '../../../core/models/part_model.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../core/providers/profiles_provider.dart';
 import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_logo.dart';
@@ -20,6 +21,8 @@ class DashboardScreen extends ConsumerWidget {
     final hasAccess = auth.hasAccess;
     final firstName = _firstName(user?.name);
     final progressAsync = ref.watch(progressProvider);
+    final profilesState = ref.watch(profilesProvider).valueOrNull;
+    final activeProfile = profilesState?.activeProfile;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -36,8 +39,15 @@ class DashboardScreen extends ConsumerWidget {
           ],
         ),
         actions: [
+          // Profile switcher — taps go directly to profile picker if multi-profile
           GestureDetector(
-            onTap: () => context.push('/profile'),
+            onTap: () {
+              if (profilesState != null && profilesState.hasMultipleProfiles) {
+                context.push('/profiles');
+              } else {
+                context.push('/profile');
+              }
+            },
             child: Container(
               margin: const EdgeInsets.only(right: 16),
               padding: const EdgeInsets.all(6),
@@ -46,7 +56,11 @@ class DashboardScreen extends ConsumerWidget {
                 shape: BoxShape.circle,
                 border: Border.all(color: AppColors.border),
               ),
-              child: const Icon(Icons.person_outline_rounded, size: 20, color: AppColors.textPrimary),
+              child: activeProfile?.avatar != null && activeProfile!.avatar!.isNotEmpty
+                  ? Text(activeProfile.avatar!,
+                      style: const TextStyle(fontSize: 16),
+                      textAlign: TextAlign.center)
+                  : const Icon(Icons.person_outline_rounded, size: 20, color: AppColors.textPrimary),
             ),
           ),
         ],
