@@ -11,6 +11,10 @@ class PartCard extends StatelessWidget {
   final bool grouped;
   final bool isFirst;
   final bool isLast;
+  /// Whether the user has opened this part at least once.
+  final bool isViewed;
+  /// Whether the user has passed the quiz for this part.
+  final bool isCompleted;
 
   const PartCard({
     super.key,
@@ -20,6 +24,8 @@ class PartCard extends StatelessWidget {
     this.grouped = false,
     this.isFirst = false,
     this.isLast = false,
+    this.isViewed = false,
+    this.isCompleted = false,
   });
 
   @override
@@ -94,13 +100,21 @@ class PartCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Icon(
-                  isLocked
-                      ? Icons.lock_outline_rounded
-                      : Icons.chevron_right_rounded,
-                  color: AppColors.textMuted,
-                  size: 18,
-                ),
+                if (isCompleted)
+                  const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 18)
+                else if (isViewed && !isLocked)
+                  Container(
+                    width: 8, height: 8,
+                    decoration: const BoxDecoration(
+                      color: AppColors.gold, shape: BoxShape.circle,
+                    ),
+                  )
+                else
+                  Icon(
+                    isLocked ? Icons.lock_outline_rounded : Icons.chevron_right_rounded,
+                    color: AppColors.textMuted,
+                    size: 18,
+                  ),
               ],
             ),
           ),

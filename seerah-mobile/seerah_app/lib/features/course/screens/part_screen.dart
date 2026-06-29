@@ -51,7 +51,7 @@ class _PartScreenState extends ConsumerState<PartScreen> {
       case 'briefing':
         _open(context, title: 'Briefing — Part $partNumber', child: ReadTab(partNumber: partNumber, initialSection: 0));
       case 'facts':
-        _open(context, title: 'Key Facts — Part $partNumber', child: ReadTab(partNumber: partNumber, initialSection: 1));
+        _open(context, title: 'Key Facts — Part $partNumber', child: ReadTab(partNumber: partNumber, initialSection: 2));
       case 'read':
         _open(context, title: 'Read — Part $partNumber', child: ReadTab(partNumber: partNumber));
       case 'flashcards':
@@ -388,6 +388,12 @@ class _PartScreenState extends ConsumerState<PartScreen> {
                 if (isFreePart && !hasAccess) ...[
                   const SizedBox(height: 28),
                   _ContinueCTA(isLoggedIn: authState.isLoggedIn),
+                ],
+
+                // ── Up Next card ─────────────────────────────────────────
+                if (partNumber < 100 && hasAccess) ...[
+                  const SizedBox(height: 24),
+                  _UpNextCard(partNumber: partNumber),
                 ],
               ]),
             ),
@@ -868,6 +874,73 @@ class _ContinueCTA extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Up Next card ──────────────────────────────────────────────────────────────
+
+class _UpNextCard extends StatelessWidget {
+  final int partNumber;
+  const _UpNextCard({required this.partNumber});
+
+  @override
+  Widget build(BuildContext context) {
+    final next = PARTS.firstWhere(
+      (p) => p.partNumber == partNumber + 1,
+      orElse: () => PARTS.last,
+    );
+    final color = AppColors.forEra(next.era);
+
+    return GestureDetector(
+      onTap: () => context.pushReplacement('/part/${next.partNumber}'),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.card,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44, height: 44,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: color.withValues(alpha: 0.3)),
+              ),
+              child: Center(
+                child: Text(
+                  '${next.partNumber}',
+                  style: TextStyle(color: color, fontSize: 15, fontWeight: FontWeight.w800),
+                ),
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Up Next', style: TextStyle(color: AppColors.textMuted, fontSize: 11, letterSpacing: 0.5)),
+                  const SizedBox(height: 2),
+                  Text(next.title,
+                    style: const TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w600),
+                    maxLines: 1, overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(next.subtitle,
+                    style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                    maxLines: 1, overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(Icons.arrow_forward_ios_rounded, color: AppColors.gold, size: 16),
+          ],
+        ),
       ),
     );
   }

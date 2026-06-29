@@ -44,28 +44,52 @@ final partContentProvider = FutureProvider.family<PartContent, int>((ref, partNu
   return PartContent.fromJson(response.data as Map<String, dynamic>);
 });
 
-// Fetches flashcard deck for a part.
-// Server returns a FlashcardSet: { easy: [...], medium: [...], full: [...] }
-// where each card has { side1, side2, id, card_number, tags }.
-// We prefer "medium" level; fall back to easy, then full.
-final flashcardsProvider = FutureProvider.family<List<FlashcardModel>, int>((ref, partNumber) async {
+// All three flashcard decks for a part.
+class FlashcardSet {
+  final List<FlashcardModel> easy;
+  final List<FlashcardModel> medium;
+  final List<FlashcardModel> full;
+  const FlashcardSet({required this.easy, required this.medium, required this.full});
+
+  List<FlashcardModel> forLevel(FlashcardLevel level) {
+    switch (level) {
+      case FlashcardLevel.easy:   return easy.isNotEmpty   ? easy   : medium.isNotEmpty ? medium : full;
+      case FlashcardLevel.medium: return medium.isNotEmpty ? medium : easy.isNotEmpty   ? easy   : full;
+      case FlashcardLevel.hard:   return full.isNotEmpty   ? full   : medium.isNotEmpty ? medium : easy;
+    }
+  }
+}
+
+enum FlashcardLevel { easy, medium, hard }
+
+final flashcardSetProvider = FutureProvider.family<FlashcardSet, int>((ref, partNumber) async {
   final partId = 'part-$partNumber';
   final response = await ApiClient.instance.dio.get('/api/flashcards/$partId');
   final data = response.data;
 
-  List<dynamic> cards = [];
-  if (data is List) {
-    cards = data;
-  } else if (data is Map) {
-    // Prefer medium deck; fall back to easy, then full
-    final medium = data['medium'] as List?;
-    final easy   = data['easy']   as List?;
-    final full   = data['full']   as List?;
-    cards = (medium?.isNotEmpty == true ? medium
-           : easy?.isNotEmpty   == true ? easy
-           : full) ?? [];
+  List<FlashcardModel> parseList(dynamic raw) {
+    if (raw is! List) return [];
+    return raw.map((c) => FlashcardModel.fromJson(c as Map<String, dynamic>)).toList();
   }
-  return cards.map((c) => FlashcardModel.fromJson(c as Map<String, dynamic>)).toList();
+
+  if (data is List) {
+    final cards = parseList(data);
+    return FlashcardSet(easy: cards, medium: cards, full: cards);
+  }
+  if (data is Map) {
+    return FlashcardSet(
+      easy:   parseList(data['easy']),
+      medium: parseList(data['medium']),
+      full:   parseList(data['full']),
+    );
+  }
+  return const FlashcardSet(easy: [], medium: [], full: []);
+});
+
+// Legacy single-deck provider kept for backward compat.
+final flashcardsProvider = FutureProvider.family<List<FlashcardModel>, int>((ref, partNumber) async {
+  final set = await ref.watch(flashcardSetProvider(partNumber).future);
+  return set.forLevel(FlashcardLevel.medium);
 });
 
 // Fetches quiz questions for a part

@@ -16,8 +16,8 @@ class ReadTab extends ConsumerStatefulWidget {
 }
 
 class _ReadTabState extends ConsumerState<ReadTab> {
-  late int _activeSection = widget.initialSection.clamp(0, 1);
-  final List<String> _sections = ['Briefing', 'Key Facts'];
+  late int _activeSection = widget.initialSection.clamp(0, 2);
+  final List<String> _sections = ['Briefing', 'Study Guide', 'Key Facts'];
 
   @override
   Widget build(BuildContext context) {
@@ -72,14 +72,16 @@ class _ReadTabState extends ConsumerState<ReadTab> {
             data: (content) {
               final text = _activeSection == 0
                   ? content.briefingText
-                  : content.statementOfFactsText;
+                  : _activeSection == 1
+                      ? content.studyGuideText
+                      : content.statementOfFactsText;
 
               if (text == null || text.isEmpty) {
                 return _EmptySection(section: _sections[_activeSection]);
               }
 
               // Key Facts: plain newline-separated sentences → individual fact cards
-              if (_activeSection == 1) {
+              if (_activeSection == 2) {
                 return _KeyFactsList(text: text);
               }
 

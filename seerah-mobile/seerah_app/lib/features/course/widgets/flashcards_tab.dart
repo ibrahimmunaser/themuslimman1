@@ -17,6 +17,7 @@ class FlashcardsTab extends ConsumerStatefulWidget {
 class _FlashcardsTabState extends ConsumerState<FlashcardsTab> {
   int _currentIndex = 0;
   bool _showingAnswer = false;
+  FlashcardLevel _level = FlashcardLevel.medium;
 
   void _flip() => setState(() => _showingAnswer = !_showingAnswer);
 
@@ -34,9 +35,14 @@ class _FlashcardsTabState extends ConsumerState<FlashcardsTab> {
 
   void _reset() => setState(() { _currentIndex = 0; _showingAnswer = false; });
 
+  void _setLevel(FlashcardLevel level) {
+    setState(() { _level = level; _currentIndex = 0; _showingAnswer = false; });
+  }
+
   @override
   Widget build(BuildContext context) {
-    final cardsAsync = ref.watch(flashcardsProvider(widget.partNumber));
+    final setAsync = ref.watch(flashcardSetProvider(widget.partNumber));
+    final cardsAsync = setAsync.whenData((s) => s.forLevel(_level));
 
     return cardsAsync.when(
       loading: () => _LoadingCards(),
@@ -49,7 +55,7 @@ class _FlashcardsTabState extends ConsumerState<FlashcardsTab> {
             const Text('Flashcards unavailable', style: TextStyle(color: AppColors.textSecondary)),
             const SizedBox(height: 16),
             OutlinedButton(
-              onPressed: () => ref.invalidate(flashcardsProvider(widget.partNumber)),
+              onPressed: () => ref.invalidate(flashcardSetProvider(widget.partNumber)),
               child: const Text('Retry'),
             ),
           ],
@@ -73,6 +79,54 @@ class _FlashcardsTabState extends ConsumerState<FlashcardsTab> {
 
         return Column(
           children: [
+            // Difficulty selector
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              decoration: const BoxDecoration(
+                border: Border(bottom: BorderSide(color: AppColors.border)),
+              ),
+              child: Row(
+                children: [
+                  const Text('Level:', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                  const SizedBox(width: 10),
+                  ...[
+                    (FlashcardLevel.easy, 'Easy'),
+                    (FlashcardLevel.medium, 'Medium'),
+                    (FlashcardLevel.hard, 'Hard'),
+                  ].map((pair) {
+                    final selected = _level == pair.$1;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 6, bottom: 10),
+                      child: GestureDetector(
+                        onTap: () => _setLevel(pair.$1),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: selected ? AppColors.gold : AppColors.card,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: selected ? AppColors.gold : AppColors.border),
+                          ),
+                          child: Text(
+                            pair.$2,
+                            style: TextStyle(
+                              color: selected ? Colors.black : AppColors.textSecondary,
+                              fontSize: 12,
+                              fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                  const Spacer(),
+                  setAsync.whenOrNull(data: (s) {
+                    final count = s.forLevel(_level).length;
+                    return Text('$count cards', style: const TextStyle(color: AppColors.textMuted, fontSize: 11));
+                  }) ?? const SizedBox.shrink(),
+                ],
+              ),
+            ),
+
             // Progress bar
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),

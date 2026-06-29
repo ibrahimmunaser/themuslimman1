@@ -17,6 +17,8 @@ import '../../features/reference/screens/reference_detail_screen.dart';
 import '../../features/progress/screens/progress_screen.dart';
 import '../../features/pricing/screens/pricing_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
+import '../../features/quiz/screens/quiz_history_screen.dart';
+import '../../features/certificate/screens/certificate_screen.dart';
 
 /// Listens to auth state changes and notifies GoRouter to re-evaluate redirects.
 class _RouterNotifier extends ChangeNotifier {
@@ -131,6 +133,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/profile',
         builder: (ctx, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: '/quiz-history',
+        builder: (ctx, state) => const QuizHistoryScreen(),
+      ),
+      GoRoute(
+        path: '/certificate',
+        builder: (ctx, state) => const CertificateScreen(),
       ),
       GoRoute(
         path: '/part/:partNumber',

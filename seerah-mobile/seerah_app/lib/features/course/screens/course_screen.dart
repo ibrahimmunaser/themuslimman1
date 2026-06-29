@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/data/parts_data.dart';
 import '../../../core/models/part_model.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/ui_kit.dart';
 import '../widgets/part_card.dart';
@@ -28,8 +29,8 @@ class _CourseScreenState extends ConsumerState<CourseScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Bug 5: read access so we can lock paid parts in the list
     final hasAccess = ref.watch(authProvider).hasAccess;
+    final progress = ref.watch(progressProvider).valueOrNull;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -53,13 +54,15 @@ class _CourseScreenState extends ConsumerState<CourseScreen> {
       ),
       body: AppGradientBackground(
         child: SafeArea(
-          child: _search.isNotEmpty ? _buildSearchResults(hasAccess) : _buildEraList(hasAccess),
+          child: _search.isNotEmpty
+              ? _buildSearchResults(hasAccess, progress)
+              : _buildEraList(hasAccess, progress),
         ),
       ),
     );
   }
 
-  Widget _buildEraList(bool hasAccess) {
+  Widget _buildEraList(bool hasAccess, ProgressState? progress) {
     final groups = getEraGroups();
     return ListView.builder(
       padding: const EdgeInsets.only(bottom: 24),
@@ -68,7 +71,7 @@ class _CourseScreenState extends ConsumerState<CourseScreen> {
         final group = groups[i];
         final era = group['era'] as EraModel;
         final parts = group['parts'] as List<PartModel>;
-        return _EraSection(era: era, parts: parts, hasAccess: hasAccess)
+        return _EraSection(era: era, parts: parts, hasAccess: hasAccess, progress: progress)
             .animate(delay: (i * 50).ms)
             .fadeIn(duration: 400.ms)
             .slideY(begin: 0.05, end: 0);
@@ -76,7 +79,7 @@ class _CourseScreenState extends ConsumerState<CourseScreen> {
     );
   }
 
-  Widget _buildSearchResults(bool hasAccess) {
+  Widget _buildSearchResults(bool hasAccess, ProgressState? progress) {
     final results = PARTS.where((p) =>
       p.title.toLowerCase().contains(_search) ||
       p.subtitle.toLowerCase().contains(_search) ||
@@ -106,6 +109,8 @@ class _CourseScreenState extends ConsumerState<CourseScreen> {
             grouped: true,
             isFirst: i == 0,
             isLast: i == results.length - 1,
+            isViewed: progress?.viewedParts.contains(p.partNumber) ?? false,
+            isCompleted: progress?.completedParts.contains(p.partNumber) ?? false,
             onTap: () => context.push('/part/${p.partNumber}'),
           ),
         );
@@ -118,7 +123,8 @@ class _EraSection extends StatefulWidget {
   final EraModel era;
   final List<PartModel> parts;
   final bool hasAccess;
-  const _EraSection({required this.era, required this.parts, required this.hasAccess});
+  final ProgressState? progress;
+  const _EraSection({required this.era, required this.parts, required this.hasAccess, this.progress});
 
   @override
   State<_EraSection> createState() => _EraSectionState();
@@ -197,6 +203,8 @@ class _EraSectionState extends State<_EraSection> {
                   grouped: true,
                   isFirst: i == 0,
                   isLast: i == widget.parts.length - 1,
+                  isViewed: widget.progress?.viewedParts.contains(p.partNumber) ?? false,
+                  isCompleted: widget.progress?.completedParts.contains(p.partNumber) ?? false,
                   onTap: () => context.push('/part/${p.partNumber}'),
                 );
               }).toList(),

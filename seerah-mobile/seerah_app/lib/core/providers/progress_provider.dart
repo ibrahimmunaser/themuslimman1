@@ -1,24 +1,23 @@
+import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../network/api_client.dart';
 
 // ─── Keys ────────────────────────────────────────────────────────────────────
 
-const _kViewedKey      = 'seerah:viewed_parts';    // JSON list of ints
-const _kCompletedKey   = 'seerah:completed_parts'; // JSON list of ints
-const _kLastPartKey    = 'seerah:last_part';        // int
-const _kQuizScoresKey  = 'seerah:quiz_scores';      // JSON map {partNum: score}
+const _kViewedKey      = 'seerah:viewed_parts';
+const _kCompletedKey   = 'seerah:completed_parts';
+const _kLastPartKey    = 'seerah:last_part';
+const _kQuizScoresKey  = 'seerah:quiz_scores';
 
 // ─── State ────────────────────────────────────────────────────────────────────
 
 class ProgressState {
-  /// Parts the user has opened at least once.
   final Set<int> viewedParts;
-  /// Parts where the user passed the quiz (≥ 80 %).
   final Set<int> completedParts;
-  /// Last part the user navigated to (used for "continue learning").
   final int? lastPartNumber;
-  /// Best quiz score per part (0–100).
   final Map<int, int> quizScores;
 
   const ProgressState({
@@ -44,19 +43,15 @@ class ProgressState {
   int get totalViewed    => viewedParts.length;
   int get totalCompleted => completedParts.length;
 
-  /// Fraction of parts viewed out of the given total (0.0–1.0).
   double viewedFraction(int total) =>
       total == 0 ? 0.0 : (viewedParts.length / total).clamp(0.0, 1.0);
 
-  /// Fraction of parts completed out of the given total (0.0–1.0).
   double completedFraction(int total) =>
       total == 0 ? 0.0 : (completedParts.length / total).clamp(0.0, 1.0);
 
-  /// Viewed parts that belong to a specific era (list of part numbers).
   int viewedInEra(List<int> eraParts) =>
       eraParts.where((p) => viewedParts.contains(p)).length;
 
-  /// Completed parts in a specific era.
   int completedInEra(List<int> eraParts) =>
       eraParts.where((p) => completedParts.contains(p)).length;
 }
@@ -65,17 +60,24 @@ class ProgressState {
 
 class ProgressNotifier extends AsyncNotifier<ProgressState> {
   @override
-  Future<ProgressState> build() => _load();
+  Future<ProgressState> build() async {
+    // Start with local cache for instant UI, then try server sync.
+    final local = await _loadLocal();
+    // Fire-and-forget server sync — don't block the UI.
+    _syncFromServer(local);
+    return local;
+  }
 
-  Future<ProgressState> _load() async {
+  // ── Local persistence ──────────────────────────────────────────────────────
+
+  Future<ProgressState> _loadLocal() async {
     final prefs = await SharedPreferences.getInstance();
 
     Set<int> parseSet(String key) {
       final raw = prefs.getString(key);
       if (raw == null) return {};
       try {
-        final list = (jsonDecode(raw) as List).cast<int>();
-        return list.toSet();
+        return (jsonDecode(raw) as List).cast<int>().toSet();
       } catch (_) {
         return {};
       }
@@ -85,8 +87,8 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
       final raw = prefs.getString(_kQuizScoresKey);
       if (raw == null) return {};
       try {
-        final map = (jsonDecode(raw) as Map<String, dynamic>);
-        return map.map((k, v) => MapEntry(int.parse(k), (v as num).toInt()));
+        return (jsonDecode(raw) as Map<String, dynamic>)
+            .map((k, v) => MapEntry(int.parse(k), (v as num).toInt()));
       } catch (_) {
         return {};
       }
@@ -100,55 +102,91 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
     );
   }
 
-  /// Record that the user opened a part.
+  Future<void> _saveLocal(ProgressState s) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kViewedKey, jsonEncode(s.viewedParts.toList()));
+    await prefs.setString(_kCompletedKey, jsonEncode(s.completedParts.toList()));
+    if (s.lastPartNumber != null) await prefs.setInt(_kLastPartKey, s.lastPartNumber!);
+    await prefs.setString(_kQuizScoresKey,
+        jsonEncode(s.quizScores.map((k, v) => MapEntry(k.toString(), v))));
+  }
+
+  // ── Server sync ────────────────────────────────────────────────────────────
+
+  Future<void> _syncFromServer(ProgressState local) async {
+    try {
+      final response = await ApiClient.instance.dio.get('/api/mobile-progress/get');
+      final data = response.data as Map<String, dynamic>;
+
+      final serverViewed = (data['viewedParts'] as List?)?.cast<int>().toSet() ?? <int>{};
+      final serverCompleted = (data['completedParts'] as List?)?.cast<int>().toSet() ?? <int>{};
+      final serverScoresRaw = (data['quizScores'] as Map<String, dynamic>?) ?? {};
+      final serverScores = serverScoresRaw.map((k, v) => MapEntry(int.parse(k), (v as num).toInt()));
+      final serverLastPart = data['lastPartNumber'] as int?;
+
+      // Merge: take the union of local + server (never lose local-only data).
+      final merged = ProgressState(
+        viewedParts: {...local.viewedParts, ...serverViewed},
+        completedParts: {...local.completedParts, ...serverCompleted},
+        lastPartNumber: serverLastPart ?? local.lastPartNumber,
+        quizScores: {...local.quizScores, ...serverScores},
+      );
+
+      state = AsyncData(merged);
+      await _saveLocal(merged);
+    } catch (e) {
+      // Server sync failed — keep using local data silently.
+      debugPrint('[Progress] server sync failed: $e');
+    }
+  }
+
+  Future<void> _trackServer(Map<String, dynamic> body) async {
+    try {
+      await ApiClient.instance.dio.post('/api/mobile-progress/track', data: body);
+    } catch (e) {
+      debugPrint('[Progress] track event failed: $e');
+    }
+  }
+
+  // ── Public actions ─────────────────────────────────────────────────────────
+
   Future<void> markPartViewed(int partNumber) async {
     final current = state.valueOrNull ?? const ProgressState();
     if (current.viewedParts.contains(partNumber) &&
-        current.lastPartNumber == partNumber) {
-      return; // nothing changed
-    }
+        current.lastPartNumber == partNumber) return;
 
     final updated = current.copyWith(
       viewedParts: {...current.viewedParts, partNumber},
       lastPartNumber: partNumber,
     );
     state = AsyncData(updated);
-
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-        _kViewedKey, jsonEncode(updated.viewedParts.toList()));
-    await prefs.setInt(_kLastPartKey, partNumber);
+    await _saveLocal(updated);
+    _trackServer({'type': 'part_opened', 'partNumber': partNumber});
   }
 
-  /// Record a quiz score. Marks part as completed if score ≥ 80.
+  Future<void> trackAssetOpened(int partNumber, String assetId) async {
+    _trackServer({'type': 'asset_opened', 'partNumber': partNumber, 'assetId': assetId});
+  }
+
+  Future<void> trackVideoProgress(int partNumber, int watchPercent) async {
+    _trackServer({'type': 'video_progress', 'partNumber': partNumber, 'watchPercent': watchPercent});
+  }
+
   Future<void> recordQuizScore(int partNumber, int score) async {
     final current = state.valueOrNull ?? const ProgressState();
-
     final prevBest = current.quizScores[partNumber] ?? 0;
     final newBest = score > prevBest ? score : prevBest;
     final newScores = Map<int, int>.from(current.quizScores)..[partNumber] = newBest;
-
     final newCompleted = score >= 80
         ? {...current.completedParts, partNumber}
         : current.completedParts;
 
-    final updated = current.copyWith(
-      quizScores: newScores,
-      completedParts: newCompleted,
-    );
+    final updated = current.copyWith(quizScores: newScores, completedParts: newCompleted);
     state = AsyncData(updated);
-
-    final prefs = await SharedPreferences.getInstance();
-    final scoresJson = jsonEncode(
-        newScores.map((k, v) => MapEntry(k.toString(), v)));
-    await prefs.setString(_kQuizScoresKey, scoresJson);
-    if (score >= 80) {
-      await prefs.setString(
-          _kCompletedKey, jsonEncode(newCompleted.toList()));
-    }
+    await _saveLocal(updated);
+    _trackServer({'type': 'quiz_completed', 'partNumber': partNumber, 'score': score});
   }
 
-  /// Clear all progress (e.g. on sign-out).
   Future<void> clearAll() async {
     state = const AsyncData(ProgressState());
     final prefs = await SharedPreferences.getInstance();
@@ -160,5 +198,4 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
 }
 
 final progressProvider =
-    AsyncNotifierProvider<ProgressNotifier, ProgressState>(
-        ProgressNotifier.new);
+    AsyncNotifierProvider<ProgressNotifier, ProgressState>(ProgressNotifier.new);

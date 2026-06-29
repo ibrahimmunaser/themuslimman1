@@ -53,6 +53,12 @@ class ProgressScreen extends ConsumerWidget {
             const SizedBox(height: 12),
           ],
 
+          const SectionHeader(title: 'Quick Links'),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _QuickLinks().animate(delay: 200.ms).fadeIn(duration: 400.ms),
+          ),
+
           const SectionHeader(title: 'Learning Tips'),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -410,6 +416,82 @@ class _UpgradeCta extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Quick Links ───────────────────────────────────────────────────────────────
+
+class _QuickLinks extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        _QuickLinkCard(
+          icon: Icons.quiz_rounded,
+          label: 'Quiz History',
+          subtitle: 'See all scores',
+          onTap: () => context.push('/quiz-history'),
+        ),
+        const SizedBox(width: 10),
+        _QuickLinkCard(
+          icon: Icons.workspace_premium_rounded,
+          label: 'Certificate',
+          subtitle: 'View requirements',
+          onTap: () => context.push('/certificate'),
+        ),
+      ],
+    );
+  }
+}
+
+class _QuickLinkCard extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _QuickLinkCard({
+    required this.icon,
+    required this.label,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: AppColors.card,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 38, height: 38,
+                decoration: BoxDecoration(
+                  color: AppColors.goldFaded,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: AppColors.gold, size: 20),
+              ),
+              const SizedBox(height: 10),
+              Text(label,
+                style: const TextStyle(
+                  color: AppColors.textPrimary, fontSize: 13, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 2),
+              Text(subtitle,
+                style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
+            ],
+          ),
+        ),
       ),
     );
   }
