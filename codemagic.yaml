@@ -181,13 +181,6 @@ workflows:
 
       - name: Set up code signing on Xcode project
         script: |
-          xcode-project use-profiles \
-            --project ios/Runner.xcodeproj \
-            --code-signing-setup-verbose-logging
-        working_directory: seerah-mobile/seerah_app
-
-      - name: Create export options plist
-        script: |
           cat > /Users/builder/export_options.plist << 'EOF'
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -200,6 +193,12 @@ workflows:
           </dict>
           </plist>
           EOF
+          xcode-project use-profiles \
+            --project ios/Runner.xcodeproj \
+            --archive-method app-store \
+            --export-options-plist /Users/builder/export_options.plist \
+            --code-signing-setup-verbose-logging
+        working_directory: seerah-mobile/seerah_app
 
       - name: Build IPA
         script: |
