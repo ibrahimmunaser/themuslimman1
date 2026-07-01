@@ -83,25 +83,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-base font-semibold text-text mb-2">4. Email Communications</h2>
-              <p>
-                We use{" "}
-                <a
-                  href="https://resend.com"
-                  className="text-gold hover:underline"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Resend
-                </a>{" "}
-                to deliver transactional emails such as email verification, password resets, and purchase
-                confirmations. We do not send marketing emails without your consent. You can contact us to
-                update your communication preferences at any time.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-base font-semibold text-text mb-2">5. Analytics</h2>
+              <h2 className="text-base font-semibold text-text mb-2">4. Analytics</h2>
               <p>
                 We may use Vercel Analytics to understand aggregate page view data (e.g., which pages are
                 most visited). This data is anonymized and does not identify individual users. No third-party
@@ -110,7 +92,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-base font-semibold text-text mb-2">6. Cookies and Sessions</h2>
+              <h2 className="text-base font-semibold text-text mb-2">5. Cookies and Sessions</h2>
               <p>
                 We use a single secure, HTTP-only session cookie to keep you logged in. This cookie contains
                 a session token only — no personal data is stored in the cookie itself. The session expires
@@ -122,7 +104,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-base font-semibold text-text mb-2">7. Data Storage</h2>
+              <h2 className="text-base font-semibold text-text mb-2">6. Data Storage</h2>
               <p>
                 Account and progress data is stored in a PostgreSQL database hosted on Supabase (cloud-hosted,
                 US-based). Course media files (videos, slides, etc.) are stored on Cloudflare R2.
@@ -130,7 +112,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-base font-semibold text-text mb-2">8. Your Rights</h2>
+              <h2 className="text-base font-semibold text-text mb-2">7. Your Rights</h2>
               <p>You have the right to:</p>
               <ul className="list-disc pl-5 mt-2 space-y-1.5">
                 <li>Request a copy of the personal data we hold about you</li>
@@ -145,7 +127,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-base font-semibold text-text mb-2">9. Children&apos;s Privacy</h2>
+              <h2 className="text-base font-semibold text-text mb-2">8. Children&apos;s Privacy</h2>
               <p>
                 This platform is not directed at children under 13. We do not knowingly collect personal
                 data from children under 13. If you believe we have done so, please contact us immediately.
@@ -153,7 +135,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-base font-semibold text-text mb-2">10. Changes to This Policy</h2>
+              <h2 className="text-base font-semibold text-text mb-2">9. Changes to This Policy</h2>
               <p>
                 We may update this Privacy Policy from time to time. We will notify you of significant changes
                 via email if you have an account with us.
@@ -161,7 +143,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-base font-semibold text-text mb-2">11. Contact</h2>
+              <h2 className="text-base font-semibold text-text mb-2">10. Contact</h2>
               <p>
                 Privacy questions?{" "}
                 <Link href="/contact" className="text-gold hover:underline">Contact us here</Link>{" "}
