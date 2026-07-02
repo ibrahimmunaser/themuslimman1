@@ -19,7 +19,7 @@ workflows:
         - google_play   # GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS (secret JSON key)
       vars:
         PACKAGE_NAME: com.themuslimman.seerah
-        GOOGLE_PLAY_TRACK: internal
+        GOOGLE_PLAY_TRACK: alpha
 
     triggering:
       events:
@@ -58,10 +58,10 @@ workflows:
           failure: true
       google_play:
         credentials: $GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS
-        track: internal
-        # App is in Draft — upload as draft release on Internal Testing track
-        submit_as_draft: true
-        changes_not_sent_for_review: true
+        track: alpha
+        # Closed testing (Alpha) — release goes live on track after Play review
+        submit_as_draft: false
+        changes_not_sent_for_review: false
 
   # ────────────────────────────────────────────────────────────────────────────
   # iOS — one-time: create App Store provisioning profile on Apple

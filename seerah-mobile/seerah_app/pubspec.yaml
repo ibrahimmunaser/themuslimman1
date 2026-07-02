@@ -1,7 +1,7 @@
 name: seerah_app
 description: "The Muslim Man — Seerah Course Mobile App"
 publish_to: 'none'
-version: 1.0.19+19
+version: 1.0.21+21
 
 environment:
   sdk: ^3.7.0
@@ -56,34 +56,34 @@ dev_dependencies:
 # ── App icon configuration ────────────────────────────────────────────────────
 # Run: dart run flutter_launcher_icons
 flutter_launcher_icons:
-  # Same square logo as the web/desktop dashboard sidebar
-  image_path: "assets/images/logodashboard.png"
+  # Square gold mark on pure black — used for Android/iOS/macOS launcher icons
+  image_path: "assets/images/app_icon.png"
 
   android: true
   ios: true
   min_sdk_android: 23
 
-  adaptive_icon_background: "#0A0A0F"
-  adaptive_icon_foreground: "assets/images/logodashboard.png"
+  adaptive_icon_background: "#000000"
+  adaptive_icon_foreground: "assets/images/app_icon.png"
 
   remove_alpha_ios: true
 
 # ── Native splash screen configuration ───────────────────────────────────────
 # Run: dart run flutter_native_splash:create
 flutter_native_splash:
-  color: "#0A0A0F"
-  color_dark: "#0A0A0F"
+  color: "#000000"
+  color_dark: "#000000"
 
   image: assets/images/splash_logo.png
   image_dark: assets/images/splash_logo.png
 
   android_12:
-    color: "#0A0A0F"
-    color_dark: "#0A0A0F"
+    color: "#000000"
+    color_dark: "#000000"
     image: assets/images/splash_logo.png
     image_dark: assets/images/splash_logo.png
-    icon_background_color: "#0A0A0F"
-    icon_background_color_dark: "#0A0A0F"
+    icon_background_color: "#000000"
+    icon_background_color_dark: "#000000"
 
   # Keep the splash visible until Flutter calls
   # FlutterNativeSplash.remove() — triggered in main.dart after init.
