@@ -88,6 +88,45 @@ export function markPaymentMethodInSession(method: string) {
   } catch { /* ignore */ }
 }
 
+// ── Attribution helper ─────────────────────────────────────────────────────────
+
+/** Read first-touch attribution from localStorage without importing the full lib. */
+function readStoredAttribution(): Record<string, string | null> {
+  try {
+    if (typeof window === "undefined") return {};
+    const raw = localStorage.getItem("tmm_attribution");
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    return {
+      utm_source:           typeof parsed.utmSource   === "string" ? parsed.utmSource   : null,
+      utm_medium:           typeof parsed.utmMedium   === "string" ? parsed.utmMedium   : null,
+      utm_campaign:         typeof parsed.utmCampaign === "string" ? parsed.utmCampaign : null,
+      utm_content:          typeof parsed.utmContent  === "string" ? parsed.utmContent  : null,
+      initial_landing_page: typeof parsed.initialLandingPage === "string" ? parsed.initialLandingPage : null,
+      sponsor:              typeof parsed.sponsor  === "string" ? parsed.sponsor  : null,
+    };
+  } catch { return {}; }
+}
+
+// ── Normalized error categories ────────────────────────────────────────────────
+// These map Stripe error codes to safe, non-PII category strings.
+// Raw Stripe error messages are NEVER forwarded to analytics.
+
+export function normalizePaymentError(code?: string, declineCode?: string): string {
+  if (!code && !declineCode) return "unknown";
+  const c = code ?? "";
+  const d = declineCode ?? "";
+  if (c === "payment_intent_authentication_failure" || c === "authentication_required" || c === "card_authentication_required" || d.includes("authentication")) return "authentication_failed";
+  if (d === "card_declined" || d === "generic_decline" || d === "do_not_honor") return "card_declined";
+  if (d === "insufficient_funds") return "insufficient_funds";
+  if (d === "expired_card" || c === "expired_card") return "card_expired";
+  if (c === "incorrect_cvc" || d === "incorrect_cvc") return "card_cvc_error";
+  if (d === "card_velocity_exceeded") return "rate_limited";
+  if (c === "api_connection_error" || c === "api_error") return "network_error";
+  if (c === "card_error") return "card_declined";
+  return "unknown";
+}
+
 // ── Main send function ─────────────────────────────────────────────────────────
 
 export function sendCheckoutEvent(
@@ -102,10 +141,14 @@ export function sendCheckoutEvent(
     const visitorId = getOrCreate(localStorage,   vidKey, 7 * 24 * 60 * 60 * 1000);
     const sessionId = getOrCreate(sessionStorage, sidKey);
 
-    // Pull userEmail out of extra so it is sent as a top-level field that
-    // the track API can read and persist in InfluencerEvent.userEmail.
-    // This enables fallback purchase attribution on the influencer stats pages.
-    const { userEmail, ...restExtra } = extra ?? {};
+    // Merge first-touch attribution so every checkout event has campaign context.
+    const attr = readStoredAttribution();
+
+    // Raw email is never included in analytics event metadata.
+    // user_id (application user ID) is passed explicitly by callers that have it.
+    // For anonymous/guest sessions, visitorId (a stable localStorage UUID) is the
+    // only identifier — it links all events in the session without exposing PII.
+    const { userEmail: _discarded, ...restExtra } = extra ?? {};
 
     const payload = JSON.stringify({
       creator,
@@ -113,8 +156,11 @@ export function sendCheckoutEvent(
       sessionId,
       visitorId,
       route: window.location.pathname,
-      ...(typeof userEmail === "string" && userEmail ? { userEmail } : {}),
-      metadata: JSON.stringify({ source: creator, ...restExtra }),
+      metadata: JSON.stringify({
+        source: creator,
+        ...attr,
+        ...restExtra,
+      }),
     });
 
     if (navigator.sendBeacon) {
@@ -130,6 +176,22 @@ export function sendCheckoutEvent(
   } catch {
     // never block checkout
   }
+}
+
+/**
+ * Fire checkout_load_failed with a normalized error category.
+ * Called when the Stripe element or intent creation fails at initialization.
+ * Never includes raw error messages — only safe category strings.
+ */
+export function sendCheckoutLoadFailed(
+  creator: string,
+  failureCategory: string,
+  extra?: Record<string, unknown>
+) {
+  sendCheckoutEvent(creator, "checkout_load_failed", {
+    failure_category: failureCategory,
+    ...extra,
+  });
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -172,6 +234,9 @@ export default function CheckoutFunnelTracker({
       sessionStorage.removeItem(SK_PAYMENT_METHOD);
     } catch { /* ignore */ }
 
+    // First-touch attribution merged into all checkout events.
+    const attr = readStoredAttribution();
+
     const baseMeta: Record<string, unknown> = {
       selected_plan:      plan,
       plan_type:          plan.startsWith("family") ? "family" : "individual",
@@ -189,8 +254,23 @@ export default function CheckoutFunnelTracker({
       os,
       page_path:          window.location.pathname,
       referrer:           document.referrer || null,
+      // Attribution fields from first-touch capture
+      ...attr,
     };
 
+    // checkout_loaded: the /checkout React page mounted successfully.
+    //   Definition: page is visible and checkout session state is initialized.
+    //   It does NOT mean the Stripe payment form is interactive.
+    //
+    // payment_element_loaded: Stripe PaymentElement became visible and interactive.
+    //   Fired by PaymentElement's onReady callback in CheckoutForm.
+    //   This is the signal that the payment interface is ready for user input.
+    //
+    // checkout_load_failed: payment initialization failed after mount.
+    //   Fired by sendCheckoutLoadFailed() when createIntent throws.
+    //
+    // Dashboards must use these definitions — do not treat checkout_loaded as
+    // "checkout ready". Use payment_element_loaded for "payment form ready" funnels.
     sendCheckoutEvent(creator, "checkout_loaded", baseMeta);
 
     // Legacy per-plan events for backwards compat

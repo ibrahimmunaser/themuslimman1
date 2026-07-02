@@ -2,53 +2,11 @@
 
 import { useRef, useEffect, useState, useCallback } from "react";
 import Image from "next/image";
-import { nanoid } from "nanoid";
 import { Play, ArrowRight } from "lucide-react";
 import { PlanPicker } from "@/components/landing/plan-picker";
 import type { PlanId } from "@/components/landing/plan-picker";
-
-// ── Analytics ──────────────────────────────────────────────────────────────────
-
-function getVisitorId(): string {
-  if (typeof window === "undefined") return "ssr";
-  try {
-    const key = "tmm_vid";
-    const existing = localStorage.getItem(key);
-    if (existing) return existing;
-    const id = nanoid();
-    localStorage.setItem(key, id);
-    return id;
-  } catch { return nanoid(); }
-}
-
-function getSessionId(): string {
-  if (typeof window === "undefined") return "ssr";
-  try {
-    const key = "tmm_sid";
-    const existing = sessionStorage.getItem(key);
-    if (existing) return existing;
-    const id = nanoid();
-    sessionStorage.setItem(key, id);
-    return id;
-  } catch { return nanoid(); }
-}
-
-async function safeTrack(creator: string, eventType: string, extra: Record<string, unknown> = {}) {
-  try {
-    await fetch("/api/influencer/track", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        creator,
-        eventType,
-        sessionId: getSessionId(),
-        visitorId: getVisitorId(),
-        route: typeof window !== "undefined" ? window.location.pathname : null,
-        ...extra,
-      }),
-    });
-  } catch { /* analytics must never break the page */ }
-}
+import { captureAttribution, attributionToProps } from "@/lib/attribution";
+import { trackEvent, captureAndTrack } from "@/lib/analytics";
 
 // ── Config ─────────────────────────────────────────────────────────────────────
 
@@ -127,12 +85,120 @@ export function InfluencerDirectLanding({ config, part1Preview, afterPart1Previe
     if (enriched !== config.checkoutUrl) setCheckoutUrl(enriched);
   }, [config.checkoutUrl]);
 
-  // Page view + scroll detection
+  // Page view + scroll detection + canonical analytics
   useEffect(() => {
-    safeTrack(config.creator, "influencer_page_view");
+    const attribution = captureAttribution();
+    const attrProps = attributionToProps(attribution);
+
+    // Canonical landing_page_viewed + legacy alias
+    captureAndTrack("landing_page_viewed", {
+      ...attrProps,
+      page_path: window.location.pathname,
+      creator_slug: config.creator,
+      referrer: document.referrer || null,
+    }, { creator: config.creator });
+    trackEvent("influencer_page_view", {}, { creator: config.creator });
+
+    // ── Click delegation for data-track on child components ─────────────────
+    function handleClick(e: MouseEvent) {
+      const el = (e.target as HTMLElement).closest("[data-track]") as HTMLElement | null;
+      if (!el) return;
+      const event = el.dataset.track;
+      if (!event) return;
+
+      const plan = el.dataset.plan;
+      const planType = el.dataset.planType;
+      const billing = el.dataset.billing;
+      const price = el.dataset.price ? Number(el.dataset.price) : undefined;
+
+      if (event === "plan_selected" || event === "plan_card_click") {
+        trackEvent("plan_selected", { plan_id: plan, plan_type: planType, billing_type: billing, price, ...attrProps }, { creator: config.creator, allowDuplicates: true });
+      } else if (event === "after_part1_checkout_click") {
+        trackEvent("checkout_clicked", { trigger: "after_part1", ...attrProps }, { creator: config.creator, allowDuplicates: true });
+        trackEvent("after_part1_checkout_click", {}, { creator: config.creator, allowDuplicates: true });
+      } else if (event === "checkout_clicked" || event === "selected_plan_checkout_click") {
+        trackEvent("checkout_clicked", { plan_id: plan, ...attrProps }, { creator: config.creator, allowDuplicates: true });
+      } else {
+        trackEvent(event, { plan, ...attrProps }, { creator: config.creator, allowDuplicates: true });
+      }
+    }
+
+    document.addEventListener("click", handleClick);
+
+    // ── pricing_viewed — observe #plans section ──────────────────────────────
+    let pricingTimer: ReturnType<typeof setTimeout> | null = null;
+    let pricingFired = false;
+    const observers: IntersectionObserver[] = [];
+
+    if (typeof IntersectionObserver !== "undefined" && plansRef.current) {
+      const obs = new IntersectionObserver(
+        (entries) => {
+          const entry = entries[0];
+          if (!entry) return;
+          if (entry.isIntersecting && !pricingFired) {
+            pricingTimer = setTimeout(() => {
+              if (pricingFired) return;
+              pricingFired = true;
+              trackEvent("pricing_viewed", { ...attrProps }, { creator: config.creator });
+            }, 1000);
+          } else {
+            if (pricingTimer) { clearTimeout(pricingTimer); pricingTimer = null; }
+          }
+        },
+        { threshold: 0.5 }
+      );
+      obs.observe(plansRef.current);
+      observers.push(obs);
+    }
+
+    // ── Part 1 video tracking ────────────────────────────────────────────────
+    let part1StartFired = false;
+    const progressFired = new Set<number>();
+
+    function attachVideo(video: HTMLVideoElement) {
+      if ((video as HTMLVideoElement & { _ilTracked?: boolean })._ilTracked) return;
+      (video as HTMLVideoElement & { _ilTracked?: boolean })._ilTracked = true;
+
+      video.addEventListener("play", () => {
+        if (part1StartFired) return;
+        part1StartFired = true;
+        trackEvent("part_1_started", { content_id: "part-1", ...attrProps }, { creator: config.creator });
+        trackEvent("influencer_part1_started", {}, { creator: config.creator });
+      });
+
+      video.addEventListener("timeupdate", () => {
+        if (!video.duration) return;
+        const pct = (video.currentTime / video.duration) * 100;
+        for (const t of [25, 50, 75, 100]) {
+          if (pct >= t && !progressFired.has(t)) {
+            progressFired.add(t);
+            trackEvent("part_1_progress", { progress_percent: t, content_id: "part-1", ...attrProps }, { creator: config.creator, allowDuplicates: true });
+            if (t === 50) trackEvent("part1_video_50_percent", {}, { creator: config.creator });
+            if (t >= 90) trackEvent("part1_video_90_percent", {}, { creator: config.creator });
+          }
+        }
+      });
+    }
+
+    function scanVideos() {
+      const container = part1Ref.current ?? document;
+      container.querySelectorAll("video").forEach((v) => attachVideo(v as HTMLVideoElement));
+    }
+
+    scanVideos();
+    const videoTimer = setTimeout(scanVideos, 2000);
+
     const onScroll = () => setScrolledPast(window.scrollY > 300);
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+
+    return () => {
+      document.removeEventListener("click", handleClick);
+      observers.forEach((o) => o.disconnect());
+      if (pricingTimer) clearTimeout(pricingTimer);
+      clearTimeout(videoTimer);
+      window.removeEventListener("scroll", onScroll);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config.creator]);
 
   // Hide sticky whenever hero or plans section is visible
@@ -156,16 +222,23 @@ export function InfluencerDirectLanding({ config, part1Preview, afterPart1Previe
 
   const scrollToPart1 = useCallback(() => {
     part1Ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    safeTrack(config.creator, "influencer_part1_cta_click");
+    trackEvent("influencer_part1_cta_click", {}, { creator: config.creator, allowDuplicates: true });
   }, [config.creator]);
 
   const scrollToPlans = useCallback(() => {
     plansRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    safeTrack(config.creator, "influencer_primary_cta_click", { plan: "scroll_to_plans" });
+    trackEvent("influencer_primary_cta_click", { plan: "scroll_to_plans" }, { creator: config.creator, allowDuplicates: true });
   }, [config.creator]);
 
+  // NOTE: checkout_clicked is intentionally NOT fired here.
+  // The PlanPicker "Continue to Checkout" button carries data-track="selected_plan_checkout_click"
+  // which is caught by the delegated click listener and fires checkout_clicked exactly once.
+  // Firing it here too would double-count every PlanPicker checkout click.
+  // The sticky CTA below carries data-track="checkout_clicked" so it is also handled by the
+  // delegated listener without relying on this callback.
   const onCheckoutClick = useCallback((plan: PlanId) => {
-    safeTrack(config.creator, "influencer_primary_cta_click", { plan });
+    // Legacy event only — canonical checkout_clicked comes from [data-track] delegation.
+    trackEvent("influencer_primary_cta_click", { plan }, { creator: config.creator, allowDuplicates: true });
   }, [config.creator]);
 
   return (
@@ -297,9 +370,11 @@ export function InfluencerDirectLanding({ config, part1Preview, afterPart1Previe
         >
           <div className="flex items-center gap-3">
             <p className="flex-1 text-xs text-text-muted truncate min-w-0">{price}</p>
+            {/* data-track="checkout_clicked" → caught by delegated listener (fires canonical event once) */}
             <a
               href={checkoutUrl}
-              onClick={() => onCheckoutClick("individual-monthly")}
+              data-track="checkout_clicked"
+              data-plan="individual-monthly"
               className="flex-shrink-0 py-3 px-6 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-sm transition-colors"
             >
               Start the Course

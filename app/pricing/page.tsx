@@ -7,6 +7,7 @@ import { getUserAccessInfo } from "@/lib/access";
 import { CreatorPromoTracker } from "@/components/promo/creator-promo-tracker";
 import { PricingSection } from "@/components/pricing/pricing-section";
 import { FadeUp } from "@/components/motion";
+import { FunnelTracker } from "@/components/analytics/funnel-tracker";
 
 export const metadata = {
   title: "Pricing — Complete Seerah",
@@ -103,6 +104,16 @@ export default async function PricingPage({ searchParams }: Props) {
     <div className="flex flex-col min-h-screen bg-ink text-text">
       <Navbar />
       <CreatorPromoTracker />
+      <FunnelTracker
+        creator="homepage"
+        pricingSectionId="pricing"
+        pageProps={{
+          page: "pricing",
+          utm_source: params.utm_source ?? null,
+          utm_medium: params.utm_medium ?? null,
+          utm_campaign: params.utm_campaign ?? null,
+        }}
+      />
 
       {/* 1. Pricing hero */}
       <section className="pt-14 pb-8 border-b border-border">

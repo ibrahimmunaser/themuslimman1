@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, Play } from "lucide-react";
 import { Part1FullPreview } from "@/components/landing/part1-full-preview";
+import { WatchFreeTracker } from "./watch-free-tracker";
 
 export const metadata: Metadata = {
   title: "Watch Part 1 Free | The Muslim Man",
@@ -39,6 +40,7 @@ export default async function WatchFreePage({ searchParams }: Props) {
 
   return (
     <div className="min-h-screen bg-ink text-text">
+      <WatchFreeTracker />
 
       {/* ── Minimal nav ──────────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-50 bg-ink/95 backdrop-blur-sm border-b border-border/50">

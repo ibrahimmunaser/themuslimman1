@@ -9,6 +9,178 @@ import { hashToken } from "@/lib/hash-token";
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
+// ── Server-side analytics helper ──────────────────────────────────────────────
+
+/**
+ * Fire a purchase_completed event from the server after successful payment.
+ * Uses the same /api/influencer/track endpoint — no external dependency.
+ * Non-blocking: errors are logged but never propagated.
+ *
+ * No sensitive payment data (card numbers, CVV, full card details) is included.
+ */
+/**
+ * Fire a purchase_completed analytics event from the server after payment confirmation.
+ *
+ * Idempotency: Before firing, queries the InfluencerEvent table for an existing
+ * purchase_completed event with the same orderId stored in the `plan` column.
+ * This guards against:
+ *   - Stripe webhook retries (same event ID re-delivered)
+ *   - Multiple Stripe event types for the same payment (payment_intent.succeeded
+ *     AND checkout.session.completed both call handlePaymentSuccess, but the
+ *     existingPurchase guard in handlePaymentSuccess means only one will reach here)
+ *   - Subscription lifecycle: isFirstActivation is DB-backed in upsertSubscription
+ *   - Concurrent processing: DB query races are rare and at worst emit one extra event
+ *
+ * NOTE: This is NOT called for subscription renewals. Renewals emit subscription_renewed
+ * (a separate event) so the funnel represents only initial conversions.
+ *
+ * No sensitive payment data (card numbers, CVV, expiry, auth tokens) is ever included.
+ * Raw Stripe error messages are never forwarded.
+ */
+async function trackPurchaseCompleted(opts: {
+  creator: string;
+  orderId: string;
+  planId: string;
+  planName?: string | null;
+  amount: number;
+  currency: string;
+  /** Application user ID — used as the analytics identifier. Raw email is never sent. */
+  userId?: string | null;
+  utmSource?: string | null;
+  utmMedium?: string | null;
+  utmCampaign?: string | null;
+  utmContent?: string | null;
+  promoCode?: string | null;
+  sessionId?: string | null;
+}): Promise<void> {
+  try {
+    // ── DB-level idempotency guard ────────────────────────────────────────────
+    // Use the orderId (PI id or subscription id) stored in `plan` as the dedup key.
+    // This survives webhook retries and concurrent delivery of different event types
+    // for the same underlying payment.
+    const alreadyFired = await prisma.influencerEvent.findFirst({
+      where: { eventType: "purchase_completed", plan: opts.orderId },
+      select: { id: true },
+    });
+    if (alreadyFired) {
+      console.log(`[WEBHOOK] trackPurchaseCompleted: already fired for ${opts.orderId}, skipping`);
+      return;
+    }
+
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://themuslimman.com";
+    const KNOWN_CREATORS = new Set([
+      "browniesaadi", "community", "deenresponds",
+      "annarbor", "dearborn", "theorthodoxmuslim",
+      "homepage", "korra", "itachi",
+    ]);
+    const creator = KNOWN_CREATORS.has(opts.creator) ? opts.creator : "homepage";
+    const sessionId = opts.sessionId ?? `server_${opts.orderId}`;
+    const visitorId = opts.userId ?? `server_${opts.orderId}`;
+
+    const payload = {
+      creator,
+      eventType: "purchase_completed",
+      sessionId,
+      // visitorId is the application user ID — this is an internal opaque identifier,
+      // not a PII field. Raw email is never included in analytics payloads.
+      visitorId,
+      route: "/payment/success",
+      // orderId stored in `plan` field for idempotency lookups above.
+      plan: opts.orderId,
+      amount: opts.amount,
+      metadata: JSON.stringify({
+        order_id: opts.orderId,
+        plan_id: opts.planId,
+        plan_name: opts.planName,
+        amount: opts.amount,
+        currency: opts.currency,
+        // user_id: application user ID — non-PII analytics identifier
+        user_id: opts.userId ?? null,
+        utm_source: opts.utmSource,
+        utm_medium: opts.utmMedium,
+        utm_campaign: opts.utmCampaign,
+        utm_content: opts.utmContent,
+        promo_code: opts.promoCode,
+        source: "stripe_webhook",
+      }),
+    };
+
+    const res = await fetch(`${appUrl}/api/influencer/track`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      console.warn(`[WEBHOOK] trackPurchaseCompleted: API returned ${res.status} — ${text}`);
+    } else {
+      console.log(`[WEBHOOK] trackPurchaseCompleted: purchase_completed fired for order ${opts.orderId}`);
+    }
+  } catch (err) {
+    // Non-blocking — analytics must never fail a payment webhook
+    console.error("[WEBHOOK] trackPurchaseCompleted: failed (non-blocking):", err);
+  }
+}
+
+/**
+ * Fire subscription_renewed for subsequent billing cycles.
+ * Separate from purchase_completed which represents only the initial conversion.
+ * Called from syncSubscriptionStatus on invoice.payment_succeeded for renewals.
+ */
+async function trackSubscriptionRenewed(opts: {
+  creator: string;
+  subscriptionId: string;
+  invoiceId: string;
+  planId: string;
+  amount: number;
+  currency: string;
+  userId: string;
+}): Promise<void> {
+  try {
+    // Guard: skip if this invoice's renewal was already recorded.
+    const alreadyFired = await prisma.influencerEvent.findFirst({
+      where: { eventType: "subscription_renewed", plan: opts.invoiceId },
+      select: { id: true },
+    });
+    if (alreadyFired) return;
+
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://themuslimman.com";
+    const KNOWN_CREATORS = new Set([
+      "browniesaadi", "community", "deenresponds",
+      "annarbor", "dearborn", "theorthodoxmuslim",
+      "homepage", "korra", "itachi",
+    ]);
+    const creator = KNOWN_CREATORS.has(opts.creator) ? opts.creator : "homepage";
+
+    const payload = {
+      creator,
+      eventType: "subscription_renewed",
+      sessionId: `server_renewal_${opts.invoiceId}`,
+      visitorId: opts.userId,
+      route: "/api/stripe/webhook",
+      plan: opts.invoiceId, // idempotency key
+      amount: opts.amount,
+      metadata: JSON.stringify({
+        subscription_id: opts.subscriptionId,
+        invoice_id: opts.invoiceId,
+        plan_id: opts.planId,
+        amount: opts.amount,
+        currency: opts.currency,
+        source: "stripe_webhook",
+      }),
+    };
+
+    await fetch(`${appUrl}/api/influencer/track`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }).catch((err) => console.warn("[WEBHOOK] trackSubscriptionRenewed: fetch failed:", err));
+  } catch (err) {
+    console.error("[WEBHOOK] trackSubscriptionRenewed: failed (non-blocking):", err);
+  }
+}
+
 /**
  * Extract subscription ID from Invoice across old and new Stripe API versions.
  *
@@ -178,11 +350,40 @@ export async function POST(request: NextRequest) {
 
       case "invoice.payment_succeeded": {
         const invoice = event.data.object as Stripe.Invoice;
-        // subscription_id is at invoice.parent?.subscription_details?.subscription in API v2
         const invoiceSubId = getInvoiceSubscriptionId(invoice);
         console.log(`[WEBHOOK] invoice.payment_succeeded: ${invoice.id}, subscription: ${invoiceSubId}`);
         if (invoiceSubId) {
           await syncSubscriptionStatus(invoiceSubId);
+
+          // Fire subscription_renewed for renewal invoices only.
+          // First-activation invoices are handled by customer.subscription.created
+          // which calls upsertSubscription → purchase_completed via isFirstActivation.
+          // We detect renewals by checking if this is NOT the first invoice
+          // (billing_reason = "subscription_cycle" for renewals, "subscription_create" for first).
+          const billingReason = (invoice as unknown as Record<string, unknown>)["billing_reason"];
+          if (billingReason === "subscription_cycle" || billingReason === "subscription_update") {
+            const sub = await prisma.subscription.findFirst({
+              where: { stripeSubscriptionId: invoiceSubId },
+              select: { userId: true, creator: true },
+            });
+            if (sub?.userId) {
+              const invoiceTotal = typeof (invoice as unknown as Record<string, unknown>)["amount_paid"] === "number"
+                ? (invoice as unknown as Record<string, unknown>)["amount_paid"] as number
+                : 0;
+              const invoiceCurrency = typeof (invoice as unknown as Record<string, unknown>)["currency"] === "string"
+                ? (invoice as unknown as Record<string, unknown>)["currency"] as string
+                : "usd";
+              trackSubscriptionRenewed({
+                creator: sub.creator ?? "homepage",
+                subscriptionId: invoiceSubId,
+                invoiceId: invoice.id,
+                planId: invoiceSubId,
+                amount: invoiceTotal,
+                currency: invoiceCurrency,
+                userId: sub.userId,
+              }).catch(() => {});
+            }
+          }
         }
         break;
       }
@@ -473,6 +674,26 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
 
     // Stamp purchasedAt on any quiz funnel leads — non-blocking.
     markCheckupLeadPurchased(userId).catch(() => {});
+
+    // Fire server-side purchase_completed event — only on first processing
+    // to avoid duplicate analytics entries on webhook retries.
+    if (!existingPurchase) {
+      // userId comes from PI metadata — no DB lookup needed for analytics.
+      trackPurchaseCompleted({
+        creator: paymentIntent.metadata.creator ?? "homepage",
+        orderId: paymentIntent.id,
+        planId,
+        planName: planName ?? null,
+        amount: paymentIntent.amount,
+        currency: paymentIntent.currency,
+        userId,
+        utmSource: paymentIntent.metadata.utmSource ?? paymentIntent.metadata.utm_source ?? null,
+        utmMedium: paymentIntent.metadata.utmMedium ?? paymentIntent.metadata.utm_medium ?? null,
+        utmCampaign: paymentIntent.metadata.utmCampaign ?? paymentIntent.metadata.utm_campaign ?? null,
+        utmContent: paymentIntent.metadata.utmContent ?? paymentIntent.metadata.utm_content ?? null,
+        promoCode: paymentIntent.metadata.promoCode ?? null,
+      }).catch(() => {});
+    }
 
     // Send purchase confirmation email — non-blocking, only on first processing
     // to avoid duplicate emails when Stripe retries the webhook.
@@ -854,6 +1075,24 @@ async function upsertSubscription(userId: string, sub: Stripe.Subscription) {
   // Stamp purchasedAt on quiz funnel leads on first activation — non-blocking.
   if (isFirstActivation) {
     markCheckupLeadPurchased(userId).catch(() => {});
+
+    // Fire server-side purchase_completed for subscription activations.
+    // userId is already in scope from paymentIntent.metadata — no DB lookup needed.
+    const planLabel = isFamilySub ? "Family Monthly" : "Individual Monthly";
+    trackPurchaseCompleted({
+      creator: sub.metadata?.creator ?? "homepage",
+      orderId: sub.id,
+      planId: sub.metadata?.planId ?? (isFamilySub ? "family-monthly" : "individual-monthly"),
+      planName: planLabel,
+      amount: sub.items.data[0]?.price?.unit_amount ?? 0,
+      currency: sub.items.data[0]?.price?.currency ?? "usd",
+      userId,
+      utmSource: sub.metadata?.utmSource ?? null,
+      utmMedium: sub.metadata?.utmMedium ?? null,
+      utmCampaign: sub.metadata?.utmCampaign ?? null,
+      utmContent: sub.metadata?.utmContent ?? null,
+      promoCode: sub.metadata?.promoCode ?? null,
+    }).catch(() => {});
   }
 
   // Send a welcome email the first time a subscription becomes active/trialing.

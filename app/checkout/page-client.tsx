@@ -17,7 +17,7 @@ import {
 import Link from "next/link";
 import { PLANS, formatPrice } from "@/lib/stripe-config";
 import { clearCreatorPromo, getCreatorPromo, getCreatorPromoConfig } from "@/lib/creator-promos";
-import CheckoutFunnelTracker, { sendCheckoutEvent, markPaymentStartedInSession, markPaymentMethodInSession } from "./checkout-funnel-tracker";
+import CheckoutFunnelTracker, { sendCheckoutEvent, sendCheckoutLoadFailed, normalizePaymentError, markPaymentStartedInSession, markPaymentMethodInSession } from "./checkout-funnel-tracker";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
@@ -166,6 +166,7 @@ function CheckoutForm({
   finalPrice,
   creator,
   promoCode,
+  userId,
   getOrCreateClientSecret,
   isAuthenticated,
   userEmail,
@@ -179,6 +180,8 @@ function CheckoutForm({
   finalPrice: number;
   creator?: string;
   promoCode?: string;
+  /** Application user ID passed down for use in payment_succeeded analytics only. */
+  userId?: string;
   getOrCreateClientSecret: (name: string, email: string) => Promise<string>;
   isAuthenticated: boolean;
   userEmail: string;
@@ -218,7 +221,7 @@ function CheckoutForm({
   // Wrapped in try/catch — tracking must never crash checkout.
   const logStage = (stage: string, extra?: Record<string, unknown>) => {
     try {
-      const ctx = {
+      const ctx: Record<string, unknown> = {
         plan:             `${audience}-${billing}`,
         plan_type:        audience,
         billing_interval: billing,
@@ -228,7 +231,38 @@ function CheckoutForm({
         ...extra,
       };
       console.log(`[CHECKOUT:${stage}]`, ctx);
-      if (creator) sendCheckoutEvent(creator, stage, { ...ctx, promoCode });
+
+      if (!creator) return;
+
+      if (stage === "payment_failed") {
+        // Failure path: send exactly ONE event with a normalized category.
+        // The raw errorCode / declineCode from Stripe is consumed here and is NOT
+        // forwarded. The single event includes all required context fields:
+        //   failure_category, payment_method, plan, amount, session_id (via visitorId),
+        //   UTM attribution (merged inside sendCheckoutEvent).
+        const rawCode    = typeof extra?.errorCode    === "string" ? extra.errorCode    : undefined;
+        const rawDecline = typeof extra?.declineCode  === "string" ? extra.declineCode  : undefined;
+        sendCheckoutEvent(creator, "payment_failed", {
+          plan:             `${audience}-${billing}`,
+          plan_type:        audience,
+          billing_interval: billing,
+          amount:           finalPrice,
+          currency:         "usd",
+          payment_method:   selectedMethodRef.current ?? extra?.method ?? undefined,
+          promoCode,
+          failure_category: normalizePaymentError(rawCode, rawDecline),
+          // attempt_id: visitorId+sessionId composite is already carried by sendCheckoutEvent
+        });
+        return; // do NOT fall through to the generic send
+      }
+
+      // All other stages — generic send.
+      sendCheckoutEvent(creator, stage, { ...ctx, promoCode });
+
+      // Canonical alias: payment_started → checkout_payment_started
+      if (stage === "payment_started") {
+        sendCheckoutEvent(creator, "checkout_payment_started", { ...ctx, promoCode });
+      }
     } catch { /* never block checkout */ }
   };
 
@@ -349,7 +383,9 @@ function CheckoutForm({
           setError(friendlyPaymentError(confirmError));
           setProcessing(false);
         } else if (paymentIntent?.status === "succeeded") {
-          logStage("payment_succeeded", { userEmail: authFormRef.current?.email || userEmail || "" });
+          // user_id = application user ID, passed from the server session via props.
+          // For guest signups, visitorId in sendCheckoutEvent links all events.
+          logStage("payment_succeeded", { user_id: userId || undefined });
           markPurchased();
           const url = new URL(returnUrl, window.location.origin);
           url.searchParams.set("payment_intent", paymentIntent.id);
@@ -469,7 +505,7 @@ function CheckoutForm({
           setError(friendlyPaymentError(confirmError));
         setProcessing(false);
       } else if (paymentIntent?.status === "succeeded") {
-        logStage("payment_succeeded", { method: "express", userEmail: walletEmail || authFormRef.current?.email || userEmail || "" });
+        logStage("payment_succeeded", { method: "express", user_id: userId || undefined });
         markPurchased();
         const url = new URL(returnUrl, window.location.origin);
         url.searchParams.set("payment_intent", paymentIntent.id);
@@ -585,6 +621,12 @@ function CheckoutForm({
           >
             <ExpressCheckoutElement
               onConfirm={handleExpressConfirm}
+              onCancel={() => {
+                // Fires when the user dismisses the Apple Pay / Google Pay sheet.
+                // Normalized to "wallet_cancelled" — no sensitive data included.
+                logStage("payment_cancelled", { method: "express", failure_category: "wallet_cancelled" });
+                setProcessing(false);
+              }}
               onReady={({ availablePaymentMethods }) => {
                 const methods = availablePaymentMethods ? Object.keys(availablePaymentMethods) : [];
                 const hasApplePay  = methods.includes("applePay");
@@ -713,6 +755,8 @@ function CheckoutForm({
 
 interface CheckoutPageClientProps {
   userEmail?: string;
+  /** Internal application user ID for authenticated users. Used in analytics instead of raw email. */
+  initialUserId?: string;
   userPlanType?: string | null;
   initialAudience?: Audience;
   initialBilling?: Billing;
@@ -813,6 +857,7 @@ function resolveQuizCheckoutIdentity(
 
 function CheckoutPageContent({
   userEmail = "",
+  initialUserId = "",
   userPlanType = null,
   initialAudience = "individual",
   initialBilling  = "lifetime",
@@ -1008,10 +1053,28 @@ function CheckoutPageContent({
         }
       }
       if (initialSourceParam)   body.source      = initialSourceParam;
-      if (initialUtmSource)     body.utmSource   = initialUtmSource;
-      if (initialUtmMedium)     body.utmMedium   = initialUtmMedium;
-      if (initialUtmCampaign)   body.utmCampaign = initialUtmCampaign;
-      if (initialUtmContent)    body.utmContent  = initialUtmContent;
+
+      // Prefer URL params; fall back to first-touch attribution from localStorage
+      // so organic visitors (e.g. Google search → bookmark → checkout) still get
+      // proper attribution in Stripe metadata and the purchase record.
+      try {
+        const storedAttr = localStorage.getItem("tmm_attribution");
+        const attr = storedAttr ? JSON.parse(storedAttr) : null;
+        body.utmSource   = initialUtmSource   ?? attr?.utmSource   ?? null;
+        body.utmMedium   = initialUtmMedium   ?? attr?.utmMedium   ?? null;
+        body.utmCampaign = initialUtmCampaign ?? attr?.utmCampaign ?? null;
+        body.utmContent  = initialUtmContent  ?? attr?.utmContent  ?? null;
+        // Backfill creator from stored attribution if not already set
+        if (!body.creator && (attr?.creator || attr?.sponsor)) {
+          const attrCreator = attr.creator ?? attr.sponsor;
+          if (INFLUENCER_SOURCES.has(attrCreator)) body.creator = attrCreator;
+        }
+      } catch {
+        if (initialUtmSource)   body.utmSource   = initialUtmSource;
+        if (initialUtmMedium)   body.utmMedium   = initialUtmMedium;
+        if (initialUtmCampaign) body.utmCampaign = initialUtmCampaign;
+        if (initialUtmContent)  body.utmContent  = initialUtmContent;
+      }
 
       const res  = await fetch(endpoint, {
         method:  "POST",
@@ -1082,6 +1145,13 @@ function CheckoutPageContent({
     } catch (err) {
       if (intentGen.current === gen) {
         setError(err instanceof Error ? err.message : "An error occurred");
+        // Fire checkout_load_failed with a safe category — raw error messages are not sent.
+        const failCreator = initialSourceParam ?? "homepage";
+        sendCheckoutLoadFailed(failCreator, "checkout_initialization_failed", {
+          plan: `${aud}-${bill}`,
+          plan_type: aud,
+          billing_interval: bill,
+        });
       }
       return null;
     } finally {
@@ -1246,6 +1316,16 @@ function CheckoutPageContent({
     intentAbortRef.current = controller;
 
     setAuthLoading(true);
+
+    // Fire signup_started — user has entered email and name, beginning account creation.
+    // Plan, creator, and UTM attribution are preserved via sendCheckoutEvent.
+    const authCreator = initialSourceParam ?? "homepage";
+    sendCheckoutEvent(authCreator, "signup_started", {
+      plan: `${audience}-${billing}`,
+      plan_type: audience,
+      billing_interval: billing,
+    });
+
     try {
       const res = await fetch("/api/auth/guest-checkout", {
         method:  "POST",
@@ -1256,6 +1336,11 @@ function CheckoutPageContent({
       const data = await res.json();
       if (!res.ok) {
         if (data.hasAccount) {
+          // Existing account: user needs to log in to resume their purchase intent.
+          sendCheckoutEvent(authCreator, "authentication_required", {
+            plan: `${audience}-${billing}`,
+            reason: "existing_account",
+          });
           if (isInfluencerMode) {
             setAuthError("__existing_account__");
           } else {
@@ -1288,6 +1373,13 @@ function CheckoutPageContent({
       setAuthEmail(email);
       isAuthenticatedRef.current = true; // sync update so getOrCreateClientSecret sees it immediately
       setIsAuthenticated(true);
+
+      // Fire signup_completed — account created, ready for payment.
+      sendCheckoutEvent(authCreator, "signup_completed", {
+        plan: `${audience}-${billing}`,
+        plan_type: audience,
+        billing_interval: billing,
+      });
     } catch (err) {
       if ((err as Error)?.name === "AbortError") return; // "Not you?" cancelled this
       setAuthError("An error occurred. Please try again.");
@@ -1385,6 +1477,19 @@ function CheckoutPageContent({
       setAuthEmail(authForm.email);
       isAuthenticatedRef.current = true; // sync update so getOrCreateClientSecret sees it immediately
       setIsAuthenticated(true);
+
+      // Fire login_completed + purchase_intent_resumed — user authenticated and
+      // will now proceed directly to payment. Plan + attribution preserved.
+      const loginCreator = initialSourceParam ?? "homepage";
+      sendCheckoutEvent(loginCreator, "login_completed", {
+        plan: `${audience}-${billing}`,
+        plan_type: audience,
+        billing_interval: billing,
+      });
+      sendCheckoutEvent(loginCreator, "purchase_intent_resumed", {
+        plan: `${audience}-${billing}`,
+        trigger: "login",
+      });
     } catch {
       setAuthError("An error occurred. Please try again.");
     } finally {
@@ -2238,6 +2343,7 @@ function CheckoutPageContent({
                       finalPrice={finalPrice}
                       creator={trackerCreator}
                       promoCode={code || undefined}
+                      userId={initialUserId || undefined}
                       getOrCreateClientSecret={getOrCreateClientSecret}
                       isAuthenticated={isAuthenticated}
                       userEmail={authEmail || ""}

@@ -53,9 +53,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geist.variable} h-full`} data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
-        <link rel="icon" type="image/png" href="/images/logoicon.png?v=8" />
-        <link rel="shortcut icon" type="image/png" href="/images/logoicon.png?v=8" />
-        <link rel="apple-touch-icon" type="image/png" href="/images/logoicon.png?v=8" />
+        <link rel="icon" type="image/png" href="/images/app-icon.png?v=1" />
+        <link rel="shortcut icon" type="image/png" href="/images/app-icon.png?v=1" />
+        <link rel="apple-touch-icon" type="image/png" href="/images/app-icon.png?v=1" />
         {/* Preconnect to Stripe — establishes TCP/TLS before JS runs, shaving ~300ms off checkout load */}
         <link rel="preconnect" href="https://js.stripe.com" />
         <link rel="preconnect" href="https://api.stripe.com" />
