@@ -2,14 +2,11 @@
 
 import { useState } from "react";
 import { ArrowRight, Check } from "lucide-react";
+import { planAnalyticsProps, type PlanId } from "@/lib/plan-catalog";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-export type PlanId =
-  | "individual-monthly"
-  | "family-monthly"
-  | "individual-lifetime"
-  | "family-lifetime";
+export type { PlanId };
 
 // ── Plan data ──────────────────────────────────────────────────────────────────
 
@@ -130,8 +127,11 @@ export function PlanPicker({
                     <button
                       key={plan.id}
                       type="button"
-                      data-track="plan_card_click"
+                      data-track="plan_selected"
                       data-plan={plan.id}
+                      data-plan-type={plan.id.startsWith("family") ? "family" : "individual"}
+                      data-billing={plan.group === "Monthly" ? "monthly" : "lifetime"}
+                      data-price={planAnalyticsProps(plan.id).price as number}
                       onClick={() => setSelectedPlan(plan.id)}
                       className={[
                         "group relative flex flex-col items-start rounded-xl border-2 text-left",
@@ -218,8 +218,11 @@ export function PlanPicker({
         </div>
         <a
           href={checkoutUrl}
-          data-track="selected_plan_checkout_click"
+          data-track="checkout_clicked"
           data-plan={selectedPlan}
+          data-plan-type={selectedPlan.startsWith("family") ? "family" : "individual"}
+          data-billing={selectedPlan.includes("monthly") ? "monthly" : "lifetime"}
+          data-price={planAnalyticsProps(selectedPlan).price as number}
           onClick={() => onCtaClick?.(selectedPlan, checkoutUrl)}
           className="flex-shrink-0 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-gold hover:bg-gold-light text-ink font-bold text-sm sm:text-base transition-colors shadow-lg shadow-gold/25 hover:shadow-gold/40"
         >

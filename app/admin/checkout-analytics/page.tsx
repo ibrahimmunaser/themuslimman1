@@ -55,10 +55,13 @@ export default async function CheckoutAnalyticsPage() {
       {/* Definitions */}
       <section className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 text-xs text-zinc-400 space-y-1">
         <p className="font-semibold text-zinc-300 mb-2">Metric definitions</p>
-        <p><strong className="text-zinc-300">Checkout attempt</strong> — one <code>checkout_loaded</code> per session (derived; no historical <code>checkout_attempt_id</code>).</p>
+        <p><strong className="text-zinc-300">Checkout attempt</strong> — explicit <code>checkout_attempt_id</code> minted on <code>checkout_clicked</code> or direct <code>/checkout</code> entry; all checkout events share it.</p>
+        <p><strong className="text-zinc-300">Plan selected</strong> — one event per explicit plan-card click (deduped per interaction; ignores synthetic/non-trusted events).</p>
         <p><strong className="text-zinc-300">Purchase</strong> — server-side <code>purchase_completed</code> only (not client <code>payment_succeeded</code>).</p>
         <p><strong className="text-zinc-300">Checkout loaded</strong> — React checkout page mounted.</p>
         <p><strong className="text-zinc-300">Payment form ready</strong> — <code>payment_element_loaded</code> (Stripe PaymentElement interactive).</p>
+        <p><strong className="text-zinc-300">Method presented</strong> — <code>payment_method_presented</code> when Stripe shows default/interactive form (not a user selection).</p>
+        <p><strong className="text-zinc-300">Method selected</strong> — <code>payment_method_selected</code> only when the user changes payment method.</p>
         <p><strong className="text-zinc-300">Payment started</strong> — <code>checkout_payment_started</code> / <code>payment_started</code> (user initiated pay).</p>
         <p><strong className="text-zinc-300">Raw events</strong> — shown separately below; not mixed into funnel CVR tables.</p>
       </section>
@@ -355,6 +358,46 @@ export default async function CheckoutAnalyticsPage() {
           )}
         </div>
       </section>
+
+      {/* Payment cancelled trace */}
+      {data.paymentCancelledTrace.length > 0 && (
+        <section>
+          <h2 className="text-base font-semibold text-zinc-300 mb-3">payment_cancelled traceability</h2>
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-zinc-950 border-b border-zinc-800">
+                <tr>
+                  <th className={th}>Time</th>
+                  <th className={th}>Attempt</th>
+                  <th className={th}>Plan</th>
+                  <th className={th}>Purchased?</th>
+                  <th className={th}>Abandonment stage</th>
+                  <th className={th}>Explanation</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-800">
+                {data.paymentCancelledTrace.map((row, i) => (
+                  <tr key={i}>
+                    <td className={`${cell} font-mono text-xs text-zinc-500 whitespace-nowrap`}>
+                      {new Date(row.eventAt).toLocaleString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </td>
+                    <td className={`${cell} font-mono text-xs`}>{row.checkoutAttemptId ?? "—"}</td>
+                    <td className={cell}>{PLAN_LABELS[row.plan] ?? row.plan}</td>
+                    <td className={cell}>{row.completedPurchase ? "Yes" : "No"}</td>
+                    <td className={cell}>{row.abandonmentStage ?? "—"}</td>
+                    <td className={`${cell} text-xs text-zinc-400`}>{row.explanation}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
 
       {/* Raw Event Counts */}
       <section>

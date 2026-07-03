@@ -1,8 +1,8 @@
 /**
  * Checkout analytics aggregation — attempt-based, post-deployment, consistent units.
  *
- * checkout_attempt_id is NOT stored historically; attempts are derived from
- * checkout_loaded anchors within a session (sessionId + plan + timestamp).
+ * Primary grouping uses metadata.checkout_attempt_id when present (checkout_v3).
+ * Legacy post-deploy events without an id fall back to sessionId + checkout_loaded timestamp.
  */
 
 import { prisma } from "@/lib/db";
@@ -23,6 +23,7 @@ const CHECKOUT_EVENT_TYPES = [
   "checkout_loaded",
   "payment_element_loaded",
   "payment_method_available",
+  "payment_method_presented",
   "payment_method_selected",
   "payment_started",
   "checkout_payment_started",
@@ -194,10 +195,70 @@ function classifyAbandonment(attempt: Omit<CheckoutAttempt, "abandonmentStage">)
   return "before_payment_element_loaded";
 }
 
+function attemptIdFromMeta(meta: Record<string, unknown>): string | null {
+  const id = meta.checkout_attempt_id;
+  return typeof id === "string" && id.length > 0 ? id : null;
+}
+
+function buildAttemptFromEvents(
+  id: string,
+  slice: Array<RawEvent & { meta: Record<string, unknown> }>,
+  sessionEvents: Array<RawEvent & { meta: Record<string, unknown> }>,
+  allParsed: Array<RawEvent & { meta: Record<string, unknown> }>
+): CheckoutAttempt | null {
+  if (slice.length === 0) return null;
+  slice.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+
+  const anchor =
+    slice.find((e) => e.eventType === "checkout_loaded") ??
+    slice.find((e) => e.eventType === "checkout_clicked") ??
+    slice[0];
+
+  const sessionId = anchor.sessionId || slice.find((e) => e.sessionId)?.sessionId || "unknown";
+  const plan = normalizePlan(anchor.meta, anchor.plan);
+  const startMs = anchor.createdAt.getTime();
+
+  const hasPlanSelectedBefore = eventBeforeAnchor(allParsed, anchor, "plan_selected", PLAN_TO_CHECKOUT_MAX_MS);
+
+  const hasPaymentStarted = slice.some((e) => isPaymentStartedType(e.eventType));
+  const hasPurchaseCompleted = slice.some((e) => isPurchaseType(e.eventType));
+
+  const paymentMethod =
+    (slice.find((e) => isPaymentStartedType(e.eventType))?.meta.payment_method as string) ||
+    (slice.find((e) => e.eventType === "payment_method_selected")?.meta.method as string) ||
+    null;
+
+  const base = {
+    id,
+    sessionId,
+    creator: anchor.creator ?? "unknown",
+    plan,
+    device: resolveDevice(slice, sessionEvents),
+    startedAt: anchor.createdAt,
+    hasPlanSelectedBefore,
+    hasCheckoutClicked:
+      eventBeforeAnchor(allParsed, anchor, "checkout_clicked", PLAN_TO_CHECKOUT_MAX_MS) ||
+      slice.some((e) => e.eventType === "checkout_clicked"),
+    hasCheckoutLoaded: slice.some((e) => e.eventType === "checkout_loaded"),
+    hasPaymentElementLoaded: slice.some((e) => e.eventType === "payment_element_loaded"),
+    hasPaymentMethodAvailable: slice.some((e) => e.eventType === "payment_method_available"),
+    hasPaymentStarted,
+    hasPurchaseCompleted,
+    hasPaymentFailed: slice.some((e) => e.eventType === "payment_failed"),
+    hasPaymentCancelled: slice.some((e) => e.eventType === "payment_cancelled"),
+    hasCheckoutAbandoned: slice.some((e) => e.eventType === "checkout_abandoned"),
+    paymentMethod,
+  };
+
+  return {
+    ...base,
+    abandonmentStage: classifyAbandonment(base),
+  };
+}
+
 function buildAttempts(events: RawEvent[]): { attempts: CheckoutAttempt[]; unlinkedPurchases: number } {
   const parsed = events.map((e) => ({ ...e, meta: parseMeta(e.metadata) }));
 
-  // Group by session
   const bySession = new Map<string, typeof parsed>();
   for (const e of parsed) {
     if (!e.sessionId) continue;
@@ -207,14 +268,34 @@ function buildAttempts(events: RawEvent[]): { attempts: CheckoutAttempt[]; unlin
   }
 
   const attempts: CheckoutAttempt[] = [];
+  const builtAttemptIds = new Set<string>();
 
+  // ── Primary: explicit checkout_attempt_id on checkout_v3 events ───────────
+  const byAttemptId = new Map<string, typeof parsed>();
+  for (const e of parsed) {
+    const aid = attemptIdFromMeta(e.meta);
+    if (!aid) continue;
+    const list = byAttemptId.get(aid) ?? [];
+    list.push(e);
+    byAttemptId.set(aid, list);
+  }
+
+  for (const [attemptId, slice] of byAttemptId) {
+    const sessionId = slice.find((e) => e.sessionId)?.sessionId ?? "unknown";
+    const sessionEvents = bySession.get(sessionId) ?? slice;
+    const attempt = buildAttemptFromEvents(attemptId, slice, sessionEvents, parsed);
+    if (attempt) {
+      attempts.push(attempt);
+      builtAttemptIds.add(attemptId);
+    }
+  }
+
+  // ── Legacy fallback: derive from checkout_loaded anchors (pre-attempt-id data) ─
   for (const [sessionId, sessionEvents] of bySession) {
+    const sessionHasAttemptId = sessionEvents.some((e) => attemptIdFromMeta(e.meta));
+    if (sessionHasAttemptId) continue;
+
     sessionEvents.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
-
-    const planSelectedTimes = sessionEvents
-      .filter((e) => e.eventType === "plan_selected")
-      .map((e) => e.createdAt.getTime());
-
     const anchors = sessionEvents.filter((e) => e.eventType === "checkout_loaded");
     if (anchors.length === 0) continue;
 
@@ -230,50 +311,15 @@ function buildAttempts(events: RawEvent[]): { attempts: CheckoutAttempt[]; unlin
         (e) => e.createdAt.getTime() >= startMs && e.createdAt.getTime() < endMs
       );
 
-      const plan = normalizePlan(anchor.meta, anchor.plan);
-      const attemptId = `${sessionId}:${startMs}`;
+      const legacyId = `${sessionId}:${startMs}`;
+      if (builtAttemptIds.has(legacyId)) continue;
 
-      const hasPlanSelectedBefore =
-        eventBeforeAnchor(parsed, anchor, "plan_selected", PLAN_TO_CHECKOUT_MAX_MS) ||
-        planSelectedTimes.some(
-          (t) => t <= startMs && startMs - t <= PLAN_TO_CHECKOUT_MAX_MS
-        );
-
-      const hasPaymentStarted = slice.some((e) => isPaymentStartedType(e.eventType));
-
-      let hasPurchaseCompleted = slice.some((e) => isPurchaseType(e.eventType));
-
-      const paymentMethod =
-        (slice.find((e) => isPaymentStartedType(e.eventType))?.meta.payment_method as string) ||
-        (slice.find((e) => e.eventType === "payment_method_selected")?.meta.method as string) ||
-        null;
-
-      const base = {
-        id: attemptId,
-        sessionId,
-        creator: anchor.creator ?? "unknown",
-        plan,
-        device: resolveDevice(slice, sessionEvents),
-        startedAt: anchor.createdAt,
-        hasPlanSelectedBefore,
-        hasCheckoutClicked:
-          eventBeforeAnchor(parsed, anchor, "checkout_clicked", PLAN_TO_CHECKOUT_MAX_MS) ||
-          slice.some((e) => e.eventType === "checkout_clicked"),
-        hasCheckoutLoaded: true,
-        hasPaymentElementLoaded: slice.some((e) => e.eventType === "payment_element_loaded"),
-        hasPaymentMethodAvailable: slice.some((e) => e.eventType === "payment_method_available"),
-        hasPaymentStarted,
-        hasPurchaseCompleted,
-        hasPaymentFailed: slice.some((e) => e.eventType === "payment_failed"),
-        hasPaymentCancelled: slice.some((e) => e.eventType === "payment_cancelled"),
-        hasCheckoutAbandoned: slice.some((e) => e.eventType === "checkout_abandoned"),
-        paymentMethod,
-      };
-
-      attempts.push({
-        ...base,
-        abandonmentStage: classifyAbandonment(base),
-      });
+      const attempt = buildAttemptFromEvents(legacyId, slice, sessionEvents, parsed);
+      if (attempt) {
+        attempt.hasCheckoutLoaded = true;
+        attempt.abandonmentStage = classifyAbandonment(attempt);
+        attempts.push(attempt);
+      }
     }
   }
 
@@ -383,6 +429,15 @@ export type CheckoutAnalyticsData = {
     creator: string;
     plan: string;
     device: string;
+  }>;
+  paymentCancelledTrace: Array<{
+    checkoutAttemptId: string | null;
+    creator: string;
+    plan: string;
+    eventAt: Date;
+    completedPurchase: boolean;
+    abandonmentStage: string | null;
+    explanation: string;
   }>;
 };
 
@@ -583,14 +638,58 @@ export async function getCheckoutAnalyticsData(): Promise<CheckoutAnalyticsData>
 
   const recentEvents = included.slice(0, 50).map((e) => {
     const meta = parseMeta(e.metadata);
+    const sessionEvents = included.filter((x) => x.sessionId === e.sessionId);
+    const device =
+      deviceFromMeta(meta) ??
+      resolveDevice(
+        [{ meta }],
+        sessionEvents.map((x) => ({ meta: parseMeta(x.metadata) }))
+      );
     return {
       createdAt: e.createdAt,
       eventType: e.eventType,
       creator: e.creator ?? "unknown",
       plan: normalizePlan(meta, e.plan),
-      device: deviceFromMeta(meta) ?? "—",
+      device,
     };
   });
+
+  const paymentCancelledTrace = included
+    .filter((e) => e.eventType === "payment_cancelled")
+    .map((e) => {
+      const meta = parseMeta(e.metadata);
+      const aid = attemptIdFromMeta(meta);
+      const attempt =
+        (aid ? attempts.find((a) => a.id === aid) : null) ??
+        attempts.find(
+          (a) =>
+            a.sessionId === e.sessionId &&
+            e.createdAt.getTime() >= a.startedAt.getTime() &&
+            e.createdAt.getTime() <= a.startedAt.getTime() + ATTEMPT_WINDOW_MS
+        );
+
+      let explanation: string;
+      if (!attempt) {
+        explanation = "No linked checkout attempt in reporting window.";
+      } else if (attempt.hasPurchaseCompleted) {
+        explanation =
+          "Wallet/payment sheet was dismissed but the attempt later completed purchase (not counted as abandoned).";
+      } else if (attempt.abandonmentStage === "payment_cancelled") {
+        explanation = "Classified as payment_cancelled abandonment.";
+      } else {
+        explanation = `Classified as ${attempt.abandonmentStage ?? "unknown"} based on furthest funnel stage reached.`;
+      }
+
+      return {
+        checkoutAttemptId: aid ?? attempt?.id ?? null,
+        creator: e.creator ?? "unknown",
+        plan: normalizePlan(meta, e.plan),
+        eventAt: e.createdAt,
+        completedPurchase: attempt?.hasPurchaseCompleted ?? false,
+        abandonmentStage: attempt?.abandonmentStage ?? null,
+        explanation,
+      };
+    });
 
   return {
     reportingStart: CHECKOUT_ANALYTICS_REPORTING_START,
@@ -614,6 +713,7 @@ export async function getCheckoutAnalyticsData(): Promise<CheckoutAnalyticsData>
     abandonment: { byStage, byPlan, byDevice, bySource },
     rawCounts,
     recentEvents,
+    paymentCancelledTrace,
   };
 }
 

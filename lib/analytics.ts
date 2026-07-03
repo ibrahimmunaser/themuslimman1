@@ -12,6 +12,7 @@
  */
 
 import { captureAttribution, getAttribution, attributionToProps } from "./attribution";
+import { CHECKOUT_ANALYTICS_SCHEMA, checkoutAttemptPayload } from "./checkout-attempt";
 
 // ── ID helpers ────────────────────────────────────────────────────────────────
 
@@ -168,6 +169,9 @@ export function trackEvent(
       ...attributionToProps(attribution),
       device_type: deviceType,
       page_path: window.location.pathname,
+      analytics_schema_version: CHECKOUT_ANALYTICS_SCHEMA,
+      session_id: sessionId,
+      ...checkoutAttemptPayload(),
       ...properties,
     };
 
@@ -225,6 +229,9 @@ export function trackThenNavigate(
       metadata: JSON.stringify({
         ...attributionToProps(attribution),
         device_type: getDeviceType(),
+        analytics_schema_version: CHECKOUT_ANALYTICS_SCHEMA,
+        session_id: sessionId,
+        ...checkoutAttemptPayload(),
         ...properties,
       }),
     });

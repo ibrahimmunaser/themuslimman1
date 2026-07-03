@@ -86,6 +86,7 @@ export default async function LandingPage() {
               <a
                 href="/checkout?plan=individual-monthly"
                 data-track="hero_cta_checkout_click"
+                data-plan="individual-monthly"
                 className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-10 py-4 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-lg transition-colors shadow-xl shadow-gold/25"
               >
                 Start for $4.99/month
@@ -329,6 +330,7 @@ export default async function LandingPage() {
             <Link
               href="/checkout?plan=individual-monthly"
               data-track="final_checkout_clicked"
+              data-plan="individual-monthly"
               className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-10 py-4 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-lg transition-colors shadow-xl shadow-gold/20"
             >
               Start for $4.99/month

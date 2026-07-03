@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { nanoid } from "nanoid";
+import { getSessionId, getVisitorId } from "@/lib/analytics";
+import {
+  CHECKOUT_ANALYTICS_SCHEMA,
+  checkoutAttemptPayload,
+  startCheckoutAttempt,
+} from "@/lib/checkout-attempt";
 
 interface CheckoutFunnelTrackerProps {
   creator: string;
@@ -17,30 +22,7 @@ interface CheckoutFunnelTrackerProps {
   fromQuiz?: boolean;
 }
 
-// ── Session helpers ────────────────────────────────────────────────────────────
-
-function getOrCreate(storage: Storage, key: string, ttlMs?: number): string {
-  try {
-    const raw = storage.getItem(key);
-    if (raw) {
-      if (ttlMs) {
-        const parsed = JSON.parse(raw) as { v: string; exp: number };
-        if (parsed.exp > Date.now()) return parsed.v;
-      } else {
-        return raw;
-      }
-    }
-    const id = nanoid();
-    if (ttlMs) {
-      storage.setItem(key, JSON.stringify({ v: id, exp: Date.now() + ttlMs }));
-    } else {
-      storage.setItem(key, id);
-    }
-    return id;
-  } catch {
-    return nanoid();
-  }
-}
+// ── Device helpers ─────────────────────────────────────────────────────────────
 
 function getDeviceType(): "mobile" | "tablet" | "desktop" {
   try {
@@ -136,18 +118,11 @@ export function sendCheckoutEvent(
 ) {
   try {
     if (typeof window === "undefined") return;
-    const vidKey    = `inf_vid_${creator}`;
-    const sidKey    = `inf_sid_${creator}`;
-    const visitorId = getOrCreate(localStorage,   vidKey, 7 * 24 * 60 * 60 * 1000);
-    const sessionId = getOrCreate(sessionStorage, sidKey);
+    const visitorId = getVisitorId();
+    const sessionId = getSessionId();
 
-    // Merge first-touch attribution so every checkout event has campaign context.
     const attr = readStoredAttribution();
 
-    // Raw email is never included in analytics event metadata.
-    // user_id (application user ID) is passed explicitly by callers that have it.
-    // For anonymous/guest sessions, visitorId (a stable localStorage UUID) is the
-    // only identifier — it links all events in the session without exposing PII.
     const { userEmail: _discarded, ...restExtra } = extra ?? {};
 
     const payload = JSON.stringify({
@@ -158,7 +133,11 @@ export function sendCheckoutEvent(
       route: window.location.pathname,
       metadata: JSON.stringify({
         source: creator,
+        analytics_schema_version: CHECKOUT_ANALYTICS_SCHEMA,
+        session_id: sessionId,
+        device_type: getDeviceType(),
         ...attr,
+        ...checkoutAttemptPayload(),
         ...restExtra,
       }),
     });
@@ -239,6 +218,7 @@ export default function CheckoutFunnelTracker({
 
     const baseMeta: Record<string, unknown> = {
       selected_plan:      plan,
+      plan_id:            plan,
       plan_type:          plan.startsWith("family") ? "family" : "individual",
       billing_interval:   interval,
       price,
@@ -254,23 +234,12 @@ export default function CheckoutFunnelTracker({
       os,
       page_path:          window.location.pathname,
       referrer:           document.referrer || null,
-      // Attribution fields from first-touch capture
       ...attr,
     };
 
-    // checkout_loaded: the /checkout React page mounted successfully.
-    //   Definition: page is visible and checkout session state is initialized.
-    //   It does NOT mean the Stripe payment form is interactive.
-    //
-    // payment_element_loaded: Stripe PaymentElement became visible and interactive.
-    //   Fired by PaymentElement's onReady callback in CheckoutForm.
-    //   This is the signal that the payment interface is ready for user input.
-    //
-    // checkout_load_failed: payment initialization failed after mount.
-    //   Fired by sendCheckoutLoadFailed() when createIntent throws.
-    //
-    // Dashboards must use these definitions — do not treat checkout_loaded as
-    // "checkout ready". Use payment_element_loaded for "payment form ready" funnels.
+    // Ensure attempt exists for direct /checkout URL visits (no prior checkout_clicked).
+    startCheckoutAttempt(plan, { source: creator });
+
     sendCheckoutEvent(creator, "checkout_loaded", baseMeta);
 
     // Legacy per-plan events for backwards compat

@@ -7,6 +7,7 @@ import { PlanPicker } from "@/components/landing/plan-picker";
 import type { PlanId } from "@/components/landing/plan-picker";
 import { captureAttribution, attributionToProps } from "@/lib/attribution";
 import { trackEvent, captureAndTrack } from "@/lib/analytics";
+import { handleCanonicalFunnelClick } from "@/lib/funnel-click-analytics";
 
 // ── Config ─────────────────────────────────────────────────────────────────────
 
@@ -101,26 +102,20 @@ export function InfluencerDirectLanding({ config, part1Preview, afterPart1Previe
 
     // ── Click delegation for data-track on child components ─────────────────
     function handleClick(e: MouseEvent) {
-      const el = (e.target as HTMLElement).closest("[data-track]") as HTMLElement | null;
-      if (!el) return;
-      const event = el.dataset.track;
-      if (!event) return;
-
-      const plan = el.dataset.plan;
-      const planType = el.dataset.planType;
-      const billing = el.dataset.billing;
-      const price = el.dataset.price ? Number(el.dataset.price) : undefined;
-
-      if (event === "plan_selected" || event === "plan_card_click") {
-        trackEvent("plan_selected", { plan_id: plan, plan_type: planType, billing_type: billing, price, ...attrProps }, { creator: config.creator, allowDuplicates: true });
-      } else if (event === "after_part1_checkout_click") {
-        trackEvent("checkout_clicked", { trigger: "after_part1", ...attrProps }, { creator: config.creator, allowDuplicates: true });
-        trackEvent("after_part1_checkout_click", {}, { creator: config.creator, allowDuplicates: true });
-      } else if (event === "checkout_clicked" || event === "selected_plan_checkout_click") {
-        trackEvent("checkout_clicked", { plan_id: plan, ...attrProps }, { creator: config.creator, allowDuplicates: true });
-      } else {
-        trackEvent(event, { plan, ...attrProps }, { creator: config.creator, allowDuplicates: true });
+      if (
+        handleCanonicalFunnelClick(e, {
+          creator: config.creator,
+          handlerScope: "InfluencerDirectLanding",
+          attrProps,
+        })
+      ) {
+        return;
       }
+
+      const el = (e.target as HTMLElement).closest("[data-track]") as HTMLElement | null;
+      if (!el?.dataset.track) return;
+      const plan = el.dataset.plan;
+      trackEvent(el.dataset.track, { plan, ...attrProps }, { creator: config.creator, allowDuplicates: true });
     }
 
     document.addEventListener("click", handleClick);

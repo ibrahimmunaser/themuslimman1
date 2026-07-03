@@ -216,6 +216,7 @@ function CheckoutForm({
 
   // Track which payment method the user has selected (card / applePay / googlePay).
   const selectedMethodRef = useRef<string | null>(null);
+  const initialPaymentMethodRef = useRef<string | null>(null);
 
   // Lightweight checkout stage logger. Enriches each event with plan context.
   // Wrapped in try/catch — tracking must never crash checkout.
@@ -672,12 +673,23 @@ function CheckoutForm({
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Apple Pay, Google Pay, Link appear above via ExpressCheckoutElement — suppress duplicates. */}
         <PaymentElement
-          onReady={() => logStage("payment_element_loaded")}
+          onReady={() => {
+            logStage("payment_element_loaded");
+            logStage("payment_method_presented", { method: "card", presentation: "default_form" });
+          }}
           onChange={(e) => {
-            if (e.value?.type) {
-              selectedMethodRef.current = e.value.type;
-              markPaymentMethodInSession(e.value.type);
-              logStage("payment_method_selected", { method: e.value.type });
+            if (!e.value?.type) return;
+            const method = e.value.type;
+            selectedMethodRef.current = method;
+            markPaymentMethodInSession(method);
+            if (initialPaymentMethodRef.current === null) {
+              initialPaymentMethodRef.current = method;
+              logStage("payment_method_presented", { method, presentation: "stripe_initial" });
+              return;
+            }
+            if (method !== initialPaymentMethodRef.current) {
+              initialPaymentMethodRef.current = method;
+              logStage("payment_method_selected", { method, user_initiated: true });
             }
           }}
           options={{

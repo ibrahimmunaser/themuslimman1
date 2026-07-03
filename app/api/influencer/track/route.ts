@@ -67,6 +67,7 @@ const KNOWN_EVENT_TYPES = [
   "payment_started",          // legacy — use checkout_payment_started in new reports
   "payment_submitted",
   "payment_method_selected",
+  "payment_method_presented",
   "payment_succeeded",        // legacy client-side — use purchase_completed (server-side)
   "payment_failed",
   "payment_skipped_already_has_access",

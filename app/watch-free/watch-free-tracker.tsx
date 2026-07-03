@@ -1,48 +1,56 @@
 "use client";
 
-/**
- * WatchFreeTracker — analytics for /watch-free.
- * Fires landing_page_viewed + Part 1 video milestones + CTA clicks.
- */
-
 import { useEffect } from "react";
 import { captureAttribution, attributionToProps } from "@/lib/attribution";
 import { captureAndTrack, trackEvent } from "@/lib/analytics";
+import { handleCanonicalFunnelClick, trackCheckoutClickedFromClick } from "@/lib/funnel-click-analytics";
 
 export function WatchFreeTracker() {
   useEffect(() => {
     const attribution = captureAttribution();
     const attrProps = attributionToProps(attribution);
 
-    captureAndTrack("landing_page_viewed", {
-      ...attrProps,
-      page: "watch_free",
-      page_path: window.location.pathname,
-      referrer: document.referrer || null,
-    }, { creator: "homepage" });
+    captureAndTrack(
+      "landing_page_viewed",
+      {
+        ...attrProps,
+        page: "watch_free",
+        page_path: window.location.pathname,
+        referrer: document.referrer || null,
+      },
+      { creator: "homepage" }
+    );
 
-    // ── Click delegation ──────────────────────────────────────────────────────
     function handleClick(e: MouseEvent) {
-      const el = (e.target as HTMLElement).closest("[data-track]") as HTMLElement | null;
-      // Also catch raw anchor clicks that navigate to checkout
-      const anchor = (e.target as HTMLElement).closest("a[href*='/checkout']") as HTMLAnchorElement | null;
+      if (
+        handleCanonicalFunnelClick(e, {
+          creator: "homepage",
+          handlerScope: "WatchFreeTracker",
+          attrProps,
+        })
+      ) {
+        return;
+      }
 
-      if (el) {
-        const event = el.dataset.track;
-        if (!event) return;
-        if (event === "checkout_clicked" || event === "after_part1_checkout_click") {
-          trackEvent("checkout_clicked", { trigger: event, ...attrProps }, { creator: "homepage", allowDuplicates: true });
-        } else {
-          trackEvent(event, { ...attrProps }, { creator: "homepage", allowDuplicates: true });
-        }
-      } else if (anchor) {
-        trackEvent("checkout_clicked", { trigger: "watch_free_cta", ...attrProps }, { creator: "homepage", allowDuplicates: true });
+      const el = (e.target as HTMLElement).closest("[data-track]") as HTMLElement | null;
+      if (el?.dataset.track) {
+        trackEvent(el.dataset.track, { ...attrProps }, { creator: "homepage", allowDuplicates: true });
+        return;
+      }
+
+      const anchor = (e.target as HTMLElement).closest("a[href*='/checkout']") as HTMLAnchorElement | null;
+      if (anchor && e.isTrusted && !anchor.dataset.track) {
+        trackCheckoutClickedFromClick(e, anchor as unknown as HTMLElement, {
+          creator: "homepage",
+          handlerScope: "WatchFreeTracker:fallback",
+          attrProps,
+          trigger: "watch_free_cta",
+        });
       }
     }
 
     document.addEventListener("click", handleClick);
 
-    // ── Part 1 video tracking ─────────────────────────────────────────────────
     let startFired = false;
     const progressFired = new Set<number>();
 
@@ -62,7 +70,11 @@ export function WatchFreeTracker() {
         for (const t of [25, 50, 75, 100]) {
           if (pct >= t && !progressFired.has(t)) {
             progressFired.add(t);
-            trackEvent("part_1_progress", { progress_percent: t, content_id: "part-1", ...attrProps }, { creator: "homepage", allowDuplicates: true });
+            trackEvent(
+              "part_1_progress",
+              { progress_percent: t, content_id: "part-1", ...attrProps },
+              { creator: "homepage", allowDuplicates: true }
+            );
           }
         }
       });

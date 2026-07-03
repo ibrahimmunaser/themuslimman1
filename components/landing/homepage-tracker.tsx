@@ -11,6 +11,7 @@
 import { useEffect } from "react";
 import { captureAndTrack, trackEvent } from "@/lib/analytics";
 import { captureAttribution, attributionToProps } from "@/lib/attribution";
+import { handleCanonicalFunnelClick } from "@/lib/funnel-click-analytics";
 
 export function HomepageTracker() {
   useEffect(() => {
@@ -30,41 +31,27 @@ export function HomepageTracker() {
 
     // ── Click delegation ────────────────────────────────────────────────────
     function handleClick(e: MouseEvent) {
+      if (
+        handleCanonicalFunnelClick(e, {
+          creator: "homepage",
+          handlerScope: "HomepageTracker",
+          attrProps,
+        })
+      ) {
+        return;
+      }
+
       const el = (e.target as HTMLElement).closest("[data-track]") as HTMLElement | null;
       if (!el) return;
       const event = el.dataset.track;
       if (!event) return;
 
       const plan = el.dataset.plan;
-      const planType = el.dataset.planType;
-      const billing = el.dataset.billing;
-      const price = el.dataset.price ? Number(el.dataset.price) : undefined;
-
-      if (event === "plan_selected") {
-        trackEvent("plan_selected", {
-          plan_id: plan,
-          plan_type: planType,
-          billing_type: billing,
-          price,
-          ...attrProps,
-        }, { creator: "homepage", allowDuplicates: true });
-      } else if (event === "plan_card_click") {
-        trackEvent("plan_selected", { plan_id: plan, ...attrProps }, { creator: "homepage", allowDuplicates: true });
-        trackEvent("plan_card_click", { plan }, { creator: "homepage", allowDuplicates: true });
-      } else if (event === "selected_plan_checkout_click") {
-        trackEvent("checkout_clicked", { plan_id: plan, ...attrProps }, { creator: "homepage", allowDuplicates: true });
-        // Legacy aliases
-        trackEvent("selected_plan_checkout_click", { plan }, { creator: "homepage", allowDuplicates: true });
-        trackEvent("checkout_start", { plan }, { creator: "homepage", allowDuplicates: true });
-      } else if (event === "hero_cta_checkout_click") {
-        trackEvent("checkout_clicked", { ...attrProps, trigger: "hero_cta" }, { creator: "homepage", allowDuplicates: true });
-        trackEvent("hero_cta_checkout_click", {}, { creator: "homepage", allowDuplicates: true });
-        trackEvent("homepage_primary_cta_click", {}, { creator: "homepage", allowDuplicates: true });
-      } else if (event === "hero_watch_free_click") {
+      if (event === "hero_watch_free_click") {
         trackEvent("hero_watch_free_click", {}, { creator: "homepage", allowDuplicates: true });
         trackEvent("homepage_part1_cta_click", {}, { creator: "homepage", allowDuplicates: true });
       } else {
-        trackEvent(event, { plan, ...attrProps }, { creator: "homepage", allowDuplicates: true });
+        trackEvent(event, { plan }, { creator: "homepage", allowDuplicates: true });
       }
     }
 
