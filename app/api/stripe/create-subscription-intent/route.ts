@@ -184,7 +184,7 @@ export async function POST(request: NextRequest) {
       console.warn("[CREATE-SUBSCRIPTION-INTENT] Could not parse PI ID from client_secret:", clientSecret?.slice(0, 30));
     }
 
-    return NextResponse.json({ clientSecret, amount: PLANS.monthly.price });
+    return NextResponse.json({ clientSecret, amount: PLANS.monthly.price, subscriptionId: subscription.id });
   } catch (error) {
     console.error("[CREATE-SUBSCRIPTION-INTENT] Error:", error);
     return NextResponse.json(

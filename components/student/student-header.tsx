@@ -113,7 +113,7 @@ export function StudentHeader({ userFirstName, userPlan: _userPlan }: StudentHea
                     My Courses
                   </Link>
                   <Link
-                    href="/pricing"
+                    href="/billing"
                     className="flex items-center gap-3 px-4 py-2.5 text-sm text-zinc-400 hover:text-white hover:bg-zinc-800/50 transition-colors"
                     onClick={() => setProfileDropdownOpen(false)}
                   >
@@ -209,7 +209,7 @@ export function StudentHeader({ userFirstName, userPlan: _userPlan }: StudentHea
               My Account
             </Link>
             <Link
-              href="/pricing"
+              href="/billing"
               className="flex items-center gap-3 px-4 py-2.5 text-sm text-zinc-400 hover:text-white hover:bg-zinc-900/50 rounded transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >

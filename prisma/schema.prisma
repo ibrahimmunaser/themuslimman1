@@ -577,24 +577,98 @@ model StudySession {
 }
 
 model Subscription {
-  id                   String   @id
+  id                   String    @id
   userId               String
   stripeCustomerId     String
-  stripeSubscriptionId String   @unique
+  stripeSubscriptionId String    @unique
   stripePriceId        String
   status               String
   currentPeriodStart   DateTime
   currentPeriodEnd     DateTime
-  cancelAtPeriodEnd    Boolean  @default(false)
+  cancelAtPeriodEnd    Boolean   @default(false)
   creator              String?
   promoCode            String?
-  createdAt            DateTime @default(now())
+  createdAt            DateTime  @default(now())
   updatedAt            DateTime
-  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Set on first invoice.payment_failed (billing_reason=subscription_cycle); cleared on
+  /// payment success. Access is granted while status=past_due AND gracePeriodEndsAt >= now.
+  gracePeriodEndsAt         DateTime?
+  /// Synced with invoice.attempt_count for the currently-failing invoice.
+  /// Reset to 0 when the invoice is paid or a new billing cycle begins.
+  renewalAttemptCount       Int       @default(0)
+  /// Timestamp of the most recent invoice.payment_failed event.
+  lastPaymentFailedAt       DateTime?
+  /// Stripe invoice ID of the invoice that triggered the failure state.
+  /// A new invoice ID (new billing cycle) resets the grace period window.
+  lastFailedInvoiceId       String?
+  /// Stripe event ID of the last invoice.payment_failed delivery that actually
+  /// mutated this row. Kept for observability/debugging only — the actual
+  /// delivery-idempotency guarantee comes from the unique constraint on
+  /// StripeWebhookEvent.stripeEventId, checked inside the same DB transaction.
+  lastFailedStripeEventId   String?
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([creator])
+  @@index([gracePeriodEndsAt])
+  @@index([lastFailedInvoiceId])
   @@index([status])
   @@index([userId])
+}
+
+/// One-trial-per-user-per-course durable claim (BLK-02 fix).
+///
+/// A DB unique constraint (not a read-then-act query) is required here because
+/// `stripe.subscriptions.create()` is an external network call that a Prisma
+/// transaction cannot atomically protect. Two concurrent `setup_intent.succeeded`
+/// deliveries — e.g. from two SetupIntents created by two browser tabs — could
+/// otherwise both observe "no Subscription row yet" and both create a live
+/// Stripe trial subscription.
+///
+/// The claim is taken (DB-only, no network call) BEFORE any Stripe subscription
+/// is created:
+///  - unique(userId, courseKey): only one SetupIntent may ever win the claim for
+///    a given user+course. The loser of a race never reaches stripe.subscriptions.create.
+///  - unique(setupIntentId): a given SetupIntent can only ever be linked to one claim.
+///
+/// stripeSubId starts null (claim taken, Stripe call not made yet) and is filled
+/// in by the SAME short transaction that upserts the local Subscription row,
+/// once stripe.subscriptions.create (called with idempotencyKey
+/// `trial-subscription:${setupIntentId}`) succeeds. A null stripeSubId on an
+/// existing row for the SAME setupIntentId means "claimed but not finished yet"
+/// (e.g. a prior DB transaction failed after Stripe already created the
+/// subscription) — recoverable by retrying with the same idempotency key.
+model TrialEligibility {
+  id            String    @id
+  userId        String
+  courseKey     String
+  setupIntentId String
+  stripeSubId   String?
+  createdAt     DateTime  @default(now())
+
+  @@unique([userId, courseKey])
+  @@unique([setupIntentId])
+}
+
+/// Durable, transactionally-consistent record of processed Stripe webhook
+/// event IDs. Used to make sensitive webhook handlers (currently:
+/// invoice.payment_failed / invoice.payment_action_required, setup_intent.succeeded
+/// for trial provisioning) safe against:
+///  - Stripe re-delivering the exact same event (evt_xxx) after a timeout
+///  - Two webhook workers processing the same delivery concurrently
+///
+/// The unique constraint on stripeEventId is the actual correctness
+/// mechanism: inserting this row happens inside the same DB transaction as
+/// the Subscription update, so a concurrent duplicate insert fails with a
+/// unique-violation and that worker returns without repeating side effects
+/// (no double counters, no duplicate emails).
+model StripeWebhookEvent {
+  id            String   @id
+  stripeEventId String   @unique
+  eventType     String
+  createdAt     DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([eventType])
 }
 
 model EmailOutreachLog {

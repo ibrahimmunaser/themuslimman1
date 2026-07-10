@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
-import { stripe } from "@/lib/stripe";
+import { stripe, isStripeLiveMode } from "@/lib/stripe";
 import { prisma } from "@/lib/db";
 import { generateGiftToken, hashGiftToken, buildClaimUrl, sendGiftClaimEmail } from "@/lib/gift";
+import { computeRenewalFailureUpdate } from "@/lib/renewal-failure";
+import { decideTrialClaimAction, resolveTrialPriceId, TRIAL_COURSE_KEY } from "@/lib/trial-eligibility";
 import Stripe from "stripe";
+import { Prisma } from "@prisma/client";
 import { nanoid } from "nanoid";
 import { hashToken } from "@/lib/hash-token";
 
@@ -354,6 +357,24 @@ export async function POST(request: NextRequest) {
         console.log(`[WEBHOOK] invoice.payment_succeeded: ${invoice.id}, subscription: ${invoiceSubId}`);
         if (invoiceSubId) {
           await syncSubscriptionStatus(invoiceSubId);
+          // Clear failure tracking ONLY when the paid invoice is the same invoice
+          // that triggered the failure state. This prevents an unrelated successful
+          // invoice (e.g. a manual invoice) from clearing an outstanding renewal failure.
+          await prisma.subscription.updateMany({
+            where: {
+              stripeSubscriptionId: invoiceSubId,
+              renewalAttemptCount:  { gt: 0 },
+              lastFailedInvoiceId:  invoice.id,   // authoritative: must match the failing invoice
+            },
+            data: {
+              gracePeriodEndsAt:       null,
+              renewalAttemptCount:     0,
+              lastPaymentFailedAt:     null,
+              lastFailedInvoiceId:     null,
+              lastFailedStripeEventId: null,
+              updatedAt:               new Date(),
+            },
+          });
 
           // Fire subscription_renewed for renewal invoices only.
           // First-activation invoices are handled by customer.subscription.created
@@ -388,15 +409,29 @@ export async function POST(request: NextRequest) {
         break;
       }
 
+      case "setup_intent.succeeded": {
+        // Only the free-trial SetupIntent flow is handled here (metadata.type
+        // === "trial_setup", set exclusively by create-trial-intent). Other
+        // SetupIntents in this app (e.g. app/api/stripe/payment-methods —
+        // "add a saved card" for existing lifetime users) intentionally do
+        // NOT set this metadata and are correctly ignored below.
+        const setupIntent = event.data.object as Stripe.SetupIntent;
+        console.log(`[WEBHOOK] setup_intent.succeeded: ${setupIntent.id}, type: ${setupIntent.metadata?.type ?? "n/a"}`);
+        if (setupIntent.metadata?.type === "trial_setup") {
+          await handleTrialSetupIntentSucceeded(event.id, event.livemode, setupIntent.id);
+        }
+        break;
+      }
+
       case "invoice.payment_failed":
       case "invoice.payment_action_required": {
         // payment_action_required = 3DS/SCA authentication needed on renewal.
-        // Treat the same as a failed payment: sync status (likely past_due) and log.
+        // Treat identically to payment_failed: enter grace period, sync status.
         const invoice = event.data.object as Stripe.Invoice;
         const invoiceSubId2 = getInvoiceSubscriptionId(invoice);
         console.error(`[WEBHOOK] ${event.type}: ${invoice.id}, subscription: ${invoiceSubId2}`);
         if (invoiceSubId2) {
-          await syncSubscriptionStatus(invoiceSubId2);
+          await handleInvoicePaymentFailed(event.id, invoice, invoiceSubId2);
         }
         break;
       }
@@ -529,6 +564,444 @@ async function handleTrialFeePayment(pi: Stripe.PaymentIntent) {
     console.error("[WEBHOOK] handleTrialFeePayment: Failed to send welcome email:", err)
   );
   console.log(`[WEBHOOK] handleTrialFeePayment: Welcome email queued for user ${userId}`);
+}
+
+// ── Trial subscription provisioning (BLK-02 fix) ─────────────────────────────
+
+/**
+ * Handles setup_intent.succeeded for the free-trial flow.
+ *
+ * This is the ONLY place a trial Stripe subscription is ever created. It
+ * replaces the old create-trial-intent behavior of creating the subscription
+ * immediately at checkout time (before the SetupIntent was even confirmed),
+ * which let a subscription enter Stripe's "trialing" status — and this app's
+ * access checks grant access for "trialing" — before any payment method was
+ * actually verified. See scripts/fix-trial-user.js for the real production
+ * incident this pattern already caused once.
+ *
+ * Two independent safety mechanisms, neither of which alone is sufficient:
+ *
+ *  1. Stripe-side idempotency key (`trial-subscription:${setupIntent.id}`) on
+ *     stripe.subscriptions.create. This is enforced by Stripe itself, not our
+ *     database, so it protects the actual network side effect: two calls with
+ *     the same key — whether from a genuine retry after our own DB failure,
+ *     or two workers racing on the same event — return the SAME Stripe
+ *     subscription object, never two.
+ *
+ *  2. TrialEligibility DB claim (unique on (userId, courseKey) AND unique on
+ *     setupIntentId), claimed BEFORE any Stripe call. This protects against
+ *     TWO DIFFERENT SetupIntents for the same user (e.g. two browser tabs)
+ *     racing — the Stripe idempotency key above cannot help there, since two
+ *     different SetupIntents produce two different idempotency keys. Claiming
+ *     is a DB-only operation (no network call), so whichever request loses
+ *     the unique-constraint race never reaches stripe.subscriptions.create at
+ *     all — no orphaned Stripe object is ever created for the loser.
+ *
+ * No Stripe network call is ever made while holding a Prisma transaction —
+ * the claim (step 2) is DB-only, the subscription is created (step where
+ * relevant) OUTSIDE any transaction, and only the final DB write (event dedup
+ * + claim completion + Subscription upsert) happens inside a transaction, by
+ * which point no further Stripe calls remain for this handler.
+ */
+async function handleTrialSetupIntentSucceeded(
+  stripeEventId: string,
+  eventLivemode: boolean,
+  setupIntentId: string,
+) {
+  // ── Fresh retrieval — never trust the webhook payload's snapshot alone ────
+  const setupIntent = await stripe.setupIntents.retrieve(setupIntentId);
+
+  if (setupIntent.status !== "succeeded") {
+    console.warn(
+      `[WEBHOOK] handleTrialSetupIntentSucceeded: SetupIntent ${setupIntentId} status is ` +
+      `"${setupIntent.status}" (not succeeded) on fresh retrieval — skipping`
+    );
+    return;
+  }
+
+  // Refuse to process a test-mode event against a live-mode deployment (or
+  // vice versa). Nothing in the webhook handled test/live separation
+  // explicitly before this check existed. isStripeLiveMode() checks both
+  // "sk_live_" and "rk_live_" (restricted key) prefixes — a naive
+  // sk_live_-only check would misclassify a live restricted-key deployment
+  // as test mode and reject every real production webhook.
+  const expectedLive = isStripeLiveMode();
+  if (eventLivemode !== expectedLive) {
+    throw new Error(
+      `[WEBHOOK] handleTrialSetupIntentSucceeded: livemode mismatch for SetupIntent ${setupIntentId} ` +
+      `(event livemode=${eventLivemode}, expected=${expectedLive}) — refusing to process`
+    );
+  }
+
+  const userId = setupIntent.metadata?.userId;
+  const planId = setupIntent.metadata?.planId;
+  if (!userId || !planId) {
+    throw new Error(
+      `[WEBHOOK] handleTrialSetupIntentSucceeded: missing userId/planId metadata on SetupIntent ${setupIntentId}`
+    );
+  }
+
+  const priceId = resolveTrialPriceId(planId);
+  if (!priceId) {
+    throw new Error(
+      `[WEBHOOK] handleTrialSetupIntentSucceeded: unrecognized/unconfigured trial planId "${planId}" on SetupIntent ${setupIntentId}`
+    );
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, stripeCustomerId: true },
+  });
+  if (!user) {
+    throw new Error(
+      `[WEBHOOK] handleTrialSetupIntentSucceeded: userId ${userId} from SetupIntent ${setupIntentId} metadata does not exist`
+    );
+  }
+
+  const setupIntentCustomerId =
+    typeof setupIntent.customer === "string" ? setupIntent.customer : setupIntent.customer?.id;
+  if (!setupIntentCustomerId || setupIntentCustomerId !== user.stripeCustomerId) {
+    throw new Error(
+      `[WEBHOOK] handleTrialSetupIntentSucceeded: SetupIntent ${setupIntentId} customer ` +
+      `(${setupIntentCustomerId ?? "none"}) does not match user ${userId}'s Stripe customer ` +
+      `(${user.stripeCustomerId ?? "none"}) — refusing to process`
+    );
+  }
+
+  const pmId =
+    typeof setupIntent.payment_method === "string" ? setupIntent.payment_method : setupIntent.payment_method?.id;
+  if (!pmId) {
+    throw new Error(
+      `[WEBHOOK] handleTrialSetupIntentSucceeded: SetupIntent ${setupIntentId} has no payment_method`
+    );
+  }
+
+  // ── Claim (DB-only, no network) ───────────────────────────────────────────
+  const claim = await claimTrialEligibility(userId, TRIAL_COURSE_KEY, setupIntentId);
+
+  if (claim.action === "claimed_by_other") {
+    console.log(
+      `[WEBHOOK] handleTrialSetupIntentSucceeded: trial for user ${userId}/${TRIAL_COURSE_KEY} ` +
+      `already claimed by a different SetupIntent — no-op for ${setupIntentId} (no Stripe call made)`
+    );
+    return;
+  }
+
+  if (claim.action === "already_completed") {
+    // Redelivered/duplicate event referencing a fully-finished claim. Ensure
+    // the local row exists (idempotent) but make no new Stripe call.
+    if (claim.stripeSubId) {
+      const stripeSub = await stripe.subscriptions.retrieve(claim.stripeSubId);
+      await finalizeTrialSubscriptionTx(stripeEventId, claim.id, userId, stripeSub);
+    }
+    return;
+  }
+
+  // claim.action is "proceed" (brand-new claim) or "recovered_no_sub_yet"
+  // (retry after a prior DB failure) — both continue identically from here,
+  // using the SAME deterministic idempotency key so a retry returns the
+  // existing Stripe object instead of creating a second one.
+  const isFamily = planId === "familyTrial";
+  const trialDays = 7;
+  const creator   = setupIntent.metadata?.creator   || undefined;
+  const promoCode = setupIntent.metadata?.promoCode || undefined;
+
+  let stripeSub: Stripe.Subscription;
+  try {
+    stripeSub = await stripe.subscriptions.create(
+      {
+        customer: setupIntentCustomerId,
+        items: [{ price: priceId }],
+        trial_period_days: trialDays,
+        trial_settings: {
+          end_behavior: {
+            // Cancel immediately when trial ends if no card was saved — matches
+            // the pre-existing policy for this trial flow.
+            missing_payment_method: "cancel",
+          },
+        },
+        // Card only — Link excluded (see handleTrialFeePayment for the same
+        // documented reasoning: Link forces setup_future_usage: off_session,
+        // which mismatches this subscription's intent).
+        default_payment_method: pmId,
+        payment_settings: { payment_method_types: ["card"] },
+        metadata: {
+          userId,
+          planId,
+          type: "subscription",
+          isTrial: "true",
+          trialDays: String(trialDays),
+          ...(isFamily ? { planType: "family" } : {}),
+          ...(creator   ? { creator }   : {}),
+          ...(promoCode ? { promoCode } : {}),
+        },
+      },
+      { idempotencyKey: `trial-subscription:${setupIntentId}` },
+    );
+  } catch (err) {
+    // ── Concurrent idempotency-key collision (retryable) ────────────────────
+    // If two workers reach this call at the same instant for the SAME
+    // setupIntentId (e.g. two near-simultaneous webhook deliveries that both
+    // won a "recovered_no_sub_yet" claim decision — see claimTrialEligibility;
+    // this is legitimate, not a bug, since the TrialEligibility claim only
+    // protects against DIFFERENT setupIntentIds racing, not redeliveries of
+    // the SAME one), Stripe returns HTTP 409 / type "idempotency_error" for
+    // whichever request loses the lock on that key (StripeIdempotencyError in
+    // the Node SDK). This is explicitly retryable per Stripe's docs — the
+    // in-flight request holding the lock will finish and cache its result
+    // under this key momentarily.
+    //
+    // We must NOT swallow this into a no-op: re-throwing here means nothing
+    // downstream runs — no StripeWebhookEvent row is written, no
+    // TrialEligibility.stripeSubId update, no Subscription upsert — so the
+    // claim taken above stays exactly in its "recovered_no_sub_yet" state.
+    // The webhook route below returns 500 and Stripe retries the delivery;
+    // the retry either observes the OTHER request's now-cached idempotent
+    // result (same idempotencyKey → same Stripe subscription, no duplicate),
+    // or — in the rare case both are still in flight — hits this same
+    // collision again and is retried again by Stripe's own backoff.
+    if (err instanceof Stripe.errors.StripeIdempotencyError) {
+      console.warn(
+        `[WEBHOOK] handleTrialSetupIntentSucceeded: idempotency key trial-subscription:${setupIntentId} ` +
+        `is currently in use by a concurrent request (StripeIdempotencyError) — retryable, not treated as a failure`
+      );
+    }
+    throw err;
+  }
+
+  console.log(
+    `[WEBHOOK] handleTrialSetupIntentSucceeded: Stripe subscription ${stripeSub.id} ` +
+    `(status: ${stripeSub.status}) created for user ${userId} via SetupIntent ${setupIntentId}`
+  );
+
+  const { isFirstLocalCreation } = await finalizeTrialSubscriptionTx(stripeEventId, claim.id, userId, stripeSub);
+
+  // Welcome email — sent only after the DB transaction commits, and only on
+  // the very first successful local subscription creation (not on retries or
+  // redelivered events). Resend idempotencyKey is a second, independent
+  // safeguard against this exact call somehow firing twice for the same
+  // subscription.
+  if (isFirstLocalCreation) {
+    const planLabel = isFamily ? "Family Trial Access" : "7-Day Trial Access";
+    sendTrialWelcomeEmail(userId, planLabel, stripeSub.id).catch((err) =>
+      console.error("[WEBHOOK] handleTrialSetupIntentSucceeded: Failed to send welcome email:", err)
+    );
+  }
+}
+
+/**
+ * TrialEligibility claim orchestration (Prisma I/O) around the pure decision
+ * logic in lib/trial-eligibility.ts. No Stripe calls happen in this function.
+ */
+async function claimTrialEligibility(
+  userId: string,
+  courseKey: string,
+  setupIntentId: string,
+): Promise<{ action: "proceed" | "recovered_no_sub_yet" | "already_completed" | "claimed_by_other"; id: string; stripeSubId: string | null }> {
+  const existing = await prisma.trialEligibility.findUnique({
+    where: { userId_courseKey: { userId, courseKey } },
+  });
+
+  if (!existing) {
+    try {
+      const created = await prisma.trialEligibility.create({
+        data: { id: crypto.randomUUID(), userId, courseKey, setupIntentId },
+      });
+      return { action: "proceed", id: created.id, stripeSubId: null };
+    } catch (err) {
+      if (!isUniqueConstraintViolation(err)) throw err;
+      // Lost the race between findUnique and create — re-read and fall
+      // through to the same decision logic as the "already exists" path.
+      const raced = await prisma.trialEligibility.findUnique({ where: { userId_courseKey: { userId, courseKey } } });
+      if (!raced) throw err; // should not happen — surface the original error
+      const decision = decideTrialClaimAction(raced, setupIntentId);
+      return decision!;
+    }
+  }
+
+  const decision = decideTrialClaimAction(existing, setupIntentId);
+  return decision!;
+}
+
+/**
+ * Short Prisma transaction that finalizes a trial subscription once Stripe
+ * has confirmed it exists: inserts the StripeWebhookEvent dedup row, marks
+ * the TrialEligibility claim complete (stripeSubId), and upserts the local
+ * Subscription row. No Stripe network calls happen inside this transaction —
+ * `stripeSub` is passed in already-fetched from the caller.
+ *
+ * Returns isFirstLocalCreation=true only when THIS call is the one that
+ * inserted the Subscription row for the first time — used to gate the
+ * welcome email so retries/redeliveries never send it twice.
+ */
+async function finalizeTrialSubscriptionTx(
+  stripeEventId: string,
+  trialEligibilityId: string,
+  userId: string,
+  stripeSub: Stripe.Subscription,
+): Promise<{ isFirstLocalCreation: boolean }> {
+  const customerId = typeof stripeSub.customer === "string" ? stripeSub.customer : stripeSub.customer?.id ?? "";
+  const priceId = stripeSub.items.data[0]?.price?.id ?? "";
+  const periods = getSubPeriod(stripeSub);
+  const trialEnd = stripeSub.trial_end ? new Date(stripeSub.trial_end * 1000) : null;
+  const periodStart = periods?.start ?? new Date();
+  const periodEnd = periods?.end ?? trialEnd ?? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  const isFamily = stripeSub.metadata?.planType === "family";
+  const subCreator   = stripeSub.metadata?.creator   ?? null;
+  const subPromoCode = stripeSub.metadata?.promoCode ?? null;
+
+  return prisma.$transaction(async (tx) => {
+    // Layer 1: delivery-level dedup, identical pattern to handleInvoicePaymentFailed.
+    try {
+      await tx.stripeWebhookEvent.create({
+        data: { id: crypto.randomUUID(), stripeEventId, eventType: "setup_intent.succeeded" },
+      });
+    } catch (err) {
+      if (isUniqueConstraintViolation(err)) {
+        console.log(
+          `[WEBHOOK] finalizeTrialSubscriptionTx: event ${stripeEventId} already recorded — no-op`
+        );
+        return { isFirstLocalCreation: false };
+      }
+      throw err;
+    }
+
+    // Mark the claim complete — only writes if it is still unclaimed-by-a-sub,
+    // so a redelivered event that already completed this claim cannot
+    // overwrite stripeSubId with a stale value.
+    await tx.trialEligibility.updateMany({
+      where: { id: trialEligibilityId, stripeSubId: null },
+      data: { stripeSubId: stripeSub.id },
+    });
+
+    const existingRow = await tx.subscription.findUnique({
+      where: { stripeSubscriptionId: stripeSub.id },
+      select: { id: true },
+    });
+
+    await tx.subscription.upsert({
+      where: { stripeSubscriptionId: stripeSub.id },
+      create: {
+        id: crypto.randomUUID(),
+        updatedAt: new Date(),
+        userId,
+        stripeCustomerId: customerId,
+        stripeSubscriptionId: stripeSub.id,
+        stripePriceId: priceId,
+        status: stripeSub.status,
+        currentPeriodStart: periodStart,
+        currentPeriodEnd: periodEnd,
+        cancelAtPeriodEnd: stripeSub.cancel_at_period_end,
+        ...(subCreator   ? { creator: subCreator }     : {}),
+        ...(subPromoCode ? { promoCode: subPromoCode } : {}),
+      },
+      update: {
+        status: stripeSub.status,
+        ...(periods ? { currentPeriodStart: periods.start, currentPeriodEnd: periods.end } : {}),
+        cancelAtPeriodEnd: stripeSub.cancel_at_period_end,
+        updatedAt: new Date(),
+      },
+    });
+
+    if (isFamily) {
+      await tx.user.update({ where: { id: userId }, data: { planType: "family" } });
+    }
+
+    return { isFirstLocalCreation: !existingRow };
+  });
+}
+
+/**
+ * Sends the trial welcome email. Only called from handleTrialSetupIntentSucceeded
+ * on the first successful local subscription creation. Uses a Resend
+ * idempotencyKey derived from the Stripe subscription ID as a second,
+ * independent safeguard against a duplicate send.
+ */
+async function sendTrialWelcomeEmail(userId: string, planName: string, stripeSubId: string): Promise<void> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { email: true, fullName: true, passwordHash: true },
+  });
+  if (!user) return;
+
+  // Guest checkout users get the "set your password" email instead.
+  if (!user.passwordHash) {
+    await sendAccountSetupEmail(userId, user.email, user.fullName, planName);
+    return;
+  }
+
+  const { Resend } = await import("resend");
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://themuslimman.com";
+  const year = new Date().getFullYear();
+
+  await resend.emails.send(
+    {
+      from: process.env.EMAIL_FROM ?? "TheMuslimMan <noreply@themuslimman.com>",
+      to: user.email,
+      subject: "Your 7-day free trial has started",
+      html: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); padding: 30px 20px; text-align: center; border-radius: 12px 12px 0 0;">
+            <h1 style="color: #f4c542; margin: 0 0 8px 0; font-size: 24px;">Your Free Trial is Active</h1>
+            <p style="color: #ccc; margin: 0; font-size: 15px;">7 days of full access — no charge today.</p>
+          </div>
+
+          <div style="background: #ffffff; padding: 40px 30px; border: 1px solid #e5e5e5; border-top: none;">
+            <p style="font-size: 16px; margin: 0 0 16px 0;">Assalamu Alaykum ${user.fullName ? user.fullName : "dear student"},</p>
+
+            <p style="font-size: 15px; margin: 0 0 16px 0;">
+              Your <strong>${planName}</strong> is now active. You have <strong>7 days of full access</strong> — completely free.
+            </p>
+
+            <div style="text-align: center; margin: 32px 0;">
+              <a href="${appUrl}/seerah" style="display: inline-block; background: #f4c542; color: #1a1a1a; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: 700; font-size: 16px;">
+                Open the Course Dashboard
+              </a>
+            </div>
+
+            <div style="background: #f9f4e8; border: 1px solid #e8d88a; border-radius: 8px; padding: 20px; margin: 24px 0;">
+              <p style="font-size: 15px; font-weight: 700; color: #333; margin: 0 0 12px 0;">Start here:</p>
+              <ol style="font-size: 14px; color: #555; padding-left: 20px; margin: 0; line-height: 1.8;">
+                <li><a href="${appUrl}/seerah" style="color: #b8960c; text-decoration: none;">Open the course dashboard</a></li>
+                <li>Begin with <strong>Part 1</strong></li>
+                <li>For each part, use the <strong>video, briefing, flashcards, and quiz together</strong> — they&rsquo;re designed to work as a set</li>
+                <li>Reply to this email or <a href="${appUrl}/contact" style="color: #b8960c; text-decoration: none;">contact support</a> if anything breaks or is unclear</li>
+              </ol>
+            </div>
+
+            <div style="background: #f0f9f0; border: 1px solid #c3e6c3; border-radius: 8px; padding: 16px; margin: 24px 0; font-size: 13px; color: #555;">
+              <strong style="color: #333;">After your 7-day trial:</strong> Your subscription continues automatically at
+              ${planName.includes("Family") ? "$19/month" : "$9/month"}. Cancel anytime from your
+              <a href="${appUrl}/billing" style="color: #b8960c; text-decoration: none;">billing page</a> before the trial ends to avoid any charge.
+            </div>
+
+            <p style="font-size: 13px; color: #aaa; margin: 0;">
+              After you&rsquo;ve had a chance to use the course, we&rsquo;d love to hear what you think.
+              No pressure — whenever you&rsquo;re ready:
+              <a href="${appUrl}/testimonial" style="color: #b8960c;"> Share your feedback.</a>
+            </p>
+          </div>
+
+          <div style="background: #f8f9fa; padding: 20px; text-align: center; border-radius: 0 0 12px 12px; border: 1px solid #e5e5e5; border-top: none;">
+            <p style="font-size: 12px; color: #999; margin: 0;">
+              © ${year} TheMuslimMan · Complete Seerah
+            </p>
+          </div>
+        </body>
+      </html>
+    `,
+    },
+    { idempotencyKey: `trial-welcome/${stripeSubId}` },
+  );
+
+  console.log(`[WEBHOOK] sendTrialWelcomeEmail: sent to user ${userId} (sub ${stripeSubId})`);
 }
 
 /**
@@ -916,6 +1389,354 @@ async function handleSubscriptionDeleted(sub: Stripe.Subscription) {
   }
 }
 
+// ── Renewal failure handling ──────────────────────────────────────────────────
+
+/** True if `err` is a Prisma unique-constraint violation (code P2002). */
+function isUniqueConstraintViolation(err: unknown): boolean {
+  return err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002";
+}
+
+/**
+ * Handles invoice.payment_failed / invoice.payment_action_required.
+ *
+ * Idempotency & concurrency safety (two independent layers):
+ *
+ *  Layer 1 — delivery dedup via StripeWebhookEvent (unique stripeEventId):
+ *    Inserted inside the SAME transaction as the Subscription update. If two
+ *    webhook workers race to process the exact same Stripe event ID
+ *    concurrently, only one INSERT succeeds — the other hits a unique
+ *    constraint violation and returns immediately with NO side effects
+ *    (no counters touched, no email, no status sync).
+ *
+ *  Layer 2 — monotonic attempt tracking via `SELECT ... FOR UPDATE` + the
+ *    pure computeRenewalFailureUpdate() decision function (lib/renewal-failure.ts):
+ *    Row-locking the Subscription for the duration of the transaction
+ *    serializes concurrent DIFFERENT events for the same subscription, and
+ *    the decision function guarantees:
+ *      - renewalAttemptCount never decreases.
+ *      - A same-invoice event with attempt_count <= the stored count
+ *        (a delayed/out-of-order redelivery of an older attempt) is ignored.
+ *      - gracePeriodEndsAt is anchored to the FIRST failure of a NEW invoice
+ *        and never extended on retries of the same invoice.
+ *      - The "payment failed" email fires only when isNewInvoice is true.
+ *
+ * Grace period is only granted for genuine renewals (billing_reason =
+ * "subscription_cycle") — checked before the transaction even begins.
+ *
+ * When retries are exhausted, Stripe transitions the subscription to
+ * canceled or unpaid (verified Revenue Recovery behavior — see
+ * docs/STRIPE_RENEWAL_FAILURE.md). Neither status matches the past_due +
+ * gracePeriodEndsAt branch in hasActiveCourseAccess, so access is denied.
+ *
+ * ── Post-transaction retry gap (fixed) ────────────────────────────────────
+ * An earlier version of this handler called syncSubscriptionStatus() (a
+ * Stripe API call + separate `status`/period-column write) AFTER the
+ * StripeWebhookEvent + renewal-failure transaction had already committed.
+ * If that post-transaction Stripe call failed, the handler threw, Stripe
+ * retried the webhook — but the StripeWebhookEvent row for that event ID
+ * was already committed, so the retry hit the Layer-1 dedup check and
+ * exited as a no-op, silently skipping the status sync forever (relying on
+ * a later customer.subscription.updated event to self-heal `status`, which
+ * is not guaranteed).
+ *
+ * Fixed by moving the Stripe fetch to BEFORE the transaction opens, and
+ * folding syncSubscriptionStatus's field writes into the SAME transaction
+ * as the event-dedup insert and the renewal-failure update:
+ *   1. Fetch the live subscription snapshot from Stripe (no DB writes yet —
+ *      if this throws, nothing has been touched and Stripe's normal retry
+ *      picks it up cleanly, same as any other pre-transaction failure).
+ *   2. Open one Prisma transaction: insert the StripeWebhookEvent row, lock
+ *      the Subscription row, apply the monotonic renewal-failure fields
+ *      (computeRenewalFailureUpdate), AND apply syncSubscriptionStatus's
+ *      fields (status, currentPeriodStart/End, cancelAtPeriodEnd) from the
+ *      snapshot fetched in step 1 — all in the same atomic write.
+ *   3. Commit. No further Stripe network calls happen after this point for
+ *      this handler, so there is nothing left that can fail post-commit and
+ *      strand a "processed" event with unsynced state.
+ *   4. Send the failure email afterward as a best-effort side effect (see
+ *      sendPaymentFailedEmail doc comment for delivery semantics).
+ *
+ * No Stripe network request is ever made while holding the transaction or
+ * the row lock — the snapshot is fetched once, up front, and reused.
+ *
+ * syncSubscriptionStatus() itself writes exactly these fields on the
+ * Subscription row: `status`, `currentPeriodStart` + `currentPeriodEnd`
+ * (only when Stripe returns real period dates — see getSubPeriod), and
+ * `cancelAtPeriodEnd`. All three are preserved here, applied from the same
+ * pre-fetched snapshot, inside the transaction.
+ */
+async function handleInvoicePaymentFailed(
+  stripeEventId: string,
+  invoice: Stripe.Invoice,
+  subscriptionId: string,
+) {
+  // ── Gate: only handle genuine renewal invoices ────────────────────────────
+  const billingReason = (invoice as unknown as Record<string, unknown>)["billing_reason"] as string | undefined;
+  if (billingReason !== "subscription_cycle") {
+    // subscription_create, manual invoices, subscription_update, etc.
+    // These are not renewal failures — do not grant a grace period.
+    // Not part of the StripeWebhookEvent dedup table at all, so a failure
+    // here is retried by Stripe's normal 500-response mechanism with no
+    // false-dedup risk.
+    console.log(
+      `[WEBHOOK] handleInvoicePaymentFailed: skipping grace for invoice ${invoice.id} ` +
+      `(billing_reason=${billingReason ?? "unknown"}, not subscription_cycle)`
+    );
+    await syncSubscriptionStatus(subscriptionId);
+    return;
+  }
+
+  const GRACE_DAYS = parseInt(process.env.SUBSCRIPTION_GRACE_PERIOD_DAYS ?? "7", 10);
+  const now = new Date();
+  const invoiceAttemptCount = (invoice as unknown as Record<string, unknown>)["attempt_count"] as number | undefined ?? 1;
+
+  // Quick existence pre-check (outside the transaction) to preserve the rare
+  // "row not created yet" race handling exactly as before. Also not part of
+  // the StripeWebhookEvent dedup — safe to simply retry via Stripe's normal
+  // 500 mechanism if syncSubscriptionStatus fails here.
+  const exists = await prisma.subscription.findFirst({
+    where: { stripeSubscriptionId: subscriptionId },
+    select: { id: true },
+  });
+  if (!exists) {
+    console.warn(`[WEBHOOK] handleInvoicePaymentFailed: no row for sub ${subscriptionId} — syncing via upsert`);
+    await syncSubscriptionStatus(subscriptionId);
+    return;
+  }
+
+  // ── Fetch the Stripe snapshot BEFORE opening the transaction ──────────────
+  // If this throws, we return/throw here — before any StripeWebhookEvent row
+  // is committed — so Stripe retries the delivery normally and nothing is
+  // left half-applied. No DB transaction or row lock is open during this call.
+  let stripeSnapshot: Stripe.Subscription;
+  try {
+    stripeSnapshot = await stripe.subscriptions.retrieve(subscriptionId, {
+      expand: ["items.data"],
+    });
+  } catch (err) {
+    console.error(
+      `[WEBHOOK] handleInvoicePaymentFailed: Stripe snapshot fetch failed for sub ${subscriptionId} — ` +
+      `aborting before any DB write so Stripe retries cleanly:`, err
+    );
+    throw err;
+  }
+  const periods = getSubPeriod(stripeSnapshot);
+
+  type TxOutcome = {
+    applied: boolean;
+    isNewInvoice: boolean;
+    userId: string;
+    gracePeriodEndsAt: Date | null;
+  };
+
+  let outcome: TxOutcome;
+  try {
+    outcome = await prisma.$transaction(async (tx) => {
+      // ── Layer 1: delivery-level dedup ───────────────────────────────────
+      try {
+        await tx.stripeWebhookEvent.create({
+          data: { id: crypto.randomUUID(), stripeEventId, eventType: "invoice.payment_failed" },
+        });
+      } catch (err) {
+        if (isUniqueConstraintViolation(err)) {
+          console.log(
+            `[WEBHOOK] handleInvoicePaymentFailed: event ${stripeEventId} already recorded ` +
+            `(duplicate/concurrent delivery) — no-op, no side effects repeated`
+          );
+          return { applied: false, isNewInvoice: false, userId: "", gracePeriodEndsAt: null };
+        }
+        throw err;
+      }
+
+      // ── Layer 2: lock the row, then apply the monotonic decision ───────
+      const rows = await tx.$queryRaw<Array<{
+        id: string;
+        userId: string;
+        lastFailedInvoiceId: string | null;
+        renewalAttemptCount: number;
+        gracePeriodEndsAt: Date | null;
+      }>>`
+        SELECT "id", "userId", "lastFailedInvoiceId", "renewalAttemptCount", "gracePeriodEndsAt"
+        FROM "Subscription"
+        WHERE "stripeSubscriptionId" = ${subscriptionId}
+        FOR UPDATE
+      `;
+      const locked = rows[0];
+      if (!locked) {
+        // Extremely rare TOCTOU (row deleted between the pre-check and here).
+        return { applied: false, isNewInvoice: false, userId: "", gracePeriodEndsAt: null };
+      }
+
+      const decision = computeRenewalFailureUpdate(
+        {
+          lastFailedInvoiceId: locked.lastFailedInvoiceId,
+          renewalAttemptCount: locked.renewalAttemptCount,
+          gracePeriodEndsAt: locked.gracePeriodEndsAt,
+        },
+        { invoiceId: invoice.id, attemptCount: invoiceAttemptCount, now, graceDays: GRACE_DAYS },
+      );
+
+      if (!decision.shouldApply) {
+        console.log(
+          `[WEBHOOK] handleInvoicePaymentFailed: ignoring stale/out-of-order event for sub ${subscriptionId} ` +
+          `(invoice=${invoice.id} attempt=${invoiceAttemptCount} <= stored=${locked.renewalAttemptCount})`
+        );
+      }
+
+      // Single atomic write: syncSubscriptionStatus's fields (status/period/
+      // cancelAtPeriodEnd) ALWAYS applied from the pre-fetched live snapshot,
+      // plus the monotonic renewal-failure fields ONLY when shouldApply.
+      // Both land in the same transaction as the StripeWebhookEvent insert —
+      // there is no longer a network call, and no separate write, after commit.
+      await tx.subscription.update({
+        where: { id: locked.id },
+        data: {
+          status: stripeSnapshot.status,
+          ...(periods ? { currentPeriodStart: periods.start, currentPeriodEnd: periods.end } : {}),
+          cancelAtPeriodEnd: stripeSnapshot.cancel_at_period_end,
+          ...(decision.shouldApply ? {
+            renewalAttemptCount: decision.nextRenewalAttemptCount,
+            lastPaymentFailedAt: now,
+            lastFailedInvoiceId: invoice.id,
+            lastFailedStripeEventId: stripeEventId,
+            // Only write gracePeriodEndsAt when starting a new grace window.
+            ...(decision.isNewInvoice ? { gracePeriodEndsAt: decision.nextGracePeriodEndsAt } : {}),
+          } : {}),
+          updatedAt: now,
+        },
+      });
+
+      return {
+        applied: true,
+        isNewInvoice: decision.shouldApply && decision.isNewInvoice,
+        userId: locked.userId,
+        gracePeriodEndsAt: decision.shouldApply ? decision.nextGracePeriodEndsAt : locked.gracePeriodEndsAt,
+      };
+    });
+  } catch (err) {
+    console.error("[WEBHOOK] handleInvoicePaymentFailed: transaction failed:", err);
+    throw err; // let Stripe retry the webhook delivery
+  }
+
+  if (!outcome.applied) {
+    // Duplicate delivery or TOCTOU row-miss — no side effects, by design.
+    return;
+  }
+
+  console.log(
+    `[WEBHOOK] handleInvoicePaymentFailed: sub=${subscriptionId} invoice=${invoice.id} ` +
+    `attempt=${invoiceAttemptCount} event=${stripeEventId} isNewInvoice=${outcome.isNewInvoice} ` +
+    `status=${stripeSnapshot.status} gracePeriodEndsAt=${outcome.gracePeriodEndsAt?.toISOString() ?? "unchanged"}`
+  );
+
+  // Email on the FIRST event for a new failing invoice only. Best-effort —
+  // see sendPaymentFailedEmail doc comment for delivery-semantics rationale.
+  if (outcome.isNewInvoice) {
+    sendPaymentFailedEmail(outcome.userId, outcome.gracePeriodEndsAt!, invoice.id).catch((err) =>
+      console.error("[WEBHOOK] handleInvoicePaymentFailed: Failed to send payment-failed email:", err)
+    );
+  }
+}
+
+/**
+ * Sends a "your renewal payment failed — please update your card" email.
+ * Only sent on the first failure of a billing cycle (not on each Stripe retry).
+ *
+ * ── Delivery semantics (documented, not silently assumed) ─────────────────
+ * This call is fire-and-forget from handleInvoicePaymentFailed's perspective
+ * (`.catch(...)` swallows failures) — the database transaction that recorded
+ * the renewal failure has ALREADY committed successfully by the time this
+ * runs, and it must stay committed regardless of whether the email provider
+ * is reachable. We deliberately do not roll back or retry the DB state based
+ * on email outcome — access control, grace-period expiry, and dunning are
+ * all driven by the DB fields, not by whether this email was delivered.
+ *
+ * At the same time, a failed send here is NOT silently treated as delivered:
+ * a `console.error` is logged by the caller on failure, so operators can
+ * grep logs for missed notifications. There is currently no automatic retry
+ * queue for this specific email — if Resend is down for the exact window
+ * this fires in, that customer does not get a second attempt at this email
+ * (though the /billing page and future Stripe dunning emails still inform
+ * them independently).
+ *
+ * Idempotency: we pass invoiceId as a Resend `idempotencyKey` (format
+ * `payment-failed/<invoiceId>` — Resend's SDK supports this as a second
+ * argument to `emails.send`, deduplicating identical requests for 24h
+ * server-side). This is defense-in-depth, not the primary safeguard — the
+ * primary safeguard is that the caller only invokes this function when
+ * `isNewInvoice` is true, which (per computeRenewalFailureUpdate) is true
+ * at most once per invoice. The idempotency key protects against the case
+ * where our own process retries this exact call (e.g. a future code path
+ * that reintroduces a retry) sending the same invoice's email twice.
+ */
+async function sendPaymentFailedEmail(userId: string, gracePeriodEndsAt: Date, invoiceId: string): Promise<void> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { email: true, fullName: true },
+  });
+  if (!user) {
+    console.warn(`[PAYMENT_FAILED_EMAIL] User ${userId} not found — cannot send email`);
+    return;
+  }
+
+  const { Resend } = await import("resend");
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://themuslimman.com";
+  const year = new Date().getFullYear();
+  const greeting = user.fullName?.trim() || "dear student";
+
+  // Format grace period end date in a human-readable way (UTC for simplicity)
+  const graceEndStr = gracePeriodEndsAt.toLocaleDateString("en-US", {
+    month: "long", day: "numeric", year: "numeric", timeZone: "America/New_York",
+  });
+
+  await resend.emails.send(
+    {
+      from: process.env.EMAIL_FROM ?? "TheMuslimMan <noreply@themuslimman.com>",
+      to: user.email,
+      subject: "Action required: Your Seerah membership payment failed",
+      html: `
+      <!DOCTYPE html>
+      <html>
+        <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+        <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.6;color:#333;max-width:600px;margin:0 auto;padding:20px;">
+          <div style="background:linear-gradient(135deg,#1a1a1a 0%,#2d2d2d 100%);padding:30px 20px;text-align:center;border-radius:12px 12px 0 0;">
+            <h1 style="color:#f4c542;margin:0 0 8px 0;font-size:22px;">Payment failed</h1>
+            <p style="color:#ccc;margin:0;font-size:15px;">Action required to keep your access</p>
+          </div>
+          <div style="background:#fff;padding:40px 30px;border:1px solid #e5e5e5;border-top:none;">
+            <p style="font-size:16px;margin:0 0 16px 0;">Assalamu Alaykum ${greeting},</p>
+            <p style="font-size:15px;margin:0 0 16px 0;">
+              Your most recent monthly payment for <strong>Complete Seerah</strong> was declined.
+              We are retrying the charge automatically over the next few days.
+            </p>
+            <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:16px;margin:20px 0;font-size:14px;color:#856404;">
+              <strong>Your access is still active until ${graceEndStr}.</strong><br>
+              To keep uninterrupted access, please update your payment method before that date.
+            </div>
+            <div style="text-align:center;margin:32px 0;">
+              <a href="${appUrl}/billing" style="display:inline-block;background:#f4c542;color:#1a1a1a;text-decoration:none;padding:16px 40px;border-radius:8px;font-weight:700;font-size:16px;">
+                Update Payment Method
+              </a>
+            </div>
+            <p style="font-size:14px;color:#555;margin:0 0 8px 0;">Clicking the button above takes you to your secure Stripe billing portal, where you can update your card or add a new one.</p>
+            <p style="font-size:13px;color:#aaa;margin:0;">
+              Questions? Reply to this email or <a href="${appUrl}/contact" style="color:#b8960c;">contact support</a>.
+            </p>
+          </div>
+          <div style="background:#f8f9fa;padding:20px;text-align:center;border-radius:0 0 12px 12px;border:1px solid #e5e5e5;border-top:none;">
+            <p style="font-size:12px;color:#999;margin:0;">© ${year} TheMuslimMan · Complete Seerah</p>
+          </div>
+        </body>
+      </html>
+    `,
+    },
+    { idempotencyKey: `payment-failed/${invoiceId}` },
+  );
+
+  console.log(`[PAYMENT_FAILED_EMAIL] Sent to user ${userId} (grace until ${graceEndStr})`);
+}
+
 async function syncSubscriptionStatus(subscriptionId: string) {
   try {
     const sub = await stripe.subscriptions.retrieve(subscriptionId, {
@@ -1001,6 +1822,13 @@ async function upsertSubscription(userId: string, sub: Stripe.Subscription) {
   const isFirstActivation =
     ACTIVE_STATUSES.includes(sub.status) &&
     (!existing || !ACTIVE_STATUSES.includes(existing.status));
+
+  // NOTE: We deliberately do NOT clear failure tracking here even when the subscription
+  // returns to active/trialing. Webhook delivery is not ordered — a stale
+  // customer.subscription.updated (active) could arrive after invoice.payment_failed,
+  // silently clearing the grace period. Failure state is only cleared by
+  // invoice.payment_succeeded or invoice.paid when the authoritative paid invoice ID
+  // matches lastFailedInvoiceId.
 
   // Abandoned checkout: Stripe expires incomplete subscriptions after ~23 hours.
   // When that happens, send a one-time recovery email so we have a chance to win
@@ -1098,12 +1926,23 @@ async function upsertSubscription(userId: string, sub: Stripe.Subscription) {
   // Send a welcome email the first time a subscription becomes active/trialing.
   // Monthly buyers would otherwise get no confirmation after checkout.
   //
-  // Skip for trial subscriptions (isTrial = "true"): the trial welcome email is
-  // sent synchronously by create-trial-intent (the API route that creates the
-  // subscription). Since that route also writes the DB row immediately,
-  // isFirstActivation will be false when this webhook fires — so this branch is
-  // only a safety guard in case the DB write raced. For legacy $1-trial PIs,
-  // handleTrialFeePayment sends the email instead.
+  // Skip for trial subscriptions (isTrial = "true", set by BOTH the current
+  // SetupIntent-based trial flow AND the legacy $1-trial-fee PI path): the
+  // trial welcome email is exclusively owned by handleTrialSetupIntentSucceeded
+  // (current flow, `trial-welcome/${stripeSubId}` idempotency key) or
+  // handleTrialFeePayment (legacy path). Neither normal monthly nor family
+  // monthly subscriptions ever set isTrial metadata — create-subscription-intent
+  // and create-family-subscription-intent don't set it — so this condition
+  // narrowly targets trial subs only and never affects the normal paid
+  // monthly/family welcome-email path below.
+  //
+  // isFirstActivation is normally already false by the time this webhook
+  // fires for a SetupIntent-based trial, because
+  // handleTrialSetupIntentSucceeded's own finalizeTrialSubscriptionTx creates
+  // the Subscription row first (see BLK-02 fix). This branch is reached only
+  // if customer.subscription.created/updated races ahead of that transaction
+  // — harmless for the row itself (the upsert above is idempotent either
+  // way), but no email must be sent from here (see comment below).
   const isTrialSub = sub.metadata?.isTrial === "true";
   if (isFirstActivation && !isTrialSub) {
     const planLabel = isFamilySub ? "Family Monthly Access" : "Monthly Access";
@@ -1112,12 +1951,20 @@ async function upsertSubscription(userId: string, sub: Stripe.Subscription) {
     );
     console.log(`[WEBHOOK] upsertSubscription: Welcome email queued for user ${userId} (sub ${sub.id})`);
   } else if (isFirstActivation && isTrialSub) {
-    // DB row created after a race — send email here as fallback
-    const planLabel = isFamilySub ? "Family Trial Access" : "7-Day Trial Access";
-    sendPurchaseConfirmationEmail(userId, planLabel).catch((err) =>
-      console.error("[WEBHOOK] upsertSubscription: Failed to send trial welcome email fallback:", err)
+    // BLK-02 fix: trial welcome emails are now exclusively owned by
+    // handleTrialSetupIntentSucceeded (with its own
+    // `trial-welcome/${stripeSubId}` Resend idempotency key). If this branch
+    // is reached, customer.subscription.created raced ahead of that
+    // handler's own finalizeTrialSubscriptionTx and created the row first —
+    // harmless for the row itself (upsert is idempotent either way), but we
+    // must NOT send a second, non-deduplicated email from here. There used
+    // to be a "fallback" send in this branch; removing it is required so
+    // customer.subscription.created can never independently trigger a
+    // trial-signup side effect outside the intended (webhook-validated) path.
+    console.log(
+      `[WEBHOOK] upsertSubscription: trial sub ${sub.id} row created via customer.subscription.created race — ` +
+      `welcome email is owned by handleTrialSetupIntentSucceeded, not sent here`
     );
-    console.log(`[WEBHOOK] upsertSubscription: Trial welcome email fallback queued for user ${userId} (sub ${sub.id})`);
   }
 }
 

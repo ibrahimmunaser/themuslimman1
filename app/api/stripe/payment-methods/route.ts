@@ -20,20 +20,28 @@ async function getOrCreateCustomer(userId: string, email: string, name: string):
   return customer.id;
 }
 
-// GET — list saved payment methods
+// GET — list saved payment methods + the customer's default payment method ID.
+// Card data is never persisted in Prisma — it's always fetched live from Stripe.
 export async function GET() {
   try {
     const user = await getCurrentUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const dbUser = await prisma.user.findUnique({ where: { id: user.id }, select: { stripeCustomerId: true } });
-    if (!dbUser?.stripeCustomerId) return NextResponse.json({ paymentMethods: [] });
+    if (!dbUser?.stripeCustomerId) return NextResponse.json({ paymentMethods: [], defaultPaymentMethodId: null });
 
     const stripe = getStripe();
-    const { data } = await stripe.paymentMethods.list({
-      customer: dbUser.stripeCustomerId,
-      type: "card",
-    });
+    const [{ data }, customer] = await Promise.all([
+      stripe.paymentMethods.list({ customer: dbUser.stripeCustomerId, type: "card" }),
+      stripe.customers.retrieve(dbUser.stripeCustomerId),
+    ]);
+
+    const defaultPaymentMethodId =
+      !("deleted" in customer) && customer.invoice_settings?.default_payment_method
+        ? (typeof customer.invoice_settings.default_payment_method === "string"
+            ? customer.invoice_settings.default_payment_method
+            : customer.invoice_settings.default_payment_method.id)
+        : null;
 
     return NextResponse.json({
       paymentMethods: data.map((pm) => ({
@@ -44,6 +52,7 @@ export async function GET() {
         expYear: pm.card?.exp_year ?? 0,
         fingerprint: pm.card?.fingerprint,
       })),
+      defaultPaymentMethodId,
     });
   } catch (err) {
     console.error("list payment methods error:", err);

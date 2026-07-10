@@ -15,6 +15,8 @@ import {
   Tag, Eye, EyeOff, RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
+import { SavedCardPicker } from "@/components/billing/saved-card-picker";
+import { friendlyPaymentError, friendlySubmitError } from "@/lib/payment-error-messages";
 import { PLANS, formatPrice } from "@/lib/stripe-config";
 import { clearCreatorPromo, getCreatorPromo, getCreatorPromoConfig } from "@/lib/creator-promos";
 import CheckoutFunnelTracker, { sendCheckoutEvent, sendCheckoutLoadFailed, normalizePaymentError, markPaymentStartedInSession, markPaymentMethodInSession } from "./checkout-funnel-tracker";
@@ -32,97 +34,6 @@ interface AppliedCoupon {
   label: string;
   discount: number;
   finalPrice: number;
-}
-
-/**
- * Maps a Stripe StripeError to a human-friendly message.
- * 3DS / authentication failures get a specific message that encourages
- * the user to retry or try Apple Pay / Google Pay.
- */
-function friendlyPaymentError(err: { code?: string; decline_code?: string; message?: string }): string {
-  const code         = err.code ?? "";
-  const declineCode  = err.decline_code ?? "";
-  const msgLower     = (err.message ?? "").toLowerCase();
-
-  // ── 3DS / authentication failures ────────────────────────────────────────
-  const authCodes = new Set([
-    "payment_intent_authentication_failure",
-    "authentication_required",
-    "card_authentication_required",
-  ]);
-  const isAuthFailure =
-    authCodes.has(code) ||
-    authCodes.has(declineCode) ||
-    msgLower.includes("authentication") ||
-    msgLower.includes("3d secure") ||
-    msgLower.includes("3ds");
-
-  if (isAuthFailure) {
-    return "Your bank could not verify this payment. Please try again, use a different card, or use Apple Pay / Google Pay if available.";
-  }
-
-  // ── Bank blocked / international transaction ──────────────────────────────
-  // "do_not_honor" is the most common decline for international cards (e.g. AU banks
-  // that block cross-border online transactions by default).
-  if (
-    declineCode === "do_not_honor" ||
-    declineCode === "transaction_not_allowed" ||
-    declineCode === "card_not_supported" ||
-    declineCode === "service_not_allowed"
-  ) {
-    return "Your bank declined this payment. This often happens when your bank blocks international or online transactions. Please contact your bank to enable these, then try again — or use a different card or Apple Pay / Google Pay.";
-  }
-
-  // ── Insufficient funds ───────────────────────────────────────────────────
-  if (declineCode === "insufficient_funds") {
-    return "Your card has insufficient funds. Please use a different card.";
-  }
-
-  // ── Expired card ─────────────────────────────────────────────────────────
-  if (code === "expired_card" || declineCode === "expired_card") {
-    return "Your card has expired. Please use a different card.";
-  }
-
-  // ── Wrong CVC / number ───────────────────────────────────────────────────
-  if (code === "incorrect_cvc" || declineCode === "incorrect_cvc") {
-    return "Your card's security code (CVV/CVC) is incorrect. Please double-check the 3-digit code on the back of your card.";
-  }
-  if (code === "incorrect_number" || code === "invalid_number") {
-    return "Your card number is invalid. Please double-check all 16 digits and try again.";
-  }
-
-  // ── Too many attempts ────────────────────────────────────────────────────
-  if (declineCode === "card_velocity_exceeded") {
-    return "Too many payment attempts on this card. Please wait a few minutes and try again, or use a different card.";
-  }
-
-  // ── Generic / unknown decline — keep Stripe's message, add guidance ───────
-  const base = err.message ?? "Your payment was declined.";
-  return `${base} Please try again, use a different card, or contact support at support@themuslimman.com.`;
-}
-
-/**
- * Converts Stripe elements.submit() validation errors into actionable messages.
- * These fire before any server call — purely client-side card field validation.
- */
-function friendlySubmitError(err: { code?: string; message?: string }): string {
-  switch (err.code) {
-    case "incomplete_number":
-      return "Your card number is incomplete. Please enter all digits on your card.";
-    case "invalid_number":
-      return "Your card number appears to be invalid. Please double-check the number and try again.";
-    case "incomplete_expiry":
-      return "Your card's expiration date is incomplete.";
-    case "invalid_expiry_year_past":
-      return "Your card's expiration year is in the past. Please use a different card.";
-    case "incomplete_cvc":
-      return "Your card's security code (CVV/CVC) is incomplete.";
-    case "incomplete_zip":
-      return "Please enter your card's billing postal code.";
-    default:
-      // Fall back to Stripe's own message — it's usually descriptive enough.
-      return err.message ?? "Please check your card details and try again.";
-  }
 }
 
 /** Derive the canonical plan key from audience + billing. */
@@ -168,6 +79,7 @@ function CheckoutForm({
   promoCode,
   userId,
   getOrCreateClientSecret,
+  subscriptionIdRef,
   isAuthenticated,
   userEmail,
   fullName,
@@ -183,6 +95,9 @@ function CheckoutForm({
   /** Application user ID passed down for use in payment_succeeded analytics only. */
   userId?: string;
   getOrCreateClientSecret: (name: string, email: string) => Promise<string>;
+  /** Subscription ID behind the current clientSecret (monthly billing only) — used
+   *  by the saved-card path to pin a chosen card as that subscription's default. */
+  subscriptionIdRef: React.RefObject<string | null>;
   isAuthenticated: boolean;
   userEmail: string;
   fullName: string;
@@ -195,6 +110,11 @@ function CheckoutForm({
   const [error, setError]           = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
   const [showExpressCheckout, setShowExpressCheckout] = useState(false);
+  // Returning customers with saved cards (e.g. a lifetime member buying a future
+  // course, or an upgrade purchase) can reuse one instead of re-entering a card.
+  // null = no saved card selected — falls back to the normal Express/PaymentElement flow below.
+  const [savedPmId, setSavedPmId] = useState<string | null>(null);
+  const usingSavedCard = billing !== "trial" && !!savedPmId;
 
   const returnUrl = toReturnUrl(audience, billing);
   const hasFullName = fullName.trim().length > 0;
@@ -270,7 +190,8 @@ function CheckoutForm({
   // Called by the card form submit button
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!stripe || !elements || processing || authInProgress) return;
+    if (!stripe || processing || authInProgress) return;
+    if (!usingSavedCard && !elements) return;
 
     // ── Guard: full name required ──────────────────────────────────────────────
     if (!authFormRef.current?.fullName?.trim()) {
@@ -303,11 +224,15 @@ function CheckoutForm({
     // intent. It validates card fields, locks the UI, and collects any required
     // user actions (e.g. BECS OTP). Doing this first gives immediate feedback if
     // the card number is incomplete — before any network calls.
-    const { error: submitError } = await elements.submit();
-    if (submitError) {
-      setError(friendlySubmitError(submitError));
-      setProcessing(false);
-      return;
+    // Skipped entirely when reusing a saved card — there are no new card details
+    // to collect or validate.
+    if (!usingSavedCard) {
+      const { error: submitError } = await elements!.submit();
+      if (submitError) {
+        setError(friendlySubmitError(submitError));
+        setProcessing(false);
+        return;
+      }
     }
 
     // ── Step 2: Ensure account + intent exist ─────────────────────────────────
@@ -353,11 +278,48 @@ function CheckoutForm({
       // Network error — proceed; Stripe handles idempotency.
     }
 
+    // ── Step 3.5: Verify saved-card ownership + pin subscription default ───────
+    // Server-side re-verification that the selected payment method really belongs
+    // to this customer (never trust the client-supplied ID alone), and — for
+    // monthly billing — explicitly set it as the new subscription's
+    // default_payment_method so future renewals use it. Any failure here (stale
+    // intent, detached card, ownership mismatch, network error) falls back safely
+    // to the normal new-card flow rather than attempting a charge.
+    if (usingSavedCard) {
+      try {
+        const applyRes = await fetch("/api/stripe/checkout/apply-saved-card", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            paymentMethodId: savedPmId,
+            subscriptionId: billing === "monthly" ? subscriptionIdRef.current : null,
+          }),
+        });
+        if (!applyRes.ok) {
+          const applyData = await applyRes.json().catch(() => ({}));
+          console.error("[CHECKOUT] apply-saved-card rejected:", applyRes.status, applyData?.error);
+          logStage("payment_failed", { errorCode: "saved_card_unavailable", method: "saved_card" });
+          setError(applyData?.error || "Your saved card could not be used. Please choose another or add a new card.");
+          setSavedPmId(null); // fall back to the new-card flow for the retry
+          setProcessing(false);
+          return;
+        }
+      } catch {
+        logStage("payment_failed", { errorCode: "saved_card_unavailable_network", method: "saved_card" });
+        setError("Could not verify your saved card. Please try again or use a new card.");
+        setSavedPmId(null);
+        setProcessing(false);
+        return;
+      }
+    }
+
     try {
       if (billing === "trial") {
         // Free trial: save card via SetupIntent — no charge today.
+        // (usingSavedCard is always false here since it excludes billing === "trial",
+        // so elements is guaranteed mounted — see the guard at the top of this function.)
         const { error: confirmError, setupIntent } = await stripe.confirmSetup({
-          elements,
+          elements: elements!,
           clientSecret,
           confirmParams: { return_url: returnUrl },
           redirect: "if_required",
@@ -372,15 +334,22 @@ function CheckoutForm({
         }
         // If redirect happened, browser navigates away — no further action needed
       } else {
-        const { error: confirmError, paymentIntent } = await stripe.confirmPayment({
-          elements,
-          clientSecret,
-          confirmParams: { return_url: returnUrl },
-          redirect: "if_required",
-        });
+        // Reusing a saved card confirms the PaymentIntent directly against that
+        // payment_method — no elements/new card data is involved. confirmCardPayment
+        // also transparently handles any required 3DS/authentication challenge via
+        // its own modal, exactly like confirmPayment does for new cards. Otherwise,
+        // fall through to the standard deferred-intent PaymentElement confirmation.
+        const { error: confirmError, paymentIntent } = usingSavedCard
+          ? await stripe.confirmCardPayment(clientSecret, { payment_method: savedPmId! })
+          : await stripe.confirmPayment({
+              elements: elements!,
+              clientSecret,
+              confirmParams: { return_url: returnUrl },
+              redirect: "if_required",
+            });
         if (confirmError) {
           console.error("[CHECKOUT] payment confirmation failed:", confirmError.code, confirmError.decline_code, confirmError.message);
-          logStage("payment_failed", { errorCode: confirmError.code ?? "unknown" });
+          logStage("payment_failed", { errorCode: confirmError.code ?? "unknown", method: usingSavedCard ? "saved_card" : undefined });
           setError(friendlyPaymentError(confirmError));
           setProcessing(false);
         } else if (paymentIntent?.status === "succeeded") {
@@ -603,10 +572,18 @@ function CheckoutForm({
 
   return (
     <div className="space-y-5">
+      {/* Returning customers who already have saved cards on file (e.g. a lifetime
+          member buying a future course, or an upgrade purchase) can reuse one
+          instead of re-entering a card. Renders nothing for first-time buyers. */}
+      {isAuthenticated && billing !== "trial" && (
+        <SavedCardPicker onSelect={setSavedPmId} />
+      )}
+
       {/* Express checkout: Apple Pay, Google Pay, Samsung Pay, Link
           Hidden for trial (SetupIntent flow — incompatible with confirmPayment).
+          Hidden when paying with a saved card — nothing new to collect.
           Enabled for both lifetime and monthly (subscription PaymentIntent). */}
-      {billing !== "trial" && (
+      {billing !== "trial" && !usingSavedCard && (
         <>
           {/* Container must never be display:none — hiding before mount prevents
               Google Pay / Apple Pay from initializing. Stripe requires the element
@@ -671,31 +648,34 @@ function CheckoutForm({
       )}
 
       <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Apple Pay, Google Pay, Link appear above via ExpressCheckoutElement — suppress duplicates. */}
-        <PaymentElement
-          onReady={() => {
-            logStage("payment_element_loaded");
-            logStage("payment_method_presented", { method: "card", presentation: "default_form" });
-          }}
-          onChange={(e) => {
-            if (!e.value?.type) return;
-            const method = e.value.type;
-            selectedMethodRef.current = method;
-            markPaymentMethodInSession(method);
-            if (initialPaymentMethodRef.current === null) {
-              initialPaymentMethodRef.current = method;
-              logStage("payment_method_presented", { method, presentation: "stripe_initial" });
-              return;
-            }
-            if (method !== initialPaymentMethodRef.current) {
-              initialPaymentMethodRef.current = method;
-              logStage("payment_method_selected", { method, user_initiated: true });
-            }
-          }}
-          options={{
-            wallets: { applePay: "never", googlePay: "never", link: "never" },
-          }}
-        />
+        {/* Apple Pay, Google Pay, Link appear above via ExpressCheckoutElement — suppress duplicates.
+            Hidden when paying with a saved card — nothing new to collect. */}
+        {!usingSavedCard && (
+          <PaymentElement
+            onReady={() => {
+              logStage("payment_element_loaded");
+              logStage("payment_method_presented", { method: "card", presentation: "default_form" });
+            }}
+            onChange={(e) => {
+              if (!e.value?.type) return;
+              const method = e.value.type;
+              selectedMethodRef.current = method;
+              markPaymentMethodInSession(method);
+              if (initialPaymentMethodRef.current === null) {
+                initialPaymentMethodRef.current = method;
+                logStage("payment_method_presented", { method, presentation: "stripe_initial" });
+                return;
+              }
+              if (method !== initialPaymentMethodRef.current) {
+                initialPaymentMethodRef.current = method;
+                logStage("payment_method_selected", { method, user_initiated: true });
+              }
+            }}
+            options={{
+              wallets: { applePay: "never", googlePay: "never", link: "never" },
+            }}
+          />
+        )}
         {error && (
           <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
             {error}
@@ -1013,6 +993,12 @@ function CheckoutPageContent({
 
   // Ref mirrors: always hold the latest value so async callbacks avoid stale closures.
   const clientSecretRef    = useRef<string | null>(initialClientSecret ?? null);
+  // Mirrors clientSecretRef for monthly billing: the Subscription ID behind the
+  // current clientSecret, if any. Used by the saved-card checkout path to pin a
+  // chosen saved card as THIS subscription's default_payment_method (see
+  // /api/stripe/checkout/apply-saved-card) — set alongside clientSecretRef
+  // wherever a fresh intent is created, and reset whenever it's invalidated.
+  const subscriptionIdRef  = useRef<string | null>(null);
   const isAuthenticatedRef = useRef<boolean>(quizIdentity.isAuthenticated);
   const authFormRef        = useRef({ fullName: "", email: "", password: "", confirmPassword: "" });
 
@@ -1034,6 +1020,7 @@ function CheckoutPageContent({
 
     setLoading(true);
     setClientSecret(null);
+    subscriptionIdRef.current = null;
     setFreeAccess(false);
     setError(null);
     setHasActiveSub(false);
@@ -1152,6 +1139,9 @@ function CheckoutPageContent({
       } else {
         setClientSecret(data.clientSecret);
         clientSecretRef.current = data.clientSecret;
+        // Only present for monthly billing (create-subscription-intent /
+        // create-family-subscription-intent) — undefined for lifetime.
+        subscriptionIdRef.current = typeof data.subscriptionId === "string" ? data.subscriptionId : null;
       }
       return { discountAmount: discount, finalPrice: price, clientSecret: data.clientSecret as string | undefined };
     } catch (err) {
@@ -1890,6 +1880,8 @@ function CheckoutPageContent({
         if (!res.ok) throw new Error(data.error || "Upgrade failed");
         // If a clientSecret came back (new subscriber, not upgrade), handle normally.
         setClientSecret(data.clientSecret);
+        clientSecretRef.current = data.clientSecret;
+        subscriptionIdRef.current = typeof data.subscriptionId === "string" ? data.subscriptionId : null;
         setTrialAlreadyUsed(false);
       } catch (err) {
         setUpgradeError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
@@ -2357,6 +2349,7 @@ function CheckoutPageContent({
                       promoCode={code || undefined}
                       userId={initialUserId || undefined}
                       getOrCreateClientSecret={getOrCreateClientSecret}
+                      subscriptionIdRef={subscriptionIdRef}
                       isAuthenticated={isAuthenticated}
                       userEmail={authEmail || ""}
                       fullName={authForm.fullName}

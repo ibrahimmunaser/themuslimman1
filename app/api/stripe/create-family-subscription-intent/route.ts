@@ -239,7 +239,7 @@ export async function POST(request: NextRequest) {
       console.warn("[CREATE-FAMILY-SUB] Could not parse PI ID from client_secret:", clientSecret?.slice(0, 30));
     }
 
-    return NextResponse.json({ clientSecret, amount: FAMILY_MONTHLY_PLAN.price });
+    return NextResponse.json({ clientSecret, amount: FAMILY_MONTHLY_PLAN.price, subscriptionId: subscription.id });
   } catch (error) {
     console.error("[CREATE-FAMILY-SUB] Error:", error);
     const message = error instanceof Error ? error.message : "Unknown error";

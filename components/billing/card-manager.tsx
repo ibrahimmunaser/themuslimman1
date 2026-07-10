@@ -3,16 +3,16 @@
 import { useState, useEffect, useCallback } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
-import { CreditCard, Plus, Trash2, Loader2, X, Check } from "lucide-react";
+import { CreditCard, Plus, Trash2, Loader2, X, Check, Star, AlertTriangle } from "lucide-react";
+import { daysUntilCardExpiry, isCardExpiringSoon, type SavedCardLike } from "@/lib/saved-cards";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
-interface PaymentMethod {
-  id: string;
+const EXPIRY_WARNING_DAYS = 60;
+
+interface PaymentMethod extends SavedCardLike {
   brand: string;
   last4: string;
-  expMonth: number;
-  expYear: number;
 }
 
 function CardBrandBadge({ brand }: { brand: string }) {
@@ -36,7 +36,7 @@ function AddCardForm({
   onCancel,
 }: {
   clientSecret: string;
-  onSuccess: () => void;
+  onSuccess: (paymentMethodId: string | null) => void;
   onCancel: () => void;
 }) {
   const stripe = useStripe();
@@ -66,7 +66,8 @@ function AddCardForm({
 
     if (setupIntent?.status === "succeeded") {
       setSucceeded(true);
-      setTimeout(onSuccess, 700);
+      const pmId = typeof setupIntent.payment_method === "string" ? setupIntent.payment_method : null;
+      setTimeout(() => onSuccess(pmId), 700);
     }
     setSaving(false);
   };
@@ -132,10 +133,12 @@ function AddCardForm({
 
 export function CardManager() {
   const [cards, setCards] = useState<PaymentMethod[]>([]);
+  const [defaultId, setDefaultId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [setupSecret, setSetupSecret] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [settingDefaultId, setSettingDefaultId] = useState<string | null>(null);
 
   const fetchCards = useCallback(async () => {
     setLoading(true);
@@ -143,6 +146,7 @@ export function CardManager() {
       const res = await fetch("/api/stripe/payment-methods");
       const data = await res.json();
       setCards(data.paymentMethods ?? []);
+      setDefaultId(data.defaultPaymentMethodId ?? null);
     } finally {
       setLoading(false);
     }
@@ -166,9 +170,15 @@ export function CardManager() {
 
   const handleCancel = () => { setShowForm(false); setSetupSecret(null); };
 
-  const handleAddSuccess = () => {
+  const handleAddSuccess = async (newPmId: string | null) => {
     setShowForm(false);
     setSetupSecret(null);
+    // If this is the customer's very first saved card, make it the default automatically —
+    // there's nothing to choose between yet, and it should be usable right away.
+    const hadNoCardsBefore = cards.length === 0;
+    if (hadNoCardsBefore && newPmId) {
+      await fetch(`/api/stripe/payment-methods/${newPmId}/default`, { method: "POST" }).catch(() => {});
+    }
     fetchCards();
   };
 
@@ -176,9 +186,21 @@ export function CardManager() {
     setRemovingId(pmId);
     try {
       await fetch(`/api/stripe/payment-methods/${pmId}`, { method: "DELETE" });
-      setCards((prev) => prev.filter((c) => c.id !== pmId));
+      // Refetch (rather than optimistic local filter) since removing the default
+      // card may cause Stripe to reassign or clear the default server-side.
+      await fetchCards();
     } finally {
       setRemovingId(null);
+    }
+  };
+
+  const handleSetDefault = async (pmId: string) => {
+    setSettingDefaultId(pmId);
+    try {
+      const res = await fetch(`/api/stripe/payment-methods/${pmId}/default`, { method: "POST" });
+      if (res.ok) setDefaultId(pmId);
+    } finally {
+      setSettingDefaultId(null);
     }
   };
 
@@ -216,34 +238,68 @@ export function CardManager() {
           </div>
         )}
 
-        {cards.map((card, i) => (
-          <div
-            key={card.id}
-            className={`flex items-center gap-4 px-5 py-4 ${i > 0 ? "border-t border-border" : ""}`}
-          >
-            <div className="w-12 h-8 rounded-md bg-gradient-to-br from-surface-raised to-border flex items-center justify-center flex-shrink-0 border border-border">
-              <CardBrandBadge brand={card.brand} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-text capitalize">
-                {card.brand} ···· {card.last4}
-              </p>
-              <p className="text-xs text-text-muted mt-0.5">
-                Expires {String(card.expMonth).padStart(2, "0")}/{card.expYear}
-              </p>
-            </div>
-            <button
-              onClick={() => handleRemove(card.id)}
-              disabled={removingId === card.id}
-              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-500/10 text-text-muted hover:text-red-400 transition-colors disabled:opacity-50"
-              aria-label="Remove card"
+        {cards.map((card, i) => {
+          const isDefault = card.id === defaultId;
+          const daysLeft = daysUntilCardExpiry(card.expMonth, card.expYear);
+          const isExpired = daysLeft < 0;
+          const isExpiringSoon = isCardExpiringSoon(card.expMonth, card.expYear, EXPIRY_WARNING_DAYS);
+
+          return (
+            <div
+              key={card.id}
+              className={`flex items-center gap-4 px-5 py-4 ${i > 0 ? "border-t border-border" : ""}`}
             >
-              {removingId === card.id
-                ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                : <Trash2 className="w-3.5 h-3.5" />}
-            </button>
-          </div>
-        ))}
+              <div className="w-12 h-8 rounded-md bg-gradient-to-br from-surface-raised to-border flex items-center justify-center flex-shrink-0 border border-border">
+                <CardBrandBadge brand={card.brand} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="text-sm font-medium text-text capitalize">
+                    {card.brand} ···· {card.last4}
+                  </p>
+                  {isDefault && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-gold/15 text-gold border border-gold/30">
+                      <Star className="w-2.5 h-2.5 fill-current" />
+                      Default
+                    </span>
+                  )}
+                </div>
+                <p className={`text-xs mt-0.5 ${isExpired ? "text-red-400" : isExpiringSoon ? "text-amber-400" : "text-text-muted"}`}>
+                  Expires {String(card.expMonth).padStart(2, "0")}/{card.expYear}
+                  {isExpired && (
+                    <span className="inline-flex items-center gap-1 ml-2">
+                      <AlertTriangle className="w-3 h-3" /> Expired
+                    </span>
+                  )}
+                  {isExpiringSoon && (
+                    <span className="inline-flex items-center gap-1 ml-2">
+                      <AlertTriangle className="w-3 h-3" /> Expires soon
+                    </span>
+                  )}
+                </p>
+              </div>
+              {!isDefault && (
+                <button
+                  onClick={() => handleSetDefault(card.id)}
+                  disabled={settingDefaultId === card.id}
+                  className="text-xs font-medium text-text-muted hover:text-gold transition-colors disabled:opacity-50 whitespace-nowrap"
+                >
+                  {settingDefaultId === card.id ? "Setting…" : "Set as default"}
+                </button>
+              )}
+              <button
+                onClick={() => handleRemove(card.id)}
+                disabled={removingId === card.id}
+                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-500/10 text-text-muted hover:text-red-400 transition-colors disabled:opacity-50 flex-shrink-0"
+                aria-label="Remove card"
+              >
+                {removingId === card.id
+                  ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  : <Trash2 className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+          );
+        })}
 
         {/* Add card form */}
         {showForm && setupSecret && (
@@ -274,4 +330,3 @@ export function CardManager() {
     </div>
   );
 }
-

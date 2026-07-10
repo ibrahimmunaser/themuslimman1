@@ -160,7 +160,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
                 To avoid losing access, please update your payment method before retries are exhausted.
               </p>
               <div className="mt-3 flex flex-wrap gap-3">
-                <PortalButton />
+                <PortalButton label="Update payment method" variant="alert" />
                 <Link href="/help" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-text-secondary hover:text-text text-sm transition-colors">
                   Contact support
                 </Link>
@@ -278,6 +278,17 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
                 cancelDate={sub.currentPeriodEnd.toISOString()}
                 isTrial={isTrial}
               />
+            </div>
+          )}
+
+          {/* Manage billing — shown for all monthly subscribers (not just past_due).
+              Opens the Stripe Customer Portal to update cards, view invoices, etc. */}
+          {isMonthly && (
+            <div className="mt-5 pt-5 border-t border-border/60 flex items-center justify-between flex-wrap gap-3">
+              <p className="text-xs text-text-muted">
+                Update your card, view invoices, or change billing details.
+              </p>
+              <PortalButton label="Manage billing" variant="default" />
             </div>
           )}
 
