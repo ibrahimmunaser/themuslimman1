@@ -833,6 +833,11 @@ model User {
   verificationExpires                             DateTime?
   stripeCustomerId                                String?          @unique
   planType                                        String           @default("individual")
+  /// True for mobile-app device-linked accounts created silently before the
+  /// user provides any personal info (Apple Guideline 5.1.1(v) — purchases
+  /// must not require registration). Set false the moment the user optionally
+  /// upgrades to a real account with email/password (see /api/auth/upgrade-account).
+  isAnonymous                                      Boolean          @default(false)
   activityLogs                                    ActivityLog[]
   emailAutomationEvents                           EmailAutomationEvent[]
   emailOutreachLogs                               EmailOutreachLog[]
@@ -848,6 +853,7 @@ model User {
   subscriptions                                   Subscription[]
 
   @@index([email])
+  @@index([isAnonymous])
   @@index([passwordResetToken])
   @@index([role])
   @@index([verificationToken])

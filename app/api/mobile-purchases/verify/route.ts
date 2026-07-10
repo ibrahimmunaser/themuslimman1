@@ -26,6 +26,15 @@ const PRODUCT_META: Record<
   family_monthly:      { planType: "family",     purchaseType: "subscription" },
   individual_lifetime: { planType: "individual", purchaseType: "lifetime"     },
   family_lifetime:     { planType: "family",     purchaseType: "lifetime"     },
+  // Legacy reverse-DNS IDs — kept as a defensive fallback in case App Store
+  // Connect still has these registered from before the seerah_* rename
+  // (STORE_RELEASE_CHECKLIST.md still documented these as of 2026-07).
+  // Unverified against the live App Store Connect config — safe to keep
+  // even if unused; remove once the real ASC product IDs are confirmed.
+  "com.themuslimman.seerah.monthly.individual":  { planType: "individual", purchaseType: "subscription" },
+  "com.themuslimman.seerah.monthly.family":      { planType: "family",     purchaseType: "subscription" },
+  "com.themuslimman.seerah.lifetime.individual": { planType: "individual", purchaseType: "lifetime"     },
+  "com.themuslimman.seerah.lifetime.family":     { planType: "family",     purchaseType: "lifetime"     },
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -326,20 +335,33 @@ export async function POST(req: NextRequest) {
 
     // B3 fix: Cross-account idempotency guard.
     // If this transactionId was already verified by a DIFFERENT user, reject
-    // the request with 409 rather than silently updating the wrong record.
+    // the request with 409 rather than silently updating the wrong record —
+    // UNLESS the current owner is an anonymous (guest) account. Anonymous
+    // accounts are device-linked, not identity-linked (Guideline 5.1.1(v)),
+    // so if the app was reinstalled and a fresh guest session was created,
+    // the original guest account is abandoned and its purchase should follow
+    // whoever can prove ownership via Apple's receipt (i.e. re-link it here).
+    // A REAL account (has a password) can never be silently re-linked away —
+    // that guard still applies below.
     const existing = await prisma.mobilePurchase.findUnique({
       where: { transactionId: verification.transactionId },
-      select: { userId: true },
+      select: { userId: true, user: { select: { isAnonymous: true } } },
     });
     if (existing && existing.userId !== user.id) {
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            "This transaction is already linked to a different account. " +
-            "Contact support@themuslimman.com if you believe this is an error.",
-        },
-        { status: 409 },
+      if (!existing.user.isAnonymous) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              "This transaction is already linked to a different account. " +
+              "Contact support@themuslimman.com if you believe this is an error.",
+          },
+          { status: 409 },
+        );
+      }
+      console.log(
+        `[mobile-purchases/verify] Re-linking transaction ${verification.transactionId} ` +
+          `from abandoned guest account ${existing.userId} to ${user.id}`,
       );
     }
 
@@ -362,6 +384,9 @@ export async function POST(req: NextRequest) {
       },
       update: {
         // Re-verification refreshes the record for subscription renewals.
+        // userId is included so re-linking an abandoned guest account's
+        // purchase (see re-link comment above) actually takes effect.
+        userId: user.id,
         status: "active",
         currentPeriodEnd: verification.currentPeriodEnd,
         rawResponse: verification.rawResponse,

@@ -47,9 +47,9 @@ const _plans = [
     id: PlanId.individualMonthly,
     iapId: AppConstants.iapMonthlyIndividual,
     name: 'Individual Monthly',
-    description: '1 learner • cancel anytime',
+    description: '1 learner • 1-month term • cancel anytime',
     fallbackPrice: '\$${AppConstants.monthlyPrice}',
-    period: '/mo',
+    period: '/month',
     badge: 'Recommended',
     isRecommended: true,
   ),
@@ -57,9 +57,9 @@ const _plans = [
     id: PlanId.familyMonthly,
     iapId: AppConstants.iapMonthlyFamily,
     name: 'Family Monthly',
-    description: 'Up to 5 profiles • cancel anytime',
+    description: 'Up to 5 profiles • 1-month term • cancel anytime',
     fallbackPrice: '\$${AppConstants.familyMonthlyPrice}',
-    period: '/mo',
+    period: '/month',
     badge: 'For Families',
   ),
   _Plan(
@@ -107,7 +107,7 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
   }
 
   String _price(IAPState iap, _Plan plan) =>
-      iap.productFor(plan.iapId)?.price ?? plan.fallbackPrice;
+      iap.productForPlan(plan.iapId)?.price ?? plan.fallbackPrice;
 
   Future<void> _buyPlan(IAPState iap, _Plan plan) async {
     if (iap.status == IAPStatus.purchasing ||
@@ -120,17 +120,21 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
       return;
     }
 
-    // AUTH GATE — must be signed in before starting a purchase.
-    // Store the intent so the notifier auto-buys after successful login.
-    final isLoggedIn = ref.read(authProvider).isLoggedIn;
-    if (!isLoggedIn) {
-      ref.read(iapProvider.notifier).setPurchaseIntent(plan.iapId);
-      if (mounted) context.push('/login');
+    setState(() => _purchasingPlanId = plan.id);
+
+    // No registration required to purchase (Apple Guideline 5.1.1(v)) — this
+    // silently provisions a device-linked guest session with no personal
+    // info collected, if one doesn't already exist. Signing in/up is only
+    // ever an optional, later step (see the profile screen).
+    final ready = await ref.read(authProvider.notifier).ensureSession();
+    if (!mounted) return;
+    if (!ready) {
+      setState(() => _purchasingPlanId = null);
+      _snack(ref.read(authProvider).error ?? 'Could not start checkout. Please try again.');
       return;
     }
 
-    setState(() => _purchasingPlanId = plan.id);
-    final product = await ref.read(iapProvider.notifier).resolveProduct(plan.iapId);
+    final product = await ref.read(iapProvider.notifier).resolveProductForPlan(plan.iapId);
     if (!mounted) return;
 
     if (product == null) {
@@ -410,14 +414,13 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                       child: TextButton(
                         onPressed: busy
                             ? null
-                            : () {
-                                // Restore requires an authenticated account.
-                                final isLoggedIn =
-                                    ref.read(authProvider).isLoggedIn;
-                                if (!isLoggedIn) {
-                                  context.push('/login');
-                                  return;
-                                }
+                            : () async {
+                                // A device-linked guest session works fine
+                                // for restore too — no registration needed.
+                                final ready = await ref
+                                    .read(authProvider.notifier)
+                                    .ensureSession();
+                                if (!ready || !mounted) return;
                                 ref
                                     .read(iapProvider.notifier)
                                     .restorePurchases();
@@ -652,10 +655,13 @@ class _SubscriptionLegalText extends StatelessWidget {
         textAlign: TextAlign.center,
         text: TextSpan(style: style, children: [
           const TextSpan(
-            text: 'Monthly subscriptions auto-renew unless cancelled at least '
-                '24 hours before the end of the current period. Manage or cancel '
-                'in your App Store or Google Play account settings. Payment will '
-                'be charged to your store account upon purchase confirmation. ',
+            text: 'Individual Monthly and Family Monthly are auto-renewing '
+                '1-month subscriptions that renew unless cancelled at least 24 '
+                'hours before the end of the current period. Individual Lifetime '
+                'and Family Lifetime are one-time, non-renewing purchases. Manage '
+                'or cancel a subscription in your App Store or Google Play account '
+                'settings. Payment will be charged to your store account upon '
+                'purchase confirmation. ',
           ),
           TextSpan(
             text: 'Privacy Policy',
@@ -665,7 +671,7 @@ class _SubscriptionLegalText extends StatelessWidget {
           ),
           const TextSpan(text: '  ·  '),
           TextSpan(
-            text: 'Terms of Service',
+            text: 'Terms of Use (EULA)',
             style: linkStyle,
             recognizer: TapGestureRecognizer()
               ..onTap = () => onOpenUrl('$baseUrl/terms'),
@@ -690,7 +696,7 @@ class _LegalWebScreenState extends State<_LegalWebScreen> {
 
   String get _title {
     if (widget.url.contains('privacy')) return 'Privacy Policy';
-    if (widget.url.contains('terms')) return 'Terms of Service';
+    if (widget.url.contains('terms')) return 'Terms of Use (EULA)';
     return 'themuslimman.com';
   }
 

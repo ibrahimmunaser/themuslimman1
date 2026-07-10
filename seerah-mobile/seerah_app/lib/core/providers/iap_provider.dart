@@ -92,36 +92,51 @@ class IAPState {
     }
   }
 
+  /// Resolves a plan's product by trying every candidate ID for it (current
+  /// + legacy naming) — see [AppConstants.iapProductIdCandidates].
+  ProductDetails? productForPlan(String canonicalId) {
+    final candidates = AppConstants.iapProductIdCandidates[canonicalId] ?? [canonicalId];
+    for (final id in candidates) {
+      final match = productFor(id);
+      if (match != null) return match;
+    }
+    return null;
+  }
+
+  /// Number of the 4 plans that resolved to a real store product, counting
+  /// either the current or legacy ID as a match.
+  int get loadedPlanCount => AppConstants.iapProductIdCandidates.values
+      .where((candidates) => candidates.any((id) => productFor(id) != null))
+      .length;
+
   bool get hasPendingLink => pendingLinkPurchase != null;
 
   bool get needsProductReload =>
       isAvailable &&
       status != IAPStatus.loading &&
-      products.length < AppConstants.iapProductIds.length;
-
-  int get loadedProductCount => products.length;
+      loadedPlanCount < AppConstants.iapPlanCount;
 
   String unavailableProductMessage() {
     if (!isAvailable) {
-      return 'Google Play billing is unavailable on this install. '
-          'Install the app from your Play Console testing link — not via USB, APK, or flutter run.';
+      return 'Store billing is unavailable on this install. '
+          'Install the app from TestFlight / Play Console internal testing — not via USB, IPA/APK, or a debug run.';
     }
     if (products.isEmpty) {
-      return 'No plans loaded from Google Play (0 of ${AppConstants.iapProductIds.length}). '
-          'Create all 4 products in Play Console, set them Active, upload a release to Internal testing, '
-          'then install from the Play Store link.';
+      return 'No plans loaded from the store (0 of ${AppConstants.iapPlanCount}). '
+          'Create all 4 products in App Store Connect / Play Console, set them Active/Ready to Submit, '
+          'then install from a TestFlight or Internal testing link.';
     }
     if (notFoundIds.isNotEmpty) {
-      return 'Only $loadedProductCount of ${AppConstants.iapProductIds.length} plans loaded. '
-          'Missing product IDs in Play Console — they must match exactly and be Active.';
+      return 'Only $loadedPlanCount of ${AppConstants.iapPlanCount} plans loaded. '
+          'Missing product IDs in App Store Connect / Play Console — they must match exactly and be Active.';
     }
-    return 'This plan could not be loaded from Google Play. Tap Retry.';
+    return 'This plan could not be loaded from the store. Tap Retry.';
   }
 
   String get storeStatusLabel {
-    if (status == IAPStatus.loading) return 'Loading plans from Google Play…';
-    if (!isAvailable) return 'Google Play billing unavailable';
-    return '$loadedProductCount of ${AppConstants.iapProductIds.length} plans loaded from Google Play';
+    if (status == IAPStatus.loading) return 'Loading plans from the store…';
+    if (!isAvailable) return 'Store billing unavailable';
+    return '$loadedPlanCount of ${AppConstants.iapPlanCount} plans loaded from the store';
   }
 }
 
@@ -211,6 +226,17 @@ class IAPNotifier extends StateNotifier<IAPState> {
     if (!state.isAvailable) return null;
     await reloadProducts();
     return state.productFor(id);
+  }
+
+  /// Like [resolveProduct] but tries every candidate ID for a plan (current
+  /// + legacy naming) — use this from purchase screens instead of
+  /// [resolveProduct] directly.
+  Future<ProductDetails?> resolveProductForPlan(String canonicalId) async {
+    final existing = state.productForPlan(canonicalId);
+    if (existing != null) return existing;
+    if (!state.isAvailable) return null;
+    await reloadProducts();
+    return state.productForPlan(canonicalId);
   }
 
   // ── Purchase intent (pre-auth) ──────────────────────────────────────────────

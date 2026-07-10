@@ -128,7 +128,7 @@ Fill out the **Data Safety** section in Play Console:
 | Does the app collect or share user data? | Yes |
 | Data types collected | Email address, Name, Purchase history |
 | Is data encrypted in transit? | Yes (HTTPS only) |
-| Can users request data deletion? | Yes (via account settings / support) |
+| Can users request data deletion? | Yes — immediate, in-app, self-service (Profile → Delete Account), no support ticket needed |
 | Data shared with third parties? | Yes — purchase tokens shared with Google Play Billing for verification (via our backend) |
 | Is data collected required? | Yes (email for login; purchase history for access control) |
 | Purpose of collection | App functionality (authentication + subscription access) |
@@ -173,14 +173,42 @@ Fill out the **Data Safety** section in Play Console:
   - **Purchase History** — Collected, linked to identity, app functionality only (IAP receipt verified server-side)
   - Data not used for tracking
 
-### App Review notes (optional but helpful)
-> *"This is an Islamic educational course app covering the biography of the Prophet Muhammad ﷺ in 100 structured parts. Part 1 is freely accessible without an account. Full access to Parts 2–100 requires a paid subscription purchased through in-app purchase (Apple StoreKit). Four plans are available: Individual Monthly, Family Monthly, Individual Lifetime, and Family Lifetime. After purchase the app verifies the receipt with our backend (themuslimman.com/api/mobile-purchases/verify) and unlocks the content. A Restore Purchases button is present on the paywall and pricing screens. Test account credentials: [provide a test account with full access — email + password]. No sign-in with Apple is used; authentication is email/password only."*
+### App Review notes (REQUIRED — paste into App Review Information → Notes)
+> *"This is an Islamic educational course app covering the biography of the Prophet Muhammad ﷺ in 100 structured parts. Part 1 is freely accessible with no account. Full access to Parts 2–100 requires a purchase through in-app purchase (Apple StoreKit) — four plans are available: Individual Monthly, Family Monthly, Individual Lifetime, and Family Lifetime, each showing its title, length, and price directly in the purchase screen next to links to our Privacy Policy and Terms of Use (EULA). Purchasing does NOT require creating an account or providing any personal information — tapping a plan silently starts checkout on a device-linked session with zero data collected, and the native StoreKit sheet appears immediately. After purchase, the app verifies the receipt with our backend (themuslimman.com/api/mobile-purchases/verify) and unlocks the content on that device right away. Creating a real account (Profile → 'Create an account') is entirely optional and only needed to access the purchase from a different device — it is never required before, during, or after checkout. A Restore Purchases button is present on the paywall and pricing screens and works without an account. Account deletion is available in-app at Profile → Delete Account (immediate, no email/support ticket required). No sign-in with Apple is used. Test account credentials: [provide a test account with full access — email + password, or note that Restore Purchases can be used with a Sandbox tester]."*
 
-> **Important:** The app uses `in_app_purchase` (Apple StoreKit). Product IDs registered in App Store Connect:
-> - `com.themuslimman.seerah.monthly.individual`
-> - `com.themuslimman.seerah.monthly.family`
-> - `com.themuslimman.seerah.lifetime.individual`
-> - `com.themuslimman.seerah.lifetime.family`
+> ⚠️ **UNVERIFIED — confirm before resubmitting (likely cause of the Guideline 2.1(b) purchase bug):**
+> The app code currently queries BOTH of the following product-ID sets from
+> the store as a defensive fallback, but the actual product IDs configured
+> in App Store Connect were never confirmed during this fix. Open App Store
+> Connect → your app → Monetization → In-App Purchases and verify the
+> **Product ID** field for each of the 4 items matches one of these sets
+> exactly (case-sensitive), is **Ready to Submit / Approved**, has pricing
+> set in all territories, and that a **Paid Apps Agreement** is active in
+> App Store Connect → Business (Apple's rejection explicitly asks you to
+> confirm this). If the real IDs are neither of these, update
+> `lib/core/constants/app_constants.dart` (mobile) and `PRODUCT_META` in
+> `app/api/mobile-purchases/verify/route.ts` (backend) to match, then remove
+> whichever fallback set turns out to be wrong.
+> - Current: `seerah_monthly_individual`, `seerah_monthly_family`, `seerah_lifetime_individual`, `seerah_lifetime_family`
+> - Legacy fallback also queried: `com.themuslimman.seerah.monthly.individual`, `com.themuslimman.seerah.monthly.family`, `com.themuslimman.seerah.lifetime.individual`, `com.themuslimman.seerah.lifetime.family`
+
+### In-App Purchase promotional image (Guideline 2.3.2)
+> A new promotional image (unique graphic, not a screenshot, large legible
+> text) is at `app-store-assets/iap-promotional-image-1024x1024.png`. Upload
+> it in App Store Connect → In-App Purchases → [item] → Promotional Image,
+> or delete the old flagged image if you don't want to promote it.
+
+### Terms of Use (EULA) — App Store metadata (Guideline 3.1.2(c))
+> The app now links "Terms of Use (EULA)" (→ `/terms`) and "Privacy Policy"
+> (→ `/privacy`) directly in the purchase flow (paywall + pricing screen +
+> signup screen). App Store Connect metadata still needs, separately:
+> - **Privacy Policy URL** field: `https://themuslimman.com/privacy` (already listed above)
+> - **Either**: check "uses Apple's standard EULA" and add a link to
+>   `https://www.apple.com/legal/internet-services/itunes/dev/stdeula/` in the
+>   App Description, **or** if a custom EULA is written, paste it into the
+>   **License Agreement (EULA)** field in App Store Connect → App Information.
+> Confirm which one applies before resubmitting — this fix assumed the
+> standard Apple EULA since no custom EULA text exists in this repo.
 
 ### Release
 - [ ] Upload IPA via Xcode or `xcrun altool`
@@ -201,7 +229,7 @@ Fill out the **Data Safety** section in Play Console:
 | Analytics | None |
 | Advertising | None |
 | Tracking | None |
-| Data deletion | Users can request via support email or account settings page |
+| Data deletion | In-app, self-service, immediate: Profile → Delete Account (POST /api/account/delete) — cancels any active subscription and hard-deletes the account. No account? Same option is available for guest/anonymous accounts too. |
 | Encryption in transit | Yes — HTTPS/TLS for all API calls |
 | Encryption at rest | Session tokens: iOS Keychain / Android Keystore. User prefs: unencrypted SharedPreferences (no sensitive values stored there) |
 
@@ -265,8 +293,11 @@ flutter run --release -d <device-id>
 - [ ] **Pricing screen**: Correct prices loaded from the App Store / Google Play (not fallback hardcoded prices)
 - [ ] **Tap a plan**: Native payment sheet appears (Apple Sheet on iOS, Google Play sheet on Android)
 - [ ] **Complete purchase (sandbox account)**: Success sheet appears — "JazakAllahu Khayran!" — then dashboard shows Full Access badge
-- [ ] **Restore Purchases button**: Visible on pricing and landing screens; tapping it restores a prior sandbox purchase
-- [ ] **Guest purchase flow**: Buy while logged out → account-setup screen appears → create account → purchase linked to new account automatically
+- [ ] **Restore Purchases button**: Visible on pricing and landing screens; tapping it restores a prior sandbox purchase — works even fully logged out (no account needed)
+- [ ] **Guest purchase flow** (Guideline 5.1.1(v) fix): Tap a plan while logged out → NO login/signup screen appears → native StoreKit sheet appears immediately → after purchase, full access unlocked on this device with zero personal info collected
+- [ ] **Optional upgrade**: After a guest purchase, Profile shows "Create an account (optional)" → completing it keeps the same purchase/access, now reachable by signing in on another device
+- [ ] **Cross-device restore**: On a second device, sign into the upgraded account, tap Restore Purchases → purchase re-links and access unlocks
+- [ ] **Delete account**: Profile → Delete Account → confirm → session ends, subscription (if any) is cancelled, re-opening the app shows the logged-out landing screen
 - [ ] **Failed purchase / cancel**: Error snackbar shown, no broken state, can retry immediately
 - [ ] **No IAP on simulator**: Store unavailable banner shown gracefully (not a crash)
 

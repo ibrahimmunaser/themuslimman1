@@ -1,10 +1,13 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_logo.dart';
+import '../../../core/widgets/legal_web_screen.dart';
 import '../../../core/widgets/ui_kit.dart';
 import '../widgets/auth_field.dart';
 
@@ -31,17 +34,37 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     super.dispose();
   }
 
+  void _openLegal(String url) {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => LegalWebScreen(url: url),
+    ));
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() { _loading = true; _error = null; });
-    final err = await ref.read(authProvider.notifier).signup(
-      _nameCtrl.text,
-      _emailCtrl.text,
-      _passCtrl.text,
-    );
+
+    // A guest/anonymous account (created silently before checkout — see
+    // Guideline 5.1.1(v)) upgrades in place so its purchases stay attached.
+    // A never-signed-in visitor gets a brand-new account as before.
+    final isUpgrade = ref.read(authProvider).isAnonymous;
+    final err = isUpgrade
+        ? await ref.read(authProvider.notifier).upgradeAccount(
+            _nameCtrl.text,
+            _emailCtrl.text,
+            _passCtrl.text,
+          )
+        : await ref.read(authProvider.notifier).signup(
+            _nameCtrl.text,
+            _emailCtrl.text,
+            _passCtrl.text,
+          );
     if (!mounted) return;
     if (err != null) {
       setState(() { _error = err; _loading = false; });
+    } else if (isUpgrade) {
+      // Already has access from the guest purchase — go straight in.
+      context.go('/dashboard');
     } else {
       // Navigate to email verification screen instead of letting the router
       // auto-redirect to /dashboard, so every new account sees the verify step.
@@ -51,6 +74,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isUpgrade = ref.watch(authProvider).isAnonymous;
     return Scaffold(
       body: AppGradientBackground(
         child: SafeArea(
@@ -66,9 +90,20 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   children: [
                     const AppLogo(size: 48),
                     const SizedBox(height: 20),
-                    Text('Create Account', style: Theme.of(context).textTheme.displayMedium, textAlign: TextAlign.center),
+                    Text(
+                      isUpgrade ? 'Save Your Progress' : 'Create Account',
+                      style: Theme.of(context).textTheme.displayMedium,
+                      textAlign: TextAlign.center,
+                    ),
                     const SizedBox(height: 6),
-                    Text('Start your Seerah journey', style: Theme.of(context).textTheme.bodyMedium, textAlign: TextAlign.center),
+                    Text(
+                      isUpgrade
+                          ? 'Optional — access your course from any device. '
+                              'Your purchase stays exactly as it is if you skip this.'
+                          : 'Start your Seerah journey',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      textAlign: TextAlign.center,
+                    ),
                   ],
                 ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.2, end: 0),
 
@@ -119,12 +154,18 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       : const Text('Create Account'),
                 ),
 
+                if (isUpgrade) ...[
+                  const SizedBox(height: 12),
+                  Center(
+                    child: TextButton(
+                      onPressed: _loading ? null : () => context.go('/dashboard'),
+                      child: const Text('Skip for now'),
+                    ),
+                  ),
+                ],
+
                 const SizedBox(height: 16),
-                Text(
-                  'By signing up you agree to our Terms & Privacy Policy.',
-                  style: Theme.of(context).textTheme.bodySmall,
-                  textAlign: TextAlign.center,
-                ),
+                _LegalText(onOpenUrl: _openLegal),
 
                 const SizedBox(height: 24),
                 Row(
@@ -143,6 +184,40 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         ),
       ),
     ),
+    );
+  }
+}
+
+class _LegalText extends StatelessWidget {
+  final void Function(String url) onOpenUrl;
+  const _LegalText({required this.onOpenUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    final style = Theme.of(context).textTheme.bodySmall ?? const TextStyle(fontSize: 12);
+    final linkStyle = style.copyWith(
+      decoration: TextDecoration.underline,
+      color: AppColors.textSecondary,
+    );
+    const baseUrl = AppConstants.baseUrl;
+
+    return RichText(
+      textAlign: TextAlign.center,
+      text: TextSpan(style: style, children: [
+        const TextSpan(text: 'By continuing you agree to our '),
+        TextSpan(
+          text: 'Terms of Use (EULA)',
+          style: linkStyle,
+          recognizer: TapGestureRecognizer()..onTap = () => onOpenUrl('$baseUrl/terms'),
+        ),
+        const TextSpan(text: ' and '),
+        TextSpan(
+          text: 'Privacy Policy',
+          style: linkStyle,
+          recognizer: TapGestureRecognizer()..onTap = () => onOpenUrl('$baseUrl/privacy'),
+        ),
+        const TextSpan(text: '.'),
+      ]),
     );
   }
 }

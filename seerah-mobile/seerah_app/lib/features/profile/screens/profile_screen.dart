@@ -29,12 +29,20 @@ class ProfileScreen extends ConsumerWidget {
             const SizedBox(height: 28),
 
             // ── Avatar & identity ──────────────────────────────────────────
-            _AvatarSection(user: user, hasAccess: auth.hasAccess)
+            _AvatarSection(user: user, hasAccess: auth.hasAccess, isAnonymous: auth.isAnonymous)
                 .animate()
                 .fadeIn(duration: 450.ms)
                 .slideY(begin: -0.08, end: 0),
 
-            const SizedBox(height: 36),
+            const SizedBox(height: 24),
+
+            // ── Guest upgrade nudge — fully optional, never required ───────
+            if (auth.isAnonymous)
+              _GuestUpgradeCard(onTap: () => context.push('/signup'))
+                  .animate(delay: 20.ms)
+                  .fadeIn(duration: 350.ms),
+
+            const SizedBox(height: 24),
 
             // ── Learner profiles ───────────────────────────────────────────
             const _GroupLabel('Learner Profile'),
@@ -62,12 +70,13 @@ class ProfileScreen extends ConsumerWidget {
             // ── Account ────────────────────────────────────────────────────
             const _GroupLabel('Account'),
             _SettingsGroup(items: [
-              _SettingsDatum(
-                icon: Icons.lock_outline_rounded,
-                label: 'Change Password',
-                color: const Color(0xFF5A90B0),
-                onTap: () => _launch('${AppConstants.baseUrl}/change-password', context),
-              ),
+              if (!auth.isAnonymous)
+                _SettingsDatum(
+                  icon: Icons.lock_outline_rounded,
+                  label: 'Change Password',
+                  color: const Color(0xFF5A90B0),
+                  onTap: () => _launch('${AppConstants.baseUrl}/change-password', context),
+                ),
               _SettingsDatum(
                 icon: Icons.receipt_long_outlined,
                 label: 'Billing & Subscription',
@@ -146,6 +155,18 @@ class ProfileScreen extends ConsumerWidget {
               ),
             ).animate(delay: 220.ms).fadeIn(duration: 350.ms),
 
+            const SizedBox(height: 12),
+
+            // ── Delete account ─────────────────────────────────────────────
+            Center(
+              child: TextButton(
+                onPressed: () => _confirmDelete(context, ref, auth.isAnonymous),
+                style: TextButton.styleFrom(foregroundColor: AppColors.textMuted),
+                child: const Text('Delete Account',
+                    style: TextStyle(fontSize: 13, decoration: TextDecoration.underline)),
+              ),
+            ).animate(delay: 250.ms).fadeIn(duration: 350.ms),
+
             const SizedBox(height: 24),
             Center(
               child: Text('Version ${AppConstants.appVersion}',
@@ -176,12 +197,19 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   Future<void> _confirmLogout(BuildContext context, WidgetRef ref) async {
+    final isAnonymous = ref.read(authProvider).isAnonymous;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surface,
         title: const Text('Sign Out?'),
-        content: const Text('You will need to sign in again.'),
+        content: Text(
+          isAnonymous
+              ? "You're using a guest account with no email or password. "
+                  'Signing out will permanently lose access on this device unless '
+                  'you create an account first. Continue?'
+              : 'You will need to sign in again.',
+        ),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
@@ -198,6 +226,58 @@ class ProfileScreen extends ConsumerWidget {
       await ref.read(authProvider.notifier).logout();
     }
   }
+
+  Future<void> _confirmDelete(BuildContext context, WidgetRef ref, bool isAnonymous) async {
+    String? password;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          backgroundColor: AppColors.surface,
+          title: const Text('Delete Account?'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'This permanently deletes your account, progress, and any active '
+                'subscription. This cannot be undone.',
+              ),
+              if (!isAnonymous) ...[
+                const SizedBox(height: 16),
+                TextField(
+                  obscureText: true,
+                  decoration: const InputDecoration(labelText: 'Confirm your password'),
+                  onChanged: (v) => setDialogState(() => password = v),
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancel')),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Delete',
+                  style: TextStyle(color: AppColors.error)),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (confirmed != true) return;
+
+    final error = await ref.read(authProvider.notifier).deleteAccount(password: password);
+    if (!context.mounted) return;
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error), behavior: SnackBarBehavior.floating),
+      );
+      return;
+    }
+    context.go('/welcome');
+  }
 }
 
 // ── Avatar section ─────────────────────────────────────────────────────────────
@@ -205,9 +285,11 @@ class ProfileScreen extends ConsumerWidget {
 class _AvatarSection extends StatelessWidget {
   final dynamic user;
   final bool hasAccess;
-  const _AvatarSection({required this.user, required this.hasAccess});
+  final bool isAnonymous;
+  const _AvatarSection({required this.user, required this.hasAccess, this.isAnonymous = false});
 
   String _initials() {
+    if (isAnonymous) return 'G';
     final name = user?.name as String?;
     final email = user?.email as String?;
     if (name != null && name.isNotEmpty) {
@@ -265,7 +347,15 @@ class _AvatarSection extends StatelessWidget {
 
           const SizedBox(height: 16),
 
-          if (user?.name != null)
+          if (isAnonymous)
+            const Text('Guest',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.4,
+                ))
+          else if (user?.name != null)
             Text(user!.name!,
                 style: const TextStyle(
                   color: AppColors.textPrimary,
@@ -275,7 +365,7 @@ class _AvatarSection extends StatelessWidget {
                 )),
 
           const SizedBox(height: 4),
-          Text(user?.email ?? 'Student',
+          Text(isAnonymous ? 'No account yet' : (user?.email ?? 'Student'),
               style: const TextStyle(color: AppColors.textSecondary, fontSize: 14)),
 
           const SizedBox(height: 12),
@@ -314,6 +404,64 @@ class _AvatarSection extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Guest upgrade nudge ──────────────────────────────────────────────────────────
+
+/// Entirely optional prompt shown to guest/anonymous accounts. Never blocks
+/// access — Apple Guideline 5.1.1(v) requires registration to remain
+/// optional and available "at any time", not forced.
+class _GuestUpgradeCard extends StatelessWidget {
+  final VoidCallback onTap;
+  const _GuestUpgradeCard({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.goldFaded,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.sync_rounded, color: AppColors.gold, size: 22),
+              const SizedBox(width: 14),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Create an account (optional)',
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Access your course from other devices. Your purchase '
+                      'already works on this device without this.',
+                      style: TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.arrow_forward_ios_rounded, color: AppColors.gold, size: 14),
+            ],
+          ),
+        ),
       ),
     );
   }

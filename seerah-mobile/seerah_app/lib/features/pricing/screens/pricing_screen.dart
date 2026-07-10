@@ -39,9 +39,9 @@ const _plans = [
     id: PlanId.individualMonthly,
     iapId: AppConstants.iapMonthlyIndividual,
     name: 'Individual Monthly',
-    description: '1 learner • cancel anytime',
+    description: '1 learner • 1-month term • cancel anytime',
     fallbackPrice: '\$${AppConstants.monthlyPrice}',
-    period: '/mo',
+    period: '/month',
     badge: 'Recommended',
     isRecommended: true,
   ),
@@ -49,9 +49,9 @@ const _plans = [
     id: PlanId.familyMonthly,
     iapId: AppConstants.iapMonthlyFamily,
     name: 'Family Monthly',
-    description: 'Up to 5 profiles • cancel anytime',
+    description: 'Up to 5 profiles • 1-month term • cancel anytime',
     fallbackPrice: '\$${AppConstants.familyMonthlyPrice}',
-    period: '/mo',
+    period: '/month',
     badge: 'For Families',
   ),
   _Plan(
@@ -115,7 +115,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
   }
 
   String _price(IAPState iap, _Plan plan) =>
-      iap.productFor(plan.iapId)?.price ?? plan.fallbackPrice;
+      iap.productForPlan(plan.iapId)?.price ?? plan.fallbackPrice;
 
   Future<void> _buyPlan(IAPState iap, _Plan plan) async {
     if (iap.status == IAPStatus.purchasing ||
@@ -131,7 +131,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
     setState(() => _purchasingPlanId = plan.id);
     final product = await ref
         .read(iapProvider.notifier)
-        .resolveProduct(plan.iapId);
+        .resolveProductForPlan(plan.iapId);
     if (!mounted) return;
 
     if (product == null) {
@@ -1007,10 +1007,13 @@ class _SubscriptionLegalText extends StatelessWidget {
           children: [
             const TextSpan(
               text:
-                  'Monthly subscriptions auto-renew unless cancelled at least '
-                  '24 hours before the end of the current period. Manage or cancel '
-                  'in your App Store or Google Play account settings. Payment will '
-                  'be charged to your store account upon purchase confirmation. ',
+                  'Individual Monthly and Family Monthly are auto-renewing '
+                  '1-month subscriptions that renew unless cancelled at least 24 '
+                  'hours before the end of the current period. Individual Lifetime '
+                  'and Family Lifetime are one-time, non-renewing purchases. Manage '
+                  'or cancel a subscription in your App Store or Google Play account '
+                  'settings. Payment will be charged to your store account upon '
+                  'purchase confirmation. ',
             ),
             TextSpan(
               text: 'Privacy Policy',
@@ -1021,7 +1024,7 @@ class _SubscriptionLegalText extends StatelessWidget {
             ),
             const TextSpan(text: '  ·  '),
             TextSpan(
-              text: 'Terms of Service',
+              text: 'Terms of Use (EULA)',
               style: linkStyle,
               recognizer:
                   TapGestureRecognizer()
@@ -1048,7 +1051,7 @@ class _LegalWebScreenState extends State<_LegalWebScreen> {
 
   String get _title {
     if (widget.url.contains('privacy')) return 'Privacy Policy';
-    if (widget.url.contains('terms')) return 'Terms of Service';
+    if (widget.url.contains('terms')) return 'Terms of Use (EULA)';
     return 'themuslimman.com';
   }
 

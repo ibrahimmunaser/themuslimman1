@@ -42,6 +42,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (authState.isLoading) return null;
 
       final isLoggedIn = authState.isLoggedIn;
+      final isAnonymous = authState.isAnonymous;
       final loc = state.uri.path;
 
       final authRoutes = ['/login', '/signup', '/verify-email'];
@@ -62,13 +63,19 @@ final routerProvider = Provider<GoRouter>((ref) {
         return '/landing';
       }
 
-      // Logged-in on entry/auth screens → go to dashboard
-      if (isLoggedIn &&
-          (loc == '/' ||
-              loc == '/welcome' ||
-              loc == '/landing' ||
-              loc == '/login' ||
-              loc == '/signup')) {
+      // Logged-in on entry/marketing screens → go to dashboard (applies to
+      // guest/anonymous accounts too — they already have a session).
+      if (isLoggedIn && (loc == '/' || loc == '/welcome' || loc == '/landing')) {
+        return '/dashboard';
+      }
+
+      // A guest/anonymous account may deliberately visit /login (to switch
+      // into an existing real account and restore purchases there) or
+      // /signup (to optionally upgrade this same account) — Apple Guideline
+      // 5.1.1(v) requires registration to remain available "at any time",
+      // not just before the first session exists. Real accounts still get
+      // bounced away from these screens once signed in.
+      if (isLoggedIn && !isAnonymous && (loc == '/login' || loc == '/signup')) {
         return '/dashboard';
       }
       return null;

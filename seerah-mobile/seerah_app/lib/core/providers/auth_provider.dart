@@ -21,6 +21,7 @@ class AuthState {
   });
 
   bool get hasAccess => user?.hasAccess ?? false;
+  bool get isAnonymous => user?.isAnonymous ?? false;
 
   AuthState copyWith({
     bool? isLoggedIn,
@@ -55,6 +56,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
           hasAccess: prefs.getBool(AppConstants.keyHasAccess) ?? false,
           isFamily: prefs.getBool(AppConstants.keyIsFamily) ?? false,
           role: prefs.getString(AppConstants.keyUserRole) ?? 'student',
+          isAnonymous: prefs.getBool(AppConstants.keyIsAnonymous) ?? false,
         );
         state = AuthState(isLoggedIn: true, isLoading: false, user: user);
         // Silently verify the session is still valid (non-blocking)
@@ -169,6 +171,96 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  /// Guarantees the caller has a session before starting a purchase, without
+  /// ever asking the user for personal information (Apple Guideline
+  /// 5.1.1(v)). If already signed in (real or guest), this is a no-op.
+  /// Otherwise it silently provisions a device-linked guest account.
+  /// Returns true if a session now exists.
+  Future<bool> ensureSession() async {
+    if (state.isLoggedIn) return true;
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final response = await ApiClient.instance.dio.post('/api/auth/mobile-anonymous');
+      final data = response.data as Map<String, dynamic>;
+      if (data['success'] == true) {
+        final user = UserModel(
+          hasAccess: data['hasAccess'] as bool? ?? false,
+          isFamily: (data['planType'] as String?) == 'family',
+          role: data['role'] as String? ?? 'student',
+          isAnonymous: data['isAnonymous'] as bool? ?? true,
+        );
+        await _saveUser(user);
+        state = AuthState(isLoggedIn: true, isLoading: false, user: user);
+        return true;
+      }
+      state = state.copyWith(isLoading: false, error: 'Could not start checkout. Please try again.');
+      return false;
+    } catch (e) {
+      final msg = _parseError(e);
+      state = state.copyWith(isLoading: false, error: msg);
+      return false;
+    }
+  }
+
+  /// Fully optional upgrade of a guest account to a real email/password
+  /// account — same user id, so purchases already made stay attached.
+  /// Never required before or after purchase (Apple Guideline 5.1.1(v)).
+  Future<String?> upgradeAccount(String name, String email, String password) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final response = await ApiClient.instance.dio.post(
+        '/api/auth/upgrade-account',
+        data: {'fullName': name.trim(), 'email': email.trim(), 'password': password},
+      );
+      final data = response.data as Map<String, dynamic>;
+      if (data['success'] == true) {
+        final current = state.user ?? const UserModel();
+        final user = current.copyWith(
+          email: email.trim(),
+          name: name.trim(),
+          isAnonymous: false,
+        );
+        await _saveUser(user);
+        state = state.copyWith(isLoading: false, user: user);
+        return null;
+      }
+      final msg = data['error'] as String? ?? 'Could not create account.';
+      state = state.copyWith(isLoading: false, error: msg);
+      return msg;
+    } catch (e) {
+      final msg = _parseError(e);
+      state = state.copyWith(isLoading: false, error: msg);
+      return msg;
+    }
+  }
+
+  /// Permanently and immediately deletes the account server-side (Apple
+  /// Guideline 5.1.1(v) — apps that support account creation must also
+  /// support in-app account deletion). Clears all local session state on
+  /// success. Returns an error message on failure, or null on success.
+  Future<String?> deleteAccount({String? password}) async {
+    try {
+      final response = await ApiClient.instance.dio.post(
+        '/api/account/delete',
+        data: password != null ? {'password': password} : <String, dynamic>{},
+      );
+      final data = response.data as Map<String, dynamic>;
+      if (data['success'] == true) {
+        await ApiClient.instance.clearCookies();
+        final prefs = await SharedPreferences.getInstance();
+        for (final key in AppConstants.authPrefKeys) {
+          await prefs.remove(key);
+        }
+        await _ref.read(progressProvider.notifier).clearAll();
+        state = const AuthState(isLoggedIn: false, isLoading: false);
+        return null;
+      }
+      return data['error'] as String? ?? 'Could not delete account.';
+    } catch (e) {
+      return _parseError(e);
+    }
+  }
+
   Future<void> logout() async {
     try {
       await ApiClient.instance.dio.post('/api/auth/logout');
@@ -197,6 +289,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     await prefs.setBool(AppConstants.keyHasAccess, user.hasAccess);
     await prefs.setBool(AppConstants.keyIsFamily, user.isFamily);
     await prefs.setString(AppConstants.keyUserRole, user.role);
+    await prefs.setBool(AppConstants.keyIsAnonymous, user.isAnonymous);
   }
 
   String _parseError(dynamic e) {
