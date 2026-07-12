@@ -6,6 +6,7 @@ import {
   CHECKOUT_ANALYTICS_REPORTING_START,
   CHECKOUT_ANALYTICS_SCHEMA,
 } from "@/lib/queries/checkout-analytics";
+import { formatAdminDateTime } from "@/lib/admin-datetime";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Checkout Analytics | Admin" };
@@ -25,14 +26,7 @@ export default async function CheckoutAnalyticsPage() {
   const cell = "px-3 py-2 text-sm text-zinc-300";
   const th = "px-3 py-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider text-left";
 
-  const reportingLabel = CHECKOUT_ANALYTICS_REPORTING_START.toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    timeZoneName: "short",
-  });
+  const reportingLabel = formatAdminDateTime(CHECKOUT_ANALYTICS_REPORTING_START, { includeYear: true });
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 space-y-12">
@@ -379,12 +373,7 @@ export default async function CheckoutAnalyticsPage() {
                 {data.paymentCancelledTrace.map((row, i) => (
                   <tr key={i}>
                     <td className={`${cell} font-mono text-xs text-zinc-500 whitespace-nowrap`}>
-                      {new Date(row.eventAt).toLocaleString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+                      {formatAdminDateTime(row.eventAt)}
                     </td>
                     <td className={`${cell} font-mono text-xs`}>{row.checkoutAttemptId ?? "—"}</td>
                     <td className={cell}>{PLAN_LABELS[row.plan] ?? row.plan}</td>
@@ -443,12 +432,7 @@ export default async function CheckoutAnalyticsPage() {
               {data.recentEvents.map((e, i) => (
                 <tr key={i}>
                   <td className={`${cell} font-mono text-xs text-zinc-500 whitespace-nowrap`}>
-                    {new Date(e.createdAt).toLocaleString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                    {formatAdminDateTime(e.createdAt)}
                   </td>
                   <td className={`${cell} font-mono text-xs`}>{e.eventType}</td>
                   <td className={cell}>{SOURCE_LABELS[e.creator] ?? e.creator}</td>

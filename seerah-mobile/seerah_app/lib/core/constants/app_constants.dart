@@ -31,7 +31,7 @@ class AppConstants {
   static const String monthlyPrice        = '4.99';
   static const String familyMonthlyPrice  = '9.99';
   static const String lifetimePrice       = '49';
-  static const String familyLifetimePrice = '99';
+  static const String familyLifetimePrice = '79';
 
   // In-App Purchase product IDs
   // These must match exactly what is registered in App Store Connect and Google Play Console.

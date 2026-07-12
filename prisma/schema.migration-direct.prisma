@@ -1,0 +1,12 @@
+// Migration-only datasource pointer — used ONLY with `prisma db execute --file ... --schema prisma/schema.migration-direct.prisma`.
+// Deliberately points `url` at DIRECT_URL (port 5432, no pgbouncer) instead of the
+// pooled DATABASE_URL (port 6543), because `prisma db execute --schema <file>` always
+// uses the `url` field of whatever schema it's pointed at — it does not consult
+// `directUrl`. This avoids running DDL through the port-6543 transaction-mode pooler,
+// and avoids ever putting the raw connection string on the command line / in shell
+// history. Not used by the app itself — prisma/schema.prisma (with its own url/directUrl
+// pair) remains the source of truth for the generated Prisma Client and app runtime.
+datasource db {
+  provider = "postgresql"
+  url      = env("DIRECT_URL")
+}

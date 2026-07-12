@@ -175,7 +175,7 @@ export function buildStep3Html(opts: {
     ? (isLifetime ? "family-lifetime" : "family-monthly")
     : (isLifetime ? "individual-lifetime" : "individual-monthly");
   const planLabel  = isFamily
-    ? (isLifetime ? "Family Lifetime — $99 one-time" : "Family Plan — $9.99/mo")
+    ? (isLifetime ? "Family Lifetime — $79 one-time" : "Family Plan — $9.99/mo")
     : (isLifetime ? "Individual Lifetime — $49 one-time" : "Individual Plan — $4.99/mo");
   const planNote   = isFamily
     ? (isLifetime ? "Lifetime access for your whole family — pay once, done." : "Full access for you and your family — cancel anytime.")

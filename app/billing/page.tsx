@@ -4,26 +4,6 @@ import { prisma } from "@/lib/db";
 import { getUserAccessInfo } from "@/lib/access";
 import { StudentLayout } from "@/components/student/student-layout";
 import { PLANS } from "@/lib/stripe-config";
-import { validatePromoCode, applyDiscount } from "@/lib/promo-codes";
-
-// Maps an individual lifetime promo code to the paired family promo code (if one exists).
-// Percentage codes (same code for both plans) map to themselves.
-// Absolute codes with plan-specific variants map to the family variant.
-const INDIVIDUAL_TO_FAMILY_PROMO: Record<string, string> = {
-  // Absolute plan-paired codes
-  COMMUNITY49:  "COMMUNITY99",   // $49 individual → $99 family  → $50 upgrade
-  DEEN59:       "DEEN119",       // $59 individual → $119 family → $60 upgrade
-  BROWNIE59:    "BROWNIE119",    // $59 individual → $119 family → $60 upgrade
-  // Percentage codes — same code applies to both plans
-  KORRA20:      "KORRA20",       // 20% off both → ~$63 individual, ~$119 family → ~$56 upgrade
-  ITACHI20:     "ITACHI20",
-  DEEN:         "DEEN",
-  ORTHODOX:     "ORTHODOX",      // legacy 20% code — same code works for family
-  ORTHODOX59:   "ORTHODOX119",   // $59 individual → $119 family → $60 upgrade
-  DEARBORN20:   "DEARBORN20",
-  ANNARBOR20:   "ANNARBOR20",
-  COMMUNITY20:  "COMMUNITY20",
-};
 import { CardManager } from "@/components/billing/card-manager";
 import { PortalButton } from "@/components/billing/portal-button";
 import { CancelSubscriptionButton } from "@/components/billing/cancel-subscription-button";
@@ -80,34 +60,16 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
   if (!accessInfo.hasAccess) redirect("/pricing");
 
   // ── Individual → Family upgrade pricing ──────────────────────────────────────
-  // Find the individual lifetime purchase to determine what the user actually paid,
-  // and whether they used a promo code that has a family equivalent.
+  // Standard upgrade cost: $30 (full $79 family − full $49 individual). Promo
+  // codes are no longer offered, so every upgrade uses this flat pricing.
   const individualPurchase = purchases.find((p) => p.planId === "complete");
   const individualPaidCents = individualPurchase?.amount ?? PLANS.complete.price;
-  const indivPromoCode = individualPurchase?.promoCode?.toUpperCase() ?? null;
-  const familyPromoCode = indivPromoCode
-    ? (INDIVIDUAL_TO_FAMILY_PROMO[indivPromoCode] ?? null)
-    : null;
-
-  // Compute the expected upgrade cost server-side so the billing page shows the right number.
-  // If the user's individual promo maps to a family promo, the upgrade = discounted_family − paid.
-  // Otherwise it's the standard $50 (full $99 − full $49).
-  let upgradeCostCents: number = PLANS.family.upgradeFromLifetimePrice; // $50 default
-  // familyReferenceCents = what the user would pay for Family if buying fresh today
-  // (discounted family price with their promo, or full $99 if no promo applies).
+  const upgradeCostCents: number = PLANS.family.upgradeFromLifetimePrice; // $30
+  // familyReferenceCents = what the user would pay for Family if buying fresh today.
   // Used as the strikethrough "instead of X" reference in the upgrade card.
-  let familyReferenceCents: number = PLANS.family.price; // $99 default
-  if (familyPromoCode) {
-    const familyPromo = validatePromoCode(familyPromoCode);
-    if (familyPromo) {
-      familyReferenceCents = applyDiscount(PLANS.family.price, familyPromo);
-      upgradeCostCents = Math.max(0, familyReferenceCents - individualPaidCents);
-    }
-  }
+  const familyReferenceCents: number = PLANS.family.price; // $79
 
-  const upgradeUrl = familyPromoCode
-    ? `/checkout?plan=family-lifetime&promo=${familyPromoCode}`
-    : "/checkout?plan=family-lifetime";
+  const upgradeUrl = "/checkout?plan=family-lifetime";
 
   const fmtCurrency = (cents: number) =>
     new Intl.NumberFormat("en-US", { style: "currency", currency: "usd", minimumFractionDigits: 0 }).format(cents / 100);
@@ -321,7 +283,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-text">Upgrade to Family Lifetime</p>
                 <p className="text-sm text-text-secondary mt-1 leading-relaxed">
-                  Stop paying monthly. Get permanent Family Access for a one-time payment of $99 —
+                  Stop paying monthly. Get permanent Family Access for a one-time payment of $79 —
                   the same 5 learner profiles, separate progress for every course asset, lifetime access.
                 </p>
                 <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -329,7 +291,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
                     href="/checkout?plan=family&billing=lifetime"
                     className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gold hover:bg-gold-light text-black font-bold text-sm transition-colors shadow-sm"
                   >
-                    Upgrade for $99
+                    Upgrade for $79
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                   <span className="text-xs text-text-muted">One-time · Monthly subscription cancelled automatically</span>
@@ -422,7 +384,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
                       href="/checkout?plan=family-lifetime"
                       className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm transition-colors shadow-sm"
                     >
-                      Lifetime — $99
+                      Lifetime — $79
                       <ArrowRight className="w-4 h-4" />
                     </Link>
                     <UpgradeToFamilyMonthlyButton />

@@ -24,7 +24,7 @@ const FAMILY_LIFETIME_PRICE_ID       =
  *   "individual-trial"    — $1 setup fee now, 7-day trial, then $9/month
  *   "family-trial"        — $1 setup fee now, 7-day family access, then $19/month
  *   "individual-lifetime" — $49 one-time lifetime individual access
- *   "family-lifetime"     — $99 one-time lifetime family access
+ *   "family-lifetime"     — $79 one-time lifetime family access
  *   "monthly"             — $9/month subscription (no trial, legacy)
  *   "family-monthly"      — $19/month subscription (no trial, legacy)
  *
@@ -217,7 +217,7 @@ export async function POST(request: NextRequest) {
         break;
       }
 
-      // ── Family lifetime: $99 one-time ───────────────────────────────────────
+      // ── Family lifetime: $79 one-time ───────────────────────────────────────
       case "family-lifetime": {
         if (!FAMILY_LIFETIME_PRICE_ID.startsWith("price_")) {
           console.error(

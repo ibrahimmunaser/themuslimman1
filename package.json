@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "cross-env NODE_OPTIONS=\"--max-old-space-size=1536\" next dev",
     "build": "cross-env NODE_OPTIONS=\"--max-old-space-size=2048\" prisma generate && next build",
+    "build:local": "powershell -ExecutionPolicy Bypass -File scripts/safe-build.ps1",
+    "build:webpack": "cross-env NODE_OPTIONS=\"--max-old-space-size=1536\" prisma generate && next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "db:push": "prisma db push",

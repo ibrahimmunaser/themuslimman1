@@ -9,7 +9,6 @@ export const metadata = { title: "Ann Arbor Stats", robots: { index: false, foll
 export const dynamic = "force-dynamic";
 
 const CREATOR      = "annarbor";
-const PROMO_CODE   = "ANNARBOR29";
 const DISPLAY_NAME = "Ann Arbor";
 
 const FUNNEL_STEPS: FunnelStep[] = [
@@ -52,7 +51,6 @@ export default async function AnnArborStatsPage({
   return (
     <BrownieStatsDashboard
       displayName={DISPLAY_NAME}
-      promoCode={PROMO_CODE}
       rawClicks={rawClicks}
       events={events}
       purchases={purchases.map((p) => ({ ...p, userEmail: p.user.email }))}

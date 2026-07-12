@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
 
   let body: Record<string, string> = {};
   try { body = await request.json(); } catch { /* no body is fine */ }
-  const { creator, promoCode, source, utmSource, utmCampaign, utmMedium, utmContent } = body;
+  const { creator, source, utmSource, utmCampaign, utmMedium, utmContent } = body;
 
   try {
     const user = await getCurrentUser();
@@ -133,7 +133,6 @@ export async function POST(request: NextRequest) {
         planId:    "monthly",
         planType:  "individual",
         ...(creator    ? { creator }    : {}),
-        ...(promoCode  ? { promoCode }  : {}),
         ...(source     ? { source }     : {}),
         ...(utmSource  ? { utmSource }  : {}),
         ...(utmCampaign  ? { utmCampaign }  : {}),
@@ -171,7 +170,6 @@ export async function POST(request: NextRequest) {
           planType:       "individual",
           subscriptionId: subscription.id,
           ...(creator     ? { creator }     : {}),
-          ...(promoCode   ? { promoCode }   : {}),
           ...(source      ? { source }      : {}),
           ...(utmSource   ? { utmSource }   : {}),
           ...(utmCampaign ? { utmCampaign } : {}),

@@ -17,6 +17,7 @@ import {
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { getAdminAnalyticsData, getAdminEmailStats } from "@/lib/queries/admin";
+import { formatAdminDate } from "@/lib/admin-datetime";
 
 export const metadata = { title: "Analytics | Admin", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
@@ -31,8 +32,7 @@ function pct(num: number, den: number) {
 }
 
 function formatDate(d: Date | null) {
-  if (!d) return "—";
-  return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  return formatAdminDate(d);
 }
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {

@@ -270,7 +270,7 @@ export function StartPage({ preview }: { preview?: ReactNode }) {
                 { type: "Monthly",  audience: "Individual", price: "$4.99", period: "/month",    featured: false },
                 { type: "Monthly",  audience: "Family",     price: "$9.99", period: "/month",    featured: false },
                 { type: "Lifetime", audience: "Individual", price: "$49",   period: " one time", featured: true  },
-                { type: "Lifetime", audience: "Family",     price: "$99",   period: " one time", featured: true  },
+                { type: "Lifetime", audience: "Family",     price: "$79",   period: " one time", featured: true  },
               ].map((plan) => (
                 <div
                   key={plan.audience + plan.type}

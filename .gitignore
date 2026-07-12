@@ -35,12 +35,16 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files — ignore all but the example template
+# env files — ignore ALL env files (including ad-hoc ones like .env.vercel.prod
+# pulled via `vercel env pull`) except the checked-in example template.
 .env
 .env.local
 .env.*.local
 .env.production
 .env.development
+.env.vercel*
+.env.*
+!.env.example
 
 # vercel
 .vercel

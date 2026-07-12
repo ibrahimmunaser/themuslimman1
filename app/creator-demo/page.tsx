@@ -443,7 +443,7 @@ export default async function CreatorDemoPage({ searchParams }: PageProps) {
             <div className="flex items-center justify-between mb-3">
               <div>
                 <p className="text-xs font-bold text-text-muted uppercase tracking-wider">Family</p>
-                <p className="text-xl font-extrabold text-text mt-0.5">$99 <span className="text-sm font-normal text-text-muted">once</span></p>
+                <p className="text-xl font-extrabold text-text mt-0.5">$79 <span className="text-sm font-normal text-text-muted">once</span></p>
               </div>
               <span className="text-[11px] bg-surface-raised border border-border/50 text-text-muted px-2.5 py-1 rounded-full font-medium">5 Profiles</span>
             </div>
@@ -452,19 +452,12 @@ export default async function CreatorDemoPage({ searchParams }: PageProps) {
               href="/checkout?plan=family&billing=lifetime"
               className="flex items-center justify-center gap-2 w-full mt-4 bg-surface-raised border border-border/60 text-text text-sm font-semibold px-5 py-3 rounded-xl hover:border-gold/40 transition-colors"
             >
-              Get Family Access — $99
+              Get Family Access — $79
               <ChevronRight className="w-4 h-4 text-text-muted" />
             </Link>
           </div>
         </div>
 
-        {/* Promo code area */}
-        <div className="mt-6 bg-gold/5 border border-gold/20 rounded-2xl px-5 py-4 text-center">
-          <p className="text-xs font-bold text-gold mb-1">Have a promo code?</p>
-          <p className="text-[11px] text-text-muted">
-            Enter it at checkout to apply your exclusive discount.
-          </p>
-        </div>
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════

@@ -297,7 +297,7 @@ function getRecommendation(answers: Record<number, number>, urls: SeerahCheckupU
       secondaryPreamble: isFamily ? "Want to keep going as a family?" : "Ready to continue after Part 1?",
       bridgeCopy: "Because you want to see the quality first, start with Part 1 free — full video, flashcards, and quiz included. No payment required.",
       lifetimeUrl: isFamily ? urls.familyLifetime : urls.individualLifetime,
-      lifetimeLabel: isFamily ? "Or pay once — family lifetime is $99 →" : "Or pay once — lifetime is $49 →",
+      lifetimeLabel: isFamily ? "Or pay once — family lifetime is $79 →" : "Or pay once — lifetime is $49 →",
       trackEvent: `${eventPrefix}watch_free_click`,
     };
   }
@@ -314,7 +314,7 @@ function getRecommendation(answers: Record<number, number>, urls: SeerahCheckupU
       secondaryPreamble: isFamily ? "Want to keep going as a family?" : "Ready to continue after Part 1?",
       bridgeCopy: "The best move when you don't know where to start is to simply start from Part 1 — free, in order, no commitment.",
       lifetimeUrl: isFamily ? urls.familyLifetime : urls.individualLifetime,
-      lifetimeLabel: isFamily ? "Or pay once — family lifetime is $99 →" : "Or pay once — lifetime is $49 →",
+      lifetimeLabel: isFamily ? "Or pay once — family lifetime is $79 →" : "Or pay once — lifetime is $49 →",
       trackEvent: `${eventPrefix}watch_free_click`,
     };
   }
@@ -332,7 +332,7 @@ function getRecommendation(answers: Record<number, number>, urls: SeerahCheckupU
       primarySupport: "Up to 5 learner profiles. Cancel anytime.",
       showFreePrimary: false,
       lifetimeUrl: urls.familyLifetime,
-      lifetimeLabel: "Prefer one payment? Family lifetime is $99 →",
+      lifetimeLabel: "Prefer one payment? Family lifetime is $79 →",
       bridgeCopy: bridgeFam,
       trackEvent: `${eventPrefix}recommended_plan_click`,
     };

@@ -29,7 +29,7 @@
  *   ✅ Individual Lifetime  ($49)   — PI confirmed, webhook delivered, DB verified
  *   ✅ Individual Monthly   ($4.99) — Subscription created + activated, DB verified
  *   ✅ Family Monthly       ($9.99) — Subscription, planType=family, DB verified
- *   ✅ Family Lifetime      ($99)   — PI confirmed, planType=family, DB verified
+ *   ✅ Family Lifetime      ($79)   — PI confirmed, planType=family, DB verified
  *   ✅ Declined card               — Stripe rejects, hasPaid=false, no Purchase row
  *
  * All Stripe objects use TEST mode (tok_visa, tok_chargeDeclined tokens).
@@ -379,7 +379,7 @@ async function testFamilyLifetime(): Promise<void> {
   await stripe.paymentMethods.attach(pm.id, { customer: customer.id });
 
   const pi = await stripe.paymentIntents.create({
-    amount:         9900,
+    amount:         7900,
     currency:       "usd",
     customer:       customer.id,
     payment_method: pm.id,
@@ -402,9 +402,9 @@ async function testFamilyLifetime(): Promise<void> {
   assert(purchase !== null, "No Purchase row created");
   assert(purchase!.status === "succeeded", `Purchase.status=${purchase!.status}`);
   assert(purchase!.planId === "family", `Purchase.planId=${purchase!.planId}`);
-  assert(purchase!.amount === 9900, `Purchase.amount=${purchase!.amount} (expected 9900)`);
+  assert(purchase!.amount === 7900, `Purchase.amount=${purchase!.amount} (expected 7900)`);
 
-  console.log(`${INFO}DB ✓ hasPaid=true, planType=family, Purchase.amount=9900`);
+  console.log(`${INFO}DB ✓ hasPaid=true, planType=family, Purchase.amount=7900`);
 
   await deleteTestUser(user.id);
   await stripe.customers.del(customer.id).catch(() => {});
@@ -490,7 +490,7 @@ async function main() {
   await runTest("Individual Lifetime  ($49 one-time)", testIndividualLifetime);
   await runTest("Individual Monthly   ($4.99/month)",  testIndividualMonthly);
   await runTest("Family Monthly       ($9.99/month)",  testFamilyMonthly);
-  await runTest("Family Lifetime      ($99 one-time)", testFamilyLifetime);
+  await runTest("Family Lifetime      ($79 one-time)", testFamilyLifetime);
   await runTest("Declined card        (no access)",    testDeclinedCard);
 
   const passed = results.filter((r) => r.status === "pass").length;

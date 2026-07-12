@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { getCurrentUser } from "@/lib/auth";
 import { PLANS } from "@/lib/stripe-config";
-import { validatePromoCode, applyDiscount } from "@/lib/promo-codes";
-import { getCreatorPromoConfig } from "@/lib/creator-promos";
 import { getUserAccessInfo } from "@/lib/access";
 import { checkRateLimit, getIP } from "@/lib/rate-limit";
 import { prisma } from "@/lib/db";
@@ -43,7 +41,7 @@ export async function POST(request: NextRequest) {
     // NEW (correct): hasLifetime && user.planType === "family"
     //   → hasLifetime = user.hasPaid || has a succeeded Purchase row, which is true only
     //     for actual lifetime buyers. Family Monthly users have hasPaid=false and no Purchase
-    //     row, so they pass through and can buy Family Lifetime at $99.
+    //     row, so they pass through and can buy Family Lifetime at $79.
     const accessInfo = await getUserAccessInfo(user.id, user.hasPaid);
     if (accessInfo.hasLifetime && user.planType === "family") {
       return NextResponse.json(
@@ -67,75 +65,21 @@ export async function POST(request: NextRequest) {
     // users — they're upgrading from Individual to Family.
 
     const body = await request.json();
-    const { promoCode, isUpgrade, creator: creatorFromSource, source, utmSource, utmMedium, utmCampaign, utmContent } = body as { promoCode?: string; isUpgrade?: boolean; creator?: string; source?: string; utmSource?: string; utmMedium?: string; utmCampaign?: string; utmContent?: string };
+    const { isUpgrade, creator: creatorFromSource, source, utmSource, utmMedium, utmCampaign, utmContent } = body as { isUpgrade?: boolean; creator?: string; source?: string; utmSource?: string; utmMedium?: string; utmCampaign?: string; utmContent?: string };
 
     // Individual Lifetime → Family Lifetime upgrade.
     // Verified server-side: user must have hasPaid=true and not already be on family plan.
     const isEligibleForUpgradePrice = isUpgrade && user.hasPaid && user.planType !== "family";
 
-    // Apply promo code discount if provided
-    let appliedPromoCode: string | null = null;
-    let baseAmount: number;
-    let finalAmount: number;
-    let promoDiscountAmount = 0;
+    // Upgrade pays fixed $30 diff (full $79 − full $49); new purchase pays $79.
+    const baseAmount: number  = isEligibleForUpgradePrice
+      ? FAMILY_PLAN.upgradeFromLifetimePrice  // 3000 cents = $30
+      : FAMILY_PLAN.price;                    // 7900 cents = $79
+    const finalAmount: number = baseAmount;
 
-    if (promoCode?.trim()) {
-      const promo = validatePromoCode(promoCode);
-      if (!promo) {
-        return NextResponse.json({ error: "Invalid promo code" }, { status: 400 });
-      }
-      // Reject codes that are explicitly scoped to the individual plan.
-      if (promo.planType === "individual") {
-        return NextResponse.json(
-          { error: "This code is for individual plans only" },
-          { status: 400 }
-        );
-      }
-
-      if (isEligibleForUpgradePrice) {
-        // Smart upgrade with promo: charge discounted_family_price − what_they_paid_for_individual.
-        // e.g. BROWNIE119 ($119) − individual purchase ($59) = $60 upgrade cost.
-        // This ensures total lifetime spend equals the discounted family price.
-        const discountedFamilyPrice = applyDiscount(FAMILY_PLAN.price, promo);
-        const individualPurchase = await prisma.purchase.findFirst({
-          where: { userId: user.id, status: "succeeded" },
-          select: { amount: true },
-          orderBy: { createdAt: "asc" }, // earliest = the original individual purchase
-        });
-        const individualPaid = individualPurchase?.amount ?? PLANS.complete.price; // fallback $49
-        baseAmount  = discountedFamilyPrice;
-        finalAmount = Math.max(0, discountedFamilyPrice - individualPaid);
-        promoDiscountAmount = baseAmount - finalAmount;
-      } else {
-        // New family purchase with promo (not an upgrade).
-        baseAmount  = FAMILY_PLAN.price;
-        finalAmount = applyDiscount(baseAmount, promo);
-        promoDiscountAmount = baseAmount - finalAmount;
-      }
-      appliedPromoCode = promoCode.trim().toUpperCase();
-    } else {
-      // No promo: upgrade pays fixed $50 diff (full $99 − full $49); new purchase pays $99.
-      baseAmount  = isEligibleForUpgradePrice
-        ? FAMILY_PLAN.upgradeFromLifetimePrice  // 5000 cents = $50
-        : FAMILY_PLAN.price;                    // 9900 cents = $99
-      finalAmount = baseAmount;
-    }
-
-    // Resolve creator: prefer promo-code config; fall back to source attribution from checkout
-    const creatorConfig = appliedPromoCode ? getCreatorPromoConfig(appliedPromoCode) : null;
-    const resolvedCreator = creatorConfig?.creator ?? (typeof creatorFromSource === "string" && creatorFromSource ? creatorFromSource : null);
-
-    // Free access: skip Stripe entirely when code makes it $0
-    if (finalAmount === 0) {
-      return NextResponse.json({
-        freeAccess: true,
-        appliedPromoCode,
-        baseAmount,
-        promoDiscountAmount,
-        finalAmount: 0,
-        isUpgrade: isEligibleForUpgradePrice,
-      });
-    }
+    // Creator attribution comes straight from the checkout's ?source= / body.creator —
+    // no promo codes involved.
+    const resolvedCreator = typeof creatorFromSource === "string" && creatorFromSource ? creatorFromSource : null;
 
     // Get or create Stripe Customer so failed/abandoned payments are recoverable by email.
     const existingCustomer = await prisma.user.findUnique({
@@ -170,25 +114,20 @@ export async function POST(request: NextRequest) {
         baseAmount: String(baseAmount),
         finalAmount: String(finalAmount),
         ...(isEligibleForUpgradePrice ? { upgradeFrom: "individual_lifetime" } : {}),
-        ...(appliedPromoCode
-          ? { promoCode: appliedPromoCode, promoDiscountAmount: String(promoDiscountAmount) }
-          : {}),
         ...(resolvedCreator ? { creator: resolvedCreator } : {}),
         ...(source          ? { source }                  : {}),
-        // Body UTMs take priority; fall back to promo-code config UTMs when absent
-        ...(utmSource   ?? creatorConfig?.utm_source   ? { utmSource:   utmSource   ?? creatorConfig!.utm_source   } : {}),
-        ...(utmMedium   ?? creatorConfig?.utm_medium   ? { utmMedium:   utmMedium   ?? creatorConfig!.utm_medium   } : {}),
-        ...(utmCampaign ?? creatorConfig?.utm_campaign ? { utmCampaign: utmCampaign ?? creatorConfig!.utm_campaign } : {}),
-        ...(utmContent  ?? creatorConfig?.utm_content  ? { utmContent:  utmContent  ?? creatorConfig!.utm_content  } : {}),
+        ...(utmSource   ? { utmSource   } : {}),
+        ...(utmMedium   ? { utmMedium   } : {}),
+        ...(utmCampaign ? { utmCampaign } : {}),
+        ...(utmContent  ? { utmContent  } : {}),
       },
-      description: `${FAMILY_PLAN.name} — TheMuslimMan${appliedPromoCode ? ` (${appliedPromoCode})` : ""}`,
+      description: `${FAMILY_PLAN.name} — TheMuslimMan`,
       receipt_email: user.email,
     });
 
     return NextResponse.json({
       clientSecret: paymentIntent.client_secret,
       baseAmount,
-      promoDiscountAmount,
       finalAmount,
       isUpgrade: isEligibleForUpgradePrice,
     });

@@ -40,13 +40,19 @@ const nextConfig: NextConfig = {
         source: "/(.*)",
         headers: securityHeaders,
       },
-      // Immutable static assets (Next.js hashed filenames)
-      {
-        source: "/_next/static/(.*)",
-        headers: [
-          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
-        ],
-      },
+      // Immutable static assets (Next.js hashed filenames).
+      // Only in production — in dev, chunk names are stable across recompiles
+      // so an immutable cache would permanently serve stale bundles.
+      ...(process.env.NODE_ENV === "production"
+        ? [
+            {
+              source: "/_next/static/(.*)",
+              headers: [
+                { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+              ],
+            },
+          ]
+        : []),
       // Warm endpoint: fire-and-forget, no browser caching needed
       {
         source: "/api/part/:partNumber/warm",
@@ -73,6 +79,31 @@ const nextConfig: NextConfig = {
   },
   turbopack: {
     root: path.resolve(__dirname),
+  },
+  productionBrowserSourceMaps: false,
+  // The webpack build worker runs webpack compilation in a spawned
+  // jest-worker child process (on by default whenever there's no custom
+  // webpack() config, which is our case). On this machine/Node version that
+  // child process crashes on Windows with exit code 3221225725
+  // (0xC00000FD = STATUS_STACK_OVERFLOW) almost immediately after
+  // "Creating an optimized production build...", before any real
+  // compilation output appears — a known Next.js/Windows/jest-worker
+  // incompatibility. Disabling the worker runs webpack compilation in the
+  // main `next build` process instead.
+  //
+  // cpus caps worker processes for "Collecting page data" / "Generating static
+  // pages". Default is os.cpus().length - 1 (15 on this 16-core machine).
+  // Each worker inherits NODE_OPTIONS heap caps but can still allocate large
+  // native/off-heap memory, so fewer workers = lower peak RAM.
+  //
+  // webpackMemoryOptimizations: official Next.js flag (v15+) that reduces
+  // peak webpack RSS during "Creating an optimized production build" by
+  // changing webpack string-buffer caching (see memory-usage.md in next/dist).
+  experimental: {
+    webpackBuildWorker: false,
+    webpackMemoryOptimizations: true,
+    cpus: 1,
+    serverSourceMaps: false,
   },
   images: {
     // Allow optimization of local static files (public/seerah-media/*)

@@ -11,6 +11,7 @@
  */
 import { getCachedStudent } from "@/lib/auth-cache";
 import { StudentLayout } from "@/components/student/student-layout";
+import { SharePopup } from "@/components/student/share-popup";
 
 export default async function SeerahLayout({
   children,
@@ -27,6 +28,7 @@ export default async function SeerahLayout({
       planType={user.planType}
     >
       {children}
+      <SharePopup />
     </StudentLayout>
   );
 }

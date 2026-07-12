@@ -17,11 +17,12 @@ type TicketStatus = "open" | "in_progress" | "resolved" | "closed";
 export default async function AdminSupportPage({
   searchParams,
 }: {
-  searchParams: { status?: string };
+  searchParams: Promise<{ status?: string }>;
 }) {
   await requireAdmin();
 
-  const statusFilter = (searchParams.status as TicketStatus) || "open";
+  const resolvedSearchParams = await searchParams;
+  const statusFilter = (resolvedSearchParams.status as TicketStatus) || "open";
 
   // Fetch tickets with filtering
   const tickets = await prisma.supportTicket.findMany({

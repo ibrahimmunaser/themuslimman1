@@ -4,8 +4,6 @@ import { getUserAccessInfo } from "@/lib/access";
 import CheckoutClientPage from "./page-client";
 import { stripe } from "@/lib/stripe";
 import { PLANS } from "@/lib/stripe-config";
-import { validatePromoCode, applyDiscount } from "@/lib/promo-codes";
-import { getCreatorPromoConfig } from "@/lib/creator-promos";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +17,7 @@ const LEGACY_PLAN_ALIASES: Record<string, string> = {
 };
 
 interface Props {
-  searchParams: Promise<{ plan?: string; billing?: string; audience?: string; promo?: string; source?: string; email?: string; name?: string; score?: string; result_type?: string; utm_source?: string; utm_medium?: string; utm_campaign?: string; utm_content?: string }>;
+  searchParams: Promise<{ plan?: string; billing?: string; audience?: string; source?: string; email?: string; name?: string; score?: string; result_type?: string; utm_source?: string; utm_medium?: string; utm_campaign?: string; utm_content?: string }>;
 }
 
 export default async function CheckoutPage({ searchParams }: Props) {
@@ -98,7 +96,7 @@ export default async function CheckoutPage({ searchParams }: Props) {
     "individual-lifetime": PLANS.complete.price,      // $49
     "family-lifetime":     isLifetimeUpgrade
                              ? PLANS.family.upgradeFromLifetimePrice  // $50 upgrade diff
-                             : PLANS.family.price,                    // $99 new purchase
+                             : PLANS.family.price,                    // $79 new purchase
     "individual-monthly":  PLANS.monthly.price,       // $4.99
     "family-monthly":      PLANS.familyMonthly.price, // $9.99
     "individual-trial":    0,
@@ -107,10 +105,6 @@ export default async function CheckoutPage({ searchParams }: Props) {
   const initialBasePrice  = planBasePrice[normalizedPlan] ?? PLANS.complete.price;
   let initialClientSecret: string | null = null;
   let initialFinalPrice = initialBasePrice;
-  let initialDiscountAmount  = 0;
-  let initialAppliedPromo: string | null = null;
-  let initialAppliedPromoLabel: string | null = null;
-  let initialFreeAccess = false;
 
   const rawScore     = parseInt(params.score ?? "", 10);
   const initialQuizScore  = !isNaN(rawScore) && rawScore >= 0 && rawScore <= 100 ? rawScore : null;
@@ -128,67 +122,33 @@ export default async function CheckoutPage({ searchParams }: Props) {
   // Pre-creating a PI for them wastes a Stripe API call and leaves an abandoned PI.
   if (user && !quizGuestOverride && initialAudience === "individual" && initialBilling === "lifetime" && user.planType !== "family") {
     try {
-      const promoParam = params.promo?.trim().toUpperCase() ?? null;
-      let finalAmount    = initialBasePrice;
-      let promoDiscount  = 0;
-      let appliedPromoCode: string | null = null;
+      const finalAmount = initialBasePrice;
+      initialFinalPrice = finalAmount;
 
-      if (promoParam) {
-        const promo = validatePromoCode(promoParam);
-        if (promo) {
-          finalAmount       = applyDiscount(initialBasePrice, promo);
-          promoDiscount     = initialBasePrice - finalAmount;
-          appliedPromoCode  = promoParam;
-          initialAppliedPromo      = promoParam;
-          initialAppliedPromoLabel = promo.label;
-        }
-      }
-
-      initialDiscountAmount = promoDiscount;
-      initialFinalPrice     = finalAmount;
-
-      if (finalAmount === 0) {
-        initialFreeAccess = true;
-      } else {
-        const creatorConfig = appliedPromoCode ? getCreatorPromoConfig(appliedPromoCode) : null;
-        // Resolve creator: promo config takes priority, then ?source= param for
-        // influencer links that don't carry a promo code.
-        const sourceParam = params.source?.trim().toLowerCase() ?? null;
-        const resolvedCreator = creatorConfig?.creator ?? sourceParam ?? null;
-        const paymentIntent = await stripe.paymentIntents.create({
-          amount:               finalAmount,
-          currency:             "usd",
-          payment_method_types: ["card"],
-          metadata: {
-            userId:   user.id,
-            planId:   "complete",
-            planName: "Complete Seerah",
-            baseAmount:   String(initialBasePrice),
-            finalAmount:  String(finalAmount),
-            ...(appliedPromoCode ? {
-              promoCode:           appliedPromoCode,
-              promoDiscountAmount: String(promoDiscount),
-            } : {}),
-            ...(resolvedCreator ? { creator: resolvedCreator } : {}),
-            ...(creatorConfig ? {
-              utm_source:   creatorConfig.utm_source   ?? "",
-              utm_medium:   creatorConfig.utm_medium   ?? "",
-              utm_campaign: creatorConfig.utm_campaign ?? "",
-              utm_content:  creatorConfig.utm_content  ?? "",
-            } : {}),
-          },
-          description:   `Complete Seerah Lifetime — TheMuslimMan${appliedPromoCode ? ` (${appliedPromoCode})` : ""}`,
-          receipt_email: user.email,
-        });
-        initialClientSecret = paymentIntent.client_secret;
-      }
+      // Resolve creator from the ?source= param for influencer link attribution.
+      const sourceParam = params.source?.trim().toLowerCase() ?? null;
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount:               finalAmount,
+        currency:             "usd",
+        payment_method_types: ["card"],
+        metadata: {
+          userId:   user.id,
+          planId:   "complete",
+          planName: "Complete Seerah",
+          baseAmount:   String(initialBasePrice),
+          finalAmount:  String(finalAmount),
+          ...(sourceParam ? { creator: sourceParam } : {}),
+        },
+        description:   `Complete Seerah Lifetime — TheMuslimMan`,
+        receipt_email: user.email,
+      });
+      initialClientSecret = paymentIntent.client_secret;
     } catch (e) {
       console.error("[CHECKOUT] Failed to pre-create payment intent:", e);
       initialClientSecret = null;
     }
   }
 
-  const promoParamProp  = params.promo?.trim().toUpperCase() ?? null;
   const sourceParamProp = params.source?.trim().toLowerCase() ?? null;
   const prefillName  = params.name?.trim()  ?? null;
   const utmSourceProp   = params.utm_source?.trim()   ?? null;
@@ -206,11 +166,6 @@ export default async function CheckoutPage({ searchParams }: Props) {
       initialClientSecret={initialClientSecret}
       initialBasePrice={initialBasePrice}
       initialFinalPrice={initialFinalPrice}
-      initialDiscountAmount={initialDiscountAmount}
-      initialAppliedPromo={initialAppliedPromo}
-      initialAppliedPromoLabel={initialAppliedPromoLabel}
-      initialFreeAccess={initialFreeAccess}
-      initialPromoParam={promoParamProp}
       initialSourceParam={sourceParamProp}
       isLifetimeUpgrade={isLifetimeUpgrade}
       initialEmail={prefillEmail}

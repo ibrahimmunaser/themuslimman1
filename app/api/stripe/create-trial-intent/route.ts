@@ -9,7 +9,7 @@ import { resolveTrialPriceId } from "@/lib/trial-eligibility";
 /**
  * POST /api/stripe/create-trial-intent
  *
- * Body: { planId: "individualTrial" | "familyTrial", creator?: string, promoCode?: string }
+ * Body: { planId: "individualTrial" | "familyTrial", creator?: string }
  *
  * Free 7-day trial flow — BLK-02 fix.
  *
@@ -32,10 +32,10 @@ import { resolveTrialPriceId } from "@/lib/trial-eligibility";
  * the subscription-creation call, so concurrent or duplicate SetupIntents
  * can never create two trial subscriptions for the same user.
  *
- * creator/promoCode (if present) are carried on the SetupIntent's metadata
- * so the webhook can propagate them onto the Stripe subscription's own
- * metadata (and from there into the Subscription row's creator/promoCode
- * columns), preserving affiliate/creator attribution through the new flow.
+ * creator (if present) is carried on the SetupIntent's metadata so the
+ * webhook can propagate it onto the Stripe subscription's own metadata
+ * (and from there into the Subscription row's creator column), preserving
+ * affiliate/creator attribution through the new flow.
  */
 export async function POST(request: NextRequest) {
   const ip = getIP(request);
@@ -56,10 +56,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = (await request.json()) as { planId?: string; creator?: string; promoCode?: string };
+    const body = (await request.json()) as { planId?: string; creator?: string };
     const planId = body.planId === "familyTrial" ? "familyTrial" : "individualTrial";
-    const creator   = typeof body.creator   === "string" ? body.creator   : undefined;
-    const promoCode = typeof body.promoCode === "string" ? body.promoCode : undefined;
+    const creator = typeof body.creator === "string" ? body.creator : undefined;
 
     if (!resolveTrialPriceId(planId)) {
       console.error("[CREATE-TRIAL-INTENT] Monthly price ID not configured for planId:", planId);
@@ -138,8 +137,7 @@ export async function POST(request: NextRequest) {
         userId: user.id,
         planId,
         type: "trial_setup",
-        ...(creator   ? { creator }   : {}),
-        ...(promoCode ? { promoCode } : {}),
+        ...(creator ? { creator } : {}),
       },
     });
 

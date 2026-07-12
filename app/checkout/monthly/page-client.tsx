@@ -25,7 +25,16 @@ import {
 import Link from "next/link";
 import { PLANS, formatPrice } from "@/lib/stripe-config";
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+// Lazily memoized so it reads the env var at first render rather than at module
+// evaluation time — avoids crashes when the key isn't yet compiled into the bundle.
+let _stripePromise: ReturnType<typeof loadStripe> | null = null;
+function getStripePromise() {
+  if (!_stripePromise) {
+    const key = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+    if (key) _stripePromise = loadStripe(key);
+  }
+  return _stripePromise;
+}
 
 type PlanChoice = "monthly" | "familyMonthly";
 type AuthMode = "signup" | "login";
@@ -568,7 +577,7 @@ function MonthlyCheckoutContent({ userEmail }: Props) {
           {clientSecret && !loading && (
             <Elements
               key={clientSecret}
-              stripe={stripePromise}
+              stripe={getStripePromise()}
               options={{
                 clientSecret,
                 appearance: {

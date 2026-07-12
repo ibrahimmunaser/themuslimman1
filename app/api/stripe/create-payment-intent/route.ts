@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { stripe, PLANS, type PlanId } from "@/lib/stripe";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { validatePromoCode, applyDiscount } from "@/lib/promo-codes";
-import { getCreatorPromoConfig } from "@/lib/creator-promos";
 import { getUserAccessInfo } from "@/lib/access";
 import { checkRateLimit, getIP } from "@/lib/rate-limit";
 
@@ -91,47 +89,17 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     // Only "complete" is sold during early access — silently upgrade any other plan
     const planId: PlanId = "complete";
-    const { promoCode, creator: creatorFromSource, source, utmSource, utmMedium, utmCampaign, utmContent } = body as { promoCode?: string; creator?: string; source?: string; utmSource?: string; utmMedium?: string; utmCampaign?: string; utmContent?: string };
+    const { creator: creatorFromSource, source, utmSource, utmMedium, utmCampaign, utmContent } = body as { creator?: string; source?: string; utmSource?: string; utmMedium?: string; utmCampaign?: string; utmContent?: string };
 
     const plan = PLANS[planId];
 
     // Server decides the price — always $49 (4900 cents), client cannot override.
     const baseAmount: number = PLANS.complete.price;
+    const finalAmount: number = baseAmount;
 
-    // ── Apply promo code if provided ──
-    let finalAmount: number = baseAmount;
-    let appliedPromoCode: string | null = null;
-    let promoDiscountAmount = 0;
-
-    if (promoCode && promoCode.trim().length > 0) {
-      const normalized = promoCode.trim().toUpperCase();
-      const promo = validatePromoCode(normalized);
-      if (!promo) {
-        return NextResponse.json({ error: "Invalid promo code" }, { status: 400 });
-      }
-      // Reject codes that are explicitly scoped to the family plan.
-      if (promo.planType === "family") {
-        return NextResponse.json({ error: "This code is for family plans only" }, { status: 400 });
-      }
-      finalAmount = applyDiscount(baseAmount, promo);
-      promoDiscountAmount = baseAmount - finalAmount;
-      appliedPromoCode = normalized;
-    }
-
-    // Resolve creator: prefer promo-code config; fall back to source attribution from checkout
-    const creatorConfig = appliedPromoCode ? getCreatorPromoConfig(appliedPromoCode) : null;
-    const resolvedCreator = creatorConfig?.creator ?? (typeof creatorFromSource === "string" && creatorFromSource ? creatorFromSource : null);
-
-    // ── Free access: skip Stripe entirely ──────────────────────────────────
-    if (finalAmount === 0) {
-      return NextResponse.json({
-        freeAccess: true,
-        appliedPromoCode,
-        baseAmount,
-        promoDiscountAmount,
-        finalAmount: 0,
-      });
-    }
+    // Creator attribution comes straight from the checkout's ?source= / body.creator —
+    // no promo codes involved.
+    const resolvedCreator = typeof creatorFromSource === "string" && creatorFromSource ? creatorFromSource : null;
 
     // ── Create Stripe PaymentIntent ──
     const customerId = await getOrCreateStripeCustomer(user.id, user.email);
@@ -147,21 +115,14 @@ export async function POST(request: NextRequest) {
         planName: plan.name,
         baseAmount: String(baseAmount),
         finalAmount: String(finalAmount),
-        ...(appliedPromoCode
-          ? {
-              promoCode: appliedPromoCode,
-              promoDiscountAmount: String(promoDiscountAmount),
-            }
-          : {}),
         ...(resolvedCreator ? { creator: resolvedCreator } : {}),
         ...(source          ? { source }                  : {}),
-        // Body UTMs take priority; fall back to promo-code config UTMs when absent
-        ...(utmSource   ?? creatorConfig?.utm_source   ? { utmSource:   utmSource   ?? creatorConfig!.utm_source   } : {}),
-        ...(utmMedium   ?? creatorConfig?.utm_medium   ? { utmMedium:   utmMedium   ?? creatorConfig!.utm_medium   } : {}),
-        ...(utmCampaign ?? creatorConfig?.utm_campaign ? { utmCampaign: utmCampaign ?? creatorConfig!.utm_campaign } : {}),
-        ...(utmContent  ?? creatorConfig?.utm_content  ? { utmContent:  utmContent  ?? creatorConfig!.utm_content  } : {}),
+        ...(utmSource   ? { utmSource   } : {}),
+        ...(utmMedium   ? { utmMedium   } : {}),
+        ...(utmCampaign ? { utmCampaign } : {}),
+        ...(utmContent  ? { utmContent  } : {}),
       },
-      description: `${plan.name} — TheMuslimMan${appliedPromoCode ? ` (${appliedPromoCode})` : ""}`,
+      description: `${plan.name} — TheMuslimMan`,
       receipt_email: user.email,
     });
 
@@ -169,7 +130,6 @@ export async function POST(request: NextRequest) {
       clientSecret: paymentIntent.client_secret,
       freeAccess: false,
       baseAmount,
-      promoDiscountAmount,
       finalAmount,
     });
   } catch (error) {

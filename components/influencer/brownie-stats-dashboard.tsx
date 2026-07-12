@@ -37,7 +37,6 @@ interface TrialSub {
 
 interface BrownieStatsDashboardProps {
   displayName: string;
-  promoCode: string;
   rawClicks: number;
   events: FunnelEvent[];
   purchases: Purchase[];
@@ -101,7 +100,6 @@ function fmtShortDate(d: Date) {
 
 export function BrownieStatsDashboard({
   displayName,
-  promoCode,
   rawClicks,
   events,
   purchases,
@@ -144,10 +142,6 @@ export function BrownieStatsDashboard({
             Funnel Dashboard
           </p>
           <h1 className="text-3xl font-bold text-white">{displayName} Stats</h1>
-          <p className="text-zinc-500 text-sm mt-1">
-            Promo code:{" "}
-            <span className="font-mono text-amber-400 font-semibold">{promoCode}</span>
-          </p>
           <p className="text-zinc-600 text-xs mt-1">Last updated: {fmtDate(lastUpdated)}</p>
         </div>
 

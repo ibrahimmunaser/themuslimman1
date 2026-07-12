@@ -4,7 +4,6 @@ import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
 import { getCurrentUser } from "@/lib/auth";
 import { getUserAccessInfo } from "@/lib/access";
-import { CreatorPromoTracker } from "@/components/promo/creator-promo-tracker";
 import { PricingSection } from "@/components/pricing/pricing-section";
 import { FadeUp } from "@/components/motion";
 import { FunnelTracker } from "@/components/analytics/funnel-tracker";
@@ -103,7 +102,6 @@ export default async function PricingPage({ searchParams }: Props) {
   return (
     <div className="flex flex-col min-h-screen bg-ink text-text">
       <Navbar />
-      <CreatorPromoTracker />
       <FunnelTracker
         creator="homepage"
         pricingSectionId="pricing"
@@ -178,7 +176,7 @@ export default async function PricingPage({ searchParams }: Props) {
               <div className="rounded-xl border border-border bg-surface-raised p-5">
                 <h3 className="font-bold text-text mb-2">Lifetime</h3>
                 <p className="text-sm text-text-secondary leading-relaxed">
-                  Pay once, keep access forever. Individual $49, family $99.
+                  Pay once, keep access forever. Individual $49, family $79.
                   Best long-term value if you plan to study for years.
                 </p>
               </div>

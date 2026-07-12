@@ -12,29 +12,30 @@ import {
 } from "@stripe/react-stripe-js";
 import {
   Check, Lock, User, Users, ArrowLeft, ArrowRight,
-  Tag, Eye, EyeOff, RefreshCw,
+  Eye, EyeOff, RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
 import { SavedCardPicker } from "@/components/billing/saved-card-picker";
 import { friendlyPaymentError, friendlySubmitError } from "@/lib/payment-error-messages";
 import { PLANS, formatPrice } from "@/lib/stripe-config";
-import { clearCreatorPromo, getCreatorPromo, getCreatorPromoConfig } from "@/lib/creator-promos";
 import CheckoutFunnelTracker, { sendCheckoutEvent, sendCheckoutLoadFailed, normalizePaymentError, markPaymentStartedInSession, markPaymentMethodInSession } from "./checkout-funnel-tracker";
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+// Lazily memoized so it reads the env var at first render rather than at module
+// evaluation time — avoids crashes when the key isn't yet compiled into the bundle.
+let _stripePromise: ReturnType<typeof loadStripe> | null = null;
+function getStripePromise() {
+  if (!_stripePromise) {
+    const key = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+    if (key) _stripePromise = loadStripe(key);
+  }
+  return _stripePromise;
+}
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type Audience = "individual" | "family";
 type Billing  = "lifetime" | "monthly" | "trial";
 type AuthMode = "signup" | "login";
-
-interface AppliedCoupon {
-  code: string;
-  label: string;
-  discount: number;
-  finalPrice: number;
-}
 
 /** Derive the canonical plan key from audience + billing. */
 function toPlanKey(audience: Audience, billing: Billing) {
@@ -76,7 +77,6 @@ function CheckoutForm({
   billing,
   finalPrice,
   creator,
-  promoCode,
   userId,
   getOrCreateClientSecret,
   subscriptionIdRef,
@@ -91,7 +91,6 @@ function CheckoutForm({
   billing: Billing;
   finalPrice: number;
   creator?: string;
-  promoCode?: string;
   /** Application user ID passed down for use in payment_succeeded analytics only. */
   userId?: string;
   getOrCreateClientSecret: (name: string, email: string) => Promise<string>;
@@ -126,8 +125,8 @@ function CheckoutForm({
     try { sessionStorage.setItem("checkout_purchased", "1"); } catch { /* storage blocked */ }
   };
 
-  // Keep Stripe's internal amount in sync when a promo is applied so Apple Pay /
-  // Google Pay show the correct amount in the wallet sheet without remounting.
+  // Keep Stripe's internal amount in sync when the price changes (e.g. plan
+  // switch) so Apple Pay / Google Pay show the correct amount without remounting.
   useEffect(() => {
     if (!elements || billing === "trial" || finalPrice <= 0) return;
     elements.update({ amount: finalPrice });
@@ -170,7 +169,6 @@ function CheckoutForm({
           amount:           finalPrice,
           currency:         "usd",
           payment_method:   selectedMethodRef.current ?? extra?.method ?? undefined,
-          promoCode,
           failure_category: normalizePaymentError(rawCode, rawDecline),
           // attempt_id: visitorId+sessionId composite is already carried by sendCheckoutEvent
         });
@@ -178,11 +176,11 @@ function CheckoutForm({
       }
 
       // All other stages — generic send.
-      sendCheckoutEvent(creator, stage, { ...ctx, promoCode });
+      sendCheckoutEvent(creator, stage, ctx);
 
       // Canonical alias: payment_started → checkout_payment_started
       if (stage === "payment_started") {
-        sendCheckoutEvent(creator, "checkout_payment_started", { ...ctx, promoCode });
+        sendCheckoutEvent(creator, "checkout_payment_started", ctx);
       }
     } catch { /* never block checkout */ }
   };
@@ -243,11 +241,6 @@ function CheckoutForm({
       clientSecret = await getOrCreateClientSecret(name, email);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "";
-      if (msg === "__FREE_ACCESS__") {
-        // $0 promo — no Stripe payment; free-claim UI should now be visible.
-        setProcessing(false);
-        return;
-      }
       if (msg === "__AUTH_FAILED__") {
         // Auth error already shown in the name/email form above payment.
         setProcessing(false);
@@ -511,9 +504,6 @@ function CheckoutForm({
     }
   };
 
-  // True for any creator promo code, not just browniesaadi
-  const isCreatorPromo = !!(creator && creator.length > 0);
-
   // Ann Arbor student offer uses custom labels everywhere
   const isAnnArborStudent = creator === "annarbor" && billing === "lifetime" && audience === "individual";
 
@@ -548,7 +538,6 @@ function CheckoutForm({
           "One-time payment — no recurring charge",
           "7-day refund guarantee",
           "Secure checkout",
-          ...(isCreatorPromo ? ["Special offer discount applied"] : []),
         ];
 
   const whatHappensNext =
@@ -755,12 +744,6 @@ interface CheckoutPageClientProps {
   initialClientSecret?: string | null;
   initialBasePrice?: number;
   initialFinalPrice?: number;
-  initialDiscountAmount?: number;
-  initialAppliedPromo?: string | null;
-  initialAppliedPromoLabel?: string | null;
-  initialFreeAccess?: boolean;
-  /** Passed from the server to avoid useSearchParams() SSR/CSR hydration mismatches. */
-  initialPromoParam?: string | null;
   /**
    * True when the user is an individual lifetime holder upgrading to Family Lifetime.
    * When set, the billing selector is locked to "lifetime" only — trial and monthly
@@ -795,9 +778,6 @@ interface CheckoutPageClientProps {
 }
 
 // ── Main checkout content ─────────────────────────────────────────────────────
-
-// Plan-specific promo codes that must be resolved to the correct variant based on
-// the selected audience. Add any new plan-paired codes here.
 
 /** Returns true when running inside an Instagram / TikTok / Facebook in-app browser. */
 function useIsInAppBrowser() {
@@ -856,11 +836,6 @@ function CheckoutPageContent({
   initialClientSecret = null,
   initialBasePrice: serverBasePrice,
   initialFinalPrice: serverFinalPrice,
-  initialDiscountAmount: serverDiscount = 0,
-  initialAppliedPromo = null,
-  initialAppliedPromoLabel = null,
-  initialFreeAccess = false,
-  initialPromoParam = null,
   initialSourceParam = null,
   isLifetimeUpgrade = false,
   initialEmail = null,
@@ -879,23 +854,18 @@ function CheckoutPageContent({
     initialResultType,
   );
 
-  // promoParam comes from the server prop — no useSearchParams() needed.
-  // This guarantees server and client render the same initial HTML.
-  const promoParam = initialPromoParam;
   const isInApp = useIsInAppBrowser();
 
   // Influencer confirmation mode: active when the user arrives from any influencer
-  // landing page (source param matches a known creator) or carries a creator promo
-  // code, and the plan is a lifetime plan. In this mode the plan selector is hidden
-  // by default — the user sees "Your selected offer" and a "Change plan" link.
+  // landing page (source param matches a known creator), and the plan is a lifetime
+  // plan. In this mode the plan selector is hidden by default — the user sees
+  // "Your selected offer" and a "Change plan" link.
   const INFLUENCER_SOURCES = new Set([
     "browniesaadi", "deenresponds", "community", "annarbor", "dearborn", "theorthodoxmuslim",
     "korra", "itachi",
   ]);
-  const isInfluencerMode = !!(
-    (initialSourceParam && INFLUENCER_SOURCES.has(initialSourceParam)) ||
-    (promoParam && getCreatorPromoConfig(promoParam) !== null)
-  ) && initialBilling === "lifetime";
+  const isInfluencerMode = !!(initialSourceParam && INFLUENCER_SOURCES.has(initialSourceParam))
+    && initialBilling === "lifetime";
 
   const [showPlanSelector, setShowPlanSelector] = useState(false);
 
@@ -906,22 +876,10 @@ function CheckoutPageContent({
   // Ann Arbor student offer: customise labels in the offer panel and buttons
   const isAnnArborStudent = initialSourceParam === "annarbor" && billing === "lifetime" && audience === "individual";
 
-  const resolvedPromoParam = promoParam ?? null;
-
   const planKey   = toPlanKey(audience, billing);
   const currentPlan = PLANS[planKey];
   const isLifetime  = billing === "lifetime";
   const isTrial     = billing === "trial";
-
-  // Compute guest promo discount synchronously from the client-safe creator promo
-  // config (20% × currentPlan.price). Because promoParam now comes from a server
-  // prop (not useSearchParams), server and client always agree on the initial value
-  // — no hydration mismatch, no async fetch race condition, always correct for the
-  // currently selected plan.
-  const creatorPromoConfig   = resolvedPromoParam ? getCreatorPromoConfig(resolvedPromoParam) : null;
-  const guestCreatorDiscount = (creatorPromoConfig && isLifetime)
-    ? Math.round(currentPlan.price * creatorPromoConfig.discountPercent / 100)
-    : 0;
 
   // ── Auth state ─────────────────────────────────────────────────────────────
   const [isAuthenticated, setIsAuthenticated] = useState(quizIdentity.isAuthenticated);
@@ -947,16 +905,6 @@ function CheckoutPageContent({
   // when the user clicks "Not you?" so no stale clientSecret can surface.
   const intentAbortRef = useRef<AbortController | null>(null);
 
-  // Promo shown to guests before auth (URL ?promo= param preview).
-  // The `forAudience` field tags which plan this discount was computed for so
-  // a stale individual-plan response can never display on the family plan.
-  const [guestPromo, setGuestPromo] = useState<{
-    code: string;
-    label: string;
-    discount: number;
-    forAudience: Audience;
-  } | null>(null);
-
   // ── Payment state ──────────────────────────────────────────────────────────
   const [clientSecret,   setClientSecret]   = useState<string | null>(initialClientSecret);
   const [loading,        setLoading]        = useState(false);
@@ -971,23 +919,10 @@ function CheckoutPageContent({
   // True while a subscription upgrade (individual → family monthly) is in progress.
   const [upgradeLoading,    setUpgradeLoading]    = useState(false);
   const [upgradeError,      setUpgradeError]      = useState<string | null>(null);
-  const [freeAccess,     setFreeAccess]     = useState(initialFreeAccess);
-  const [freeClaimLoading, setFreeClaimLoading] = useState(false);
-  const [freeClaimError,   setFreeClaimError]   = useState<string | null>(null);
 
   const defaultBase = currentPlan.price;
   const [basePrice,     setBasePrice]     = useState<number>(serverBasePrice ?? defaultBase);
   const [finalPrice,    setFinalPrice]    = useState<number>(serverFinalPrice ?? defaultBase);
-  const [discountAmount,setDiscountAmount]= useState(serverDiscount);
-
-  const [couponInput,  setCouponInput]  = useState(initialAppliedPromo ?? promoParam ?? "");
-  const [couponLoading,setCouponLoading]= useState(false);
-  const [couponError,  setCouponError]  = useState<string | null>(null);
-  const [appliedCoupon,setAppliedCoupon]= useState<AppliedCoupon | null>(
-    initialAppliedPromo && initialAppliedPromoLabel && serverFinalPrice != null
-      ? { code: initialAppliedPromo, label: initialAppliedPromoLabel, discount: serverDiscount, finalPrice: serverFinalPrice }
-      : null
-  );
 
   // ── Create payment / subscription intent ───────────────────────────────────
 
@@ -1010,8 +945,7 @@ function CheckoutPageContent({
   const createIntent = async (
     aud: Audience,
     bill: Billing,
-    promoCode?: string
-  ): Promise<{ discountAmount: number; finalPrice: number; clientSecret?: string } | null> => {
+  ): Promise<{ finalPrice: number; clientSecret?: string } | null> => {
     // Stamp this call with a generation number. Any response that arrives after
     // a newer call has started will be silently discarded — this prevents a slow
     // 409 from an old trial intent overwriting the clientSecret from a faster
@@ -1021,7 +955,6 @@ function CheckoutPageContent({
     setLoading(true);
     setClientSecret(null);
     subscriptionIdRef.current = null;
-    setFreeAccess(false);
     setError(null);
     setHasActiveSub(false);
     setActiveSubPlanType(null);
@@ -1031,7 +964,6 @@ function CheckoutPageContent({
     try {
       const endpoint = toEndpoint(aud, bill);
       const body: Record<string, unknown> = { planId: toPlanKey(aud, bill) };
-      if (promoCode && bill === "lifetime") body.promoCode = promoCode;
       // Always pass isUpgrade=true for family lifetime — the server validates eligibility
       // server-side (user.hasPaid && planType !== "family"). Individual lifetime holders
       // upgrading to Family Lifetime pay only the $50 difference; the server returns the
@@ -1039,17 +971,9 @@ function CheckoutPageContent({
       if (aud === "family" && bill === "lifetime") body.isUpgrade = true;
 
       // Pass creator attribution for all billing types so Purchase.creator /
-      // Subscription.creator are recorded — enabling influencer conversion tracking
-      // without requiring a promo code.
-      {
-        const storedPromo = promoCode ?? getCreatorPromo();
-        const cfg = storedPromo ? getCreatorPromoConfig(storedPromo) : null;
-        if (cfg?.creator) {
-          body.creator   = cfg.creator;
-          if (bill !== "lifetime") body.promoCode = storedPromo;
-        } else if (initialSourceParam && INFLUENCER_SOURCES.has(initialSourceParam)) {
-          body.creator = initialSourceParam;
-        }
+      // Subscription.creator are recorded — enabling influencer conversion tracking.
+      if (initialSourceParam && INFLUENCER_SOURCES.has(initialSourceParam)) {
+        body.creator = initialSourceParam;
       }
       if (initialSourceParam)   body.source      = initialSourceParam;
 
@@ -1114,8 +1038,7 @@ function CheckoutPageContent({
         return null;
       }
 
-      const discount: number = data.promoDiscountAmount ?? 0;
-      const price: number    = data.finalAmount ?? data.amount ?? currentPlan.price;
+      const price: number = data.finalAmount ?? data.amount ?? currentPlan.price;
 
       // One final stale-check before writing state — the fetch above could have
       // taken a while and a newer call may have already completed.
@@ -1123,27 +1046,13 @@ function CheckoutPageContent({
 
       setBasePrice(data.baseAmount ?? currentPlan.price);
       setFinalPrice(price);
-      setDiscountAmount(discount);
 
-      // Sync appliedCoupon with the server-computed discount for the CURRENT plan.
-      // validate-promo always returns the individual price discount, so without this
-      // a Family plan user would see the wrong (individual-based) discount in the UI.
-      if (discount > 0) {
-        setAppliedCoupon((prev) =>
-          prev ? { ...prev, discount, finalPrice: price } : prev
-        );
-      }
-
-      if (data.freeAccess) {
-        setFreeAccess(true);
-      } else {
-        setClientSecret(data.clientSecret);
-        clientSecretRef.current = data.clientSecret;
-        // Only present for monthly billing (create-subscription-intent /
-        // create-family-subscription-intent) — undefined for lifetime.
-        subscriptionIdRef.current = typeof data.subscriptionId === "string" ? data.subscriptionId : null;
-      }
-      return { discountAmount: discount, finalPrice: price, clientSecret: data.clientSecret as string | undefined };
+      setClientSecret(data.clientSecret);
+      clientSecretRef.current = data.clientSecret;
+      // Only present for monthly billing (create-subscription-intent /
+      // create-family-subscription-intent) — undefined for lifetime.
+      subscriptionIdRef.current = typeof data.subscriptionId === "string" ? data.subscriptionId : null;
+      return { finalPrice: price, clientSecret: data.clientSecret as string | undefined };
     } catch (err) {
       if (intentGen.current === gen) {
         setError(err instanceof Error ? err.message : "An error occurred");
@@ -1165,17 +1074,9 @@ function CheckoutPageContent({
   // ── Deferred-intent helper ────────────────────────────────────────────────
   // Called by CheckoutForm at submit time. Ensures auth + creates intent if
   // not already done, then returns the clientSecret for stripe.confirmPayment.
-  // Ref so getOrCreateClientSecret can read freeAccess without a stale closure.
-  const freeAccessRef = useRef<boolean>(!!initialFreeAccess);
-  useEffect(() => { freeAccessRef.current = freeAccess; }, [freeAccess]);
-
   const getOrCreateClientSecret = async (name: string, email: string): Promise<string> => {
     // Fast path — intent already ready.
     if (clientSecretRef.current) return clientSecretRef.current;
-
-    // If a $0 promo was applied, no Stripe payment is needed — bubble up so the
-    // free-claim UI is shown instead of attempting confirmPayment.
-    if (freeAccessRef.current) throw new Error("__FREE_ACCESS__");
 
     // Validate email before doing any network calls.
     if (!isAuthenticatedRef.current) {
@@ -1192,119 +1093,41 @@ function CheckoutPageContent({
       }
     }
 
-    // If a $0 promo was set during runGuestCheckout, handle it.
-    if (freeAccessRef.current) throw new Error("__FREE_ACCESS__");
-
     // At this point we are authenticated. If createIntent already fired (background
     // auto-trigger), clientSecretRef should be set. Otherwise call it now.
     if (!clientSecretRef.current) {
-      const result = await createIntent(audience, billing, appliedCoupon?.code ?? undefined);
+      const result = await createIntent(audience, billing);
       const secret = result?.clientSecret;
       if (secret) return secret;
-      // If freeAccess was set by createIntent, bubble up.
-      if (freeAccessRef.current) throw new Error("__FREE_ACCESS__");
     }
 
     // Poll up to 10s for the background auto-trigger to finish setting the secret.
     for (let i = 0; i < 100; i++) {
       if (clientSecretRef.current) return clientSecretRef.current;
-      if (freeAccessRef.current) throw new Error("__FREE_ACCESS__");
       await new Promise((r) => setTimeout(r, 100));
     }
 
     throw new Error("Unable to prepare payment. Please try again.");
   };
 
-  // ── Validate URL promo for guest preview ───────────────────────────────────
-
-  useEffect(() => {
-    if (isAuthenticated || !promoParam) return;
-    // Clear stale discount immediately so the UI never shows the previous plan's
-    // discount while the new validation request is in-flight.
-    setGuestPromo(null);
-    // Use AbortController so that if the audience changes before this fetch
-    // completes, the stale response is ignored and can't overwrite a newer result.
-    const controller = new AbortController();
-    const planParam = audience === "family" ? "&plan=family" : "";
-    fetch(`/api/stripe/validate-promo?code=${encodeURIComponent(promoParam)}${planParam}`, {
-      signal: controller.signal,
-    })
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.valid) {
-          // Tag the result with the audience it was computed for so stale
-          // individual-plan responses cannot display on the family plan.
-          setGuestPromo({ code: data.code, label: data.label, discount: data.promoDiscountAmount, forAudience: audience });
-          setCouponInput(data.code);
-        }
-      })
-      .catch((err) => {
-        if (err?.name !== "AbortError") {
-          // non-abort errors are silently swallowed (promo just won't show)
-        }
-      });
-    return () => controller.abort();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [audience]);
-
   // ── On mount / plan change: create intent (authenticated users) ────────────
 
   const isFirstMount  = useRef(true);
-  // Monotonically-increasing counter used to detect stale autoApply responses.
-  // Each time a new autoApply is started, gen is incremented.  The response
-  // checks gen against the current value; if they differ, a newer autoApply
-  // has started and this response must be discarded.
-  const autoApplyGen  = useRef(0);
-  // Same pattern for createIntent — prevents a stale 409 from an old trial
-  // intent call overwriting a successful response from a newer lifetime call
-  // when the user switches plans quickly while the first fetch is in-flight.
+  // Prevents a stale 409 from an old trial intent call overwriting a successful
+  // response from a newer lifetime call when the user switches plans quickly
+  // while the first fetch is in-flight.
   const intentGen     = useRef(0);
 
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    const autoApply = (code: string, onInvalid?: () => void) => {
-      // Capture the current generation so stale responses from a previous plan
-      // cannot overwrite a newer (correct) result.
-      const gen = ++autoApplyGen.current;
-      const planParam = audience === "family" ? "&plan=family" : "";
-      fetch(`/api/stripe/validate-promo?code=${encodeURIComponent(code)}${planParam}`)
-        .then((r) => r.json())
-        .then((data) => {
-          // If gen no longer matches, a newer autoApply has started — discard.
-          if (autoApplyGen.current !== gen) return;
-          if (data.valid) {
-            setAppliedCoupon({ code: data.code, label: data.label, discount: data.promoDiscountAmount, finalPrice: data.finalPrice });
-            setCouponInput(data.code);
-            return createIntent(audience, billing, data.code);
-          }
-          onInvalid?.();
-          return createIntent(audience, billing, undefined);
-        })
-        .catch(() => { if (autoApplyGen.current === gen) createIntent(audience, billing, undefined); });
-    };
-
     if (isFirstMount.current) {
       isFirstMount.current = false;
       // Already have a server-created secret for individual lifetime — skip.
-      if ((initialClientSecret || initialFreeAccess) && audience === "individual" && billing === "lifetime") return;
-    } else {
-      // Plan changed after initial mount: clear any stale coupon/discount that was
-      // computed for a different plan so we never show the wrong discounted price
-      // while the new intent is being created server-side.
-      setAppliedCoupon(null);
-      setDiscountAmount(0);
+      if (initialClientSecret && audience === "individual" && billing === "lifetime") return;
     }
 
-    if (billing === "lifetime") {
-      const couponCode = appliedCoupon?.code;
-      if (promoParam) { autoApply(promoParam); return; }
-      const stored = getCreatorPromo();
-      if (stored) { autoApply(stored, clearCreatorPromo); return; }
-      if (couponCode) { autoApply(couponCode); return; }
-    }
-
-    createIntent(audience, billing, undefined);
+    createIntent(audience, billing);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [audience, billing, isAuthenticated]);
 
@@ -1355,22 +1178,6 @@ function CheckoutPageContent({
         setAuthError(data.error || "Failed to continue. Please try again.");
         setAutoIntentStarted(false);
         return;
-      }
-      if ((guestPromo || creatorPromoConfig) && billing === "lifetime") {
-        const code     = guestPromo?.code     ?? promoParam ?? "";
-        const label    = guestPromo?.label    ?? creatorPromoConfig?.displayLabel ?? "";
-        // Prefer server-validated discount (correct for both percent and fixed codes).
-        const discount = (guestPromo?.discount ?? 0) || guestCreatorDiscount;
-        const discountedPrice = currentPlan.price - discount;
-        setAppliedCoupon({ code, label, discount, finalPrice: discountedPrice });
-        setCouponInput(code);
-        // Sync finalPrice so Elements + wallet sheet show the correct discounted
-        // amount immediately — before createIntent returns the server-verified price.
-        if (discount > 0) {
-          setFinalPrice(discountedPrice);
-          setDiscountAmount(discount);
-          setBasePrice(currentPlan.price);
-        }
       }
       setAuthEmail(email);
       isAuthenticatedRef.current = true; // sync update so getOrCreateClientSecret sees it immediately
@@ -1468,14 +1275,6 @@ function CheckoutPageContent({
       });
       const data = await res.json();
       if (!res.ok) { setAuthError(data.error || "Invalid email or password"); return; }
-      if ((guestPromo || creatorPromoConfig) && billing === "lifetime") {
-        const code     = guestPromo?.code     ?? promoParam ?? "";
-        const label    = guestPromo?.label    ?? creatorPromoConfig?.displayLabel ?? "";
-        // Prefer server-validated discount (correct for both percent and fixed codes).
-        const discount = (guestPromo?.discount ?? 0) || guestCreatorDiscount;
-        setAppliedCoupon({ code, label, discount, finalPrice: currentPlan.price - discount });
-        setCouponInput(code);
-      }
       setAuthEmail(authForm.email);
       isAuthenticatedRef.current = true; // sync update so getOrCreateClientSecret sees it immediately
       setIsAuthenticated(true);
@@ -1499,98 +1298,10 @@ function CheckoutPageContent({
     }
   };
 
-  // ── Coupon handlers (lifetime only) ───────────────────────────────────────
-
-  const handleApplyCoupon = async () => {
-    const code = couponInput.trim();
-    if (!code) return;
-    // Clear the existing intent so getOrCreateClientSecret creates a new one with the discount.
-    clientSecretRef.current = null;
-    setClientSecret(null);
-    setCouponLoading(true);
-    setCouponError(null);
-    try {
-      if (audience === "family" && billing === "lifetime") {
-        // Validate with the family plan base price so the displayed discount is correct.
-        const res  = await fetch(`/api/stripe/validate-promo?code=${encodeURIComponent(code)}&plan=family`);
-        const data = await res.json();
-        if (!res.ok || !data.valid) { setCouponError(data.error || "Invalid promo code"); return; }
-        // Always show the code as applied (correct family discount from validate-promo).
-        // If authenticated, also create/update the Stripe intent immediately.
-        setAppliedCoupon({ code: data.code, label: data.label, discount: data.promoDiscountAmount, finalPrice: data.finalPrice });
-        setCouponInput(data.code);
-        setCouponError(null);
-        if (isAuthenticated) {
-          const result = await createIntent("family", "lifetime", data.code);
-          if (result) {
-            setAppliedCoupon({ code: data.code, label: data.label, discount: result.discountAmount, finalPrice: result.finalPrice });
-          }
-        }
-        return;
-      }
-      const res  = await fetch(`/api/stripe/validate-promo?code=${encodeURIComponent(code)}`);
-      const data = await res.json();
-      if (!res.ok || !data.valid) { setCouponError(data.error || "Invalid promo code"); return; }
-      setAppliedCoupon({ code: data.code, label: data.label, discount: data.promoDiscountAmount, finalPrice: data.finalPrice });
-      setCouponError(null);
-      await createIntent("individual", "lifetime", data.code);
-    } catch {
-      setCouponError("Could not validate code. Please try again.");
-    } finally {
-      setCouponLoading(false);
-    }
-  };
-
-  const handleRemoveCoupon = async () => {
-    clearCreatorPromo();
-    clientSecretRef.current = null;
-    setClientSecret(null);
-    setAppliedCoupon(null);
-    setCouponInput("");
-    setCouponError(null);
-    await createIntent(audience, billing);
-  };
-
-  const handleClaimFreeAccess = async () => {
-    const code = appliedCoupon?.code ?? couponInput.trim();
-    if (!code) return;
-    setFreeClaimLoading(true);
-    setFreeClaimError(null);
-    try {
-      const res = await fetch("/api/stripe/claim-free-access", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ promoCode: code, planType: audience === "family" ? "family" : "individual" }),
-      });
-      const data = await res.json();
-      if (!res.ok) { setFreeClaimError(data.error || "Something went wrong"); return; }
-      window.location.href = "/seerah";
-    } catch {
-      setFreeClaimError("Something went wrong. Please try again.");
-    } finally {
-      setFreeClaimLoading(false);
-    }
-  };
-
   // ── Derived display values ─────────────────────────────────────────────────
 
-  // For creator promo codes, always use the current plan's catalogue price as the
-  // base so the order summary is correct the instant the user switches plans —
-  // before any async createIntent/autoApply calls complete.
-  const displayBase = (guestCreatorDiscount > 0 || !isAuthenticated)
-    ? currentPlan.price
-    : (appliedCoupon ? currentPlan.price : basePrice);
-  // Server-validated amounts always take priority (correct for both percent and fixed
-  // codes). Fall back to the client-side estimate (guestCreatorDiscount) only when no
-  // server value has arrived yet — this covers the brief window before validate-promo
-  // or createIntent responds.
-  const resolvedDiscount = !isAuthenticated
-    ? ((guestPromo?.forAudience === audience) ? (guestPromo?.discount ?? null) : null)
-    : (appliedCoupon ? (appliedCoupon.discount ?? discountAmount) : null);
-  const displayDiscount = resolvedDiscount !== null
-    ? resolvedDiscount
-    : (guestCreatorDiscount || discountAmount);
-  const displayPrice    = displayBase - displayDiscount;
+  const displayBase     = !isAuthenticated ? currentPlan.price : basePrice;
+  const displayPrice    = displayBase;
 
   // ── Plan summary (top of single-column checkout) ──────────────────────────
 
@@ -1665,13 +1376,6 @@ function CheckoutPageContent({
             ))}
           </div>
 
-          {displayDiscount > 0 && (
-            <div className="flex items-center gap-1.5 text-xs text-green-400 mt-2.5">
-              <Check className="w-3.5 h-3.5 flex-shrink-0" />
-              Discount applied — saving {formatPrice(displayDiscount)}
-            </div>
-          )}
-
           <button
             onClick={() => {
               setShowPlanSelector(true);
@@ -1707,7 +1411,6 @@ function CheckoutPageContent({
                   // Clear immediately so getOrCreateClientSecret can't return a stale intent.
                   clientSecretRef.current = null;
                   setClientSecret(null);
-                  setAppliedCoupon(null); setGuestPromo(null); setDiscountAmount(0); setCouponInput(""); setCouponError(null);
                   const newPlan = PLANS[toPlanKey(id, billing)];
                   const snap = billing === "trial" ? (newPlan as typeof PLANS.individualTrial).trialFeeAmount ?? newPlan.price : newPlan.price;
                   setBasePrice(snap); setFinalPrice(snap);
@@ -1734,7 +1437,6 @@ function CheckoutPageContent({
                   setBilling(id);
                   clientSecretRef.current = null;
                   setClientSecret(null);
-                  setAppliedCoupon(null); setGuestPromo(null); setDiscountAmount(0); setCouponInput(""); setCouponError(null);
                   const newPlan = PLANS[toPlanKey(audience, id)];
                   const snap = id === "trial" ? (newPlan as typeof PLANS.individualTrial).trialFeeAmount ?? newPlan.price : newPlan.price;
                   setBasePrice(snap); setFinalPrice(snap);
@@ -1776,12 +1478,6 @@ function CheckoutPageContent({
   );
 
   // ── Order summary ─────────────────────────────────────────────────────────
-
-  const promoCodeLabel = guestCreatorDiscount > 0
-    ? (creatorPromoConfig?.displayLabel ?? promoParam)
-    : (!isAuthenticated
-        ? (guestPromo?.label ?? guestPromo?.code)
-        : (appliedCoupon?.label ?? appliedCoupon?.code));
 
   const trialPlanConfig = isTrial
     ? (audience === "family" ? PLANS.familyTrial : PLANS.individualTrial)
@@ -1826,15 +1522,6 @@ function CheckoutPageContent({
           </p>
         </div>
       </div>
-      {isLifetime && displayDiscount > 0 && (
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-green-400 flex items-center gap-1.5">
-            <Tag className="w-3.5 h-3.5" />
-            {promoCodeLabel ?? "Promo"} discount
-          </span>
-          <span className="text-green-400 font-medium">−{formatPrice(displayDiscount)}</span>
-        </div>
-      )}
       <div className="flex items-center justify-between pt-2 border-t border-zinc-800">
         <span className="text-sm font-semibold text-white">
           {isLifetime ? "Total" : "Due today"}
@@ -1928,7 +1615,7 @@ function CheckoutPageContent({
                   onClick={() => { setTrialAlreadyUsed(false); setAudience("family"); setBilling("lifetime"); }}
                   className="inline-flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl border border-amber-500/40 hover:border-amber-500/70 text-amber-400 font-semibold text-sm transition-colors"
                 >
-                  Family Lifetime — $99 one-time
+                  Family Lifetime — $79 one-time
                 </button>
               </div>
             </div>
@@ -2204,9 +1891,6 @@ function CheckoutPageContent({
                   setHasActiveSub(false);
                   setActiveSubPlanType(null);
                   setTrialAlreadyUsed(false);
-                  setFreeAccess(false);
-                  setAppliedCoupon(null);
-                  setCouponInput("");
                 }}
                 className="flex-shrink-0 ml-3 text-xs text-zinc-500 hover:text-zinc-200 transition-colors cursor-pointer"
               >
@@ -2215,37 +1899,8 @@ function CheckoutPageContent({
             </div>
           )}
 
-          {/* ── Auto-applied promo — only shown when arriving from an influencer link ── */}
-          {isLifetime && isAuthenticated && appliedCoupon && (
-            <div className="flex items-center justify-between p-3 rounded-xl bg-green-500/10 border border-green-500/20">
-              <div className="flex items-center gap-2">
-                <Tag className="w-4 h-4 text-green-400 flex-shrink-0" />
-                <div>
-                  <p className="text-sm font-medium text-green-400">{appliedCoupon.code} applied</p>
-                  <p className="text-xs text-zinc-500">{appliedCoupon.label}</p>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* ── 2. Payment options ── */}
-          {freeAccess ? (
-            <div className="space-y-3">
-              <div className="p-4 rounded-xl bg-gold/10 border border-gold/25 text-center">
-                <p className="text-sm font-bold text-gold mb-1">Free Access Applied!</p>
-                <p className="text-xs text-zinc-400">Your promo code gives you full access at no cost.</p>
-              </div>
-              <button
-                onClick={handleClaimFreeAccess}
-                disabled={freeClaimLoading}
-                className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-gold hover:bg-gold-light disabled:opacity-60 text-ink font-bold text-base transition-colors"
-              >
-                {freeClaimLoading ? "Activating…" : "Activate Free Access"}
-              </button>
-              {freeClaimError && <p className="text-xs text-red-400 text-center">{freeClaimError}</p>}
-            </div>
-          ) : (
-            <>
+          <>
               {error && !loading && (
                 <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
                   {error}
@@ -2257,9 +1912,6 @@ function CheckoutPageContent({
                   mode causes Stripe.js to inject setup_future_usage: off_session, which
                   conflicts with subscription invoice PIs (setup_future_usage: null). */}
               {(() => {
-                const code = appliedCoupon?.code ?? resolvedPromoParam ?? "";
-                const cfg = code ? getCreatorPromoConfig(code) : null;
-                const checkoutCreator = cfg?.creator ?? null;
                 const elementsAppearance = {
                   theme: "night" as const,
                   variables: {
@@ -2321,10 +1973,10 @@ function CheckoutPageContent({
                   : `${audience}-${billing}`;
 
                 // Default to "homepage" so organic checkout visitors are also tracked
-              const trackerCreator = checkoutCreator ?? initialSourceParam ?? "homepage";
+              const trackerCreator = initialSourceParam ?? "homepage";
               return (
                   <Elements
-                    stripe={stripePromise}
+                    stripe={getStripePromise()}
                     key={elementsKey}
                     options={elementsOptions}
                   >
@@ -2333,9 +1985,8 @@ function CheckoutPageContent({
                       plan={`${audience}-${billing}`}
                       interval={billing}
                       price={finalPrice}
-                      promoCode={code || null}
                       source={initialSourceParam}
-                      influencer={checkoutCreator ?? initialSourceParam}
+                      influencer={initialSourceParam}
                       quizScore={initialQuizScore}
                       resultType={initialResultType}
                       emailPrefilled={!!(initialEmail || isAuthenticated)}
@@ -2346,7 +1997,6 @@ function CheckoutPageContent({
                       billing={billing}
                       finalPrice={finalPrice}
                       creator={trackerCreator}
-                      promoCode={code || undefined}
                       userId={initialUserId || undefined}
                       getOrCreateClientSecret={getOrCreateClientSecret}
                       subscriptionIdRef={subscriptionIdRef}
@@ -2361,7 +2011,6 @@ function CheckoutPageContent({
                 );
               })()}
             </>
-          )}
 
         </div>
       </div>
@@ -2372,7 +2021,7 @@ function CheckoutPageContent({
 // ── Export ────────────────────────────────────────────────────────────────────
 
 // No Suspense wrapper needed — useSearchParams() was removed in favour of the
-// server-passed initialPromoParam prop, eliminating the SSR/CSR hydration risk.
+// server-passed source param, eliminating the SSR/CSR hydration risk.
 export default function CheckoutClientPage(props: CheckoutPageClientProps) {
   return <CheckoutPageContent {...props} />;
 }

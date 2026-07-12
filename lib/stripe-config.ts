@@ -97,8 +97,8 @@ export const PLANS = {
     id: "family",
     name: "Family Access",
     subtitle: "One household account with up to 5 learner profiles",
-    price: 9900, // $99.00 lifetime family access
-    upgradeFromLifetimePrice: 5000, // $50.00 — Individual Lifetime → Family Lifetime upgrade ($99 - $49)
+    price: 7900, // $79.00 lifetime family access
+    upgradeFromLifetimePrice: 3000, // $30.00 — Individual Lifetime → Family Lifetime upgrade ($79 - $49)
     stripeProductId: "prod_UbM83Q8KLI4HX0", // env: STRIPE_PRICE_FAMILY_LIFETIME
     features: [
       "One household account",

@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { stripe, PLANS } from "@/lib/stripe";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { validatePromoCode, applyDiscount } from "@/lib/promo-codes";
 
 // Family lifetime price ID for Stripe metadata linkage
 const FAMILY_LIFETIME_PRICE_ID = process.env.STRIPE_FAMILY_LIFETIME_PRICE_ID ?? "";
@@ -26,11 +25,10 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { recipientEmail, recipientName, giftMessage, promoCode, planId: rawPlanId } = body as {
+    const { recipientEmail, recipientName, giftMessage, planId: rawPlanId } = body as {
       recipientEmail: string;
       recipientName?: string;
       giftMessage?: string;
-      promoCode?: string;
       planId?: string;
     };
 
@@ -54,30 +52,7 @@ export async function POST(request: NextRequest) {
     const plan = isFamily ? PLANS.family : PLANS.complete;
 
     const baseAmount = isFamily ? PLANS.family.price : PLANS.complete.price;
-
-    // Apply creator/promo discount if provided
-    let finalAmount: number = baseAmount;
-    let promoDiscountAmount = 0;
-    let appliedPromoCode: string | null = null;
-    let appliedPromoLabel: string | null = null;
-
-    if (promoCode?.trim()) {
-      const promo = validatePromoCode(promoCode);
-      if (!promo) {
-        return NextResponse.json({ error: "Invalid promo code" }, { status: 400 });
-      }
-      // Creator/influencer codes are for individual lifetime purchases only.
-      if (promo.creatorOnly && isFamily) {
-        return NextResponse.json(
-          { error: "This promo code is not valid for the Family plan" },
-          { status: 400 }
-        );
-      }
-      finalAmount = applyDiscount(baseAmount, promo);
-      promoDiscountAmount = baseAmount - finalAmount;
-      appliedPromoCode = promoCode.trim().toUpperCase();
-      appliedPromoLabel = promo.label;
-    }
+    const finalAmount: number = baseAmount;
 
     const paymentIntent = await stripe.paymentIntents.create({
       amount: finalAmount,
@@ -93,8 +68,6 @@ export async function POST(request: NextRequest) {
         recipientName: recipientName?.trim() ?? "",
         giftMessage: giftMessage?.trim() ?? "",
         baseAmount: String(baseAmount),
-        promoCode: appliedPromoCode ?? "",
-        promoDiscountAmount: String(promoDiscountAmount),
         finalAmount: String(finalAmount),
         ...(isFamily && FAMILY_LIFETIME_PRICE_ID.startsWith("price_")
           ? { stripePriceId: FAMILY_LIFETIME_PRICE_ID }
@@ -123,9 +96,6 @@ export async function POST(request: NextRequest) {
       clientSecret: paymentIntent.client_secret,
       planId,
       baseAmount,
-      promoCode: appliedPromoCode,
-      promoLabel: appliedPromoLabel,
-      promoDiscountAmount,
       finalAmount,
     });
   } catch (error) {

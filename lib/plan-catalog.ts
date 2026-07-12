@@ -42,7 +42,7 @@ const PLAN_CATALOG: Record<PlanId, PlanAnalyticsFields> = {
     plan_id: "family-lifetime",
     plan_type: "family",
     billing_interval: "lifetime",
-    price: 9900,
+    price: 7900,
     currency: "usd",
   },
 };

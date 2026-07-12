@@ -13,7 +13,6 @@ interface CheckoutFunnelTrackerProps {
   plan: string;
   interval: string;
   price: number;
-  promoCode?: string | null;
   source?: string | null;
   influencer?: string | null;
   quizScore?: number | null;
@@ -180,7 +179,6 @@ export default function CheckoutFunnelTracker({
   plan,
   interval,
   price,
-  promoCode,
   source,
   influencer,
   quizScore,
@@ -223,7 +221,6 @@ export default function CheckoutFunnelTracker({
       billing_interval:   interval,
       price,
       currency:           "usd",
-      promoCode:          promoCode  ?? null,
       source:             source     ?? creator,
       influencer:         influencer ?? creator,
       quiz_score:         quizScore  ?? null,

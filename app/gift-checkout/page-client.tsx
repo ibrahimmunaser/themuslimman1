@@ -5,13 +5,21 @@ import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import {
   Lock, ArrowLeft, ArrowRight, Gift, Check, Mail, User, MessageSquare,
-  Tag, X, Users, Shield, Eye, EyeOff,
+  Users, Shield, Eye, EyeOff,
 } from "lucide-react";
 import Link from "next/link";
 import { PLANS, formatPrice } from "@/lib/stripe-config";
-import { getCreatorPromo, clearCreatorPromo, getCreatorPromoConfig } from "@/lib/creator-promos";
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+// Lazily memoized so it reads the env var at first render rather than at module
+// evaluation time — avoids crashes when the key isn't yet compiled into the bundle.
+let _stripePromise: ReturnType<typeof loadStripe> | null = null;
+function getStripePromise() {
+  if (!_stripePromise) {
+    const key = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+    if (key) _stripePromise = loadStripe(key);
+  }
+  return _stripePromise;
+}
 
 type GiftPlanId = "complete" | "family";
 type AuthMode   = "signup" | "login";
@@ -91,18 +99,9 @@ interface GiftDetails {
   giftMessage: string;
 }
 
-interface GiftPromoState {
-  code: string;
-  displayLabel: string;
-  discountAmount: number;
-  estimatedFinalPrice: number;
-}
-
 interface GiftPricing {
   baseAmount: number;
   finalAmount: number;
-  promoCode: string | null;
-  promoDiscountAmount: number;
 }
 
 // ── Main content ──────────────────────────────────────────────────────────────
@@ -131,23 +130,8 @@ function GiftCheckoutContent({ purchaserEmail, purchaserName: _purchaserName }: 
   const [requiresVerification, setRequiresVerification] = useState(false);
 
   const [pricing, setPricing] = useState<GiftPricing>({
-    baseAmount: plan.price, finalAmount: plan.price, promoCode: null, promoDiscountAmount: 0,
+    baseAmount: plan.price, finalAmount: plan.price,
   });
-
-  const [giftPromo, setGiftPromo] = useState<GiftPromoState | null>(null);
-
-  useEffect(() => {
-    const stored = getCreatorPromo();
-    if (!stored) return;
-    const config = getCreatorPromoConfig(stored);
-    if (!config) { clearCreatorPromo(); return; }
-    const discountAmount = Math.round(plan.price * config.discountPercent / 100);
-    const estimatedFinal = plan.price - discountAmount;
-    setGiftPromo({ code: config.code, displayLabel: config.displayLabel, discountAmount, estimatedFinalPrice: Math.max(0, estimatedFinal) });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [planChoice]);
-
-  const handleRemoveGiftPromo = () => { clearCreatorPromo(); setGiftPromo(null); };
 
   const handlePlanChange = (newPlan: GiftPlanId) => {
     if (newPlan === planChoice) return;
@@ -155,7 +139,7 @@ function GiftCheckoutContent({ purchaserEmail, purchaserName: _purchaserName }: 
     if (step === "payment") { setStep("details"); setClientSecret(null); }
   };
 
-  const displayPrice = step === "payment" ? pricing.finalAmount : giftPromo ? giftPromo.estimatedFinalPrice : plan.price;
+  const displayPrice = step === "payment" ? pricing.finalAmount : plan.price;
 
   // ── Auth handlers ──────────────────────────────────────────────────────────
 
@@ -236,7 +220,6 @@ function GiftCheckoutContent({ purchaserEmail, purchaserName: _purchaserName }: 
           recipientName: details.recipientName,
           giftMessage: details.giftMessage,
           planId: planChoice,
-          promoCode: giftPromo?.code ?? undefined,
         }),
       });
       const data = await res.json();
@@ -244,7 +227,7 @@ function GiftCheckoutContent({ purchaserEmail, purchaserName: _purchaserName }: 
         if (res.status === 403 && data.requiresVerification) { setRequiresVerification(true); setDetailsError(data.error); return; }
         setDetailsError(data.error ?? "Failed to initialize payment"); return;
       }
-      setPricing({ baseAmount: data.baseAmount, finalAmount: data.finalAmount, promoCode: data.promoCode ?? null, promoDiscountAmount: data.promoDiscountAmount ?? 0 });
+      setPricing({ baseAmount: data.baseAmount, finalAmount: data.finalAmount });
       setClientSecret(data.clientSecret);
       setStep("payment");
     } catch (err) {
@@ -344,15 +327,6 @@ function GiftCheckoutContent({ purchaserEmail, purchaserName: _purchaserName }: 
         </div>
         <p className="text-sm font-bold text-white ml-4">{formatPrice(plan.price)}</p>
       </div>
-      {giftPromo && (
-        <div className="flex items-center justify-between text-sm pt-1 border-t border-zinc-800">
-          <span className="text-green-400 flex items-center gap-1.5">
-            <Tag className="w-3.5 h-3.5" />
-            Creator offer
-          </span>
-          <span className="text-green-400 font-medium">−{formatPrice(giftPromo.discountAmount)}</span>
-        </div>
-      )}
       <div className="flex items-center justify-between pt-2 border-t border-zinc-800">
         <span className="text-sm font-semibold text-white">Gift Total</span>
         <span className="text-lg font-bold text-gold">{formatPrice(displayPrice)}</span>
@@ -565,22 +539,6 @@ function GiftCheckoutContent({ purchaserEmail, purchaserName: _purchaserName }: 
 
           {OrderSummary}
 
-          {/* Creator promo banner */}
-          {giftPromo && step === "details" && (
-            <div className="mb-5 flex items-start justify-between gap-2 rounded-xl bg-gold/10 border border-gold/20 px-4 py-3">
-              <div className="flex items-start gap-2 text-sm min-w-0">
-                <Tag className="w-3.5 h-3.5 text-gold mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="text-gold font-medium leading-tight">Creator offer applied</p>
-                  <p className="text-zinc-400 text-xs mt-0.5">{giftPromo.displayLabel}</p>
-                </div>
-              </div>
-              <button type="button" onClick={handleRemoveGiftPromo} className="text-zinc-500 hover:text-zinc-300 flex-shrink-0" aria-label="Remove promo">
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          )}
-
           {/* Step 1: Recipient Details */}
           {step === "details" && (
             <form onSubmit={handleDetailsSubmit} className="space-y-4">
@@ -669,7 +627,7 @@ function GiftCheckoutContent({ purchaserEmail, purchaserName: _purchaserName }: 
 
               <Elements
                 key={clientSecret}
-                stripe={stripePromise}
+                stripe={getStripePromise()}
                 options={{
                   clientSecret,
                   appearance: {

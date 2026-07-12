@@ -6,7 +6,16 @@ import { Elements, CardElement, useStripe, useElements } from "@stripe/react-str
 import { CreditCard, Plus, Trash2, Loader2, X, Check, Star, AlertTriangle } from "lucide-react";
 import { daysUntilCardExpiry, isCardExpiringSoon, type SavedCardLike } from "@/lib/saved-cards";
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+// Lazily memoized so it reads the env var at first render rather than at module
+// evaluation time — avoids crashes when the key isn't yet compiled into the bundle.
+let _stripePromise: ReturnType<typeof loadStripe> | null = null;
+function getStripePromise() {
+  if (!_stripePromise) {
+    const key = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+    if (key) _stripePromise = loadStripe(key);
+  }
+  return _stripePromise;
+}
 
 const EXPIRY_WARNING_DAYS = 60;
 
@@ -305,7 +314,7 @@ export function CardManager() {
         {showForm && setupSecret && (
           <div className={`px-5 pb-5 ${cards.length > 0 ? "border-t border-border" : ""}`}>
             <Elements
-              stripe={stripePromise}
+              stripe={getStripePromise()}
               options={{
                 appearance: {
                   theme: "night",

@@ -14,7 +14,7 @@ interface InfluencerPricingToggleProps {
   individualMonthlyUrl: string;
   familyMonthlyUrl: string;
 
-  // Lifetime checkout URLs (with promo code already embedded)
+  // Lifetime checkout URLs (with creator/source attribution embedded)
   individualLifetimeUrl: string;
   familyLifetimeUrl: string;
 

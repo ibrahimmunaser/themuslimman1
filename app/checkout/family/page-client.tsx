@@ -2,17 +2,25 @@
 
 import { useEffect, useState, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { useRouter } from "next/navigation";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import {
   Check, Lock, Users, User, ArrowLeft, Shield, Star, RefreshCw,
-  ArrowUpCircle, Tag, X, ArrowRight, Eye, EyeOff,
+  ArrowUpCircle, ArrowRight, Eye, EyeOff,
 } from "lucide-react";
 import Link from "next/link";
 import { PLANS, formatPrice } from "@/lib/stripe-config";
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+// Lazily memoized so it reads the env var at first render rather than at module
+// evaluation time — avoids crashes when the key isn't yet compiled into the bundle.
+let _stripePromise: ReturnType<typeof loadStripe> | null = null;
+function getStripePromise() {
+  if (!_stripePromise) {
+    const key = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+    if (key) _stripePromise = loadStripe(key);
+  }
+  return _stripePromise;
+}
 
 const LIFETIME_PLAN = PLANS.family;
 const MONTHLY_PLAN  = PLANS.familyMonthly;
@@ -117,7 +125,6 @@ function FamilyCheckoutContent({
   initialCycle = "lifetime",
   isUpgradeFromLifetime = false,
 }: FamilyCheckoutClientProps) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const cycleParam = searchParams.get("cycle") as BillingCycle | null;
 
@@ -147,20 +154,6 @@ function FamilyCheckoutContent({
     isUpgradeFromLifetime ? LIFETIME_PLAN.upgradeFromLifetimePrice : LIFETIME_PLAN.price
   );
   const [finalPrice, setFinalPrice]   = useState<number>(basePrice);
-  const [discountAmount, setDiscountAmount] = useState(0);
-
-  // Coupon
-  const [couponInput, setCouponInput]   = useState("");
-  const [couponLoading, setCouponLoading] = useState(false);
-  const [couponError, setCouponError]   = useState<string | null>(null);
-  const [appliedCoupon, setAppliedCoupon] = useState<{
-    code: string; label: string; discount: number; finalPrice: number;
-  } | null>(null);
-
-  // Free access
-  const [freeAccess, setFreeAccess]         = useState(false);
-  const [freeClaimLoading, setFreeClaimLoading] = useState(false);
-  const [freeClaimError, setFreeClaimError] = useState<string | null>(null);
 
   const isUpgrade = isUpgradeFromLifetime;
 
@@ -168,11 +161,9 @@ function FamilyCheckoutContent({
 
   const createIntent = async (
     currentCycle: BillingCycle,
-    promoCode?: string
-  ): Promise<{ discountAmount: number; finalPrice: number } | null> => {
+  ): Promise<{ finalPrice: number } | null> => {
     setLoading(true);
     setClientSecret(null);
-    setFreeAccess(false);
     setError(null);
 
     const endpoint = currentCycle === "lifetime"
@@ -183,7 +174,7 @@ function FamilyCheckoutContent({
       const r = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isUpgrade, promoCode }),
+        body: JSON.stringify({ isUpgrade }),
       });
       const data = await r.json();
 
@@ -198,19 +189,12 @@ function FamilyCheckoutContent({
         return null;
       }
 
-      const discount: number = data.promoDiscountAmount ?? 0;
-      const price: number    = data.finalAmount ?? basePrice;
+      const price: number = data.finalAmount ?? basePrice;
 
       if (data.baseAmount) setBasePrice(data.baseAmount);
       setFinalPrice(price);
-      setDiscountAmount(discount);
-
-      if (data.freeAccess) {
-        setFreeAccess(true);
-      } else {
-        setClientSecret(data.clientSecret);
-      }
-      return { discountAmount: discount, finalPrice: price };
+      setClientSecret(data.clientSecret);
+      return { finalPrice: price };
     } catch {
       setError("Failed to initialize checkout. Please refresh the page.");
       return null;
@@ -226,60 +210,9 @@ function FamilyCheckoutContent({
     if (isFirstMount.current) {
       isFirstMount.current = false;
     }
-    createIntent(cycle, appliedCoupon?.code);
+    createIntent(cycle);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cycle, isAuthenticated]);
-
-  // ── Coupon handlers ────────────────────────────────────────────────────────
-
-  const handleApplyCoupon = async () => {
-    const code = couponInput.trim();
-    if (!code) return;
-    setCouponLoading(true);
-    setCouponError(null);
-    try {
-      const result = await createIntent(cycle, code);
-      if (result) {
-        setAppliedCoupon({ code: code.toUpperCase(), label: "Promo applied", discount: result.discountAmount, finalPrice: result.finalPrice });
-      } else {
-        setCouponError("Invalid promo code");
-      }
-    } catch {
-      setCouponError("Could not apply code. Please try again.");
-    } finally {
-      setCouponLoading(false);
-    }
-  };
-
-  const handleRemoveCoupon = () => {
-    setAppliedCoupon(null);
-    setCouponInput("");
-    setCouponError(null);
-    createIntent(cycle);
-  };
-
-  // ── Free access claim ──────────────────────────────────────────────────────
-
-  const handleClaimFreeAccess = async () => {
-    const code = appliedCoupon?.code ?? couponInput.trim();
-    if (!code) return;
-    setFreeClaimLoading(true);
-    setFreeClaimError(null);
-    try {
-      const res = await fetch("/api/stripe/claim-free-access", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ promoCode: code, planType: "family" }),
-      });
-      const data = await res.json();
-      if (!res.ok) { setFreeClaimError(data.error || "Something went wrong"); return; }
-      router.push("/seerah");
-    } catch {
-      setFreeClaimError("Something went wrong. Please try again.");
-    } finally {
-      setFreeClaimLoading(false);
-    }
-  };
 
   // ── Auth handlers ──────────────────────────────────────────────────────────
 
@@ -340,8 +273,7 @@ function FamilyCheckoutContent({
   // ── Derived display values ─────────────────────────────────────────────────
 
   const activeFeatures  = cycle === "lifetime" ? LIFETIME_PLAN.features : MONTHLY_PLAN.features;
-  const displayPrice    = appliedCoupon ? appliedCoupon.finalPrice : finalPrice;
-  const displayDiscount = appliedCoupon ? appliedCoupon.discount : discountAmount;
+  const displayPrice    = finalPrice;
 
   // ── Left column (shared) ───────────────────────────────────────────────────
 
@@ -476,15 +408,6 @@ function FamilyCheckoutContent({
           )}
         </div>
       </div>
-      {displayDiscount > 0 && (
-        <div className="flex items-center justify-between text-sm pt-1 border-t border-zinc-800">
-          <span className="text-green-400 flex items-center gap-1.5">
-            <Tag className="w-3.5 h-3.5" />
-            {appliedCoupon?.code ?? "Promo"} discount
-          </span>
-          <span className="text-green-400 font-medium">−{formatPrice(displayDiscount)}</span>
-        </div>
-      )}
       {cycle === "lifetime" && (
         <div className="flex items-center justify-between pt-2 border-t border-zinc-800">
           <span className="text-sm font-semibold text-white">Total</span>
@@ -680,45 +603,6 @@ function FamilyCheckoutContent({
 
           {OrderSummary}
 
-          {/* Coupon input — lifetime only */}
-          {cycle === "lifetime" && (
-            <div className="mb-6">
-              {appliedCoupon ? (
-                <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-green-500/10 border border-green-500/20">
-                  <div className="flex items-center gap-2 text-green-400 text-sm">
-                    <Tag className="w-3.5 h-3.5 flex-shrink-0" />
-                    <span className="font-medium">{appliedCoupon.code}</span>
-                    <span className="text-green-400/60 text-xs">{appliedCoupon.label}</span>
-                  </div>
-                  <button onClick={handleRemoveCoupon} className="text-green-400/60 hover:text-green-400 transition-colors ml-2" aria-label="Remove promo code">
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-1.5">
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={couponInput}
-                      onChange={(e) => { setCouponInput(e.target.value.toUpperCase()); setCouponError(null); }}
-                      onKeyDown={(e) => e.key === "Enter" && handleApplyCoupon()}
-                      placeholder="Promo code"
-                      className="flex-1 px-3.5 py-2.5 text-sm rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors uppercase"
-                    />
-                    <button
-                      onClick={handleApplyCoupon}
-                      disabled={couponLoading || !couponInput.trim()}
-                      className="px-4 py-2.5 text-sm font-medium rounded-xl border border-zinc-700 bg-zinc-800 text-zinc-300 hover:border-gold/40 hover:text-gold transition-colors disabled:opacity-40 whitespace-nowrap"
-                    >
-                      {couponLoading ? "…" : "Apply"}
-                    </button>
-                  </div>
-                  {couponError && <p className="text-xs text-red-400">{couponError}</p>}
-                </div>
-              )}
-            </div>
-          )}
-
           {loading && (
             <div className="flex items-center justify-center py-12">
               <div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
@@ -741,31 +625,10 @@ function FamilyCheckoutContent({
             </div>
           )}
 
-          {freeAccess && !loading && (
-            <div className="space-y-4">
-              <div className="p-5 rounded-xl bg-gold/10 border border-gold/25 text-center">
-                <div className="text-3xl mb-3">🎁</div>
-                <h3 className="text-lg font-bold text-white mb-1">Free Access Applied</h3>
-                <p className="text-zinc-400 text-sm">Your promo code gives you full family access at no charge.</p>
-              </div>
-              {freeClaimError && (
-                <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">{freeClaimError}</div>
-              )}
-              <button
-                onClick={handleClaimFreeAccess}
-                disabled={freeClaimLoading}
-                className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-gold hover:bg-gold-light disabled:opacity-60 text-ink font-bold text-base transition-colors shadow-lg shadow-gold/20"
-              >
-                <Lock className="w-4 h-4" />
-                {freeClaimLoading ? "Activating…" : "Claim Free Family Access"}
-              </button>
-            </div>
-          )}
-
           {clientSecret && !loading && (
             <Elements
               key={clientSecret}
-              stripe={stripePromise}
+              stripe={getStripePromise()}
               options={{
                 clientSecret,
                 appearance: {

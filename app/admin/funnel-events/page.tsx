@@ -5,30 +5,19 @@ import {
   FUNNEL_CREATORS,
   CHECKOUT_RAW_EVENTS,
 } from "@/lib/queries/funnel-events";
+import { formatAdminDateTime } from "@/lib/admin-datetime";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Funnel Events | Admin" };
 
 function fmtDate(d: Date) {
-  return new Date(d).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return formatAdminDateTime(d);
 }
 
 export default async function FunnelEventsPage() {
   const data = await getFunnelEventsData();
 
-  const reportingLabel = data.checkoutReportingStart.toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    timeZoneName: "short",
-  });
+  const reportingLabel = formatAdminDateTime(data.checkoutReportingStart, { includeYear: true });
 
   return (
     <div className="p-6 max-w-screen-2xl mx-auto space-y-8">

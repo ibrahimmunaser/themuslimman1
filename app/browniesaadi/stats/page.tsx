@@ -8,7 +8,6 @@ export const metadata = { title: "Creator Stats", robots: { index: false, follow
 export const dynamic = "force-dynamic";
 
 const CREATOR      = "browniesaadi";
-const PROMO_CODE   = "BROWNIE";
 const DISPLAY_NAME = "Browniesaadi";
 
 export default async function BrowniesaadiStatsPage({
@@ -44,7 +43,6 @@ export default async function BrowniesaadiStatsPage({
   return (
     <BrownieStatsDashboard
       displayName={DISPLAY_NAME}
-      promoCode={PROMO_CODE}
       rawClicks={rawClicks}
       events={events}
       purchases={purchases.map((p) => ({ ...p, userEmail: p.user.email }))}
