@@ -74,7 +74,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 6),
-                    Text('Use your email to continue learning',
+                    Text('Sign in only if you already have access on another device. Purchasing does not require an account.',
                       style: Theme.of(context).textTheme.bodyMedium,
                       textAlign: TextAlign.center,
                     ),
@@ -132,17 +132,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
 
                 const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text("Don't have an account?",
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    TextButton(
-                      onPressed: () => context.go('/signup'),
-                      child: const Text('Sign up'),
-                    ),
-                  ],
+                // Apple Guideline 5.1.1(v): do not funnel new users into
+                // registration before purchase. Sign-up is optional and later.
+                TextButton(
+                  onPressed: () => context.go('/landing'),
+                  child: const Text(
+                    'Want to purchase? No account needed — view plans',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                TextButton(
+                  onPressed: () => context.go('/signup'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.textMuted,
+                  ),
+                  child: const Text(
+                    'Create an account (optional)',
+                    style: TextStyle(fontSize: 13),
+                  ),
                 ),
               ].animate(interval: 60.ms).fadeIn(duration: 300.ms).slideY(begin: 0.1, end: 0),
             ),

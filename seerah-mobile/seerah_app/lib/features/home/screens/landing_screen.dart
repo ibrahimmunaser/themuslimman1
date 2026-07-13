@@ -259,28 +259,21 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
         child: Column(
           children: [
             // ── Top bar ───────────────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 16, 0),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const Expanded(
-                    child: Text(
-                      'Choose your plan',
-                      style: TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.3,
-                      ),
-                    ),
+            // No Sign In here — Apple Guideline 5.1.1(v): plan picking / purchase
+            // must not look like it requires registration first.
+            const Padding(
+              padding: EdgeInsets.fromLTRB(20, 12, 20, 0),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Choose your plan',
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.3,
                   ),
-                  TextButton(
-                    onPressed: () => context.push('/login'),
-                    child: const Text('Sign In',
-                        style: TextStyle(color: AppColors.textSecondary)),
-                  ),
-                ],
+                ),
               ),
             ),
 
@@ -404,21 +397,14 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                     const SizedBox(height: 20),
 
                     // ── Bottom actions ────────────────────────────────────
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text('Already have an account? ',
-                            style: TextStyle(
-                                color: AppColors.textMuted, fontSize: 13)),
-                        GestureDetector(
-                          onTap: () => context.push('/login'),
-                          child: const Text('Sign In',
-                              style: TextStyle(
-                                  color: AppColors.gold,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600)),
-                        ),
-                      ],
+                    const Text(
+                      'No account required to purchase. Tap a plan to buy.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 12.5,
+                        height: 1.4,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Center(
@@ -437,9 +423,21 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                                     .restorePurchases();
                               },
                         style: TextButton.styleFrom(
-                            foregroundColor: AppColors.textMuted),
+                            foregroundColor: AppColors.gold),
                         child: const Text('Restore Purchases',
-                            style: TextStyle(fontSize: 12)),
+                            style: TextStyle(
+                                fontSize: 13, fontWeight: FontWeight.w600)),
+                      ),
+                    ),
+                    Center(
+                      child: TextButton(
+                        onPressed: () => context.push('/login'),
+                        style: TextButton.styleFrom(
+                            foregroundColor: AppColors.textMuted),
+                        child: const Text(
+                          'Already learning on another device? Sign in',
+                          style: TextStyle(fontSize: 12),
+                        ),
                       ),
                     ),
 

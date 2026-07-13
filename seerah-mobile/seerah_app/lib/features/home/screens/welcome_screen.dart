@@ -92,14 +92,16 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                       ),
                     ),
                     const Spacer(),
+                    // Returning learners only — purchase path is the primary CTAs
+                    // below (Start Part 1 Free / Start Full Course), not Sign In.
                     TextButton(
                       onPressed: () {
                         HapticFeedback.selectionClick();
                         context.push('/login');
                       },
                       child: const Text(
-                        'Sign In',
-                        style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                        'Returning?',
+                        style: TextStyle(color: AppColors.textMuted, fontSize: 13),
                       ),
                     ),
                   ],
