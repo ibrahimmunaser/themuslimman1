@@ -46,16 +46,20 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     );
   }
 
-  void _restore() {
+  Future<void> _restore() async {
     HapticFeedback.lightImpact();
-    // Restore requires an authenticated account.
-    final isLoggedIn = ref.read(authProvider).isLoggedIn;
-    if (!isLoggedIn) {
-      context.push('/login');
+    // Restore without forcing login (Apple Guideline 5.1.1(v)) — silently
+    // provision a guest session if needed, then restore StoreKit purchases.
+    setState(() => _restoring = true);
+    final ready = await ref.read(authProvider.notifier).ensureSession();
+    if (!mounted) return;
+    if (!ready) {
+      setState(() => _restoring = false);
+      _snack(ref.read(authProvider).error ??
+          'Could not restore purchases. Please try again.');
       return;
     }
-    setState(() => _restoring = true);
-    ref.read(iapProvider.notifier).restorePurchases();
+    await ref.read(iapProvider.notifier).restorePurchases();
   }
 
   @override

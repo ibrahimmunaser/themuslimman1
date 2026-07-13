@@ -274,6 +274,22 @@ class IAPNotifier extends StateNotifier<IAPState> {
     }
   }
 
+  /// Explicitly claim a pending OS purchase using a guest session if needed.
+  Future<void> claimPendingPurchase() async {
+    final purchase = state.pendingLinkPurchase;
+    if (purchase == null) return;
+    final ready = await _ref.read(authProvider.notifier).ensureSession();
+    if (!ready) {
+      state = state.copyWith(
+        status: IAPStatus.error,
+        errorMessage: _ref.read(authProvider).error ??
+            'Could not claim purchase. Please try again.',
+      );
+      return;
+    }
+    await _verifyAndLinkPurchase(purchase);
+  }
+
   // ── Buying ──────────────────────────────────────────────────────────────────
 
   /// Initiate a purchase. Caller MUST ensure the user is logged in before calling.
@@ -352,23 +368,25 @@ class IAPNotifier extends StateNotifier<IAPState> {
   }
 
   Future<void> _completePurchase(PurchaseDetails purchase) async {
-    final isLoggedIn = _ref.read(authProvider).isLoggedIn;
+    var isLoggedIn = _ref.read(authProvider).isLoggedIn;
 
     if (!isLoggedIn) {
-      // Edge case: OS delivered a purchase without an authenticated session.
-      // This should not happen with the new auth-first flow, but can occur
-      // with OS-replayed pending purchases from a previous install.
-      // Store it — the recovery banner will prompt the user to sign in,
-      // and _onUserLoggedIn() will verify it automatically after login.
-      debugPrint('[IAP] purchase arrived without auth — storing for recovery');
-      state = state.copyWith(
-        status: IAPStatus.pendingLink,
-        pendingLinkPurchase: purchase,
-      );
-      return;
+      // OS delivered a purchase without a session. Silently create a guest
+      // session (Apple 5.1.1(v)) instead of forcing email/password login.
+      debugPrint('[IAP] purchase arrived without auth — ensuring guest session');
+      final ready = await _ref.read(authProvider.notifier).ensureSession();
+      isLoggedIn = ready && _ref.read(authProvider).isLoggedIn;
+      if (!isLoggedIn) {
+        debugPrint('[IAP] guest session failed — storing for recovery');
+        state = state.copyWith(
+          status: IAPStatus.pendingLink,
+          pendingLinkPurchase: purchase,
+        );
+        return;
+      }
     }
 
-    state = state.copyWith(status: IAPStatus.verifying);
+    state = state.copyWith(status: IAPStatus.verifying, clearPendingIntent: true);
     try {
       await _verifyWithBackend(purchase);
       // Acknowledge only AFTER backend verification succeeds.

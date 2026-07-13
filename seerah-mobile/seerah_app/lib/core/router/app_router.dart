@@ -63,9 +63,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         return '/landing';
       }
 
-      // Logged-in on entry/marketing screens → go to dashboard (applies to
-      // guest/anonymous accounts too — they already have a session).
-      if (isLoggedIn && (loc == '/' || loc == '/welcome' || loc == '/landing')) {
+      // Logged-in on splash/welcome → dashboard.
+      // Keep unpaid users on /landing so guest checkout can finish StoreKit
+      // (Apple 2.1(b) / 5.1.1(v)). Sending them to /dashboard mid-buy was
+      // disposing the paywall before buy() ran.
+      if (isLoggedIn && (loc == '/' || loc == '/welcome')) {
+        return '/dashboard';
+      }
+      if (isLoggedIn && loc == '/landing' && authState.hasAccess) {
         return '/dashboard';
       }
 

@@ -129,18 +129,26 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
     }
 
     setState(() => _purchasingPlanId = plan.id);
+
     final product = await ref
         .read(iapProvider.notifier)
         .resolveProductForPlan(plan.iapId);
-    if (!mounted) return;
-
     if (product == null) {
-      setState(() => _purchasingPlanId = null);
+      if (mounted) setState(() => _purchasingPlanId = null);
       _snack(ref.read(iapProvider).unavailableProductMessage());
       return;
     }
 
-    ref.read(iapProvider.notifier).buy(product);
+    // Defense in depth: ensure a session exists even if auth state went stale.
+    final ready = await ref.read(authProvider.notifier).ensureSession();
+    if (!ready) {
+      if (mounted) setState(() => _purchasingPlanId = null);
+      _snack(ref.read(authProvider).error ??
+          'Could not start checkout. Please try again.');
+      return;
+    }
+
+    await ref.read(iapProvider.notifier).buy(product);
   }
 
   void _snack(String msg) {
@@ -518,7 +526,19 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
               onPressed:
                   busy
                       ? null
-                      : () => ref.read(iapProvider.notifier).restorePurchases(),
+                      : () async {
+                          final ready = await ref
+                              .read(authProvider.notifier)
+                              .ensureSession();
+                          if (!ready) {
+                            _snack(ref.read(authProvider).error ??
+                                'Could not restore. Please try again.');
+                            return;
+                          }
+                          await ref
+                              .read(iapProvider.notifier)
+                              .restorePurchases();
+                        },
               icon: const Icon(
                 Icons.restore_rounded,
                 size: 17,

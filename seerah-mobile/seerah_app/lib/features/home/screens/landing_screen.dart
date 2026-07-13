@@ -122,28 +122,35 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
 
     setState(() => _purchasingPlanId = plan.id);
 
+    // Resolve the StoreKit product first so buy() can still run even if the
+    // widget tree rebuilds after ensureSession().
+    final product =
+        await ref.read(iapProvider.notifier).resolveProductForPlan(plan.iapId);
+    if (product == null) {
+      if (mounted) setState(() => _purchasingPlanId = null);
+      _snack(ref.read(iapProvider).unavailableProductMessage());
+      return;
+    }
+
+    // Persist intent so IAPNotifier can resume after any navigation/login.
+    ref.read(iapProvider.notifier).setPurchaseIntent(product.id);
+
     // No registration required to purchase (Apple Guideline 5.1.1(v)) — this
     // silently provisions a device-linked guest session with no personal
     // info collected, if one doesn't already exist. Signing in/up is only
     // ever an optional, later step (see the profile screen).
     final ready = await ref.read(authProvider.notifier).ensureSession();
-    if (!mounted) return;
     if (!ready) {
-      setState(() => _purchasingPlanId = null);
-      _snack(ref.read(authProvider).error ?? 'Could not start checkout. Please try again.');
+      ref.read(iapProvider.notifier).clearPurchaseIntent();
+      if (mounted) setState(() => _purchasingPlanId = null);
+      _snack(ref.read(authProvider).error ??
+          'Could not start checkout. Please try again.');
       return;
     }
 
-    final product = await ref.read(iapProvider.notifier).resolveProductForPlan(plan.iapId);
-    if (!mounted) return;
-
-    if (product == null) {
-      setState(() => _purchasingPlanId = null);
-      _snack(ref.read(iapProvider).unavailableProductMessage());
-      return;
-    }
-
-    ref.read(iapProvider.notifier).buy(product);
+    // Call buy on the notifier (survives LandingScreen dispose). Do not
+    // gate on mounted — that was aborting StoreKit for Apple review.
+    await ref.read(iapProvider.notifier).buy(product);
   }
 
   void _snack(String msg) {
@@ -287,7 +294,11 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                     // ── Recovery banner — legacy unlinked purchase ─────────
                     if (showRecovery) ...[
                       _RecoveryBanner(
-                        onSignIn: () => context.push('/login'),
+                        onClaim: () async {
+                          await ref
+                              .read(iapProvider.notifier)
+                              .claimPendingPurchase();
+                        },
                       ),
                       const SizedBox(height: 12),
                     ],
@@ -816,8 +827,8 @@ class _Part1PreviewSection extends StatelessWidget {
 }
 
 class _RecoveryBanner extends StatelessWidget {
-  final VoidCallback onSignIn;
-  const _RecoveryBanner({required this.onSignIn});
+  final VoidCallback onClaim;
+  const _RecoveryBanner({required this.onClaim});
 
   @override
   Widget build(BuildContext context) {
@@ -834,20 +845,20 @@ class _RecoveryBanner extends StatelessWidget {
           const SizedBox(width: 10),
           const Expanded(
             child: Text(
-              'You have a pending purchase — sign in to claim your access.',
+              'You have a pending purchase — tap Claim to unlock access. No account required.',
               style: TextStyle(
                   color: AppColors.textPrimary, fontSize: 13, height: 1.4),
             ),
           ),
           const SizedBox(width: 8),
           TextButton(
-            onPressed: onSignIn,
+            onPressed: onClaim,
             style: TextButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               minimumSize: Size.zero,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
-            child: const Text('Sign In',
+            child: const Text('Claim',
                 style: TextStyle(
                     color: AppColors.gold,
                     fontSize: 13,
