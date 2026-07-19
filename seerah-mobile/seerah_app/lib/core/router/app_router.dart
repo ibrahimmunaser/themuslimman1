@@ -48,6 +48,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       final authRoutes = ['/login', '/signup', '/verify-email'];
       final isOnAuth = authRoutes.contains(loc);
 
+      // /signup is the post-purchase upgrade path only (anonymous guest → real
+      // account). Logged-out visitors and anonymous guests who have not yet
+      // purchased are sent to /landing to buy first (Guideline 5.1.1(v)).
+      if (loc == '/signup') {
+        if (!isLoggedIn) return '/landing';
+        if (isAnonymous && !authState.hasAccess) return '/landing';
+      }
+
       // Part 1 is always free — allow logged-out users through directly.
       final isFreePartRoute = loc == '/part/1';
 
@@ -74,12 +82,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         return '/dashboard';
       }
 
-      // A guest/anonymous account may deliberately visit /login (to switch
-      // into an existing real account and restore purchases there) or
-      // /signup (to optionally upgrade this same account) — Apple Guideline
-      // 5.1.1(v) requires registration to remain available "at any time",
-      // not just before the first session exists. Real accounts still get
-      // bounced away from these screens once signed in.
+      // A guest/anonymous account with access may visit /signup to upgrade.
+      // A real account is bounced away from both /login and /signup.
       if (isLoggedIn && !isAnonymous && (loc == '/login' || loc == '/signup')) {
         return '/dashboard';
       }

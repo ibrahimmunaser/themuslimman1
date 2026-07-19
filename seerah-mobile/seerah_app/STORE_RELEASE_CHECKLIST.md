@@ -174,23 +174,19 @@ Fill out the **Data Safety** section in Play Console:
   - Data not used for tracking
 
 ### App Review notes (REQUIRED — paste into App Review Information → Notes)
-> *"This is an Islamic educational course app covering the biography of the Prophet Muhammad ﷺ in 100 structured parts. Part 1 is freely accessible with no account. Full access to Parts 2–100 requires a purchase through in-app purchase (Apple StoreKit) — four plans are available: Individual Monthly, Family Monthly, Individual Lifetime, and Family Lifetime, each showing its title, length, and price directly in the purchase screen next to links to our Privacy Policy and Terms of Use (EULA). Purchasing does NOT require creating an account or providing any personal information — tapping a plan silently starts checkout on a device-linked session with zero data collected, and the native StoreKit sheet appears immediately. After purchase, the app verifies the receipt with our backend (themuslimman.com/api/mobile-purchases/verify) and unlocks the content on that device right away. Creating a real account (Profile → 'Create an account') is entirely optional and only needed to access the purchase from a different device — it is never required before, during, or after checkout. A Restore Purchases button is present on the paywall and pricing screens and works without an account. Account deletion is available in-app at Profile → Delete Account (immediate, no email/support ticket required). No sign-in with Apple is used. Test account credentials: [provide a test account with full access — email + password, or note that Restore Purchases can be used with a Sandbox tester]."*
+> *"This is an Islamic educational course app covering the biography of the Prophet Muhammad ﷺ in 100 structured parts. Part 1 is freely accessible with no account. Full access to Parts 2–100 requires a purchase through in-app purchase (Apple StoreKit) — four plans are available: Individual Monthly, Family Monthly, Individual Lifetime, and Family Lifetime, each showing its title, length, and price directly in the purchase screen next to links to our Privacy Policy and Terms of Use (EULA). Purchasing does NOT require creating an account or providing any personal information — tapping a plan silently starts checkout on a device-linked session with zero data collected, and the native StoreKit sheet appears immediately. After purchase, the app verifies the receipt with our backend (themuslimman.com/api/mobile-purchases/verify) and unlocks the content on that device right away. Creating a real account (Profile → 'Create an account') is entirely optional and only available AFTER a purchase has been completed — it exists solely to access the same purchase from a different device. Account creation is never required before, during, or after checkout, and there is no account creation option on the Sign In screen. A Restore Purchases button is present on the paywall and pricing screens and works without an account. Account deletion is available in-app at Profile → Delete Account (immediate, no email/support ticket required). No sign-in with Apple is used. Test account credentials: [provide a test account with full access — email + password, or note that Restore Purchases can be used with a Sandbox tester]."*
 
-> ⚠️ **UNVERIFIED — confirm before resubmitting (likely cause of the Guideline 2.1(b) purchase bug):**
-> The app code currently queries BOTH of the following product-ID sets from
-> the store as a defensive fallback, but the actual product IDs configured
-> in App Store Connect were never confirmed during this fix. Open App Store
-> Connect → your app → Monetization → In-App Purchases and verify the
-> **Product ID** field for each of the 4 items matches one of these sets
-> exactly (case-sensitive), is **Ready to Submit / Approved**, has pricing
-> set in all territories, and that a **Paid Apps Agreement** is active in
-> App Store Connect → Business (Apple's rejection explicitly asks you to
-> confirm this). If the real IDs are neither of these, update
-> `lib/core/constants/app_constants.dart` (mobile) and `PRODUCT_META` in
-> `app/api/mobile-purchases/verify/route.ts` (backend) to match, then remove
-> whichever fallback set turns out to be wrong.
-> - Current: `seerah_monthly_individual`, `seerah_monthly_family`, `seerah_lifetime_individual`, `seerah_lifetime_family`
-> - Legacy fallback also queried: `com.themuslimman.seerah.monthly.individual`, `com.themuslimman.seerah.monthly.family`, `com.themuslimman.seerah.lifetime.individual`, `com.themuslimman.seerah.lifetime.family`
+> ⚠️ **CONFIRMED 2026-07-19 (ASC check):**
+> Product IDs in App Store Connect match the app code exactly:
+> - `seerah_monthly_individual`, `seerah_monthly_family` (subscriptions, Waiting for Review)
+> - `seerah_lifetime_individual`, `seerah_lifetime_family` (non-consumables, Waiting for Review)
+> Paid Apps Agreement is **Active**. Bank + W-9 tax forms are Active.
+> Legacy reverse-DNS IDs in verify route are unused fallback only — ASC does not use them.
+>
+> Remaining for 2.1(b): retest sandbox purchase after rebuilding with the 5.1.1 signup gate fix.
+> Remaining for 2.3.10: upload the cleaned iOS screenshots from
+> `app-store-assets/ios-iphone-screenshot-1.jpg` (and -2, -3) — Android status-bar
+> screenshots were deleted from the version page; new ones still need uploading.
 
 ### In-App Purchase promotional image (Guideline 2.3.2)
 > A new promotional image (unique graphic, not a screenshot, large legible
@@ -270,7 +266,7 @@ flutter run --release -d <device-id>
 
 ### Authentication flows
 - [ ] **Cold start (logged out)**: App shows landing screen, not course
-- [ ] **Sign up**: New account created, redirected to Pricing (no access yet)
+- [ ] **Sign up (post-purchase only)**: After completing a guest IAP purchase, Profile → "Create an account" → account created and redirected to dashboard with existing access intact
 - [ ] **Login (free user)**: Sees Pricing screen; Parts 2-100 show paywall
 - [ ] **Login (paid user)**: Directly to Course screen; all parts accessible
 - [ ] **Splash screen**: Appears with gold crescent logo on dark background, dismisses cleanly

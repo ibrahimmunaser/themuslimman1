@@ -44,37 +44,24 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() { _loading = true; _error = null; });
 
-    // A guest/anonymous account (created silently before checkout — see
-    // Guideline 5.1.1(v)) upgrades in place so its purchases stay attached.
-    // A never-signed-in visitor gets a brand-new account as before.
-    final isUpgrade = ref.read(authProvider).isAnonymous;
-    final err = isUpgrade
-        ? await ref.read(authProvider.notifier).upgradeAccount(
-            _nameCtrl.text,
-            _emailCtrl.text,
-            _passCtrl.text,
-          )
-        : await ref.read(authProvider.notifier).signup(
-            _nameCtrl.text,
-            _emailCtrl.text,
-            _passCtrl.text,
-          );
+    // Router enforces that only anonymous+purchased guests reach this screen,
+    // so this is always a guest → real account upgrade (purchases stay attached).
+    final err = await ref.read(authProvider.notifier).upgradeAccount(
+        _nameCtrl.text,
+        _emailCtrl.text,
+        _passCtrl.text,
+      );
     if (!mounted) return;
     if (err != null) {
       setState(() { _error = err; _loading = false; });
-    } else if (isUpgrade) {
+    } else {
       // Already has access from the guest purchase — go straight in.
       context.go('/dashboard');
-    } else {
-      // Navigate to email verification screen instead of letting the router
-      // auto-redirect to /dashboard, so every new account sees the verify step.
-      context.go('/verify-email');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isUpgrade = ref.watch(authProvider).isAnonymous;
     return Scaffold(
       body: AppGradientBackground(
         child: SafeArea(
@@ -91,16 +78,14 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     const AppLogo(size: 48),
                     const SizedBox(height: 20),
                     Text(
-                      isUpgrade ? 'Save Your Progress' : 'Create Account',
+                      'Save Your Progress',
                       style: Theme.of(context).textTheme.displayMedium,
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      isUpgrade
-                          ? 'Optional — access your course from any device. '
-                              'Your purchase stays exactly as it is if you skip this.'
-                          : 'Start your Seerah journey',
+                      'Optional — access your course from any device. '
+                          'Your purchase stays exactly as it is if you skip this.',
                       style: Theme.of(context).textTheme.bodyMedium,
                       textAlign: TextAlign.center,
                     ),
@@ -154,15 +139,13 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       : const Text('Create Account'),
                 ),
 
-                if (isUpgrade) ...[
-                  const SizedBox(height: 12),
-                  Center(
-                    child: TextButton(
-                      onPressed: _loading ? null : () => context.go('/dashboard'),
-                      child: const Text('Skip for now'),
-                    ),
+                const SizedBox(height: 12),
+                Center(
+                  child: TextButton(
+                    onPressed: _loading ? null : () => context.go('/dashboard'),
+                    child: const Text('Skip for now'),
                   ),
-                ],
+                ),
 
                 const SizedBox(height: 16),
                 _LegalText(onOpenUrl: _openLegal),

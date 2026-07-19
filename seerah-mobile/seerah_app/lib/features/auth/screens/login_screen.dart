@@ -141,17 +141,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     textAlign: TextAlign.center,
                   ),
                 ),
-                const SizedBox(height: 4),
-                TextButton(
-                  onPressed: () => context.go('/signup'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppColors.textMuted,
-                  ),
-                  child: const Text(
-                    'Create an account (optional)',
-                    style: TextStyle(fontSize: 13),
-                  ),
-                ),
               ].animate(interval: 60.ms).fadeIn(duration: 300.ms).slideY(begin: 0.1, end: 0),
             ),
           ),
