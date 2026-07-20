@@ -6,6 +6,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/webview_nav_policy.dart';
 import '../../../core/widgets/app_logo.dart';
 import '../../../core/widgets/ui_kit.dart';
 import '../widgets/auth_field.dart';
@@ -167,6 +168,12 @@ class _ForgotPasswordScreenState extends State<_ForgotPasswordScreen> {
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(AppColors.background)
       ..setNavigationDelegate(NavigationDelegate(
+        onNavigationRequest: (request) {
+          if (shouldBlockInAppPurchaseNavigation(request.url)) {
+            return NavigationDecision.prevent;
+          }
+          return NavigationDecision.navigate;
+        },
         onPageStarted: (_) { if (mounted) setState(() => _loading = true); },
         onPageFinished: (_) async {
           if (mounted) setState(() => _loading = false);

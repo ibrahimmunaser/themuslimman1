@@ -187,6 +187,12 @@ Fill out the **Data Safety** section in Play Console:
 > Remaining for 2.3.10: upload the cleaned iOS screenshots from
 > `app-store-assets/ios-iphone-screenshot-1.jpg` (and -2, -3) — Android status-bar
 > screenshots were deleted from the version page; new ones still need uploading.
+>
+> **Guideline 3.1.1 fix (1.0.26):** Profile → Billing no longer opens
+> `themuslimman.com/billing` (Stripe) inside an iOS WebView. Unpaid users go to
+> the native IAP pricing screen; paid users see Apple ID subscription management
+> instructions. All in-app WebViews block navigation to `/pricing`, `/checkout`,
+> `/billing`, and Stripe hosts on iOS. Purchases are StoreKit only.
 
 ### In-App Purchase promotional image (Guideline 2.3.2)
 > A new promotional image (unique graphic, not a screenshot, large legible

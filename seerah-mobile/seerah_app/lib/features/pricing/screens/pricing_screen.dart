@@ -8,6 +8,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/iap_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/webview_nav_policy.dart';
 import '../../home/screens/landing_screen.dart' show PlanId;
 
 // ── Plan model (mirrors landing_screen) ──────────────────────────────────────
@@ -1084,6 +1085,12 @@ class _LegalWebScreenState extends State<_LegalWebScreen> {
           ..setBackgroundColor(AppColors.background)
           ..setNavigationDelegate(
             NavigationDelegate(
+              onNavigationRequest: (request) {
+                if (shouldBlockInAppPurchaseNavigation(request.url)) {
+                  return NavigationDecision.prevent;
+                }
+                return NavigationDecision.navigate;
+              },
               onPageStarted: (_) {
                 if (mounted) setState(() => _loading = true);
               },

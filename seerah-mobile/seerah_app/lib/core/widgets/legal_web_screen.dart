@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../theme/app_colors.dart';
+import '../utils/webview_nav_policy.dart';
 
 /// Shared in-app browser for legal pages (Privacy Policy / Terms of Use).
 /// Used anywhere the app needs a functional link to these pages, per Apple
@@ -31,6 +32,12 @@ class _LegalWebScreenState extends State<LegalWebScreen> {
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(AppColors.background)
       ..setNavigationDelegate(NavigationDelegate(
+        onNavigationRequest: (request) {
+          if (shouldBlockInAppPurchaseNavigation(request.url)) {
+            return NavigationDecision.prevent;
+          }
+          return NavigationDecision.navigate;
+        },
         onPageStarted: (_) {
           if (mounted) setState(() => _loading = true);
         },

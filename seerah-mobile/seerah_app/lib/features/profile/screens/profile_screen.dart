@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +10,7 @@ import '../../../core/network/cookie_helper.dart' as cookies;
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/profiles_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/webview_nav_policy.dart';
 import '../../../core/widgets/ui_kit.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -81,7 +84,7 @@ class ProfileScreen extends ConsumerWidget {
                 icon: Icons.receipt_long_outlined,
                 label: 'Billing & Subscription',
                 color: AppColors.gold,
-                onTap: () => _launch('${AppConstants.baseUrl}/billing', context),
+                onTap: () => _openBilling(context, auth),
               ),
             ]).animate(delay: 70.ms).fadeIn(duration: 350.ms),
 
@@ -176,6 +179,37 @@ class ProfileScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  void _openBilling(BuildContext context, AuthState auth) {
+    if (!context.mounted) return;
+    // Guideline 3.1.1: never open web/Stripe billing inside the iOS app.
+    if (Platform.isIOS) {
+      if (!auth.hasAccess) {
+        context.push('/pricing');
+        return;
+      }
+      showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: AppColors.surface,
+          title: const Text('Manage Subscription'),
+          content: const Text(
+            'Subscriptions purchased in this app are managed through your '
+            'Apple ID.\n\n'
+            'On your device: Settings → [Your Name] → Subscriptions.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+    _launch('${AppConstants.baseUrl}/billing', context);
   }
 
   void _launch(String url, BuildContext context) {
@@ -600,6 +634,12 @@ class _InAppWebScreenState extends State<_InAppWebScreen> {
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(AppColors.background)
       ..setNavigationDelegate(NavigationDelegate(
+        onNavigationRequest: (request) {
+          if (shouldBlockInAppPurchaseNavigation(request.url)) {
+            return NavigationDecision.prevent;
+          }
+          return NavigationDecision.navigate;
+        },
         onPageStarted: (_) {
           if (mounted) setState(() => _loading = true);
         },
@@ -614,6 +654,7 @@ class _InAppWebScreenState extends State<_InAppWebScreen> {
                 'aside { display: none !important; }',
                 'main { margin-left: 0 !important; padding-left: 0 !important; width: 100% !important; }',
                 '.lg\\\\:hidden.fixed.inset-0 { display: none !important; }'
+                ${Platform.isIOS ? ", 'a[href*=\"/pricing\"], a[href*=\"/checkout\"], a[href*=\"/billing\"], a[href*=\"/upgrade\"] { display: none !important; }'" : ''}
               ].join(' ');
               document.head.appendChild(s);
             })();
