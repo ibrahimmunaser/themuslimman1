@@ -187,6 +187,26 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
     _trackServer({'type': 'quiz_completed', 'partNumber': partNumber, 'score': score});
   }
 
+  /// One-time, best-effort push of progress recorded on this device (as a
+  /// guest, or before signing in) onto the now-authenticated user. Call
+  /// right after account creation or a successful login. Safe to call
+  /// repeatedly — the server only ever raises scores, never lowers them.
+  Future<void> pushLocalToServer() async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    if (current.viewedParts.isEmpty && current.quizScores.isEmpty) return;
+    try {
+      await ApiClient.instance.dio.post('/api/mobile-progress/bulk-sync', data: {
+        'viewedParts': current.viewedParts.toList(),
+        'quizScores': current.quizScores.map((k, v) => MapEntry(k.toString(), v)),
+      });
+      // Pull back the merged, canonical state so both sides stay consistent.
+      await _syncFromServer(current);
+    } catch (e) {
+      debugPrint('[Progress] bulk sync failed: $e');
+    }
+  }
+
   Future<void> clearAll() async {
     state = const AsyncData(ProgressState());
     final prefs = await SharedPreferences.getInstance();

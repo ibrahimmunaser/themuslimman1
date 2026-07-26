@@ -23,7 +23,11 @@ export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    if (!user.emailVerified) return NextResponse.json({ error: "Email not verified" }, { status: 403 });
+    // Note: deliberately NOT gated on emailVerified — mobile guest accounts
+    // (created by /api/auth/mobile-anonymous) have no email to verify, and
+    // real accounts created via /api/auth/upgrade-account aren't verified
+    // until the user clicks the email link. Gating here silently dropped
+    // 100% of mobile progress tracking. Access is still gated below.
 
     const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
     if (!hasAccess) return NextResponse.json({ error: "No active subscription" }, { status: 403 });

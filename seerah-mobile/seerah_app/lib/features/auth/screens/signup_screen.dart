@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -5,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../core/providers/iap_provider.dart';
+import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_logo.dart';
 import '../../../core/widgets/legal_web_screen.dart';
@@ -25,6 +28,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   final _passCtrl = TextEditingController();
   bool _loading = false;
   String? _error;
+  bool _accountExists = false;
 
   @override
   void dispose() {
@@ -42,21 +46,29 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() { _loading = true; _error = null; });
+    setState(() { _loading = true; _error = null; _accountExists = false; });
 
     // Router enforces that only anonymous+purchased guests reach this screen,
     // so this is always a guest → real account upgrade (purchases stay attached).
-    final err = await ref.read(authProvider.notifier).upgradeAccount(
+    final result = await ref.read(authProvider.notifier).upgradeAccount(
         _nameCtrl.text,
         _emailCtrl.text,
         _passCtrl.text,
       );
     if (!mounted) return;
-    if (err != null) {
-      setState(() { _error = err; _loading = false; });
-    } else {
+    if (result.success) {
+      // Merge any progress made on this device before the account existed —
+      // best-effort, never blocks navigation.
+      unawaited(ref.read(progressProvider.notifier).pushLocalToServer());
+      unawaited(ref.read(iapProvider.notifier).restorePurchases());
       // Already has access from the guest purchase — go straight in.
       context.go('/dashboard');
+    } else {
+      setState(() {
+        _error = result.error;
+        _accountExists = result.accountExists;
+        _loading = false;
+      });
     }
   }
 
@@ -126,7 +138,27 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
                     ),
-                    child: Text(_error!, style: const TextStyle(color: AppColors.error, fontSize: 13)),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(_error!, style: const TextStyle(color: AppColors.error, fontSize: 13)),
+                        if (_accountExists) ...[
+                          const SizedBox(height: 10),
+                          OutlinedButton(
+                            onPressed: _loading
+                                ? null
+                                : () => context.push(
+                                    '/login?email=${Uri.encodeComponent(_emailCtrl.text.trim())}'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppColors.gold,
+                              side: const BorderSide(color: AppColors.gold),
+                              minimumSize: const Size(48, 44),
+                            ),
+                            child: const Text('Sign In Instead'),
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
                 ],
 

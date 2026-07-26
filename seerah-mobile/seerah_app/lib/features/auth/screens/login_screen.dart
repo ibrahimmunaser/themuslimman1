@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,6 +6,8 @@ import 'package:go_router/go_router.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../core/providers/iap_provider.dart';
+import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/webview_nav_policy.dart';
 import '../../../core/widgets/app_logo.dart';
@@ -12,7 +15,8 @@ import '../../../core/widgets/ui_kit.dart';
 import '../widgets/auth_field.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key});
+  final String? prefillEmail;
+  const LoginScreen({super.key, this.prefillEmail});
 
   @override
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
@@ -20,10 +24,16 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailCtrl = TextEditingController();
+  late final TextEditingController _emailCtrl;
   final _passCtrl = TextEditingController();
   bool _loading = false;
   String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailCtrl = TextEditingController(text: widget.prefillEmail ?? '');
+  }
 
   @override
   void dispose() {
@@ -48,8 +58,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (!mounted) return;
     if (err != null) {
       setState(() { _error = err; _loading = false; });
+      return;
     }
-    // Router redirect handles navigation on success
+    // Signed in to this account — merge any progress recorded on this
+    // device (as a guest, or before signing in) and reconcile any store
+    // purchase made on this device/install onto this account. Both are
+    // best-effort and never block navigation (router redirect handles that).
+    unawaited(ref.read(progressProvider.notifier).pushLocalToServer());
+    unawaited(ref.read(iapProvider.notifier).restorePurchases());
   }
 
   @override

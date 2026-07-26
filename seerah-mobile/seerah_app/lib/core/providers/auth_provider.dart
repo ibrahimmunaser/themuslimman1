@@ -38,6 +38,20 @@ class AuthState {
   }
 }
 
+/// Result of [AuthNotifier.upgradeAccount] — richer than a plain error
+/// string so the UI can offer "Sign in instead" when the email is already
+/// taken by a different (real) account.
+class UpgradeAccountResult {
+  final bool success;
+  final String? error;
+  final bool accountExists;
+  const UpgradeAccountResult({
+    required this.success,
+    this.error,
+    this.accountExists = false,
+  });
+}
+
 class AuthNotifier extends StateNotifier<AuthState> {
   final Ref _ref;
 
@@ -205,7 +219,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
   /// Fully optional upgrade of a guest account to a real email/password
   /// account — same user id, so purchases already made stay attached.
   /// Never required before or after purchase (Apple Guideline 5.1.1(v)).
-  Future<String?> upgradeAccount(String name, String email, String password) async {
+  Future<UpgradeAccountResult> upgradeAccount(
+      String name, String email, String password) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final response = await ApiClient.instance.dio.post(
@@ -222,15 +237,26 @@ class AuthNotifier extends StateNotifier<AuthState> {
         );
         await _saveUser(user);
         state = state.copyWith(isLoading: false, user: user);
-        return null;
+        return const UpgradeAccountResult(success: true);
       }
       final msg = data['error'] as String? ?? 'Could not create account.';
       state = state.copyWith(isLoading: false, error: msg);
-      return msg;
+      return UpgradeAccountResult(success: false, error: msg);
+    } on DioException catch (e) {
+      final data = e.response?.data;
+      final accountExists = data is Map && data['hasAccount'] == true;
+      final serverMsg = data is Map ? data['error'] as String? : null;
+      final msg = serverMsg ?? _parseError(e);
+      state = state.copyWith(isLoading: false, error: msg);
+      return UpgradeAccountResult(
+        success: false,
+        error: msg,
+        accountExists: accountExists,
+      );
     } catch (e) {
       final msg = _parseError(e);
       state = state.copyWith(isLoading: false, error: msg);
-      return msg;
+      return UpgradeAccountResult(success: false, error: msg);
     }
   }
 

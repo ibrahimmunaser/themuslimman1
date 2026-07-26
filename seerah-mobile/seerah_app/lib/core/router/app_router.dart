@@ -104,7 +104,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/login',
-        builder: (ctx, state) => const LoginScreen(),
+        builder: (ctx, state) =>
+            LoginScreen(prefillEmail: state.uri.queryParameters['email']),
       ),
       GoRoute(
         path: '/signup',
