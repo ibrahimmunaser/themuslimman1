@@ -34,7 +34,7 @@ class ProfilesScreen extends ConsumerWidget {
         child: SafeArea(
           child: profilesAsync.when(
             data: (state) => _buildGrid(context, ref, state),
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: () => const Center(child: CircularProgressIndicator.adaptive()),
             error: (e, _) => Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -97,12 +97,15 @@ class ProfilesScreen extends ConsumerWidget {
         if (!state.canAddMore && state.profileLimit == 1)
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-            child: GestureDetector(
-              onTap: () => context.go('/pricing'),
-              child: Container(
+            child: Material(
+              color: AppColors.goldFaded,
+              borderRadius: BorderRadius.circular(12),
+              child: InkWell(
+                onTap: () => context.go('/pricing'),
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  color: AppColors.goldFaded,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
                 ),
@@ -123,6 +126,7 @@ class ProfilesScreen extends ConsumerWidget {
                     ),
                     const Icon(Icons.chevron_right_rounded, color: AppColors.gold, size: 20),
                   ],
+                ),
                 ),
               ),
             ),
@@ -176,7 +180,7 @@ class ProfilesScreen extends ConsumerWidget {
                     .map((e) => GestureDetector(
                       onTap: () => setState(() => selectedAvatar = e),
                       child: Container(
-                        width: 40, height: 40,
+                        width: 44, height: 44,
                         decoration: BoxDecoration(
                           color: selectedAvatar == e
                               ? AppColors.gold.withValues(alpha: 0.2)
@@ -259,10 +263,13 @@ class _ProfileTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      onLongPress: onLongPress,
-      child: Column(
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        onLongPress: onLongPress,
+        borderRadius: BorderRadius.circular(16),
+        child: Column(
         children: [
           Stack(
             children: [
@@ -322,6 +329,7 @@ class _ProfileTile extends StatelessWidget {
               style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
             ),
         ],
+        ),
       ),
     );
   }
@@ -333,31 +341,35 @@ class _AddProfileTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        children: [
-          Container(
-            width: 80, height: 80,
-            decoration: BoxDecoration(
-              color: AppColors.border.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: AppColors.border.withValues(alpha: 0.5),
-                width: 2,
-                strokeAlign: BorderSide.strokeAlignInside,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Column(
+          children: [
+            Container(
+              width: 80, height: 80,
+              decoration: BoxDecoration(
+                color: AppColors.border.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: AppColors.border.withValues(alpha: 0.5),
+                  width: 2,
+                  strokeAlign: BorderSide.strokeAlignInside,
+                ),
+              ),
+              child: const Center(
+                child: Icon(Icons.add_rounded, color: AppColors.textMuted, size: 32),
               ),
             ),
-            child: const Center(
-              child: Icon(Icons.add_rounded, color: AppColors.textMuted, size: 32),
+            const SizedBox(height: 8),
+            const Text('Add Profile',
+              style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+              textAlign: TextAlign.center,
             ),
-          ),
-          const SizedBox(height: 8),
-          const Text('Add Profile',
-            style: TextStyle(color: AppColors.textMuted, fontSize: 13),
-            textAlign: TextAlign.center,
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -395,7 +407,8 @@ class _ProfileEditSheetState extends ConsumerState<_ProfileEditSheet> {
     final canDelete = !widget.profile.isDefault && widget.state.profiles.length > 1;
     return Padding(
       padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
+        bottom: MediaQuery.of(context).viewInsets.bottom +
+            MediaQuery.paddingOf(context).bottom,
         left: 20, right: 20, top: 20,
       ),
       child: Column(
@@ -430,7 +443,7 @@ class _ProfileEditSheetState extends ConsumerState<_ProfileEditSheet> {
           if (_loading)
             const Center(child: Padding(
               padding: EdgeInsets.all(16),
-              child: CircularProgressIndicator(strokeWidth: 2),
+              child: CircularProgressIndicator.adaptive(strokeWidth: 2),
             ))
           else ...[
             SizedBox(

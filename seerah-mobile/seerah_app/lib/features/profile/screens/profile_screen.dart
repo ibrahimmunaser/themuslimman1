@@ -10,6 +10,7 @@ import '../../../core/network/cookie_helper.dart' as cookies;
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/profiles_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/system_insets.dart';
 import '../../../core/utils/webview_nav_policy.dart';
 import '../../../core/widgets/ui_kit.dart';
 
@@ -27,7 +28,7 @@ class ProfileScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('Profile')),
       body: AppGradientBackground(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
+          padding: EdgeInsets.fromLTRB(20, 0, 20, 40 + bottomSystemInset(context)),
           children: [
             const SizedBox(height: 28),
 
@@ -391,6 +392,8 @@ class _AvatarSection extends StatelessWidget {
                 ))
           else if (user?.name != null)
             Text(user!.name!,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   color: AppColors.textPrimary,
                   fontSize: 20,
@@ -400,6 +403,8 @@ class _AvatarSection extends StatelessWidget {
 
           const SizedBox(height: 4),
           Text(isAnonymous ? 'No account yet' : (user?.email ?? 'Student'),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(color: AppColors.textSecondary, fontSize: 14)),
 
           const SizedBox(height: 12),
@@ -702,7 +707,11 @@ class _InAppWebScreenState extends State<_InAppWebScreen> {
         children: [
           WebViewWidget(controller: _ctrl),
           if (_loading)
-            const Center(child: CircularProgressIndicator(color: AppColors.gold)),
+            const Center(
+              child: CircularProgressIndicator.adaptive(
+                valueColor: AlwaysStoppedAnimation(AppColors.gold),
+              ),
+            ),
         ],
       ),
     );

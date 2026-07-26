@@ -201,6 +201,8 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(rt.title,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
                                       color: locked ? AppColors.textSecondary : AppColors.textPrimary,
                                       fontSize: 15,
@@ -423,11 +425,11 @@ class _StatsStrip extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _Stat('${progress.totalViewed}', 'Studied'),
+          Expanded(child: _Stat('${progress.totalViewed}', 'Studied')),
           _StatDivider(),
-          _Stat('${progress.totalCompleted}', 'Completed'),
+          Expanded(child: _Stat('${progress.totalCompleted}', 'Completed')),
           _StatDivider(),
-          _Stat('${progress.quizScores.length}', 'Quizzes'),
+          Expanded(child: _Stat('${progress.quizScores.length}', 'Quizzes')),
         ],
       ),
     );
@@ -442,9 +444,13 @@ class _Stat extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Column(
     children: [
-      Text(value, style: const TextStyle(color: AppColors.gold, fontSize: 18, fontWeight: FontWeight.w800)),
+      Text(value,
+        maxLines: 1, overflow: TextOverflow.ellipsis,
+        style: const TextStyle(color: AppColors.gold, fontSize: 18, fontWeight: FontWeight.w800)),
       const SizedBox(height: 2),
-      Text(label, style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
+      Text(label,
+        maxLines: 1, overflow: TextOverflow.ellipsis,
+        style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
     ],
   );
 }
@@ -465,53 +471,57 @@ class _ContinueWatchingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = AppColors.forEra(part.era as String);
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [color.withValues(alpha: 0.12), AppColors.card],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Ink(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [color.withValues(alpha: 0.12), AppColors.card],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: color.withValues(alpha: 0.3)),
           ),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withValues(alpha: 0.3)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 52, height: 52,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(12),
+          child: Row(
+            children: [
+              Container(
+                width: 52, height: 52,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Icon(Icons.play_arrow_rounded, color: color, size: 28),
+                ),
               ),
-              child: Center(
-                child: Icon(Icons.play_arrow_rounded, color: color, size: 28),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Continue Watching',
+                      style: TextStyle(color: AppColors.textMuted, fontSize: 11, letterSpacing: 0.4)),
+                    const SizedBox(height: 2),
+                    Text(part.title as String,
+                      style: const TextStyle(
+                        color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w600),
+                      maxLines: 1, overflow: TextOverflow.ellipsis,
+                    ),
+                    Text('Part ${part.partNumber}  •  ${part.subtitle}',
+                      style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                      maxLines: 1, overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Continue Watching',
-                    style: TextStyle(color: AppColors.textMuted, fontSize: 11, letterSpacing: 0.4)),
-                  const SizedBox(height: 2),
-                  Text(part.title as String,
-                    style: const TextStyle(
-                      color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w600),
-                    maxLines: 1, overflow: TextOverflow.ellipsis,
-                  ),
-                  Text('Part ${part.partNumber}  •  ${part.subtitle}',
-                    style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
-                    maxLines: 1, overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.play_circle_filled_rounded, color: color, size: 28),
-          ],
+              Icon(Icons.play_circle_filled_rounded, color: color, size: 28),
+            ],
+          ),
         ),
       ),
     );
@@ -539,6 +549,7 @@ class _PartThumbnail extends ConsumerWidget {
               return Image.network(
                 assets.thumbnailUrl!,
                 fit: BoxFit.cover,
+                cacheWidth: (56 * MediaQuery.devicePixelRatioOf(context)).round(),
                 errorBuilder: (_, __, ___) => _fallback(color),
               );
             }

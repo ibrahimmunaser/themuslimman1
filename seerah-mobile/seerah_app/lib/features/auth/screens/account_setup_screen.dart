@@ -184,8 +184,10 @@ class _AccountSetupScreenState extends ConsumerState<AccountSetupScreen> {
                       ? const SizedBox(
                           height: 22,
                           width: 22,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2.5, color: Colors.black54),
+                          child: CircularProgressIndicator.adaptive(
+                              strokeWidth: 2.5,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.black54)),
                         )
                       : const Text('Create Account',
                           style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
@@ -196,10 +198,17 @@ class _AccountSetupScreenState extends ConsumerState<AccountSetupScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text('Already have an account? ',
-                        style: TextStyle(color: AppColors.textMuted, fontSize: 13)),
-                    GestureDetector(
-                      onTap: () => context.go('/login'),
+                    const Flexible(
+                      child: Text('Already have an account? ',
+                          style: TextStyle(color: AppColors.textMuted, fontSize: 13)),
+                    ),
+                    TextButton(
+                      onPressed: () => context.go('/login'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.gold,
+                        minimumSize: const Size(48, 44),
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                      ),
                       child: const Text('Sign In',
                           style: TextStyle(
                               color: AppColors.gold,

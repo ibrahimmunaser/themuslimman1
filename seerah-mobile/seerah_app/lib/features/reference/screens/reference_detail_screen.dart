@@ -168,60 +168,70 @@ class _TimelineItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Left column: dot + line
-          SizedBox(
-            width: 32,
-            child: Column(
-              children: [
-                Container(
-                  width: 12, height: 12,
-                  margin: const EdgeInsets.only(top: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.gold,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.goldDark, width: 2),
-                  ),
-                ),
-                if (!isLast)
-                  Expanded(child: Container(
-                    width: 1.5,
-                    color: AppColors.gold.withValues(alpha: 0.2),
-                  )),
-              ],
+    // The connector line is a positioned Stack layer spanning the full row
+    // height, so no IntrinsicHeight pass is needed to size the left column.
+    return Stack(
+      children: [
+        if (!isLast)
+          Positioned(
+            // Centered under the 12px dot inside the 32px gutter.
+            left: 15.25,
+            top: 16,
+            bottom: 0,
+            child: Container(
+              width: 1.5,
+              color: AppColors.gold.withValues(alpha: 0.2),
             ),
           ),
-          const SizedBox(width: 10),
-          // Right: content
-          Expanded(
-            child: Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.card,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.border),
-              ),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Left column: dot
+            SizedBox(
+              width: 32,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(event.date,
-                    style: const TextStyle(color: AppColors.gold, fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
-                  const SizedBox(height: 3),
-                  Text(event.title,
-                    style: const TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w700)),
-                  const SizedBox(height: 4),
-                  Text(event.description,
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4)),
+                  Container(
+                    width: 12, height: 12,
+                    margin: const EdgeInsets.only(top: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.gold,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.goldDark, width: 2),
+                    ),
+                  ),
                 ],
               ),
             ),
-          ),
-        ],
-      ),
+            const SizedBox(width: 10),
+            // Right: content
+            Expanded(
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.card,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(event.date,
+                      style: const TextStyle(color: AppColors.gold, fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
+                    const SizedBox(height: 3),
+                    Text(event.title,
+                      style: const TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 4),
+                    Text(event.description,
+                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4)),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -380,7 +390,12 @@ class _BattlesContent extends StatelessWidget {
                       const SizedBox(width: 12),
                       const Icon(Icons.flag_outlined, size: 12, color: AppColors.textMuted),
                       const SizedBox(width: 4),
-                      Text(b.outcome, style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+                      Expanded(
+                        child: Text(b.outcome,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -435,19 +450,23 @@ class _MiraclesContent extends StatelessWidget {
                         child: Text(m.title,
                           style: const TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w700)),
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: isQuran ? AppColors.goldFaded : AppColors.success.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: isQuran ? AppColors.gold.withValues(alpha: 0.4) : AppColors.success.withValues(alpha: 0.4)),
+                      Flexible(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: isQuran ? AppColors.goldFaded : AppColors.success.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: isQuran ? AppColors.gold.withValues(alpha: 0.4) : AppColors.success.withValues(alpha: 0.4)),
+                          ),
+                          child: Text(m.source,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: isQuran ? AppColors.gold : AppColors.success,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w700,
+                            )),
                         ),
-                        child: Text(m.source,
-                          style: TextStyle(
-                            color: isQuran ? AppColors.gold : AppColors.success,
-                            fontSize: 9,
-                            fontWeight: FontWeight.w700,
-                          )),
                       ),
                     ],
                   ),
@@ -562,9 +581,12 @@ class _TermsContentState extends State<_TermsContent> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Text(t.arabic,
-                            textAlign: TextAlign.right,
-                            style: const TextStyle(color: AppColors.gold, fontSize: 18, fontWeight: FontWeight.w600)),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(t.arabic,
+                              textAlign: TextAlign.right,
+                              style: const TextStyle(color: AppColors.gold, fontSize: 18, fontWeight: FontWeight.w600)),
+                          ),
                         ],
                       ),
                     ),
@@ -575,8 +597,12 @@ class _TermsContentState extends State<_TermsContent> {
                         children: [
                           Row(
                             children: [
-                              Text(t.transliteration,
-                                style: const TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w700)),
+                              Expanded(
+                                child: Text(t.transliteration,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w700)),
+                              ),
                               const SizedBox(width: 8),
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -644,7 +670,7 @@ class _TribesContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.only(bottom: 32),
       children: [
         _SectionHeader(
           title: 'Tribes and Lineage',

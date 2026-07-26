@@ -189,54 +189,60 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (_) => Padding(
-        padding: const EdgeInsets.fromLTRB(28, 28, 28, 40),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                color: const Color(0xFF4CAF50).withValues(alpha: 0.15),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.check_rounded,
-                  color: Color(0xFF4CAF50), size: 32),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'JazakAllahu Khayran!',
-              style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              'Your purchase was successful. Full access has been unlocked. May Allah bless your learning.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                  color: AppColors.textSecondary, fontSize: 15, height: 1.5),
-            ),
-            const SizedBox(height: 28),
-            FilledButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                context.go('/dashboard');
-              },
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.gold,
-                foregroundColor: Colors.black,
-                minimumSize: const Size.fromHeight(50),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+      builder: (_) => SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(28, 28, 28, 40),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4CAF50).withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.check_rounded,
+                      color: Color(0xFF4CAF50), size: 32),
                 ),
-              ),
-              child: const Text('Start Learning',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                const SizedBox(height: 20),
+                const Text(
+                  'JazakAllahu Khayran!',
+                  style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'Your purchase was successful. Full access has been unlocked. May Allah bless your learning.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      color: AppColors.textSecondary, fontSize: 15, height: 1.5),
+                ),
+                const SizedBox(height: 28),
+                FilledButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    context.go('/dashboard');
+                  },
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.gold,
+                    foregroundColor: Colors.black,
+                    minimumSize: const Size.fromHeight(50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: const Text('Start Learning',
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -250,7 +256,6 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
         iap.status == IAPStatus.verifying ||
         iap.status == IAPStatus.loading;
 
-    final showStoreWarning = !iap.isAvailable && iap.status != IAPStatus.loading;
     final showRetry = iap.needsProductReload;
     final showRecovery = iap.hasPendingLink;
 
@@ -297,21 +302,6 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                       const SizedBox(height: 12),
                     ],
 
-                    if (showStoreWarning) ...[
-                      _StoreWarningBanner(
-                        text: iap.unavailableProductMessage(),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        iap.storeStatusLabel,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: AppColors.textMuted,
-                          fontSize: 11.5,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                    ],
                     if (showRetry) ...[
                       _ProductRetryBanner(
                         status: iap.storeStatusLabel,
@@ -376,11 +366,13 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                               children: [
                                 Icon(item.$1, color: AppColors.gold, size: 16),
                                 const SizedBox(width: 10),
-                                Text(item.$2,
-                                    style: const TextStyle(
-                                      color: AppColors.textSecondary,
-                                      fontSize: 13,
-                                    )),
+                                Expanded(
+                                  child: Text(item.$2,
+                                      style: const TextStyle(
+                                        color: AppColors.textSecondary,
+                                        fontSize: 13,
+                                      )),
+                                ),
                               ],
                             ),
                           )),
@@ -606,35 +598,45 @@ class _PlanTile extends StatelessWidget {
                   SizedBox(
                     width: 22,
                     height: 22,
-                    child: CircularProgressIndicator(
+                    child: CircularProgressIndicator.adaptive(
                       strokeWidth: 2.5,
-                      color: isRecommended ? AppColors.gold : AppColors.textMuted,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                          isRecommended ? AppColors.gold : AppColors.textMuted),
                     ),
                   )
                 else
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        price,
-                        style: TextStyle(
-                          color: isRecommended
-                              ? AppColors.gold
-                              : AppColors.textPrimary,
-                          fontSize: 19,
-                          fontWeight: FontWeight.w800,
+                  Flexible(
+                    fit: FlexFit.loose,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            price,
+                            maxLines: 1,
+                            style: TextStyle(
+                              color: isRecommended
+                                  ? AppColors.gold
+                                  : AppColors.textPrimary,
+                              fontSize: 19,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
                         ),
-                      ),
-                      Text(
-                        plan.period,
-                        style: TextStyle(
-                          color: isRecommended
-                              ? AppColors.gold.withValues(alpha: 0.7)
-                              : AppColors.textMuted,
-                          fontSize: 11,
+                        Text(
+                          plan.period,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: isRecommended
+                                ? AppColors.gold.withValues(alpha: 0.7)
+                                : AppColors.textMuted,
+                            fontSize: 11,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
 
                 const SizedBox(width: 10),
@@ -658,13 +660,37 @@ class _PlanTile extends StatelessWidget {
 
 // ── Subscription legal text ───────────────────────────────────────────────────
 
-class _SubscriptionLegalText extends StatelessWidget {
+class _SubscriptionLegalText extends StatefulWidget {
   final void Function(String url) onOpenUrl;
   const _SubscriptionLegalText({required this.onOpenUrl});
 
   @override
+  State<_SubscriptionLegalText> createState() => _SubscriptionLegalTextState();
+}
+
+class _SubscriptionLegalTextState extends State<_SubscriptionLegalText> {
+  static const _baseUrl = AppConstants.baseUrl;
+  late final TapGestureRecognizer _privacyRecognizer;
+  late final TapGestureRecognizer _termsRecognizer;
+
+  @override
+  void initState() {
+    super.initState();
+    _privacyRecognizer = TapGestureRecognizer()
+      ..onTap = () => widget.onOpenUrl('$_baseUrl/privacy');
+    _termsRecognizer = TapGestureRecognizer()
+      ..onTap = () => widget.onOpenUrl('$_baseUrl/terms');
+  }
+
+  @override
+  void dispose() {
+    _privacyRecognizer.dispose();
+    _termsRecognizer.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    const baseUrl = AppConstants.baseUrl;
     final style = const TextStyle(color: AppColors.textMuted, fontSize: 11, height: 1.5);
     final linkStyle = style.copyWith(
       color: AppColors.textSecondary,
@@ -689,15 +715,13 @@ class _SubscriptionLegalText extends StatelessWidget {
           TextSpan(
             text: 'Privacy Policy',
             style: linkStyle,
-            recognizer: TapGestureRecognizer()
-              ..onTap = () => onOpenUrl('$baseUrl/privacy'),
+            recognizer: _privacyRecognizer,
           ),
           const TextSpan(text: '  ·  '),
           TextSpan(
             text: 'Terms of Use (EULA)',
             style: linkStyle,
-            recognizer: TapGestureRecognizer()
-              ..onTap = () => onOpenUrl('$baseUrl/terms'),
+            recognizer: _termsRecognizer,
           ),
         ]),
       ),
@@ -763,7 +787,9 @@ class _LegalWebScreenState extends State<_LegalWebScreen> {
         children: [
           WebViewWidget(controller: _ctrl),
           if (_loading)
-            const Center(child: CircularProgressIndicator(color: AppColors.gold)),
+            const Center(
+                child: CircularProgressIndicator.adaptive(
+                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.gold))),
         ],
       ),
     );
@@ -873,7 +899,7 @@ class _RecoveryBanner extends StatelessWidget {
             onPressed: onClaim,
             style: TextButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              minimumSize: Size.zero,
+              minimumSize: const Size(48, 44),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
             child: const Text('Claim',
@@ -881,38 +907,6 @@ class _RecoveryBanner extends StatelessWidget {
                     color: AppColors.gold,
                     fontSize: 13,
                     fontWeight: FontWeight.w700)),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StoreWarningBanner extends StatelessWidget {
-  final String text;
-  const _StoreWarningBanner({required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(Icons.info_outline_rounded,
-              color: AppColors.textMuted, size: 18),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(text,
-                style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 12.5,
-                    height: 1.45)),
           ),
         ],
       ),
@@ -951,7 +945,7 @@ class _ProductRetryBanner extends StatelessWidget {
                 onPressed: onRetry,
                 style: TextButton.styleFrom(
                     padding: EdgeInsets.zero,
-                    minimumSize: const Size(44, 36)),
+                    minimumSize: const Size(48, 44)),
                 child: const Text('Retry',
                     style: TextStyle(color: AppColors.gold, fontSize: 13)),
               ),

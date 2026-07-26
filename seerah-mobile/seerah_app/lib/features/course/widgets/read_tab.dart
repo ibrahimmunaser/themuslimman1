@@ -19,6 +19,97 @@ class _ReadTabState extends ConsumerState<ReadTab> {
   late int _activeSection = widget.initialSection.clamp(0, 2);
   final List<String> _sections = ['Briefing', 'Study Guide', 'Key Facts'];
 
+  // Built once — the sheet only depends on static AppColors values.
+  static final MarkdownStyleSheet _markdownStyleSheet = MarkdownStyleSheet(
+    // Body text
+    p: const TextStyle(
+      color: AppColors.textPrimary,
+      fontSize: 15,
+      height: 1.75,
+      letterSpacing: 0.1,
+    ),
+    // Headings
+    h1: const TextStyle(
+      color: AppColors.textPrimary,
+      fontSize: 22,
+      fontWeight: FontWeight.w700,
+      height: 1.3,
+    ),
+    h2: TextStyle(
+      color: AppColors.gold,
+      fontSize: 18,
+      fontWeight: FontWeight.w700,
+      height: 1.4,
+    ),
+    h3: const TextStyle(
+      color: AppColors.textPrimary,
+      fontSize: 16,
+      fontWeight: FontWeight.w600,
+      height: 1.4,
+    ),
+    h4: const TextStyle(
+      color: AppColors.textSecondary,
+      fontSize: 14,
+      fontWeight: FontWeight.w600,
+      letterSpacing: 0.5,
+    ),
+    // Strong / em
+    strong: const TextStyle(
+      color: AppColors.textPrimary,
+      fontWeight: FontWeight.w700,
+    ),
+    em: const TextStyle(
+      color: AppColors.textSecondary,
+      fontStyle: FontStyle.italic,
+    ),
+    // Code
+    code: TextStyle(
+      color: AppColors.goldLight,
+      backgroundColor: AppColors.gold.withValues(alpha: 0.08),
+      fontSize: 13,
+      fontFamily: 'monospace',
+    ),
+    codeblockDecoration: BoxDecoration(
+      color: AppColors.card,
+      borderRadius: BorderRadius.circular(8),
+      border: Border.all(color: AppColors.border),
+    ),
+    // Blockquote
+    blockquote: const TextStyle(
+      color: AppColors.textSecondary,
+      fontSize: 15,
+      fontStyle: FontStyle.italic,
+      height: 1.6,
+    ),
+    blockquoteDecoration: BoxDecoration(
+      color: AppColors.gold.withValues(alpha: 0.05),
+      borderRadius: BorderRadius.circular(8),
+      border: Border(
+        left: BorderSide(color: AppColors.gold, width: 3),
+      ),
+    ),
+    blockquotePadding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+    // Lists
+    listBullet: const TextStyle(
+      color: AppColors.gold,
+      fontSize: 15,
+    ),
+    listBulletPadding: const EdgeInsets.only(right: 8),
+    listIndent: 20,
+    // Horizontal rule
+    horizontalRuleDecoration: const BoxDecoration(
+      border: Border(
+        bottom: BorderSide(color: AppColors.border, width: 1),
+      ),
+    ),
+    // Spacing
+    pPadding: const EdgeInsets.only(bottom: 8),
+    h1Padding: const EdgeInsets.only(bottom: 12, top: 8),
+    h2Padding: const EdgeInsets.only(bottom: 8, top: 16),
+    h3Padding: const EdgeInsets.only(bottom: 6, top: 12),
+    blockSpacing: 12,
+  );
+
   @override
   Widget build(BuildContext context) {
     final contentAsync = ref.watch(partContentProvider(widget.partNumber));
@@ -31,34 +122,41 @@ class _ReadTabState extends ConsumerState<ReadTab> {
           decoration: const BoxDecoration(
             border: Border(bottom: BorderSide(color: AppColors.border)),
           ),
-          child: Row(
-            children: _sections.asMap().entries.map((e) {
-              final selected = e.key == _activeSection;
-              return Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: GestureDetector(
-                  onTap: () => setState(() => _activeSection = e.key),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                    decoration: BoxDecoration(
-                      color: selected ? AppColors.gold : AppColors.card,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: _sections.asMap().entries.map((e) {
+                final selected = e.key == _activeSection;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: Material(
+                    color: selected ? AppColors.gold : AppColors.card,
+                    borderRadius: BorderRadius.circular(20),
+                    child: InkWell(
+                      onTap: () => setState(() => _activeSection = e.key),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: selected ? AppColors.gold : AppColors.border,
-                      ),
-                    ),
-                    child: Text(
-                      e.value,
-                      style: TextStyle(
-                        color: selected ? Colors.black : AppColors.textSecondary,
-                        fontSize: 13,
-                        fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: selected ? AppColors.gold : AppColors.border,
+                          ),
+                        ),
+                        child: Text(
+                          e.value,
+                          style: TextStyle(
+                            color: selected ? Colors.black : AppColors.textSecondary,
+                            fontSize: 13,
+                            fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
-              );
-            }).toList(),
+                );
+              }).toList(),
+            ),
           ),
         ),
 
@@ -88,95 +186,7 @@ class _ReadTabState extends ConsumerState<ReadTab> {
               return Markdown(
                 data: text,
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
-                styleSheet: MarkdownStyleSheet(
-                  // Body text
-                  p: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 15,
-                    height: 1.75,
-                    letterSpacing: 0.1,
-                  ),
-                  // Headings
-                  h1: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    height: 1.3,
-                  ),
-                  h2: TextStyle(
-                    color: AppColors.gold,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    height: 1.4,
-                  ),
-                  h3: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    height: 1.4,
-                  ),
-                  h4: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.5,
-                  ),
-                  // Strong / em
-                  strong: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w700,
-                  ),
-                  em: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontStyle: FontStyle.italic,
-                  ),
-                  // Code
-                  code: TextStyle(
-                    color: AppColors.goldLight,
-                    backgroundColor: AppColors.gold.withValues(alpha: 0.08),
-                    fontSize: 13,
-                    fontFamily: 'monospace',
-                  ),
-                  codeblockDecoration: BoxDecoration(
-                    color: AppColors.card,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  // Blockquote
-                  blockquote: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 15,
-                    fontStyle: FontStyle.italic,
-                    height: 1.6,
-                  ),
-                  blockquoteDecoration: BoxDecoration(
-                    color: AppColors.gold.withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border(
-                      left: BorderSide(color: AppColors.gold, width: 3),
-                    ),
-                  ),
-                  blockquotePadding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-                  // Lists
-                  listBullet: const TextStyle(
-                    color: AppColors.gold,
-                    fontSize: 15,
-                  ),
-                  listBulletPadding: const EdgeInsets.only(right: 8),
-                  listIndent: 20,
-                  // Horizontal rule
-                  horizontalRuleDecoration: const BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(color: AppColors.border, width: 1),
-                    ),
-                  ),
-                  // Spacing
-                  pPadding: const EdgeInsets.only(bottom: 8),
-                  h1Padding: const EdgeInsets.only(bottom: 12, top: 8),
-                  h2Padding: const EdgeInsets.only(bottom: 8, top: 16),
-                  h3Padding: const EdgeInsets.only(bottom: 6, top: 12),
-                  blockSpacing: 12,
-                ),
+                styleSheet: _markdownStyleSheet,
               );
             },
           ),

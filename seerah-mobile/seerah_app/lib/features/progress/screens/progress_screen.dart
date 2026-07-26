@@ -326,6 +326,8 @@ class _CourseMap extends StatelessWidget {
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(era.name as String,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               color: isUnlocked
                                   ? AppColors.textPrimary
@@ -392,8 +394,10 @@ class _UpgradeCta extends StatelessWidget {
             children: [
               Icon(Icons.lock_open_outlined, color: AppColors.gold, size: 20),
               SizedBox(width: 8),
-              Text('Unlock Full Progress',
-                style: TextStyle(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.w700)),
+              Expanded(
+                child: Text('Unlock Full Progress',
+                  style: TextStyle(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.w700)),
+              ),
             ],
           ),
           const SizedBox(height: 8),
@@ -462,34 +466,42 @@ class _QuickLinkCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: AppColors.card,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.border),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 38, height: 38,
-                decoration: BoxDecoration(
-                  color: AppColors.goldFaded,
-                  borderRadius: BorderRadius.circular(10),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Ink(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: AppColors.card,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 38, height: 38,
+                  decoration: BoxDecoration(
+                    color: AppColors.goldFaded,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, color: AppColors.gold, size: 20),
                 ),
-                child: Icon(icon, color: AppColors.gold, size: 20),
-              ),
-              const SizedBox(height: 10),
-              Text(label,
-                style: const TextStyle(
-                  color: AppColors.textPrimary, fontSize: 13, fontWeight: FontWeight.w700)),
-              const SizedBox(height: 2),
-              Text(subtitle,
-                style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
-            ],
+                const SizedBox(height: 10),
+                Text(label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary, fontSize: 13, fontWeight: FontWeight.w700)),
+                const SizedBox(height: 2),
+                Text(subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
+              ],
+            ),
           ),
         ),
       ),

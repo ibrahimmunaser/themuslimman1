@@ -53,97 +53,103 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
               ),
 
               Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Email icon with animation circle
-                    Stack(
-                      alignment: Alignment.center,
+                child: Center(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Container(
-                          width: 100,
-                          height: 100,
-                          decoration: BoxDecoration(
-                            color: AppColors.goldFaded,
-                            shape: BoxShape.circle,
+                        // Email icon with animation circle
+                        Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            Container(
+                              width: 100,
+                              height: 100,
+                              decoration: BoxDecoration(
+                                color: AppColors.goldFaded,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const Icon(
+                              Icons.mark_email_unread_outlined,
+                              color: AppColors.gold,
+                              size: 48,
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 28),
+
+                        const Text(
+                          'Check Your Inbox',
+                          style: TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 28,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
-                        const Icon(
-                          Icons.mark_email_unread_outlined,
-                          color: AppColors.gold,
-                          size: 48,
+
+                        const SizedBox(height: 12),
+
+                        if (email.isNotEmpty) ...[
+                          const Text(
+                            'We sent a verification link to:',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                color: AppColors.textSecondary, fontSize: 15),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            email,
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: AppColors.gold,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ] else
+                          const Text(
+                            'We sent a verification link to your email address.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                color: AppColors.textSecondary, fontSize: 15),
+                          ),
+
+                        const SizedBox(height: 20),
+
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 16),
+                          decoration: BoxDecoration(
+                            color: AppColors.card,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: AppColors.border),
+                          ),
+                          child: const Column(
+                            children: [
+                              _StepRow(
+                                icon: Icons.mail_outlined,
+                                text: 'Open the email from The Muslim Man',
+                              ),
+                              SizedBox(height: 12),
+                              _StepRow(
+                                icon: Icons.touch_app_outlined,
+                                text: 'Tap the verification link',
+                              ),
+                              SizedBox(height: 12),
+                              _StepRow(
+                                icon: Icons.lock_open_rounded,
+                                text: 'Your account is already fully unlocked',
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
-
-                    const SizedBox(height: 28),
-
-                    const Text(
-                      'Check Your Inbox',
-                      style: TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 28,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    if (email.isNotEmpty) ...[
-                      const Text(
-                        'We sent a verification link to:',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            color: AppColors.textSecondary, fontSize: 15),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        email,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: AppColors.gold,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ] else
-                      const Text(
-                        'We sent a verification link to your email address.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            color: AppColors.textSecondary, fontSize: 15),
-                      ),
-
-                    const SizedBox(height: 20),
-
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 16),
-                      decoration: BoxDecoration(
-                        color: AppColors.card,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: AppColors.border),
-                      ),
-                      child: const Column(
-                        children: [
-                          _StepRow(
-                            icon: Icons.mail_outlined,
-                            text: 'Open the email from The Muslim Man',
-                          ),
-                          SizedBox(height: 12),
-                          _StepRow(
-                            icon: Icons.touch_app_outlined,
-                            text: 'Tap the verification link',
-                          ),
-                          SizedBox(height: 12),
-                          _StepRow(
-                            icon: Icons.lock_open_rounded,
-                            text: 'Your account is already fully unlocked',
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
 
@@ -177,8 +183,10 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                             child: SizedBox(
                               height: 18,
                               width: 18,
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: AppColors.textMuted),
+                              child: CircularProgressIndicator.adaptive(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      AppColors.textMuted)),
                             ),
                           )
                         : TextButton(

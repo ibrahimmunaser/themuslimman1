@@ -97,21 +97,25 @@ class _FlashcardsTabState extends ConsumerState<FlashcardsTab> {
                     final selected = _level == pair.$1;
                     return Padding(
                       padding: const EdgeInsets.only(right: 6, bottom: 10),
-                      child: GestureDetector(
-                        onTap: () => _setLevel(pair.$1),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                          decoration: BoxDecoration(
-                            color: selected ? AppColors.gold : AppColors.card,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: selected ? AppColors.gold : AppColors.border),
-                          ),
-                          child: Text(
-                            pair.$2,
-                            style: TextStyle(
-                              color: selected ? Colors.black : AppColors.textSecondary,
-                              fontSize: 12,
-                              fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                      child: Material(
+                        color: selected ? AppColors.gold : AppColors.card,
+                        borderRadius: BorderRadius.circular(20),
+                        child: InkWell(
+                          onTap: () => _setLevel(pair.$1),
+                          borderRadius: BorderRadius.circular(20),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: selected ? AppColors.gold : AppColors.border),
+                            ),
+                            child: Text(
+                              pair.$2,
+                              style: TextStyle(
+                                color: selected ? Colors.black : AppColors.textSecondary,
+                                fontSize: 12,
+                                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                              ),
                             ),
                           ),
                         ),
@@ -119,10 +123,15 @@ class _FlashcardsTabState extends ConsumerState<FlashcardsTab> {
                     );
                   }),
                   const Spacer(),
-                  setAsync.whenOrNull(data: (s) {
-                    final count = s.forLevel(_level).length;
-                    return Text('$count cards', style: const TextStyle(color: AppColors.textMuted, fontSize: 11));
-                  }) ?? const SizedBox.shrink(),
+                  Flexible(
+                    child: setAsync.whenOrNull(data: (s) {
+                      final count = s.forLevel(_level).length;
+                      return Text('$count cards',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(color: AppColors.textMuted, fontSize: 11));
+                    }) ?? const SizedBox.shrink(),
+                  ),
                 ],
               ),
             ),
@@ -154,7 +163,7 @@ class _FlashcardsTabState extends ConsumerState<FlashcardsTab> {
                     icon: const Icon(Icons.refresh, size: 18, color: AppColors.textMuted),
                     tooltip: 'Restart',
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
+                    constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
                   ),
                 ],
               ),
@@ -164,12 +173,16 @@ class _FlashcardsTabState extends ConsumerState<FlashcardsTab> {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(20),
-                child: GestureDetector(
-                  onTap: _flip,
-                  child: _FlipCard(
-                    question: cards[_currentIndex].question,
-                    answer: cards[_currentIndex].answer,
-                    showAnswer: _showingAnswer,
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: _flip,
+                    borderRadius: BorderRadius.circular(20),
+                    child: _FlipCard(
+                      question: cards[_currentIndex].question,
+                      answer: cards[_currentIndex].answer,
+                      showAnswer: _showingAnswer,
+                    ),
                   ),
                 ),
               ),
@@ -250,18 +263,20 @@ class _FlipCardState extends State<_FlipCard> with SingleTickerProviderStateMixi
         // Single 0→π sweep: front rotates away, back counter-rotates by π to face forward
         final angle = _anim.value * math.pi;
 
-        return Transform(
-          transform: Matrix4.identity()
-            ..setEntry(3, 2, 0.001)
-            ..rotateY(angle),
-          alignment: Alignment.center,
-          child: showFront
-              ? _CardFace(text: widget.question, isQuestion: true)
-              : Transform(
-                  transform: Matrix4.identity()..rotateY(math.pi),
-                  alignment: Alignment.center,
-                  child: _CardFace(text: widget.answer, isQuestion: false),
-                ),
+        return RepaintBoundary(
+          child: Transform(
+            transform: Matrix4.identity()
+              ..setEntry(3, 2, 0.001)
+              ..rotateY(angle),
+            alignment: Alignment.center,
+            child: showFront
+                ? _CardFace(text: widget.question, isQuestion: true)
+                : Transform(
+                    transform: Matrix4.identity()..rotateY(math.pi),
+                    alignment: Alignment.center,
+                    child: _CardFace(text: widget.answer, isQuestion: false),
+                  ),
+          ),
         );
       },
     );
@@ -343,27 +358,31 @@ class _NavButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        decoration: BoxDecoration(
-          color: primary ? AppColors.gold : AppColors.card,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: primary ? AppColors.gold : AppColors.border,
+    return Material(
+      color: primary ? AppColors.gold : AppColors.card,
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: primary ? AppColors.gold : AppColors.border,
+            ),
           ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 16, color: primary ? Colors.black : (onPressed != null ? AppColors.textPrimary : AppColors.textMuted)),
-            const SizedBox(width: 6),
-            Text(label, style: TextStyle(
-              color: primary ? Colors.black : (onPressed != null ? AppColors.textPrimary : AppColors.textMuted),
-              fontSize: 14, fontWeight: FontWeight.w500,
-            )),
-          ],
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 16, color: primary ? Colors.black : (onPressed != null ? AppColors.textPrimary : AppColors.textMuted)),
+              const SizedBox(width: 6),
+              Text(label, style: TextStyle(
+                color: primary ? Colors.black : (onPressed != null ? AppColors.textPrimary : AppColors.textMuted),
+                fontSize: 14, fontWeight: FontWeight.w500,
+              )),
+            ],
+          ),
         ),
       ),
     );
@@ -377,19 +396,23 @@ class _FlipButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: AppColors.goldFaded,
-          border: Border.all(color: AppColors.gold.withValues(alpha: 0.5)),
-        ),
-        child: Icon(
-          showing ? Icons.visibility_off_outlined : Icons.flip,
-          color: AppColors.gold,
-          size: 22,
+    return Material(
+      color: AppColors.goldFaded,
+      shape: const CircleBorder(),
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: AppColors.gold.withValues(alpha: 0.5)),
+          ),
+          child: Icon(
+            showing ? Icons.visibility_off_outlined : Icons.flip,
+            color: AppColors.gold,
+            size: 22,
+          ),
         ),
       ),
     );

@@ -14,7 +14,11 @@ class VideoTab extends ConsumerWidget {
     final assetsAsync = ref.watch(partAssetsProvider(partNumber));
 
     return assetsAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator(color: AppColors.gold)),
+      loading: () => const Center(
+        child: CircularProgressIndicator.adaptive(
+          valueColor: AlwaysStoppedAnimation(AppColors.gold),
+        ),
+      ),
       error: (e, _) => _ErrorState(
         message: partNumber == 1
             ? 'Unable to load video.\nPlease check your connection and try again.'
@@ -96,7 +100,11 @@ class _VideoPlayerState extends State<_VideoPlayer> {
   @override
   Widget build(BuildContext context) {
     if (_initializing) {
-      return const Center(child: CircularProgressIndicator(color: AppColors.gold));
+      return const Center(
+        child: CircularProgressIndicator.adaptive(
+          valueColor: AlwaysStoppedAnimation(AppColors.gold),
+        ),
+      );
     }
     if (_error != null || _chewieCtrl == null) {
       return _ErrorState(message: _error ?? 'Video unavailable', onRetry: () {
@@ -127,9 +135,10 @@ class _ErrorState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(32),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(Icons.play_circle_outline, size: 64, color: AppColors.textMuted),

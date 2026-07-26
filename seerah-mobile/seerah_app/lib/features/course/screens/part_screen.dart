@@ -171,15 +171,19 @@ class _PartScreenState extends ConsumerState<PartScreen> {
                     // Era + part badge row
                     Row(
                       children: [
-                        _Pill(
-                          label: 'Part $partNumber',
-                          color: eraColor,
+                        Flexible(
+                          child: _Pill(
+                            label: 'Part $partNumber',
+                            color: eraColor,
+                          ),
                         ),
                         const SizedBox(width: 8),
-                        _Pill(
-                          label: _eraName(part.era),
-                          color: eraColor,
-                          faint: true,
+                        Flexible(
+                          child: _Pill(
+                            label: _eraName(part.era),
+                            color: eraColor,
+                            faint: true,
+                          ),
                         ),
                       ],
                     ),
@@ -437,6 +441,8 @@ class _AssetViewerScreen extends StatelessWidget {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
         centerTitle: false,
         elevation: 0,
@@ -473,6 +479,8 @@ class _Pill extends StatelessWidget {
       ),
       child: Text(
         label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
         style: TextStyle(
           color: faint ? color.withValues(alpha: 0.75) : color,
           fontSize: 11,
@@ -541,14 +549,17 @@ class _AssetHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: available ? onTap : null,
-      child: AnimatedOpacity(
-        duration: const Duration(milliseconds: 200),
-        opacity: available ? 1.0 : 0.45,
-        child: Container(
+    return AnimatedOpacity(
+      duration: const Duration(milliseconds: 200),
+      opacity: available ? 1.0 : 0.45,
+      child: Material(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          onTap: available ? onTap : null,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
           decoration: BoxDecoration(
-            color: AppColors.card,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.border),
           ),
@@ -604,6 +615,8 @@ class _AssetHero extends StatelessWidget {
                             )),
                           const SizedBox(height: 4),
                           Text(description,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               color: AppColors.textMuted,
                               fontSize: 12,
@@ -621,6 +634,7 @@ class _AssetHero extends StatelessWidget {
                 ),
               ),
             ],
+          ),
           ),
         ),
       ),
@@ -648,15 +662,18 @@ class _AssetCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: available ? onTap : null,
-      child: AnimatedOpacity(
-        duration: const Duration(milliseconds: 200),
-        opacity: available ? 1.0 : 0.45,
-        child: Container(
+    return AnimatedOpacity(
+      duration: const Duration(milliseconds: 200),
+      opacity: available ? 1.0 : 0.45,
+      child: Material(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          onTap: available ? onTap : null,
+          borderRadius: BorderRadius.circular(14),
+          child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: AppColors.card,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: AppColors.border),
           ),
@@ -713,6 +730,7 @@ class _AssetCard extends StatelessWidget {
               ],
             ],
           ),
+          ),
         ),
       ),
     );
@@ -742,12 +760,14 @@ class _PaywallScreen extends StatelessWidget {
         ),
         title: Text('Part $partNumber'),
       ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
               Container(
                 width: 80,
                 height: 80,
@@ -809,7 +829,8 @@ class _PaywallScreen extends StatelessWidget {
                   style: TextStyle(color: AppColors.textSecondary),
                 ),
               ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -893,12 +914,15 @@ class _UpNextCard extends StatelessWidget {
     );
     final color = AppColors.forEra(next.era);
 
-    return GestureDetector(
-      onTap: () => context.pushReplacement('/part/${next.partNumber}'),
-      child: Container(
+    return Material(
+      color: AppColors.card,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: () => context.pushReplacement('/part/${next.partNumber}'),
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.card,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppColors.border),
         ),
@@ -940,6 +964,7 @@ class _UpNextCard extends StatelessWidget {
             const SizedBox(width: 8),
             const Icon(Icons.arrow_forward_ios_rounded, color: AppColors.gold, size: 16),
           ],
+        ),
         ),
       ),
     );
@@ -1017,8 +1042,12 @@ class _PartNavBar extends StatelessWidget {
                     if (!hasAccess && partNumber + 1 > 1) ...[
                       const Icon(Icons.lock_outline_rounded, size: 14),
                       const SizedBox(width: 6),
-                      const Text('Unlock to continue',
-                          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+                      const Flexible(
+                        child: Text('Unlock to continue',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+                      ),
                     ] else ...[
                       Text('Part ${partNumber + 1}',
                           style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: Colors.black)),

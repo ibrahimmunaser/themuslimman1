@@ -22,7 +22,9 @@ class _InfographicsTabState extends ConsumerState<InfographicsTab> {
 
     return infographicsAsync.when(
       loading: () => const Center(
-        child: CircularProgressIndicator(color: AppColors.gold),
+        child: CircularProgressIndicator.adaptive(
+          valueColor: AlwaysStoppedAnimation(AppColors.gold),
+        ),
       ),
       error: (_, __) => _Unavailable(
         onRetry: () => ref.invalidate(infographicsProvider(widget.partNumber)),
@@ -69,22 +71,28 @@ class _InfographicsTabState extends ConsumerState<InfographicsTab> {
                   children: styles.map((s) {
                     final selected = s.id == _style;
                     return Expanded(
-                      child: GestureDetector(
-                        onTap: () => setState(() => _style = s.id),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 180),
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          decoration: BoxDecoration(
-                            color: selected ? AppColors.gold : Colors.transparent,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        decoration: BoxDecoration(
+                          color: selected ? AppColors.gold : Colors.transparent,
+                          borderRadius: BorderRadius.circular(9),
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () => setState(() => _style = s.id),
                             borderRadius: BorderRadius.circular(9),
-                          ),
-                          child: Text(
-                            s.label,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: selected ? Colors.black : AppColors.textSecondary,
-                              fontSize: 12,
-                              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              child: Text(
+                                s.label,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: selected ? Colors.black : AppColors.textSecondary,
+                                  fontSize: 12,
+                                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                                ),
+                              ),
                             ),
                           ),
                         ),
@@ -113,8 +121,16 @@ class _InfographicsTabState extends ConsumerState<InfographicsTab> {
                   child: CachedNetworkImage(
                     imageUrl: imageUrl,
                     fit: BoxFit.contain,
+                    // 2x screen width leaves headroom for pinch-zoom while
+                    // avoiding a full-resolution decode.
+                    memCacheWidth: (MediaQuery.sizeOf(context).width *
+                            MediaQuery.devicePixelRatioOf(context) *
+                            2)
+                        .round(),
                     placeholder: (_, __) => const Center(
-                      child: CircularProgressIndicator(color: AppColors.gold),
+                      child: CircularProgressIndicator.adaptive(
+                        valueColor: AlwaysStoppedAnimation(AppColors.gold),
+                      ),
                     ),
                     errorWidget: (_, __, ___) => const Center(
                       child: Column(

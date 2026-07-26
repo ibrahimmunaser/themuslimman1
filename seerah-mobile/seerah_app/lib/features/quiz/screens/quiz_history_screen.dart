@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/data/parts_data.dart';
 import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/system_insets.dart';
 
 class QuizHistoryScreen extends ConsumerWidget {
   const QuizHistoryScreen({super.key});
@@ -27,7 +28,11 @@ class QuizHistoryScreen extends ConsumerWidget {
         ),
       ),
       body: progressAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator(color: AppColors.gold)),
+        loading: () => const Center(
+          child: CircularProgressIndicator.adaptive(
+            valueColor: AlwaysStoppedAnimation(AppColors.gold),
+          ),
+        ),
         error: (e, _) => Center(
           child: Text('Failed to load progress', style: const TextStyle(color: AppColors.textSecondary)),
         ),
@@ -59,106 +64,118 @@ class QuizHistoryScreen extends ConsumerWidget {
           final sortedEntries = progress.quizScores.entries.toList()
             ..sort((a, b) => a.key.compareTo(b.key));
 
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-            children: [
-              // Stats row
-              Row(
-                children: [
-                  _StatCard(value: '$total', label: 'Attempted'),
-                  const SizedBox(width: 10),
-                  _StatCard(value: '$passed', label: 'Passed', color: AppColors.success),
-                  const SizedBox(width: 10),
-                  _StatCard(value: '$avgScore%', label: 'Avg Score', color: AppColors.gold),
-                ],
-              ),
-              const SizedBox(height: 20),
+          // Pre-index parts so each row does an O(1) lookup instead of firstWhere.
+          final partByNumber = {for (final p in PARTS) p.partNumber: p};
 
-              // Quiz list
-              ...sortedEntries.map((entry) {
-                final partNum = entry.key;
-                final score = entry.value;
-                final part = PARTS.firstWhere(
-                  (p) => p.partNumber == partNum,
-                  orElse: () => PARTS.first,
-                );
-                final passed = score >= 80;
-                final color = AppColors.forEra(part.era);
-
-                return GestureDetector(
-                  onTap: () => context.push('/part/$partNum?tab=quiz'),
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: AppColors.card,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: passed
-                            ? AppColors.success.withValues(alpha: 0.3)
-                            : AppColors.border,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 40, height: 40,
-                          decoration: BoxDecoration(
-                            color: color.withValues(alpha: 0.14),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Center(
-                            child: Text('$partNum',
-                              style: TextStyle(color: color, fontSize: 14, fontWeight: FontWeight.w800)),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(part.title,
-                                style: const TextStyle(
-                                  color: AppColors.textPrimary,
-                                  fontSize: 14, fontWeight: FontWeight.w600),
-                                maxLines: 1, overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 2),
-                              Text(part.subtitle,
-                                style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
-                                maxLines: 1, overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text('$score%',
-                              style: TextStyle(
-                                color: passed ? AppColors.success : AppColors.error,
-                                fontSize: 18,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(passed ? 'Passed' : 'Try again',
-                              style: TextStyle(
-                                color: passed
-                                    ? AppColors.success.withValues(alpha: 0.7)
-                                    : AppColors.textMuted,
-                                fontSize: 11,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+          return ListView.builder(
+            padding: EdgeInsets.fromLTRB(16, 16, 16, 32 + bottomSystemInset(context)),
+            itemCount: sortedEntries.length + 1,
+            itemBuilder: (context, index) {
+              if (index == 0) {
+                // Stats row
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 20),
+                  child: Row(
+                    children: [
+                      _StatCard(value: '$total', label: 'Attempted'),
+                      const SizedBox(width: 10),
+                      _StatCard(value: '$passed', label: 'Passed', color: AppColors.success),
+                      const SizedBox(width: 10),
+                      _StatCard(value: '$avgScore%', label: 'Avg Score', color: AppColors.gold),
+                    ],
                   ),
                 );
-              }),
-            ],
+              }
+
+              final entry = sortedEntries[index - 1];
+              final partNum = entry.key;
+              final score = entry.value;
+              final part = partByNumber[partNum] ?? PARTS.first;
+              final rowPassed = score >= 80;
+              final color = AppColors.forEra(part.era);
+
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Material(
+                  color: AppColors.card,
+                  borderRadius: BorderRadius.circular(12),
+                  child: InkWell(
+                    onTap: () => context.push('/part/$partNum?tab=quiz'),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: rowPassed
+                              ? AppColors.success.withValues(alpha: 0.3)
+                              : AppColors.border,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 40, height: 40,
+                            decoration: BoxDecoration(
+                              color: color.withValues(alpha: 0.14),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Center(
+                              child: Text('$partNum',
+                                style: TextStyle(color: color, fontSize: 14, fontWeight: FontWeight.w800)),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(part.title,
+                                  style: const TextStyle(
+                                    color: AppColors.textPrimary,
+                                    fontSize: 14, fontWeight: FontWeight.w600),
+                                  maxLines: 1, overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 2),
+                                Text(part.subtitle,
+                                  style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                                  maxLines: 1, overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text('$score%',
+                                  style: TextStyle(
+                                    color: rowPassed ? AppColors.success : AppColors.error,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(rowPassed ? 'Passed' : 'Try again',
+                                  style: TextStyle(
+                                    color: rowPassed
+                                        ? AppColors.success.withValues(alpha: 0.7)
+                                        : AppColors.textMuted,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
           );
         },
       ),

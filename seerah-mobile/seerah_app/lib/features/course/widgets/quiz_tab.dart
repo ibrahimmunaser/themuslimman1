@@ -65,7 +65,11 @@ class _QuizTabState extends ConsumerState<QuizTab> {
     final quizAsync = ref.watch(quizProvider(widget.partNumber));
 
     return quizAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator(color: AppColors.gold)),
+      loading: () => const Center(
+        child: CircularProgressIndicator.adaptive(
+          valueColor: AlwaysStoppedAnimation(AppColors.gold),
+        ),
+      ),
       error: (e, _) => Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -184,17 +188,21 @@ class _QuizTabState extends ConsumerState<QuizTab> {
 
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 10),
-                        child: GestureDetector(
-                          onTap: () => _select(i),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: bgColor,
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          decoration: BoxDecoration(
+                            color: bgColor,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: borderColor, width: isSelected || (_submitted && isCorrect) ? 1.5 : 1),
+                          ),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () => _select(i),
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: borderColor, width: isSelected || (_submitted && isCorrect) ? 1.5 : 1),
-                            ),
-                            child: Row(
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Row(
                               children: [
                                 Container(
                                   width: 28, height: 28,
@@ -222,6 +230,8 @@ class _QuizTabState extends ConsumerState<QuizTab> {
                                   )),
                                 ),
                               ],
+                                ),
+                              ),
                             ),
                           ),
                         ),

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/system_insets.dart';
 
 const _kRequiredParts = 100;
 const _kRequiredQuizPct = 70;
@@ -31,7 +32,11 @@ class CertificateScreen extends ConsumerWidget {
         ),
       ),
       body: progressAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator(color: AppColors.gold)),
+        loading: () => const Center(
+          child: CircularProgressIndicator.adaptive(
+            valueColor: AlwaysStoppedAnimation(AppColors.gold),
+          ),
+        ),
         error: (_, __) => const Center(
           child: Text('Failed to load progress', style: TextStyle(color: AppColors.textSecondary)),
         ),
@@ -47,7 +52,7 @@ class CertificateScreen extends ConsumerWidget {
           final isEarned = meetsStudied && meetsQuiz;
 
           return ListView(
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
+            padding: EdgeInsets.fromLTRB(20, 24, 20, 40 + bottomSystemInset(context)),
             children: [
               // Certificate card
               Container(
@@ -262,8 +267,13 @@ class _RequirementRow extends StatelessWidget {
               if (met)
                 const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 18)
               else
-                Text('$current / $required${suffix != null ? " $suffix" : ""}',
-                  style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text('$current / $required${suffix != null ? " $suffix" : ""}',
+                      style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
+                  ),
+                ),
             ],
           ),
           const SizedBox(height: 10),

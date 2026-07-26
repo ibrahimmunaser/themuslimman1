@@ -65,6 +65,8 @@ class ReferenceScreen extends StatelessWidget {
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(section.title,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
                                           style: const TextStyle(
                                             color: AppColors.textPrimary,
                                             fontSize: 15,

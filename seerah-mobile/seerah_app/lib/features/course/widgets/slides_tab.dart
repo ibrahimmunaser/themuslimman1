@@ -37,7 +37,11 @@ class _SlidesTabState extends ConsumerState<SlidesTab> {
     final slidesAsync = ref.watch(slidesProvider(widget.partNumber));
 
     return slidesAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator(color: AppColors.gold)),
+      loading: () => const Center(
+        child: CircularProgressIndicator.adaptive(
+          valueColor: AlwaysStoppedAnimation(AppColors.gold),
+        ),
+      ),
       error: (e, _) => Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -102,38 +106,46 @@ class _SlidesTabState extends ConsumerState<SlidesTab> {
                   final selected = e.key == _deckIndex;
                   final hasSlides = e.value.$2.isNotEmpty;
                   return Expanded(
-                    child: GestureDetector(
-                      onTap: hasSlides ? () {
-                        setState(() { _deckIndex = e.key; _slideIndex = 0; });
-                        _pageCtrl.jumpToPage(0);
-                      } : null,
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 180),
-                        curve: Curves.easeInOut,
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        decoration: BoxDecoration(
-                          color: selected ? AppColors.gold : Colors.transparent,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      curve: Curves.easeInOut,
+                      decoration: BoxDecoration(
+                        color: selected ? AppColors.gold : Colors.transparent,
+                        borderRadius: BorderRadius.circular(9),
+                        boxShadow: selected ? [
+                          BoxShadow(
+                            color: AppColors.gold.withValues(alpha: 0.25),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ] : null,
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: hasSlides ? () {
+                            setState(() { _deckIndex = e.key; _slideIndex = 0; });
+                            _pageCtrl.jumpToPage(0);
+                          } : null,
                           borderRadius: BorderRadius.circular(9),
-                          boxShadow: selected ? [
-                            BoxShadow(
-                              color: AppColors.gold.withValues(alpha: 0.25),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            child: Text(
+                              e.value.$1,
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: !hasSlides
+                                    ? AppColors.textMuted
+                                    : selected
+                                    ? Colors.black
+                                    : AppColors.textSecondary,
+                                fontSize: 13,
+                                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                                letterSpacing: selected ? -0.2 : 0,
+                              ),
                             ),
-                          ] : null,
-                        ),
-                        child: Text(
-                          e.value.$1,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: !hasSlides
-                                ? AppColors.textMuted
-                                : selected
-                                ? Colors.black
-                                : AppColors.textSecondary,
-                            fontSize: 13,
-                            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                            letterSpacing: selected ? -0.2 : 0,
                           ),
                         ),
                       ),
@@ -183,6 +195,9 @@ class _SlidesTabState extends ConsumerState<SlidesTab> {
                       child: CachedNetworkImage(
                         imageUrl: slide.medium,
                         fit: BoxFit.contain,
+                        memCacheWidth: (MediaQuery.sizeOf(ctx).width *
+                                MediaQuery.devicePixelRatioOf(ctx))
+                            .round(),
                         placeholder: (ctx, url) => Container(
                           color: AppColors.card,
                           child: const Center(
@@ -267,12 +282,15 @@ class _NavBtn extends StatelessWidget {
     final bgColor = enabled ? AppColors.card : AppColors.surface;
     final borderColor = enabled ? AppColors.border : AppColors.border.withValues(alpha: 0.4);
 
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
+    return Material(
+      color: bgColor,
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: bgColor,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(color: borderColor),
         ),
@@ -289,6 +307,7 @@ class _NavBtn extends StatelessWidget {
                   const SizedBox(width: 6),
                   Text(label, style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w500)),
                 ],
+        ),
         ),
       ),
     );

@@ -82,13 +82,16 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                 padding: const EdgeInsets.fromLTRB(20, 4, 8, 0),
                 child: Row(
                   children: [
-                    const Text(
-                      'Complete Seerah',
-                      style: TextStyle(
-                        color: AppColors.textMuted,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.2,
+                    const Flexible(
+                      child: Text(
+                        'Complete Seerah',
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: AppColors.textMuted,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.2,
+                        ),
                       ),
                     ),
                     const Spacer(),
@@ -243,11 +246,15 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                       const SizedBox(height: 16),
 
                       Center(
-                        child: GestureDetector(
-                          onTap: () {
+                        child: TextButton(
+                          onPressed: () {
                             HapticFeedback.selectionClick();
                             context.push('/login');
                           },
+                          style: TextButton.styleFrom(
+                            minimumSize: const Size(48, 44),
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                          ),
                           child: RichText(
                             text: const TextSpan(
                               style: TextStyle(fontSize: 13, color: AppColors.textMuted),
@@ -273,9 +280,10 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                             ? const SizedBox(
                                 width: 18,
                                 height: 18,
-                                child: CircularProgressIndicator(
+                                child: CircularProgressIndicator.adaptive(
                                   strokeWidth: 2,
-                                  color: AppColors.gold,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      AppColors.gold),
                                 ),
                               )
                             : TextButton(

@@ -35,32 +35,42 @@ class DashboardScreen extends ConsumerWidget {
           children: [
             const AppLogo(size: 28, borderRadius: 8),
             const SizedBox(width: 10),
-            const Text('Complete Seerah'),
+            const Flexible(
+              child: Text('Complete Seerah',
+                  maxLines: 1, overflow: TextOverflow.ellipsis),
+            ),
           ],
         ),
         actions: [
           // Profile switcher — taps go directly to profile picker if multi-profile
-          GestureDetector(
-            onTap: () {
-              if (profilesState != null && profilesState.hasMultipleProfiles) {
-                context.push('/profiles');
-              } else {
-                context.push('/profile');
-              }
-            },
-            child: Container(
-              margin: const EdgeInsets.only(right: 16),
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: AppColors.card,
-                shape: BoxShape.circle,
-                border: Border.all(color: AppColors.border),
+          Padding(
+            padding: const EdgeInsets.only(right: 10),
+            child: InkResponse(
+              onTap: () {
+                if (profilesState != null && profilesState.hasMultipleProfiles) {
+                  context.push('/profiles');
+                } else {
+                  context.push('/profile');
+                }
+              },
+              radius: 24,
+              // Outer padding keeps the visual circle unchanged while giving a >=44dp tap target.
+              child: Padding(
+                padding: const EdgeInsets.all(6),
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: AppColors.card,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: activeProfile?.avatar != null && activeProfile!.avatar!.isNotEmpty
+                      ? Text(activeProfile.avatar!,
+                          style: const TextStyle(fontSize: 16),
+                          textAlign: TextAlign.center)
+                      : const Icon(Icons.person_outline_rounded, size: 20, color: AppColors.textPrimary),
+                ),
               ),
-              child: activeProfile?.avatar != null && activeProfile!.avatar!.isNotEmpty
-                  ? Text(activeProfile.avatar!,
-                      style: const TextStyle(fontSize: 16),
-                      textAlign: TextAlign.center)
-                  : const Icon(Icons.person_outline_rounded, size: 20, color: AppColors.textPrimary),
             ),
           ),
         ],
@@ -212,6 +222,8 @@ class _WelcomeCard extends StatelessWidget {
               )),
           const SizedBox(height: 2),
           Text(firstName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 color: AppColors.textPrimary,
                 fontSize: 28,
@@ -237,24 +249,30 @@ class _WelcomeCard extends StatelessWidget {
               ),
               if (hasAccess) ...[
                 const SizedBox(width: 12),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.success.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.check_circle_rounded, color: AppColors.success, size: 11),
-                      SizedBox(width: 3),
-                      Text('Full Access',
-                          style: TextStyle(
-                              color: AppColors.success,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700)),
-                    ],
+                Flexible(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.success.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.check_circle_rounded, color: AppColors.success, size: 11),
+                        SizedBox(width: 3),
+                        Flexible(
+                          child: Text('Full Access',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                  color: AppColors.success,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700)),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -325,6 +343,8 @@ class _ContinueLearningCard extends StatelessWidget {
                     Text(
                       '$label — ${nextPart.era}',
                       style: const TextStyle(color: AppColors.gold, fontSize: 11, fontWeight: FontWeight.w700),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
                     Text(nextPart.title,
@@ -432,9 +452,15 @@ class _InlineStat extends StatelessWidget {
       child: Column(
         children: [
           Text(value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
             style: TextStyle(color: color, fontSize: 20, fontWeight: FontWeight.w800)),
           const SizedBox(height: 3),
           Text(label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
             style: const TextStyle(
               color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w500)),
         ],

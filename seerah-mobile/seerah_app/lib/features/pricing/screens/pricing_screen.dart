@@ -194,63 +194,68 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder:
-          (_) => Padding(
-            padding: const EdgeInsets.fromLTRB(28, 28, 28, 40),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF4CAF50).withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.check_rounded,
-                    color: Color(0xFF4CAF50),
-                    size: 32,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                const Text(
-                  'JazakAllahu Khayran!',
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  'Your purchase was successful. Full access has been unlocked. May Allah bless your learning.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 15,
-                    height: 1.5,
-                  ),
-                ),
-                const SizedBox(height: 28),
-                FilledButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    context.go('/dashboard');
-                  },
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.gold,
-                    foregroundColor: Colors.black,
-                    minimumSize: const Size.fromHeight(50),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+          (_) => SafeArea(
+            top: false,
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(28, 28, 28, 40),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF4CAF50).withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.check_rounded,
+                        color: Color(0xFF4CAF50),
+                        size: 32,
+                      ),
                     ),
-                  ),
-                  child: const Text(
-                    'Start Learning',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-                  ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      'JazakAllahu Khayran!',
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'Your purchase was successful. Full access has been unlocked. May Allah bless your learning.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 15,
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+                    FilledButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        context.go('/dashboard');
+                      },
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.gold,
+                        foregroundColor: Colors.black,
+                        minimumSize: const Size.fromHeight(50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: const Text(
+                        'Start Learning',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
     );
@@ -298,18 +303,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
             const SizedBox(height: 16),
           ],
 
-          // ── Store / retry warnings ───────────────────────────────
-          if (!iap.isAvailable && iap.status != IAPStatus.loading) ...[
-            _StatusBanner(
-              icon: Icons.info_outline_rounded,
-              iconColor: AppColors.textMuted,
-              text: iap.unavailableProductMessage(),
-              bgColor: AppColors.surface,
-              borderColor: AppColors.border,
-              textColor: AppColors.textSecondary,
-            ),
-            const SizedBox(height: 12),
-          ],
+          // ── Retry when products failed to load ───────────────────
           if (showRetry) ...[
             _RetryBanner(
               status: iap.storeStatusLabel,
@@ -383,11 +377,13 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
                       children: [
                         Icon(item.$1, color: AppColors.gold, size: 16),
                         const SizedBox(width: 12),
-                        Text(
-                          item.$2,
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 13,
+                        Expanded(
+                          child: Text(
+                            item.$2,
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 13,
+                            ),
                           ),
                         ),
                       ],
@@ -682,9 +678,9 @@ class _PlanTile extends StatelessWidget {
                   const SizedBox(
                     width: 22,
                     height: 22,
-                    child: CircularProgressIndicator(
+                    child: CircularProgressIndicator.adaptive(
                       strokeWidth: 2.5,
-                      color: AppColors.gold,
+                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.gold),
                     ),
                   )
                 else
@@ -1001,13 +997,37 @@ class _FaqTileState extends State<_FaqTile> {
   }
 }
 
-class _SubscriptionLegalText extends StatelessWidget {
+class _SubscriptionLegalText extends StatefulWidget {
   final void Function(String url) onOpenUrl;
   const _SubscriptionLegalText({required this.onOpenUrl});
 
   @override
+  State<_SubscriptionLegalText> createState() => _SubscriptionLegalTextState();
+}
+
+class _SubscriptionLegalTextState extends State<_SubscriptionLegalText> {
+  static const _baseUrl = AppConstants.baseUrl;
+  late final TapGestureRecognizer _privacyRecognizer;
+  late final TapGestureRecognizer _termsRecognizer;
+
+  @override
+  void initState() {
+    super.initState();
+    _privacyRecognizer = TapGestureRecognizer()
+      ..onTap = () => widget.onOpenUrl('$_baseUrl/privacy');
+    _termsRecognizer = TapGestureRecognizer()
+      ..onTap = () => widget.onOpenUrl('$_baseUrl/terms');
+  }
+
+  @override
+  void dispose() {
+    _privacyRecognizer.dispose();
+    _termsRecognizer.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    const baseUrl = AppConstants.baseUrl;
     final style = const TextStyle(
       color: AppColors.textMuted,
       fontSize: 11,
@@ -1039,17 +1059,13 @@ class _SubscriptionLegalText extends StatelessWidget {
             TextSpan(
               text: 'Privacy Policy',
               style: linkStyle,
-              recognizer:
-                  TapGestureRecognizer()
-                    ..onTap = () => onOpenUrl('$baseUrl/privacy'),
+              recognizer: _privacyRecognizer,
             ),
             const TextSpan(text: '  ·  '),
             TextSpan(
               text: 'Terms of Use (EULA)',
               style: linkStyle,
-              recognizer:
-                  TapGestureRecognizer()
-                    ..onTap = () => onOpenUrl('$baseUrl/terms'),
+              recognizer: _termsRecognizer,
             ),
           ],
         ),
@@ -1126,7 +1142,9 @@ class _LegalWebScreenState extends State<_LegalWebScreen> {
           WebViewWidget(controller: _ctrl),
           if (_loading)
             const Center(
-              child: CircularProgressIndicator(color: AppColors.gold),
+              child: CircularProgressIndicator.adaptive(
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.gold),
+              ),
             ),
         ],
       ),

@@ -164,6 +164,8 @@ class _EraSectionState extends State<_EraSection> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(widget.era.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           color: AppColors.textPrimary,
                           fontSize: 16,

@@ -19,6 +19,9 @@ class _AudioTabState extends State<AudioTab> {
   bool _loading = true;
   String? _error;
   double _speed = 1.0;
+  // Throttle rebuilds: only setState when the displayed second or play state changes.
+  int _lastPosSec = -1;
+  bool _lastPlaying = false;
 
   @override
   void initState() {
@@ -30,15 +33,28 @@ class _AudioTabState extends State<AudioTab> {
     try {
       _ctrl = VideoPlayerController.networkUrl(Uri.parse(widget.audioUrl));
       await _ctrl!.initialize();
-      _ctrl!.addListener(() { if (mounted) setState(() {}); });
+      _ctrl!.addListener(_onControllerTick);
       if (mounted) setState(() => _loading = false);
     } catch (_) {
       if (mounted) setState(() { _loading = false; _error = 'Could not load audio.'; });
     }
   }
 
+  void _onControllerTick() {
+    if (!mounted) return;
+    final value = _ctrl?.value;
+    if (value == null) return;
+    final posSec = value.position.inSeconds;
+    if (posSec != _lastPosSec || value.isPlaying != _lastPlaying) {
+      _lastPosSec = posSec;
+      _lastPlaying = value.isPlaying;
+      setState(() {});
+    }
+  }
+
   @override
   void dispose() {
+    _ctrl?.removeListener(_onControllerTick);
     _ctrl?.dispose();
     super.dispose();
   }
@@ -57,7 +73,11 @@ class _AudioTabState extends State<AudioTab> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator(color: AppColors.gold));
+      return const Center(
+        child: CircularProgressIndicator.adaptive(
+          valueColor: AlwaysStoppedAnimation(AppColors.gold),
+        ),
+      );
     }
     if (_error != null || _ctrl == null) {
       return Center(
@@ -90,9 +110,10 @@ class _AudioTabState extends State<AudioTab> {
     final progress = dur.inMilliseconds > 0 ? pos.inMilliseconds / dur.inMilliseconds : 0.0;
 
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(32),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Album art placeholder
@@ -175,26 +196,32 @@ class _AudioTabState extends State<AudioTab> {
                 ),
                 const SizedBox(width: 16),
                 // Play/Pause
-                GestureDetector(
-                  onTap: () => isPlaying ? ctrl.pause() : ctrl.play(),
-                  child: Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      color: AppColors.gold,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.gold.withValues(alpha: 0.35),
-                          blurRadius: 16,
-                          offset: const Offset(0, 4),
+                Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.gold.withValues(alpha: 0.35),
+                        blurRadius: 16,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: AppColors.gold,
+                    shape: const CircleBorder(),
+                    child: InkWell(
+                      onTap: () => isPlaying ? ctrl.pause() : ctrl.play(),
+                      customBorder: const CircleBorder(),
+                      child: SizedBox(
+                        width: 64,
+                        height: 64,
+                        child: Icon(
+                          isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                          color: Colors.black,
+                          size: 36,
                         ),
-                      ],
-                    ),
-                    child: Icon(
-                      isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                      color: Colors.black,
-                      size: 36,
+                      ),
                     ),
                   ),
                 ),
@@ -210,29 +237,36 @@ class _AudioTabState extends State<AudioTab> {
             const SizedBox(height: 24),
 
             // Speed chips
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              alignment: WrapAlignment.center,
               children: _kSpeeds.map((speed) {
                 final selected = _speed == speed;
-                return GestureDetector(
-                  onTap: () => _setSpeed(speed),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 150),
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                    decoration: BoxDecoration(
-                      color: selected ? AppColors.gold : AppColors.surface,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: selected ? AppColors.gold : AppColors.border,
-                      ),
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 150),
+                  decoration: BoxDecoration(
+                    color: selected ? AppColors.gold : AppColors.surface,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: selected ? AppColors.gold : AppColors.border,
                     ),
-                    child: Text(
-                      '${speed == speed.truncateToDouble() ? speed.toInt() : speed}×',
-                      style: TextStyle(
-                        color: selected ? Colors.black : AppColors.textSecondary,
-                        fontSize: 13,
-                        fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () => _setSpeed(speed),
+                      borderRadius: BorderRadius.circular(20),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                        child: Text(
+                          '${speed == speed.truncateToDouble() ? speed.toInt() : speed}×',
+                          style: TextStyle(
+                            color: selected ? Colors.black : AppColors.textSecondary,
+                            fontSize: 13,
+                            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                          ),
+                        ),
                       ),
                     ),
                   ),

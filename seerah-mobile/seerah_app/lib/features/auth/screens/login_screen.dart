@@ -58,7 +58,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       body: AppGradientBackground(
         child: SafeArea(
           child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
           child: Form(
             key: _formKey,
             child: Column(
@@ -128,7 +128,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ElevatedButton(
                   onPressed: _loading ? null : _submit,
                   child: _loading
-                      ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
+                      ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator.adaptive(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.black)))
                       : const Text('Sign In'),
                 ),
 

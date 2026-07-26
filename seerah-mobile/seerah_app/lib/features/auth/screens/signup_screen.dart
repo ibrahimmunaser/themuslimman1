@@ -66,7 +66,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       body: AppGradientBackground(
         child: SafeArea(
           child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
           child: Form(
             key: _formKey,
             child: Column(
@@ -135,7 +135,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 ElevatedButton(
                   onPressed: _loading ? null : _submit,
                   child: _loading
-                      ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
+                      ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator.adaptive(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.black)))
                       : const Text('Create Account'),
                 ),
 
@@ -154,7 +154,10 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('Already have an account?', style: Theme.of(context).textTheme.bodyMedium),
+                    Flexible(
+                      child: Text('Already have an account?',
+                          style: Theme.of(context).textTheme.bodyMedium),
+                    ),
                     TextButton(
                       onPressed: () => context.go('/login'),
                       child: const Text('Sign in'),
@@ -171,9 +174,34 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   }
 }
 
-class _LegalText extends StatelessWidget {
+class _LegalText extends StatefulWidget {
   final void Function(String url) onOpenUrl;
   const _LegalText({required this.onOpenUrl});
+
+  @override
+  State<_LegalText> createState() => _LegalTextState();
+}
+
+class _LegalTextState extends State<_LegalText> {
+  static const _baseUrl = AppConstants.baseUrl;
+  late final TapGestureRecognizer _termsRecognizer;
+  late final TapGestureRecognizer _privacyRecognizer;
+
+  @override
+  void initState() {
+    super.initState();
+    _termsRecognizer = TapGestureRecognizer()
+      ..onTap = () => widget.onOpenUrl('$_baseUrl/terms');
+    _privacyRecognizer = TapGestureRecognizer()
+      ..onTap = () => widget.onOpenUrl('$_baseUrl/privacy');
+  }
+
+  @override
+  void dispose() {
+    _termsRecognizer.dispose();
+    _privacyRecognizer.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -182,7 +210,6 @@ class _LegalText extends StatelessWidget {
       decoration: TextDecoration.underline,
       color: AppColors.textSecondary,
     );
-    const baseUrl = AppConstants.baseUrl;
 
     return RichText(
       textAlign: TextAlign.center,
@@ -191,13 +218,13 @@ class _LegalText extends StatelessWidget {
         TextSpan(
           text: 'Terms of Use (EULA)',
           style: linkStyle,
-          recognizer: TapGestureRecognizer()..onTap = () => onOpenUrl('$baseUrl/terms'),
+          recognizer: _termsRecognizer,
         ),
         const TextSpan(text: ' and '),
         TextSpan(
           text: 'Privacy Policy',
           style: linkStyle,
-          recognizer: TapGestureRecognizer()..onTap = () => onOpenUrl('$baseUrl/privacy'),
+          recognizer: _privacyRecognizer,
         ),
         const TextSpan(text: '.'),
       ]),

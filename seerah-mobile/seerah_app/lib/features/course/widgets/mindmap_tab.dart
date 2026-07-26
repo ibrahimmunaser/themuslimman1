@@ -37,8 +37,16 @@ class MindmapTab extends StatelessWidget {
                 child: CachedNetworkImage(
                   imageUrl: mindmapUrl,
                   fit: BoxFit.contain,
+                  // 2x screen width leaves headroom for pinch-zoom while
+                  // avoiding a full-resolution decode.
+                  memCacheWidth: (MediaQuery.sizeOf(context).width *
+                          MediaQuery.devicePixelRatioOf(context) *
+                          2)
+                      .round(),
                   placeholder: (ctx, url) => const Center(
-                    child: CircularProgressIndicator(color: AppColors.gold),
+                    child: CircularProgressIndicator.adaptive(
+                      valueColor: AlwaysStoppedAnimation(AppColors.gold),
+                    ),
                   ),
                   errorWidget: (ctx, url, err) => const Center(
                     child: Column(
