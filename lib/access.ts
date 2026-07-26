@@ -275,3 +275,39 @@ export function getProfileLimit(planType: string): number {
 export function isFamilyPlan(planType: string): boolean {
   return planType === "family";
 }
+
+/**
+ * After a family plan purchase, fill learner profile slots up to
+ * FAMILY_PROFILE_LIMIT. Existing profiles are preserved. Idempotent.
+ */
+export async function ensureFamilyProfilesForUser(userId: string): Promise<number> {
+  const [existingProfiles, user] = await Promise.all([
+    prisma.learnerProfile.findMany({
+      where: { userId },
+      select: { id: true, isDefault: true },
+      orderBy: { createdAt: "asc" },
+    }),
+    prisma.user.findUnique({ where: { id: userId }, select: { fullName: true } }),
+  ]);
+
+  const toCreate = FAMILY_PROFILE_LIMIT - existingProfiles.length;
+  if (toCreate <= 0) return 0;
+
+  const hasDefault = existingProfiles.some((p) => p.isDefault);
+  const existingCount = existingProfiles.length;
+  const newProfiles = Array.from({ length: toCreate }, (_, i) => {
+    const slot = existingCount + i + 1;
+    const isMainSlot = slot === 1;
+    return {
+      id: crypto.randomUUID(),
+      userId,
+      displayName: isMainSlot ? (user?.fullName?.trim() || "Main Learner") : `Learner ${slot}`,
+      isDefault: isMainSlot && !hasDefault,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+  });
+
+  await prisma.learnerProfile.createMany({ data: newProfiles });
+  return newProfiles.length;
+}

@@ -10,6 +10,7 @@ import 'package:in_app_purchase_android/in_app_purchase_android.dart';
 import '../constants/app_constants.dart';
 import '../network/api_client.dart';
 import 'auth_provider.dart';
+import 'profiles_provider.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // State
@@ -535,6 +536,9 @@ class IAPNotifier extends StateNotifier<IAPState> {
     // Refresh hasAccess + isFamily from the server so Family plans unlock
     // the multi-profile UI immediately (not only after a later re-login).
     await _ref.read(authProvider.notifier).refreshAccessAfterPurchase();
+    // Drop any pre-purchase profile cache (limit 1) so Profiles shows the
+    // family slots right away.
+    _ref.invalidate(profilesProvider);
 
     state = state.copyWith(
       status: IAPStatus.success,

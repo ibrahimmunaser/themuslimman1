@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { nanoid } from "nanoid";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { hasActiveCourseAccess } from "@/lib/access";
+import { hasActiveCourseAccess, ensureFamilyProfilesForUser } from "@/lib/access";
 import { checkRateLimit, getIP } from "@/lib/rate-limit";
 
 /** Max bytes to store from the Apple/Google raw response. */
@@ -427,12 +427,21 @@ export async function POST(req: NextRequest) {
       await prisma.user.update({ where: { id: user.id }, data: userUpdate });
     }
 
+    // Match Stripe family checkout: pre-fill learner slots so Profiles is ready
+    // immediately for the household (idempotent if slots already exist).
+    const planType = userUpdate.planType ?? user.planType ?? "individual";
+    if (planType === "family") {
+      await ensureFamilyProfilesForUser(user.id).catch((e) =>
+        console.error("[mobile-purchases/verify] ensureFamilyProfilesForUser failed:", e),
+      );
+    }
+
     const hasAccess = await hasActiveCourseAccess(user.id, userUpdate.hasPaid ?? user.hasPaid);
     return NextResponse.json({
       success: true,
       hasAccess,
-      isFamily: (userUpdate.planType ?? user.planType) === "family",
-      planType: userUpdate.planType ?? user.planType ?? "individual",
+      isFamily: planType === "family",
+      planType,
     });
   } catch (err) {
     console.error("[mobile-purchases/verify]", err);
