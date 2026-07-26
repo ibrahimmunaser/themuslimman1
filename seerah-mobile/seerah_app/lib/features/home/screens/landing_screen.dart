@@ -435,9 +435,22 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                         onPressed: () => context.push('/login'),
                         style: TextButton.styleFrom(
                             foregroundColor: AppColors.textMuted),
-                        child: const Text(
-                          'Already learning on another device? Sign in',
-                          style: TextStyle(fontSize: 12),
+                        child: RichText(
+                          text: const TextSpan(
+                            style: TextStyle(
+                                fontSize: 12, color: AppColors.textMuted),
+                            children: [
+                              TextSpan(
+                                  text:
+                                      'Already learning on another device? '),
+                              TextSpan(
+                                text: 'Sign in',
+                                style: TextStyle(
+                                    color: AppColors.gold,
+                                    fontWeight: FontWeight.w600),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
