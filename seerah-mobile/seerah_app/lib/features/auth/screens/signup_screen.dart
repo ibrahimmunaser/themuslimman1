@@ -48,8 +48,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() { _loading = true; _error = null; _accountExists = false; });
 
-    // Router enforces that only anonymous+purchased guests reach this screen,
-    // so this is always a guest → real account upgrade (purchases stay attached).
+    // Guest → real account upgrade. Purchases already linked to this guest
+    // session stay attached after the upgrade.
     final result = await ref.read(authProvider.notifier).upgradeAccount(
         _nameCtrl.text,
         _emailCtrl.text,
@@ -74,6 +74,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final hasAccess = ref.watch(authProvider).hasAccess;
     return Scaffold(
       body: AppGradientBackground(
         child: SafeArea(
@@ -90,14 +91,15 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     const AppLogo(size: 48),
                     const SizedBox(height: 20),
                     Text(
-                      'Save Your Progress',
+                      hasAccess ? 'Create Your Account' : 'Save Your Progress',
                       style: Theme.of(context).textTheme.displayMedium,
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Optional — access your course from any device. '
-                          'Your purchase stays exactly as it is if you skip this.',
+                      hasAccess
+                          ? 'Your purchase is confirmed. Create an account so you can sign in on Android, iOS, and the website.'
+                          : 'Create an account to access your course from any device.',
                       style: Theme.of(context).textTheme.bodyMedium,
                       textAlign: TextAlign.center,
                     ),
@@ -172,12 +174,13 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 ),
 
                 const SizedBox(height: 12),
-                Center(
-                  child: TextButton(
-                    onPressed: _loading ? null : () => context.go('/dashboard'),
-                    child: const Text('Skip for now'),
+                if (!hasAccess)
+                  Center(
+                    child: TextButton(
+                      onPressed: _loading ? null : () => context.go('/dashboard'),
+                      child: const Text('Skip for now'),
+                    ),
                   ),
-                ),
 
                 const SizedBox(height: 16),
                 _LegalText(onOpenUrl: _openLegal),

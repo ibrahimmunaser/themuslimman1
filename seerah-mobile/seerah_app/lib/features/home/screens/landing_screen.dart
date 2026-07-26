@@ -183,6 +183,14 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
 
   void _showSuccessSheet() {
     if (!mounted) return;
+
+    // Guests must create an account after purchase so access syncs across
+    // Android, iOS, and web. Skip is intentionally not offered.
+    if (ref.read(authProvider).isAnonymous) {
+      context.go('/signup');
+      return;
+    }
+
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: AppColors.card,
@@ -223,51 +231,23 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                       color: AppColors.textSecondary, fontSize: 15, height: 1.5),
                 ),
                 const SizedBox(height: 28),
-                if (ref.read(authProvider).isAnonymous) ...[
-                  FilledButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      context.push('/signup');
-                    },
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.gold,
-                      foregroundColor: Colors.black,
-                      minimumSize: const Size.fromHeight(50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
+                FilledButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    context.go('/dashboard');
+                  },
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.gold,
+                    foregroundColor: Colors.black,
+                    minimumSize: const Size.fromHeight(50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
                     ),
-                    child: const Text('Save Access to All Your Devices',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w700)),
                   ),
-                  const SizedBox(height: 10),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      context.go('/dashboard');
-                    },
-                    child: const Text('Skip — Start Learning'),
-                  ),
-                ] else
-                  FilledButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      context.go('/dashboard');
-                    },
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.gold,
-                      foregroundColor: Colors.black,
-                      minimumSize: const Size.fromHeight(50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                    child: const Text('Start Learning',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w700)),
-                  ),
+                  child: const Text('Start Learning',
+                      style: TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.w700)),
+                ),
               ],
             ),
           ),
