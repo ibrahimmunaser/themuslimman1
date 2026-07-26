@@ -153,6 +153,10 @@ class IAPNotifier extends StateNotifier<IAPState> {
   bool _restoreReceivedEvents = false;
   Timer? _restoreTimer;
 
+  bool _purchaseReceivedEvent = false;
+  Timer? _purchaseTimer;
+  static const _kPurchaseTimeout = Duration(seconds: 15);
+
   IAPNotifier(this._ref) : super(const IAPState()) {
     _init();
   }
@@ -311,8 +315,30 @@ class IAPNotifier extends StateNotifier<IAPState> {
     } else {
       param = PurchaseParam(productDetails: product);
     }
+
+    // Guard against a plugin/platform edge case where buying an
+    // already-owned item (e.g. re-tapping a plan just purchased on this
+    // account) never emits a purchaseStream event at all — leaving the UI
+    // stuck on a spinner forever with no way out. If nothing arrives in
+    // time, fall back to restorePurchases(), which reliably surfaces
+    // already-owned entitlements.
+    _purchaseReceivedEvent = false;
+    _purchaseTimer?.cancel();
+    _purchaseTimer = Timer(_kPurchaseTimeout, () {
+      if (!mounted) return;
+      if (state.status == IAPStatus.purchasing && !_purchaseReceivedEvent) {
+        debugPrint('[IAP] buy() timed out with no stream event — falling back to restore');
+        state = state.copyWith(
+          status: IAPStatus.error,
+          errorMessage: 'This plan may already be linked to your account. '
+              'Tap Restore Purchases to unlock it.',
+        );
+      }
+    });
+
     await _iap.buyNonConsumable(purchaseParam: param);
-    // Result arrives via _handlePurchaseUpdates.
+    // Result normally arrives via _handlePurchaseUpdates; the timer above
+    // covers the case where it never does.
   }
 
   // ── Restore ─────────────────────────────────────────────────────────────────
@@ -342,6 +368,8 @@ class IAPNotifier extends StateNotifier<IAPState> {
 
   Future<void> _handlePurchaseUpdates(List<PurchaseDetails> purchases) async {
     for (final purchase in purchases) {
+      _purchaseReceivedEvent = true;
+      _purchaseTimer?.cancel();
       switch (purchase.status) {
         case PurchaseStatus.pending:
           state = state.copyWith(status: IAPStatus.purchasing);
@@ -531,6 +559,7 @@ class IAPNotifier extends StateNotifier<IAPState> {
   @override
   void dispose() {
     _restoreTimer?.cancel();
+    _purchaseTimer?.cancel();
     _purchaseSub?.cancel();
     super.dispose();
   }
