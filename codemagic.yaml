@@ -1,7 +1,7 @@
 workflows:
 
   # ────────────────────────────────────────────────────────────────────────────
-  # ANDROID — builds a signed release AAB and uploads to Play Store internal track
+  # ANDROID — builds a signed release AAB and uploads to Play Store production track
   # ────────────────────────────────────────────────────────────────────────────
   android-release:
     name: Android Release
@@ -19,7 +19,7 @@ workflows:
         - google_play   # GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS (secret JSON key)
       vars:
         PACKAGE_NAME: com.themuslimman.seerah
-        GOOGLE_PLAY_TRACK: alpha
+        GOOGLE_PLAY_TRACK: production
 
     triggering:
       events:
@@ -58,8 +58,8 @@ workflows:
           failure: true
       google_play:
         credentials: $GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS
-        track: alpha
-        # Closed testing (Alpha) — release goes live on track after Play review
+        track: production
+        # Production — release goes live to all users after Play review
         submit_as_draft: false
         changes_not_sent_for_review: false
 
