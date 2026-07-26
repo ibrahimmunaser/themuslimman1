@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
@@ -394,10 +395,10 @@ class IAPNotifier extends StateNotifier<IAPState> {
       await _finalize(purchase);
     } catch (e) {
       debugPrint('[IAP] backend verification error: $e');
-      final message = e is Exception
-          ? e.toString().replaceFirst('Exception: ', '')
-          : 'Purchase verification failed. Please contact support if the issue persists.';
-      state = state.copyWith(status: IAPStatus.error, errorMessage: message);
+      state = state.copyWith(
+        status: IAPStatus.error,
+        errorMessage: _verificationErrorMessage(e),
+      );
       // iOS: finalize to clear from StoreKit queue (user can retry via Restore).
       // Android: do NOT finalize — auto-refund is the safer default.
       if (!kIsWeb && Platform.isIOS) {
@@ -416,14 +417,51 @@ class IAPNotifier extends StateNotifier<IAPState> {
       state = state.copyWith(clearPendingLink: true);
     } catch (e) {
       debugPrint('[IAP] pending link verify error: $e');
-      final message = e is Exception
-          ? e.toString().replaceFirst('Exception: ', '')
-          : 'Could not verify your purchase. Please contact support@themuslimman.com';
-      state = state.copyWith(status: IAPStatus.error, errorMessage: message);
+      state = state.copyWith(
+        status: IAPStatus.error,
+        errorMessage: _verificationErrorMessage(
+          e,
+          fallback:
+              'Could not verify your purchase. Please contact support@themuslimman.com',
+        ),
+      );
       if (!kIsWeb && Platform.isIOS) {
         await _finalize(purchase);
       }
     }
+  }
+
+  /// Prefer the backend's `error` field over Dio's verbose exception dump.
+  String _verificationErrorMessage(
+    Object e, {
+    String fallback =
+        'Purchase verification failed. Please try again or contact support@themuslimman.com',
+  }) {
+    if (e is DioException) {
+      final data = e.response?.data;
+      if (data is Map) {
+        final msg = data['error'];
+        if (msg is String && msg.trim().isNotEmpty) return msg;
+      }
+      final code = e.response?.statusCode;
+      if (code == 401) {
+        return 'Your session expired. Please close and reopen the app, then try Restore Purchases.';
+      }
+      if (code == 409) {
+        return 'This purchase is already linked to a different account. Contact support@themuslimman.com if you need help.';
+      }
+      if (code == 422 || code == 502) {
+        return 'We could not verify this purchase with the store. Please try Restore Purchases, or contact support@themuslimman.com.';
+      }
+      return fallback;
+    }
+    if (e is Exception) {
+      final text = e.toString().replaceFirst('Exception: ', '').trim();
+      // Never surface raw DioException dumps if they slipped through.
+      if (text.startsWith('DioException')) return fallback;
+      if (text.isNotEmpty) return text;
+    }
+    return fallback;
   }
 
   // ── Backend verification ────────────────────────────────────────────────────

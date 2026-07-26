@@ -206,7 +206,25 @@ async function verifyAndroid(
   const raw = JSON.stringify(data).slice(0, MAX_RAW_RESPONSE_BYTES);
 
   if (!res.ok) {
-    return { valid: false, transactionId: "", currentPeriodEnd: null, rawResponse: raw };
+    // Distinguish Play API / config failures from a genuinely invalid purchase.
+    // 401/403 almost always mean the service account is missing Play Console
+    // API access — returning a generic "invalid purchase" 422 misleads support.
+    const googleMsg =
+      (data.error as { message?: string } | undefined)?.message ??
+      `Google Play API returned ${res.status}`;
+    console.error(
+      `[mobile-purchases/verify] Google Play API ${res.status} for ${productId}:`,
+      googleMsg,
+      raw,
+    );
+    if (res.status === 401 || res.status === 403) {
+      throw new Error(
+        "Google Play API access is not configured. Link a service account with " +
+          "Android Publisher access in Play Console → Users and permissions, " +
+          "and set GOOGLE_SERVICE_ACCOUNT_KEY on the server.",
+      );
+    }
+    throw new Error(`Google Play verification failed (${res.status}): ${googleMsg}`);
   }
 
   if (purchaseType === "subscription") {
@@ -404,9 +422,28 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, hasAccess });
   } catch (err) {
     console.error("[mobile-purchases/verify]", err);
+    const message =
+      err instanceof Error && err.message.startsWith("Google Play")
+        ? err.message
+        : err instanceof Error && err.message.startsWith("APPLE_IAP")
+          ? err.message
+          : err instanceof Error && err.message.startsWith("GOOGLE_SERVICE_ACCOUNT")
+            ? err.message
+            : "Purchase verification failed. Please try again.";
+    const isConfig =
+      message.includes("not configured") ||
+      message.includes("not set") ||
+      message.includes("API access") ||
+      message.includes("OAuth2") ||
+      message.includes("GOOGLE_SERVICE_ACCOUNT") ||
+      message.includes("APPLE_IAP");
     return NextResponse.json(
-      { success: false, error: "Purchase verification failed. Please try again." },
-      { status: 500 }
+      { success: false, error: isConfig
+          ? "Purchase verification is temporarily unavailable. Please try again shortly, or contact support@themuslimman.com."
+          : message.startsWith("Google Play verification failed")
+            ? "We could not verify this purchase with Google Play. Please try Restore Purchases, or contact support@themuslimman.com."
+            : message },
+      { status: isConfig ? 502 : 500 },
     );
   }
 }
