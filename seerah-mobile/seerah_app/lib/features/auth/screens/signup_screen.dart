@@ -74,7 +74,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final hasAccess = ref.watch(authProvider).hasAccess;
+    final auth = ref.watch(authProvider);
+    final hasAccess = auth.hasAccess;
+    final isFamily = auth.isFamily;
     return Scaffold(
       body: AppGradientBackground(
         child: SafeArea(
@@ -98,7 +100,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     const SizedBox(height: 6),
                     Text(
                       hasAccess
-                          ? 'Your purchase is confirmed. Create an account so you can sign in on Android, iOS, and the website.'
+                          ? (isFamily
+                              ? 'Your Family plan is confirmed. Create an account — anyone in your household can sign in with it and add their own learner profile (up to 5).'
+                              : 'Your purchase is confirmed. Create an account so you can sign in on Android, iOS, and the website.')
                           : 'Create an account to access your course from any device.',
                       style: Theme.of(context).textTheme.bodyMedium,
                       textAlign: TextAlign.center,

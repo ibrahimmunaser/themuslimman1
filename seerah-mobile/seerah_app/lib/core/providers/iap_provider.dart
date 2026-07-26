@@ -532,6 +532,8 @@ class IAPNotifier extends StateNotifier<IAPState> {
       );
     }
 
+    // Refresh hasAccess + isFamily from the server so Family plans unlock
+    // the multi-profile UI immediately (not only after a later re-login).
     await _ref.read(authProvider.notifier).refreshAccessAfterPurchase();
 
     state = state.copyWith(

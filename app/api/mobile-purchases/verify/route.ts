@@ -414,12 +414,26 @@ export async function POST(req: NextRequest) {
     });
 
     // Update user.planType to family if this is a family purchase.
+    // Lifetime mobile purchases also set hasPaid so access checks that only
+    // look at the User row (session short-circuit) stay consistent with Stripe.
+    const userUpdate: { planType?: "family"; hasPaid?: boolean } = {};
     if (meta.planType === "family" && user.planType !== "family") {
-      await prisma.user.update({ where: { id: user.id }, data: { planType: "family" } });
+      userUpdate.planType = "family";
+    }
+    if (meta.purchaseType === "lifetime" && !user.hasPaid) {
+      userUpdate.hasPaid = true;
+    }
+    if (Object.keys(userUpdate).length > 0) {
+      await prisma.user.update({ where: { id: user.id }, data: userUpdate });
     }
 
-    const hasAccess = await hasActiveCourseAccess(user.id);
-    return NextResponse.json({ success: true, hasAccess });
+    const hasAccess = await hasActiveCourseAccess(user.id, userUpdate.hasPaid ?? user.hasPaid);
+    return NextResponse.json({
+      success: true,
+      hasAccess,
+      isFamily: (userUpdate.planType ?? user.planType) === "family",
+      planType: userUpdate.planType ?? user.planType ?? "individual",
+    });
   } catch (err) {
     console.error("[mobile-purchases/verify]", err);
     const message =

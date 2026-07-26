@@ -105,7 +105,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
       // Use the unified endpoint (covers Stripe + Apple IAP + Google Play IAP).
       final response = await ApiClient.instance.dio.get('/api/access/check');
       final hasAccess = response.data['hasAccess'] as bool? ?? false;
-      final user = state.user?.copyWith(hasAccess: hasAccess);
+      final isFamily = response.data['isFamily'] as bool? ??
+          (response.data['planType'] as String?) == 'family';
+      final user = state.user?.copyWith(hasAccess: hasAccess, isFamily: isFamily);
       if (user != null) {
         state = state.copyWith(user: user);
         await _saveUser(user);
@@ -132,15 +134,19 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final data = response.data as Map<String, dynamic>;
       if (data['success'] == true) {
         bool hasAccess = data['hasPurchase'] as bool? ?? false;
+        bool isFamily = data['isFamily'] as bool? ?? false;
         try {
           final accessRes = await ApiClient.instance.dio.get('/api/access/check');
           hasAccess = accessRes.data['hasAccess'] as bool? ?? hasAccess;
+          isFamily = accessRes.data['isFamily'] as bool? ??
+              ((accessRes.data['planType'] as String?) == 'family') ||
+              isFamily;
         } catch (_) {}
 
         final user = UserModel(
           email: email.trim(),
           hasAccess: hasAccess,
-          isFamily: data['isFamily'] as bool? ?? false,
+          isFamily: isFamily,
           role: data['role'] as String? ?? 'student',
         );
         await _saveUser(user);
@@ -230,10 +236,23 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final data = response.data as Map<String, dynamic>;
       if (data['success'] == true) {
         final current = state.user ?? const UserModel();
+        // Re-check access/family from the server so a family purchase made as
+        // a guest is reflected after the upgrade (same user id, purchase stays).
+        bool hasAccess = current.hasAccess;
+        bool isFamily = current.isFamily;
+        try {
+          final accessRes = await ApiClient.instance.dio.get('/api/access/check');
+          hasAccess = accessRes.data['hasAccess'] as bool? ?? hasAccess;
+          isFamily = accessRes.data['isFamily'] as bool? ??
+              ((accessRes.data['planType'] as String?) == 'family') ||
+              isFamily;
+        } catch (_) {}
         final user = current.copyWith(
           email: email.trim(),
           name: name.trim(),
           isAnonymous: false,
+          hasAccess: hasAccess,
+          isFamily: isFamily,
         );
         await _saveUser(user);
         state = state.copyWith(isLoading: false, user: user);
