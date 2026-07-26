@@ -21,6 +21,7 @@ class AuthState {
   });
 
   bool get hasAccess => user?.hasAccess ?? false;
+  bool get isFamily => user?.isFamily ?? false;
   bool get isAnonymous => user?.isAnonymous ?? false;
 
   AuthState copyWith({

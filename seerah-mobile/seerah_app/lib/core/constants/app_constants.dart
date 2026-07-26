@@ -1,6 +1,6 @@
 class AppConstants {
   // App version — keep in sync with pubspec.yaml version field
-  static const String appVersion = '1.0.37';
+  static const String appVersion = '1.0.38';
 
   // API
   static const String baseUrl = 'https://themuslimman.com';
