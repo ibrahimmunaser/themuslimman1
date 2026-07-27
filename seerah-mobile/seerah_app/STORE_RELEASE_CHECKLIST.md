@@ -183,7 +183,18 @@ Fill out the **Data Safety** section in Play Console:
 > Paid Apps Agreement is **Active**. Bank + W-9 tax forms are Active.
 > Legacy reverse-DNS IDs in verify route are unused fallback only — ASC does not use them.
 >
-> Remaining for 2.1(b): retest sandbox purchase after rebuilding with the 5.1.1 signup gate fix.
+> **Guideline 2.1(b) fix (1.0.39):** Apple Review rejected 1.0.26 because the
+> purchase flow errored after StoreKit checkout. Root cause: Flutter
+> `in_app_purchase_storekit` 0.4.x defaults to StoreKit 2, which sends a JWS
+> in `serverVerificationData`, while `/api/mobile-purchases/verify` only
+> called legacy `/verifyReceipt` (status 21002 on JWS). Fix:
+> 1) Backend accepts StoreKit 2 JWS (ES256 + x5c) and classic receipts
+> 2) Classic path also searches `receipt.in_app` for lifetime non-consumables
+> 3) iOS app calls `enableStoreKit1()` at startup as a belt-and-suspenders
+>    fallback for Review while both paths are live on the server
+> Redeploy Vercel **before** submitting the new binary so Review hits the
+> fixed verify endpoint.
+>
 > Remaining for 2.3.10: upload the cleaned iOS screenshots from
 > `app-store-assets/ios-iphone-screenshot-1.jpg` (and -2, -3) — Android status-bar
 > screenshots were deleted from the version page; new ones still need uploading.

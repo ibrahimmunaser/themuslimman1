@@ -38,17 +38,107 @@ const PRODUCT_META: Record<
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// iOS — App Store receipt verification
+// iOS — App Store receipt / StoreKit 2 JWS verification
 //
-// Uses the legacy /verifyReceipt endpoint (still supported as of 2026).
-// TODO: Migrate to the App Store Server API (https://developer.apple.com/documentation/appstoreserverapi)
-//       using signed JWS transactions from StoreKit 2. The new API provides
-//       per-transaction status, revocation events, and consumption history.
-//       Required keys: APPLE_KEY_ID, APPLE_ISSUER_ID, APPLE_PRIVATE_KEY (.p8).
-//       Migration guide: https://developer.apple.com/videos/play/wwdc2023/10143
+// Flutter in_app_purchase_storekit ≥0.4 defaults to StoreKit 2, which sends a
+// signed transaction JWS in serverVerificationData (not a classic app receipt).
+// Passing that JWS to legacy /verifyReceipt returns status 21002 and fails App
+// Review (Guideline 2.1(b)). Support both:
+//   1) StoreKit 2 JWS — verify ES256 signature via embedded x5c leaf cert
+//   2) Classic base64 receipt — /verifyReceipt (prod → sandbox 21007)
+// Classic path also searches receipt.in_app (lifetime non-consumables) in
+// addition to latest_receipt_info (subscriptions).
 // ─────────────────────────────────────────────────────────────────────────────
 
-async function verifyApple(
+const APPLE_BUNDLE_ID = "com.themuslimman.seerah";
+
+function looksLikeAppleJws(data: string): boolean {
+  if (!data.startsWith("eyJ")) return false;
+  const parts = data.split(".");
+  return parts.length === 3 && parts.every((p) => p.length > 0);
+}
+
+async function verifyAppleJws(
+  jws: string,
+  productId: string,
+): Promise<{
+  valid: boolean;
+  transactionId: string;
+  currentPeriodEnd: Date | null;
+  rawResponse: string;
+}> {
+  const { compactVerify, decodeProtectedHeader, importX509 } = await import("jose");
+
+  const header = decodeProtectedHeader(jws);
+  const x5c = header.x5c;
+  if (!Array.isArray(x5c) || !x5c[0] || typeof x5c[0] !== "string") {
+    return {
+      valid: false,
+      transactionId: "",
+      currentPeriodEnd: null,
+      rawResponse: JSON.stringify({ error: "JWS missing x5c certificate chain" }).slice(0, MAX_RAW_RESPONSE_BYTES),
+    };
+  }
+
+  // Rebuild PEM from the leaf certificate Apple embeds in the JWS header.
+  const leafPem =
+    "-----BEGIN CERTIFICATE-----\n" +
+    x5c[0].match(/.{1,64}/g)!.join("\n") +
+    "\n-----END CERTIFICATE-----";
+  const key = await importX509(leafPem, header.alg ?? "ES256");
+  const verified = await compactVerify(jws, key);
+  const claims = JSON.parse(new TextDecoder().decode(verified.payload)) as Record<
+    string,
+    unknown
+  >;
+  const raw = JSON.stringify(claims).slice(0, MAX_RAW_RESPONSE_BYTES);
+
+  if (claims.bundleId !== APPLE_BUNDLE_ID) {
+    return { valid: false, transactionId: "", currentPeriodEnd: null, rawResponse: raw };
+  }
+  if (claims.productId !== productId) {
+    return { valid: false, transactionId: "", currentPeriodEnd: null, rawResponse: raw };
+  }
+  if (claims.revocationDate != null) {
+    return {
+      valid: false,
+      transactionId: String(claims.originalTransactionId ?? claims.transactionId ?? ""),
+      currentPeriodEnd: null,
+      rawResponse: raw,
+    };
+  }
+
+  const expiresMs =
+    typeof claims.expiresDate === "number"
+      ? claims.expiresDate
+      : typeof claims.expiresDate === "string"
+        ? Number(claims.expiresDate)
+        : null;
+  if (expiresMs && expiresMs < Date.now()) {
+    return {
+      valid: false,
+      transactionId: String(claims.originalTransactionId ?? claims.transactionId ?? ""),
+      currentPeriodEnd: new Date(expiresMs),
+      rawResponse: raw,
+    };
+  }
+
+  const transactionId = String(
+    claims.originalTransactionId ?? claims.transactionId ?? "",
+  );
+  if (!transactionId) {
+    return { valid: false, transactionId: "", currentPeriodEnd: null, rawResponse: raw };
+  }
+
+  return {
+    valid: true,
+    transactionId,
+    currentPeriodEnd: expiresMs ? new Date(expiresMs) : null,
+    rawResponse: raw,
+  };
+}
+
+async function verifyAppleReceipt(
   receiptData: string,
   productId: string,
 ): Promise<{
@@ -94,9 +184,24 @@ async function verifyApple(
     return { valid: false, transactionId: "", currentPeriodEnd: null, rawResponse: raw };
   }
 
-  // Find the most recent transaction for the given product.
-  const latestReceipts = (data.latest_receipt_info as Record<string, string>[]) ?? [];
-  const matching = latestReceipts
+  // Subscriptions usually appear in latest_receipt_info; lifetime non-consumables
+  // often only appear under receipt.in_app. Search both.
+  const latestReceipts =
+    (data.latest_receipt_info as Record<string, string>[]) ?? [];
+  const inApp =
+    ((data.receipt as Record<string, unknown> | undefined)?.in_app as
+      | Record<string, string>[]
+      | undefined) ?? [];
+  const seen = new Set<string>();
+  const allTx: Record<string, string>[] = [];
+  for (const t of [...latestReceipts, ...inApp]) {
+    const id = t.transaction_id || `${t.product_id}:${t.purchase_date_ms}`;
+    if (seen.has(id)) continue;
+    seen.add(id);
+    allTx.push(t);
+  }
+
+  const matching = allTx
     .filter((t) => t.product_id === productId)
     .sort((a, b) => Number(b.purchase_date_ms) - Number(a.purchase_date_ms));
 
@@ -109,7 +214,12 @@ async function verifyApple(
   // B2 fix: reject cancelled / refunded transactions.
   // Apple sets cancellation_date_ms when a transaction is refunded or revoked.
   if (latest.cancellation_date_ms) {
-    return { valid: false, transactionId: latest.original_transaction_id ?? latest.transaction_id, currentPeriodEnd: null, rawResponse: raw };
+    return {
+      valid: false,
+      transactionId: latest.original_transaction_id ?? latest.transaction_id,
+      currentPeriodEnd: null,
+      rawResponse: raw,
+    };
   }
 
   const transactionId = latest.original_transaction_id ?? latest.transaction_id;
@@ -117,11 +227,31 @@ async function verifyApple(
 
   // Reject expired subscriptions. Lifetime products have no expires_date_ms.
   if (expiresMs && expiresMs < Date.now()) {
-    return { valid: false, transactionId, currentPeriodEnd: new Date(expiresMs), rawResponse: raw };
+    return {
+      valid: false,
+      transactionId,
+      currentPeriodEnd: new Date(expiresMs),
+      rawResponse: raw,
+    };
   }
 
   const currentPeriodEnd = expiresMs ? new Date(expiresMs) : null;
   return { valid: true, transactionId, currentPeriodEnd, rawResponse: raw };
+}
+
+async function verifyApple(
+  receiptData: string,
+  productId: string,
+): Promise<{
+  valid: boolean;
+  transactionId: string;
+  currentPeriodEnd: Date | null;
+  rawResponse: string;
+}> {
+  if (looksLikeAppleJws(receiptData)) {
+    return verifyAppleJws(receiptData, productId);
+  }
+  return verifyAppleReceipt(receiptData, productId);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

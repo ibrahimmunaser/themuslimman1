@@ -1,7 +1,11 @@
+import 'dart:io' show Platform;
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:in_app_purchase_storekit/in_app_purchase_storekit.dart';
 import 'core/network/api_client.dart';
 import 'core/providers/auth_provider.dart';
 import 'core/providers/iap_provider.dart';
@@ -12,6 +16,17 @@ Future<void> main() async {
   // Preserve the native splash until init is complete.
   final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+
+  // Prefer StoreKit 1 receipts while the backend still accepts classic
+  // verifyReceipt payloads. StoreKit 2 (plugin default) sends a JWS that
+  // our server also handles, but SK1 is the safer path for App Review.
+  if (!kIsWeb && Platform.isIOS) {
+    try {
+      await InAppPurchaseStoreKitPlatform.enableStoreKit1();
+    } catch (e) {
+      debugPrint('[IAP] enableStoreKit1 failed (continuing with StoreKit 2): $e');
+    }
+  }
 
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
