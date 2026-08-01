@@ -10,6 +10,11 @@ export interface SessionUser {
   timezone: string;
   studentProfileId: string | null;
   emailVerified: boolean;
+  // True for device-linked guest accounts created by
+  // POST /api/auth/mobile-anonymous (Apple Guideline 5.1.1(v)) — these have
+  // no real, reachable email address, so "verify your email" gates must not
+  // apply to them.
+  isAnonymous: boolean;
   // Loaded from the user row so downstream access checks can short-circuit
   // without an extra DB round-trip for lifetime buyers.
   hasPaid: boolean;

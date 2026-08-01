@@ -28,6 +28,8 @@ const CSP_DIRECTIVES = [
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
+  "frame-ancestors 'self'",
+  "upgrade-insecure-requests",
 ];
 
 const CSP_STRING = CSP_DIRECTIVES.join("; ");
@@ -105,6 +107,14 @@ describe("CSP — security lockdown directives", () => {
 
   it("form-action is 'self' (prevents form submission to third parties)", () => {
     expect(CSP_STRING).toContain("form-action 'self'");
+  });
+
+  it("frame-ancestors is 'self' (clickjacking defense alongside X-Frame-Options)", () => {
+    expect(CSP_STRING).toContain("frame-ancestors 'self'");
+  });
+
+  it("upgrade-insecure-requests is set", () => {
+    expect(CSP_STRING).toContain("upgrade-insecure-requests");
   });
 });
 

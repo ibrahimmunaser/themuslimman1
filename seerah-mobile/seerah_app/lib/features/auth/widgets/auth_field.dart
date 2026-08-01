@@ -50,6 +50,7 @@ class _AuthFieldState extends State<AuthField> {
                   color: AppColors.textMuted,
                   size: 20,
                 ),
+                tooltip: _hidden ? 'Show password' : 'Hide password',
                 onPressed: () => setState(() => _hidden = !_hidden),
               )
             : null,

@@ -69,9 +69,14 @@ export function TextViewer({
     const onScroll = () => {
       const rect = el.getBoundingClientRect();
       const windowH = window.innerHeight;
-      // How far the user has scrolled through the article
-      const scrolled = Math.max(0, windowH - rect.top);
       const total = el.offsetHeight;
+      // Require content taller than the viewport so a short article that fits
+      // entirely on screen cannot auto-fire "10% read" on mount.
+      if (total <= windowH) {
+        setReadProgress(0);
+        return;
+      }
+      const scrolled = Math.max(0, windowH - rect.top);
       const pct = Math.min(100, Math.round((scrolled / total) * 100));
       setReadProgress(pct);
     };

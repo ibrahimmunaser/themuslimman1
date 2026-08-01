@@ -1,13 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { r2StreamFile, r2GetMetadata, generateETag, isCached, generateSignedR2Url, IMAGE_URL_EXPIRY } from "@/lib/r2";
 import { requirePartAccess, extractPartNumberFromR2Key } from "@/lib/part-access";
+import { checkRateLimit, getIP } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// In production this route issues a 307 redirect to a short-lived signed R2 URL
-// so that all media bandwidth is charged to Cloudflare R2, not Vercel.
-// In local development (no R2 credentials) it falls through to the proxy path below.
+const ALLOWED_PREFIXES = [
+  "videos/",
+  "audio/",
+  "mindmaps/",
+  "Infographics-Bento-Grid/",
+  "Infographics-Concise/",
+  "Infographics-Standard/",
+  "slides-presented/",
+  "slides-detailed/",
+  "slides-facts/",
+] as const;
+
+const ALLOWED_EXTENSIONS = new Set([
+  ".mp4", ".mp3", ".wav", ".png", ".webp", ".jpg", ".jpeg", ".gif", ".pdf", ".txt", ".json",
+]);
 
 const MIME_TYPES: Record<string, string> = {
   ".mp4": "video/mp4",
@@ -28,7 +41,26 @@ function getMimeType(key: string): string {
   return MIME_TYPES[ext] || "application/octet-stream";
 }
 
+function validateKey(key: string, partNumber: number): boolean {
+  if (!key || typeof key !== "string") return false;
+  if (key.includes("..") || key.startsWith("/") || key.includes("\\")) return false;
+  if (!ALLOWED_PREFIXES.some((p) => key.startsWith(p))) return false;
+  const ext = key.substring(key.lastIndexOf(".")).toLowerCase();
+  if (!ALLOWED_EXTENSIONS.has(ext)) return false;
+  const keyPart = extractPartNumberFromR2Key(key);
+  return keyPart !== null && keyPart === partNumber;
+}
+
 export async function GET(req: NextRequest) {
+  const ip = getIP(req);
+  const rl = await checkRateLimit(`r2-asset:${ip}`, 120, 60 * 1000);
+  if (!rl.allowed) {
+    return new NextResponse("Too many requests", {
+      status: 429,
+      headers: { "Retry-After": String(rl.retryAfterSeconds) },
+    });
+  }
+
   const { searchParams } = req.nextUrl;
   const key = searchParams.get("key");
 
@@ -36,20 +68,19 @@ export async function GET(req: NextRequest) {
     return new NextResponse("Missing key parameter", { status: 400 });
   }
 
-  // Access control: extract part number from key and enforce paid-content rules.
-  // Key format examples: "videos/Part 50.mp4", "audio/Part 1.mp3", "mindmaps/Part 3 - Mindmap.png"
   const partNum = extractPartNumberFromR2Key(key);
 
-  if (partNum !== null) {
-    const deny = await requirePartAccess(partNum);
-    if (deny) return deny;
-  } else {
-    // Key does not match a known part — deny by default to avoid arbitrary R2 access.
+  if (partNum === null) {
     return new NextResponse("Forbidden", { status: 403 });
   }
 
-  // In production, redirect to a signed R2 URL so bandwidth is served directly
-  // by Cloudflare R2 and does not count against Vercel Fast Data Transfer.
+  if (!validateKey(key, partNum)) {
+    return new NextResponse("Forbidden", { status: 403 });
+  }
+
+  const deny = await requirePartAccess(partNum);
+  if (deny) return deny;
+
   if (process.env.NODE_ENV === "production") {
     try {
       const signedUrl = await generateSignedR2Url(key, IMAGE_URL_EXPIRY);

@@ -33,10 +33,11 @@ export function EmailVerificationBanner({ email }: EmailVerificationBannerProps)
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm text-text">
-                <span className="font-semibold">Verify your email to unlock all features.</span>{" "}
+                <span className="font-semibold">Confirm your email to secure your account.</span>{" "}
                 <span className="text-text-secondary hidden sm:inline">
                   We sent a link to{" "}
                   <span className="font-medium text-gold">{email}</span>
+                  . Your course access stays unlocked.
                 </span>
               </p>
             </div>

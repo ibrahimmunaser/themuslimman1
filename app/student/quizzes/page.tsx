@@ -17,7 +17,7 @@ export default async function QuizzesPage() {
 
   const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
   if (!hasAccess) redirect("/pricing");
-  if (!user.emailVerified) redirect("/seerah");
+  // Entitled unverified keep access (part-access / Apple 5.1.1(v) parity).
 
   const userPlan = "complete" as const;
 
@@ -37,6 +37,7 @@ export default async function QuizzesPage() {
       quizAttempts: true,
       quizCompleted: true,
       quizPassed: true,
+      quizScoreVerified: true,
       quizScore: true,
       quizBestScore: true,
       lastAccessedAt: true,
@@ -46,8 +47,8 @@ export default async function QuizzesPage() {
   const partTitleMap = Object.fromEntries(PARTS.map((p) => [p.partNumber, p.title]));
 
   const totalAttempted = quizProgress.length;
-  const passed = quizProgress.filter((q) => q.quizPassed).length;
-  const failed = quizProgress.filter((q) => !q.quizPassed && (q.quizAttempts ?? 0) > 0).length;
+  const passed = quizProgress.filter((q) => q.quizPassed && q.quizScoreVerified).length;
+  const failed = quizProgress.filter((q) => !(q.quizPassed && q.quizScoreVerified) && (q.quizAttempts ?? 0) > 0).length;
   const avgScore =
     quizProgress.length > 0
       ? Math.round(
@@ -111,7 +112,9 @@ export default async function QuizzesPage() {
                 <h2 className="text-base font-semibold text-text">Quiz History</h2>
               </div>
               <div className="divide-y divide-border">
-                {quizProgress.map((q) => (
+                {quizProgress.map((q) => {
+                  const verifiedPass = !!(q.quizPassed && q.quizScoreVerified);
+                  return (
                   <Link
                     key={q.partNumber}
                     href={`/seerah/part-${q.partNumber}?tab=quiz`}
@@ -121,12 +124,12 @@ export default async function QuizzesPage() {
                       {/* Pass/fail badge */}
                       <div
                         className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 font-bold text-sm ${
-                          q.quizPassed
+                          verifiedPass
                             ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
                             : "bg-red-500/10 text-red-400 border border-red-500/20"
                         }`}
                       >
-                        {q.quizPassed ? "✓" : "✗"}
+                        {verifiedPass ? "✓" : "✗"}
                       </div>
                       <div>
                         <p className="text-sm font-medium text-text">
@@ -144,7 +147,7 @@ export default async function QuizzesPage() {
                       {q.quizBestScore != null && (
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                            q.quizPassed
+                            verifiedPass
                               ? "bg-emerald-500/10 text-emerald-400"
                               : "bg-red-500/10 text-red-400"
                           }`}
@@ -154,17 +157,18 @@ export default async function QuizzesPage() {
                       )}
                       <span
                         className={`hidden sm:inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-medium ${
-                          q.quizPassed
+                          verifiedPass
                             ? "bg-emerald-500/10 text-emerald-400"
                             : "bg-amber-500/10 text-amber-400"
                         }`}
                       >
-                        {q.quizPassed ? "Passed" : "Retry"}
+                        {verifiedPass ? "Passed" : "Retry"}
                       </span>
                       <ChevronRight className="w-4 h-4 text-text-muted group-hover:text-text transition-colors" />
                     </div>
                   </Link>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}

@@ -39,7 +39,7 @@ import { resolveTrialPriceId } from "@/lib/trial-eligibility";
  */
 export async function POST(request: NextRequest) {
   const ip = getIP(request);
-  const rl = checkRateLimit(`create-trial-intent:${ip}`, 10, 10 * 60 * 1000);
+  const rl = await checkRateLimit(`create-trial-intent:${ip}`, 10, 10 * 60 * 1000);
   if (!rl.allowed) {
     return NextResponse.json(
       { error: "Too many requests. Please try again later." },

@@ -117,11 +117,15 @@ export default async function CheckoutPage({ searchParams }: Props) {
     prefillEmail!.toLowerCase() !== user.email.toLowerCase()
   );
 
-  // Skip pre-creation for family plan users — create-payment-intent will block them
-  // with isFamilyPlan=true anyway (individual lifetime is a downgrade from family).
-  // Pre-creating a PI for them wastes a Stripe API call and leaves an abandoned PI.
+  // Pre-create PI only when create-payment-intent would also allow it:
+  // no lifetime, no active mobile IAP, not a family-plan holder buying individual.
+  // Skipping these gates left abandoned Stripe PIs for users who already have access.
   if (user && !quizGuestOverride && initialAudience === "individual" && initialBilling === "lifetime" && user.planType !== "family") {
     try {
+      const access = await getUserAccessInfo(user.id, user.hasPaid);
+      if (access.hasLifetime || access.mobilePurchase) {
+        initialClientSecret = null;
+      } else {
       const finalAmount = initialBasePrice;
       initialFinalPrice = finalAmount;
 
@@ -143,6 +147,7 @@ export default async function CheckoutPage({ searchParams }: Props) {
         receipt_email: user.email,
       });
       initialClientSecret = paymentIntent.client_secret;
+      }
     } catch (e) {
       console.error("[CHECKOUT] Failed to pre-create payment intent:", e);
       initialClientSecret = null;

@@ -207,7 +207,7 @@ export function ProfilesClient({
               </div>
               <div>
                 <p className="text-xs text-zinc-500">{label}</p>
-                <p className="text-sm font-bold text-white">{value}<span className="text-zinc-600 font-normal text-xs"> / 100</span></p>
+                <p className="text-sm font-bold text-white">{value}<span className="text-zinc-600 font-normal text-xs"> / {s.totalParts}</span></p>
               </div>
             </div>
           ))}

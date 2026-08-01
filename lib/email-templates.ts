@@ -1,10 +1,14 @@
 // Email templates for support system
+import { escapeHtml } from "@/lib/html-escape";
 
 export function getStudentConfirmationEmail(data: {
   name: string;
   subject: string;
   message: string;
 }) {
+  const name = escapeHtml(data.name);
+  const subject = escapeHtml(data.subject);
+  const message = escapeHtml(data.message);
   return {
     subject: "We received your message — TheMuslimMan",
     html: `
@@ -33,15 +37,15 @@ export function getStudentConfirmationEmail(data: {
       <h1>Message Received ✓</h1>
     </div>
     <div class="content">
-      <p>As-salamu alaykum ${data.name},</p>
+      <p>As-salamu alaykum ${name},</p>
       
       <p>Thank you for reaching out to TheMuslimMan. We've received your message and will respond within 24-48 hours on business days.</p>
       
       <div class="ticket-box">
         <h3>Your Message:</h3>
-        <p><strong>Subject:</strong> ${data.subject}</p>
+        <p><strong>Subject:</strong> ${subject}</p>
         <p style="margin-top: 12px;"><strong>Message:</strong></p>
-        <p style="margin-top: 8px; white-space: pre-wrap;">${data.message}</p>
+        <p style="margin-top: 8px; white-space: pre-wrap;">${message}</p>
       </div>
       
       <p>In the meantime, you might find answers in our <a href="https://themuslimman.com/help" style="color: #D4A574; text-decoration: none;">Help Center</a>.</p>
@@ -85,6 +89,11 @@ export function getAdminNotificationEmail(data: {
   subject: string;
   message: string;
 }) {
+  const name = escapeHtml(data.name);
+  const email = escapeHtml(data.email);
+  const subject = escapeHtml(data.subject);
+  const message = escapeHtml(data.message);
+  const ticketId = escapeHtml(data.ticketId);
   return {
     subject: `New Support Ticket: ${data.subject}`,
     html: `
@@ -113,7 +122,7 @@ export function getAdminNotificationEmail(data: {
 <body>
   <div class="container">
     <div class="header">
-      <h1>🎫 New Support Ticket</h1>
+      <h1>New Support Ticket</h1>
     </div>
     <div class="content">
       <p><strong>A new support ticket has been submitted.</strong></p>
@@ -121,25 +130,25 @@ export function getAdminNotificationEmail(data: {
       <div class="info-box">
         <div class="row">
           <div class="label">Ticket ID</div>
-          <div class="value"><code>${data.ticketId}</code></div>
+          <div class="value"><code>${ticketId}</code></div>
         </div>
         <div class="row">
           <div class="label">From</div>
-          <div class="value">${data.name}</div>
+          <div class="value">${name}</div>
         </div>
         <div class="row">
           <div class="label">Email</div>
-          <div class="value"><a href="mailto:${data.email}" style="color: #D4A574; text-decoration: none;">${data.email}</a></div>
+          <div class="value"><a href="mailto:${email}" style="color: #D4A574; text-decoration: none;">${email}</a></div>
         </div>
         <div class="row">
           <div class="label">Subject</div>
-          <div class="value">${data.subject}</div>
+          <div class="value">${subject}</div>
         </div>
       </div>
       
       <div class="message-box">
         <p><strong>Message:</strong></p>
-        <p style="margin-top: 12px;">${data.message}</p>
+        <p style="margin-top: 12px;">${message}</p>
       </div>
       
       <div style="text-align: center;">
@@ -156,7 +165,7 @@ export function getAdminNotificationEmail(data: {
 </body>
 </html>
     `,
-    text: `🎫 New Support Ticket
+    text: `New Support Ticket
 
 Ticket ID: ${data.ticketId}
 From: ${data.name}

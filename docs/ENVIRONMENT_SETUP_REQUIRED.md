@@ -7,7 +7,7 @@
 #### 1. **Database Password** (CRITICAL - Signup won't work)
 Your `.env` file has:
 ```
-DATABASE_URL="postgresql://postgres.btbaumqtxjuxjctgvjlm:YOUR_PASSWORD@..."
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/postgres"
 ```
 
 **Action Required:**

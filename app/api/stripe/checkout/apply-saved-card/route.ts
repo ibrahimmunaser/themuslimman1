@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { stripe } from "@/lib/stripe";
 import { assertPaymentMethodOwnership, assertSubscriptionOwnership } from "@/lib/saved-cards";
+import { checkRateLimit, getIP } from "@/lib/rate-limit";
 
 /**
  * Called by checkout right before confirming a PaymentIntent with a saved card
@@ -27,6 +28,15 @@ import { assertPaymentMethodOwnership, assertSubscriptionOwnership } from "@/lib
  * /billing → CardManager's "Set as default").
  */
 export async function POST(request: NextRequest) {
+  const ip = getIP(request);
+  const rl = await checkRateLimit(`apply-saved-card:${ip}`, 20, 10 * 60 * 1000);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Too many attempts. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSeconds) } }
+    );
+  }
+
   try {
     const user = await getCurrentUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

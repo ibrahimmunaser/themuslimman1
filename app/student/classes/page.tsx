@@ -16,7 +16,7 @@ export default async function StudentClassesPage() {
 
   const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
   if (!hasAccess) redirect("/pricing");
-  if (!user.emailVerified) redirect("/seerah");
+  // Entitled unverified keep access (part-access / Apple 5.1.1(v) parity).
 
   const { enrollments } = await getStudentDashboardData(user.studentProfileId);
 

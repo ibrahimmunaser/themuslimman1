@@ -311,11 +311,11 @@ export function VideoResourceContent({
                 return (
                   <div
                     key={part.id}
-                    onClick={isLocked ? undefined : () => handleOpenVideo(part)}
+                    onClick={isLocked ? () => { window.location.assign("/pricing"); } : () => handleOpenVideo(part)}
                     onMouseEnter={isLocked ? undefined : () => handlePrefetch(part.partNumber)}
                     className={`group rounded-xl border border-zinc-800 bg-zinc-900/50 transition-all overflow-hidden ${
                       isLocked
-                        ? "cursor-not-allowed opacity-60"
+                        ? "cursor-pointer opacity-60 hover:opacity-80"
                         : "cursor-pointer hover:bg-zinc-900 hover:border-amber-500/25"
                     }`}
                   >

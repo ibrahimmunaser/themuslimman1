@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/signup_screen.dart';
-import '../../features/auth/screens/verify_email_screen.dart';
 import '../../features/shell/app_shell.dart';
 import '../../features/home/screens/landing_screen.dart';
 import '../../features/home/screens/welcome_screen.dart';
@@ -20,6 +19,7 @@ import '../../features/profile/screens/profile_screen.dart';
 import '../../features/quiz/screens/quiz_history_screen.dart';
 import '../../features/certificate/screens/certificate_screen.dart';
 import '../../features/profiles/screens/profiles_screen.dart';
+import '../data/parts_data.dart';
 
 /// Listens to auth state changes and notifies GoRouter to re-evaluate redirects.
 class _RouterNotifier extends ChangeNotifier {
@@ -45,7 +45,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isAnonymous = authState.isAnonymous;
       final loc = state.uri.path;
 
-      final authRoutes = ['/login', '/signup', '/verify-email'];
+      final authRoutes = ['/login', '/signup'];
       final isOnAuth = authRoutes.contains(loc);
 
       // /signup upgrades an anonymous guest to a real email/password account
@@ -112,10 +112,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/signup',
         builder: (ctx, state) => const SignupScreen(),
       ),
-      GoRoute(
-        path: '/verify-email',
-        builder: (ctx, state) => const VerifyEmailScreen(),
-      ),
 
       // ── Shell with bottom nav ──────────────────────────────────────────────
       ShellRoute(
@@ -168,9 +164,18 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/part/:partNumber',
         builder: (ctx, state) {
-          final n = int.tryParse(state.pathParameters['partNumber'] ?? '') ?? 1;
+          final raw = state.pathParameters['partNumber'];
+          final parsed = int.tryParse(raw ?? '');
+          // A malformed/out-of-range deep link (e.g. "/part/abc", "/part/-5",
+          // "/part/9999") used to silently clamp to Part 1 or the last part
+          // with no indication anything was wrong. Show the same "not found"
+          // UI as an unmatched route instead, so a broken/typo'd link is
+          // visibly broken rather than quietly landing somewhere unintended.
+          if (parsed == null || parsed < 1 || parsed > PARTS.length) {
+            return const _NotFoundScreen();
+          }
           final tab = state.uri.queryParameters['tab'];
-          return PartScreen(partNumber: n.clamp(1, 100), initialTab: tab);
+          return PartScreen(partNumber: parsed, initialTab: tab);
         },
       ),
       GoRoute(
@@ -181,23 +186,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
     ],
-    errorBuilder: (ctx, state) => Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.grey),
-            const SizedBox(height: 16),
-            Text('Page not found', style: Theme.of(ctx).textTheme.titleLarge),
-            const SizedBox(height: 8),
-            TextButton(
-              onPressed: () => ctx.go('/dashboard'),
-              child: const Text('Go Home'),
-            ),
-          ],
-        ),
-      ),
-    ),
+    errorBuilder: (ctx, state) => const _NotFoundScreen(),
   );
 });
 
@@ -208,6 +197,34 @@ class _SplashScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Scaffold(
       body: Center(child: CircularProgressIndicator()),
+    );
+  }
+}
+
+/// Shown for both unmatched routes (GoRouter's errorBuilder) and
+/// well-formed-but-invalid path parameters (e.g. an out-of-range part
+/// number), so both cases give the user the same clear, actionable signal.
+class _NotFoundScreen extends StatelessWidget {
+  const _NotFoundScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 48, color: Colors.grey),
+            const SizedBox(height: 16),
+            Text('Page not found', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: () => context.go('/dashboard'),
+              child: const Text('Go Home'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

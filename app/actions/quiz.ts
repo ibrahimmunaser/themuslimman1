@@ -2,6 +2,7 @@
 
 import { getPartPageData } from "@/lib/part-content-cache";
 import { requirePartAccess } from "@/lib/part-access";
+import { normalizeQuizAnswer } from "@/lib/progress";
 import type { Quiz } from "@/lib/types";
 
 export interface QuizAnswerResult {
@@ -10,70 +11,41 @@ export interface QuizAnswerResult {
   explanation: string;
 }
 
-/** Per-question answer data pre-fetched at quiz start. */
-export type QuizAnswerMap = Record<string, { correctAnswer: string; explanation: string }>;
-
-/** Wrapper that lets TypeScript distinguish success from error without index-signature conflicts. */
-export type QuizAnswerMapResult =
-  | { ok: true; map: QuizAnswerMap }
-  | { ok: false; error: string };
-
 /**
- * Pre-fetch the full answer map for a quiz in a SINGLE server round-trip.
+ * Single-question answer check. Prefer this so the client never receives
+ * the full answer key in one response.
  *
- * Called ONCE when the user opens the quiz tab (not on every click).
- * The client stores the map and resolves answers instantly — no per-question
- * server call needed, so feedback is immediate.
- *
- * Answers are not included in the RSC page payload (stripped in stripQuizAnswers),
- * so they are only accessible after this explicit access-gated fetch.
+ * INTENTIONAL (accepted): Mobile still uses correctIndex from GET
+ * /api/quiz/[partId] for inline UX. That leaks which option is correct in the
+ * payload, but options are already visible on screen; web uses this action.
+ * Server-side submitQuizAnswers remains authoritative for scores/progress.
  *
  * @param previewMode - When true and partNumber is 1, skip access check (free preview)
- */
-export async function getQuizAnswerMap(
-  partNumber: number,
-  previewMode = false,
-): Promise<QuizAnswerMapResult> {
-  // Skip access check for Part 1 in preview mode (landing page free preview)
-  const skipAccessCheck = previewMode && partNumber === 1;
-  
-  if (!skipAccessCheck) {
-    const deny = await requirePartAccess(partNumber);
-    if (deny) return { ok: false, error: "Access denied" };
-  }
-
-  // Use the shared in-memory part cache — no extra file/R2 read on repeat calls.
-  const partData = await getPartPageData(partNumber);
-  const quizData = partData.quizData as Quiz | null | undefined;
-  if (!quizData) return { ok: false, error: "Quiz not found" };
-
-  const map: QuizAnswerMap = {};
-  for (const q of quizData.questions) {
-    map[q.id] = { correctAnswer: q.correct_answer, explanation: q.explanation };
-  }
-  return { ok: true, map };
-}
-
-/**
- * Single-question answer check kept for backward-compatibility.
- * New code should prefer getQuizAnswerMap + client-side lookup.
- *
- * @deprecated Use getQuizAnswerMap instead.
  */
 export async function checkQuizAnswer(
   partNumber: number,
   questionId: string,
   selectedAnswer: string,
+  previewMode = false,
 ): Promise<QuizAnswerResult | { error: string }> {
-  const result = await getQuizAnswerMap(partNumber);
-  if (!result.ok) return { error: result.error };
+  const skipAccessCheck = previewMode && partNumber === 1;
 
-  const entry = result.map[questionId];
-  if (!entry) return { error: "Question not found" };
+  if (!skipAccessCheck) {
+    const deny = await requirePartAccess(partNumber);
+    if (deny) return { error: "Access denied" };
+  }
+
+  const partData = await getPartPageData(partNumber);
+  const quizData = partData.quizData as Quiz | null | undefined;
+  if (!quizData) return { error: "Quiz not found" };
+
+  const question = quizData.questions.find((q) => q.id === questionId);
+  if (!question) return { error: "Question not found" };
 
   return {
-    correct: selectedAnswer === entry.correctAnswer,
-    correctAnswer: entry.correctAnswer,
-    explanation: entry.explanation,
+    correct:
+      normalizeQuizAnswer(selectedAnswer) === normalizeQuizAnswer(question.correct_answer),
+    correctAnswer: question.correct_answer,
+    explanation: question.explanation,
   };
 }

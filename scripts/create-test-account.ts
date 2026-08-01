@@ -46,7 +46,7 @@ async function createTestAccount() {
     }
 
     // Hash password
-    const passwordHash = await bcrypt.hash('Fatass222?', 12);
+    const passwordHash = await bcrypt.hash(process.env.TEST_ACCOUNT_PASSWORD ?? "ChangeMe-TestOnly-123!", 12);
 
     // Create user and student profile
     const user = await prisma.user.create({
@@ -83,7 +83,7 @@ async function createTestAccount() {
 
     console.log('\n✅ Test account created successfully!\n');
     console.log('Username: imunaser1');
-    console.log('Password: Fatass222?');
+    console.log('Password: (from TEST_ACCOUNT_PASSWORD or default test placeholder)');
     console.log('Email:', user.email);
     console.log('Plan:', user.purchases[0].planName);
     console.log('Has Paid:', user.hasPaid);

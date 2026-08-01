@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/system_insets.dart';
 
 class AppShell extends StatelessWidget {
   final Widget child;
@@ -16,7 +17,10 @@ class AppShell extends StatelessWidget {
     if (loc.startsWith('/resources')) return 2;
     if (loc.startsWith('/reference')) return 3;
     if (loc.startsWith('/progress'))  return 4;
-    if (loc.startsWith('/pricing'))   return 1;
+    // Pricing isn't one of the 5 primary tabs — it used to fall under
+    // "Lessons" (index 1), which wrongly implied the user was viewing course
+    // content while actually looking at a paywall/upsell screen. Fall
+    // through to the neutral Home tab instead of a misleading selection.
     return 0;
   }
 
@@ -25,6 +29,13 @@ class AppShell extends StatelessWidget {
     final idx = _currentIndex(context);
     final width = MediaQuery.sizeOf(context).width;
     final compact = width < 380;
+    // Labels are hidden in compact mode, so only the fixed-size icon governs
+    // height there. When labels are shown, grow the bar with Dynamic Type so
+    // scaled label text (up to the app's 1.3x ceiling) doesn't get clipped.
+    final textScale = MediaQuery.textScalerOf(context).scale(1.0);
+    final navHeight = compact
+        ? 60.0
+        : 64.0 + (textScale - 1.0).clamp(0.0, 0.3) * 20;
 
     return Scaffold(
       body: child,
@@ -37,11 +48,18 @@ class AppShell extends StatelessWidget {
                 color: AppColors.surface.withValues(alpha: 0.88),
                 border: const Border(top: BorderSide(color: AppColors.border, width: 0.5)),
               ),
-              child: SafeArea(
-                top: false,
+              // Audit H10 fix: SafeArea here relies on MediaQuery.padding,
+              // which bottomSystemInset's own doc comment notes some Android
+              // devices report as 0 even while the 3-button nav bar still
+              // overlaps content — those devices rendered this bar's icons
+              // partially hidden behind the system nav bar. Use the same
+              // helper every other bottom-inset spot in this app uses so
+              // behavior is consistent across all of them.
+              child: Padding(
+                padding: EdgeInsets.only(bottom: bottomSystemInset(context)),
                 child: NavigationBarTheme(
                   data: NavigationBarThemeData(
-                    height: compact ? 60 : 64,
+                    height: navHeight,
                     backgroundColor: Colors.transparent,
                     indicatorColor: AppColors.gold.withValues(alpha: 0.14),
                     indicatorShape: RoundedRectangleBorder(

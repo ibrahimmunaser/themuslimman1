@@ -13,7 +13,7 @@ export async function PATCH(req: NextRequest) {
   try {
     // Rate-limit per IP: 20 writes per 10 minutes is more than enough for real use.
     const ip = getIP(req);
-    const rl = checkRateLimit(`checkup_activity:${ip}`, 20, 10 * 60_000);
+    const rl = await checkRateLimit(`checkup_activity:${ip}`, 20, 10 * 60_000);
     if (!rl.allowed) {
       return NextResponse.json(
         { error: "rate_limited" },

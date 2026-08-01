@@ -21,35 +21,73 @@ class _QuizTabState extends ConsumerState<QuizTab> {
   int _score = 0;
   bool _done = false;
   List<int?> _answers = [];
+  // questionId -> chosen option TEXT (not index) — sent to the server so it
+  // can independently recompute the score from the authoritative
+  // correct_answer values instead of trusting a client-supplied percentage,
+  // which would otherwise be trivially forgeable via a raw HTTP POST.
+  final Map<String, String> _answerTexts = {};
+  // Re-entrancy guard for _submit/_next: without it, two taps landing in
+  // the same synchronous event (fast double-tap, a stuck screen-protector,
+  // an assistive-technology repeat) could both fire before setState's
+  // rebuild flips _submitted/_currentQ, double-incrementing _score /
+  // double-pushing into _answers (pushing the percentage past 100%) or
+  // double-firing the final-question branch (double-recording the quiz
+  // score server-side).
+  bool _busy = false;
 
   void _select(int i) {
     if (!_submitted) setState(() => _selected = i);
   }
 
   void _submit(List<QuizQuestion> questions) {
-    if (_selected == null) return;
+    if (_selected == null || _submitted || _busy) return;
+    _busy = true;
+    final q = questions[_currentQ];
     setState(() {
       _submitted = true;
       _answers.add(_selected);
-      if (_selected == questions[_currentQ].correctIndex) _score++;
+      if (_selected! >= 0 && _selected! < q.options.length) {
+        _answerTexts[q.id] = q.options[_selected!];
+      }
+      if (_selected == q.correctIndex) _score++;
+    });
+    // setState() mutates synchronously and returns immediately — clearing
+    // _busy here (in the same call stack) would NOT actually block a second
+    // tap event dispatched in the same frame (e.g. a duplicate/ghost touch),
+    // since _submitted/_busy would already both read as "safe to resubmit"
+    // before Flutter has even rebuilt. Deferring the reset to the next frame
+    // makes the guard actually block same-frame re-entrancy.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _busy = false;
     });
   }
 
   void _next(List<QuizQuestion> questions) {
+    if (_busy) return;
+    _busy = true;
     if (_currentQ < questions.length - 1) {
       setState(() { _currentQ++; _selected = null; _submitted = false; });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _busy = false;
+      });
     } else {
-      // Save score before showing results screen.
+      // Save score before showing results screen. The percentage here is
+      // only used for the immediate local UI/optimistic cache — the server
+      // independently recomputes the authoritative score from _answerTexts.
       final pct = questions.isEmpty
           ? 0
           : (_score / questions.length * 100).round();
-      ref.read(progressProvider.notifier)
-          .recordQuizScore(widget.partNumber, pct);
-      setState(() => _done = true);
+      ref.read(progressProvider.notifier).recordQuizScore(
+            widget.partNumber,
+            pct,
+            answers: Map.of(_answerTexts),
+          );
+      setState(() { _done = true; _busy = false; });
     }
   }
 
   void _restart() {
+    if (_busy) return;
     setState(() {
       _currentQ = 0;
       _selected = null;
@@ -57,6 +95,7 @@ class _QuizTabState extends ConsumerState<QuizTab> {
       _score = 0;
       _done = false;
       _answers = [];
+      _answerTexts.clear();
     });
   }
 
@@ -268,6 +307,15 @@ class _QuizTabState extends ConsumerState<QuizTab> {
 
             // Submit / Next
             Padding(
+              // Audit M4 fix: this used to ALSO add bottomSystemInset(context)
+              // on top of a 16 floor — but QuizTab's only host,
+              // _AssetViewerScreen (part_screen.dart), already wraps its
+              // child in `Padding(bottom: bottomSystemInset(context))`, so
+              // the system nav bar/gesture inset was being applied twice,
+              // pushing this button up by roughly double the real inset on
+              // Android. Plain 16 here is purely visual breathing room below
+              // the button — the actual system-bar clearance is the outer
+              // AssetViewerScreen's job.
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
               child: SizedBox(
                 width: double.infinity,
@@ -316,10 +364,13 @@ class _ResultsScreen extends StatelessWidget {
                 ),
               ),
               child: Center(
-                child: Text('$pct%', style: TextStyle(
-                  color: passed ? AppColors.success : AppColors.error,
-                  fontSize: 28, fontWeight: FontWeight.w800,
-                )),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text('$pct%', style: TextStyle(
+                    color: passed ? AppColors.success : AppColors.error,
+                    fontSize: 28, fontWeight: FontWeight.w800,
+                  )),
+                ),
               ),
             ).animate().scale(duration: 400.ms, curve: Curves.elasticOut),
 

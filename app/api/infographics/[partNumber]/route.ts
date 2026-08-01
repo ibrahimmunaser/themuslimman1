@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { r2GetInfographicKey, generateSignedR2Url, IMAGE_URL_EXPIRY } from "@/lib/r2";
 import { requirePartAccess } from "@/lib/part-access";
+import { TOTAL_COURSE_PARTS } from "@/lib/access";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +11,7 @@ export async function GET(
 ) {
   const { partNumber: partNumberStr } = await params;
   const partNumber = parseInt(partNumberStr, 10);
-  if (isNaN(partNumber) || partNumber < 1 || partNumber > 100) {
+  if (isNaN(partNumber) || partNumber < 1 || partNumber > TOTAL_COURSE_PARTS) {
     return NextResponse.json({ error: "Invalid partNumber" }, { status: 400 });
   }
 

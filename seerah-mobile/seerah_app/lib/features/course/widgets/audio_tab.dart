@@ -1,20 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:video_player/video_player.dart';
+import '../../../core/providers/part_provider.dart';
+import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
 
 /// Full audio player for a part — uses VideoPlayerController in audio mode.
-class AudioTab extends StatefulWidget {
+class AudioTab extends ConsumerStatefulWidget {
   final String audioUrl;
+  final int partNumber;
   final String? partTitle;
-  const AudioTab({super.key, required this.audioUrl, this.partTitle});
+  const AudioTab({super.key, required this.audioUrl, required this.partNumber, this.partTitle});
 
   @override
-  State<AudioTab> createState() => _AudioTabState();
+  ConsumerState<AudioTab> createState() => _AudioTabState();
 }
 
 const _kSpeeds = [0.75, 1.0, 1.25, 1.5, 2.0];
 
-class _AudioTabState extends State<AudioTab> {
+class _AudioTabState extends ConsumerState<AudioTab> with WidgetsBindingObserver {
   VideoPlayerController? _ctrl;
   bool _loading = true;
   String? _error;
@@ -22,21 +26,94 @@ class _AudioTabState extends State<AudioTab> {
   // Throttle rebuilds: only setState when the displayed second or play state changes.
   int _lastPosSec = -1;
   bool _lastPlaying = false;
+  // Bumped by _disposeController() and captured at the start of every
+  // _init() call — lets a stale in-flight _init() (superseded by a rapid
+  // double-tap on Retry, or a new URL via didUpdateWidget) recognize it's
+  // been superseded and bail out instead of cross-wiring its listener onto
+  // a different controller or resurrecting state after dispose. See _init().
+  int _initGen = 0;
+  // Signed asset URLs expire (short TTL) — mutable so a Retry after
+  // expiry/failure can swap in a freshly-fetched one instead of being
+  // permanently pinned to whatever URL this widget was first built with.
+  // See _retryWithFreshUrl().
+  late String _currentUrl = widget.audioUrl;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _init();
   }
 
+  // Neither platform gives this player a MediaSession/lock-screen "Now
+  // Playing" surface or a foreground-service notification, so there is no
+  // user-facing way to control or even know audio is still running once the
+  // app is backgrounded — pausing here keeps behavior predictable instead of
+  // silently draining battery/data with no controls, matching video_tab.dart.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.inactive || state == AppLifecycleState.paused) {
+      _ctrl?.pause();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant AudioTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // No reachable UI path reuses this widget with a new URL today (every
+    // "open a tab" action pushes a brand-new route/State), but guard against
+    // it anyway so a future in-place "next part" affordance can't leave two
+    // audio controllers playing on top of each other.
+    if (oldWidget.audioUrl != widget.audioUrl) {
+      _currentUrl = widget.audioUrl;
+      _disposeController();
+      setState(() { _loading = true; _error = null; });
+      _init();
+    }
+  }
+
+  void _disposeController() {
+    _initGen++; // invalidate any _init() call still in flight
+    _ctrl?.removeListener(_onControllerTick);
+    _ctrl?.dispose();
+    _ctrl = null;
+    _lastPosSec = -1;
+    _lastPlaying = false;
+  }
+
   Future<void> _init() async {
+    final gen = ++_initGen;
+    // Built up locally and only ever assigned to the shared _ctrl field once
+    // we know this call is still current (see the gen check below) — this
+    // is what stops a rapid double-tap on Retry from cross-wiring one
+    // attempt's listener onto a completely different attempt's controller.
+    VideoPlayerController? ctrl;
     try {
-      _ctrl = VideoPlayerController.networkUrl(Uri.parse(widget.audioUrl));
-      await _ctrl!.initialize();
+      ctrl = VideoPlayerController.networkUrl(Uri.parse(_currentUrl));
+      await ctrl.initialize();
+      if (!mounted || gen != _initGen) {
+        // Superseded by a newer _init() (Retry double-tap / new URL) or the
+        // widget was disposed while we were awaiting — discard our own
+        // work without touching any shared field.
+        await ctrl.dispose();
+        return;
+      }
+      _ctrl = ctrl;
       _ctrl!.addListener(_onControllerTick);
-      if (mounted) setState(() => _loading = false);
+      ref.read(progressProvider.notifier).trackAssetOpened(widget.partNumber, 'audio');
+      setState(() => _loading = false);
     } catch (_) {
-      if (mounted) setState(() { _loading = false; _error = 'Could not load audio.'; });
+      if (!mounted || gen != _initGen) {
+        // Stale attempt failed after being superseded — clean up only what
+        // WE created locally; the shared fields belong to a newer call now.
+        try { await ctrl?.dispose(); } catch (_) {}
+        return;
+      }
+      // initialize() can throw after partially constructing the platform
+      // player — without disposing here, that controller is orphaned since
+      // nothing else references it once this function returns.
+      _disposeController();
+      setState(() { _loading = false; _error = 'Could not load audio.'; });
     }
   }
 
@@ -44,18 +121,65 @@ class _AudioTabState extends State<AudioTab> {
     if (!mounted) return;
     final value = _ctrl?.value;
     if (value == null) return;
+    // Previously nothing checked value.hasError after the initial
+    // initialize() succeeded — a post-init failure (dropped connection, CDN
+    // blip, expired signed URL) left the player frozen with stale
+    // position/duration and fully unresponsive play/pause/seek controls,
+    // with zero feedback to the user. Route into the same _error/Retry UI
+    // used for init failures, mirroring the fix applied to video_tab.dart.
+    if (value.hasError) {
+      Future.microtask(() {
+        if (!mounted) return;
+        _disposeController();
+        setState(() {
+          _loading = false;
+          _error = 'Audio playback error. Please check your connection and try again.';
+        });
+      });
+      return;
+    }
     final posSec = value.position.inSeconds;
     if (posSec != _lastPosSec || value.isPlaying != _lastPlaying) {
       _lastPosSec = posSec;
       _lastPlaying = value.isPlaying;
       setState(() {});
     }
+    // Do NOT write videoWatchPercent from audio — web's AudioPlayer only
+    // tracks asset_opened("audio"). Listening must not mark video complete.
+  }
+
+  // Audit H7 fix: mirrors video_tab.dart's _retryWithFreshUrl — the old
+  // Retry handler re-ran _init() against the exact same (possibly-expired)
+  // signed URL, guaranteed to fail identically if the URL itself was the
+  // problem (a 403 on a signed R2 URL past its short TTL).
+  Future<void> _retryWithFreshUrl() async {
+    _disposeController();
+    setState(() { _loading = true; _error = null; });
+    try {
+      ref.invalidate(partAssetsProvider(widget.partNumber));
+      final assets = await ref.read(partAssetsProvider(widget.partNumber).future);
+      final freshUrl = assets.audioUrl;
+      if (!mounted) return;
+      if (freshUrl == null || freshUrl.isEmpty) {
+        setState(() {
+          _loading = false;
+          _error = 'Audio not available for this part yet.';
+        });
+        return;
+      }
+      _currentUrl = freshUrl;
+    } catch (_) {
+      // Couldn't refresh (offline/API error) — fall back to retrying the
+      // URL we already have rather than leaving Retry with nothing to do.
+    }
+    if (!mounted) return;
+    _init();
   }
 
   @override
   void dispose() {
-    _ctrl?.removeListener(_onControllerTick);
-    _ctrl?.dispose();
+    WidgetsBinding.instance.removeObserver(this);
+    _disposeController();
     super.dispose();
   }
 
@@ -93,7 +217,7 @@ class _AudioTabState extends State<AudioTab> {
                 textAlign: TextAlign.center),
               const SizedBox(height: 24),
               OutlinedButton.icon(
-                onPressed: () { setState(() { _loading = true; _error = null; }); _init(); },
+                onPressed: _retryWithFreshUrl,
                 icon: const Icon(Icons.refresh, size: 18),
                 label: const Text('Retry'),
               ),
@@ -193,6 +317,7 @@ class _AudioTabState extends State<AudioTab> {
                 IconButton(
                   onPressed: () => ctrl.seekTo(pos - const Duration(seconds: 15)),
                   icon: const Icon(Icons.replay_rounded, size: 32, color: AppColors.textSecondary),
+                  tooltip: 'Rewind 15 seconds',
                 ),
                 const SizedBox(width: 16),
                 // Play/Pause
@@ -213,13 +338,17 @@ class _AudioTabState extends State<AudioTab> {
                     child: InkWell(
                       onTap: () => isPlaying ? ctrl.pause() : ctrl.play(),
                       customBorder: const CircleBorder(),
-                      child: SizedBox(
-                        width: 64,
-                        height: 64,
-                        child: Icon(
-                          isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                          color: Colors.black,
-                          size: 36,
+                      child: Semantics(
+                        button: true,
+                        label: isPlaying ? 'Pause' : 'Play',
+                        child: SizedBox(
+                          width: 64,
+                          height: 64,
+                          child: Icon(
+                            isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                            color: Colors.black,
+                            size: 36,
+                          ),
                         ),
                       ),
                     ),
@@ -230,6 +359,7 @@ class _AudioTabState extends State<AudioTab> {
                 IconButton(
                   onPressed: () => ctrl.seekTo(pos + const Duration(seconds: 15)),
                   icon: const Icon(Icons.fast_forward_rounded, size: 32, color: AppColors.textSecondary),
+                  tooltip: 'Forward 15 seconds',
                 ),
               ],
             ),

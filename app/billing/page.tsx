@@ -44,10 +44,13 @@ function formatAmount(cents: number, currency: string) {
 export default async function BillingPage({ searchParams }: { searchParams: SearchParams }) {
   const user = await requireStudent();
   if (!user.studentProfileId) redirect("/");
-  if (!user.emailVerified) redirect("/seerah");
 
   const params = await searchParams;
   const upgradedPlan = typeof params.upgraded === "string" ? params.upgraded : null;
+  // Mobile in-app WebView opens /billing?app=1 — hide Stripe upgrade CTAs so
+  // Guideline 3.1.1 / Play billing rules aren't violated by in-WebView checkout
+  // (CSS also hides /checkout links as defense in depth).
+  const fromMobileApp = params.app === "1" || params.app === "true";
 
   // Parallelize access info + purchase history — saves one sequential round-trip.
   const [accessInfo, purchases] = await Promise.all([
@@ -57,7 +60,35 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
       orderBy: { createdAt: "desc" },
     }),
   ]);
-  if (!accessInfo.hasAccess) redirect("/pricing");
+  // Course access is NOT required here. After a failed renewal, past_due users
+  // keep course access only for the ~7-day grace window — then hasAccess flips
+  // false while Stripe is still retrying / waiting for a new card. Redirecting
+  // them to /pricing would lock them out of the only page that can fix payment
+  // (and checkout itself refuses a second sub while status is still past_due).
+  // unpaid is the same recovery case after Stripe finalizes the dunning cycle.
+  const needsBillingRecovery =
+    accessInfo.subscription?.status === "past_due" ||
+    accessInfo.subscription?.status === "unpaid";
+  if (!accessInfo.hasAccess && !needsBillingRecovery) redirect("/pricing");
+
+  // Mobile IAP users manage billing in the App Store / Play Store — never show
+  // Stripe portal/upgrade CTAs that contradict store billing rules.
+  const isStorePurchase =
+    accessInfo.purchasePlatform === "apple" || accessInfo.purchasePlatform === "google";
+  const hideStripeBilling = fromMobileApp || isStorePurchase;
+
+  // Audit M2 fix: this emailVerified redirect used to run unconditionally,
+  // BEFORE needsBillingRecovery was even computed — so a guest-checkout
+  // subscriber (app/api/auth/guest-checkout sets emailVerified: false; they
+  // set a password later via the emailed link but never necessarily click
+  // "verify") whose card failed got bounced straight to /seerah instead of
+  // reaching the one page that can fix their payment method, right when
+  // hasAccess is already false too — a dead-end loop with literally no path
+  // back to a working card. Exempt the same past_due/unpaid recovery cohort
+  // hasAccess already is above.
+  // Paid / entitled users may reach billing without emailVerified (Stripe guest
+  // checkout, IAP upgrade). Only bounce unpaid unverified users away.
+  if (!user.emailVerified && !needsBillingRecovery && !accessInfo.hasAccess) redirect("/seerah");
 
   // ── Individual → Family upgrade pricing ──────────────────────────────────────
   // Standard upgrade cost: $30 (full $79 family − full $49 individual). Promo
@@ -77,12 +108,22 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
   const userPlan = "complete" as const;
 
   const isFamily          = user.planType === "family";
-  const isMonthly         = !accessInfo.hasLifetime && accessInfo.hasActiveSubscription;
+  // Treat past_due/unpaid monthly subs as monthly even after grace expires —
+  // hasActiveSubscription is false once grace ends (course access revoked),
+  // but the Stripe subscription row is still there and the billing page must
+  // keep showing the monthly plan + payment-failure recovery UI, not fall
+  // through to the lifetime card.
+  const hasOpenMonthlySub =
+    accessInfo.subscription?.status === "past_due" ||
+    accessInfo.subscription?.status === "unpaid" ||
+    accessInfo.subscription?.status === "active" ||
+    accessInfo.subscription?.status === "trialing";
+  const isMonthly         = !accessInfo.hasLifetime && (accessInfo.hasActiveSubscription || hasOpenMonthlySub);
   const isTrial           = isMonthly && accessInfo.subscription?.status === "trialing";
   const isFamilyLifetime  = isFamily && !isMonthly;
   const isFamilyMonthly   = isFamily && isMonthly;
   const sub               = accessInfo.subscription;
-  const isPastDue         = sub?.status === "past_due";
+  const isPastDue         = sub?.status === "past_due" || sub?.status === "unpaid";
 
   return (
     <StudentLayout userPlan={userPlan} userName={user.fullName} planType={user.planType}>
@@ -103,7 +144,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
             <div>
               <p className="font-semibold text-emerald-400">Upgraded to Family Monthly</p>
               <p className="text-sm text-text-secondary mt-1 leading-relaxed">
-                Your plan has been upgraded to Family Monthly — $9.99/mo. Your existing card will be charged at the next billing date with Stripe handling any proration automatically.
+                Your plan has been upgraded to Family Monthly — ${(PLANS.familyMonthly.price / 100).toFixed(2)}/mo. Your existing card will be charged at the next billing date with Stripe handling any proration automatically.
               </p>
             </div>
           </div>
@@ -118,11 +159,14 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-red-400">Payment failed — please update your card</p>
               <p className="text-sm text-text-secondary mt-1 leading-relaxed">
-                Your last monthly payment didn&apos;t go through. We&apos;re retrying automatically — you still have access.
-                To avoid losing access, please update your payment method before retries are exhausted.
+                {accessInfo.hasAccess
+                  ? "Your last monthly payment didn\u2019t go through. We\u2019re retrying automatically — you still have access for now. Update your payment method so you don\u2019t lose access when retries run out."
+                  : "Your last monthly payment didn\u2019t go through and course access is paused. Update your payment method below — once the charge succeeds, access is restored automatically."}
               </p>
               <div className="mt-3 flex flex-wrap gap-3">
-                <PortalButton label="Update payment method" variant="alert" />
+                {!hideStripeBilling && (
+                  <PortalButton label="Update payment method" variant="alert" />
+                )}
                 <Link href="/help" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-text-secondary hover:text-text text-sm transition-colors">
                   Contact support
                 </Link>
@@ -177,7 +221,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
             <div className="text-right">
               {isFamilyMonthly && isTrial ? (
                 <>
-                  <p className="text-xs text-text-muted">Free today · then $9.99/mo</p>
+                  <p className="text-xs text-text-muted">Free today · then ${(PLANS.familyMonthly.price / 100).toFixed(2)}/mo</p>
                   {sub && (
                     <p className="text-xs text-text-muted mt-0.5">
                       Trial ends {formatDate(sub.currentPeriodEnd)}
@@ -186,7 +230,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
                 </>
               ) : isFamilyMonthly ? (
                 <>
-                  <p className="text-xs text-text-muted">$9.99 / month</p>
+                  <p className="text-xs text-text-muted">${(PLANS.familyMonthly.price / 100).toFixed(2)} / month</p>
                   {sub && (
                     <p className="text-xs text-text-muted mt-0.5">
                       {sub.cancelAtPeriodEnd
@@ -197,7 +241,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
                 </>
               ) : isMonthly && isTrial ? (
                 <>
-                  <p className="text-xs text-text-muted">Free today · then $9/mo</p>
+                  <p className="text-xs text-text-muted">Free today · then ${(PLANS.monthly.price / 100).toFixed(2)}/mo</p>
                   {sub && (
                     <p className="text-xs text-text-muted mt-0.5">
                       Trial ends {formatDate(sub.currentPeriodEnd)}
@@ -206,7 +250,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
                 </>
               ) : isMonthly ? (
                 <>
-                  <p className="text-xs text-text-muted">$9 / month</p>
+                  <p className="text-xs text-text-muted">${(PLANS.monthly.price / 100).toFixed(2)} / month</p>
                   {sub && (
                     <p className="text-xs text-text-muted mt-0.5">
                       {sub.cancelAtPeriodEnd
@@ -233,8 +277,8 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
             </div>
           )}
 
-          {/* Cancel button — shown for all active monthly/trial subscribers who haven't cancelled yet */}
-          {isMonthly && sub && !sub.cancelAtPeriodEnd && (
+          {/* Cancel button — shown for Stripe monthly/trial only (not App Store / Play) */}
+          {!hideStripeBilling && isMonthly && sub && !sub.cancelAtPeriodEnd && (
             <div className="mt-5">
               <CancelSubscriptionButton
                 cancelDate={sub.currentPeriodEnd.toISOString()}
@@ -243,14 +287,22 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
             </div>
           )}
 
-          {/* Manage billing — shown for all monthly subscribers (not just past_due).
-              Opens the Stripe Customer Portal to update cards, view invoices, etc. */}
-          {isMonthly && (
+          {/* Manage billing — Stripe portal only when purchasePlatform is stripe */}
+          {!hideStripeBilling && isMonthly && (
             <div className="mt-5 pt-5 border-t border-border/60 flex items-center justify-between flex-wrap gap-3">
               <p className="text-xs text-text-muted">
                 Update your card, view invoices, or change billing details.
               </p>
               <PortalButton label="Manage billing" variant="default" />
+            </div>
+          )}
+
+          {isStorePurchase && isMonthly && (
+            <div className="mt-5 pt-5 border-t border-border/60">
+              <p className="text-xs text-text-muted">
+                Your subscription is billed through the {accessInfo.purchasePlatform === "apple" ? "App Store" : "Google Play Store"}.
+                Manage or cancel it in your device&apos;s subscription settings.
+              </p>
             </div>
           )}
 
@@ -274,7 +326,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
         </div>
 
         {/* Family Monthly → Lifetime upgrade nudge */}
-        {isFamilyMonthly && (
+        {!hideStripeBilling && isFamilyMonthly && (
           <div className="rounded-2xl border border-gold/20 bg-gold/5 p-6">
             <div className="flex items-start gap-4">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-gold/15">
@@ -302,7 +354,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
         )}
 
         {/* Individual Lifetime → Family Lifetime upgrade card */}
-        {accessInfo.hasLifetime && !isFamily && !isMonthly && !isTrial && (
+        {!hideStripeBilling && accessInfo.hasLifetime && !isFamily && !isMonthly && !isTrial && (
           <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-6">
             <div className="flex items-start gap-4">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-amber-500/15">
@@ -339,7 +391,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
         )}
 
         {/* Individual Monthly/Trial → Lifetime upgrade cards */}
-        {!accessInfo.hasLifetime && !isFamily && isMonthly && (
+        {!hideStripeBilling && !accessInfo.hasLifetime && !isFamily && isMonthly && !isPastDue && (
           <>
             {/* Upgrade to Individual Lifetime */}
             <div className="rounded-2xl border border-gold/20 bg-gold/5 p-6">
@@ -395,8 +447,8 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
           </>
         )}
 
-        {/* Card manager — show for lifetime buyers; monthly/trial users manage cards via Stripe portal */}
-        {accessInfo.hasLifetime && !isTrial && <CardManager />}
+        {/* Card manager — Stripe saved cards only (not App Store / Play) */}
+        {!hideStripeBilling && accessInfo.hasLifetime && !isTrial && <CardManager />}
 
         {/* Purchase history */}
         {purchases.length > 0 && (

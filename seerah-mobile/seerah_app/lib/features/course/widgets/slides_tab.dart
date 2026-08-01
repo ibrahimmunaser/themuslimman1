@@ -2,7 +2,9 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers/part_provider.dart';
+import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/adaptive_icons.dart';
 
 class SlidesTab extends ConsumerStatefulWidget {
   final int partNumber;
@@ -24,6 +26,7 @@ class _SlidesTabState extends ConsumerState<SlidesTab> {
   void initState() {
     super.initState();
     _pageCtrl = PageController();
+    ref.read(progressProvider.notifier).trackAssetOpened(widget.partNumber, 'slides');
   }
 
   @override
@@ -85,6 +88,19 @@ class _SlidesTabState extends ConsumerState<SlidesTab> {
               ],
             ),
           );
+        }
+
+        // Defensive: if a Retry (ref.invalidate below) ever returns a
+        // smaller deck than the one the user had scrolled deep into,
+        // _slideIndex (separate mutable state from activeDeck.length) would
+        // otherwise show a nonsensical "5 / 2" readout and stale
+        // canPrev/canNext until the next swipe self-corrects via
+        // onPageChanged. Clamp it here so that gap never renders.
+        if (_slideIndex > activeDeck.length - 1) {
+          _slideIndex = activeDeck.length - 1;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted && _pageCtrl.hasClients) _pageCtrl.jumpToPage(_slideIndex);
+          });
         }
 
         final canPrev = _slideIndex > 0;
@@ -223,7 +239,6 @@ class _SlidesTabState extends ConsumerState<SlidesTab> {
               child: Row(
                 children: [
                   _NavBtn(
-                    icon: Icons.arrow_back_ios_rounded,
                     label: 'Prev',
                     enabled: canPrev,
                     onTap: canPrev
@@ -241,7 +256,6 @@ class _SlidesTabState extends ConsumerState<SlidesTab> {
                     ),
                   ),
                   _NavBtn(
-                    icon: Icons.arrow_forward_ios_rounded,
                     label: 'Next',
                     enabled: canNext,
                     trailingIcon: true,
@@ -262,14 +276,12 @@ class _SlidesTabState extends ConsumerState<SlidesTab> {
 }
 
 class _NavBtn extends StatelessWidget {
-  final IconData icon;
   final String label;
   final bool enabled;
   final bool trailingIcon;
   final VoidCallback? onTap;
 
   const _NavBtn({
-    required this.icon,
     required this.label,
     required this.enabled,
     this.trailingIcon = false,
@@ -281,6 +293,13 @@ class _NavBtn extends StatelessWidget {
     final color = enabled ? AppColors.textPrimary : AppColors.textMuted;
     final bgColor = enabled ? AppColors.card : AppColors.surface;
     final borderColor = enabled ? AppColors.border : AppColors.border.withValues(alpha: 0.4);
+    // trailingIcon distinguishes "Next" (forward chevron, icon after label)
+    // from "Prev" (back chevron, icon before label) — reuse the shared
+    // platform-adaptive icons so this stays in sync with the rest of the
+    // app's back/forward affordances instead of hardcoding the iOS glyph.
+    final icon = trailingIcon
+        ? ForwardChevronIcon(size: 14, color: color)
+        : BackIcon(size: 14, color: color);
 
     return Material(
       color: bgColor,
@@ -300,10 +319,10 @@ class _NavBtn extends StatelessWidget {
               ? [
                   Text(label, style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w500)),
                   const SizedBox(width: 6),
-                  Icon(icon, size: 14, color: color),
+                  icon,
                 ]
               : [
-                  Icon(icon, size: 14, color: color),
+                  icon,
                   const SizedBox(width: 6),
                   Text(label, style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w500)),
                 ],

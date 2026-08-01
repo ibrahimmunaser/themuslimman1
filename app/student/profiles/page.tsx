@@ -19,7 +19,7 @@ export default async function ProfilesPage() {
   ]);
 
   if (!hasAccess) redirect("/pricing");
-  if (!user.emailVerified) redirect("/seerah");
+  // Entitled unverified keep access (part-access / Apple 5.1.1(v) parity).
 
   const isFamily     = isFamilyPlan(user.planType);
   const profileLimit = getProfileLimit(user.planType);

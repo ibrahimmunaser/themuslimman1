@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/data/parts_data.dart';
+import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/system_insets.dart';
+import '../../../core/widgets/adaptive_icons.dart';
 
 class QuizHistoryScreen extends ConsumerWidget {
   const QuizHistoryScreen({super.key});
@@ -12,6 +14,12 @@ class QuizHistoryScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final progressAsync = ref.watch(progressProvider);
+    // A part quizzed while subscribed stays in this history forever, even
+    // after the subscription lapses — gate the row tap the same way every
+    // other part-entry-point in the app does (resources_screen, dashboard),
+    // rather than relying solely on PartScreen's own paywall to catch it
+    // after navigating.
+    final hasAccess = ref.watch(authProvider).hasAccess;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -19,7 +27,8 @@ class QuizHistoryScreen extends ConsumerWidget {
         backgroundColor: AppColors.surface,
         title: const Text('Quiz History'),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          icon: const BackIcon(size: 20),
+          tooltip: 'Back',
           onPressed: () => context.pop(),
         ),
         bottom: PreferredSize(
@@ -37,7 +46,21 @@ class QuizHistoryScreen extends ConsumerWidget {
           child: Text('Failed to load progress', style: const TextStyle(color: AppColors.textSecondary)),
         ),
         data: (progress) {
-          if (progress.quizScores.isEmpty) {
+          // Pre-index parts so each row does an O(1) lookup instead of firstWhere.
+          final partByNumber = {for (final p in PARTS) p.partNumber: p};
+
+          // A quizScores key with no matching PartModel is stale/out-of-range
+          // data (e.g. left over from a course restructure) — previously this
+          // silently fell back to PARTS.first, mislabeling it as Part 1's
+          // title/subtitle/era while still showing the real (bogus) part
+          // number badge. Drop it from the list entirely instead of lying
+          // about what it is.
+          final sortedEntries = progress.quizScores.entries
+              .where((e) => partByNumber.containsKey(e.key))
+              .toList()
+            ..sort((a, b) => a.key.compareTo(b.key));
+
+          if (sortedEntries.isEmpty) {
             return const Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -55,17 +78,15 @@ class QuizHistoryScreen extends ConsumerWidget {
             );
           }
 
-          final total = progress.quizScores.length;
-          final passed = progress.completedParts.length;
-          final avgScore = progress.quizScores.values.isEmpty
+          final total = sortedEntries.length;
+          // Derive from the same filtered `sortedEntries` as `total`/`avgScore`
+          // rather than the raw `progress.completedParts` set — that set can
+          // contain a passing score for a stale/out-of-range part number that
+          // was just excluded above, which would let Passed exceed Attempted.
+          final passed = sortedEntries.where((e) => e.value >= 80).length;
+          final avgScore = sortedEntries.isEmpty
               ? 0
-              : (progress.quizScores.values.reduce((a, b) => a + b) / total).round();
-
-          final sortedEntries = progress.quizScores.entries.toList()
-            ..sort((a, b) => a.key.compareTo(b.key));
-
-          // Pre-index parts so each row does an O(1) lookup instead of firstWhere.
-          final partByNumber = {for (final p in PARTS) p.partNumber: p};
+              : (sortedEntries.map((e) => e.value).reduce((a, b) => a + b) / total).round();
 
           return ListView.builder(
             padding: EdgeInsets.fromLTRB(16, 16, 16, 32 + bottomSystemInset(context)),
@@ -90,9 +111,10 @@ class QuizHistoryScreen extends ConsumerWidget {
               final entry = sortedEntries[index - 1];
               final partNum = entry.key;
               final score = entry.value;
-              final part = partByNumber[partNum] ?? PARTS.first;
+              final part = partByNumber[partNum]!;
               final rowPassed = score >= 80;
               final color = AppColors.forEra(part.era);
+              final locked = partNum > 1 && !hasAccess;
 
               return Padding(
                 padding: const EdgeInsets.only(bottom: 8),
@@ -100,7 +122,9 @@ class QuizHistoryScreen extends ConsumerWidget {
                   color: AppColors.card,
                   borderRadius: BorderRadius.circular(12),
                   child: InkWell(
-                    onTap: () => context.push('/part/$partNum?tab=quiz'),
+                    onTap: locked
+                        ? () => context.push('/pricing')
+                        : () => context.push('/part/$partNum?tab=quiz'),
                     borderRadius: BorderRadius.circular(12),
                     child: Container(
                       padding: const EdgeInsets.all(14),
@@ -145,30 +169,34 @@ class QuizHistoryScreen extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(width: 12),
-                          FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text('$score%',
-                                  style: TextStyle(
-                                    color: rowPassed ? AppColors.success : AppColors.error,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w800,
+                          if (locked)
+                            const Icon(Icons.lock_outline_rounded,
+                                color: AppColors.textMuted, size: 18)
+                          else
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text('$score%',
+                                    style: TextStyle(
+                                      color: rowPassed ? AppColors.success : AppColors.error,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w800,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(rowPassed ? 'Passed' : 'Try again',
-                                  style: TextStyle(
-                                    color: rowPassed
-                                        ? AppColors.success.withValues(alpha: 0.7)
-                                        : AppColors.textMuted,
-                                    fontSize: 11,
+                                  const SizedBox(height: 2),
+                                  Text(rowPassed ? 'Passed' : 'Try again',
+                                    style: TextStyle(
+                                      color: rowPassed
+                                          ? AppColors.success.withValues(alpha: 0.7)
+                                          : AppColors.textMuted,
+                                      fontSize: 11,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
                         ],
                       ),
                     ),

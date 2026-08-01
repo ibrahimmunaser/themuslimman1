@@ -31,6 +31,14 @@
 		<key>UISupportedInterfaceOrientations</key>
 		<array>
 			<string>UIInterfaceOrientationPortrait</string>
+			<!-- The app is portrait-only everywhere except full-screen video
+			     playback: main.dart pins the app to portrait at startup, and
+			     Chewie's full-screen mode explicitly requests landscape and
+			     restores portrait on exit. Without landscape declared here,
+			     iOS silently refuses that rotation and "full screen" video
+			     stays portrait-boxed instead of actually going landscape. -->
+			<string>UIInterfaceOrientationLandscapeLeft</string>
+			<string>UIInterfaceOrientationLandscapeRight</string>
 		</array>
 		<key>CADisableMinimumFrameDurationOnPhone</key>
 		<true/>
@@ -38,11 +46,11 @@
 		<true/>
 		<key>UIViewControllerBasedStatusBarAppearance</key>
 		<false/>
-		<key>NSAppTransportSecurity</key>
-		<dict>
-			<key>NSAllowsArbitraryLoadsForMedia</key>
-			<true/>
-		</dict>
+		<!-- No NSAppTransportSecurity exceptions: all media is served over
+		     HTTPS from R2 in production (the local dev proxy 410s in prod),
+		     so a blanket NSAllowsArbitraryLoadsForMedia exception isn't
+		     needed and only weakens transport security / invites extra App
+		     Review scrutiny. -->
 		<key>UIStatusBarHidden</key>
 		<true/>
 	</dict>

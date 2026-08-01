@@ -1,9 +1,10 @@
 /**
  * AUTOMATED RISK: Rate Limiting
  *
- * Verifies the in-memory rate limiter correctly allows and blocks requests.
- * NOTE: This tests single-instance behavior. In multi-instance serverless
- * (Vercel), each instance has its own store. Upstash Redis solves that.
+ * Verifies the rate limiter correctly allows and blocks requests. No
+ * UPSTASH_REDIS_REST_URL/TOKEN env vars are set in the test environment, so
+ * this exercises the in-memory fallback path (checkRateLimit is async
+ * either way, since the Upstash path performs a real network call).
  */
 
 import { describe, it, expect } from "vitest";
@@ -15,7 +16,7 @@ describe("checkRateLimit — allow behavior", () => {
   it("allows the first request under the limit", async () => {
     vi.resetModules();
     const { checkRateLimit } = await import("@/lib/rate-limit");
-    const result = checkRateLimit("test-key-allow", 3, 60_000);
+    const result = await checkRateLimit("test-key-allow", 3, 60_000);
     expect(result.allowed).toBe(true);
   });
 
@@ -23,9 +24,9 @@ describe("checkRateLimit — allow behavior", () => {
     vi.resetModules();
     const { checkRateLimit } = await import("@/lib/rate-limit");
     const key = "test-key-multi";
-    checkRateLimit(key, 3, 60_000); // 1st
-    checkRateLimit(key, 3, 60_000); // 2nd
-    const third = checkRateLimit(key, 3, 60_000); // 3rd (limit)
+    await checkRateLimit(key, 3, 60_000); // 1st
+    await checkRateLimit(key, 3, 60_000); // 2nd
+    const third = await checkRateLimit(key, 3, 60_000); // 3rd (limit)
     expect(third.allowed).toBe(true);
   });
 });
@@ -35,10 +36,10 @@ describe("checkRateLimit — block behavior", () => {
     vi.resetModules();
     const { checkRateLimit } = await import("@/lib/rate-limit");
     const key = "test-key-block";
-    checkRateLimit(key, 3, 60_000);
-    checkRateLimit(key, 3, 60_000);
-    checkRateLimit(key, 3, 60_000);
-    const fourth = checkRateLimit(key, 3, 60_000); // over limit
+    await checkRateLimit(key, 3, 60_000);
+    await checkRateLimit(key, 3, 60_000);
+    await checkRateLimit(key, 3, 60_000);
+    const fourth = await checkRateLimit(key, 3, 60_000); // over limit
     expect(fourth.allowed).toBe(false);
     expect(fourth.retryAfterSeconds).toBeGreaterThan(0);
   });
@@ -48,8 +49,8 @@ describe("checkRateLimit — block behavior", () => {
     const { checkRateLimit } = await import("@/lib/rate-limit");
     const key = "test-key-retry";
     const windowMs = 30_000; // 30 seconds
-    for (let i = 0; i < 5; i++) checkRateLimit(key, 5, windowMs);
-    const result = checkRateLimit(key, 5, windowMs);
+    for (let i = 0; i < 5; i++) await checkRateLimit(key, 5, windowMs);
+    const result = await checkRateLimit(key, 5, windowMs);
     expect(result.allowed).toBe(false);
     expect(result.retryAfterSeconds).toBeLessThanOrEqual(30);
     expect(result.retryAfterSeconds).toBeGreaterThan(0);
@@ -61,10 +62,10 @@ describe("checkRateLimit — different keys are independent", () => {
     vi.resetModules();
     const { checkRateLimit } = await import("@/lib/rate-limit");
     // Exhaust key A
-    for (let i = 0; i < 2; i++) checkRateLimit("key-A", 2, 60_000);
-    const blockedA = checkRateLimit("key-A", 2, 60_000);
+    for (let i = 0; i < 2; i++) await checkRateLimit("key-A", 2, 60_000);
+    const blockedA = await checkRateLimit("key-A", 2, 60_000);
     // Key B should still be allowed
-    const allowedB = checkRateLimit("key-B", 2, 60_000);
+    const allowedB = await checkRateLimit("key-B", 2, 60_000);
     expect(blockedA.allowed).toBe(false);
     expect(allowedB.allowed).toBe(true);
   });

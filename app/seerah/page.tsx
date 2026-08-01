@@ -8,8 +8,6 @@ import { getThumbnailUrls } from "@/lib/r2";
 import { getPartPageData } from "@/lib/part-content-cache";
 import { ERA_MAP } from "@/lib/types";
 import { prisma } from "@/lib/db";
-import { Mail } from "lucide-react";
-import { ResendVerificationButton } from "@/app/verify-email-pending/resend-button";
 import { CourseDashboardTabs } from "@/components/course/course-dashboard-tabs";
 import { CourseHomeContent } from "@/components/course/course-home-content";
 import { CourseProgressContent } from "@/components/course/course-progress-content";
@@ -21,6 +19,7 @@ import { AudioResourceContent } from "@/components/resources/audio-resource-cont
 import { TextResourceContent } from "@/components/resources/text-resource-content";
 import { SimpleResourceContent } from "@/components/resources/simple-resource-content";
 import { QuizResourceContent } from "@/components/resources/quiz-resource-content";
+import { EmailVerificationBanner } from "@/components/auth/email-verification-banner";
 
 export const metadata = { title: "Complete Seerah" };
 export const dynamic = "force-dynamic";
@@ -60,90 +59,11 @@ export default async function LearnIndexPage({
     if (!hasProfileCookie) redirect("/profiles");
   }
 
-  // Gate 1: Access check (payment / subscription).
-  // Run this BEFORE the email-verification gate so that unpaid+unverified users are
-  // sent straight to pricing rather than seeing a misleading "verify to unlock" wall.
-  // For unverified users we skip the thumbnail/profile fetch — it would be wasted work.
-  if (!user.emailVerified) {
-    const [hasAccess, dbUser] = await Promise.all([
-      hasActiveCourseAccess(user.id, user.hasPaid),
-      prisma.user.findUnique({ where: { id: user.id }, select: { passwordHash: true } }),
-    ]);
-    if (!hasAccess) redirect("/pricing");
-
-    const isGuestAccount = !dbUser?.passwordHash;
-
-    return (
-      <div className="flex-1 flex items-center justify-center px-4 py-16 min-h-[60vh]">
-        <div className="max-w-md w-full text-center space-y-6">
-          <div className="w-16 h-16 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center mx-auto">
-            <Mail className="w-8 h-8 text-gold" />
-          </div>
-          {isGuestAccount ? (
-            <>
-              <div className="space-y-2">
-                <h1 className="text-2xl font-bold text-text">Check your email to get started</h1>
-                <p className="text-text-secondary">
-                  We sent a link to{" "}
-                  <span className="font-semibold text-gold">{user.email}</span>.
-                  Click it to set your password and unlock the course.
-                </p>
-                <p className="text-sm text-emerald-400 font-medium mt-3">
-                  Your access is confirmed and ready — the link takes you straight to the dashboard.
-                </p>
-              </div>
-              <p className="text-xs text-text-muted">
-                Link not arriving?{" "}
-                <a href="/forgot-password" className="text-gold hover:text-gold/80 underline">
-                  Request a new one
-                </a>
-                {" · "}
-                <a href="/contact" className="text-gold hover:text-gold/80 underline">
-                  Contact support
-                </a>
-              </p>
-            </>
-          ) : (
-            <>
-              <div className="space-y-2">
-                <h1 className="text-2xl font-bold text-text">Verify your email to unlock access</h1>
-                <p className="text-text-secondary">
-                  We sent a verification link to{" "}
-                  <span className="font-semibold text-gold">{user.email}</span>.
-                  Click the link in that email to unlock your course.
-                </p>
-                <p className="text-sm text-emerald-400 font-medium mt-3">
-                  Your payment is confirmed and saved — your access will unlock the moment you verify.
-                </p>
-              </div>
-              <ResendVerificationButton />
-              <p className="text-xs text-text-muted">
-                Wrong email?{" "}
-                <a href="/contact" className="text-gold hover:text-gold/80 underline">
-                  Contact support
-                </a>
-              </p>
-            </>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  // Gate 2: Access check for verified users.
-  // Run access check, thumbnail fetch, and profile-ID resolution in parallel.
-  //
-  // Why this order is safe:
-  //   - hasActiveCourseAccess: for lifetime buyers (hasPaid=true) it short-circuits
-  //     instantly; for monthly subscribers it runs 3 parallel DB queries. Either
-  //     way it is completely independent of thumbnails and profile resolution.
-  //   - getThumbnailUrls: pure R2 API call, independent of everything.
-  //   - profileId: reads the cookie value already validated by getCurrentUser();
-  //     falls back to a DB lookup only for brand-new sessions (very rare).
-  //
-  // Previously these ran sequentially (access → profile → [progress + thumbnails]).
-  // For monthly subscribers this collapses one full sequential step, saving the
-  // R2 thumbnail latency (~50–200 ms) off the dashboard's critical path.
+  // Gate 1: Unverified users may still browse the dashboard (Part 1 free /
+  // locked parts → pricing), matching mobile. Content APIs still enforce
+  // requirePartAccess. Soft verify banner is shown below when needed.
+  // Gate 2: Access check — unpaid users stay on the dashboard with parts 2–100
+  // locked (mobile parity). Do NOT hard-redirect to /pricing.
   const [hasAccess, thumbnails, learnerProfileId] = await Promise.all([
     hasActiveCourseAccess(user.id, user.hasPaid),
     getThumbnailUrls(PARTS.map((p) => p.partNumber)),
@@ -151,8 +71,6 @@ export default async function LearnIndexPage({
       ? Promise.resolve(user.activeProfileId)
       : getActiveProfileId(user.id),
   ]);
-
-  if (!hasAccess) redirect("/pricing");
 
   // Check if the user's subscription is past_due — they still have access
   // (we include past_due in ACTIVE_SUBSCRIPTION_STATUSES) but we show a
@@ -175,6 +93,7 @@ export default async function LearnIndexPage({
       videoWatchPercent:  true,
       briefingOpened:     true,
       quizPassed:         true,
+      quizScoreVerified:  true,
       quizBestScore:      true,
       quizAttempts:       true,
       flashcardsReviewed: true,
@@ -184,8 +103,9 @@ export default async function LearnIndexPage({
   });
 
   // Derive progress overview stats inline (replaces the old getProgress() call).
+  // Quiz "passed" requires quizScoreVerified (Audit C4 / mobile get parity).
   const completedParts = allPartProgress
-    .filter(p => p.quizPassed)
+    .filter(p => p.quizPassed && p.quizScoreVerified)
     .map(p => p.partNumber);
 
   // Current part = the most recently accessed part (by lastAccessedAt).
@@ -198,7 +118,9 @@ export default async function LearnIndexPage({
       const bTime = b.lastAccessedAt ? new Date(b.lastAccessedAt).getTime() : 0;
       return bTime - aTime;
     })[0];
-  const currentPart: number = lastAccessed?.partNumber ?? 1;
+  // Unpaid users: continue card must not point at a locked part (mobile: Free — Start Here).
+  const rawCurrentPart: number = lastAccessed?.partNumber ?? 1;
+  const currentPart: number = !hasAccess && rawCurrentPart > 1 ? 1 : rawCurrentPart;
 
   // Proactively warm the user's current part so clicking "Continue" / "Start stage"
   // hits a hot cache instead of waiting for cold R2 fetches.
@@ -245,9 +167,9 @@ export default async function LearnIndexPage({
     .filter((p) => p.videoWatchPercent > 0 && p.videoWatchPercent < 85)
     .sort((a, b) => b.videoWatchPercent - a.videoWatchPercent)[0];
 
-  // Quiz stats
-  const quizCompletedCount = allPartProgress.filter((p) => p.quizPassed).length;
-  const quizPassedCount = quizCompletedCount;
+  // Quiz stats — only verified passes count (Audit C4).
+  const quizPassedCount = allPartProgress.filter((p) => p.quizPassed && p.quizScoreVerified).length;
+  const quizCompletedCount = quizPassedCount;
   const quizTotalAttempts = allPartProgress.reduce((sum, p) => sum + (p.quizAttempts || 0), 0);
   // Only average rows where the user actually attempted a quiz (has a score).
   // Including zero-score rows in the denominator's count-only calculation was
@@ -290,15 +212,17 @@ export default async function LearnIndexPage({
   // Progress map for quiz resource content
   const quizProgressMap = Object.fromEntries(
     allPartProgress.map(p => [p.partNumber, {
-      quizCompleted: p.quizPassed || false,
+      quizCompleted: !!(p.quizPassed && p.quizScoreVerified),
       quizBestScore: p.quizBestScore,
-      quizPassed: p.quizPassed || false,
+      quizPassed: !!(p.quizPassed && p.quizScoreVerified),
       quizAttempts: p.quizAttempts || 0,
     }])
   );
 
-  // All parts are freely accessible — no sequential lock.
-  const lockedPartNumbers: number[] = [];
+  // Unpaid: lock parts 2–100 (Part 1 free) — mirrors mobile resources/dashboard.
+  const lockedPartNumbers: number[] = hasAccess
+    ? []
+    : PARTS.filter((p) => p.partNumber > 1).map((p) => p.partNumber);
 
   // Show all parts (plan-locked parts are shown for upsell purposes)
   const accessibleParts = PARTS;
@@ -322,7 +246,7 @@ export default async function LearnIndexPage({
         status: p.status ?? "not_started",
         videoWatchPercent: p.videoWatchPercent ?? 0,
         briefingOpened: p.briefingOpened ?? false,
-        quizPassed: p.quizPassed ?? false,
+        quizPassed: p.quizPassed && p.quizScoreVerified ? true : false,
         quizBestScore: p.quizBestScore ?? null,
         quizAttempts: p.quizAttempts ?? 0,
         flashcardsReviewed: p.flashcardsReviewed ?? false,
@@ -406,12 +330,16 @@ export default async function LearnIndexPage({
       parts={PARTS}
       progressData={lessonsProgressData}
       currentPart={currentPart}
+      lockedPartNumbers={lockedPartNumbers}
     />
   );
 
   // StudentLayout is provided by app/seerah/layout.tsx — no wrapper needed here.
   return (
     <>
+      {!user.emailVerified && (
+        <EmailVerificationBanner email={user.email} />
+      )}
       {isPastDue && (
         <div className="bg-red-500/10 border-b border-red-500/20 px-4 py-3 flex items-center justify-between gap-4 flex-wrap">
           <p className="text-sm text-red-400 font-medium">
@@ -439,6 +367,7 @@ export default async function LearnIndexPage({
             currentPartVideoProgress={currentPartProgress}
             stagesData={stagesData}
             currentStageNumber={currentStageNumber}
+            hasAccess={hasAccess}
           />
         }
         lessonsContent={lessonsContent}

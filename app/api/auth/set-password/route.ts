@@ -15,7 +15,7 @@ import { checkRateLimit, getIP } from "@/lib/rate-limit";
  */
 export async function POST(request: NextRequest) {
   const ip = getIP(request);
-  const rl = checkRateLimit(`set-password:${ip}`, 5, 15 * 60 * 1000);
+  const rl = await checkRateLimit(`set-password:${ip}`, 5, 15 * 60 * 1000);
   if (!rl.allowed) {
     return NextResponse.json(
       { error: "Too many attempts. Please try again later." },

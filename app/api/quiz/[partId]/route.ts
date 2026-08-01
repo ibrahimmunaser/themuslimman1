@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getPartById } from "@/lib/content";
 import { readQuiz } from "@/lib/files";
 import { requirePartAccess } from "@/lib/part-access";
+import { normalizeQuizAnswer } from "@/lib/progress";
 
 export async function GET(
   request: Request,
@@ -27,14 +28,20 @@ export async function GET(
     }
 
     // Strip correct_answer text from every question.
-    // Add correctIndex (position in options array) so native mobile clients can
-    // show inline feedback without a second server round-trip — the index alone
-    // is not a useful secret since the user can see all options on screen.
+    // INTENTIONAL: correctIndex is exposed for native mobile inline feedback
+    // (see app/actions/quiz.ts). Index alone is not a useful secret — all options
+    // are already on screen. Web uses checkQuizAnswer; submitQuizAnswers is
+    // authoritative for scoring on both platforms.
+    // Use the same normalizeQuizAnswer as computeQuizScore so formatting drift
+    // between options[] and correct_answer does not yield indexOf === -1 (or a
+    // wrong match) while server scoring would still accept the answer.
     const safeQuiz = {
       ...quiz,
       questions: quiz.questions.map(({ correct_answer, ...q }) => ({
         ...q,
-        correctIndex: q.options.indexOf(correct_answer),
+        correctIndex: q.options.findIndex(
+          (opt) => normalizeQuizAnswer(opt) === normalizeQuizAnswer(correct_answer),
+        ),
       })),
     };
 

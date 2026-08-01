@@ -1,8 +1,10 @@
 import { Resend } from "resend";
 import { isBlockedEmail, getOrCreateUnsubscribeToken, buildUnsubscribeUrl } from "./email-automation";
+import { escapeHtml } from "./html-escape";
 
 const FROM    = process.env.EMAIL_FROM    ?? "TheMuslimMan <noreply@themuslimman.com>";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://themuslimman.com";
+
 
 // CAN-SPAM §5(a)(5): must be a valid physical postal address. Update before sending live emails.
 const PHYSICAL_ADDRESS = process.env.EMAIL_PHYSICAL_ADDRESS ?? "TheMuslimMan · PO Box 1234 · New York, NY 10001 · USA";
@@ -296,7 +298,9 @@ export async function sendCheckupFollowupEmail(
   const blocked = isBlockedEmail(lead.email);
   if (blocked) throw new Error(`Blocked: ${blocked}`);
 
-  const firstName      = (lead.name ?? "").split(" ")[0] ?? "";
+  const firstName      = escapeHtml((lead.name ?? "").split(" ")[0] ?? "");
+  const safeObjection  = escapeHtml(lead.mainObjection ?? "");
+
   const unsubToken     = await getOrCreateUnsubscribeToken(lead.email);
   const unsubscribeUrl = buildUnsubscribeUrl(unsubToken);
 
@@ -314,7 +318,7 @@ export async function sendCheckupFollowupEmail(
       recommendedPlan: lead.recommendedPlan, source: lead.source, unsubscribeUrl,
     });
   } else if (step === 2) {
-    html = buildStep2Html({ firstName, objection: lead.mainObjection, unsubscribeUrl });
+    html = buildStep2Html({ firstName, objection: escapeHtml(lead.mainObjection ?? ""), unsubscribeUrl });
   } else if (step === 3) {
     html = buildStep3Html({
       firstName, score: lead.score, recommendedPlan: lead.recommendedPlan,

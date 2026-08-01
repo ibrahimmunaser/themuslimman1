@@ -5,7 +5,11 @@ import { prisma } from "@/lib/db";
 export async function POST(request: Request) {
   try {
     await requireAdmin();
+  } catch {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
+  try {
     const body = await request.json();
     const { ticketId, status } = body;
 

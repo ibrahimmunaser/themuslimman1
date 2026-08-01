@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { checkRateLimit, getIP } from "@/lib/rate-limit";
 import Stripe from "stripe";
 
 function getStripe() {
@@ -10,9 +11,18 @@ function getStripe() {
 }
 
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ pmId: string }> }
 ) {
+  const ip = getIP(req);
+  const rl = await checkRateLimit(`payment-methods-delete:${ip}`, 20, 10 * 60 * 1000);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Too many attempts. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSeconds) } }
+    );
+  }
+
   try {
     const user = await getCurrentUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

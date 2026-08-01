@@ -6,34 +6,55 @@ import '../../../core/models/profile_model.dart';
 import '../../../core/providers/profiles_provider.dart';
 import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/system_insets.dart';
+import '../../../core/widgets/adaptive_icons.dart';
 import '../../../core/widgets/ui_kit.dart';
 
 // ── Profile picker (Netflix-style) ────────────────────────────────────────────
 
-class ProfilesScreen extends ConsumerWidget {
+class ProfilesScreen extends ConsumerStatefulWidget {
   const ProfilesScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProfilesScreen> createState() => _ProfilesScreenState();
+}
+
+class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
+  /// When true, tapping a profile opens rename/delete instead of switching.
+  bool _managing = false;
+
+  @override
+  Widget build(BuildContext context) {
     final profilesAsync = ref.watch(profilesProvider);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        title: const Text('Who\'s Learning?'),
+        title: Text(_managing ? 'Manage Profiles' : 'Who\'s Learning?'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            onPressed: () => context.push('/profile-settings'),
-            tooltip: 'Manage profiles',
+          TextButton(
+            onPressed: () => setState(() => _managing = !_managing),
+            child: Text(
+              _managing ? 'Done' : 'Edit',
+              style: const TextStyle(
+                color: AppColors.gold,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
       body: AppGradientBackground(
+        // Audit H10 fix: SafeArea's default bottom inset
+        // (MediaQuery.padding.bottom) can report 0 on some Android devices
+        // even while the 3-button nav bar still overlaps content — bottom
+        // is handled explicitly via bottomSystemInset() in _buildGrid
+        // instead, matching every other bottom-inset spot in the app.
         child: SafeArea(
+          bottom: false,
           child: profilesAsync.when(
-            data: (state) => _buildGrid(context, ref, state),
+            data: (state) => _buildGrid(state),
             loading: () => const Center(child: CircularProgressIndicator.adaptive()),
             error: (e, _) => Center(
               child: Column(
@@ -57,15 +78,24 @@ class ProfilesScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildGrid(BuildContext context, WidgetRef ref, ProfilesState state) {
+  Widget _buildGrid(ProfilesState state) {
     final profiles = state.profiles;
     final items = [
       ...profiles,
-      if (state.canAddMore) null, // null = "Add Profile" slot
+      if (!_managing && state.canAddMore) null, // null = "Add Profile" slot
     ];
 
     return Column(
       children: [
+        if (_managing)
+          const Padding(
+            padding: EdgeInsets.fromLTRB(24, 4, 24, 0),
+            child: Text(
+              'Tap a profile to rename or remove it.',
+              style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+              textAlign: TextAlign.center,
+            ),
+          ),
         const SizedBox(height: 12),
         Expanded(
           child: GridView.builder(
@@ -86,7 +116,14 @@ class ProfilesScreen extends ConsumerWidget {
               }
               return _ProfileTile(
                 profile: profile,
-                onTap: () => _selectProfile(context, ref, profile),
+                managing: _managing,
+                onTap: () {
+                  if (_managing) {
+                    _showEditSheet(context, ref, profile, state);
+                  } else {
+                    _selectProfile(context, ref, profile);
+                  }
+                },
                 onLongPress: () => _showEditSheet(context, ref, profile, state),
               ).animate().fadeIn(duration: 300.ms, delay: (i * 60).ms);
             },
@@ -101,7 +138,10 @@ class ProfilesScreen extends ConsumerWidget {
               color: AppColors.goldFaded,
               borderRadius: BorderRadius.circular(12),
               child: InkWell(
-                onTap: () => context.go('/pricing'),
+                // push preserves the back-stack this screen was reached
+                // through (profile_screen/dashboard both use push to get
+                // here) — matches every other paywall entry point in the app.
+                onTap: () => context.push('/pricing'),
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -124,13 +164,14 @@ class ProfilesScreen extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    const Icon(Icons.chevron_right_rounded, color: AppColors.gold, size: 20),
+                    const ForwardChevronIcon(color: AppColors.gold, size: 20),
                   ],
                 ),
                 ),
               ),
             ),
           ),
+        SizedBox(height: bottomSystemInset(context)),
       ],
     );
   }
@@ -140,7 +181,7 @@ class ProfilesScreen extends ConsumerWidget {
     if (profile.isActive) {
       // Already active — just go back
       if (context.canPop()) context.pop();
-      else context.go('/home');
+      else context.go('/dashboard');
       return;
     }
 
@@ -151,16 +192,27 @@ class ProfilesScreen extends ConsumerWidget {
       return;
     }
 
-    // Refresh progress after switching
-    ref.invalidate(progressProvider);
+    // Refresh progress after switching — reset() (not invalidate()) so the
+    // dashboard we're about to pop back to never renders even one frame of
+    // the previous profile's progress (see ProgressNotifier.reset doc).
+    await ref.read(progressProvider.notifier).reset();
 
     if (!context.mounted) return;
     if (context.canPop()) context.pop();
-    else context.go('/home');
+    else context.go('/dashboard');
   }
 
   Future<void> _showAddDialog(BuildContext context, WidgetRef ref) async {
     final controller = TextEditingController();
+    try {
+      await _showAddDialogInner(context, ref, controller);
+    } finally {
+      controller.dispose();
+    }
+  }
+
+  Future<void> _showAddDialogInner(
+      BuildContext context, WidgetRef ref, TextEditingController controller) async {
     String? selectedAvatar = '📖';
 
     final confirmed = await showDialog<bool>(
@@ -176,25 +228,46 @@ class ProfilesScreen extends ConsumerWidget {
               // Avatar picker
               Wrap(
                 spacing: 8, runSpacing: 8,
-                children: ['📖', '🌙', '⭐', '🌸', '🕌', '🦁', '🌿', '🎯', '🏆', '💫']
-                    .map((e) => GestureDetector(
-                      onTap: () => setState(() => selectedAvatar = e),
+                children: [
+                  ('📖', 'Book'), ('🌙', 'Moon'), ('⭐', 'Star'), ('🌸', 'Flower'),
+                  ('🕌', 'Mosque'), ('🦁', 'Lion'), ('🌿', 'Leaf'), ('🎯', 'Target'),
+                  ('🏆', 'Trophy'), ('💫', 'Sparkle'),
+                ].map((e) {
+                  final emoji = e.$1;
+                  final label = e.$2;
+                  final selected = selectedAvatar == emoji;
+                  // A bare GestureDetector+emoji gives VoiceOver/TalkBack no
+                  // indication this is a tappable, selectable option — just
+                  // the raw glyph's name read once with no "selected" state,
+                  // so a screen reader user could not tell which avatar (if
+                  // any) was currently chosen before saving the profile.
+                  return Semantics(
+                    button: true,
+                    selected: selected,
+                    label: '$label avatar',
+                    child: GestureDetector(
+                      onTap: () => setState(() => selectedAvatar = emoji),
                       child: Container(
                         width: 44, height: 44,
                         decoration: BoxDecoration(
-                          color: selectedAvatar == e
+                          color: selected
                               ? AppColors.gold.withValues(alpha: 0.2)
                               : AppColors.border.withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                            color: selectedAvatar == e ? AppColors.gold : Colors.transparent,
+                            color: selected ? AppColors.gold : Colors.transparent,
                             width: 2,
                           ),
                         ),
-                        child: Center(child: Text(e, style: const TextStyle(fontSize: 20))),
+                        child: Center(
+                          child: ExcludeSemantics(
+                            child: Text(emoji, style: const TextStyle(fontSize: 20)),
+                          ),
+                        ),
                       ),
-                    ))
-                    .toList(),
+                    ),
+                  );
+                }).toList(),
               ),
               const SizedBox(height: 16),
               TextField(
@@ -256,10 +329,16 @@ class ProfilesScreen extends ConsumerWidget {
 
 class _ProfileTile extends StatelessWidget {
   final ProfileModel profile;
+  final bool managing;
   final VoidCallback onTap;
   final VoidCallback onLongPress;
 
-  const _ProfileTile({required this.profile, required this.onTap, required this.onLongPress});
+  const _ProfileTile({
+    required this.profile,
+    required this.managing,
+    required this.onTap,
+    required this.onLongPress,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -297,7 +376,20 @@ class _ProfileTile extends StatelessWidget {
                         ),
                 ),
               ),
-              if (profile.isActive)
+              if (managing)
+                Positioned(
+                  right: 0, top: 0,
+                  child: Container(
+                    width: 22, height: 22,
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: const Icon(Icons.edit_rounded, size: 12, color: AppColors.gold),
+                  ),
+                )
+              else if (profile.isActive)
                 Positioned(
                   right: 4, bottom: 4,
                   child: Container(
@@ -406,9 +498,14 @@ class _ProfileEditSheetState extends ConsumerState<_ProfileEditSheet> {
   Widget build(BuildContext context) {
     final canDelete = !widget.profile.isDefault && widget.state.profiles.length > 1;
     return Padding(
+      // Audit H10 fix: MediaQuery.paddingOf(context).bottom alone can report
+      // 0 on some Android devices even while the 3-button nav bar still
+      // overlaps this sheet — bottomSystemInset() is the shared helper with
+      // the fallback for exactly that case (viewInsets.bottom for the
+      // keyboard is unaffected and kept as-is).
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom +
-            MediaQuery.paddingOf(context).bottom,
+            bottomSystemInset(context),
         left: 20, right: 20, top: 20,
       ),
       child: Column(

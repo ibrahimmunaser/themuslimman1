@@ -28,6 +28,7 @@ function snap(overrides: Partial<ProgressSnapshot> = {}): ProgressSnapshot {
     quizCompleted: false,
     quizBestScore: null,
     quizPassed: false,
+    quizScoreVerified: false,
     flashcardsReviewed: false,
     openedAssets: [],
     startedAt: null,
@@ -74,8 +75,12 @@ describe("isCompleted — essentials plan", () => {
 });
 
 describe("isCompleted — complete plan", () => {
-  it("requires only quizPassed", () => {
-    expect(isCompleted(snap({ quizPassed: true }), "complete")).toBe(true);
+  it("requires quizPassed AND quizScoreVerified", () => {
+    expect(isCompleted(snap({ quizPassed: true, quizScoreVerified: true }), "complete")).toBe(true);
+  });
+
+  it("false when quiz passed but unverified", () => {
+    expect(isCompleted(snap({ quizPassed: true, quizScoreVerified: false }), "complete")).toBe(false);
   });
 
   it("false even with video + briefing if quiz not passed", () => {
@@ -84,10 +89,10 @@ describe("isCompleted — complete plan", () => {
     ).toBe(false);
   });
 
-  it("true with quiz score exactly at threshold", () => {
+  it("true with quiz score exactly at threshold when verified", () => {
     // quizPassed is a DB field set by trackQuizCompleted when score >= QUIZ_PASS_SCORE
-    // We test that isCompleted uses quizPassed (boolean) not a raw score
-    expect(isCompleted(snap({ quizPassed: true, quizBestScore: QUIZ_PASS_SCORE }), "complete")).toBe(true);
+    // We test that isCompleted uses quizPassed+verified not a raw score alone
+    expect(isCompleted(snap({ quizPassed: true, quizScoreVerified: true, quizBestScore: QUIZ_PASS_SCORE }), "complete")).toBe(true);
   });
 });
 
@@ -98,6 +103,7 @@ describe("isMastered", () => {
     videoWatchPercent: 100,
     briefingOpened: true,
     quizBestScore: QUIZ_MASTERY_SCORE,
+    quizScoreVerified: true,
     flashcardsReviewed: true,
     openedAssets: ["slides", "mindmap"],
   });
@@ -138,8 +144,8 @@ describe("computeStatus", () => {
     expect(computeStatus(s, "complete")).toBe("started");
   });
 
-  it("returns completed for complete plan after quiz pass", () => {
-    const s = snap({ startedAt: new Date(), quizPassed: true });
+  it("returns completed for complete plan after verified quiz pass", () => {
+    const s = snap({ startedAt: new Date(), quizPassed: true, quizScoreVerified: true });
     expect(computeStatus(s, "complete")).toBe("completed");
   });
 
@@ -149,6 +155,7 @@ describe("computeStatus", () => {
       videoWatchPercent: 100,
       briefingOpened: true,
       quizBestScore: QUIZ_MASTERY_SCORE,
+      quizScoreVerified: true,
       flashcardsReviewed: true,
       openedAssets: ["slides", "mindmap"],
     });

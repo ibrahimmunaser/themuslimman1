@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { clsx } from "clsx";
 import { CheckCircle2, XCircle, ChevronRight, RotateCcw, Trophy, Loader2 } from "lucide-react";
 import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
 import type { Quiz, QuizQuestion } from "@/lib/types";
 import { submitQuizAnswers } from "@/app/actions/progress";
-import { getQuizAnswerMap, type QuizAnswerMap } from "@/app/actions/quiz";
+import { checkQuizAnswer } from "@/app/actions/quiz";
 import { AnimatedProgressBar } from "@/components/motion";
 
 /** QuizQuestion without correct_answer — used client-side only */
@@ -36,6 +36,8 @@ interface QuizViewerProps {
   draft?: QuizDraft | null;
   /** Called whenever the in-progress state changes. Pass null when the quiz finishes or resets. */
   onDraftChange?: (draft: QuizDraft | null) => void;
+  /** The learner profile this page was rendered for — see PartTabsProps.learnerProfileId. */
+  learnerProfileId?: string;
 }
 
 type AnswerState = "unanswered" | "correct" | "wrong";
@@ -54,12 +56,14 @@ function QuestionCard({
   total,
   onAnswer,
   feedback,
+  busy = false,
 }: {
   question: SafeQuizQuestion;
   index: number;
   total: number;
   onAnswer: (chosen: string) => void;
   feedback: { correctAnswer: string; explanation: string; correct: boolean; chosen: string } | null;
+  busy?: boolean;
 }) {
   const answered = feedback !== null;
   const chosen = feedback?.chosen ?? null;
@@ -107,8 +111,8 @@ function QuestionCard({
           return (
             <button
               key={i}
-              onClick={() => !answered && onAnswer(option)}
-              disabled={answered}
+              onClick={() => !answered && !busy && onAnswer(option)}
+              disabled={answered || busy}
               role="radio"
               aria-checked={chosen === option}
               className={clsx(
@@ -174,6 +178,7 @@ function ScoreScreen({
   partNumber,
   previewMode,
   initialBestScore,
+  learnerProfileId,
 }: {
   results: QuestionResult[];
   total: number;
@@ -181,6 +186,7 @@ function ScoreScreen({
   partNumber?: number;
   previewMode?: boolean;
   initialBestScore?: number;
+  learnerProfileId?: string;
 }) {
   const prefersReduced = useReducedMotion();
   const score = results.filter((r) => r.correct).length;
@@ -193,7 +199,7 @@ function ScoreScreen({
       // computed server-side rather than trusting the client-supplied value.
       const answersMap: Record<string, string> = {};
       for (const r of results) answersMap[r.question.id] = r.chosen;
-      submitQuizAnswers(partNumber, answersMap).catch(() => {});
+      submitQuizAnswers(partNumber, answersMap, learnerProfileId).catch(() => {});
 
       const bestScore = Math.max(pct, initialBestScore ?? 0);
       window.dispatchEvent(
@@ -328,63 +334,49 @@ function ScoreScreen({
   );
 }
 
-type QuizPhase = "loading" | "error" | "ready";
 type CurrentFeedback = { correctAnswer: string; explanation: string; correct: boolean; chosen: string };
 
-export function QuizViewer({ quiz, partNumber, previewMode, initialBestScore, draft, onDraftChange }: QuizViewerProps) {
+export function QuizViewer({ quiz, partNumber, previewMode, initialBestScore, draft, onDraftChange, learnerProfileId }: QuizViewerProps) {
   // Strip correct_answer — it must never be used from the RSC payload.
-  // The answer map is fetched separately once via getQuizAnswerMap.
+  // Per-question feedback goes through checkQuizAnswer (no bulk answer map leak).
   const safeQuestions: SafeQuizQuestion[] = quiz.questions.map(
     ({ correct_answer: _stripped, ...q }) => q
   );
 
   const effectivePartNumber = partNumber ?? 1;
 
-  // ── Pre-fetch answer map once on quiz open ─────────────────────────────────
-  // Single server round-trip → all subsequent answer checks are instant (local).
-  const [phase, setPhase] = useState<QuizPhase>("loading");
-  const [answerMap, setAnswerMap] = useState<QuizAnswerMap>({});
-  const fetchedRef = useRef(false);
-
-  useEffect(() => {
-    if (fetchedRef.current) return;
-    fetchedRef.current = true;
-
-    getQuizAnswerMap(effectivePartNumber, previewMode).then((result) => {
-      if (!result.ok) {
-        console.error("[QuizViewer] getQuizAnswerMap error:", result.error);
-        setPhase("error");
-      } else {
-        setAnswerMap(result.map);
-        setPhase("ready");
-      }
-    });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const [checking, setChecking] = useState(false);
+  const [currentFeedback, setCurrentFeedback] = useState<CurrentFeedback | null>(draft?.currentFeedback ?? null);
 
   // Restore in-progress state from parent-held draft (survives tab switches).
   // Never restore a "done" state — completed quizzes always restart fresh so
   // we don't re-submit answers to the server on remount.
   const [current, setCurrent] = useState(draft?.current ?? 0);
   const [results, setResults] = useState<QuestionResult[]>(draft?.results ?? []);
-  const [currentFeedback, setCurrentFeedback] = useState<CurrentFeedback | null>(draft?.currentFeedback ?? null);
   const [done, setDone] = useState(false);
 
-  // ── Instant answer resolution from pre-fetched map ────────────────────────
-  const handleAnswer = (chosen: string) => {
+  // ── Per-question server check (no full answer map on the client) ───────────
+  const handleAnswer = async (chosen: string) => {
+    if (checking || currentFeedback) return;
     const question = safeQuestions[current];
-    const entry = answerMap[question.id];
-    if (!entry) return; // map not ready (shouldn't happen — button is disabled in loading phase)
-
-    const feedback: CurrentFeedback = {
-      chosen,
-      correctAnswer: entry.correctAnswer,
-      explanation: entry.explanation,
-      correct: chosen === entry.correctAnswer,
-    };
-    setCurrentFeedback(feedback);
-    // Persist draft so the answered state survives a tab switch
-    onDraftChange?.({ current, results, currentFeedback: feedback });
+    setChecking(true);
+    try {
+      const result = await checkQuizAnswer(effectivePartNumber, question.id, chosen, !!previewMode);
+      if ("error" in result) {
+        console.error("[QuizViewer] checkQuizAnswer error:", result.error);
+        return;
+      }
+      const feedback: CurrentFeedback = {
+        chosen,
+        correctAnswer: result.correctAnswer,
+        explanation: result.explanation,
+        correct: result.correct,
+      };
+      setCurrentFeedback(feedback);
+      onDraftChange?.({ current, results, currentFeedback: feedback });
+    } finally {
+      setChecking(false);
+    }
   };
 
   const handleNext = () => {
@@ -419,24 +411,7 @@ export function QuizViewer({ quiz, partNumber, previewMode, initialBestScore, dr
     onDraftChange?.(null);
   };
 
-  // ── Loading / error states ─────────────────────────────────────────────────
-  if (phase === "loading") {
-    return (
-      <div className="flex flex-col items-center justify-center gap-3 py-16 text-zinc-400">
-        <Loader2 className="w-7 h-7 animate-spin text-amber-500" />
-        <p className="text-sm">Loading quiz…</p>
-      </div>
-    );
-  }
-
-  if (phase === "error") {
-    return (
-      <div className="flex flex-col items-center gap-3 py-12 text-zinc-400">
-        <p className="text-sm">Could not load quiz. Please refresh and try again.</p>
-      </div>
-    );
-  }
-
+  // ── Score / question states ────────────────────────────────────────────────
   if (done) {
     return (
       <ScoreScreen
@@ -446,6 +421,7 @@ export function QuizViewer({ quiz, partNumber, previewMode, initialBestScore, dr
         partNumber={partNumber}
         previewMode={previewMode}
         initialBestScore={initialBestScore}
+        learnerProfileId={learnerProfileId}
       />
     );
   }
@@ -466,6 +442,7 @@ export function QuizViewer({ quiz, partNumber, previewMode, initialBestScore, dr
             total={safeQuestions.length}
             onAnswer={handleAnswer}
             feedback={currentFeedback}
+            busy={checking}
           />
         </motion.div>
       </AnimatePresence>

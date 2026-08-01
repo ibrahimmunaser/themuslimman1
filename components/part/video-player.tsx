@@ -45,8 +45,12 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
   const overlayAudioRef = useRef<HTMLAudioElement | null>(null);
   const reportedRef     = useRef<Set<number>>(new Set());
   const startOffset     = getVideoStartOffset(partNumber);
-  // High-water mark of the furthest position watched (0–100). Prevents
-  // forward-seeking beyond what the user has genuinely watched.
+  // High-water mark of *played* time only — seeks that jump ahead more than
+  // MAX_PLAY_JUMP_SEC are ignored so scrubbing to 85%/end can't mark complete
+  // (same clamp as mobile video_tab.dart).
+  const maxCreditedSecRef = useRef(startOffset);
+  const lastTickSecRef = useRef(startOffset);
+  const MAX_PLAY_JUMP_SEC = 2.5;
   // Tracks whether the player auto-muted due to a MUTED_SEGMENTS rule,
   // so we can restore audio without overriding a manual user mute.
   const autoMutedRef    = useRef<boolean>(false);
@@ -125,6 +129,7 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
   const handleTimeUpdate = useCallback(() => {
     if (!videoRef.current) return;
     const currentTime = videoRef.current.currentTime;
+    const duration = videoRef.current.duration;
 
     // Snap back if video somehow drifts before the intro cutoff.
     if (currentTime < startOffset) {
@@ -132,9 +137,26 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
       return;
     }
 
+    // Only credit forward play within a small jump — large leaps are seeks.
+    // Mirrors mobile video_tab.dart: always advance lastTick so the next
+    // continuous-play window is measured from the new position; never credit
+    // the seek gap itself.
+    if (!videoRef.current.paused && isFinite(duration) && duration > 0) {
+      if (
+        currentTime >= lastTickSecRef.current &&
+        currentTime - lastTickSecRef.current <= MAX_PLAY_JUMP_SEC
+      ) {
+        if (currentTime > maxCreditedSecRef.current) {
+          maxCreditedSecRef.current = currentTime;
+        }
+      }
+      // else: scrubbed forward past threshold, or rewound — do not credit.
+    }
+    lastTickSecRef.current = currentTime;
+
     // Progress is relative to the cropped range [startOffset, duration].
-    const playable = videoRef.current.duration - startOffset;
-    const elapsed  = currentTime - startOffset;
+    const playable = duration - startOffset;
+    const elapsed = maxCreditedSecRef.current - startOffset;
     const pct = playable > 0 ? (elapsed / playable) * 100 : 0;
     const rounded = isNaN(pct) ? 0 : Math.min(100, Math.round(pct));
     setProgress(rounded);
@@ -345,14 +367,18 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
           }
           overlayPlayingRef.current = false;
           if (partNumber && !previewMode) {
-            if (!reportedRef.current.has(100)) {
+            const duration = videoRef.current?.duration ?? 0;
+            const nearEnd =
+              isFinite(duration) &&
+              duration > 0 &&
+              maxCreditedSecRef.current >= duration - MAX_PLAY_JUMP_SEC;
+            if (nearEnd && !reportedRef.current.has(100)) {
               reportedRef.current.add(100);
               trackVideoProgress(partNumber, 100).catch(() => {});
+              window.dispatchEvent(new CustomEvent("seerah:progressUpdate", {
+                detail: { videoWatchPercent: 100 },
+              }));
             }
-            // Always fire the badge update on end (covers skipping to the end)
-            window.dispatchEvent(new CustomEvent("seerah:progressUpdate", {
-              detail: { videoWatchPercent: 100 },
-            }));
           }
         }}
         onPlay={() => { setPlaying(true); window.dispatchEvent(new CustomEvent("seerah:videoPlaying")); }}

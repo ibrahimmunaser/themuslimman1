@@ -5,12 +5,12 @@ import { customAlphabet, nanoid } from "nanoid";
 import { prisma } from "@/lib/db";
 import { hashToken } from "@/lib/hash-token";
 import { Resend } from "resend";
-import { cookies } from "next/headers";
 import { checkRateLimit, getIP } from "@/lib/rate-limit";
+import { setAuthCookies, SESSION_COOKIE_MAX_AGE_SECONDS } from "@/lib/session-cookies";
+import { escapeHtml } from "@/lib/html-escape";
 
 const generateToken = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 32);
-const COOKIE_NAME = "seerah_session";
-const COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
+const COOKIE_MAX_AGE = SESSION_COOKIE_MAX_AGE_SECONDS;
 
 const SignupSchema = z.object({
   fullName: z.string().min(2, "Name must be at least 2 characters").max(100),
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
 
   // Rate limit: 5 signups per 10 minutes per IP
   const ip = getIP(request);
-  const rl = checkRateLimit(`signup:${ip}`, 5, 10 * 60 * 1000);
+  const rl = await checkRateLimit(`signup:${ip}`, 5, 10 * 60 * 1000);
   if (!rl.allowed) {
     return NextResponse.json(
       { error: "Too many attempts. Please try again later." },
@@ -134,21 +134,7 @@ export async function POST(request: NextRequest) {
     });
     console.log(`[API] /api/auth/signup-student: Session created, expires ${sessionExpiresAt.toISOString()}`);
 
-    const cookieStore = await cookies();
-    cookieStore.set(COOKIE_NAME, sessionToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      expires: sessionExpiresAt,
-      path: "/",
-    });
-    cookieStore.set("seerah_role", "student", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      expires: sessionExpiresAt,
-      path: "/",
-    });
+    await setAuthCookies(sessionToken, "student", sessionExpiresAt);
     // Send verification email (only in production)
     // Use the raw (un-hashed) token in the URL — the DB stores the hash.
     if (!isDevelopment && rawVerificationToken) {
@@ -244,7 +230,7 @@ function generateWelcomeEmail(data: {
         </div>
 
         <div style="background: #ffffff; padding: 40px 30px; border-left: 1px solid #e5e5e5; border-right: 1px solid #e5e5e5;">
-          <p style="font-size: 16px; margin: 0 0 20px 0;">As-salamu alaykum ${data.fullName},</p>
+          <p style="font-size: 16px; margin: 0 0 20px 0;">As-salamu alaykum ${escapeHtml(data.fullName)},</p>
           
           <p style="font-size: 16px; margin: 0 0 20px 0;">
             Your account has been created successfully! Before you can start learning, please verify your email address.

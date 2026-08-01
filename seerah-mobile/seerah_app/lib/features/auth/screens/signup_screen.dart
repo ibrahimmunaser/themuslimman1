@@ -9,6 +9,7 @@ import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/iap_provider.dart';
 import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/system_insets.dart';
 import '../../../core/widgets/app_logo.dart';
 import '../../../core/widgets/legal_web_screen.dart';
 import '../../../core/widgets/ui_kit.dart';
@@ -61,6 +62,51 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       // best-effort, never blocks navigation.
       unawaited(ref.read(progressProvider.notifier).pushLocalToServer());
       unawaited(ref.read(iapProvider.notifier).restorePurchases());
+      if (result.requiresVerification) {
+        // No purchase yet, so the server still requires clicking the
+        // emailed verification link — tell the user explicitly instead of
+        // silently sending them to the dashboard with no signal that
+        // anything further is needed (their first sign otherwise would be
+        // an opaque "verification required" error on a locked part later).
+        // Audit H6 fix: this used to say "you can keep using the app now",
+        // which was only true for the always-free Part 1 — every other part
+        // is blocked for an unverified real account regardless of payment
+        // (see lib/part-access.ts). Rewritten so it's accurate whether the
+        // user buys a plan next (which now auto-verifies them, see
+        // /api/mobile-purchases/verify) or just keeps browsing for free.
+        // Audit M7 fix: don't claim an email was sent if it genuinely
+        // wasn't — result.verificationEmailFailed is only true when the
+        // account upgrade itself succeeded but the send call threw (e.g. an
+        // email-provider outage), so telling the user to "check your inbox"
+        // here would send them looking for a link that's never arriving.
+        await showDialog<void>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Text(result.verificationEmailFailed
+                ? "Couldn't send verification email"
+                : 'Check your email'),
+            content: Text(
+              result.verificationEmailFailed
+                  ? "Your account was created, but we couldn't send a verification "
+                      "email to ${_emailCtrl.text.trim()} right now. Part 1 is free to "
+                      "explore right away, and if you purchase a plan we'll verify your "
+                      "email automatically — otherwise, use \"Resend Email\" from your "
+                      "profile once you're signed in."
+                  : "We've sent a verification link to ${_emailCtrl.text.trim()}. "
+                      "Part 1 is free to explore right away. If you purchase a plan "
+                      "before verifying, we'll verify your email for you automatically — "
+                      'otherwise, click the link so you can also sign in from other devices.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('Got it'),
+              ),
+            ],
+          ),
+        );
+        if (!mounted) return;
+      }
       // Already has access from the guest purchase — go straight in.
       context.go('/dashboard');
     } else {
@@ -80,14 +126,35 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     return Scaffold(
       body: AppGradientBackground(
         child: SafeArea(
+          bottom: false,
           child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+          padding: EdgeInsets.fromLTRB(24, 0, 24, 24 + bottomSystemInset(context)),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 64),
+                const SizedBox(height: 8),
+                // This screen is reached via `context.go('/signup')` from
+                // every purchase entry point, which replaces the entire
+                // Navigator stack — there is nothing to pop back to. Without
+                // a persistent, unconditional exit here, a guest who just
+                // bought a plan (hasAccess == true, so the old "Skip for
+                // now" button below was hidden) had no way off this screen
+                // short of force-quitting the app — directly contradicting
+                // Apple Guideline 5.1.1(v)'s requirement that registration
+                // stay optional even after purchase.
+                Align(
+                  alignment: Alignment.topLeft,
+                  child: IconButton(
+                    icon: const Icon(Icons.close_rounded, size: 22),
+                    tooltip: 'Close',
+                    onPressed: _loading
+                        ? null
+                        : () => context.canPop() ? context.pop() : context.go('/dashboard'),
+                  ),
+                ),
+                const SizedBox(height: 24),
                 Column(
                   children: [
                     const AppLogo(size: 48),

@@ -3,6 +3,7 @@ import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../../core/providers/part_provider.dart';
+import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
 
 class ReadTab extends ConsumerStatefulWidget {
@@ -18,6 +19,57 @@ class ReadTab extends ConsumerStatefulWidget {
 class _ReadTabState extends ConsumerState<ReadTab> {
   late int _activeSection = widget.initialSection.clamp(0, 2);
   final List<String> _sections = ['Briefing', 'Study Guide', 'Key Facts'];
+  static const _assetIds = ['briefing', 'study_guide', 'statement-of-facts'];
+
+  final ScrollController _scrollController = ScrollController();
+  /// Sections already credited this mount (mirrors web TextViewer 10% gate).
+  final Set<int> _trackedSections = {};
+  bool _briefingTracked = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+    // Key Facts / Study Guide: still require scroll engagement for briefing
+    // parity with web — other sections track on first meaningful scroll or
+    // when content is short enough that 10% is already visible (post-frame).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _maybeTrackFromScroll();
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() => _maybeTrackFromScroll();
+
+  void _maybeTrackFromScroll() {
+    if (!mounted || !_scrollController.hasClients) return;
+    final pos = _scrollController.position;
+    final max = pos.maxScrollExtent;
+    // Short content (nothing to scroll): treat as engaged once laid out —
+    // same idea as web's onScroll init when the article is shorter than the
+    // viewport (readProgress can already be ≥10).
+    final pct = max <= 0
+        ? 100
+        : ((pos.pixels / max) * 100).clamp(0, 100).round();
+    if (pct < 10) return;
+    _trackSection(_activeSection);
+  }
+
+  void _trackSection(int section) {
+    if (_trackedSections.contains(section)) return;
+    final assetId = _assetIds[section.clamp(0, _assetIds.length - 1)];
+    // Briefing must not fire on tab open alone (web requires ≥10% scroll).
+    if (assetId == 'briefing' && _briefingTracked) return;
+    _trackedSections.add(section);
+    if (assetId == 'briefing') _briefingTracked = true;
+    ref.read(progressProvider.notifier).trackAssetOpened(widget.partNumber, assetId);
+  }
 
   // Built once — the sheet only depends on static AppColors values.
   static final MarkdownStyleSheet _markdownStyleSheet = MarkdownStyleSheet(
@@ -133,7 +185,16 @@ class _ReadTabState extends ConsumerState<ReadTab> {
                     color: selected ? AppColors.gold : AppColors.card,
                     borderRadius: BorderRadius.circular(20),
                     child: InkWell(
-                      onTap: () => setState(() => _activeSection = e.key),
+                      onTap: () {
+                        setState(() => _activeSection = e.key);
+                        // Reset scroll; tracking waits for ≥10% on new section.
+                        if (_scrollController.hasClients) {
+                          _scrollController.jumpTo(0);
+                        }
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (mounted) _maybeTrackFromScroll();
+                        });
+                      },
                       borderRadius: BorderRadius.circular(20),
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -180,10 +241,19 @@ class _ReadTabState extends ConsumerState<ReadTab> {
 
               // Key Facts: plain newline-separated sentences → individual fact cards
               if (_activeSection == 2) {
-                return _KeyFactsList(text: text);
+                return _KeyFactsList(
+                  text: text,
+                  controller: _scrollController,
+                  onLaidOut: () {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (mounted) _maybeTrackFromScroll();
+                    });
+                  },
+                );
               }
 
               return Markdown(
+                controller: _scrollController,
                 data: text,
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
                 styleSheet: _markdownStyleSheet,
@@ -248,7 +318,13 @@ class _ErrorView extends StatelessWidget {
 /// Renders newline-separated plain-text facts as numbered cards.
 class _KeyFactsList extends StatelessWidget {
   final String text;
-  const _KeyFactsList({required this.text});
+  final ScrollController controller;
+  final VoidCallback onLaidOut;
+  const _KeyFactsList({
+    required this.text,
+    required this.controller,
+    required this.onLaidOut,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -258,7 +334,10 @@ class _KeyFactsList extends StatelessWidget {
         .where((l) => l.isNotEmpty)
         .toList();
 
+    WidgetsBinding.instance.addPostFrameCallback((_) => onLaidOut());
+
     return ListView.builder(
+      controller: controller,
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
       itemCount: facts.length,
       itemBuilder: (ctx, i) {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/adaptive_icons.dart';
 import '../../../core/widgets/ui_kit.dart';
 import '../data/reference_data.dart';
 
@@ -84,7 +85,7 @@ class ReferenceScreen extends StatelessWidget {
                                     ),
                                   ),
                                   const SizedBox(width: 8),
-                                  const Icon(Icons.chevron_right_rounded,
+                                  const ForwardChevronIcon(
                                     color: AppColors.textMuted, size: 18),
                                 ],
                               ),

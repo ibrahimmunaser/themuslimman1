@@ -350,7 +350,7 @@ export function SlidesPanel({ part, previewMode }: { part: Part; previewMode?: b
 
 import { fetchPartAssets, type PartAssets as PartAssetUrls } from "@/lib/part-asset-cache";
 
-function SubTabContent({ id, part, previewMode, assetUrls, onSwitchMode, videoCompleted, initialVideoPercent, initialQuizBestScore, quizDraft, onQuizDraftChange }: {
+function SubTabContent({ id, part, previewMode, assetUrls, onSwitchMode, videoCompleted, initialVideoPercent, initialQuizBestScore, quizDraft, onQuizDraftChange, learnerProfileId }: {
   id: SubTabId;
   part: Part;
   previewMode?: boolean;
@@ -361,6 +361,7 @@ function SubTabContent({ id, part, previewMode, assetUrls, onSwitchMode, videoCo
   initialQuizBestScore?: number;
   quizDraft?: QuizDraft | null;
   onQuizDraftChange?: (draft: QuizDraft | null) => void;
+  learnerProfileId?: string;
 }) {
   const wrap = (child: React.ReactNode) => (
     <div className="rounded-xl bg-surface/60 p-4 sm:p-6">{child}</div>
@@ -424,6 +425,7 @@ function SubTabContent({ id, part, previewMode, assetUrls, onSwitchMode, videoCo
             initialBestScore={initialQuizBestScore}
             draft={quizDraft}
             onDraftChange={onQuizDraftChange}
+            learnerProfileId={learnerProfileId}
           />
         : <EmptyContent label="Quiz" />);
     case "slides":      return <SlidesPanel part={part} previewMode={previewMode} />;
@@ -565,9 +567,17 @@ interface PartTabsProps {
   forcedInitialMode?: ModeId;
   /** Hide the mode/tab navigation row entirely (used in marketing previews to reduce friction). */
   hideTabNav?: boolean;
+  /**
+   * The learner profile this page was rendered for, snapshotted server-side
+   * at page load. Passed through to progress-tracking writes (e.g. quiz
+   * submission) so a stale tab's writes aren't silently attributed to a
+   * different family profile switched to in another tab. Undefined for
+   * contexts without family profiles (e.g. the classroom lesson page).
+   */
+  learnerProfileId?: string;
 }
 
-export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initialAssetUrls, initialVideoCompleted, initialVideoPercent, initialQuizBestScore, forcedInitialMode, hideTabNav = false }: PartTabsProps) {
+export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initialAssetUrls, initialVideoCompleted, initialVideoPercent, initialQuizBestScore, forcedInitialMode, hideTabNav = false, learnerProfileId }: PartTabsProps) {
   const availableModes = MODES.filter((m) => getModeSubTabs(m, part).length > 0);
   const defaultMode = availableModes[0] ?? MODES[0];
 
@@ -751,6 +761,7 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
                   initialQuizBestScore={initialQuizBestScore}
                   quizDraft={quizDraft}
                   onQuizDraftChange={setQuizDraft}
+                  learnerProfileId={learnerProfileId}
                 />
               </div>
             )}
@@ -767,6 +778,7 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
                   initialQuizBestScore={initialQuizBestScore}
                   quizDraft={quizDraft}
                   onQuizDraftChange={setQuizDraft}
+                  learnerProfileId={learnerProfileId}
                 />
               </div>
             )}

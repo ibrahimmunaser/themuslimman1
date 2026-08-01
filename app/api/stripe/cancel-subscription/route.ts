@@ -1,7 +1,8 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { checkRateLimit, getIP } from "@/lib/rate-limit";
 
 /**
  * POST /api/stripe/cancel-subscription
@@ -12,8 +13,17 @@ import { prisma } from "@/lib/db";
  *
  * To undo a cancellation, POST to /api/stripe/reactivate-subscription.
  */
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
+    const ip = getIP(request);
+    const rl = await checkRateLimit(`cancel-sub:${ip}`, 10, 15 * 60 * 1000);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: "Too many attempts. Please try again later." },
+        { status: 429, headers: { "Retry-After": String(rl.retryAfterSeconds) } }
+      );
+    }
+
     const user = await getCurrentUser();
     if (!user) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
@@ -22,7 +32,7 @@ export async function POST() {
     const sub = await prisma.subscription.findFirst({
       where: {
         userId: user.id,
-        status: { in: ["active", "trialing", "past_due"] },
+        status: { in: ["active", "trialing", "past_due", "unpaid"] },
         currentPeriodEnd: { gte: new Date() },
       },
       select: { stripeSubscriptionId: true, cancelAtPeriodEnd: true, currentPeriodEnd: true },

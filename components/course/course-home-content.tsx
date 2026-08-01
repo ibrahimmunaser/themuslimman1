@@ -31,6 +31,8 @@ interface CourseHomeContentProps {
   currentPartVideoProgress: number;
   stagesData: StageData[];
   currentStageNumber: number;
+  /** When false, show Part 1 free copy + upgrade banner (mobile parity). */
+  hasAccess?: boolean;
 }
 
 export function CourseHomeContent({
@@ -44,6 +46,7 @@ export function CourseHomeContent({
   currentPartVideoProgress,
   stagesData,
   currentStageNumber,
+  hasAccess = true,
 }: CourseHomeContentProps) {
   const isNewUser = completedLessons === 0;
   const currentStage = stagesData[currentStageNumber - 1];
@@ -58,6 +61,11 @@ export function CourseHomeContent({
       <FadeUp>
         <p className="text-text-muted text-sm mb-1">Welcome back</p>
         <h1 className="text-2xl sm:text-3xl font-bold text-text">{userName}</h1>
+        {!hasAccess && (
+          <p className="text-text-secondary text-sm mt-2">
+            Part 1 is free — begin the Seerah today.
+          </p>
+        )}
       </FadeUp>
 
       {/* ── Start Here / Continue ─────────────────────────────────────────── */}
@@ -70,7 +78,11 @@ export function CourseHomeContent({
             {/* Main content */}
             <div className="flex-1 min-w-0">
               <p className="text-xs font-bold uppercase tracking-widest text-gold mb-3">
-                {isNewUser ? "Start here" : "Continue learning"}
+                {!hasAccess
+                  ? "Free — Start Here"
+                  : isNewUser
+                    ? "Start here"
+                    : "Continue learning"}
               </p>
 
               <h2 className="text-xl sm:text-2xl font-bold text-text mb-2 leading-tight">
@@ -162,6 +174,27 @@ export function CourseHomeContent({
           </div>
         </div>
       </FadeUp>
+
+      {/* ── Upgrade prompt (unpaid — mobile parity) ───────────────────────── */}
+      {!hasAccess && (
+        <FadeUp delay={0.08}>
+          <div className="rounded-2xl border border-gold/25 bg-gradient-to-br from-gold/10 via-gold/5 to-transparent p-6 sm:p-7">
+            <h2 className="text-lg font-bold text-text mb-2">
+              Unlock All {totalLessons} Parts
+            </h2>
+            <p className="text-sm text-text-secondary leading-relaxed mb-4 max-w-xl">
+              Get lifetime access to the full Seerah course — videos, reading notes, flashcards, and quizzes for every part.
+            </p>
+            <Link
+              href="/pricing"
+              className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[44px] bg-gold hover:bg-gold-light text-ink font-semibold rounded-xl text-sm transition-colors"
+            >
+              View Plans
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </FadeUp>
+      )}
 
       {/* ── Stats Grid ────────────────────────────────────────────────────── */}
       <StaggerChildren className="grid grid-cols-1 sm:grid-cols-3 gap-4" stagger={0.1} as="section">

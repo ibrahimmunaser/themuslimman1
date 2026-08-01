@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Audit H5 fix: android:allowBackup="false" (AndroidManifest.xml) only
+  disables Google Drive cloud backup on Android 12 (API 31)+ — it does NOT
+  disable device-to-device (D2D) "copy my data" transfer during new-device
+  setup on that OS version (manufacturer-dependent; confirmed in Android's
+  own Android 12 behavior-change docs). Without this file, a user setting up
+  a new phone could have this app's plain SharedPreferences copied across
+  (is_logged_in / has_access / user_name flags, none of which are
+  Keystore-protected) while the actual session cookie in
+  flutter_secure_storage's EncryptedSharedPreferences either fails to
+  decrypt on the new device (different hardware-backed Keystore key) or is
+  itself excluded — leaving a "phantom logged in" UI state with no valid
+  session behind it until the next network call 401s and
+  AuthNotifier._handleSessionExpired() bounces the user back to sign-in.
+  Excluding everything here for both cloud-backup and device-transfer
+  mirrors allowBackup="false"'s original intent on every Android version.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="root" path="." />
+        <exclude domain="file" path="." />
+        <exclude domain="database" path="." />
+        <exclude domain="sharedpref" path="." />
+        <exclude domain="external" path="." />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="root" path="." />
+        <exclude domain="file" path="." />
+        <exclude domain="database" path="." />
+        <exclude domain="sharedpref" path="." />
+        <exclude domain="external" path="." />
+    </device-transfer>
+</data-extraction-rules>

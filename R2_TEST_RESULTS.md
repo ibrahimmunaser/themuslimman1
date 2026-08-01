@@ -145,7 +145,7 @@ All R2 integration components are working perfectly. The website is successfully
 
 ### Admin Created
 - ✅ Username: `themuslimman_admin`
-- ✅ Password: `Chemithabet22?`
+- ✅ Password: (set via `ADMIN_BOOTSTRAP_PASSWORD` — never store in docs)
 - ✅ Role: Platform Admin
 - ✅ Email verified: Yes
 - ✅ Successfully logged in

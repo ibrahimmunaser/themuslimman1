@@ -132,8 +132,13 @@ const List<PartModel> PARTS = [
 List<PartModel> getPartsByEra(String era) =>
     PARTS.where((p) => p.era == era).toList();
 
+List<Map<String, dynamic>>? _eraGroupsCache;
+
+/// [ERAS]/[PARTS] are static const data that never changes at runtime, so
+/// this only needs to be computed once instead of on every rebuild of every
+/// screen that calls it (dashboard + progress screens both call this).
 List<Map<String, dynamic>> getEraGroups() {
-  return ERAS.map((era) {
+  return _eraGroupsCache ??= ERAS.map((era) {
     return {
       'era': era,
       'parts': getPartsByEra(era.id),

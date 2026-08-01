@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { isBlockedEmail } from "@/lib/email-automation";
 import { sendCheckupFollowupEmail, type CheckupLeadForEmail } from "@/lib/checkup-email-automation";
+import { requireCronAuth } from "@/lib/cron-auth";
 
 export const dynamic    = "force-dynamic";
 export const maxDuration = 60;
@@ -29,17 +30,6 @@ const SUBJECTS: Record<number, string> = {
 function getSubject(step: number, lead: { score: number }): string {
   if (step === 1) return `Your Seerah score: ${lead.score}/100`;
   return SUBJECTS[step] ?? "Your Seerah journey";
-}
-
-function requireCronAuth(req: NextRequest): boolean {
-  const secret = process.env.CRON_SECRET;
-  if (!secret) {
-    // Deliberately loud: a missing secret means the cron will silently 401 on
-    // every invocation. Log at startup so it shows in Vercel function logs.
-    console.error("[CRON] CRON_SECRET is not set — all cron requests will be rejected. Set this env var in Vercel dashboard.");
-    return false;
-  }
-  return req.headers.get("authorization") === `Bearer ${secret}`;
 }
 
 /**

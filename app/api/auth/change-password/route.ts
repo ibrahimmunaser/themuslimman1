@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Per-user rate limit: 5 attempts per 15 minutes to prevent brute-force of current password.
-    const rl = checkRateLimit(`change-password:${user.id}`, 5, 15 * 60 * 1000);
+    const rl = await checkRateLimit(`change-password:${user.id}`, 5, 15 * 60 * 1000);
     if (!rl.allowed) {
       return NextResponse.json(
         { error: "Too many attempts. Please try again later." },

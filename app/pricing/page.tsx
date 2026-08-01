@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Play, ChevronDown } from "lucide-react";
+import { Play, ChevronDown, AlertTriangle } from "lucide-react";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
 import { getCurrentUser } from "@/lib/auth";
@@ -7,6 +7,7 @@ import { getUserAccessInfo } from "@/lib/access";
 import { PricingSection } from "@/components/pricing/pricing-section";
 import { FadeUp } from "@/components/motion";
 import { FunnelTracker } from "@/components/analytics/funnel-tracker";
+import { PortalButton } from "@/components/billing/portal-button";
 
 export const metadata = {
   title: "Pricing — Complete Seerah",
@@ -98,6 +99,10 @@ export default async function PricingPage({ searchParams }: Props) {
   const hasFamily   = user?.planType === "family";
   const checkoutBaseUrl = buildCheckoutBaseUrl(params);
   const watchFreeUrl = buildWatchFreeUrl(params);
+  const needsBillingRecovery =
+    !hasLifetime &&
+    (accessInfo?.subscription?.status === "past_due" ||
+      accessInfo?.subscription?.status === "unpaid");
 
   return (
     <div className="flex flex-col min-h-screen bg-ink text-text">
@@ -112,6 +117,36 @@ export default async function PricingPage({ searchParams }: Props) {
           utm_campaign: params.utm_campaign ?? null,
         }}
       />
+
+      {/* Past-due recovery: checkout is blocked while Stripe still has an open
+          past_due subscription, so buying a new plan here won't work. Point them
+          at /billing (and the Stripe portal) instead of leaving them stuck. */}
+      {needsBillingRecovery && (
+        <div className="border-b border-red-500/30 bg-red-500/5">
+          <div className="max-w-2xl mx-auto px-4 sm:px-6 py-4 flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-red-400 text-sm">
+                Your subscription payment failed
+              </p>
+              <p className="text-sm text-text-secondary mt-1 leading-relaxed">
+                {accessInfo?.hasAccess
+                  ? "Update your card to keep access. Buying a new plan won\u2019t work while this payment is still open."
+                  : "Course access is paused until payment succeeds. Update your card — don\u2019t buy a new plan while this payment is still open."}
+              </p>
+              <div className="mt-3 flex flex-wrap gap-3">
+                <PortalButton label="Update payment method" variant="alert" />
+                <Link
+                  href="/billing"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-text-secondary hover:text-text text-sm transition-colors"
+                >
+                  Go to billing
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 1. Pricing hero */}
       <section className="pt-14 pb-8 border-b border-border">

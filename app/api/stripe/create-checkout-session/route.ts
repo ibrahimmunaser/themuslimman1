@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { getCurrentUser } from "@/lib/auth";
-import { hasActiveCourseAccess } from "@/lib/access";
+import { hasActiveCourseAccess, getUserAccessInfo, getActiveSubscription } from "@/lib/access";
+import { checkRateLimit, getIP } from "@/lib/rate-limit";
 
 // ── Price ID environment variables ────────────────────────────────────────────
 // New unified naming convention. Old STRIPE_MONTHLY_PRICE_ID / STRIPE_FAMILY_MONTHLY_PRICE_ID
@@ -20,23 +21,19 @@ const FAMILY_LIFETIME_PRICE_ID       =
 /**
  * POST /api/stripe/create-checkout-session
  *
- * Supported types (body.type):
- *   "individual-trial"    — $1 setup fee now, 7-day trial, then $9/month
- *   "family-trial"        — $1 setup fee now, 7-day family access, then $19/month
- *   "individual-lifetime" — $49 one-time lifetime individual access
- *   "family-lifetime"     — $79 one-time lifetime family access
- *   "monthly"             — $9/month subscription (no trial, legacy)
- *   "family-monthly"      — $19/month subscription (no trial, legacy)
- *
- * Returns: { url: string } — the Stripe-hosted Checkout Session URL.
- * On already-has-access: { url: "/seerah" }.
- *
- * NOTE: Email verification is NOT required before payment. Verified status
- * gates dashboard access, not payment. The webhook grants entitlement
- * regardless of email verification state.
+ * Legacy Stripe Checkout Session path (trial UI). Gates mirror create-*-intent.
  */
 export async function POST(request: NextRequest) {
   try {
+    const ip = getIP(request);
+    const rl = await checkRateLimit(`checkout-session:${ip}`, 20, 15 * 60 * 1000);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: "Too many attempts. Please try again later." },
+        { status: 429, headers: { "Retry-After": String(rl.retryAfterSeconds) } }
+      );
+    }
+
     const user = await getCurrentUser();
     if (!user) {
       return NextResponse.json(
@@ -48,15 +45,34 @@ export async function POST(request: NextRequest) {
     const body = await request.json() as { type?: string };
     const checkoutType = (body.type ?? "individual-trial") as string;
 
+    const [access, activeSub] = await Promise.all([
+      getUserAccessInfo(user.id, user.hasPaid),
+      getActiveSubscription(user.id),
+    ]);
+
+    // Mobile IAP subscribers already have access — don't open a second Stripe sub.
+    if (access.mobilePurchase && checkoutType !== "family-lifetime") {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://themuslimman.com";
+      return NextResponse.json({ url: `${appUrl}/seerah` });
+    }
+
+    if (activeSub && !checkoutType.includes("lifetime")) {
+      return NextResponse.json(
+        {
+          error: "You already have an open subscription. Update payment on the billing page.",
+          hasActiveSubscription: true,
+        },
+        { status: 409 },
+      );
+    }
+
     // Short-circuit: user already has active access.
-    // Exception: individual lifetime holders may still proceed to family-lifetime
-    // to upgrade their plan (they pay the difference). All other combinations
-    // (family lifetime, active subscription) are fully blocked.
+    // Exception: individual lifetime holders may still proceed to family-lifetime.
     const alreadyHasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
-    if (alreadyHasAccess) {
+    if (alreadyHasAccess || access.hasLifetime) {
       const isIndividualLifetimeUpgrade =
         checkoutType === "family-lifetime" &&
-        user.hasPaid &&
+        access.hasLifetime &&
         user.planType !== "family";
       if (!isIndividualLifetimeUpgrade) {
         const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://themuslimman.com";

@@ -2,14 +2,14 @@
 
 import { PART_CONTENT } from "@/lib/part-content-data";
 import { getCurrentUser } from "@/lib/auth";
-import { hasActiveCourseAccess } from "@/lib/access";
+import { hasActiveCourseAccess, TOTAL_COURSE_PARTS } from "@/lib/access";
 
 /**
  * Access gate for text content server actions.
  *
- * Three-layer check — identical to getQuizAnswerMap / requirePartAccess:
+ * Matches lib/part-access.ts:
  *   1. Authenticated user
- *   2. Verified email (prevents bypass of the verification wall)
+ *   2. Verified email — waived for anonymous guests and entitled (paid/IAP) users
  *   3. Active course access (lifetime purchase OR active/trialing subscription)
  *
  * Returns false (silently) for any denied case — no error detail is leaked
@@ -19,14 +19,20 @@ import { hasActiveCourseAccess } from "@/lib/access";
  * inputs before hitting auth.
  */
 async function canAccessPartContent(partNumber: number): Promise<boolean> {
-  if (!Number.isInteger(partNumber) || partNumber < 1 || partNumber > 100) {
+  if (!Number.isInteger(partNumber) || partNumber < 1 || partNumber > TOTAL_COURSE_PARTS) {
     return false;
   }
 
   const user = await getCurrentUser();
   if (!user) return false;
-  if (!user.emailVerified) return false;
-
+  // Part 1 free; paid content requires access. Email verify waived when entitled
+  // (mirrors lib/part-access.ts).
+  if (partNumber === 1) return true;
+  if (!user.emailVerified && !user.isAnonymous) {
+    const entitled = await hasActiveCourseAccess(user.id, user.hasPaid);
+    if (!entitled) return false;
+    return true;
+  }
   return hasActiveCourseAccess(user.id, user.hasPaid);
 }
 

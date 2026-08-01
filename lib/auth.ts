@@ -9,12 +9,14 @@ import { hashToken } from "./hash-token";
 import { checkRateLimit } from "./rate-limit";
 import type { SessionUser } from "./session";
 import { ROLES, type Role, isRole } from "./roles";
+import { setAuthCookies, SESSION_COOKIE_NAME, ROLE_COOKIE_NAME } from "./session-cookies";
+import { escapeHtml } from "./html-escape";
 
-const COOKIE_NAME    = "seerah_session";
+const COOKIE_NAME    = SESSION_COOKIE_NAME;
 // seerah_role is a UI-hint cookie (now httpOnly). It is NEVER used for access
 // control decisions on the server — all authorization uses the DB session lookup
 // in getCurrentUser(). This cookie only informs client-side UI like nav items.
-const ROLE_COOKIE    = "seerah_role";
+const ROLE_COOKIE    = ROLE_COOKIE_NAME;
 const PROFILE_COOKIE = "seerah_profile"; // active learner profile ID (non-httpOnly for client reads)
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 const BCRYPT_ROUNDS  = 12;
@@ -22,28 +24,6 @@ const BCRYPT_ROUNDS  = 12;
 // ─────────────────────────────────────────────────────────────
 // Session helpers
 // ─────────────────────────────────────────────────────────────
-
-async function setSessionCookie(token: string, expiresAt: Date) {
-  const cookieStore = await cookies();
-  cookieStore.set(COOKIE_NAME, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    expires: expiresAt,
-    path: "/",
-  });
-}
-
-async function setRoleCookie(role: string, expiresAt: Date) {
-  const cookieStore = await cookies();
-  cookieStore.set(ROLE_COOKIE, role, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    expires: expiresAt,
-    path: "/",
-  });
-}
 
 async function clearSessionCookie() {
   const cookieStore = await cookies();
@@ -57,6 +37,16 @@ async function clearSessionCookie() {
 // ─────────────────────────────────────────────────────────────
 
 export async function setActiveProfileCookie(profileId: string) {
+  const user = await getCurrentUser();
+  if (!user) return;
+
+  // Never trust a client-supplied profileId without ownership check.
+  const owned = await prisma.learnerProfile.findFirst({
+    where: { id: profileId, userId: user.id },
+    select: { id: true },
+  });
+  if (!owned) return;
+
   const cookieStore = await cookies();
   const expiresAt = new Date(Date.now() + COOKIE_MAX_AGE * 1000);
   cookieStore.set(PROFILE_COOKIE, profileId, {
@@ -82,8 +72,7 @@ async function createSession(userId: string, role: string): Promise<string> {
     // Store only the SHA-256 hash in the DB so a DB leak cannot be used to
     // hijack sessions. The raw token lives exclusively in the user's cookie.
     await prisma.session.create({ data: { id: nanoid(24), userId, token: tokenHash, expiresAt } });
-    await setSessionCookie(token, expiresAt);
-    await setRoleCookie(role, expiresAt);
+    await setAuthCookies(token, role, expiresAt);
     return token;
   } catch (error) {
     console.error(`[AUTH] createSession: Failed to create session for user ${userId}:`, error);
@@ -117,6 +106,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
           emailVerified: true,
           hasPaid: true,
           planType: true,
+          isAnonymous: true,
           studentProfile: { select: { id: true } },
           learnerProfiles: {
             select: { id: true, displayName: true, isDefault: true },
@@ -173,6 +163,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
     emailVerified: user.emailVerified,
     hasPaid: user.hasPaid,
     planType: user.planType,
+    isAnonymous: user.isAnonymous,
     activeProfileId: activeProfile?.id ?? null,
     activeProfileName: activeProfile?.displayName ?? null,
   };
@@ -238,32 +229,58 @@ export async function requireStudent(): Promise<SessionUser> {
 export async function login(
   email: string,
   password: string
-): Promise<{ success: boolean; error?: string; role?: Role; hasPurchase?: boolean; isPastDue?: boolean; userId?: string; emailVerified?: boolean }> {
+): Promise<{
+  success: boolean;
+  error?: string;
+  role?: Role;
+  hasPurchase?: boolean;
+  isPastDue?: boolean;
+  userId?: string;
+  emailVerified?: boolean;
+  fullName?: string;
+}> {
   const startTime = Date.now();
   const lowerEmail = email.toLowerCase();
+
+  // Defense in depth: this file is "use server", so login is callable as a
+  // server action even when /api/auth/signin already rate-limits by IP.
+  try {
+    const hdrs = await headers();
+    const xff = hdrs.get("x-forwarded-for");
+    const ip = xff?.split(",")[0]?.trim() || hdrs.get("x-real-ip") || "unknown";
+    const rl = await checkRateLimit(`login-action:${ip}`, 5, 10 * 60 * 1000);
+    if (!rl.allowed) {
+      return { success: false, error: "Too many attempts. Please try again later." };
+    }
+  } catch {
+    // headers() unavailable — continue; API route still rate-limits.
+  }
 
   const user = await prisma.user.findUnique({
     where: { email: lowerEmail },
   });
 
   if (!user) {
-    // Run a dummy bcrypt comparison so "user not found" takes the same wall-clock
-    // time as "wrong password", preventing timing-based user enumeration.
-    await bcrypt.compare(password, "$2a$12$dummyhashfortimingequalityXXXXXXXXXXXXXXX");
-    return { success: false, error: "Invalid credentials" };
+    await bcrypt.compare(password, "$2b$12$TKYwTM5YiNrZ.CQshX1m.OuolC6Pbw8AMMTTbWyJe6TGTQiWAXb7e");
+    return { success: false, error: "Invalid email or password" };
   }
 
-  if (!user.isActive) return { success: false, error: "Account is deactivated" };
+  if (!user.isActive) {
+    await bcrypt.compare(password, "$2b$12$TKYwTM5YiNrZ.CQshX1m.OuolC6Pbw8AMMTTbWyJe6TGTQiWAXb7e");
+    return { success: false, error: "Invalid email or password" };
+  }
 
   if (!user.passwordHash) {
-    await bcrypt.compare(password, "$2a$12$dummyhashfortimingequalityXXXXXXXXXXXXXXX");
-    return { success: false, error: "Check your email for a link to set your password and access your account." };
+    await bcrypt.compare(password, "$2b$12$TKYwTM5YiNrZ.CQshX1m.OuolC6Pbw8AMMTTbWyJe6TGTQiWAXb7e");
+    return { success: false, error: "Invalid email or password" };
   }
 
   const valid = await bcrypt.compare(password, user.passwordHash);
   if (!valid) return { success: false, error: "Invalid email or password" };
 
   try {
+    // Revoke other sessions so a stolen cookie can't survive a fresh login.
+    await prisma.session.deleteMany({ where: { userId: user.id } });
     await createSession(user.id, user.role);
   } catch (error) {
     console.error(`[AUTH] login: Failed to create session for ${user.id}:`, error);
@@ -277,7 +294,7 @@ export async function login(
   // access, and any other path that sets it directly must also be honoured here.
   const [, purchaseInfo] = await Promise.all([
     prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } }),
-    userHasPurchases(user.id),
+    lookupUserPurchases(user.id),
   ]);
   const hasPurchase = user.hasPaid || purchaseInfo.hasPurchase;
   // Lifetime buyers (hasPaid=true) are never "past due" — only monthly subs can be.
@@ -286,7 +303,15 @@ export async function login(
   const elapsed = Date.now() - startTime;
   if (elapsed > 3000) console.warn(`[AUTH] login: Slow login for ${lowerEmail} [${elapsed}ms]`);
 
-  return { success: true, role: user.role as Role, hasPurchase, isPastDue, userId: user.id, emailVerified: user.emailVerified };
+  return {
+    success: true,
+    role: user.role as Role,
+    hasPurchase,
+    isPastDue,
+    userId: user.id,
+    emailVerified: user.emailVerified,
+    fullName: user.fullName,
+  };
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -313,6 +338,16 @@ export async function logout(): Promise<void> {
 // ─────────────────────────────────────────────────────────────
 
 export async function userHasPurchases(userId: string): Promise<{ hasPurchase: boolean; isPastDue: boolean }> {
+  // "use server" export — refuse cross-user probes (IDOR).
+  const sessionUser = await getCurrentUser();
+  if (!sessionUser || sessionUser.id !== userId) {
+    return { hasPurchase: false, isPastDue: false };
+  }
+  return lookupUserPurchases(userId);
+}
+
+/** Internal purchase lookup — trusted callers only (e.g. login after session create). */
+async function lookupUserPurchases(userId: string): Promise<{ hasPurchase: boolean; isPastDue: boolean }> {
   const now = new Date();
   const [purchase, subscription, mobilePurchase] = await Promise.all([
     prisma.purchase.findFirst({ where: { userId, status: "succeeded" }, select: { id: true } }),
@@ -346,7 +381,22 @@ export async function verifyEmail(token: string): Promise<{ success: boolean; er
   // The DB stores the hash; hash the incoming token before lookup.
   const user = await prisma.user.findFirst({ where: { verificationToken: hashToken(token) } });
 
-  if (!user) return { success: false, error: "Invalid or expired verification link" };
+  // Audit L-verify-email-wording: verificationToken is nulled out the moment a
+  // link is successfully consumed (see the update below), so a genuine
+  // "already verified, re-clicked the same email link on a different device
+  // or after the session cookie expired" case is indistinguishable here from
+  // a truly invalid/tampered token — both simply find no matching user. The
+  // API route's `sessionUser?.emailVerified` short-circuit already handles
+  // the common case (clicking the link again in the SAME browser session),
+  // so this message only needs to read reasonably for the cross-device case
+  // too, instead of implying something is broken when it likely already
+  // succeeded.
+  if (!user) {
+    return {
+      success: false,
+      error: "This link is invalid or has already been used. If you already verified your email, you're all set.",
+    };
+  }
 
   if (user.verificationExpires && user.verificationExpires < new Date()) {
     return { success: false, error: "This verification link has expired. Please request a new one." };
@@ -368,7 +418,7 @@ export async function requestPasswordReset(email: string): Promise<{ success: bo
   // Per-email rate limit: 3 reset emails per hour per address.
   // This is in addition to the per-IP limit in the API route, so rotating
   // proxies cannot spam reset emails to a victim's inbox.
-  const emailRl = checkRateLimit(
+  const emailRl = await checkRateLimit(
     `pw-reset:email:${email.trim().toLowerCase()}`,
     3,
     60 * 60 * 1000,
@@ -391,13 +441,13 @@ export async function requestPasswordReset(email: string): Promise<{ success: bo
   console.log(`[PASSWORD_RESET] Processing reset request`);
 
   const resetToken = nanoid(32);
-  const resetTokenHash = hashToken(resetToken);
+  const resetTokenHash = hashToken(`reset:${resetToken}`);
   const resetExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
   await prisma.user.update({
     where: { id: user.id },
     data: {
-      passwordResetToken: resetTokenHash, // Store hash — raw token only in email
+      passwordResetToken: resetTokenHash,
       passwordResetExpiry: resetExpiry,
     },
   });
@@ -425,7 +475,7 @@ export async function requestPasswordReset(email: string): Promise<{ success: bo
             </div>
             
             <div style="background: #ffffff; padding: 40px 30px; border: 1px solid #e5e5e5; border-top: none;">
-              <p style="font-size: 16px; margin: 0 0 20px 0;">Hello ${user.fullName ?? "there"},</p>
+              <p style="font-size: 16px; margin: 0 0 20px 0;">Hello ${escapeHtml(user.fullName ?? "there")},</p>
               
               <p style="font-size: 16px; margin: 0 0 20px 0;">
                 We received a request to reset your password. Click the button below to create a new password:
@@ -461,9 +511,8 @@ export async function requestPasswordReset(email: string): Promise<{ success: bo
     console.log(`[PASSWORD_RESET] Email sent successfully:`, result);
   } catch (emailError) {
     console.error("[PASSWORD_RESET] Failed to send password reset email:", emailError);
-    // Return failure so the UI can inform the user rather than saying "email sent"
-    // when it wasn't. The token in the DB is harmless to leave (it expires in 1 h).
-    return { success: false, error: "Failed to send reset email. Please try again." };
+    // Same success shape as "user not found" so send-failure cannot enumerate accounts.
+    return { success: true };
   }
 
   return { success: true };
@@ -475,7 +524,7 @@ export async function resetPassword(
 ): Promise<{ success: boolean; error?: string }> {
   if (newPassword.length < 8) return { success: false, error: "Password must be at least 8 characters" };
 
-  const tokenHash = hashToken(token);
+  const tokenHash = hashToken(`reset:${token}`);
   const user = await prisma.user.findFirst({
     where: { passwordResetToken: tokenHash, passwordResetExpiry: { gt: new Date() } },
   });
@@ -484,8 +533,6 @@ export async function resetPassword(
 
   const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
 
-  // Update password and revoke ALL existing sessions so any attacker
-  // who had a stolen session is kicked out immediately.
   await prisma.$transaction([
     prisma.user.update({
       where: { id: user.id },
@@ -502,9 +549,9 @@ export async function resetPassword(
 // ─────────────────────────────────────────────────────────────
 
 /**
- * Used after guest checkout: validates the account-setup token (reuses the
- * passwordResetToken field), sets the user's password, marks their email as
- * verified, and creates a fresh session so they land directly in the dashboard.
+ * Used after guest checkout: validates the account-setup token (prefixed
+ * `setup:` in passwordResetToken), sets the password, marks email verified,
+ * and creates a fresh session.
  */
 export async function completeAccountSetup(
   token: string,
@@ -517,15 +564,26 @@ export async function completeAccountSetup(
     return { success: false, error: "Password is too long" };
   }
 
-  const tokenHash = hashToken(token);
+  const tokenHash = hashToken(`setup:${token}`);
   const user = await prisma.user.findFirst({
     where: { passwordResetToken: tokenHash, passwordResetExpiry: { gt: new Date() } },
-    select: { id: true, role: true },
+    select: { id: true, role: true, passwordHash: true },
   });
   if (!user) {
     return {
       success: false,
       error: "This link has expired or has already been used. Use Forgot Password to get a new one.",
+    };
+  }
+  // Already set a password via /change-password — refuse takeover via stale email link.
+  if (user.passwordHash) {
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { passwordResetToken: null, passwordResetExpiry: null },
+    });
+    return {
+      success: false,
+      error: "A password is already set on this account. Sign in or use Forgot Password.",
     };
   }
 
@@ -544,7 +602,6 @@ export async function completeAccountSetup(
     prisma.session.deleteMany({ where: { userId: user.id } }),
   ]);
 
-  // Create a fresh session — user lands directly in the dashboard
   await createSession(user.id, user.role);
 
   return { success: true };
@@ -560,6 +617,15 @@ export async function changePassword(
 ): Promise<{ success: boolean; error?: string }> {
   const user = await getCurrentUser();
   if (!user) return { success: false, error: "Not authenticated" };
+
+  try {
+    const rl = await checkRateLimit(`change-password-action:${user.id}`, 5, 15 * 60 * 1000);
+    if (!rl.allowed) {
+      return { success: false, error: "Too many attempts. Please try again later." };
+    }
+  } catch {
+    // headers/rate-limit unavailable — continue; API route still rate-limits.
+  }
 
   const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
 
@@ -580,7 +646,15 @@ export async function changePassword(
   const currentTokenHash = currentRawToken ? hashToken(currentRawToken) : null;
 
   await prisma.$transaction([
-    prisma.user.update({ where: { id: user.id }, data: { passwordHash } }),
+    prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordHash,
+        // Invalidate any outstanding setup/reset/checkout tokens.
+        passwordResetToken: null,
+        passwordResetExpiry: null,
+      },
+    }),
     prisma.session.deleteMany({
       where: {
         userId: user.id,

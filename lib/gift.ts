@@ -1,4 +1,5 @@
 import { createHash, randomBytes } from "crypto";
+import { escapeHtml } from "@/lib/html-escape";
 
 /** Generate a cryptographically secure 32-byte hex token (64 chars). */
 export function generateGiftToken(): string {
@@ -29,7 +30,8 @@ export async function sendGiftClaimEmail(opts: {
   const resend = new Resend(process.env.RESEND_API_KEY);
 
   const isFamily = opts.planId === "family";
-  const toName = opts.recipientName ? opts.recipientName : "there";
+  const toName = escapeHtml(opts.recipientName ? opts.recipientName : "there");
+  const safePurchaserEmail = escapeHtml(opts.purchaserEmail);
   const planLabel = isFamily ? "Family Access to Complete Seerah" : "Complete Seerah";
   const subject = isFamily
     ? "You've been gifted Family Access to Complete Seerah"
@@ -38,7 +40,7 @@ export async function sendGiftClaimEmail(opts: {
   const messageBlock = opts.giftMessage
     ? `<div style="background:#f9f4e8;border:1px solid #e8d88a;border-radius:8px;padding:20px;margin:24px 0;">
         <p style="font-size:14px;color:#555;margin:0 0 6px 0;font-weight:600;">A personal message:</p>
-        <p style="font-size:14px;color:#333;margin:0;line-height:1.6;font-style:italic;">"${opts.giftMessage}"</p>
+        <p style="font-size:14px;color:#333;margin:0;line-height:1.6;font-style:italic;">"${escapeHtml(opts.giftMessage)}"</p>
        </div>`
     : "";
 
@@ -70,14 +72,14 @@ export async function sendGiftClaimEmail(opts: {
     <div style="background:linear-gradient(135deg,#1a1a1a 0%,#2d2d2d 100%);padding:30px 20px;text-align:center;border-radius:12px 12px 0 0;">
       <div style="font-size:36px;margin-bottom:12px;">🎁</div>
       <h1 style="color:#f4c542;margin:0 0 8px 0;font-size:24px;">You've Been Gifted ${planLabel}</h1>
-      <p style="color:#ccc;margin:0;font-size:15px;">A gift from ${opts.purchaserEmail}</p>
+      <p style="color:#ccc;margin:0;font-size:15px;">A gift from ${safePurchaserEmail}</p>
     </div>
 
     <div style="background:#ffffff;padding:40px 30px;border:1px solid #e5e5e5;border-top:none;">
       <p style="font-size:16px;margin:0 0 16px 0;">As-salamu alaykum ${toName},</p>
 
       <p style="font-size:15px;margin:0 0 16px 0;">
-        ${opts.purchaserEmail} gifted you lifetime access to <strong>${planLabel}</strong>,
+        ${safePurchaserEmail} gifted you lifetime access to <strong>${planLabel}</strong>,
         a structured course teaching the life of the Prophet ﷺ as one connected story.${isFamily ? " Your gift includes up to 5 learner profiles so your whole household can learn together." : ""}
       </p>
 

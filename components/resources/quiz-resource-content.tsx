@@ -166,11 +166,17 @@ export function QuizResourceContent({
                 return (
                   <div
                     key={part.id}
-                    onClick={mounted && !isLocked ? () => handleOpenQuiz(part) : undefined}
+                    onClick={
+                      !mounted
+                        ? undefined
+                        : isLocked
+                          ? () => { window.location.assign("/pricing"); }
+                          : () => handleOpenQuiz(part)
+                    }
                     onMouseEnter={mounted && !isLocked ? () => handlePrefetch(part.id) : undefined}
                     className={`group rounded-xl border border-zinc-800 bg-zinc-900/50 transition-all overflow-hidden ${
                       isLocked
-                        ? "cursor-not-allowed opacity-60"
+                        ? "cursor-pointer opacity-60 hover:opacity-80"
                         : "cursor-pointer hover:bg-zinc-900 hover:border-amber-500/30"
                     }`}
                   >

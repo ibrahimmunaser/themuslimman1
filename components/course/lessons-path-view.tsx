@@ -27,6 +27,8 @@ interface LessonsPathViewProps {
   parts: Part[];
   progressData: Record<number, PartProgressData>;
   currentPart: number;
+  /** Parts locked for unpaid users (Part 1 free). Locked cards link to /pricing. */
+  lockedPartNumbers?: number[];
 }
 
 const ERA_DESCRIPTIONS: Record<string, string> = {
@@ -44,11 +46,11 @@ export function LessonsPathView({
   parts,
   progressData,
   currentPart,
+  lockedPartNumbers = [],
 }: LessonsPathViewProps) {
   const filteredParts = parts;
 
-  // All parts are freely accessible — no sequential lock.
-  const pathLockedSet = new Set<number>();
+  const pathLockedSet = new Set(lockedPartNumbers);
 
   const partsByEra = filteredParts.reduce(
     (acc, part) => {
@@ -280,9 +282,11 @@ export function LessonsPathView({
                       );
 
                       return isLocked ? (
-                        <div key={part.id} className="block p-4 rounded-xl border bg-zinc-900/30 border-zinc-800/50 opacity-50 cursor-not-allowed">
+                        <Link key={part.id} href="/pricing"
+                          className="block p-4 rounded-xl border bg-zinc-900/30 border-zinc-800/50 opacity-60 hover:opacity-80 hover:border-amber-500/20 transition-all"
+                        >
                           {cardInner}
-                        </div>
+                        </Link>
                       ) : (
                         <Link key={part.id} href={`/seerah/part-${part.partNumber}`}
                           className="group block p-4 rounded-xl border transition-all bg-zinc-900/50 border-zinc-800 hover:border-amber-500/30 hover:bg-zinc-900"

@@ -7,6 +7,8 @@ import { prisma } from "@/lib/db";
 import { hashToken } from "@/lib/hash-token";
 import { getCurrentUser } from "@/lib/auth";
 import { checkRateLimit, getIP } from "@/lib/rate-limit";
+import { hasActiveCourseAccess } from "@/lib/access";
+import { escapeHtml } from "@/lib/html-escape";
 
 const generateToken = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 32);
 
@@ -38,7 +40,7 @@ const UpgradeSchema = z.object({
  */
 export async function POST(request: NextRequest) {
   const ip = getIP(request);
-  const rl = checkRateLimit(`upgrade-account:${ip}`, 10, 15 * 60 * 1000);
+  const rl = await checkRateLimit(`upgrade-account:${ip}`, 10, 15 * 60 * 1000);
   if (!rl.allowed) {
     return NextResponse.json(
       { error: "Too many attempts. Please try again later." },
@@ -65,7 +67,7 @@ export async function POST(request: NextRequest) {
 
     const dbUser = await prisma.user.findUnique({
       where: { id: sessionUser.id },
-      select: { id: true, isAnonymous: true },
+      select: { id: true, isAnonymous: true, hasPaid: true },
     });
     if (!dbUser) {
       return NextResponse.json({ error: "Account not found" }, { status: 404 });
@@ -93,9 +95,16 @@ export async function POST(request: NextRequest) {
 
     const passwordHash = await bcrypt.hash(password, 12);
     const isDevelopment = process.env.NODE_ENV !== "production";
-    const rawVerificationToken = isDevelopment ? null : generateToken();
+
+    // Entitled guests (IAP) must keep course access without a verify click —
+    // part-access waives emailVerified when hasActiveCourseAccess. Do NOT claim
+    // emailVerified without proof (would squat someone else's address as "verified").
+    // Still send a verification email so they can prove ownership for password reset.
+    const alreadyHasAccess = await hasActiveCourseAccess(dbUser.id, dbUser.hasPaid);
+    const autoVerify = isDevelopment; // only skip proof in local/dev
+    const rawVerificationToken = autoVerify ? null : generateToken();
     const verificationToken = rawVerificationToken ? hashToken(rawVerificationToken) : null;
-    const verificationExpires = isDevelopment ? null : new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const verificationExpires = autoVerify ? null : new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     await prisma.user.update({
       where: { id: dbUser.id },
@@ -104,13 +113,16 @@ export async function POST(request: NextRequest) {
         email: normalizedEmail,
         passwordHash,
         isAnonymous: false,
-        emailVerified: isDevelopment,
+        emailVerified: autoVerify,
         verificationToken,
         verificationExpires,
+        passwordResetToken: null,
+        passwordResetExpiry: null,
       },
     });
 
-    if (!isDevelopment && rawVerificationToken) {
+    let verificationEmailFailed = false;
+    if (!autoVerify && rawVerificationToken) {
       const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify-email?token=${rawVerificationToken}`;
       try {
         const resend = new Resend(process.env.RESEND_API_KEY);
@@ -122,7 +134,7 @@ export async function POST(request: NextRequest) {
             <!DOCTYPE html>
             <html><body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
               <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); padding: 30px 20px; text-align: center; border-radius: 12px 12px 0 0;">
-                <h1 style="color: #f4c542; margin: 0; font-size: 24px;">Welcome, ${fullName.trim()}</h1>
+                <h1 style="color: #f4c542; margin: 0; font-size: 24px;">Welcome, ${escapeHtml(fullName.trim())}</h1>
               </div>
               <div style="background: #ffffff; padding: 40px 30px; border: 1px solid #e5e5e5; border-top: none;">
                 <p style="font-size: 16px;">Your account is now linked to this email. Verify it to enable password resets and signing in from other devices:</p>
@@ -135,10 +147,17 @@ export async function POST(request: NextRequest) {
         });
       } catch (emailError) {
         console.error("[UPGRADE_ACCOUNT] Failed to send verification email:", emailError);
+        verificationEmailFailed = true;
       }
     }
 
-    return NextResponse.json({ success: true });
+    // Soft prompt only when they don't already have access — entitled IAP
+    // upgrades must not hit a verify wall (Apple 5.1.1(v) / part-access waive).
+    return NextResponse.json({
+      success: true,
+      requiresVerification: !autoVerify && !alreadyHasAccess,
+      verificationEmailFailed,
+    });
   } catch (error) {
     console.error("[UPGRADE_ACCOUNT] Error:", error);
     if (error instanceof Error && error.message.includes("Unique constraint")) {

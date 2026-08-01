@@ -2,12 +2,22 @@ import { NextRequest, NextResponse } from "next/server";
 import { stripe, PLANS } from "@/lib/stripe";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { checkRateLimit, getIP } from "@/lib/rate-limit";
 
 // Family lifetime price ID for Stripe metadata linkage
 const FAMILY_LIFETIME_PRICE_ID = process.env.STRIPE_FAMILY_LIFETIME_PRICE_ID ?? "";
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = getIP(request);
+    const rl = await checkRateLimit(`gift-pi:${ip}`, 20, 15 * 60 * 1000);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: "Too many attempts. Please try again later." },
+        { status: 429, headers: { "Retry-After": String(rl.retryAfterSeconds) } }
+      );
+    }
+
     const user = await getCurrentUser();
 
     if (!user) {

@@ -59,7 +59,7 @@ export default async function StudentLessonPage({ params }: Props) {
 
   const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
   if (!hasAccess) redirect("/pricing");
-  if (!user.emailVerified) redirect("/seerah");
+  // Entitled unverified keep access (part-access / Apple 5.1.1(v) parity).
 
   const { classId, partNumber: partNumberStr } = await params;
   const partNum = parseInt(partNumberStr, 10);

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/part_model.dart';
 import '../../../core/providers/part_provider.dart';
+import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -18,8 +19,20 @@ class _FlashcardsTabState extends ConsumerState<FlashcardsTab> {
   int _currentIndex = 0;
   bool _showingAnswer = false;
   FlashcardLevel _level = FlashcardLevel.medium;
+  bool _trackedReview = false;
 
-  void _flip() => setState(() => _showingAnswer = !_showingAnswer);
+  void _trackReviewOnce() {
+    if (_trackedReview) return;
+    _trackedReview = true;
+    ref.read(progressProvider.notifier).trackAssetOpened(widget.partNumber, 'flashcard');
+  }
+
+  void _flip() {
+    // Credit review on first flip (engagement), not on tab mount — matches
+    // web flashcards-viewer first-interaction tracking.
+    _trackReviewOnce();
+    setState(() => _showingAnswer = !_showingAnswer);
+  }
 
   void _next(List<FlashcardModel> cards) {
     if (_currentIndex < cards.length - 1) {
@@ -178,10 +191,37 @@ class _FlashcardsTabState extends ConsumerState<FlashcardsTab> {
                   child: InkWell(
                     onTap: _flip,
                     borderRadius: BorderRadius.circular(20),
-                    child: _FlipCard(
-                      question: cards[_currentIndex].question,
-                      answer: cards[_currentIndex].answer,
-                      showAnswer: _showingAnswer,
+                    // The 3D Transform/rotateY flip renders the question and
+                    // answer as two disconnected Text subtrees with no
+                    // indication of the card's interactive/flippable nature
+                    // or which face is currently showing — a screen reader
+                    // user landed here only heard the raw question/answer
+                    // text with no "double tap to flip" affordance and no
+                    // announcement when the tap actually flipped the card.
+                    child: Semantics(
+                      button: true,
+                      label: _showingAnswer ? 'Flashcard answer' : 'Flashcard question',
+                      value: _showingAnswer ? cards[_currentIndex].answer : cards[_currentIndex].question,
+                      hint: _showingAnswer ? 'Double tap to show question' : 'Double tap to reveal answer',
+                      liveRegion: true,
+                      // The label/value above already fully describe this
+                      // card, so the raw question/answer Text nodes inside
+                      // _FlipCard would otherwise be announced a second time.
+                      child: ExcludeSemantics(
+                        child: _FlipCard(
+                          // Without a key tied to the card index, Flutter
+                          // reuses the same _FlipCardState across Next/Prev
+                          // (same widget type/position in the tree) — its
+                          // flip animation controller was mid-transition from
+                          // the PREVIOUS card, so for one frame the new
+                          // card's content briefly renders with the old flip
+                          // progress.
+                          key: ValueKey(_currentIndex),
+                          question: cards[_currentIndex].question,
+                          answer: cards[_currentIndex].answer,
+                          showAnswer: _showingAnswer,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -221,7 +261,7 @@ class _FlipCard extends StatefulWidget {
   final String answer;
   final bool showAnswer;
 
-  const _FlipCard({required this.question, required this.answer, required this.showAnswer});
+  const _FlipCard({super.key, required this.question, required this.answer, required this.showAnswer});
 
   @override
   State<_FlipCard> createState() => _FlipCardState();
@@ -396,22 +436,25 @@ class _FlipButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.goldFaded,
-      shape: const CircleBorder(),
-      child: InkWell(
-        onTap: onTap,
-        customBorder: const CircleBorder(),
-        child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: AppColors.gold.withValues(alpha: 0.5)),
-          ),
-          child: Icon(
-            showing ? Icons.visibility_off_outlined : Icons.flip,
-            color: AppColors.gold,
-            size: 22,
+    return Tooltip(
+      message: showing ? 'Show question' : 'Flip card',
+      child: Material(
+        color: AppColors.goldFaded,
+        shape: const CircleBorder(),
+        child: InkWell(
+          onTap: onTap,
+          customBorder: const CircleBorder(),
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.gold.withValues(alpha: 0.5)),
+            ),
+            child: Icon(
+              showing ? Icons.visibility_off_outlined : Icons.flip,
+              color: AppColors.gold,
+              size: 22,
+            ),
           ),
         ),
       ),
@@ -425,20 +468,39 @@ class _LoadingCards extends StatelessWidget {
     return Shimmer.fromColors(
       baseColor: AppColors.card,
       highlightColor: AppColors.surface,
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            const SizedBox(height: 40),
-            Container(
-              height: 300,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-              ),
+      // Fixed 40 + 300 = 340px previously assumed every host always has at
+      // least that much vertical space — not guaranteed on short screens
+      // (small/older phones, or landscape orientation) once whatever fixed
+      // chrome surrounds this tab (header, tab bar, nav bar) is subtracted,
+      // which throws a RenderFlex overflow ("yellow/black stripes") instead
+      // of a broken but harmless mis-sized placeholder. LayoutBuilder scales
+      // the placeholder card down to fit whatever space is actually
+      // available instead of assuming a fixed minimum.
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          const topGap = 40.0;
+          const verticalPadding = 40.0; // 20 top + 20 bottom
+          final available = constraints.hasBoundedHeight
+              ? constraints.maxHeight - topGap - verticalPadding
+              : 300.0;
+          final cardHeight = available.clamp(120.0, 300.0);
+          return Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: topGap),
+                Container(
+                  height: cardHeight,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

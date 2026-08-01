@@ -16,7 +16,9 @@ class AppColors {
   // Text
   static const textPrimary = Color(0xFFFFFFFF);
   static const textSecondary = Color(0xFF9A9A9A);
-  static const textMuted = Color(0xFF5A5A5A);
+  // 0x808080 keeps >= 4.5:1 contrast against `background`/`surface`/`card`
+  // (WCAG AA for normal text); the previous 0x5A5A5A only hit ~2.9:1.
+  static const textMuted = Color(0xFF808080);
 
   // Surfaces
   static const surfaceRaised = Color(0xFF1A1A1A);

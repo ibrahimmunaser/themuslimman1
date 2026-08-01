@@ -1155,7 +1155,7 @@ function CheckoutPageContent({
       const res = await fetch("/api/auth/guest-checkout", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fullName: name, email }),
+        body: JSON.stringify({ fullName: name, email, audience, billing }),
         signal: controller.signal,
       });
       const data = await res.json();
@@ -1176,6 +1176,16 @@ function CheckoutPageContent({
           return;
         }
         setAuthError(data.error || "Failed to continue. Please try again.");
+        setAutoIntentStarted(false);
+        return;
+      }
+      if (data.requiresConfirmation) {
+        // Existing password-less account — we can't tell if the person typing
+        // this email is its real owner, so a confirmation link was emailed
+        // instead of granting a session outright. Don't proceed to payment.
+        setAuthError(
+          `We sent a confirmation link to ${email}. Click it to continue your checkout (expires in 15 minutes).`
+        );
         setAutoIntentStarted(false);
         return;
       }

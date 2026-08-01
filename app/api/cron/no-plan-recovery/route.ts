@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { hasActiveCourseAccess } from "@/lib/access";
 import { sendNoPlanRecoveryEmail, isBlockedEmail } from "@/lib/email-automation";
+import { requireCronAuth } from "@/lib/cron-auth";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -12,16 +13,6 @@ const BATCH_LIMIT = 50;
 // Time thresholds
 const STEP_1_DELAY_MS  = 3  * 60 * 60 * 1000; // 3 hours after signup
 const STEP_2_DELAY_MS  = 24 * 60 * 60 * 1000; // 24 hours after step 1
-
-function requireCronAuth(req: NextRequest): boolean {
-  const secret = process.env.CRON_SECRET;
-  if (!secret) {
-    console.error("[CRON] CRON_SECRET is not set — all cron requests will be rejected. Set this env var in Vercel dashboard.");
-    return false;
-  }
-  const auth = req.headers.get("authorization") ?? "";
-  return auth === `Bearer ${secret}`;
-}
 
 /** Returns true if the user has any form of paid access (lifetime, subscription, mobile). */
 async function userHasPaidAccess(userId: string): Promise<boolean> {

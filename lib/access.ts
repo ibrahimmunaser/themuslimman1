@@ -1,4 +1,5 @@
 import { prisma } from "./db";
+import { Prisma } from "@prisma/client";
 
 // ─────────────────────────────────────────────────────────────
 // Profile limits
@@ -6,6 +7,16 @@ import { prisma } from "./db";
 
 export const INDIVIDUAL_PROFILE_LIMIT = 1;
 export const FAMILY_PROFILE_LIMIT     = 5;
+
+/**
+ * Total number of parts in the Seerah course. Single source of truth for
+ * the web app — mirrors the mobile app's `PARTS.length`
+ * (seerah-mobile/seerah_app/lib/core/data/parts_data.dart). Previously this
+ * was hardcoded independently as `100` in multiple places (certificate page,
+ * profile-progress summary), which would have silently gone stale if the
+ * course's part count ever changed.
+ */
+export const TOTAL_COURSE_PARTS: number = 100;
 
 /**
  * Subscription statuses that grant full course access when paired with an
@@ -45,6 +56,25 @@ export const ACTIVE_SUBSCRIPTION_STATUSES = ["active", "trialing", "past_due"] a
  * 3. An active/trialing Stripe subscription with a future currentPeriodEnd, OR
  * 4. A past_due subscription within an explicit grace window (gracePeriodEndsAt >= now), OR
  * 5. An active Apple/Google IAP purchase.
+ *
+ * ── MobilePurchase.currentPeriodEnd freshness (Audit H8 — resolved) ──
+ * As of 2026-07-30, App Store Server Notifications V2 (Apple) and Real-time
+ * Developer Notifications (Google) webhooks are wired up at
+ * /api/webhooks/apple-notifications and /api/webhooks/google-play-notifications
+ * respectively. Refunds and Family Sharing revocations now flip
+ * MobilePurchase.status away from "active" (and clear currentPeriodEnd)
+ * the moment Apple/Google tell us, regardless of whether the app is open —
+ * closing the "refunded user keeps access forever" gap. Renewals (DID_RENEW /
+ * SUBSCRIPTION_RENEWED) also refresh currentPeriodEnd server-side as a bonus,
+ * on top of the pre-existing client-side mitigations in IAPNotifier (purchase
+ * stream observer attached at app startup so the OS replays queued
+ * transactions).
+ * Remaining gap: webhook delivery requires the URLs above to actually be
+ * registered in App Store Connect (App Information → App Store Server
+ * Notifications) and Play Console (Monetization setup → Real-time developer
+ * notifications) + a Cloud Pub/Sub push subscription — see the comments atop
+ * each webhook route for the exact external setup steps. Until registered,
+ * this reduces to the previous client-driven-only behavior.
  *
  * Pass `sessionHasPaid: true` when the caller already loaded hasPaid from the
  * session (via getCurrentUser) to skip the user-row DB query and short-circuit
@@ -148,6 +178,10 @@ export async function getUserAccessInfo(userId: string, sessionHasPaid?: boolean
           { purchaseType: "subscription", currentPeriodEnd: { gte: now } },
         ],
       },
+      // Prefer the most recently verified mobile entitlement when multiple
+      // active rows exist (e.g. lifetime + leftover sub) so purchasePlatform
+      // routing is deterministic.
+      orderBy: { verifiedAt: "desc" },
       select: { id: true, platform: true, productId: true, purchaseType: true, currentPeriodEnd: true },
     }),
   ]);
@@ -173,10 +207,29 @@ export async function getUserAccessInfo(userId: string, sessionHasPaid?: boolean
   const hasActiveSubscription =
     hasActiveStripeSubscription || mobilePurchase?.purchaseType === "subscription";
 
+  // Prefer Stripe when it is actively granting access so "Manage Subscription"
+  // routes to the Stripe portal rather than Play/App Store (dual-platform users
+  // who bought on web then also have a leftover mobile row). Use mobile only
+  // when mobile is the sole grant.
+  const stripeGrantsAccess = !!purchase || hasActiveStripeSubscription;
+  const mobileGrantsAccess = !!mobilePurchase;
+  const purchasePlatform: "stripe" | "google" | "apple" | null = (() => {
+    if (!(hasLifetime || hasActiveSubscription)) return null;
+    if (stripeGrantsAccess) return "stripe";
+    if (mobileGrantsAccess) {
+      const p = mobilePurchase!.platform;
+      if (p === "google" || p === "apple") return p;
+    }
+    // Legacy hasPaid with no traceable purchase row.
+    return "stripe";
+  })();
+
   return {
     hasAccess: hasLifetime || hasActiveSubscription,
     hasLifetime,
     hasActiveSubscription,
+    hasActiveStripeSubscription,
+    purchasePlatform,
     subscription: subscription ?? null,
     lifetimePurchase: purchase ?? null,
     mobilePurchase: mobilePurchase ?? null,
@@ -225,7 +278,8 @@ export const STALE_PAST_DUE_CEILING_DAYS = parseInt(
  *  - past_due older than STALE_PAST_DUE_CEILING_DAYS: stop blocking (safety
  *    net — see constant doc above). Course access is still denied by
  *    hasActiveCourseAccess regardless; this only affects the checkout guard.
- *  - canceled / unpaid / incomplete*: not returned — user may create a new sub.
+ *  - unpaid: block like past_due — open Stripe subscription still needs portal recovery.
+ *  - canceled / incomplete*: not returned — user may create a new sub.
  */
 export async function getActiveSubscription(userId: string) {
   const now = new Date();
@@ -234,7 +288,7 @@ export async function getActiveSubscription(userId: string) {
       userId,
       OR: [
         { status: { in: ["active", "trialing"] }, currentPeriodEnd: { gte: now } },
-        { status: "past_due" },  // blocked regardless of grace; direct to /billing
+        { status: { in: ["past_due", "unpaid"] } },
       ],
     },
     select: {
@@ -247,7 +301,10 @@ export async function getActiveSubscription(userId: string) {
     },
   });
 
-  if (sub?.status === "past_due" && sub.lastPaymentFailedAt) {
+  if (
+    (sub?.status === "past_due" || sub?.status === "unpaid") &&
+    sub.lastPaymentFailedAt
+  ) {
     const ceiling = new Date(
       sub.lastPaymentFailedAt.getTime() + STALE_PAST_DUE_CEILING_DAYS * 24 * 60 * 60 * 1000,
     );
@@ -259,6 +316,39 @@ export async function getActiveSubscription(userId: string) {
   }
 
   return sub;
+}
+
+/**
+ * Max length allowed for a LearnerProfile.avatar value. Both avatar pickers
+ * (web: app/student/profiles/profiles-client.tsx, mobile:
+ * profiles_screen.dart) only ever offer single-emoji choices, but emoji can
+ * legitimately be multi-codepoint UTF-16 sequences (ZWJ family/skin-tone
+ * modifiers, flag sequences, etc.) — 32 is generous headroom above any real
+ * emoji (which top out well under 20 UTF-16 code units) while still
+ * rejecting a client sending something absurd.
+ */
+export const MAX_AVATAR_LENGTH = 32;
+
+/**
+ * Validates a LearnerProfile.avatar value before it's persisted.
+ *
+ * Audit M-avatar-validate: create/update profile endpoints on both web
+ * (app/actions/profiles.ts) and mobile (app/api/mobile-profiles/**) accepted
+ * `avatar` completely unvalidated — any JSON value (not just a short emoji
+ * string) was passed straight through to Prisma. A non-string value would
+ * throw an unhandled Prisma type error (-> undifferentiated 500), and an
+ * unbounded string could bloat storage or break the fixed-size UI slot both
+ * clients render it into (a raw `Text(profile.avatar!, fontSize: 36)` on
+ * mobile with no maxLines/overflow handling).
+ *
+ * Returns an error message if invalid, or null if `avatar` is valid
+ * (including `undefined`/`null`, both of which mean "no avatar").
+ */
+export function validateAvatar(avatar: unknown): string | null {
+  if (avatar === undefined || avatar === null) return null;
+  if (typeof avatar !== "string") return "Invalid avatar.";
+  if (avatar.length > MAX_AVATAR_LENGTH) return `Avatar must be ${MAX_AVATAR_LENGTH} characters or fewer.`;
+  return null;
 }
 
 /**
@@ -279,35 +369,168 @@ export function isFamilyPlan(planType: string): boolean {
 /**
  * After a family plan purchase, fill learner profile slots up to
  * FAMILY_PROFILE_LIMIT. Existing profiles are preserved. Idempotent.
+ *
+ * This is the SINGLE consolidated implementation — it used to be
+ * copy-pasted independently in the Stripe webhook, verify-payment route,
+ * create-family-subscription-intent route, and the web profiles action,
+ * each with its own hardcoded `5` and none of them race-safe. Two of those
+ * call sites (webhook + verify-payment racing each other after the same
+ * purchase, or a mobile app + web tab both triggering this around the same
+ * purchase) reading `existingProfiles.length` outside a transaction could
+ * both see 0 existing profiles and both insert a full set of 5, landing 10
+ * profiles on one family account. Serializable isolation + retry closes
+ * that window the same way profile creation/deletion already do.
  */
 export async function ensureFamilyProfilesForUser(userId: string): Promise<number> {
-  const [existingProfiles, user] = await Promise.all([
-    prisma.learnerProfile.findMany({
-      where: { userId },
-      select: { id: true, isDefault: true },
-      orderBy: { createdAt: "asc" },
+  const maxAttempts = 3;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await prisma.$transaction(
+        async (tx) => {
+          const [existingProfiles, user] = await Promise.all([
+            tx.learnerProfile.findMany({
+              where: { userId },
+              select: { id: true, isDefault: true },
+              orderBy: { createdAt: "asc" },
+            }),
+            tx.user.findUnique({ where: { id: userId }, select: { fullName: true } }),
+          ]);
+
+          const toCreate = FAMILY_PROFILE_LIMIT - existingProfiles.length;
+          if (toCreate <= 0) return 0;
+
+          const hasDefault = existingProfiles.some((p) => p.isDefault);
+          const existingCount = existingProfiles.length;
+          const newProfiles = Array.from({ length: toCreate }, (_, i) => {
+            const slot = existingCount + i + 1;
+            const isMainSlot = slot === 1;
+            return {
+              id: crypto.randomUUID(),
+              userId,
+              displayName: isMainSlot ? (user?.fullName?.trim() || "Main Learner") : `Learner ${slot}`,
+              isDefault: isMainSlot && !hasDefault,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            };
+          });
+
+          await tx.learnerProfile.createMany({ data: newProfiles });
+          return newProfiles.length;
+        },
+        { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+      );
+    } catch (e) {
+      const isSerializationFailure =
+        e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2034";
+      if (!isSerializationFailure || attempt === maxAttempts) throw e;
+      await new Promise((r) => setTimeout(r, 50 * attempt));
+    }
+  }
+  // Unreachable — the loop above always returns or throws.
+  return 0;
+}
+
+/**
+ * After marking a lifetime purchase refunded/revoked, clear `user.hasPaid`
+ * ONLY if no OTHER legitimate lifetime evidence exists (a separate Stripe
+ * purchase, or another still-active mobile lifetime purchase) — never
+ * blindly strip access a paying customer earned through a completely
+ * different purchase just because one specific lifetime purchase was
+ * refunded.
+ *
+ * This is the SINGLE consolidated implementation (Audit L-dedupe-clearhaspaid)
+ * — it used to be copy-pasted near-identically in both
+ * app/api/webhooks/apple-notifications/route.ts and
+ * app/api/webhooks/google-play-notifications/route.ts, with no shared source
+ * of truth for what "other lifetime evidence" means.
+ */
+export async function clearHasPaidIfNoOtherLifetimeEvidence(
+  userId: string,
+  excludeMobilePurchaseId: string,
+  logPrefix: string,
+): Promise<void> {
+  const [otherMobileLifetime, stripePurchase] = await Promise.all([
+    prisma.mobilePurchase.findFirst({
+      where: { userId, status: "active", purchaseType: "lifetime", id: { not: excludeMobilePurchaseId } },
+      select: { id: true },
     }),
-    prisma.user.findUnique({ where: { id: userId }, select: { fullName: true } }),
+    prisma.purchase.findFirst({ where: { userId, status: "succeeded" }, select: { id: true } }),
+  ]);
+  if (!otherMobileLifetime && !stripePurchase) {
+    console.log(`[${logPrefix}] Clearing hasPaid for user ${userId} (no other lifetime evidence)`);
+    await prisma.user.update({ where: { id: userId }, data: { hasPaid: false } });
+  }
+}
+
+/**
+ * After a Stripe lifetime Purchase is refunded/disputed, clear hasPaid unless
+ * another succeeded Stripe purchase or active mobile lifetime remains.
+ * Also downgrade planType when the refunded purchase was the only family grant.
+ * Mirrors clearHasPaidIfNoOtherLifetimeEvidence used by Apple/Google webhooks.
+ */
+export async function clearHasPaidIfNoOtherStripeLifetimeEvidence(
+  userId: string,
+  excludePurchaseId: string,
+  logPrefix: string,
+  options?: { refundedPlanId?: string | null },
+): Promise<void> {
+  const [otherStripe, mobileLifetime, otherFamilyStripe, familyMobile] = await Promise.all([
+    prisma.purchase.findFirst({
+      where: { userId, status: "succeeded", id: { not: excludePurchaseId } },
+      select: { id: true, planId: true },
+    }),
+    prisma.mobilePurchase.findFirst({
+      where: { userId, status: "active", purchaseType: "lifetime" },
+      select: { id: true },
+    }),
+    prisma.purchase.findFirst({
+      where: {
+        userId,
+        status: "succeeded",
+        planId: "family",
+        id: { not: excludePurchaseId },
+      },
+      select: { id: true },
+    }),
+    // Family mobile products use productId/plan metadata — treat any active
+    // mobile lifetime as sufficient to keep family only when we can't tell;
+    // downgrade when refunded plan was family and no other family Stripe row.
+    prisma.mobilePurchase.findFirst({
+      where: { userId, status: "active", purchaseType: "lifetime" },
+      select: { id: true, productId: true },
+    }),
   ]);
 
-  const toCreate = FAMILY_PROFILE_LIMIT - existingProfiles.length;
-  if (toCreate <= 0) return 0;
+  const updates: { hasPaid?: boolean; planType?: string } = {};
 
-  const hasDefault = existingProfiles.some((p) => p.isDefault);
-  const existingCount = existingProfiles.length;
-  const newProfiles = Array.from({ length: toCreate }, (_, i) => {
-    const slot = existingCount + i + 1;
-    const isMainSlot = slot === 1;
-    return {
-      id: crypto.randomUUID(),
-      userId,
-      displayName: isMainSlot ? (user?.fullName?.trim() || "Main Learner") : `Learner ${slot}`,
-      isDefault: isMainSlot && !hasDefault,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-  });
+  if (!otherStripe && !mobileLifetime) {
+    updates.hasPaid = false;
+  }
 
-  await prisma.learnerProfile.createMany({ data: newProfiles });
-  return newProfiles.length;
+  // Family upgrade refund: restore individual when no other family grant remains
+  // (other family Purchase, family mobile product, OR open family Stripe monthly).
+  if (options?.refundedPlanId === "family" && !otherFamilyStripe) {
+    const familyMonthlyPriceId =
+      process.env.STRIPE_PRICE_FAMILY_MONTHLY ?? process.env.STRIPE_FAMILY_MONTHLY_PRICE_ID ?? "";
+    const openFamilySub = await prisma.subscription.findFirst({
+      where: {
+        userId,
+        status: { in: ["active", "trialing", "past_due", "unpaid"] },
+        ...(familyMonthlyPriceId ? { stripePriceId: familyMonthlyPriceId } : { id: "__none__" }),
+      },
+      select: { id: true },
+    });
+    const mobileLooksFamily =
+      !!familyMobile?.productId && /family/i.test(familyMobile.productId);
+    if (!mobileLooksFamily && !openFamilySub) {
+      updates.planType = "individual";
+    }
+  }
+
+  if (Object.keys(updates).length > 0) {
+    console.log(
+      `[${logPrefix}] Updating user ${userId} after Stripe lifetime revoke: ${JSON.stringify(updates)}`,
+    );
+    await prisma.user.update({ where: { id: userId }, data: updates });
+  }
 }

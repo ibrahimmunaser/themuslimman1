@@ -29,6 +29,8 @@ const securityHeaders = [
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",
+      "frame-ancestors 'self'",
+      "upgrade-insecure-requests",
     ].join("; "),
   },
 ];

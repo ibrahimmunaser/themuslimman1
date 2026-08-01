@@ -265,7 +265,7 @@ export function TextResourceContent({
                 return (
                   <div
                     key={part.id}
-                    onClick={isLocked ? undefined : () => handleOpenContent(part)}
+                    onClick={isLocked ? () => { window.location.assign("/pricing"); } : () => handleOpenContent(part)}
                     className={`group rounded-xl border border-zinc-800 bg-zinc-900/50 transition-all overflow-hidden ${
                       isLocked
                         ? "cursor-not-allowed opacity-60"

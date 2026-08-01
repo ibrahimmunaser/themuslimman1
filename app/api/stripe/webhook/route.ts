@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
-import { stripe, isStripeLiveMode } from "@/lib/stripe";
+import { stripe, isStripeLiveMode, extractLatestChargeId, getChargeRefundStatus } from "@/lib/stripe";
 import { prisma } from "@/lib/db";
 import { generateGiftToken, hashGiftToken, buildClaimUrl, sendGiftClaimEmail } from "@/lib/gift";
 import { computeRenewalFailureUpdate } from "@/lib/renewal-failure";
 import { decideTrialClaimAction, resolveTrialPriceId, TRIAL_COURSE_KEY } from "@/lib/trial-eligibility";
+import { ensureFamilyProfilesForUser, clearHasPaidIfNoOtherStripeLifetimeEvidence } from "@/lib/access";
 import Stripe from "stripe";
 import { Prisma } from "@prisma/client";
 import { nanoid } from "nanoid";
 import { hashToken } from "@/lib/hash-token";
+import { escapeHtml } from "@/lib/html-escape";
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
@@ -348,6 +350,25 @@ export async function POST(request: NextRequest) {
         const sub = event.data.object as Stripe.Subscription;
         console.log(`[WEBHOOK] customer.subscription.deleted: ${sub.id}`);
         await handleSubscriptionDeleted(sub);
+        break;
+      }
+
+      case "charge.refunded": {
+        const charge = event.data.object as Stripe.Charge;
+        console.log(`[WEBHOOK] charge.refunded: ${charge.id}, pi=${charge.payment_intent}`);
+        await handleStripeLifetimeRevoke(charge.payment_intent, "refunded", charge);
+        break;
+      }
+
+      case "charge.dispute.created":
+      case "charge.dispute.funds_withdrawn": {
+        const dispute = event.data.object as Stripe.Dispute;
+        console.log(`[WEBHOOK] ${event.type}: ${dispute.id}, charge=${dispute.charge}`);
+        const chargeId = typeof dispute.charge === "string" ? dispute.charge : dispute.charge?.id;
+        if (chargeId) {
+          const charge = await stripe.charges.retrieve(chargeId);
+          await handleStripeLifetimeRevoke(charge.payment_intent, "disputed", charge);
+        }
         break;
       }
 
@@ -934,6 +955,8 @@ async function sendTrialWelcomeEmail(userId: string, planName: string, stripeSub
   const resend = new Resend(process.env.RESEND_API_KEY);
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://themuslimman.com";
   const year = new Date().getFullYear();
+  const safePlanName = escapeHtml(planName);
+  const isFamilyPlanName = planName.includes("Family");
 
   await resend.emails.send(
     {
@@ -954,10 +977,10 @@ async function sendTrialWelcomeEmail(userId: string, planName: string, stripeSub
           </div>
 
           <div style="background: #ffffff; padding: 40px 30px; border: 1px solid #e5e5e5; border-top: none;">
-            <p style="font-size: 16px; margin: 0 0 16px 0;">Assalamu Alaykum ${user.fullName ? user.fullName : "dear student"},</p>
+            <p style="font-size: 16px; margin: 0 0 16px 0;">Assalamu Alaykum ${user.fullName ? escapeHtml(user.fullName) : "dear student"},</p>
 
             <p style="font-size: 15px; margin: 0 0 16px 0;">
-              Your <strong>${planName}</strong> is now active. You have <strong>7 days of full access</strong> — completely free.
+              Your <strong>${safePlanName}</strong> is now active. You have <strong>7 days of full access</strong> — completely free.
             </p>
 
             <div style="text-align: center; margin: 32px 0;">
@@ -978,7 +1001,7 @@ async function sendTrialWelcomeEmail(userId: string, planName: string, stripeSub
 
             <div style="background: #f0f9f0; border: 1px solid #c3e6c3; border-radius: 8px; padding: 16px; margin: 24px 0; font-size: 13px; color: #555;">
               <strong style="color: #333;">After your 7-day trial:</strong> Your subscription continues automatically at
-              ${planName.includes("Family") ? "$19/month" : "$9/month"}. Cancel anytime from your
+              ${isFamilyPlanName ? "$19/month" : "$9/month"}. Cancel anytime from your
               <a href="${appUrl}/billing" style="color: #b8960c; text-decoration: none;">billing page</a> before the trial ends to avoid any charge.
             </div>
 
@@ -1029,6 +1052,191 @@ async function markCheckupLeadPurchased(userId: string): Promise<void> {
   }
 }
 
+/**
+ * Revoke Stripe lifetime / gift entitlements after a full refund or dispute.
+ * Partial refunds are ignored (goodwill credits must not wipe access).
+ */
+async function handleStripeLifetimeRevoke(
+  paymentIntent: string | Stripe.PaymentIntent | null | undefined,
+  reason: "refunded" | "disputed",
+  charge?: Stripe.Charge | null,
+): Promise<void> {
+  const piId =
+    typeof paymentIntent === "string"
+      ? paymentIntent
+      : paymentIntent && typeof paymentIntent === "object"
+        ? paymentIntent.id
+        : null;
+  if (!piId) {
+    console.warn(`[WEBHOOK] handleStripeLifetimeRevoke: no payment_intent on ${reason} charge`);
+    return;
+  }
+
+  // Partial refunds must not revoke lifetime access.
+  if (reason === "refunded" && charge) {
+    const fullyRefunded =
+      charge.refunded === true ||
+      (typeof charge.amount_refunded === "number" &&
+        charge.amount_refunded >= charge.amount &&
+        charge.amount > 0);
+    if (!fullyRefunded) {
+      console.log(
+        `[WEBHOOK] handleStripeLifetimeRevoke: partial refund on ${piId} ` +
+          `(${charge.amount_refunded}/${charge.amount}) — leaving access intact`,
+      );
+      return;
+    }
+  }
+
+  // Gift PIs never create a buyer Purchase — cancel the claimable/claimed gift.
+  const gift = await prisma.giftPurchase.findUnique({
+    where: { stripePaymentIntentId: piId },
+    select: { id: true, status: true, claimedByUserId: true, planId: true },
+  });
+  if (gift) {
+    if (gift.status === "paid" || gift.status === "pending" || gift.status === "claimed") {
+      await prisma.giftPurchase.update({
+        where: { id: gift.id },
+        data: { status: "refunded" },
+      });
+      console.log(`[WEBHOOK] handleStripeLifetimeRevoke: GiftPurchase ${gift.id} marked refunded (was ${gift.status})`);
+    } else {
+      console.log(`[WEBHOOK] handleStripeLifetimeRevoke: gift ${gift.id} already ${gift.status}`);
+    }
+  }
+
+  const purchase = await prisma.purchase.findUnique({
+    where: { stripePaymentIntentId: piId },
+    select: { id: true, userId: true, status: true, planId: true },
+  });
+  if (!purchase) {
+    // Claimed gift with no Purchase yet (claim/refund race) — clear claimant hasPaid.
+    if (gift?.claimedByUserId) {
+      await clearHasPaidIfNoOtherStripeLifetimeEvidence(
+        gift.claimedByUserId,
+        "__none__",
+        `WEBHOOK:${reason}:gift-no-purchase`,
+        { refundedPlanId: gift.planId ?? null },
+      );
+      console.log(
+        `[WEBHOOK] handleStripeLifetimeRevoke: cleared hasPaid for gift claimant ${gift.claimedByUserId} (no Purchase row)`,
+      );
+    } else if (!gift) {
+      // Lifetime PI refunded before Purchase existed — write a refunded sentinel
+      // so a late verify-payment / PI.succeeded cannot create succeeded + hasPaid.
+      // Fail closed: throw on sentinel failure so Stripe retries (do not silently
+      // fall through — a missing sentinel leaves a late-grant hole).
+      const pi = await stripe.paymentIntents.retrieve(piId);
+      const metaUserId = pi.metadata?.userId;
+      const metaPlanId = pi.metadata?.planId || "complete";
+      if (metaUserId && pi.metadata?.type !== "gift" && pi.metadata?.type !== "subscription") {
+        try {
+          await prisma.purchase.upsert({
+            where: { stripePaymentIntentId: piId },
+            create: {
+              id: crypto.randomUUID(),
+              updatedAt: new Date(),
+              userId: metaUserId,
+              planId: metaPlanId,
+              planName: pi.metadata?.planName || metaPlanId,
+              amount: typeof pi.amount === "number" ? pi.amount : 0,
+              currency: pi.currency || "usd",
+              stripePaymentIntentId: piId,
+              status: "refunded",
+            },
+            update: { status: "refunded", updatedAt: new Date() },
+          });
+          await clearHasPaidIfNoOtherStripeLifetimeEvidence(
+            metaUserId,
+            "__none__",
+            `WEBHOOK:${reason}:sentinel`,
+            { refundedPlanId: metaPlanId },
+          );
+          console.log(
+            `[WEBHOOK] handleStripeLifetimeRevoke: wrote refunded sentinel Purchase for PI ${piId}`,
+          );
+        } catch (sentinelErr) {
+          console.error(
+            `[WEBHOOK] handleStripeLifetimeRevoke: sentinel write failed for ${piId} — retrying via Stripe:`,
+            sentinelErr,
+          );
+          throw sentinelErr;
+        }
+      } else {
+        await handleSubscriptionInvoiceRefund(piId, reason);
+      }
+    }
+    return;
+  }
+  if (purchase.status === "refunded") {
+    // Duplicate charge.refunded after a grant/revoke race restored hasPaid — re-clear.
+    console.log(`[WEBHOOK] handleStripeLifetimeRevoke: already refunded Purchase ${purchase.id} — re-clearing hasPaid`);
+    await clearHasPaidIfNoOtherStripeLifetimeEvidence(
+      purchase.userId,
+      purchase.id,
+      `WEBHOOK:${reason}:already-refunded`,
+      { refundedPlanId: purchase.planId },
+    );
+    return;
+  }
+
+  await prisma.purchase.update({
+    where: { id: purchase.id },
+    data: { status: "refunded", updatedAt: new Date() },
+  });
+  console.log(`[WEBHOOK] handleStripeLifetimeRevoke: Purchase ${purchase.id} marked refunded (${reason})`);
+
+  await clearHasPaidIfNoOtherStripeLifetimeEvidence(
+    purchase.userId,
+    purchase.id,
+    `WEBHOOK:${reason}`,
+    { refundedPlanId: purchase.planId },
+  );
+}
+
+/** Full refund of a subscription invoice charge → cancel the Stripe sub + DB row. */
+async function handleSubscriptionInvoiceRefund(
+  piId: string,
+  reason: "refunded" | "disputed",
+): Promise<void> {
+  try {
+    const pi = await stripe.paymentIntents.retrieve(piId);
+    const invoiceRef = (pi as unknown as { invoice?: string | { id?: string; subscription?: string | { id: string } | null } }).invoice;
+    if (!invoiceRef) {
+      console.log(`[WEBHOOK] handleSubscriptionInvoiceRefund: PI ${piId} has no invoice (${reason})`);
+      return;
+    }
+    const invoiceId = typeof invoiceRef === "string" ? invoiceRef : invoiceRef.id;
+    if (!invoiceId) return;
+
+    const invoice = await stripe.invoices.retrieve(invoiceId);
+    const subRef = (invoice as unknown as { subscription?: string | { id: string } | null }).subscription;
+    const subId =
+      typeof subRef === "string"
+        ? subRef
+        : subRef && typeof subRef === "object"
+          ? subRef.id
+          : null;
+    if (!subId) {
+      console.log(`[WEBHOOK] handleSubscriptionInvoiceRefund: invoice ${invoiceId} has no subscription`);
+      return;
+    }
+
+    try {
+      await stripe.subscriptions.cancel(subId);
+    } catch (cancelErr) {
+      console.error(`[WEBHOOK] handleSubscriptionInvoiceRefund: cancel ${subId} failed:`, cancelErr);
+    }
+    await prisma.subscription.updateMany({
+      where: { stripeSubscriptionId: subId },
+      data: { status: "canceled", cancelAtPeriodEnd: false, updatedAt: new Date() },
+    });
+    console.log(`[WEBHOOK] handleSubscriptionInvoiceRefund: cancelled sub ${subId} after ${reason} of PI ${piId}`);
+  } catch (err) {
+    console.error(`[WEBHOOK] handleSubscriptionInvoiceRefund: error for PI ${piId}:`, err);
+  }
+}
+
 async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
   const startTime = Date.now();
   const { userId, planId, planName } = paymentIntent.metadata;
@@ -1040,39 +1248,94 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
     throw new Error(`[WEBHOOK] handlePaymentSuccess: Missing required metadata (userId=${userId}, planId=${planId}) in payment intent ${paymentIntent.id}`);
   }
 
+  // Pre-grant charge fail-closed (matches verify-payment): never grant when we
+  // cannot confirm the charge exists and is unrefunded.
+  const chargeId = extractLatestChargeId(paymentIntent);
+  if (!chargeId) {
+    throw new Error(
+      `[WEBHOOK] handlePaymentSuccess: PI ${paymentIntent.id} missing latest_charge — fail-closed retry`,
+    );
+  }
+  const preChargeStatus = await getChargeRefundStatus(chargeId);
+  if (preChargeStatus === "refunded") {
+    console.warn(
+      `[WEBHOOK] handlePaymentSuccess: PI ${paymentIntent.id} fully refunded — skipping grant`,
+    );
+    return;
+  }
+
   try {
     console.log(`[WEBHOOK] handlePaymentSuccess: Upserting purchase record for payment ${paymentIntent.id}...`);
 
     // Check if the purchase row already existed — used to gate the confirmation
     // email so Stripe webhook retries don't send duplicate emails.
+    // Also refuse to resurrect a refunded Purchase (out-of-order PI.succeeded).
     const existingPurchase = await prisma.purchase.findUnique({
       where: { stripePaymentIntentId: paymentIntent.id },
-      select: { id: true },
+      select: { id: true, status: true },
     });
+    if (existingPurchase?.status === "refunded") {
+      console.warn(
+        `[WEBHOOK] handlePaymentSuccess: PI ${paymentIntent.id} Purchase is refunded — refusing to resurrect`,
+      );
+      return;
+    }
 
-    // Upsert purchase — idempotent so webhook retries and the verify-payment
-    // route don't create duplicate records for the same PaymentIntent.
-    await prisma.purchase.upsert({
-      where: { stripePaymentIntentId: paymentIntent.id },
-      create: {
-        id: crypto.randomUUID(),
-        updatedAt: new Date(),
-        userId,
-        planId,
-        planName,
-        amount: paymentIntent.amount,
-        currency: paymentIntent.currency,
-        stripePaymentIntentId: paymentIntent.id,
-        status: "succeeded",
-        promoCode: paymentIntent.metadata.promoCode || null,
-        creator:   paymentIntent.metadata.creator   || null,
-      },
-      update: {
-        status:    "succeeded",
-        promoCode: paymentIntent.metadata.promoCode || null,
-        creator:   paymentIntent.metadata.creator   || null,
-      },
-    });
+    // Atomic upsert: refuse to resurrect if concurrently marked refunded.
+    // updateMany with status != refunded then create-if-missing.
+    if (existingPurchase) {
+      const promoted = await prisma.purchase.updateMany({
+        where: {
+          stripePaymentIntentId: paymentIntent.id,
+          status: { not: "refunded" },
+        },
+        data: {
+          promoCode: paymentIntent.metadata.promoCode || null,
+          creator:   paymentIntent.metadata.creator   || null,
+          ...(existingPurchase.status !== "succeeded" ? { status: "succeeded" } : {}),
+          updatedAt: new Date(),
+        },
+      });
+      if (promoted.count === 0) {
+        // Row is refunded (or vanished) — do not grant access.
+        console.warn(
+          `[WEBHOOK] handlePaymentSuccess: PI ${paymentIntent.id} update skipped (refunded or missing)`,
+        );
+        return;
+      }
+    } else {
+      try {
+        await prisma.purchase.create({
+          data: {
+            id: crypto.randomUUID(),
+            updatedAt: new Date(),
+            userId,
+            planId,
+            planName,
+            amount: paymentIntent.amount,
+            currency: paymentIntent.currency,
+            stripePaymentIntentId: paymentIntent.id,
+            status: "succeeded",
+            promoCode: paymentIntent.metadata.promoCode || null,
+            creator:   paymentIntent.metadata.creator   || null,
+          },
+        });
+      } catch (createErr) {
+        // Race: another worker created or refunded — re-check.
+        const again = await prisma.purchase.findUnique({
+          where: { stripePaymentIntentId: paymentIntent.id },
+          select: { status: true },
+        });
+        if (!again || again.status === "refunded") {
+          console.warn(
+            `[WEBHOOK] handlePaymentSuccess: PI ${paymentIntent.id} create raced with refund`,
+          );
+          return;
+        }
+        // Already succeeded by peer — continue to hasPaid update.
+        console.log(`[WEBHOOK] handlePaymentSuccess: PI ${paymentIntent.id} already created by peer`);
+      }
+    }
     
     console.log(`[WEBHOOK] handlePaymentSuccess: Purchase record upserted for payment ${paymentIntent.id}`);
 
@@ -1101,9 +1364,81 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
     await prisma.user.update({ where: { id: userId }, data: updateData });
     console.log(`[WEBHOOK] handlePaymentSuccess: User ${userId} updated - hasPaid=true, planType=${updateData.planType ?? "unchanged"}`);
 
+    // Grant/revoke race: refund may have marked Purchase refunded after we set hasPaid.
+    // Also re-probe Stripe (H3) — DB-only misses charge.refunded before webhook writes.
+    const postGrant = await prisma.purchase.findUnique({
+      where: { stripePaymentIntentId: paymentIntent.id },
+      select: { id: true, status: true, planId: true },
+    });
+    if (!postGrant || postGrant.status === "refunded") {
+      console.warn(
+        `[WEBHOOK] handlePaymentSuccess: PI ${paymentIntent.id} refunded after grant — clearing hasPaid`,
+      );
+      if (postGrant) {
+        await clearHasPaidIfNoOtherStripeLifetimeEvidence(
+          userId,
+          postGrant.id,
+          "WEBHOOK:handlePaymentSuccess:post-grant-refund",
+          { refundedPlanId: postGrant.planId },
+        );
+      } else {
+        await clearHasPaidIfNoOtherStripeLifetimeEvidence(
+          userId,
+          "__none__",
+          "WEBHOOK:handlePaymentSuccess:post-grant-missing",
+        );
+      }
+      return;
+    }
+
+    let postStripeStatus: "unrefunded" | "refunded";
+    try {
+      postStripeStatus = await getChargeRefundStatus(chargeId);
+    } catch (postStripeErr) {
+      // Fail closed — throw so Stripe retries rather than leaving hasPaid sticky
+      // while charge status is unknown.
+      console.error(
+        `[WEBHOOK] handlePaymentSuccess: post-grant Stripe re-probe failed for ${paymentIntent.id}:`,
+        postStripeErr,
+      );
+      await prisma.purchase.updateMany({
+        where: { id: postGrant.id, status: { not: "refunded" } },
+        data: { status: "pending", updatedAt: new Date() },
+      });
+      await clearHasPaidIfNoOtherStripeLifetimeEvidence(
+        userId,
+        postGrant.id,
+        "WEBHOOK:handlePaymentSuccess:post-grant-stripe-unavailable",
+        { refundedPlanId: postGrant.planId },
+      );
+      throw new Error(
+        `[WEBHOOK] handlePaymentSuccess: post-grant charge re-probe failed for ${paymentIntent.id} — retry`,
+      );
+    }
+    if (postStripeStatus === "refunded") {
+      console.warn(
+        `[WEBHOOK] handlePaymentSuccess: PI ${paymentIntent.id} Stripe-refunded after grant — clearing`,
+      );
+      await prisma.purchase.updateMany({
+        where: { id: postGrant.id, status: { not: "refunded" } },
+        data: { status: "refunded", updatedAt: new Date() },
+      });
+      await clearHasPaidIfNoOtherStripeLifetimeEvidence(
+        userId,
+        postGrant.id,
+        "WEBHOOK:handlePaymentSuccess:post-grant-stripe-refunded",
+        { refundedPlanId: postGrant.planId },
+      );
+      return;
+    }
+
+    // Do NOT auto-set emailVerified here. Paid access is granted via hasPaid /
+    // hasActiveCourseAccess; part-access waives the verify wall for entitled users.
+    // Mobile IAP verify likewise does NOT auto-set emailVerified — soft prompt only.
+
     // Auto-provision 5 learner profiles for family lifetime purchases.
     if (planId === "family") {
-      await ensureFamilyProfiles(userId).catch((e) =>
+      await ensureFamilyProfilesForUser(userId).catch((e) =>
         console.error("[WEBHOOK] handlePaymentSuccess: Failed to provision family profiles:", e)
       );
     }
@@ -1126,7 +1461,7 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
     // reason to keep the subscription running. The customer.subscription.deleted webhook
     // fires next; handleSubscriptionDeleted is guarded by hasPaid so planType is safe.
     const activeSub = await prisma.subscription.findFirst({
-      where: { userId, status: { in: ["active", "trialing", "past_due"] } },
+      where: { userId, status: { in: ["active", "trialing", "past_due", "unpaid"] } },
       select: { stripeSubscriptionId: true },
     });
     if (activeSub) {
@@ -1185,61 +1520,11 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
   }
 }
 
-// ── Family profile auto-provisioning ─────────────────────────────────────────
-
-/**
- * Ensures a family user has exactly 5 learner profiles.
- * Safe to call multiple times — idempotent, never deletes existing profiles.
- *
- * Profile names:
- *   Slot 1 — user's full name (or "Main Learner") — marked isDefault=true
- *   Slots 2–5 — "Learner 2" … "Learner 5"
- *
- * If the user already has profiles those are kept and we only fill missing
- * slots up to 5 total.
- */
-async function ensureFamilyProfiles(userId: string): Promise<void> {
-  const FAMILY_LIMIT = 5;
-
-  const [existingProfiles, user] = await Promise.all([
-    prisma.learnerProfile.findMany({
-      where: { userId },
-      select: { id: true, isDefault: true },
-      orderBy: { createdAt: "asc" },
-    }),
-    prisma.user.findUnique({
-      where: { id: userId },
-      select: { fullName: true },
-    }),
-  ]);
-
-  const toCreate = FAMILY_LIMIT - existingProfiles.length;
-  if (toCreate <= 0) return; // already fully provisioned
-
-  const hasDefault = existingProfiles.some((p) => p.isDefault);
-  const existingCount = existingProfiles.length;
-
-  const newProfiles = Array.from({ length: toCreate }, (_, i) => {
-    const slot = existingCount + i + 1; // 1-based slot index
-    const isMainSlot = slot === 1;
-    return {
-      id: crypto.randomUUID(),
-      userId,
-      displayName: isMainSlot
-        ? (user?.fullName?.trim() || "Main Learner")
-        : `Learner ${slot}`,
-      isDefault: isMainSlot && !hasDefault,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-  });
-
-  await prisma.learnerProfile.createMany({ data: newProfiles });
-  console.log(
-    `[WEBHOOK] ensureFamilyProfiles: Created ${newProfiles.length} profiles for user ${userId} ` +
-    `(${existingCount} already existed)`
-  );
-}
+// Family profile auto-provisioning is centralized in lib/access.ts's
+// ensureFamilyProfilesForUser (Serializable transaction + retry) — this used
+// to be an independent, non-transactional copy here that could race with
+// the same logic firing from verify-payment/create-family-subscription-intent
+// for the same purchase.
 
 // ── Subscription helpers ──────────────────────────────────────────────────────
 
@@ -1351,23 +1636,21 @@ async function handleSubscriptionDeleted(sub: Stripe.Subscription) {
     throw new Error(`[WEBHOOK] handleSubscriptionDeleted: Could not resolve userId for family sub ${sub.id}`);
   }
 
-  // Higher-tier wins: if the user has ANY lifetime access (Stripe or IAP) or an
-  // active family IAP subscription, do not reset planType. The lifetime purchase
-  // already granted the correct planType via handlePaymentSuccess, and the
-  // cancellation webhook must not override it.
-  //
-  // Examples this protects:
-  //   • Individual monthly → buys Individual Lifetime → sub cancelled → stays planType=individual ✓
-  //   • Family monthly → buys Family Lifetime → sub cancelled → stays planType=family ✓
-  //   • Individual monthly → buys Family Lifetime → sub cancelled → stays planType=family ✓
-  //   • Family IAP sub + Stripe family sub cancelled → stays planType=family (IAP still active) ✓
+  // Keep planType=family only when another family entitlement remains
+  // (family Stripe lifetime Purchase, or mobile product id containing "family").
+  // Individual IAP lifetime alone must NOT retain family planType after Stripe
+  // family monthly is cancelled.
   const now = new Date();
-  const [lifetimeUser, familyIap] = await Promise.all([
-    prisma.user.findUnique({ where: { id: userId }, select: { hasPaid: true } }),
+  const [familyStripe, familyMobile] = await Promise.all([
+    prisma.purchase.findFirst({
+      where: { userId, status: "succeeded", planId: "family" },
+      select: { id: true },
+    }),
     prisma.mobilePurchase.findFirst({
       where: {
         userId,
         status: "active",
+        productId: { contains: "family", mode: "insensitive" },
         OR: [
           { purchaseType: "lifetime" },
           { purchaseType: "subscription", currentPeriodEnd: { gte: now } },
@@ -1377,15 +1660,14 @@ async function handleSubscriptionDeleted(sub: Stripe.Subscription) {
     }),
   ]);
 
-  if (!lifetimeUser?.hasPaid && !familyIap) {
+  if (!familyStripe && !familyMobile) {
     await prisma.user.update({
       where: { id: userId },
       data: { planType: "individual" },
     }).catch((e) => console.error("[WEBHOOK] handleSubscriptionDeleted: Failed to reset planType:", e));
     console.log(`[WEBHOOK] Downgraded user ${userId} to planType=individual after family sub ${sub.id} cancelled`);
   } else {
-    const reason = lifetimeUser?.hasPaid ? "hasPaid=true" : "active IAP subscription";
-    console.log(`[WEBHOOK] User ${userId} retains planType (${reason}) after sub ${sub.id} cancelled`);
+    console.log(`[WEBHOOK] Keeping planType=family for ${userId} — other family entitlement remains`);
   }
 }
 
@@ -1683,7 +1965,7 @@ async function sendPaymentFailedEmail(userId: string, gracePeriodEndsAt: Date, i
   const resend = new Resend(process.env.RESEND_API_KEY);
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://themuslimman.com";
   const year = new Date().getFullYear();
-  const greeting = user.fullName?.trim() || "dear student";
+  const greeting = escapeHtml(user.fullName?.trim() || "dear student");
 
   // Format grace period end date in a human-readable way (UTC for simplicity)
   const graceEndStr = gracePeriodEndsAt.toLocaleDateString("en-US", {
@@ -1894,7 +2176,7 @@ async function upsertSubscription(userId: string, sub: Stripe.Subscription) {
     // Auto-provision up to 5 learner profiles on first activation so the user
     // doesn't have to visit /profiles before they appear.
     if (isFirstActivation) {
-      ensureFamilyProfiles(userId).catch((e) =>
+      ensureFamilyProfilesForUser(userId).catch((e) =>
         console.error("[WEBHOOK] upsertSubscription: ensureFamilyProfiles failed:", e)
       );
     }
@@ -1902,6 +2184,9 @@ async function upsertSubscription(userId: string, sub: Stripe.Subscription) {
 
   // Stamp purchasedAt on quiz funnel leads on first activation — non-blocking.
   if (isFirstActivation) {
+    // Paid access does not prove email ownership — leave emailVerified alone.
+    // part-access allows entitled users without a verified email (same as guests).
+
     markCheckupLeadPurchased(userId).catch(() => {});
 
     // Fire server-side purchase_completed for subscription activations.
@@ -1981,6 +2266,39 @@ async function handleGiftPaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
     throw new Error(`[WEBHOOK] handleGiftPaymentSuccess: Missing purchaserEmail/recipientEmail metadata in payment intent ${paymentIntent.id}`);
   }
 
+  // Fail-closed: refuse to activate / email without a confirmable unrefunded charge
+  // (matches gift claim / verify-and-create). Missing charge → throw for Stripe retry.
+  const chargeId =
+    typeof paymentIntent.latest_charge === "string"
+      ? paymentIntent.latest_charge
+      : paymentIntent.latest_charge && typeof paymentIntent.latest_charge === "object"
+        ? (paymentIntent.latest_charge as { id?: string }).id
+        : null;
+  if (!chargeId) {
+    throw new Error(
+      `[WEBHOOK] handleGiftPaymentSuccess: PI ${paymentIntent.id} missing latest_charge — fail-closed retry`,
+    );
+  }
+  const charge = await stripe.charges.retrieve(chargeId);
+  const fullyRefunded =
+    charge.refunded === true ||
+    (typeof charge.amount_refunded === "number" &&
+      charge.amount_refunded >= charge.amount &&
+      charge.amount > 0);
+  if (fullyRefunded) {
+    await prisma.giftPurchase.updateMany({
+      where: {
+        stripePaymentIntentId: paymentIntent.id,
+        status: { in: ["pending", "paid"] },
+      },
+      data: { status: "refunded" },
+    });
+    console.warn(
+      `[WEBHOOK] handleGiftPaymentSuccess: PI ${paymentIntent.id} fully refunded — skipping activation`,
+    );
+    return;
+  }
+
   try {
     // Ensure a GiftPurchase record exists (create if webhook fires before verify-and-create).
     // planId must come from metadata — "complete" is the safe fallback for individual gifts.
@@ -2019,10 +2337,22 @@ async function handleGiftPaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
     // on a previous webhook attempt is retried correctly on the next one.
     const giftRecord = await prisma.giftPurchase.findUnique({
       where: { stripePaymentIntentId: paymentIntent.id },
-      select: { emailSentAt: true, claimTokenHash: true },
+      select: { emailSentAt: true, claimTokenHash: true, status: true },
     });
 
-    if (giftRecord && !giftRecord.emailSentAt) {
+    // Never email a claim link after a refund/dispute marked the gift refunded.
+    // Re-read status immediately before send (concurrent revoke race).
+    if (giftRecord && giftRecord.status === "paid" && !giftRecord.emailSentAt) {
+      const stillPaid = await prisma.giftPurchase.findUnique({
+        where: { stripePaymentIntentId: paymentIntent.id },
+        select: { status: true },
+      });
+      if (!stillPaid || stillPaid.status !== "paid") {
+        console.warn(
+          `[WEBHOOK] handleGiftPaymentSuccess: gift ${paymentIntent.id} no longer paid before email — skipping`,
+        );
+        return;
+      }
       // Generate a fresh token on every email attempt (including retries) so the
       // stored hash and the emailed URL always match. The transition updateMany
       // above may have been a no-op on retries (status already "paid"), so we
@@ -2085,6 +2415,7 @@ async function sendPurchaseConfirmationEmail(userId: string, planName: string) {
   const resend = new Resend(process.env.RESEND_API_KEY);
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://themuslimman.com";
   const year = new Date().getFullYear();
+  const safePlanName = escapeHtml(planName);
 
   await resend.emails.send({
     from: process.env.EMAIL_FROM ?? "TheMuslimMan <noreply@themuslimman.com>",
@@ -2104,10 +2435,10 @@ async function sendPurchaseConfirmationEmail(userId: string, planName: string) {
           </div>
 
           <div style="background: #ffffff; padding: 40px 30px; border: 1px solid #e5e5e5; border-top: none;">
-            <p style="font-size: 16px; margin: 0 0 16px 0;">Assalamu Alaykum ${user.fullName ? user.fullName : "dear student"},</p>
+            <p style="font-size: 16px; margin: 0 0 16px 0;">Assalamu Alaykum ${user.fullName ? escapeHtml(user.fullName) : "dear student"},</p>
 
             <p style="font-size: 15px; margin: 0 0 16px 0;">
-              Thank you for your purchase. Your <strong>${planName}</strong> is now active and ready to use.
+              Thank you for your purchase. Your <strong>${safePlanName}</strong> is now active and ready to use.
             </p>
 
             <div style="text-align: center; margin: 32px 0;">
@@ -2194,15 +2525,20 @@ async function sendAccountSetupEmail(
   let rawToken: string;
 
   if (current.passwordResetToken && current.passwordResetExpiry && current.passwordResetExpiry > new Date()) {
-    // A valid token already exists — skip regenerating to avoid invalidating
-    // the link that was already emailed. Don't send a duplicate email.
-    console.log(`[PURCHASE_EMAIL] Valid setup token already exists for user ${userId} — skipping duplicate email`);
-    return;
+    // Checkout confirm tokens expire in 15m; setup tokens last 48h.
+    // Only skip duplicate email for long-lived (setup) tokens — never treat
+    // a short-lived checkout: hash as a setup token.
+    const remainingMs = current.passwordResetExpiry.getTime() - Date.now();
+    const likelyCheckoutConfirm = remainingMs > 0 && remainingMs <= 20 * 60 * 1000;
+    if (!likelyCheckoutConfirm) {
+      console.log(`[PURCHASE_EMAIL] Valid setup token already exists for user ${userId} — skipping duplicate email`);
+      return;
+    }
   }
 
-  // Generate a fresh token (48-hour expiry)
+  // Generate a fresh setup-prefixed token (48-hour expiry)
   rawToken = nanoid(32);
-  const tokenHash = hashToken(rawToken);
+  const tokenHash = hashToken(`setup:${rawToken}`);
   const expiry = new Date(Date.now() + 48 * 60 * 60 * 1000);
 
   await prisma.user.update({
@@ -2215,7 +2551,8 @@ async function sendAccountSetupEmail(
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://themuslimman.com";
   const setupUrl = `${appUrl}/set-password?token=${rawToken}`;
   const year = new Date().getFullYear();
-  const greeting = fullName ? fullName : "dear student";
+  const greeting = escapeHtml(fullName ? fullName : "dear student");
+  const safePlanName = escapeHtml(planName);
 
   await resend.emails.send({
     from: process.env.EMAIL_FROM ?? "TheMuslimMan <noreply@themuslimman.com>",
@@ -2238,7 +2575,7 @@ async function sendAccountSetupEmail(
             <p style="font-size: 16px; margin: 0 0 16px 0;">Assalamu Alaykum ${greeting},</p>
 
             <p style="font-size: 15px; margin: 0 0 16px 0;">
-              Your <strong>${planName}</strong> is now active. Click the button below to set your
+              Your <strong>${safePlanName}</strong> is now active. Click the button below to set your
               password and go straight to the dashboard.
             </p>
 
@@ -2350,7 +2687,7 @@ async function sendAbandonedCheckoutEmail(
   if (utmContent)  params.set("utm_content",  utmContent);
   const checkoutUrl = `${appUrl}/checkout?${params.toString()}`;
 
-  const greeting = user.fullName?.trim() || "dear student";
+  const greeting = escapeHtml(user.fullName?.trim() || "dear student");
   const planLabel = isFamilySub ? "Family Membership ($9.99/month)" : "Individual Membership ($4.99/month)";
 
   await resend.emails.send({

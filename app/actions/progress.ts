@@ -1,81 +1,55 @@
-"use server";
+﻿"use server";
 
 import { prisma } from "@/lib/db";
 import { requireStudent } from "@/lib/auth";
-import { getActiveProfileId } from "@/app/actions/profiles";
+import { getActiveProfileId, resolveLearnerProfileId } from "@/app/actions/profiles";
 import { getPartPageData } from "@/lib/part-content-cache";
 import type { Quiz } from "@/lib/types";
 import {
-  computeStatus,
-  parseProgressRow,
+  computeQuizScore,
   VIDEO_COMPLETION_THRESHOLD,
-  QUIZ_PASS_SCORE,
 } from "@/lib/progress";
-type UserPlan = "essentials" | "complete";
+import {
+  getUserPlan,
+  recomputeAndSaveStatus,
+  applyVerifiedQuizScore,
+} from "@/lib/progress-writes";
+import { hasActiveCourseAccess, TOTAL_COURSE_PARTS } from "@/lib/access";
 
 // Verbose trace logs are active in development only to avoid spamming
-// production logs on every video-threshold tick (up to 6× per viewing session).
+// production logs on every video-threshold tick.
 const isDev = process.env.NODE_ENV !== "production";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const devLog = isDev ? (...args: any[]) => console.log(...args) : () => {};
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+/** Valid asset IDs — mirrors mobile-progress/track allowlist. */
+const VALID_ASSET_IDS = new Set([
+  "video", "audio", "briefing", "study_guide", "flashcard",
+  "slides", "infographic", "mindmap", "statement-of-facts", "quiz",
+  // Legacy aliases normalized below
+  "facts", "statement_of_facts", "study-guide",
+]);
 
-/**
- * Determines the user's active plan.
- *
- * @param sessionHasPaid - if true (from the session cookie), short-circuits all
- *   DB queries and immediately returns "complete". This avoids 3 round-trips on
- *   every video-progress heartbeat for lifetime/one-time buyers.
- */
-async function getUserPlan(userId: string, sessionHasPaid?: boolean): Promise<UserPlan | null> {
-  // Fast path: the session already knows the user has paid. No DB queries needed.
-  if (sessionHasPaid) {
-    devLog(`[PROGRESS] getUserPlan: User ${userId} short-circuited via sessionHasPaid`);
-    return "complete";
-  }
+/** Reject non-integer / out-of-range part numbers (mirrors mobile track). */
+function isValidPartNumber(partNumber: unknown): partNumber is number {
+  return (
+    typeof partNumber === "number" &&
+    Number.isInteger(partNumber) &&
+    partNumber >= 1 &&
+    partNumber <= TOTAL_COURSE_PARTS
+  );
+}
 
-  devLog(`[PROGRESS] getUserPlan: Fetching plan for user ${userId}`);
-
-  const [user, purchases, subscription, mobilePurchase] = await Promise.all([
-    prisma.user.findUnique({ where: { id: userId }, select: { hasPaid: true } }),
-    prisma.purchase.findMany({ where: { userId, status: "succeeded" }, select: { planId: true } }),
-    prisma.subscription.findFirst({
-      where: {
-        userId,
-        // Include "past_due" so users in Stripe's dunning window keep progress tracking.
-        // Mirrors ACTIVE_SUBSCRIPTION_STATUSES from lib/access.ts.
-        status: { in: ["active", "trialing", "past_due"] },
-        // Use gte (≥) to match hasActiveCourseAccess in lib/access.ts exactly.
-        // Using gt (>) would deny progress tracking in the same millisecond
-        // that the access gate still grants dashboard access via gte.
-        currentPeriodEnd: { gte: new Date() },
-      },
-      select: { id: true },
-    }),
-    prisma.mobilePurchase.findFirst({
-      where: {
-        userId,
-        status: "active",
-        OR: [
-          { purchaseType: "lifetime" },
-          { purchaseType: "subscription", currentPeriodEnd: { gte: new Date() } },
-        ],
-      },
-      select: { id: true },
-    }),
-  ]);
-
-  if (purchases.some((p) => p.planId === "complete") || user?.hasPaid || subscription || mobilePurchase) {
-    devLog(`[PROGRESS] getUserPlan: User ${userId} has "complete" plan`);
-    return "complete";
-  }
-  if (purchases.some((p) => p.planId === "essentials")) {
-    devLog(`[PROGRESS] getUserPlan: User ${userId} has "essentials" plan`);
-    return "essentials";
-  }
-
-  devLog(`[PROGRESS] getUserPlan: User ${userId} has no valid plan`);
+/** Resolve plan for progress writes — Part 1 unpaid uses "complete" like mobile track. */
+async function resolveProgressPlan(
+  userId: string,
+  sessionHasPaid: boolean | undefined,
+  partNumber: number,
+) {
+  const userPlan = await getUserPlan(userId, sessionHasPaid);
+  if (userPlan) return userPlan;
+  // Mobile: `(await getUserPlan(...)) ?? "complete"` after Part 1 carve-out.
+  if (partNumber === 1) return "complete" as const;
   return null;
 }
 
@@ -96,48 +70,7 @@ async function getOrCreateProgress(userId: string, learnerProfileId: string, par
   });
 }
 
-async function recomputeAndSave(
-  learnerProfileId: string,
-  partNumber: number,
-  userPlan: UserPlan,
-) {
-  devLog(`[PROGRESS] recomputeAndSave: Profile ${learnerProfileId}, part ${partNumber}, plan ${userPlan}`);
-  const row = await prisma.partProgress.findUniqueOrThrow({
-    where: { learnerProfileId_partNumber: { learnerProfileId, partNumber } },
-    select: {
-      videoWatchPercent:  true,
-      videoCompleted:     true,
-      briefingOpened:     true,
-      quizCompleted:      true,
-      quizBestScore:      true,
-      quizPassed:         true,
-      flashcardsReviewed: true,
-      openedAssets:       true,
-      startedAt:          true,
-      completedAt:        true,
-      masteredAt:         true,
-    },
-  });
-  const snap = parseProgressRow(row);
-  const newStatus = computeStatus(snap, userPlan);
-
-  devLog(`[PROGRESS] recomputeAndSave: Computed status "${newStatus}" for profile ${learnerProfileId}, part ${partNumber}`);
-
-  const update: Record<string, unknown> = { status: newStatus };
-  if (newStatus === "completed" && !row.completedAt) {
-    update.completedAt = new Date();
-  }
-  if (newStatus === "mastered" && !row.masteredAt) {
-    update.masteredAt = new Date();
-  }
-
-  await prisma.partProgress.update({
-    where: { learnerProfileId_partNumber: { learnerProfileId, partNumber } },
-    data:  update,
-  });
-}
-
-// ── Public server actions ─────────────────────────────────────────────────────
+// ── Public server actions ────────────────────────────────────────────────────
 
 /**
  * Called by the video player when the user reaches a new highest watch %.
@@ -147,13 +80,11 @@ export async function trackVideoProgress(partNumber: number, watchPercent: numbe
   const startTime = Date.now();
   devLog(`[PROGRESS] trackVideoProgress: Part ${partNumber}, watchPercent ${watchPercent}%`);
 
+  if (!isValidPartNumber(partNumber)) return;
+
   const user = await requireStudent();
   if (!user) {
     devLog(`[PROGRESS] trackVideoProgress: No authenticated student`);
-    return;
-  }
-  if (!user.emailVerified) {
-    devLog(`[PROGRESS] trackVideoProgress: User ${user.id} email not verified, skipping`);
     return;
   }
 
@@ -162,7 +93,7 @@ export async function trackVideoProgress(partNumber: number, watchPercent: numbe
 
   devLog(`[PROGRESS] trackVideoProgress: User ${userId}, profile ${learnerProfileId}, part ${partNumber}, ${watchPercent}%`);
 
-  const userPlan = await getUserPlan(userId, user.hasPaid);
+  const userPlan = await resolveProgressPlan(userId, user.hasPaid, partNumber);
   if (!userPlan) {
     devLog(`[PROGRESS] trackVideoProgress: User ${userId} has no valid plan, skipping`);
     return;
@@ -171,7 +102,7 @@ export async function trackVideoProgress(partNumber: number, watchPercent: numbe
   const clamped = Math.min(100, Math.max(0, Math.round(watchPercent)));
 
   // Step 1: ensure the row exists (create on first visit).
-  // The UPDATE branch intentionally does NOT write videoWatchPercent here —
+  // The UPDATE branch intentionally does NOT write videoWatchPercent here â€”
   // that is handled atomically in step 2 to avoid ever regressing the value.
   await prisma.partProgress.upsert({
     where:  { learnerProfileId_partNumber: { learnerProfileId, partNumber } },
@@ -195,6 +126,8 @@ export async function trackVideoProgress(partNumber: number, watchPercent: numbe
   // Step 2: advance the high-water mark atomically.
   // The WHERE clause `videoWatchPercent < clamped` ensures this is a no-op
   // when the stored value is already equal or higher, preventing any regression.
+  // videoCompleted is sticky (lib/progress.ts) — only set true at threshold,
+  // never clear a prior true by writing false on a sub-threshold bump.
   await prisma.partProgress.updateMany({
     where: {
       learnerProfileId,
@@ -203,11 +136,11 @@ export async function trackVideoProgress(partNumber: number, watchPercent: numbe
     },
     data: {
       videoWatchPercent: clamped,
-      videoCompleted:    clamped >= VIDEO_COMPLETION_THRESHOLD,
+      ...(clamped >= VIDEO_COMPLETION_THRESHOLD ? { videoCompleted: true } : {}),
     },
   });
 
-  await recomputeAndSave(learnerProfileId, partNumber, userPlan);
+  await recomputeAndSaveStatus(learnerProfileId, partNumber, userPlan);
   
   const elapsed = Date.now() - startTime;
   devLog(`[PROGRESS] trackVideoProgress: Complete for profile ${learnerProfileId}, part ${partNumber} [${elapsed}ms]`);
@@ -216,15 +149,15 @@ export async function trackVideoProgress(partNumber: number, watchPercent: numbe
 /** Called when the user opens/views the briefing for a part. */
 export async function trackBriefingOpened(partNumber: number) {
   devLog(`[PROGRESS] trackBriefingOpened: Part ${partNumber}`);
+
+  if (!isValidPartNumber(partNumber)) return;
   
   const user = await requireStudent();
   if (!user) return;
-  if (!user.emailVerified) return;
-
   const userId          = user.id;
   const learnerProfileId = await getActiveProfileId(userId);
   
-  const userPlan = await getUserPlan(userId, user.hasPaid);
+  const userPlan = await resolveProgressPlan(userId, user.hasPaid, partNumber);
   if (!userPlan) return;
 
   await getOrCreateProgress(userId, learnerProfileId, partNumber);
@@ -233,90 +166,18 @@ export async function trackBriefingOpened(partNumber: number) {
     data:  { briefingOpened: true, lastAccessedAt: new Date() },
   });
 
-  await recomputeAndSave(learnerProfileId, partNumber, userPlan);
-}
-
-/** Called when the quiz is completed with a final score (0-100). */
-export async function trackQuizCompleted(partNumber: number, score: number) {
-  devLog(`[PROGRESS] trackQuizCompleted: Part ${partNumber}, score ${score}`);
-  
-  const user = await requireStudent();
-  if (!user) return;
-  if (!user.emailVerified) return;
-
-  const userId          = user.id;
-  const learnerProfileId = await getActiveProfileId(userId);
-  
-  const userPlan = await getUserPlan(userId, user.hasPaid);
-  if (!userPlan) return;
-
-  // Clamp score to [0, 100] — never trust a raw client value.
-  // isFinite check BEFORE clamp: Math.min/max convert Infinity → 100/0 so
-  // checking afterwards is always true and misses the Infinity/NaN case.
-  const raw = Number(score);
-  if (!Number.isFinite(raw)) return; // reject NaN, Infinity, -Infinity
-  const clamped = Math.min(100, Math.max(0, Math.round(raw)));
-
-  const passed  = clamped >= QUIZ_PASS_SCORE;
-
-  await getOrCreateProgress(userId, learnerProfileId, partNumber);
-
-  // Atomic best-score update: only raise quizBestScore, never lower it.
-  // Using updateMany with a WHERE condition (quizBestScore IS NULL OR < clamped)
-  // eliminates the read-then-write race condition from concurrent quiz submissions.
-  const alwaysFields = {
-    quizCompleted:  true,
-    quizScore:      clamped,
-    quizAttempts:   { increment: 1 as const },
-    lastAccessedAt: new Date(),
-  };
-  const updatedHigh = await prisma.partProgress.updateMany({
-    where: {
-      learnerProfileId,
-      partNumber,
-      OR: [
-        { quizBestScore: null },
-        { quizBestScore: { lt: clamped } },
-      ],
-    },
-    data: {
-      ...alwaysFields,
-      quizBestScore: clamped,
-      quizPassed:    clamped >= QUIZ_PASS_SCORE,
-    },
-  });
-
-  if (updatedHigh.count === 0) {
-    // Score is not higher than existing best — still record the attempt metadata.
-    await prisma.partProgress.update({
-      where: { learnerProfileId_partNumber: { learnerProfileId, partNumber } },
-      data: alwaysFields,
-    });
-  }
-
-  // Re-read final bestScore for the return value.
-  const saved = await prisma.partProgress.findUnique({
-    where: { learnerProfileId_partNumber: { learnerProfileId, partNumber } },
-    select: { quizBestScore: true, quizPassed: true },
-  });
-  const bestScore = saved?.quizBestScore ?? clamped;
-
-  await recomputeAndSave(learnerProfileId, partNumber, userPlan);
-
-  devLog(`[PROGRESS] trackQuizCompleted: Profile ${learnerProfileId}, part ${partNumber}, score ${clamped}, passed: ${passed}`);
-  return { score: clamped, passed, bestScore };
+  await recomputeAndSaveStatus(learnerProfileId, partNumber, userPlan);
 }
 
 /** Called when flashcards session is started/reviewed. */
 export async function trackFlashcardsReviewed(partNumber: number) {
+  if (!isValidPartNumber(partNumber)) return;
   const user = await requireStudent();
   if (!user) return;
-  if (!user.emailVerified) return;
-
   const userId          = user.id;
   const learnerProfileId = await getActiveProfileId(userId);
   
-  const userPlan = await getUserPlan(userId, user.hasPaid);
+  const userPlan = await resolveProgressPlan(userId, user.hasPaid, partNumber);
   if (!userPlan) return;
 
   await getOrCreateProgress(userId, learnerProfileId, partNumber);
@@ -339,7 +200,7 @@ export async function trackFlashcardsReviewed(partNumber: number) {
       AND "partNumber" = ${partNumber}
   `;
 
-  await recomputeAndSave(learnerProfileId, partNumber, userPlan);
+  await recomputeAndSaveStatus(learnerProfileId, partNumber, userPlan);
 }
 
 /**
@@ -348,20 +209,30 @@ export async function trackFlashcardsReviewed(partNumber: number) {
  *                   "report", "statement-of-facts", "timeline", "audio"
  *
  * NOTE: openedAssets is stored as a JSON string in the DB (e.g. '["slides","audio"]').
- * The max realistic size is ~20 assets × ~30 chars each ≈ 600 bytes, well within
+ * The max realistic size is ~20 assets Ã— ~30 chars each â‰ˆ 600 bytes, well within
  * the varchar limit. Avoid storing unbounded user input as assetId values here.
  */
 export async function trackAssetOpened(partNumber: number, assetId: string) {
   devLog(`[PROGRESS] trackAssetOpened: Part ${partNumber}, assetId "${assetId}"`);
+
+  if (!isValidPartNumber(partNumber)) return;
+  if (typeof assetId !== "string" || !VALID_ASSET_IDS.has(assetId)) {
+    return;
+  }
+  // Normalize legacy IDs to canonical values stored in openedAssets.
+  const canonicalId =
+    assetId === "facts" || assetId === "statement_of_facts"
+      ? "statement-of-facts"
+      : assetId === "study-guide"
+        ? "study_guide"
+        : assetId;
   
   const user = await requireStudent();
   if (!user) return;
-  if (!user.emailVerified) return;
-
   const userId          = user.id;
   const learnerProfileId = await getActiveProfileId(userId);
   
-  const userPlan = await getUserPlan(userId, user.hasPaid);
+  const userPlan = await resolveProgressPlan(userId, user.hasPaid, partNumber);
   if (!userPlan) return;
 
   await getOrCreateProgress(userId, learnerProfileId, partNumber);
@@ -371,16 +242,16 @@ export async function trackAssetOpened(partNumber: number, assetId: string) {
   // preventing duplicates without a separate read-then-write race.
   // Also sync the dedicated boolean columns when "briefing" or "flashcard"
   // are opened via the Resources tab so both write paths stay consistent.
-  const isBriefing  = assetId === "briefing";
-  const isFlashcard = assetId === "flashcard";
+  const isBriefing  = canonicalId === "briefing";
+  const isFlashcard = canonicalId === "flashcard";
 
   await prisma.$executeRaw`
     UPDATE "PartProgress"
     SET
       "openedAssets" = CASE
-        WHEN COALESCE("openedAssets", '[]')::jsonb ? ${assetId}
+        WHEN COALESCE("openedAssets", '[]')::jsonb ? ${canonicalId}
         THEN COALESCE("openedAssets", '[]')
-        ELSE (COALESCE("openedAssets", '[]')::jsonb || jsonb_build_array(${assetId}::text))::text
+        ELSE (COALESCE("openedAssets", '[]')::jsonb || jsonb_build_array(${canonicalId}::text))::text
       END,
       "briefingOpened"    = CASE WHEN ${isBriefing}  THEN true ELSE "briefingOpened"    END,
       "flashcardsReviewed"= CASE WHEN ${isFlashcard} THEN true ELSE "flashcardsReviewed" END,
@@ -390,22 +261,24 @@ export async function trackAssetOpened(partNumber: number, assetId: string) {
       AND "partNumber" = ${partNumber}
   `;
 
-  await recomputeAndSave(learnerProfileId, partNumber, userPlan);
-  devLog(`[PROGRESS] trackAssetOpened: Profile ${learnerProfileId}, part ${partNumber}, asset "${assetId}"`);
+  await recomputeAndSaveStatus(learnerProfileId, partNumber, userPlan);
+  devLog(`[PROGRESS] trackAssetOpened: Profile ${learnerProfileId}, part ${partNumber}, asset "${canonicalId}"`);
 }
 
 /**
  * Mark a part as started (called when user opens the part page).
- *
- * Intentionally skips the plan check here: by the time this action is called,
- * the page-level access gate (hasActiveCourseAccess) has already verified the
- * user has an active subscription or purchase. The server action doesn't repeat
- * that check to avoid an extra round-trip on every page view.
+ * Requires active course access (or Part 1 free) — do not trust page-only gates;
+ * this action is callable directly and would inflate certificate "studied" counts.
  */
 export async function trackPartOpened(partNumber: number) {
   const user = await requireStudent();
   if (!user) return;
-  if (!user.emailVerified) return;
+  if (!isValidPartNumber(partNumber)) return;
+
+  if (partNumber !== 1) {
+    const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
+    if (!hasAccess) return;
+  }
 
   const userId          = user.id;
   const learnerProfileId = await getActiveProfileId(userId);
@@ -421,24 +294,17 @@ export async function trackPartOpened(partNumber: number) {
 
 /**
  * Server-side quiz submission — validates every answer against the authoritative
- * quiz data, computes the score, then delegates to trackQuizCompleted.
- *
- * Use this instead of calling trackQuizCompleted with a client-supplied score.
- * The client still uses getQuizAnswerMap for instant per-question feedback, but
- * the final score that is recorded is always computed on the server.
- *
- * @param answers - map of questionId → the option the user selected
+ * quiz data, computes the score, then persists it. Never accept a client score.
+ * Mirrors mobile `/api/mobile-progress/track` which also requires answers.
  */
 export async function submitQuizAnswers(
   partNumber: number,
   answers: Record<string, string>,
+  explicitProfileId?: string,
 ): Promise<{ score: number; passed: boolean; bestScore: number } | undefined> {
+  if (!isValidPartNumber(partNumber)) return;
   const user = await requireStudent();
   if (!user) return;
-  if (!user.emailVerified) return;
-
-  // Load quiz data from the shared in-memory cache (no extra R2 round-trip
-  // when the user just finished the quiz — data is almost always hot).
   const partData = await getPartPageData(partNumber);
   const quizData = partData.quizData as Quiz | null | undefined;
   if (!quizData || quizData.questions.length === 0) {
@@ -446,14 +312,12 @@ export async function submitQuizAnswers(
     return;
   }
 
-  // Compute score server-side from authoritative correct_answer values.
-  const total   = quizData.questions.length;
-  const correct = quizData.questions.filter(
-    (q) => answers[q.id] !== undefined && answers[q.id] === q.correct_answer,
-  ).length;
-  const serverScore = Math.round((correct / total) * 100);
+  const serverScore = computeQuizScore(quizData, answers);
+  const userPlan = await resolveProgressPlan(user.id, user.hasPaid, partNumber);
+  if (!userPlan) return;
 
-  devLog(`[PROGRESS] submitQuizAnswers: Part ${partNumber} server-computed score ${serverScore}% (${correct}/${total})`);
+  const learnerProfileId = await resolveLearnerProfileId(user.id, explicitProfileId);
+  devLog(`[PROGRESS] submitQuizAnswers: Part ${partNumber} server-computed score ${serverScore}%`);
 
-  return trackQuizCompleted(partNumber, serverScore);
+  return applyVerifiedQuizScore(user.id, learnerProfileId, partNumber, serverScore, userPlan);
 }

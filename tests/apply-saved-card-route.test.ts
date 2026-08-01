@@ -28,6 +28,11 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 vi.mock("@/lib/auth", () => ({
   getCurrentUser: vi.fn(),
 }));
+
+vi.mock("@/lib/rate-limit", () => ({
+  checkRateLimit: vi.fn(async () => ({ allowed: true, retryAfterSeconds: 0 })),
+  getIP: vi.fn(() => "127.0.0.1"),
+}));
 vi.mock("@/lib/db", () => ({
   prisma: {
     user: { findUnique: vi.fn() },

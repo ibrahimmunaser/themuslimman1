@@ -417,7 +417,7 @@ export function AudioResourceContent({
                 return (
                   <div
                     key={part.id}
-                    onClick={isLocked ? undefined : () => handlePlayAudio(part.partNumber, part.title, part.subtitle)}
+                    onClick={isLocked ? () => { window.location.assign("/pricing"); } : () => handlePlayAudio(part.partNumber, part.title, part.subtitle)}
                     className={`group rounded-xl border transition-all overflow-hidden ${
                       isLocked
                         ? "cursor-not-allowed opacity-60 border-zinc-800 bg-zinc-900/50"

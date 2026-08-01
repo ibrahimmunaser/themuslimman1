@@ -25,7 +25,8 @@ export default async function VerifyEmailPendingPage() {
           <p className="text-text-secondary">
             We sent a verification link to{" "}
             <span className="font-semibold text-gold">{user.email}</span>.
-            Click the link to unlock full access to Complete Seerah.
+            Confirm your email to secure your account
+            {user.hasPaid ? " — your course access is already unlocked." : " and unlock full access to Complete Seerah."}
           </p>
         </div>
 

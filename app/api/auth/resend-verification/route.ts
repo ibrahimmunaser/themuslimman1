@@ -6,6 +6,7 @@ import { hasActiveCourseAccess } from "@/lib/access";
 import { hashToken } from "@/lib/hash-token";
 import { Resend } from "resend";
 import { checkRateLimit, getIP } from "@/lib/rate-limit";
+import { escapeHtml } from "@/lib/html-escape";
 
 const generateToken = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 32);
 
@@ -13,7 +14,7 @@ const generateToken = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 32)
 export async function POST(request: NextRequest) {
   // Rate limit: 3 attempts per 15 minutes per IP
   const ip = getIP(request);
-  const rl = checkRateLimit(`resend-verify:${ip}`, 3, 15 * 60 * 1000);
+  const rl = await checkRateLimit(`resend-verify:${ip}`, 3, 15 * 60 * 1000);
   if (!rl.allowed) {
     return NextResponse.json(
       { error: "Too many attempts. Please try again later." },
@@ -32,7 +33,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Secondary per-user rate limit: 5 attempts per hour per account
-    const userRl = checkRateLimit(`resend-verify:user:${user.id}`, 5, 60 * 60 * 1000);
+    const userRl = await checkRateLimit(`resend-verify:user:${user.id}`, 5, 60 * 60 * 1000);
     if (!userRl.allowed) {
       return NextResponse.json(
         { error: "Too many attempts. Please try again later." },
@@ -145,7 +146,7 @@ function generateVerificationEmail(data: {
         </div>
 
         <div style="background: #ffffff; padding: 40px 30px; border-left: 1px solid #e5e5e5; border-right: 1px solid #e5e5e5;">
-          <p style="font-size: 16px; margin: 0 0 20px 0;">As-salamu alaykum ${data.fullName || "there"},</p>
+          <p style="font-size: 16px; margin: 0 0 20px 0;">As-salamu alaykum ${escapeHtml(data.fullName || "there")},</p>
           
           ${paidNote}
 

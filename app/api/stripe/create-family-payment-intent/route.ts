@@ -13,7 +13,7 @@ const FAMILY_PLAN = PLANS.family;
 export async function POST(request: NextRequest) {
   // Rate limit: 10 payment intent creations per 10 minutes per IP.
   const ip = getIP(request);
-  const rl = checkRateLimit(`create-family-pi:${ip}`, 10, 10 * 60 * 1000);
+  const rl = await checkRateLimit(`create-family-pi:${ip}`, 10, 10 * 60 * 1000);
   if (!rl.allowed) {
     return NextResponse.json(
       { error: "Too many requests. Please try again later." },

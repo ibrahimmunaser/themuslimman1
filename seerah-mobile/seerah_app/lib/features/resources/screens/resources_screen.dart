@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +8,7 @@ import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/part_provider.dart';
 import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/adaptive_icons.dart';
 import '../../../core/widgets/ui_kit.dart';
 
 // ── Resource type definitions ─────────────────────────────────────────────────
@@ -98,6 +100,11 @@ const _resourceTypes = [
   ),
 ];
 
+/// Public so other screens (dashboard stat strip) can display the real count
+/// instead of a hardcoded number that drifts whenever a resource type is
+/// added/removed here.
+final int kResourceTypeCount = _resourceTypes.length;
+
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 class ResourcesScreen extends ConsumerStatefulWidget {
@@ -124,7 +131,8 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
             : Text(_labelForType(_activeType!)),
         leading: _activeType != null
             ? IconButton(
-                icon: const Icon(Icons.arrow_back_rounded),
+                icon: const BackIcon(),
+                tooltip: 'Back',
                 onPressed: () => setState(() => _activeType = null),
               )
             : null,
@@ -154,7 +162,7 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
         Padding(
           padding: const EdgeInsets.only(bottom: 14),
           child: Text(
-            '${_resourceTypes.length} resource types • 100 parts each',
+            '${_resourceTypes.length} resource types • ${PARTS.length} parts each',
             style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
           ),
         ),
@@ -176,8 +184,11 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
                   Material(
                     color: AppColors.card,
                     child: InkWell(
+                      // push, not go — matches part_screen.dart's paywall
+                      // fix so Back returns to Resources instead of wiping
+                      // the back stack.
                       onTap: locked
-                          ? () => context.go('/pricing')
+                          ? () => context.push('/pricing')
                           : () => setState(() => _activeType = rt.id),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
@@ -229,10 +240,11 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
                                   style: const TextStyle(
                                     color: AppColors.gold, fontSize: 11, fontWeight: FontWeight.w600)),
                               ),
-                            Icon(
-                              locked ? Icons.lock_outline_rounded : Icons.chevron_right_rounded,
-                              color: AppColors.textMuted, size: 18,
-                            ),
+                            locked
+                                ? const Icon(Icons.lock_outline_rounded,
+                                    color: AppColors.textMuted, size: 18)
+                                : const ForwardChevronIcon(
+                                    color: AppColors.textMuted, size: 18),
                           ],
                         ),
                       ),
@@ -309,8 +321,10 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
               Material(
                 color: AppColors.card,
                 child: InkWell(
+                  // push, not go — matches part_screen.dart's paywall fix so
+                  // Back returns to Resources instead of wiping the stack.
                   onTap: locked
-                      ? () => context.go('/pricing')
+                      ? () => context.push('/pricing')
                       : () => context.push('/part/${part.partNumber}?tab=$typeId'),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
@@ -546,11 +560,12 @@ class _PartThumbnail extends ConsumerWidget {
         child: assetsAsync.whenOrNull(
           data: (assets) {
             if (assets.thumbnailUrl != null && assets.thumbnailUrl!.isNotEmpty) {
-              return Image.network(
-                assets.thumbnailUrl!,
+              return CachedNetworkImage(
+                imageUrl: assets.thumbnailUrl!,
                 fit: BoxFit.cover,
-                cacheWidth: (56 * MediaQuery.devicePixelRatioOf(context)).round(),
-                errorBuilder: (_, __, ___) => _fallback(color),
+                memCacheWidth: (56 * MediaQuery.devicePixelRatioOf(context)).round(),
+                placeholder: (_, __) => Container(color: AppColors.card),
+                errorWidget: (_, __, ___) => _fallback(color),
               );
             }
             return _fallback(color);

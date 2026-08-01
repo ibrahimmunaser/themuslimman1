@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth";
 import { invalidatePartCache } from "@/lib/part-content-cache";
+import { TOTAL_COURSE_PARTS } from "@/lib/access";
 
 export const dynamic = "force-dynamic";
 
@@ -21,9 +22,9 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
   const partNumber = typeof body.partNumber === "number" ? body.partNumber : null;
 
-  if (!partNumber || partNumber < 1 || partNumber > 100) {
+  if (!partNumber || partNumber < 1 || partNumber > TOTAL_COURSE_PARTS) {
     return NextResponse.json(
-      { error: "partNumber must be an integer between 1 and 100" },
+      { error: `partNumber must be an integer between 1 and ${TOTAL_COURSE_PARTS}` },
       { status: 400 }
     );
   }

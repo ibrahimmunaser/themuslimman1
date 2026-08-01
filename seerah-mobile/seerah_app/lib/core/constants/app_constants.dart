@@ -12,8 +12,23 @@ class AppConstants {
   static const String keyHasAccess = 'has_access';
   static const String keyIsFamily = 'is_family';
   static const String keyUserRole = 'user_role';
-  static const String keyCookies = 'auth_cookies';
   static const String keyIsAnonymous = 'is_anonymous';
+  static const String keyEmailVerified = 'email_verified';
+
+  /// "stripe" | "google" | "apple" | null (no active access). Mirrors
+  /// /api/access/check's `purchasePlatform` — tells "Manage Subscription"
+  /// where to actually route the user instead of guessing from the OS the
+  /// app happens to be running on today (a Stripe web subscriber signed in
+  /// on Android must NOT be sent to the Play Store subscription center, and
+  /// a Play purchaser must NOT be sent to Stripe's web billing portal).
+  static const String keyPurchasePlatform = 'purchase_platform';
+
+  /// Last known active learner profile id — used to scope the local
+  /// on-device progress cache per profile so switching profiles on a
+  /// shared family device never shows one learner's progress merged into
+  /// another's. Kept out of [authPrefKeys] on purpose: progressProvider
+  /// clears it explicitly (see ProgressNotifier.clearAll).
+  static const String keyActiveProfileId = 'active_profile_id';
 
   // All auth-related pref keys — used for selective clear on logout
   static const List<String> authPrefKeys = [
@@ -23,8 +38,9 @@ class AppConstants {
     keyHasAccess,
     keyIsFamily,
     keyUserRole,
-    keyCookies,
     keyIsAnonymous,
+    keyEmailVerified,
+    keyPurchasePlatform,
   ];
 
   // Plans — fallback prices shown while store products load

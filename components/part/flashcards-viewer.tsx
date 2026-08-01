@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef } from "react";
 import { clsx } from "clsx";
 import { ChevronLeft, ChevronRight, RotateCcw, Shuffle } from "lucide-react";
 import type { FlashcardSet, FlashcardLevel, Flashcard } from "@/lib/types";
@@ -27,10 +27,23 @@ function shuffleArray<T>(arr: T[]): T[] {
   return copy;
 }
 
-function FlipCard({ card, index, total }: { card: Flashcard; index: number; total: number }) {
+function FlipCard({
+  card,
+  index,
+  total,
+  onEngage,
+}: {
+  card: Flashcard;
+  index: number;
+  total: number;
+  onEngage?: () => void;
+}) {
   const [flipped, setFlipped] = useState(false);
 
-  const toggle = () => setFlipped((f) => !f);
+  const toggle = () => {
+    onEngage?.();
+    setFlipped((f) => !f);
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -137,16 +150,16 @@ export function FlashcardsViewer({ flashcards, partNumber, previewMode }: Flashc
   const [shuffled, setShuffled] = useState(false);
   const trackedRef = useRef(false);
 
-  // Track on first open (mount) and update the header badge live.
-  useEffect(() => {
+  // Track after the user flips/navigates a card (engagement), not on mount —
+  // mirrors mobile flashcards_tab first-flip tracking.
+  const markReviewed = useCallback(() => {
     if (!partNumber || trackedRef.current || previewMode) return;
     trackedRef.current = true;
     trackFlashcardsReviewed(partNumber).catch(() => {});
     window.dispatchEvent(
       new CustomEvent("seerah:progressUpdate", { detail: { flashcardsReviewed: true } })
     );
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [partNumber, previewMode]);
 
   const switchLevel = useCallback((newLevel: FlashcardLevel) => {
     setLevel(newLevel);
@@ -156,6 +169,7 @@ export function FlashcardsViewer({ flashcards, partNumber, previewMode }: Flashc
   }, [flashcards]);
 
   const handleShuffle = () => {
+    markReviewed();
     setDeck(shuffleArray(deck));
     setIndex(0);
     setShuffled(true);
@@ -167,8 +181,14 @@ export function FlashcardsViewer({ flashcards, partNumber, previewMode }: Flashc
     setShuffled(false);
   };
 
-  const prev = () => setIndex((i) => Math.max(0, i - 1));
-  const next = () => setIndex((i) => Math.min(deck.length - 1, i + 1));
+  const prev = () => {
+    markReviewed();
+    setIndex((i) => Math.max(0, i - 1));
+  };
+  const next = () => {
+    markReviewed();
+    setIndex((i) => Math.min(deck.length - 1, i + 1));
+  };
 
   const card = deck[index];
 
@@ -232,7 +252,13 @@ export function FlashcardsViewer({ flashcards, partNumber, previewMode }: Flashc
       </div>
 
       {/* Card */}
-      <FlipCard key={`${level}-${index}-${shuffled}`} card={card} index={index} total={deck.length} />
+      <FlipCard
+        key={`${level}-${index}-${shuffled}`}
+        card={card}
+        index={index}
+        total={deck.length}
+        onEngage={markReviewed}
+      />
 
       {/* Navigation */}
       <div className="flex items-center justify-between gap-4 pt-4 border-t border-zinc-800">

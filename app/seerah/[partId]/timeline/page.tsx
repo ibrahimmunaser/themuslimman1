@@ -32,9 +32,10 @@ export default async function TimelinePage(props: Props) {
   const partBase = getPartById(partId);
   if (!partBase) notFound();
 
-  const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
+  const hasAccess =
+    partBase.partNumber === 1 || (await hasActiveCourseAccess(user.id, user.hasPaid));
   if (!hasAccess) redirect("/pricing");
-  if (!user.emailVerified) redirect("/seerah");
+  // Part 1 timeline is free (mirrors part page + mobile). Entitled unverified keep access.
 
   if (isFamilyPlan(user.planType)) {
     const cookieStore = await cookies();

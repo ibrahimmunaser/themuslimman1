@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { requireStudent } from "@/lib/auth";
-import { hasActiveCourseAccess } from "@/lib/access";
+import { hasActiveCourseAccess, TOTAL_COURSE_PARTS } from "@/lib/access";
 import { StudentLayout } from "@/components/student/student-layout";
 import { prisma } from "@/lib/db";
 import { getActiveProfileId } from "@/app/actions/profiles";
@@ -27,7 +27,7 @@ export default async function ProgressPage() {
 
   const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
   if (!hasAccess) redirect("/pricing");
-  if (!user.emailVerified) redirect("/seerah");
+  // Entitled unverified users keep progress access.
 
   const userPlan = "complete" as const;
 
@@ -48,6 +48,7 @@ export default async function ProgressPage() {
         briefingOpened: true,
         quizCompleted: true,
         quizPassed: true,
+        quizScoreVerified: true,
         quizBestScore: true,
         quizAttempts: true,
         flashcardsReviewed: true,
@@ -63,7 +64,7 @@ export default async function ProgressPage() {
     }),
   ]);
 
-  const TOTAL_PARTS = 100;
+  const TOTAL_PARTS = TOTAL_COURSE_PARTS;
 
   // Compute stats
   const completedParts = allProgress.filter(
@@ -99,7 +100,7 @@ export default async function ProgressPage() {
     slides: allProgress.filter((p) => (openedAssetsMap[p.partNumber] ?? []).includes("slides")).length,
     briefings: allProgress.filter((p) => p.briefingOpened).length,
     flashcards: allProgress.filter((p) => p.flashcardsReviewed).length,
-    quizzes: allProgress.filter((p) => p.quizPassed).length,
+    quizzes: allProgress.filter((p) => p.quizPassed && p.quizScoreVerified).length,
     audio: allProgress.filter((p) => (openedAssetsMap[p.partNumber] ?? []).includes("audio")).length,
     mindmaps: allProgress.filter((p) => (openedAssetsMap[p.partNumber] ?? []).includes("mindmap")).length,
     infographics: allProgress.filter((p) => (openedAssetsMap[p.partNumber] ?? []).includes("infographic")).length,

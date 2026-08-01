@@ -126,13 +126,13 @@ model ClassEnrollment {
 }
 
 model CourseTemplate {
-  id          String               @id
-  title       String
-  slug        String               @unique
-  description String?
-  isActive    Boolean              @default(true)
-  createdAt   DateTime             @default(now())
-  updatedAt   DateTime
+  id           String               @id
+  title        String
+  slug         String               @unique
+  description  String?
+  isActive     Boolean              @default(true)
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime
   classCourses ClassCourse[]
   items        CourseTemplateItem[]
 }
@@ -239,15 +239,15 @@ model InfluencerClick {
 }
 
 model LearnerProfile {
-  id           String         @id
-  userId       String
-  displayName  String
-  avatar       String?
-  isDefault    Boolean        @default(false)
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @default(now())
-  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  partProgress PartProgress[]
+  id            String         @id
+  userId        String
+  displayName   String
+  avatar        String?
+  isDefault     Boolean        @default(false)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @default(now())
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  partProgress  PartProgress[]
   studySessions StudySession[]
 
   @@index([userId])
@@ -272,6 +272,14 @@ model PartProgress {
   quizCompleted      Boolean        @default(false)
   quizPassed         Boolean        @default(false)
   quizScore          Int?
+  // Was quizBestScore recomputed server-side from raw per-question answers
+  // (true), or merely trusted as-sent from an older/offline client with no
+  // answers to re-grade (false)? Certificate eligibility requires this to be
+  // true so a tampered local cache bulk-synced without answers can't
+  // permanently masquerade as a real passing score. Defaults to true so
+  // pre-existing rows (all recorded through server-validated paths before
+  // this column existed) aren't retroactively invalidated.
+  quizScoreVerified  Boolean        @default(true)
   videoCompleted     Boolean        @default(false)
   videoWatchPercent  Int            @default(0)
   learnerProfileId   String
@@ -285,30 +293,52 @@ model PartProgress {
 }
 
 model MobilePurchase {
-  id               String    @id
-  userId           String
+  id                String    @id
+  userId            String
   /// "apple" | "google"
-  platform         String
+  platform          String
   /// Exact product ID registered in App Store Connect / Play Console
-  productId        String
-  /// iOS: transactionId — Android: orderId
-  transactionId    String    @unique
+  productId         String
+  /// iOS: transactionId — Android subscriptions: purchaseToken (stable across
+  /// renewals); Android one-time: orderId
+  transactionId     String    @unique
   /// Android only — the purchase token used for API verification
-  purchaseToken    String?
+  purchaseToken     String?
   /// "individual" | "family"
-  planType         String
+  planType          String
   /// "lifetime" | "subscription"
-  purchaseType     String
+  purchaseType      String
   /// "active" | "expired" | "cancelled" | "refunded"
-  status           String    @default("active")
+  status            String    @default("active")
   /// null for lifetime purchases
-  currentPeriodEnd DateTime?
+  currentPeriodEnd  DateTime?
   /// Full JSON response from Apple/Google stored for audit trail
-  rawResponse      String?
-  verifiedAt       DateTime  @default(now())
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rawResponse       String?
+  /// "Production" | "Sandbox" (Apple) | "Test" | "Promo" | "Rewarded" (Google) | null.
+  /// Apple signs Sandbox and Production StoreKit 2 transactions with the same
+  /// root CA chain, so this is the only reliable signal that a "valid"
+  /// transaction wasn't a free Sandbox/tester purchase — queryable here so
+  /// non-Production purchases in prod can be audited/reported without
+  /// grepping rawResponse JSON blobs.
+  environment       String?
+  /// True when, at the moment this transactionId was FIRST verified (never
+  /// re-set on renewal updates), the user already had active course access
+  /// through some OTHER source (an active Stripe subscription/lifetime
+  /// purchase, or a different already-active MobilePurchase). The client
+  /// already disables the Buy button once hasAccess is true (see
+  /// landing_screen.dart/pricing_screen.dart), but that's a soft, best-effort
+  /// UI guard: a stale profile/access cache, a purchase queued by the OS
+  /// before app launch and auto-completed by IAPNotifier's purchase-stream
+  /// listener, or simply buying on a second platform (e.g. already has a web
+  /// Stripe sub, then buys again in the App Store) can all still reach this
+  /// endpoint with a genuinely valid receipt. Apple/Google purchases can't be
+  /// blocked or auto-refunded server-side, so this flag exists purely to make
+  /// double charges queryable/auditable instead of silently invisible.
+  possibleDuplicate Boolean   @default(false)
+  verifiedAt        DateTime  @default(now())
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([platform])
@@ -427,21 +457,21 @@ model QuizQuestion {
 }
 
 model ReleaseRule {
-  id                     String                   @id
-  classId                String
-  classCourseItemId      String?
-  targetType             String
-  targetId               String?
-  releaseMode            String
-  scheduledAt            DateTime?
-  conditionType          String?
-  conditionValue         String?
-  isReleased             Boolean                  @default(false)
-  releasedAt             DateTime?
-  createdAt              DateTime                 @default(now())
-  updatedAt              DateTime
-  classCourseItem        ClassCourseItem?         @relation(fields: [classCourseItemId], references: [id])
-  class                  Class                    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  id                      String                   @id
+  classId                 String
+  classCourseItemId       String?
+  targetType              String
+  targetId                String?
+  releaseMode             String
+  scheduledAt             DateTime?
+  conditionType           String?
+  conditionValue          String?
+  isReleased              Boolean                  @default(false)
+  releasedAt              DateTime?
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime
+  classCourseItem         ClassCourseItem?         @relation(fields: [classCourseItemId], references: [id])
+  class                   Class                    @relation(fields: [classId], references: [id], onDelete: Cascade)
   studentReleaseOverrides StudentReleaseOverride[]
 
   @@index([classId])
@@ -505,17 +535,17 @@ model Session {
 }
 
 model StudentProfile {
-  id                     String                   @id
-  userId                 String                   @unique
-  dateOfBirth            DateTime?
-  isActive               Boolean                  @default(true)
-  createdAt              DateTime                 @default(now())
-  updatedAt              DateTime
-  enrollments            ClassEnrollment[]
-  examAttempts           ExamAttempt[]
-  quizAttempts           QuizAttempt[]
-  user                   User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  studentProgress        StudentProgress[]
+  id                      String                   @id
+  userId                  String                   @unique
+  dateOfBirth             DateTime?
+  isActive                Boolean                  @default(true)
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime
+  enrollments             ClassEnrollment[]
+  examAttempts            ExamAttempt[]
+  quizAttempts            QuizAttempt[]
+  user                    User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  studentProgress         StudentProgress[]
   studentReleaseOverrides StudentReleaseOverride[]
 }
 
@@ -577,36 +607,36 @@ model StudySession {
 }
 
 model Subscription {
-  id                   String    @id
-  userId               String
-  stripeCustomerId     String
-  stripeSubscriptionId String    @unique
-  stripePriceId        String
-  status               String
-  currentPeriodStart   DateTime
-  currentPeriodEnd     DateTime
-  cancelAtPeriodEnd    Boolean   @default(false)
-  creator              String?
-  promoCode            String?
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime
+  id                      String    @id
+  userId                  String
+  stripeCustomerId        String
+  stripeSubscriptionId    String    @unique
+  stripePriceId           String
+  status                  String
+  currentPeriodStart      DateTime
+  currentPeriodEnd        DateTime
+  cancelAtPeriodEnd       Boolean   @default(false)
+  creator                 String?
+  promoCode               String?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime
   /// Set on first invoice.payment_failed (billing_reason=subscription_cycle); cleared on
   /// payment success. Access is granted while status=past_due AND gracePeriodEndsAt >= now.
-  gracePeriodEndsAt         DateTime?
+  gracePeriodEndsAt       DateTime?
   /// Synced with invoice.attempt_count for the currently-failing invoice.
   /// Reset to 0 when the invoice is paid or a new billing cycle begins.
-  renewalAttemptCount       Int       @default(0)
+  renewalAttemptCount     Int       @default(0)
   /// Timestamp of the most recent invoice.payment_failed event.
-  lastPaymentFailedAt       DateTime?
+  lastPaymentFailedAt     DateTime?
   /// Stripe invoice ID of the invoice that triggered the failure state.
   /// A new invoice ID (new billing cycle) resets the grace period window.
-  lastFailedInvoiceId       String?
+  lastFailedInvoiceId     String?
   /// Stripe event ID of the last invoice.payment_failed delivery that actually
   /// mutated this row. Kept for observability/debugging only — the actual
   /// delivery-idempotency guarantee comes from the unique constraint on
   /// StripeWebhookEvent.stripeEventId, checked inside the same DB transaction.
-  lastFailedStripeEventId   String?
-  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lastFailedStripeEventId String?
+  user                    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([creator])
   @@index([gracePeriodEndsAt])
@@ -638,12 +668,12 @@ model Subscription {
 /// (e.g. a prior DB transaction failed after Stripe already created the
 /// subscription) — recoverable by retrying with the same idempotency key.
 model TrialEligibility {
-  id            String    @id
+  id            String   @id
   userId        String
   courseKey     String
   setupIntentId String
   stripeSubId   String?
-  createdAt     DateTime  @default(now())
+  createdAt     DateTime @default(now())
 
   @@unique([userId, courseKey])
   @@unique([setupIntentId])
@@ -672,17 +702,17 @@ model StripeWebhookEvent {
 }
 
 model EmailOutreachLog {
-  id           String    @id
+  id           String   @id
   userId       String?
   name         String
   email        String
-  outreachType String    // "NO_PLAN_MANUAL"
+  outreachType String // "NO_PLAN_MANUAL"
   subject      String
-  status       String    // "SENT" | "FAILED" | "SKIPPED"
-  sentAt       DateTime  @default(now())
+  status       String // "SENT" | "FAILED" | "SKIPPED"
+  sentAt       DateTime @default(now())
   error        String?
-  createdAt    DateTime  @default(now())
-  user         User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt    DateTime @default(now())
+  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([email])
   @@index([outreachType, status])
@@ -707,10 +737,10 @@ model EmailAutomationEvent {
   id        String   @id
   userId    String
   email     String
-  flowType  String   // e.g. "NO_PLAN_RECOVERY"
+  flowType  String // e.g. "NO_PLAN_RECOVERY"
   step      Int
   subject   String
-  status    String   // "SENT" | "FAILED" | "SKIPPED"
+  status    String // "SENT" | "FAILED" | "SKIPPED"
   sentAt    DateTime @default(now())
   error     String?
   createdAt DateTime @default(now())
@@ -759,31 +789,31 @@ model SupportTicket {
 }
 
 model SeerahCheckupLead {
-  id                String    @id @default(cuid())
-  name              String?
-  email             String
-  phone             String?
-  answers           Json
-  score             Int
-  resultType        String    // "scattered" | "partial" | "strong"
-  recommendedPlan   String
-  openText          String?
-  sessionId         String?
-  mainObjection     String?
-  audienceType      String?   // "self" | "family" | "self_and_family" | "group"
-  influencer        String?
-  quizVersion       String?   @default("1.0")
-  source            String?
-  utmSource         String?
-  utmMedium         String?
-  utmCampaign       String?
-  utmContent        String?
-  clickedCheckout   Boolean   @default(false)
-  checkoutClickedAt DateTime?
-  part1ClickedAt    DateTime?
-  purchasedAt       DateTime?
-  unsubscribedAt    DateTime?
-  createdAt         DateTime  @default(now())
+  id                 String              @id @default(cuid())
+  name               String?
+  email              String
+  phone              String?
+  answers            Json
+  score              Int
+  resultType         String // "scattered" | "partial" | "strong"
+  recommendedPlan    String
+  openText           String?
+  sessionId          String?
+  mainObjection      String?
+  audienceType       String? // "self" | "family" | "self_and_family" | "group"
+  influencer         String?
+  quizVersion        String?             @default("1.0")
+  source             String?
+  utmSource          String?
+  utmMedium          String?
+  utmCampaign        String?
+  utmContent         String?
+  clickedCheckout    Boolean             @default(false)
+  checkoutClickedAt  DateTime?
+  part1ClickedAt     DateTime?
+  purchasedAt        DateTime?
+  unsubscribedAt     DateTime?
+  createdAt          DateTime            @default(now())
   checkupEmailEvents CheckupEmailEvent[]
 
   @@index([email])
@@ -796,10 +826,10 @@ model CheckupEmailEvent {
   id        String            @id
   leadId    String
   email     String
-  flowType  String            // "CHECKUP_FOLLOWUP"
-  step      Int               // 1=2h, 2=24h, 3=72h, 4=checkout_recovery
+  flowType  String // "CHECKUP_FOLLOWUP"
+  step      Int // 1=2h, 2=24h, 3=72h, 4=checkout_recovery
   subject   String
-  status    String            // "SENT" | "FAILED" | "SKIPPED"
+  status    String // "SENT" | "FAILED" | "SKIPPED"
   sentAt    DateTime          @default(now())
   error     String?
   createdAt DateTime          @default(now())
@@ -813,36 +843,36 @@ model CheckupEmailEvent {
 }
 
 model User {
-  id                                              String           @id
+  id                                              String                 @id
   fullName                                        String
-  email                                           String           @unique
+  email                                           String                 @unique
   passwordHash                                    String?
   role                                            String
-  emailVerified                                   Boolean          @default(false)
-  verificationToken                               String?          @unique
-  passwordResetToken                              String?          @unique
+  emailVerified                                   Boolean                @default(false)
+  verificationToken                               String?                @unique
+  passwordResetToken                              String?                @unique
   passwordResetExpiry                             DateTime?
   lastLoginAt                                     DateTime?
-  isActive                                        Boolean          @default(true)
+  isActive                                        Boolean                @default(true)
   profileImage                                    String?
-  timezone                                        String           @default("UTC")
-  createdAt                                       DateTime         @default(now())
+  timezone                                        String                 @default("UTC")
+  createdAt                                       DateTime               @default(now())
   updatedAt                                       DateTime
-  hasPaid                                         Boolean          @default(false)
+  hasPaid                                         Boolean                @default(false)
   stripePaymentIntentId                           String?
   verificationExpires                             DateTime?
-  stripeCustomerId                                String?          @unique
-  planType                                        String           @default("individual")
+  stripeCustomerId                                String?                @unique
+  planType                                        String                 @default("individual")
   /// True for mobile-app device-linked accounts created silently before the
   /// user provides any personal info (Apple Guideline 5.1.1(v) — purchases
   /// must not require registration). Set false the moment the user optionally
   /// upgrades to a real account with email/password (see /api/auth/upgrade-account).
-  isAnonymous                                      Boolean          @default(false)
+  isAnonymous                                     Boolean                @default(false)
   activityLogs                                    ActivityLog[]
   emailAutomationEvents                           EmailAutomationEvent[]
   emailOutreachLogs                               EmailOutreachLog[]
-  GiftPurchase_GiftPurchase_claimedByUserIdToUser GiftPurchase[]   @relation("GiftPurchase_claimedByUserIdToUser")
-  GiftPurchase_GiftPurchase_purchaserUserIdToUser GiftPurchase[]   @relation("GiftPurchase_purchaserUserIdToUser")
+  GiftPurchase_GiftPurchase_claimedByUserIdToUser GiftPurchase[]         @relation("GiftPurchase_claimedByUserIdToUser")
+  GiftPurchase_GiftPurchase_purchaserUserIdToUser GiftPurchase[]         @relation("GiftPurchase_purchaserUserIdToUser")
   learnerProfiles                                 LearnerProfile[]
   mobilePurchases                                 MobilePurchase[]
   partProgress                                    PartProgress[]

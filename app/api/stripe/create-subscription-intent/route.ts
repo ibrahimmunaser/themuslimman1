@@ -8,7 +8,7 @@ import { checkRateLimit, getIP } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
   const ip = getIP(request);
-  const rl = checkRateLimit(`create-sub-intent:${ip}`, 10, 10 * 60 * 1000);
+  const rl = await checkRateLimit(`create-sub-intent:${ip}`, 10, 10 * 60 * 1000);
   if (!rl.allowed) {
     return NextResponse.json(
       { error: "Too many requests. Please try again later." },
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
     // Cancel any existing incomplete or past_due subscriptions for this customer
     // to avoid duplicate active subscriptions. past_due subs are canceled here so
     // the user can create a fresh one with a new payment method if retries failed.
-    for (const statusFilter of ["incomplete", "past_due"] as const) {
+    for (const statusFilter of ["incomplete", "past_due", "unpaid"] as const) {
       const existingSubs = await stripe.subscriptions.list({
         customer: customerId,
         status: statusFilter,

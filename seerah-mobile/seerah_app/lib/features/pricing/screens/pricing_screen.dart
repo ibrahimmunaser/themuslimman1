@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/iap_provider.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/utils/webview_nav_policy.dart';
+import '../../../core/widgets/adaptive_icons.dart';
+import '../../../core/widgets/legal_web_screen.dart';
+import '../../../core/widgets/subscription_legal_text.dart';
+import '../../../core/utils/refund_copy.dart';
+import '../../../core/utils/system_insets.dart';
+import '../../../core/widgets/ui_kit.dart' show VerifyingPurchaseBanner, PriceLoadingPlaceholder, PendingPurchaseRecoveryBanner;
 import '../../home/screens/landing_screen.dart' show PlanId;
 
 // ── Plan model (mirrors landing_screen) ──────────────────────────────────────
@@ -74,7 +77,7 @@ const _plans = [
   ),
 ];
 
-const _faqItems = [
+final _faqItems = [
   (
     q: 'What is included?',
     a: 'Every plan includes the full 100-part Seerah course with video lessons, readings, quizzes, flashcards, summaries, mind maps, and progress tracking.',
@@ -85,7 +88,7 @@ const _faqItems = [
   ),
   (
     q: 'Is there a refund guarantee?',
-    a: 'Yes. If the course is not what you expected, contact us within 7 days for a full refund.',
+    a: refundGuaranteeAnswer(),
   ),
   (
     q: 'Is Part 1 free?',
@@ -108,6 +111,11 @@ class PricingScreen extends ConsumerStatefulWidget {
 
 class _PricingScreenState extends ConsumerState<PricingScreen> {
   PlanId? _purchasingPlanId;
+  // Set synchronously the instant a plan is tapped — iap.status doesn't flip
+  // to `purchasing` until after resolveProductForPlan()/ensureSession() have
+  // both awaited, leaving a window where a fast double-tap could start two
+  // concurrent purchase flows for the same (or different) plan.
+  bool _buyTapInFlight = false;
 
   @override
   void initState() {
@@ -115,11 +123,18 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
     ref.read(iapProvider);
   }
 
-  String _price(IAPState iap, _Plan plan) =>
-      iap.productForPlan(plan.iapId)?.price ?? plan.fallbackPrice;
+  /// Audit M-fallback-price: null while store products are still loading —
+  /// see identical helper doc comment in landing_screen.dart.
+  String? _price(IAPState iap, _Plan plan) {
+    final resolved = iap.productForPlan(plan.iapId)?.price;
+    if (resolved != null) return resolved;
+    if (iap.status == IAPStatus.loading) return null;
+    return plan.fallbackPrice;
+  }
 
   Future<void> _buyPlan(IAPState iap, _Plan plan) async {
-    if (iap.status == IAPStatus.purchasing ||
+    if (_buyTapInFlight ||
+        iap.status == IAPStatus.purchasing ||
         iap.status == IAPStatus.verifying ||
         iap.status == IAPStatus.loading) {
       return;
@@ -129,27 +144,36 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
       return;
     }
 
+    _buyTapInFlight = true;
     setState(() => _purchasingPlanId = plan.id);
 
-    final product = await ref
-        .read(iapProvider.notifier)
-        .resolveProductForPlan(plan.iapId);
-    if (product == null) {
-      if (mounted) setState(() => _purchasingPlanId = null);
-      _snack(ref.read(iapProvider).unavailableProductMessage());
-      return;
-    }
+    try {
+      final product = await ref
+          .read(iapProvider.notifier)
+          .resolveProductForPlan(plan.iapId);
+      if (product == null) {
+        if (mounted) setState(() => _purchasingPlanId = null);
+        _snack(ref.read(iapProvider).unavailableProductMessage());
+        return;
+      }
 
-    // Defense in depth: ensure a session exists even if auth state went stale.
-    final ready = await ref.read(authProvider.notifier).ensureSession();
-    if (!ready) {
-      if (mounted) setState(() => _purchasingPlanId = null);
-      _snack(ref.read(authProvider).error ??
-          'Could not start checkout. Please try again.');
-      return;
-    }
+      // Defense in depth: ensure a session exists even if auth state went stale.
+      final ready = await ref.read(authProvider.notifier).ensureSession();
+      if (!ready || !ref.read(authProvider).isLoggedIn) {
+        if (mounted) setState(() => _purchasingPlanId = null);
+        _snack(ref.read(authProvider).error ??
+            'Could not start checkout. Please try again.');
+        return;
+      }
 
-    await ref.read(iapProvider.notifier).buy(product);
+      final started = await ref.read(iapProvider.notifier).buy(product);
+      if (!started && mounted) {
+        setState(() => _purchasingPlanId = null);
+        _snack('A purchase is already being processed. Please wait for it to finish.');
+      }
+    } finally {
+      _buyTapInFlight = false;
+    }
   }
 
   void _snack(String msg) {
@@ -204,9 +228,10 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
       builder:
           (_) => SafeArea(
             top: false,
+            bottom: false,
             child: SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(28, 28, 28, 40),
+                padding: EdgeInsets.fromLTRB(28, 28, 28, 40 + bottomSystemInset(context)),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -277,11 +302,17 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
     final hasAccess = auth.hasAccess;
 
     final busy =
+        _buyTapInFlight ||
         iap.status == IAPStatus.purchasing ||
         iap.status == IAPStatus.verifying ||
         iap.status == IAPStatus.loading;
 
     final showRetry = iap.needsProductReload;
+    // Audit M1 fix: this screen never surfaced pendingLinkPurchases at all —
+    // see PendingPurchaseRecoveryBanner's doc comment for how a purchase can
+    // end up queued there while logged out and still be unclaimed once the
+    // user is signed in and lands here instead of the pre-login pricing view.
+    final showRecovery = iap.hasPendingLink;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -291,12 +322,12 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
         centerTitle: true,
       ),
       body: ListView(
-        padding: EdgeInsets.fromLTRB(
-          20,
-          8,
-          20,
-          MediaQuery.of(context).padding.bottom + 24,
-        ),
+        // Audit H3: /pricing lives inside AppShell, which already pads the
+        // bottom nav with bottomSystemInset(). Scaffold zeros padding.bottom
+        // for the body but leaves viewPadding — so calling the helper here
+        // double-applied the system inset and left a dead gap above the tab
+        // bar. Use plain content padding like other shell tabs (dashboard).
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
         children: [
           // ── Access banner ────────────────────────────────────────
           if (hasAccess) ...[
@@ -311,12 +342,31 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
             const SizedBox(height: 16),
           ],
 
+          // ── Recovery banner — unclaimed purchase(s) from a logged-out
+          // moment (e.g. a renewal replayed before guest-session creation
+          // succeeded) ───────────────────────────────────────────────────
+          if (showRecovery) ...[
+            PendingPurchaseRecoveryBanner(
+              count: iap.pendingLinkPurchases.length,
+              onClaim: () async {
+                await ref.read(iapProvider.notifier).claimPendingPurchase();
+              },
+            ),
+            const SizedBox(height: 12),
+          ],
+
           // ── Retry when products failed to load ───────────────────
           if (showRetry) ...[
             _RetryBanner(
               status: iap.storeStatusLabel,
               onRetry: () => ref.read(iapProvider.notifier).reloadProducts(),
             ),
+            const SizedBox(height: 12),
+          ],
+
+          // ── Verifying purchase — can take up to ~2 minutes (retries) ─
+          if (iap.status == IAPStatus.verifying) ...[
+            const VerifyingPurchaseBanner(),
             const SizedBox(height: 12),
           ],
 
@@ -335,10 +385,24 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
           }),
 
           const SizedBox(height: 12),
-          const Text(
-            '7-day refund guarantee  ·  Instant access  ·  Cancel anytime',
+          Text(
+            '${refundBadgeText()}  ·  Instant access  ·  Cancel anytime',
             textAlign: TextAlign.center,
-            style: TextStyle(color: AppColors.textMuted, fontSize: 11.5),
+            style: const TextStyle(color: AppColors.textMuted, fontSize: 11.5),
+          ),
+
+          const SizedBox(height: 10),
+
+          // Apple 3.1.2(c): condensed auto-renewal disclosure right under
+          // the Buy buttons, in the viewport before any scrolling — the
+          // full version further down the page repeats it.
+          SubscriptionLegalText(
+            compact: true,
+            onOpenUrl: (url) {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => LegalWebScreen(url: url)),
+              );
+            },
           ),
 
           const SizedBox(height: 28),
@@ -444,7 +508,10 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
           ),
           const SizedBox(height: 10),
           InkWell(
-            onTap: () => context.go('/part/1'),
+            // push (not go) preserves whatever back-stack the user arrived
+            // with — matches the identical "preview Part 1" card on
+            // landing_screen.dart and part_screen.dart's continue CTA.
+            onTap: () => context.push('/part/1'),
             borderRadius: BorderRadius.circular(12),
             child: Container(
               padding: const EdgeInsets.all(16),
@@ -492,8 +559,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
                       ],
                     ),
                   ),
-                  const Icon(
-                    Icons.arrow_forward_ios,
+                  const ForwardChevronIcon(
                     color: AppColors.textMuted,
                     size: 14,
                   ),
@@ -535,7 +601,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
                           final ready = await ref
                               .read(authProvider.notifier)
                               .ensureSession();
-                          if (!ready) {
+                          if (!ready || !ref.read(authProvider).isLoggedIn) {
                             _snack(ref.read(authProvider).error ??
                                 'Could not restore. Please try again.');
                             return;
@@ -558,10 +624,10 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
 
           const SizedBox(height: 16),
 
-          _SubscriptionLegalText(
+          SubscriptionLegalText(
             onOpenUrl: (url) {
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => _LegalWebScreen(url: url)),
+                MaterialPageRoute(builder: (_) => LegalWebScreen(url: url)),
               );
             },
           ),
@@ -577,7 +643,9 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
 
 class _PlanTile extends StatelessWidget {
   final _Plan plan;
-  final String price;
+  /// Null while the real store price is still loading — see [_price] doc
+  /// comment (audit M-fallback-price).
+  final String? price;
   final bool isLoading;
   final bool enabled;
   final bool isRecommended;
@@ -691,36 +759,44 @@ class _PlanTile extends StatelessWidget {
                       valueColor: AlwaysStoppedAnimation<Color>(AppColors.gold),
                     ),
                   )
+                else if (price == null)
+                  const PriceLoadingPlaceholder()
                 else
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        price,
-                        style: TextStyle(
-                          color:
-                              isRecommended
-                                  ? AppColors.gold
-                                  : AppColors.textPrimary,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
+                  Flexible(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          price!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color:
+                                isRecommended
+                                    ? AppColors.gold
+                                    : AppColors.textPrimary,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
-                      ),
-                      Text(
-                        plan.period,
-                        style: TextStyle(
-                          color:
-                              isRecommended
-                                  ? AppColors.gold.withValues(alpha: 0.7)
-                                  : AppColors.textMuted,
-                          fontSize: 11,
+                        Text(
+                          plan.period,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color:
+                                isRecommended
+                                    ? AppColors.gold.withValues(alpha: 0.7)
+                                    : AppColors.textMuted,
+                            fontSize: 11,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 const SizedBox(width: 10),
-                Icon(
-                  Icons.arrow_forward_ios,
+                ForwardChevronIcon(
                   size: 14,
                   color:
                       enabled
@@ -832,8 +908,12 @@ class _RetryBanner extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 4),
+          // See matching comment in landing_screen.dart's _ProductRetryBanner
+          // — this used to show internal QA install instructions to real
+          // customers hitting an ordinary transient load failure.
           const Text(
-            'Install from Play Console internal testing. USB/APK installs cannot load plans.',
+            'Check your internet connection, then tap Retry. If this keeps happening, '
+            'contact support@themuslimman.com.',
             style: TextStyle(
               color: AppColors.textMuted,
               fontSize: 11.5,
@@ -853,12 +933,22 @@ class _GuaranteeRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
-      children: const [
-        Icon(Icons.shield_outlined, color: AppColors.gold, size: 18),
-        SizedBox(width: 6),
-        Text(
-          '7-day refund guarantee',
-          style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+      children: [
+        const Icon(Icons.shield_outlined, color: AppColors.gold, size: 18),
+        const SizedBox(width: 6),
+        // Flexible + ellipsis: refundBadgeText() varies in length by platform
+        // ("Refundable via Google Play" is notably longer than "7-day refund
+        // guarantee"), and at larger Dynamic Type / accessibility text scales
+        // an unconstrained Text here could overflow the row with no way to
+        // shrink, producing the classic yellow/black overflow stripes.
+        Flexible(
+          child: Text(
+            refundBadgeText(),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+          ),
         ),
       ],
     );
@@ -1000,161 +1090,6 @@ class _FaqTileState extends State<_FaqTile> {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _SubscriptionLegalText extends StatefulWidget {
-  final void Function(String url) onOpenUrl;
-  const _SubscriptionLegalText({required this.onOpenUrl});
-
-  @override
-  State<_SubscriptionLegalText> createState() => _SubscriptionLegalTextState();
-}
-
-class _SubscriptionLegalTextState extends State<_SubscriptionLegalText> {
-  static const _baseUrl = AppConstants.baseUrl;
-  late final TapGestureRecognizer _privacyRecognizer;
-  late final TapGestureRecognizer _termsRecognizer;
-
-  @override
-  void initState() {
-    super.initState();
-    _privacyRecognizer = TapGestureRecognizer()
-      ..onTap = () => widget.onOpenUrl('$_baseUrl/privacy');
-    _termsRecognizer = TapGestureRecognizer()
-      ..onTap = () => widget.onOpenUrl('$_baseUrl/terms');
-  }
-
-  @override
-  void dispose() {
-    _privacyRecognizer.dispose();
-    _termsRecognizer.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final style = const TextStyle(
-      color: AppColors.textMuted,
-      fontSize: 11,
-      height: 1.5,
-    );
-    final linkStyle = style.copyWith(
-      color: AppColors.textSecondary,
-      decoration: TextDecoration.underline,
-      decorationColor: AppColors.textSecondary,
-    );
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: RichText(
-        textAlign: TextAlign.center,
-        text: TextSpan(
-          style: style,
-          children: [
-            const TextSpan(
-              text:
-                  'Individual Monthly and Family Monthly are auto-renewing '
-                  '1-month subscriptions that renew unless cancelled at least 24 '
-                  'hours before the end of the current period. Individual Lifetime '
-                  'and Family Lifetime are one-time, non-renewing purchases. Manage '
-                  'or cancel a subscription in your App Store or Google Play account '
-                  'settings. Payment will be charged to your store account upon '
-                  'purchase confirmation. ',
-            ),
-            TextSpan(
-              text: 'Privacy Policy',
-              style: linkStyle,
-              recognizer: _privacyRecognizer,
-            ),
-            const TextSpan(text: '  ·  '),
-            TextSpan(
-              text: 'Terms of Use (EULA)',
-              style: linkStyle,
-              recognizer: _termsRecognizer,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _LegalWebScreen extends StatefulWidget {
-  final String url;
-  const _LegalWebScreen({required this.url});
-
-  @override
-  State<_LegalWebScreen> createState() => _LegalWebScreenState();
-}
-
-class _LegalWebScreenState extends State<_LegalWebScreen> {
-  late final WebViewController _ctrl;
-  bool _loading = true;
-
-  String get _title {
-    if (widget.url.contains('privacy')) return 'Privacy Policy';
-    if (widget.url.contains('terms')) return 'Terms of Use (EULA)';
-    return 'themuslimman.com';
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl =
-        WebViewController()
-          ..setJavaScriptMode(JavaScriptMode.unrestricted)
-          ..setBackgroundColor(AppColors.background)
-          ..setNavigationDelegate(
-            NavigationDelegate(
-              onNavigationRequest: (request) {
-                if (shouldBlockInAppPurchaseNavigation(request.url)) {
-                  return NavigationDecision.prevent;
-                }
-                return NavigationDecision.navigate;
-              },
-              onPageStarted: (_) {
-                if (mounted) setState(() => _loading = true);
-              },
-              onPageFinished: (_) {
-                if (mounted) setState(() => _loading = false);
-              },
-            ),
-          )
-          ..loadRequest(Uri.parse(widget.url));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.surface,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text(
-          _title,
-          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-        ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(height: 1, color: AppColors.border),
-        ),
-      ),
-      body: Stack(
-        children: [
-          WebViewWidget(controller: _ctrl),
-          if (_loading)
-            const Center(
-              child: CircularProgressIndicator.adaptive(
-                valueColor: AlwaysStoppedAnimation<Color>(AppColors.gold),
-              ),
-            ),
-        ],
       ),
     );
   }

@@ -23,7 +23,7 @@ export default async function StudentQuizPage({ params }: Props) {
 
   const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
   if (!hasAccess) redirect("/pricing");
-  if (!user.emailVerified) redirect("/seerah");
+  // Entitled unverified keep access (part-access / Apple 5.1.1(v) parity).
 
   const { classId, quizId } = await params;
   const data = await getStudentQuizData(user.studentProfileId, classId, quizId);

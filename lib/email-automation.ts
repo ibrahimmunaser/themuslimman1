@@ -1,8 +1,12 @@
 import { Resend } from "resend";
 import { prisma } from "./db";
+import { escapeHtml } from "./html-escape";
 
 const FROM = process.env.EMAIL_FROM ?? "TheMuslimMan <noreply@themuslimman.com>";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://themuslimman.com";
+
+/** @deprecated Prefer importing from `@/lib/html-escape` — re-exported for callers. */
+export { escapeHtml };
 
 // ─── Test / blocked domains ────────────────────────────────────────────────────
 const BLOCKED_DOMAINS = new Set([
@@ -119,7 +123,7 @@ export async function sendManualOutreachEmail(opts: {
   fullName: string;
 }): Promise<void> {
   const { email, fullName } = opts;
-  const firstName     = (fullName ?? "").split(" ")[0] ?? "";
+  const firstName     = escapeHtml((fullName ?? "").split(" ")[0] ?? "");
   const unsubToken    = await getOrCreateUnsubscribeToken(email);
   const unsubscribeUrl = buildUnsubscribeUrl(unsubToken);
 
@@ -273,7 +277,7 @@ export async function sendNoPlanRecoveryEmail(opts: {
   step: 1 | 2;
 }): Promise<void> {
   const { email, fullName, step } = opts;
-  const firstName = (fullName ?? "").split(" ")[0] ?? "";
+  const firstName = escapeHtml((fullName ?? "").split(" ")[0] ?? "");
 
   const unsubToken     = await getOrCreateUnsubscribeToken(email);
   const unsubscribeUrl = buildUnsubscribeUrl(unsubToken);

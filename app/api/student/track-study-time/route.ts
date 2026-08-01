@@ -3,12 +3,12 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getActiveProfileId } from "@/app/actions/profiles";
 import { checkRateLimit, getIP } from "@/lib/rate-limit";
-import { hasActiveCourseAccess } from "@/lib/access";
+import { hasActiveCourseAccess, TOTAL_COURSE_PARTS } from "@/lib/access";
 
 export async function POST(request: NextRequest) {
   // Rate limit: 30 updates per minute per IP (1 update per 2 s is plenty for 60-second intervals)
   const ip = getIP(request);
-  const rl = checkRateLimit(`study-time:${ip}`, 30, 60 * 1000);
+  const rl = await checkRateLimit(`study-time:${ip}`, 30, 60 * 1000);
   if (!rl.allowed) {
     return NextResponse.json(
       { error: "Too many requests." },
@@ -23,41 +23,58 @@ export async function POST(request: NextRequest) {
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    if (!user.emailVerified) {
-      return NextResponse.json({ error: "Email verification required" }, { status: 403 });
-    }
-    const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
-    if (!hasAccess) {
-      return NextResponse.json({ error: "No active subscription" }, { status: 403 });
-    }
+
     const body = await request.json();
-    
     const { partNumber, secondsToAdd } = body;
-    
-    if (!partNumber || typeof partNumber !== "number") {
+
+    if (
+      typeof partNumber !== "number" ||
+      !Number.isInteger(partNumber) ||
+      partNumber < 1 ||
+      partNumber > TOTAL_COURSE_PARTS
+    ) {
       return NextResponse.json(
         { error: "Valid partNumber is required" },
         { status: 400 }
       );
     }
-    
+
     if (!secondsToAdd || typeof secondsToAdd !== "number" || secondsToAdd <= 0) {
       return NextResponse.json(
         { error: "Valid secondsToAdd is required" },
         { status: 400 }
       );
     }
-    
+
+    if (!user.emailVerified) {
+      // Entitled (paid/IAP) users may track without verify — mirrors part-access / mobile track.
+      // Part 1 free users also waive verify (same as part page soft path for free content).
+      if (partNumber !== 1) {
+        const entitled = await hasActiveCourseAccess(user.id, user.hasPaid);
+        if (!entitled) {
+          return NextResponse.json({ error: "Email verification required" }, { status: 403 });
+        }
+      }
+    }
+
+    // Part 1 is free — mirrors mobile-progress/track carve-out.
+    if (partNumber !== 1) {
+      const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
+      if (!hasAccess) {
+        return NextResponse.json({ error: "No active subscription" }, { status: 403 });
+      }
+    }
+
     // Limit to reasonable values (max 5 minutes per update to prevent abuse)
     const cappedSeconds = Math.min(secondsToAdd, 300);
-    
+
     // Resolve active learner profile for study time tracking.
     const learnerProfileId = await getActiveProfileId(user.id);
 
     // Find or create a study session for today
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     const existingSession = await prisma.studySession.findFirst({
       where: {
         userId: user.id,
@@ -71,7 +88,7 @@ export async function POST(request: NextRequest) {
         startedAt: "desc",
       },
     });
-    
+
     if (existingSession) {
       await prisma.studySession.update({
         where: { id: existingSession.id },
@@ -95,7 +112,7 @@ export async function POST(request: NextRequest) {
         },
       });
     }
-    
+
     return NextResponse.json({
       success: true,
       secondsTracked: cappedSeconds,

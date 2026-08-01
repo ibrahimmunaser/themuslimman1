@@ -20,11 +20,15 @@ The production environment may not be able to connect to your Supabase database.
 1. Go to your Vercel dashboard: https://vercel.com/dashboard
 2. Select your project (Seerah/TheMuslimMan)
 3. Go to **Settings** → **Environment Variables**
-4. Verify `DATABASE_URL` is set correctly:
+4. Verify `DATABASE_URL` is set correctly (use the connection string from your
+   Supabase / Postgres dashboard — never paste live credentials into docs):
    ```
-   DATABASE_URL=postgresql://postgres.btbaumqtxjuxjctgvjlm:Chemithabet22%3F@aws-1-us-west-2.pooler.supabase.com:5432/postgres
+   DATABASE_URL=postgresql://USER:PASSWORD@HOST:5432/postgres
    ```
 5. Make sure it's enabled for **Production** environment
+
+**If this document ever contained a live password, rotate the DB password
+immediately and purge it from git history.**
 
 ### 2. Missing Environment Variables
 Other required variables might be missing in production.

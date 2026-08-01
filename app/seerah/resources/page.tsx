@@ -24,14 +24,14 @@ export default async function SeerahResourcesPage() {
   if (!user.studentProfileId) redirect("/seerah");
 
   // Run access check and profile ID lookup in parallel — both only need user.id.
+  // Unpaid users stay on resources with parts 2–100 locked (mobile parity).
   const [hasAccess, learnerProfileId] = await Promise.all([
     hasActiveCourseAccess(user.id, user.hasPaid),
     user.activeProfileId
       ? Promise.resolve(user.activeProfileId)
       : getActiveProfileId(user.id),
   ]);
-  if (!hasAccess) redirect("/pricing");
-  if (!user.emailVerified) redirect("/seerah");
+  // Entitled unverified users keep access (part-access waive parity).
 
   if (isFamilyPlan(user.planType)) {
     const cookieStore = await cookies();
@@ -51,6 +51,7 @@ export default async function SeerahResourcesPage() {
         openedAssets: true,
         quizCompleted: true,
         quizPassed: true,
+        quizScoreVerified: true,
         quizBestScore: true,
         quizAttempts: true,
         status: true,
@@ -99,9 +100,9 @@ export default async function SeerahResourcesPage() {
     .filter((p) => p.videoWatchPercent > 0 && !p.videoCompleted)
     .sort((a, b) => b.videoWatchPercent - a.videoWatchPercent)[0];
 
-  // Quiz stats
-  const quizCompletedCount = progress.filter((p) => p.quizPassed).length;
-  const quizPassedCount = progress.filter((p) => p.quizPassed).length;
+  // Quiz stats — only verified passes count (Audit C4).
+  const quizPassedCount = progress.filter((p) => p.quizPassed && p.quizScoreVerified).length;
+  const quizCompletedCount = quizPassedCount;
   const quizTotalAttempts = progress.reduce((sum, p) => sum + (p.quizAttempts || 0), 0);
   // Average only rows where the user has a recorded best score.
   const quizScoredRows = progress.filter((p) => (p.quizAttempts || 0) > 0 && p.quizBestScore != null);
@@ -112,12 +113,16 @@ export default async function SeerahResourcesPage() {
   // Progress map for quiz resource content
   const quizProgressMap = Object.fromEntries(
     progress.map(p => [p.partNumber, {
-      quizCompleted: p.quizCompleted || false,
+      quizCompleted: !!(p.quizPassed && p.quizScoreVerified),
       quizBestScore: p.quizBestScore,
-      quizPassed: p.quizPassed || false,
+      quizPassed: !!(p.quizPassed && p.quizScoreVerified),
       quizAttempts: p.quizAttempts || 0,
     }])
   );
+
+  const lockedPartNumbers: number[] = hasAccess
+    ? []
+    : PARTS.filter((p) => p.partNumber > 1).map((p) => p.partNumber);
 
   // Asset progress maps
   const audioProgressMap = getAssetProgressMap("audio");
@@ -140,9 +145,6 @@ export default async function SeerahResourcesPage() {
 
   const factsProgressMap = getAssetProgressMap("statement-of-facts");
   const factsCompletedCount = getAssetCompletedCount("statement-of-facts");
-
-  // All parts are freely accessible — no sequential lock.
-  const lockedPartNumbers: number[] = [];
 
   return (
     <ResourcesTabs

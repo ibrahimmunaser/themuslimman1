@@ -151,7 +151,7 @@ const KNOWN_EVENT_TYPES = [
 export async function POST(req: NextRequest) {
   try {
     const ip = getIP(req);
-    const rl = checkRateLimit(`inf_track:${ip}`, 60, 60_000);
+    const rl = await checkRateLimit(`inf_track:${ip}`, 60, 60_000);
     if (!rl.allowed) {
       return NextResponse.json(
         { ok: false, error: "rate_limited" },

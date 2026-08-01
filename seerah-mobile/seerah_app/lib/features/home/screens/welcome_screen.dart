@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/iap_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/system_insets.dart';
 import '../../../core/widgets/ui_kit.dart';
 
 class WelcomeScreen extends ConsumerStatefulWidget {
@@ -20,6 +21,23 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
   bool _restoring = false;
 
   void _onIAP(IAPState? prev, IAPState next) {
+    // Bug fix: this handler never checked for IAPStatus.success, so a
+    // successful restore left `_restoring` (and its spinner) stuck forever
+    // — the user had no way to know the restore worked or to proceed.
+    if (next.status == IAPStatus.success && prev?.status != IAPStatus.success) {
+      if (mounted) setState(() => _restoring = false);
+      ref.read(iapProvider.notifier).clearSuccess();
+      if (!mounted) return;
+      // Guests must create an account after purchase so access syncs across
+      // Android, iOS, and web — mirrors landing/pricing screens.
+      if (ref.read(authProvider).isAnonymous) {
+        context.go('/signup');
+      } else {
+        _snack('Purchase restored! Full access unlocked.');
+        context.go('/dashboard');
+      }
+      return;
+    }
     if (next.status == IAPStatus.error &&
         next.errorMessage != null &&
         prev?.errorMessage != next.errorMessage) {
@@ -53,7 +71,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     setState(() => _restoring = true);
     final ready = await ref.read(authProvider.notifier).ensureSession();
     if (!mounted) return;
-    if (!ready) {
+    if (!ready || !ref.read(authProvider).isLoggedIn) {
       setState(() => _restoring = false);
       _snack(ref.read(authProvider).error ??
           'Could not restore purchases. Please try again.');
@@ -74,6 +92,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       backgroundColor: AppColors.background,
       body: AppGradientBackground(
         child: SafeArea(
+          bottom: false,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -114,7 +133,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
               // ── Scrollable body ───────────────────────────────────────────
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                  padding: EdgeInsets.fromLTRB(24, 16, 24, 24 + bottomSystemInset(context)),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -276,25 +295,30 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                       const SizedBox(height: 8),
 
                       Center(
-                        child: busy
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator.adaptive(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                      AppColors.gold),
-                                ),
-                              )
-                            : TextButton(
-                                onPressed: _restore,
-                                style: TextButton.styleFrom(
-                                    foregroundColor: AppColors.textMuted),
-                                child: const Text(
-                                  'Restore purchase',
-                                  style: TextStyle(fontSize: 12),
-                                ),
-                              ),
+                        child: iap.status == IAPStatus.verifying
+                            // Restoring a genuine purchase re-verifies against
+                            // the same slow backend call as a fresh buy — see
+                            // VerifyingPurchaseBanner doc comment.
+                            ? const VerifyingPurchaseBanner()
+                            : busy
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator.adaptive(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                          AppColors.gold),
+                                    ),
+                                  )
+                                : TextButton(
+                                    onPressed: _restore,
+                                    style: TextButton.styleFrom(
+                                        foregroundColor: AppColors.textMuted),
+                                    child: const Text(
+                                      'Restore purchase',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
+                                  ),
                       ).animate(delay: 320.ms).fadeIn(duration: 400.ms),
 
                     ],

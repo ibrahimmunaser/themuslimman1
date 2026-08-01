@@ -59,9 +59,10 @@ interface PartTabsContentProps {
   initialVideoPercent: number;
   initialVideoCompleted: boolean;
   initialQuizBestScore?: number;
+  learnerProfileId: string;
 }
 
-async function PartTabsContent({ partNumber, partBase, userPlan, initialVideoPercent, initialVideoCompleted, initialQuizBestScore }: PartTabsContentProps) {
+async function PartTabsContent({ partNumber, partBase, userPlan, initialVideoPercent, initialVideoCompleted, initialQuizBestScore, learnerProfileId }: PartTabsContentProps) {
   const {
     briefingText,
     statementOfFactsText,
@@ -112,6 +113,7 @@ async function PartTabsContent({ partNumber, partBase, userPlan, initialVideoPer
         initialVideoPercent={initialVideoPercent}
         initialVideoCompleted={initialVideoCompleted}
         initialQuizBestScore={initialQuizBestScore}
+        learnerProfileId={learnerProfileId}
       />
     </div>
   );
@@ -167,9 +169,15 @@ export default async function SeerahPartPage(props: Props) {
   const user = await getCachedStudent();
   if (!user.studentProfileId) notFound();
 
-  // Unverified users cannot access individual lesson pages — send them back to
-  // the dashboard which shows the verification wall.
-  if (!user.emailVerified) redirect("/seerah");
+  // Unverified users without course access go to dashboard verify wall —
+  // except Part 1, which is free (mirrors lib/part-access + mobile).
+  // Entitled users keep lesson access — soft verify from profile/dashboard.
+  if (!user.emailVerified) {
+    if (n !== 1) {
+      const entitled = await hasActiveCourseAccess(user.id, user.hasPaid);
+      if (!entitled) redirect("/seerah");
+    }
+  }
 
   // Family plan: redirect to profile picker if no profile cookie is set (first
   // visit / cookie expired). Consistent with the /seerah dashboard gate.
@@ -181,7 +189,7 @@ export default async function SeerahPartPage(props: Props) {
   const learnerProfileId = user.activeProfileId ?? await getActiveProfileId(user.id);
 
   const [accessOk, partProgress] = await Promise.all([
-    hasActiveCourseAccess(user.id, user.hasPaid),
+    n === 1 ? Promise.resolve(true) : hasActiveCourseAccess(user.id, user.hasPaid),
     prisma.partProgress.findUnique({
       where: { learnerProfileId_partNumber: { learnerProfileId, partNumber: n } },
       select: {
@@ -190,6 +198,7 @@ export default async function SeerahPartPage(props: Props) {
         videoCompleted:     true,
         briefingOpened:     true,
         quizPassed:         true,
+        quizScoreVerified:  true,
         quizBestScore:      true,
         flashcardsReviewed: true,
         openedAssets:       true,
@@ -277,7 +286,7 @@ export default async function SeerahPartPage(props: Props) {
               initial={{
                 videoWatchPercent:  partProgress?.videoWatchPercent  ?? 0,
                 briefingOpened:     partProgress?.briefingOpened     ?? false,
-                quizPassed:         partProgress?.quizPassed         ?? false,
+                quizPassed:         !!(partProgress?.quizPassed && partProgress?.quizScoreVerified),
                 quizBestScore:      partProgress?.quizBestScore      ?? null,
                 flashcardsReviewed: partProgress?.flashcardsReviewed ?? false,
                 openedAssets,
@@ -299,6 +308,7 @@ export default async function SeerahPartPage(props: Props) {
                 !!(partProgress?.videoCompleted || (partProgress?.videoWatchPercent ?? 0) >= 85)
               }
               initialQuizBestScore={partProgress?.quizBestScore ?? undefined}
+              learnerProfileId={learnerProfileId}
             />
           </Suspense>
 

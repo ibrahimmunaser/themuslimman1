@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/checkup-followup",
       "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/cleanup-abandoned-guests",
+      "schedule": "0 5 * * *"
     }
   ]
 }

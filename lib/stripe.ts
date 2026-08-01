@@ -8,6 +8,57 @@ export const stripe = new Stripe(stripeKey, {
   typescript: true,
 });
 
+/** Outcome of a fail-closed charge refund probe. */
+export type ChargeRefundStatus = "unrefunded" | "refunded" | "unavailable";
+
+/** Extract latest_charge id from a PaymentIntent (string or expanded object). */
+export function extractLatestChargeId(
+  paymentIntent: Stripe.PaymentIntent,
+): string | null {
+  if (typeof paymentIntent.latest_charge === "string") {
+    return paymentIntent.latest_charge;
+  }
+  if (
+    paymentIntent.latest_charge &&
+    typeof paymentIntent.latest_charge === "object"
+  ) {
+    return (paymentIntent.latest_charge as { id?: string }).id ?? null;
+  }
+  return null;
+}
+
+/**
+ * Fail-closed refund probe for a Stripe Charge.
+ * Throws on Stripe API errors (caller decides 503 / retry).
+ */
+export async function getChargeRefundStatus(
+  chargeId: string,
+): Promise<"unrefunded" | "refunded"> {
+  const charge = await stripe.charges.retrieve(chargeId);
+  const fullyRefunded =
+    charge.refunded === true ||
+    (typeof charge.amount_refunded === "number" &&
+      charge.amount_refunded >= charge.amount &&
+      charge.amount > 0);
+  return fullyRefunded ? "refunded" : "unrefunded";
+}
+
+/**
+ * Fail-closed refund probe for a PaymentIntent's latest charge.
+ * Returns "unavailable" when latest_charge is missing; throws on Stripe errors.
+ */
+export async function checkPaymentIntentRefundStatus(
+  piIdOrIntent: string | Stripe.PaymentIntent,
+): Promise<ChargeRefundStatus> {
+  const pi =
+    typeof piIdOrIntent === "string"
+      ? await stripe.paymentIntents.retrieve(piIdOrIntent)
+      : piIdOrIntent;
+  const chargeId = extractLatestChargeId(pi);
+  if (!chargeId) return "unavailable";
+  return getChargeRefundStatus(chargeId);
+}
+
 /**
  * Whether this deployment is configured for LIVE Stripe traffic.
  *

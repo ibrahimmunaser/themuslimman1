@@ -30,10 +30,25 @@ function applyInlineFormatting(text: string): string {
   processed = processed.replace(
     /\[([^\]]+)\]\(([^)]+)\)/g,
     (_, linkText, url) => {
-      const isExternal = /^https?:\/\//.test(url);
-      return isExternal
-        ? `<a href="${url}" target="_blank" rel="noopener noreferrer">${linkText}</a>`
-        : `<a href="${url}">${linkText}</a>`;
+      // linkText/url are already HTML-escaped from step 1 (& < >).
+      const rawHref = String(url)
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .trim();
+      const isHttp = /^https?:\/\//i.test(rawHref);
+      const isRelative = rawHref.startsWith("/") && !rawHref.startsWith("//");
+      if (!isHttp && !isRelative) {
+        return linkText;
+      }
+      const href = rawHref
+        .replace(/&/g, "&amp;")
+        .replace(/"/g, "&quot;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+      return isHttp
+        ? `<a href="${href}" target="_blank" rel="noopener noreferrer">${linkText}</a>`
+        : `<a href="${href}">${linkText}</a>`;
     }
   );
 

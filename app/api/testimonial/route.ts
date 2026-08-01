@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
 
   // Rate limit: 3 submissions per 15 minutes per IP to prevent email flooding.
   const ip = getIP(req);
-  const rl = checkRateLimit(`testimonial:${ip}`, 3, 15 * 60 * 1000);
+  const rl = await checkRateLimit(`testimonial:${ip}`, 3, 15 * 60 * 1000);
   if (!rl.allowed) {
     return NextResponse.json(
       { error: "Too many requests. Please wait before submitting again." },
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
     await resend.emails.send({
       from,
       to,
-      subject: `[Testimonial] New submission from ${safeName}`,
+      subject: `[Testimonial] New submission from ${String(name).replace(/[\r\n]+/g, " ").slice(0, 80)}`,
       html: `
         <!DOCTYPE html>
         <html>

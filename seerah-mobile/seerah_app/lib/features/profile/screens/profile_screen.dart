@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/network/cookie_helper.dart' as cookies;
@@ -12,7 +14,9 @@ import '../../../core/providers/profiles_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/system_insets.dart';
 import '../../../core/utils/webview_nav_policy.dart';
+import '../../../core/widgets/adaptive_icons.dart';
 import '../../../core/widgets/ui_kit.dart';
+import '../../../core/widgets/webview_error_overlay.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -45,6 +49,25 @@ class ProfileScreen extends ConsumerWidget {
               _GuestUpgradeCard(onTap: () => context.push('/signup'))
                   .animate(delay: 20.ms)
                   .fadeIn(duration: 350.ms),
+
+            // ── Verify email nudge — real accounts only ─────────────────────
+            // Audit H6 fix: this comment previously claimed mobile never
+            // gates anything on emailVerified — that's false. The shared
+            // backend (lib/part-access.ts's checkPartAccess, used by every
+            // part-content API both web and mobile call) blocks ALL part
+            // content for any non-anonymous, unverified account regardless
+            // of hasAccess. A real account that upgraded before completing a
+            // purchase would hit that wall the moment they tried to open a
+            // part they just paid for — /api/mobile-purchases/verify now
+            // auto-verifies the email as soon as a purchase grants access
+            // (mirroring the exemption /api/auth/upgrade-account already
+            // applies when access existed at upgrade time), which is why
+            // this banner should rarely be seen by anyone who's actually paid.
+            if (!auth.isAnonymous && user != null && !user.emailVerified)
+              const Padding(
+                padding: EdgeInsets.only(top: 12),
+                child: _VerifyEmailBanner(),
+              ).animate(delay: 20.ms).fadeIn(duration: 350.ms),
 
             const SizedBox(height: 24),
 
@@ -121,7 +144,7 @@ class ProfileScreen extends ConsumerWidget {
               ),
               _SettingsDatum(
                 icon: Icons.gavel_outlined,
-                label: 'Terms of Service',
+                label: 'Terms of Use (EULA)',
                 color: AppColors.textMuted,
                 onTap: () => _launch('${AppConstants.baseUrl}/terms', context),
               ),
@@ -182,22 +205,26 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
+  // "stripe" | "google" | "apple" | null — see UserModel.purchasePlatform doc.
+  // Routing this by the ACTUAL purchase platform (not just which OS the app
+  // happens to be running on) matters both ways: a Google Play subscriber
+  // must land in the Play Store subscription center, not Stripe's web
+  // billing portal (which has no record of their purchase at all); and an
+  // Apple subscriber must be told to use Settings, per Guideline 3.1.1 —
+  // even if, say, they're now signed in on Android after buying on iOS.
   void _openBilling(BuildContext context, AuthState auth) {
     if (!context.mounted) return;
-    // Guideline 3.1.1: never open web/Stripe billing inside the iOS app.
-    if (Platform.isIOS) {
-      if (!auth.hasAccess) {
-        context.push('/pricing');
-        return;
-      }
+    final platform = auth.user?.purchasePlatform;
+
+    if (platform == 'apple') {
       showDialog<void>(
         context: context,
         builder: (ctx) => AlertDialog(
           backgroundColor: AppColors.surface,
           title: const Text('Manage Subscription'),
           content: const Text(
-            'Subscriptions purchased in this app are managed through your '
-            'Apple ID.\n\n'
+            'Subscriptions purchased through the App Store are managed through '
+            'your Apple ID.\n\n'
             'On your device: Settings → [Your Name] → Subscriptions.',
           ),
           actions: [
@@ -210,7 +237,41 @@ class ProfileScreen extends ConsumerWidget {
       );
       return;
     }
-    _launch('${AppConstants.baseUrl}/billing', context);
+
+    if (platform == 'google') {
+      _openPlayStoreSubscriptions(context);
+      return;
+    }
+
+    if (!auth.hasAccess) {
+      context.push('/pricing');
+      return;
+    }
+    // Stripe (web) purchase, or a legacy access grant with no traceable
+    // purchase row — the Stripe web billing portal is the correct place to
+    // manage it. This isn't the "alternative purchasing mechanism"
+    // Guideline 3.1.1 is about even when shown on iOS: the purchase itself
+    // already happened outside Apple's IAP, so there's nothing for Apple to
+    // manage in the first place.
+    _launch('${AppConstants.baseUrl}/billing?app=1', context);
+  }
+
+  Future<void> _openPlayStoreSubscriptions(BuildContext context) async {
+    final uri = Uri.parse(
+      'https://play.google.com/store/account/subscriptions?package=com.themuslimman.seerah',
+    );
+    try {
+      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (launched) return;
+    } catch (_) {}
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Could not open the Play Store. Open the Play Store app and check '
+            'Menu → Payments & subscriptions → Subscriptions instead.'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   void _launch(String url, BuildContext context) {
@@ -227,7 +288,7 @@ class ProfileScreen extends ConsumerWidget {
     if (url.contains('help')) return 'Help & FAQ';
     if (url.contains('contact')) return 'Contact Us';
     if (url.contains('privacy')) return 'Privacy Policy';
-    if (url.contains('terms')) return 'Terms of Service';
+    if (url.contains('terms')) return 'Terms of Use (EULA)';
     return 'themuslimman.com';
   }
 
@@ -274,9 +335,19 @@ class ProfileScreen extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'This permanently deletes your account, progress, and any active '
-                'subscription. This cannot be undone.',
+                'subscription. This cannot be undone.'
+                // Apple provides no server-side subscription cancellation API
+                // (only the account/subscriber owns that, via Settings) — so
+                // unlike Stripe/Google Play, deleting here can't touch an
+                // active App Store subscription. Without this note, an iOS
+                // subscriber who deletes their account would keep being
+                // billed by Apple indefinitely with no record left anywhere
+                // in the app to even show them what's still charging them.
+                '${Platform.isIOS ? '\n\nIf you subscribed through the App Store, this does '
+                    'NOT cancel Apple billing — please also cancel it in Settings > '
+                    '[your name] > Subscriptions on this device.' : ''}',
               ),
               if (!isAnonymous) ...[
                 const SizedBox(height: 16),
@@ -497,10 +568,101 @@ class _GuestUpgradeCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(Icons.arrow_forward_ios_rounded, color: AppColors.gold, size: 14),
+              const ForwardChevronIcon(color: AppColors.gold, size: 14),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ── Verify email nudge ───────────────────────────────────────────────────────────
+
+class _VerifyEmailBanner extends ConsumerStatefulWidget {
+  const _VerifyEmailBanner();
+
+  @override
+  ConsumerState<_VerifyEmailBanner> createState() => _VerifyEmailBannerState();
+}
+
+class _VerifyEmailBannerState extends ConsumerState<_VerifyEmailBanner> {
+  bool _sending = false;
+  bool _sent = false;
+
+  Future<void> _resend() async {
+    setState(() => _sending = true);
+    final error = await ref.read(authProvider.notifier).resendVerificationEmail();
+    if (!mounted) return;
+    setState(() => _sending = false);
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error), behavior: SnackBarBehavior.floating),
+      );
+      return;
+    }
+    setState(() => _sent = true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.gold.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.mark_email_unread_outlined, color: AppColors.gold, size: 22),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Verify your email',
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  _sent
+                      ? 'Verification email sent — check your inbox.'
+                      : 'Needed to unlock course content, reset your password, and sign in on other devices.',
+                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4),
+                ),
+                if (!_sent) ...[
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    height: 32,
+                    child: OutlinedButton(
+                      onPressed: _sending ? null : _resend,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.gold,
+                        side: BorderSide(color: AppColors.gold.withValues(alpha: 0.5)),
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      child: _sending
+                          ? const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.gold),
+                            )
+                          : const Text('Resend Email', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -596,7 +758,7 @@ class _SettingsGroup extends StatelessWidget {
                             ],
                           ),
                         ),
-                        const Icon(Icons.chevron_right_rounded,
+                        const ForwardChevronIcon(
                             color: AppColors.textMuted, size: 18),
                       ],
                     ),
@@ -631,6 +793,18 @@ class _InAppWebScreen extends StatefulWidget {
 class _InAppWebScreenState extends State<_InAppWebScreen> {
   late final WebViewController _ctrl;
   bool _loading = true;
+  bool _hasError = false;
+  Timer? _loadTimeout;
+
+  // Without this, a hung connection (dead server, captive Wi-Fi portal, a
+  // stalled TLS handshake) that never fires onPageFinished/onWebResourceError
+  // left the user staring at an infinite spinner with no way to recover.
+  void _armLoadTimeout() {
+    _loadTimeout?.cancel();
+    _loadTimeout = Timer(const Duration(seconds: 20), () {
+      if (mounted && _loading) setState(() { _loading = false; _hasError = true; });
+    });
+  }
 
   @override
   void initState() {
@@ -646,9 +820,17 @@ class _InAppWebScreenState extends State<_InAppWebScreen> {
           return NavigationDecision.navigate;
         },
         onPageStarted: (_) {
-          if (mounted) setState(() => _loading = true);
+          if (mounted) setState(() { _loading = true; _hasError = false; });
+          _armLoadTimeout();
+        },
+        onWebResourceError: (error) {
+          if (error.isForMainFrame ?? true) {
+            _loadTimeout?.cancel();
+            if (mounted) setState(() { _loading = false; _hasError = true; });
+          }
         },
         onPageFinished: (_) async {
+          _loadTimeout?.cancel();
           if (mounted) setState(() => _loading = false);
           await _ctrl.runJavaScript('''
             (function() {
@@ -658,8 +840,8 @@ class _InAppWebScreenState extends State<_InAppWebScreen> {
                 '#mobile-drawer, [aria-label="mobile-drawer"] { display: none !important; }',
                 'aside { display: none !important; }',
                 'main { margin-left: 0 !important; padding-left: 0 !important; width: 100% !important; }',
-                '.lg\\\\:hidden.fixed.inset-0 { display: none !important; }'
-                ${Platform.isIOS ? ", 'a[href*=\"/pricing\"], a[href*=\"/checkout\"], a[href*=\"/billing\"], a[href*=\"/upgrade\"] { display: none !important; }'" : ''}
+                '.lg\\\\:hidden.fixed.inset-0 { display: none !important; }',
+                'a[href*="/pricing"], a[href*="/checkout"], a[href*="/upgrade"] { display: none !important; }'
               ].join(' ');
               document.head.appendChild(s);
             })();
@@ -682,17 +864,48 @@ class _InAppWebScreenState extends State<_InAppWebScreen> {
       ));
     }
     await _ctrl.loadRequest(Uri.parse(widget.url));
+    _armLoadTimeout();
+  }
+
+  @override
+  void dispose() {
+    _loadTimeout?.cancel();
+    super.dispose();
+  }
+
+  void _retry() {
+    setState(() { _hasError = false; _loading = true; });
+    _injectCookiesAndLoad();
+  }
+
+  // See legal_web_screen.dart's identical helper — same rationale: a plain
+  // AppBar back button / bare pop() bypasses the WebView's in-page history,
+  // which Android's hardware back button and edge-swipe gesture both expect
+  // to step through first.
+  Future<void> _handleBack(BuildContext context) async {
+    if (await _ctrl.canGoBack()) {
+      await _ctrl.goBack();
+    } else if (context.mounted) {
+      Navigator.of(context).pop();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        await _handleBack(context);
+      },
+      child: Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.surface,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: () => Navigator.of(context).pop(),
+          icon: const BackIcon(size: 20),
+          tooltip: 'Back',
+          onPressed: () => _handleBack(context),
         ),
         title: Text(widget.title,
             style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
@@ -703,16 +916,19 @@ class _InAppWebScreenState extends State<_InAppWebScreen> {
           child: Container(height: 1, color: AppColors.border),
         ),
       ),
-      body: Stack(
-        children: [
-          WebViewWidget(controller: _ctrl),
-          if (_loading)
-            const Center(
-              child: CircularProgressIndicator.adaptive(
-                valueColor: AlwaysStoppedAnimation(AppColors.gold),
-              ),
+      body: _hasError
+          ? WebViewErrorOverlay(onRetry: _retry)
+          : Stack(
+              children: [
+                WebViewWidget(controller: _ctrl),
+                if (_loading)
+                  const Center(
+                    child: CircularProgressIndicator.adaptive(
+                      valueColor: AlwaysStoppedAnimation(AppColors.gold),
+                    ),
+                  ),
+              ],
             ),
-        ],
       ),
     );
   }

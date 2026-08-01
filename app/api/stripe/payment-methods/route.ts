@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { checkRateLimit, getIP } from "@/lib/rate-limit";
 import Stripe from "stripe";
 
 function getStripe() {
@@ -22,7 +24,16 @@ async function getOrCreateCustomer(userId: string, email: string, name: string):
 
 // GET — list saved payment methods + the customer's default payment method ID.
 // Card data is never persisted in Prisma — it's always fetched live from Stripe.
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const ip = getIP(request);
+  const rl = await checkRateLimit(`payment-methods-list:${ip}`, 30, 10 * 60 * 1000);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Too many attempts. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSeconds) } }
+    );
+  }
+
   try {
     const user = await getCurrentUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -61,7 +72,16 @@ export async function GET() {
 }
 
 // POST — create a SetupIntent so the client can add a card
-export async function POST() {
+export async function POST(request: NextRequest) {
+  const ip = getIP(request);
+  const rl = await checkRateLimit(`payment-methods-setup:${ip}`, 10, 10 * 60 * 1000);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Too many attempts. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSeconds) } }
+    );
+  }
+
   try {
     const user = await getCurrentUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

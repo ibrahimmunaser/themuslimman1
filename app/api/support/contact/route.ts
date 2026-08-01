@@ -6,7 +6,7 @@ import { checkRateLimit, getIP } from "@/lib/rate-limit";
 export async function POST(req: NextRequest) {
   // Rate limit: 3 submissions per 15 minutes per IP to prevent email flooding.
   const ip = getIP(req);
-  const rl = checkRateLimit(`contact:${ip}`, 3, 15 * 60 * 1000);
+  const rl = await checkRateLimit(`contact:${ip}`, 3, 15 * 60 * 1000);
   if (!rl.allowed) {
     return NextResponse.json(
       { error: "Too many requests. Please wait before submitting again." },
@@ -57,11 +57,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const safeSubject = String(subject).replace(/[\r\n]+/g, " ").slice(0, 200);
+
     const { error: sendError } = await resend.emails.send({
       from: process.env.EMAIL_FROM ?? "Seerah Support <noreply@themuslimman.com>",
       to: process.env.SUPPORT_EMAIL ?? "themuslimman77@gmail.com",
       replyTo: senderEmail,
-      subject: `Support Request: ${subject}`,
+      subject: `Support Request: ${safeSubject}`,
       html: `
         <!DOCTYPE html>
         <html>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { checkRateLimit, getIP } from "@/lib/rate-limit";
 
 const AUDIENCE_MAP: Record<number, string> = {
   0: "self",
@@ -17,6 +18,15 @@ const OBJECTION_OPTIONS = [
 ];
 
 export async function POST(req: NextRequest) {
+  const ip = getIP(req);
+  const rl = await checkRateLimit(`checkup_submit:${ip}`, 10, 15 * 60_000);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Too many submissions. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSeconds) } },
+    );
+  }
+
   try {
     const body = await req.json();
     const {

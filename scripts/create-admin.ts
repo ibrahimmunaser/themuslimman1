@@ -3,8 +3,17 @@ import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
+/**
+ * Creates a platform admin. Password MUST come from ADMIN_BOOTSTRAP_PASSWORD.
+ * Never commit real passwords to this file.
+ */
 async function main() {
-  const email = "themuslimman77@gmail.com";
+  const email = process.env.ADMIN_BOOTSTRAP_EMAIL ?? "admin@example.com";
+  const password = process.env.ADMIN_BOOTSTRAP_PASSWORD;
+  if (!password || password.length < 12) {
+    console.error("Set ADMIN_BOOTSTRAP_PASSWORD (min 12 chars) before running.");
+    process.exit(1);
+  }
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
@@ -12,10 +21,12 @@ async function main() {
     return;
   }
 
-  const passwordHash = await bcrypt.hash("Chemithabet22?", 12);
+  const passwordHash = await bcrypt.hash(password, 12);
   await prisma.user.create({
     data: {
-      fullName: "TheMuslimMan Admin",
+      id: crypto.randomUUID(),
+      updatedAt: new Date(),
+      fullName: "Platform Admin",
       email,
       passwordHash,
       role: "platform_admin",

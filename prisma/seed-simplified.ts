@@ -75,11 +75,17 @@ async function main() {
   });
 
   if (!existingAdmin) {
-    const passwordHash = await bcrypt.hash("Chemithabet22?", 12);
+    const bootstrapPassword = process.env.ADMIN_BOOTSTRAP_PASSWORD;
+    if (!bootstrapPassword || bootstrapPassword.length < 12) {
+      console.log("    ⚠ Skipping admin create — set ADMIN_BOOTSTRAP_PASSWORD (min 12 chars)");
+    } else {
+    const passwordHash = await bcrypt.hash(bootstrapPassword, 12);
     await prisma.user.create({
       data: {
+        id: crypto.randomUUID(),
+        updatedAt: new Date(),
         username: "themuslimman_admin",
-        email: "themuslimman77@gmail.com",
+        email: process.env.ADMIN_BOOTSTRAP_EMAIL ?? "admin@example.com",
         fullName: "TheMuslimMan Admin",
         passwordHash,
         role: "platform_admin",
@@ -88,6 +94,7 @@ async function main() {
       },
     });
     console.log("    ✓ Platform admin created");
+    }
   } else {
     console.log("    ✓ Platform admin already exists");
   }
@@ -130,8 +137,7 @@ async function main() {
   console.log("Platform Details:");
   console.log("  • 100 Seerah parts imported");
   console.log("  • Full Seerah course template created");
-  console.log("  • Admin account: themuslimman_admin");
-  console.log("  • Password: Chemithabet22?\n");
+  console.log("  • Admin: set via ADMIN_BOOTSTRAP_EMAIL / ADMIN_BOOTSTRAP_PASSWORD (never logged)\n");
 }
 
 main()

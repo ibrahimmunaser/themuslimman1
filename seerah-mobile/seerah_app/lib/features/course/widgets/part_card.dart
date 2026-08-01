@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/models/part_model.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/adaptive_icons.dart';
 
 class PartCard extends StatelessWidget {
   final PartModel part;
@@ -109,9 +110,14 @@ class PartCard extends StatelessWidget {
                       color: AppColors.gold, shape: BoxShape.circle,
                     ),
                   )
+                else if (isLocked)
+                  const Icon(
+                    Icons.lock_outline_rounded,
+                    color: AppColors.textMuted,
+                    size: 18,
+                  )
                 else
-                  Icon(
-                    isLocked ? Icons.lock_outline_rounded : Icons.chevron_right_rounded,
+                  const ForwardChevronIcon(
                     color: AppColors.textMuted,
                     size: 18,
                   ),

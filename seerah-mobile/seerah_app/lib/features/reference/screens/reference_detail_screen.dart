@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/system_insets.dart';
 import '../../../core/widgets/ui_kit.dart';
 import '../data/reference_data.dart';
 
@@ -21,7 +22,15 @@ class ReferenceDetailScreen extends StatelessWidget {
         backgroundColor: Colors.transparent,
         title: Text(section.title),
       ),
-      body: AppGradientBackground(child: SafeArea(child: _buildContent(context))),
+      body: AppGradientBackground(
+        child: SafeArea(
+          bottom: false,
+          child: Padding(
+            padding: EdgeInsets.only(bottom: bottomSystemInset(context)),
+            child: _buildContent(context),
+          ),
+        ),
+      ),
     );
   }
 
@@ -284,6 +293,7 @@ class _KeyPeopleContentState extends State<_KeyPeopleContent> {
               suffixIcon: _search.isNotEmpty
                   ? IconButton(
                       icon: const Icon(Icons.close, size: 18, color: AppColors.textMuted),
+                      tooltip: 'Clear search',
                       onPressed: () { _ctrl.clear(); setState(() => _search = ''); })
                   : null,
               contentPadding: const EdgeInsets.symmetric(vertical: 10),
@@ -530,6 +540,7 @@ class _TermsContentState extends State<_TermsContent> {
               suffixIcon: _search.isNotEmpty
                   ? IconButton(
                       icon: const Icon(Icons.close, size: 18),
+                      tooltip: 'Clear search',
                       onPressed: () { _ctrl.clear(); setState(() => _search = ''); })
                   : null,
               contentPadding: const EdgeInsets.symmetric(vertical: 10),
@@ -560,7 +571,9 @@ class _TermsContentState extends State<_TermsContent> {
         ),
         const SizedBox(height: 8),
         Expanded(
-          child: ListView.builder(
+          child: terms.isEmpty
+              ? const Center(child: Text('No results found', style: TextStyle(color: AppColors.textSecondary)))
+              : ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
             itemCount: terms.length,
             itemBuilder: (ctx, i) {

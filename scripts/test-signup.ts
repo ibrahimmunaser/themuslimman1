@@ -2,7 +2,7 @@ async function testSignup() {
   const testData = {
     fullName: "Ibrahim Munaser",
     email: "ibrahimmunaser@gmail.com",
-    password: "Fatass222?",
+    password: process.env.TEST_ACCOUNT_PASSWORD ?? "ChangeMe-TestOnly-123!",
   };
 
   console.log("\n🧪 Testing signup API...");

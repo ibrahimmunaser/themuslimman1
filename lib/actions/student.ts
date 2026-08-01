@@ -5,6 +5,16 @@ import { prisma } from "@/lib/db";
 import { requireStudent } from "@/lib/auth";
 import { hasActiveCourseAccess } from "@/lib/access";
 
+/** Email verify required unless the student already has course access (IAP/Stripe parity). */
+async function requireVerifiedOrEntitled(
+  user: { id: string; emailVerified: boolean; hasPaid: boolean },
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (user.emailVerified) return { ok: true };
+  const entitled = await hasActiveCourseAccess(user.id, user.hasPaid);
+  if (entitled) return { ok: true };
+  return { ok: false, error: "Email verification required." };
+}
+
 // ─────────────────────────────────────────────────────────────
 // Join a class by code
 // ─────────────────────────────────────────────────────────────
@@ -14,7 +24,8 @@ export async function joinClassByCode(
 ): Promise<{ success: boolean; error?: string; classId?: string }> {
   const user = await requireStudent();
   if (!user.studentProfileId) return { success: false, error: "Student profile required." };
-  if (!user.emailVerified) return { success: false, error: "Email verification required." };
+  const verifyGate = await requireVerifiedOrEntitled(user);
+  if (!verifyGate.ok) return { success: false, error: verifyGate.error };
   const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
   if (!hasAccess) return { success: false, error: "Active subscription required." };
 
@@ -55,7 +66,8 @@ export async function markItemComplete(
 ): Promise<{ success: boolean; error?: string }> {
   const user = await requireStudent();
   if (!user.studentProfileId) return { success: false, error: "Student profile required." };
-  if (!user.emailVerified) return { success: false, error: "Email verification required." };
+  const verifyGate = await requireVerifiedOrEntitled(user);
+  if (!verifyGate.ok) return { success: false, error: verifyGate.error };
   const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
   if (!hasAccess) return { success: false, error: "Active subscription required." };
 
@@ -108,7 +120,8 @@ export async function startOrResumeQuiz(
 ): Promise<{ success: boolean; error?: string; attemptId?: string }> {
   const user = await requireStudent();
   if (!user.studentProfileId) return { success: false, error: "Student profile required." };
-  if (!user.emailVerified) return { success: false, error: "Email verification required." };
+  const verifyGate = await requireVerifiedOrEntitled(user);
+  if (!verifyGate.ok) return { success: false, error: verifyGate.error };
   const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
   if (!hasAccess) return { success: false, error: "Active subscription required." };
 
@@ -155,7 +168,8 @@ export async function submitQuizAttempt(
 ): Promise<{ success: boolean; error?: string; score?: number; passed?: boolean; total?: number }> {
   const user = await requireStudent();
   if (!user.studentProfileId) return { success: false, error: "Student profile required." };
-  if (!user.emailVerified) return { success: false, error: "Email verification required." };
+  const verifyGate = await requireVerifiedOrEntitled(user);
+  if (!verifyGate.ok) return { success: false, error: verifyGate.error };
   const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
   if (!hasAccess) return { success: false, error: "Active subscription required." };
 

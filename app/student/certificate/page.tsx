@@ -1,12 +1,20 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { requireStudent } from "@/lib/auth";
-import { hasActiveCourseAccess } from "@/lib/access";
+import { hasActiveCourseAccess, TOTAL_COURSE_PARTS } from "@/lib/access";
+import { getActiveProfileId } from "@/app/actions/profiles";
+import { prisma } from "@/lib/db";
 import { StudentLayout } from "@/components/student/student-layout";
-import { Award, Lock } from "lucide-react";
+import { Award, Lock, CheckCircle2 } from "lucide-react";
 
 export const metadata = { title: "Certificate | Complete Seerah" };
 export const dynamic = "force-dynamic";
+
+// Must match the mobile app's certificate_screen.dart exactly — a
+// per-quiz pass is 80%+ (see PASS_SCORE in mobile-progress/track), but the
+// certificate's OWN requirement is coverage-based: pass 70+ of the 100
+// per-part quizzes. These are two different metrics on purpose.
+const REQUIRED_QUIZ_COVERAGE_PCT = 70;
 
 export default async function CertificatePage() {
   const user = await requireStudent();
@@ -14,11 +22,37 @@ export default async function CertificatePage() {
 
   const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
   if (!hasAccess) redirect("/pricing");
-  if (!user.emailVerified) redirect("/seerah");
+  // Entitled unverified users keep certificate access (part-access / IAP parity).
 
   const userPlan = "complete" as const;
+  const requiredLessons = TOTAL_COURSE_PARTS;
 
-  const requiredLessons = userPlan === "complete" ? 100 : 75;
+  // Mirrors the mobile app's certificate_screen.dart: "studied" is any part
+  // with a PartProgress row at all, "quizzesPassed" is rows with
+  // quizPassed = true, and quiz coverage is judged against the total part
+  // count (not against quizzes attempted).
+  const learnerProfileId = await getActiveProfileId(user.id);
+  const rows = await prisma.partProgress.findMany({
+    where: {
+      learnerProfileId,
+      partNumber: { gte: 1, lte: TOTAL_COURSE_PARTS },
+    },
+    select: { partNumber: true, quizPassed: true, quizScoreVerified: true },
+  });
+
+  const studied = rows.length;
+  // A quiz only counts once its best score has been server-recomputed from
+  // real answers — see PartProgress.quizScoreVerified (Audit C4). Without
+  // this, a score bulk-synced from an old/offline cache with no answers to
+  // re-grade could permanently count toward the certificate.
+  const quizzesPassed = rows.filter((r) => r.quizPassed && r.quizScoreVerified).length;
+  const quizPct = requiredLessons === 0 ? 0 : (quizzesPassed / requiredLessons) * 100;
+
+  const meetsStudied = studied >= requiredLessons;
+  const meetsQuiz = quizPct >= REQUIRED_QUIZ_COVERAGE_PCT;
+  const isEarned = meetsStudied && meetsQuiz;
+
+  const studiedPct = requiredLessons === 0 ? 0 : Math.round((studied / requiredLessons) * 100);
 
   return (
     <StudentLayout userPlan={userPlan} userName={user.fullName}>
@@ -31,27 +65,28 @@ export default async function CertificatePage() {
             </p>
           </div>
 
-          {/* Certificate Preview (Locked) */}
+          {/* Certificate Preview */}
           <div className="relative p-8 rounded-xl border-2 border-gold/30 bg-gradient-to-b from-gold/5 to-surface mb-8">
-            {/* Lock Overlay */}
-            <div className="absolute inset-0 bg-surface/80 backdrop-blur-sm rounded-xl flex flex-col items-center justify-center">
-              <div className="w-16 h-16 rounded-full bg-gold/10 border-2 border-gold/30 flex items-center justify-center mb-4">
-                <Lock className="w-8 h-8 text-gold" />
+            {!isEarned && (
+              <div className="absolute inset-0 bg-surface/80 backdrop-blur-sm rounded-xl flex flex-col items-center justify-center z-10">
+                <div className="w-16 h-16 rounded-full bg-gold/10 border-2 border-gold/30 flex items-center justify-center mb-4">
+                  <Lock className="w-8 h-8 text-gold" />
+                </div>
+                <h3 className="text-xl font-bold text-text mb-2">Certificate Locked</h3>
+                <p className="text-text-secondary text-center max-w-md mb-6">
+                  Complete all {requiredLessons} lessons and pass enough quizzes to unlock your certificate of completion
+                </p>
+                <Link
+                  href="/seerah"
+                  className="px-6 py-3 rounded-lg bg-gold text-ink font-semibold hover:bg-gold/90 transition-colors"
+                >
+                  Continue Learning
+                </Link>
               </div>
-              <h3 className="text-xl font-bold text-text mb-2">Certificate Locked</h3>
-              <p className="text-text-secondary text-center max-w-md mb-6">
-                Complete all {requiredLessons} lessons and pass all quizzes to unlock your certificate of completion
-              </p>
-              <Link
-                href="/seerah"
-                className="px-6 py-3 rounded-lg bg-gold text-ink font-semibold hover:bg-gold/90 transition-colors"
-              >
-                Continue Learning
-              </Link>
-            </div>
+            )}
 
-            {/* Certificate Design Preview (Blurred) */}
-            <div className="opacity-30 blur-sm pointer-events-none">
+            {/* Certificate Design Preview */}
+            <div className={isEarned ? "" : "opacity-30 blur-sm pointer-events-none"}>
               <div className="text-center py-12">
                 <Award className="w-20 h-20 text-gold mx-auto mb-6" />
                 <h2 className="text-3xl font-bold text-text mb-2">Certificate of Completion</h2>
@@ -73,20 +108,41 @@ export default async function CertificatePage() {
             <h3 className="text-lg font-semibold text-text mb-4">Requirements</h3>
             <div className="space-y-3">
               <div className="flex items-center gap-3 text-text-secondary">
-                <div className="w-6 h-6 rounded-full border-2 border-border flex items-center justify-center flex-shrink-0">
-                  <span className="text-xs">✓</span>
+                <div
+                  className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                    meetsStudied ? "border-emerald-500/60 bg-emerald-500/10" : "border-border"
+                  }`}
+                >
+                  {meetsStudied ? (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                  ) : (
+                    <span className="text-xs">✓</span>
+                  )}
                 </div>
-                <span>Complete all {requiredLessons} lessons</span>
+                <span>
+                  Complete all {requiredLessons} lessons ({studied}/{requiredLessons})
+                </span>
               </div>
               <div className="flex items-center gap-3 text-text-secondary">
-                <div className="w-6 h-6 rounded-full border-2 border-border flex items-center justify-center flex-shrink-0">
-                  <span className="text-xs">✓</span>
+                <div
+                  className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                    meetsQuiz ? "border-emerald-500/60 bg-emerald-500/10" : "border-border"
+                  }`}
+                >
+                  {meetsQuiz ? (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                  ) : (
+                    <span className="text-xs">✓</span>
+                  )}
                 </div>
-                <span>Pass all quizzes with at least 70%</span>
+                <span>
+                  Pass the quiz (80%+) for at least {REQUIRED_QUIZ_COVERAGE_PCT} of the {requiredLessons} parts (
+                  {Math.round(quizPct)}%)
+                </span>
               </div>
               <div className="flex items-center gap-3 text-text-secondary">
-                <div className="w-6 h-6 rounded-full border-2 border-border flex items-center justify-center flex-shrink-0">
-                  <span className="text-xs">✓</span>
+                <div className="w-6 h-6 rounded-full border-2 border-emerald-500/60 bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                 </div>
                 <span>Maintain active student status</span>
               </div>
@@ -94,7 +150,8 @@ export default async function CertificatePage() {
 
             <div className="mt-6 pt-6 border-t border-border">
               <p className="text-sm text-text-muted">
-                <strong className="text-text">Current Progress:</strong> 0 of {requiredLessons} lessons completed (0%)
+                <strong className="text-text">Current Progress:</strong> {studied} of {requiredLessons} lessons
+                completed ({studiedPct}%)
               </p>
             </div>
           </div>

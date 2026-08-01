@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
 
   // Rate limit: 5 attempts per 10 minutes per IP
   const ip = getIP(request);
-  const rl = checkRateLimit(`signin:${ip}`, 5, 10 * 60 * 1000);
+  const rl = await checkRateLimit(`signin:${ip}`, 5, 10 * 60 * 1000);
   if (!rl.allowed) {
     return NextResponse.json(
       { error: "Too many attempts. Please try again later." },
@@ -88,6 +88,14 @@ export async function POST(request: NextRequest) {
       isPastDue: result.isPastDue ?? false,
       isFamily,
       profileCount,
+      emailVerified: result.emailVerified ?? false,
+      // The web dashboard reads the signed-in user's name server-side via
+      // getCurrentUser() on every render, so it never needed this — but the
+      // Flutter app has no equivalent and builds its local UserModel purely
+      // from this response, so without it `name` stayed null forever after a
+      // real email/password sign-in and the dashboard greeting fell back to
+      // "Student" instead of the user's actual name.
+      fullName: result.fullName ?? null,
     });
   } catch (error) {
     const elapsed = Date.now() - startTime;

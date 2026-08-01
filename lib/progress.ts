@@ -9,6 +9,43 @@
  *   quiz best score >= 90% + flashcards reviewed + 2+ optional assets opened
  */
 
+import type { Quiz } from "./types";
+
+/**
+ * Both the client (quiz UI) and the content data store the FULL option text
+ * as the answer value (never an index/letter — see quiz_tab.dart), so an
+ * exact `===` comparison normally works. But this content is hand-authored
+ * across 100 parts, and `correct_answer` is a separately-typed copy of one
+ * of the `options` strings rather than a reference into the array — any
+ * authoring inconsistency (a stray trailing space, curly vs straight quotes,
+ * doubled internal whitespace, a differently-composed Unicode accent on a
+ * transliterated Arabic name) between the two would silently mark an
+ * objectively correct answer wrong with zero visibility into why. Normalize
+ * both sides the same way before comparing so only the actual answer
+ * content matters, not incidental formatting drift between two hand-typed
+ * copies of the same text.
+ */
+export function normalizeQuizAnswer(s: string): string {
+  return s.normalize("NFKC").trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+/**
+ * Recomputes a quiz score from the authoritative correct_answer values
+ * rather than trusting a client-supplied number. Shared by the web
+ * (`submitQuizAnswers`) and mobile (`/api/mobile-progress/track` and
+ * `/bulk-sync`) submission paths so neither can be bypassed by simply
+ * POSTing `{ score: 100 }` without ever answering a real question.
+ */
+export function computeQuizScore(quizData: Quiz, answers: Record<string, string>): number {
+  const total = quizData.questions.length;
+  if (total === 0) return 0;
+  const correct = quizData.questions.filter((q) => {
+    const given = answers[q.id];
+    return given !== undefined && normalizeQuizAnswer(given) === normalizeQuizAnswer(q.correct_answer);
+  }).length;
+  return Math.round((correct / total) * 100);
+}
+
 export const VIDEO_COMPLETION_THRESHOLD = 85;  // percent
 export const QUIZ_PASS_SCORE            = 80;  // percent
 export const QUIZ_MASTERY_SCORE         = 90;  // percent
@@ -23,6 +60,8 @@ export interface ProgressSnapshot {
   quizCompleted:     boolean;
   quizBestScore:     number | null;
   quizPassed:        boolean;
+  /** False for legacy/offline bulk scores that were never re-graded from answers. */
+  quizScoreVerified: boolean;
   flashcardsReviewed:boolean;
   openedAssets:      string[]; // e.g. ["slides","mindmap","infographic"]
   startedAt:         Date | null;
@@ -44,7 +83,9 @@ export function canUnlockNextPart(snap: ProgressSnapshot): boolean {
 
 export function isCompleted(snap: ProgressSnapshot, userPlan: "essentials" | "complete"): boolean {
   if (userPlan === "essentials") return videoReachedThreshold(snap) && snap.briefingOpened;
-  return snap.quizPassed;
+  // Require verified so an unverified bulk-sync score can't complete a part
+  // (mobile get route already gates completedParts the same way).
+  return snap.quizPassed && snap.quizScoreVerified;
 }
 
 export function isMastered(snap: ProgressSnapshot, userPlan: "essentials" | "complete"): boolean {
@@ -53,6 +94,7 @@ export function isMastered(snap: ProgressSnapshot, userPlan: "essentials" | "com
   return (
     videoReachedThreshold(snap) &&
     snap.briefingOpened &&
+    snap.quizScoreVerified &&
     (snap.quizBestScore ?? 0) >= QUIZ_MASTERY_SCORE &&
     snap.flashcardsReviewed &&
     openedCount >= MASTERY_ASSETS_MIN
@@ -82,7 +124,7 @@ export function getCompletionRequirements(
   return {
     videoNeeded:    !videoReachedThreshold(snap),
     briefingNeeded: !snap.briefingOpened,
-    quizNeeded:     userPlan === "complete" && !snap.quizPassed,
+    quizNeeded:     userPlan === "complete" && !(snap.quizPassed && snap.quizScoreVerified),
     quizScore:      snap.quizBestScore,
   };
 }
@@ -96,11 +138,25 @@ export function parseProgressRow(row: {
   quizCompleted:     boolean;
   quizBestScore:     number | null;
   quizPassed:        boolean;
+  quizScoreVerified?: boolean | null;
   flashcardsReviewed:boolean;
   openedAssets:      string;
   startedAt:         Date | null;
 }): ProgressSnapshot {
   let openedAssets: string[] = [];
   try { openedAssets = JSON.parse(row.openedAssets); } catch {}
-  return { ...row, openedAssets };
+  return {
+    videoWatchPercent: row.videoWatchPercent,
+    videoCompleted: row.videoCompleted,
+    briefingOpened: row.briefingOpened,
+    quizCompleted: row.quizCompleted,
+    quizBestScore: row.quizBestScore,
+    quizPassed: row.quizPassed,
+    // Legacy rows written before the verified column defaulted false; treat
+    // missing as false so status can't complete from unverified bulk scores.
+    quizScoreVerified: row.quizScoreVerified === true,
+    flashcardsReviewed: row.flashcardsReviewed,
+    openedAssets,
+    startedAt: row.startedAt,
+  };
 }

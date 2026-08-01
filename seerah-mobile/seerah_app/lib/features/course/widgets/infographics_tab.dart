@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers/part_provider.dart';
+import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
 
 /// Infographic viewer — concise, standard, and bento grid styles per part.
@@ -15,6 +18,34 @@ class InfographicsTab extends ConsumerStatefulWidget {
 
 class _InfographicsTabState extends ConsumerState<InfographicsTab> {
   String _style = 'standard';
+  bool _trackedOpen = false;
+  int _imageKey = 0;
+  Timer? _dwellTimer;
+
+  @override
+  void dispose() {
+    _dwellTimer?.cancel();
+    super.dispose();
+  }
+
+  /// Mirrors web part-tabs: require 1.5s dwell after the image loads so a
+  /// deep-link auto-open doesn't count without actually viewing.
+  void _scheduleTrackAfterLoad() {
+    if (_trackedOpen) return;
+    _dwellTimer?.cancel();
+    _dwellTimer = Timer(const Duration(milliseconds: 1500), () {
+      if (!mounted || _trackedOpen) return;
+      _trackedOpen = true;
+      ref.read(progressProvider.notifier).trackAssetOpened(widget.partNumber, 'infographic');
+    });
+  }
+
+  Future<void> _retryImage() async {
+    _dwellTimer?.cancel();
+    ref.invalidate(infographicsProvider(widget.partNumber));
+    await ref.read(infographicsProvider(widget.partNumber).future);
+    if (mounted) setState(() => _imageKey++);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -80,7 +111,10 @@ class _InfographicsTabState extends ConsumerState<InfographicsTab> {
                         child: Material(
                           color: Colors.transparent,
                           child: InkWell(
-                            onTap: () => setState(() => _style = s.id),
+                            onTap: () {
+                              _dwellTimer?.cancel();
+                              setState(() => _style = s.id);
+                            },
                             borderRadius: BorderRadius.circular(9),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(vertical: 10),
@@ -119,6 +153,7 @@ class _InfographicsTabState extends ConsumerState<InfographicsTab> {
                 maxScale: 4.0,
                 child: Center(
                   child: CachedNetworkImage(
+                    key: ValueKey('infographic-$_imageKey-$_style-$imageUrl'),
                     imageUrl: imageUrl,
                     fit: BoxFit.contain,
                     // 2x screen width leaves headroom for pinch-zoom while
@@ -127,20 +162,32 @@ class _InfographicsTabState extends ConsumerState<InfographicsTab> {
                             MediaQuery.devicePixelRatioOf(context) *
                             2)
                         .round(),
+                    imageBuilder: (ctx, provider) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (mounted) _scheduleTrackAfterLoad();
+                      });
+                      return Image(image: provider, fit: BoxFit.contain);
+                    },
                     placeholder: (_, __) => const Center(
                       child: CircularProgressIndicator.adaptive(
                         valueColor: AlwaysStoppedAnimation(AppColors.gold),
                       ),
                     ),
-                    errorWidget: (_, __, ___) => const Center(
+                    errorWidget: (_, __, ___) => Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.image_not_supported_outlined,
+                          const Icon(Icons.image_not_supported_outlined,
                               size: 48, color: AppColors.textMuted),
-                          SizedBox(height: 12),
-                          Text('Infographic unavailable',
+                          const SizedBox(height: 12),
+                          const Text('Infographic unavailable',
                               style: TextStyle(color: AppColors.textSecondary)),
+                          const SizedBox(height: 16),
+                          OutlinedButton.icon(
+                            onPressed: _retryImage,
+                            icon: const Icon(Icons.refresh, size: 18),
+                            label: const Text('Retry'),
+                          ),
                         ],
                       ),
                     ),

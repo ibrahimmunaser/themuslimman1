@@ -79,7 +79,7 @@ android {
         applicationId = "com.themuslimman.seerah"
 
         // flutter_secure_storage with encryptedSharedPreferences requires API 23+.
-        minSdk    = 23
+        minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

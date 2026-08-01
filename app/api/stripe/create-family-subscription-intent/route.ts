@@ -3,8 +3,9 @@ import { stripe } from "@/lib/stripe";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { PLANS } from "@/lib/stripe-config";
-import { getUserAccessInfo, getActiveSubscription, FAMILY_PROFILE_LIMIT } from "@/lib/access";
+import { getUserAccessInfo, getActiveSubscription, ensureFamilyProfilesForUser } from "@/lib/access";
 import { checkRateLimit, getIP } from "@/lib/rate-limit";
+import { escapeHtml } from "@/lib/html-escape";
 
 // Support both env var names — new canonical name takes priority.
 const FAMILY_MONTHLY_PRICE_ID =
@@ -15,7 +16,7 @@ const FAMILY_MONTHLY_PLAN = PLANS.familyMonthly;
 
 export async function POST(request: NextRequest) {
   const ip = getIP(request);
-  const rl = checkRateLimit(`create-family-sub-intent:${ip}`, 10, 10 * 60 * 1000);
+  const rl = await checkRateLimit(`create-family-sub-intent:${ip}`, 10, 10 * 60 * 1000);
   if (!rl.allowed) {
     return NextResponse.json(
       { error: "Too many requests. Please try again later." },
@@ -129,7 +130,7 @@ export async function POST(request: NextRequest) {
       ]);
 
       // Auto-provision up to 5 learner profiles for family access.
-      await ensureFamilyProfiles(user.id);
+      await ensureFamilyProfilesForUser(user.id);
 
       // Send upgrade confirmation email.
       // The webhook's upsertSubscription will NOT send one because isFirstActivation=false
@@ -161,14 +162,16 @@ export async function POST(request: NextRequest) {
     // Cancel any stale incomplete/past_due subscriptions to avoid Stripe conflicts.
     // NOTE: Active/trialing individual subs are now handled above via the upgrade path
     // (stripe.subscriptions.update), so this loop only needs to clean up orphaned ones.
-    for (const statusFilter of ["incomplete", "past_due"] as const) {
+    for (const statusFilter of ["incomplete", "past_due", "unpaid"] as const) {
       const existingSubs = await stripe.subscriptions.list({
         customer: customerId,
         status: statusFilter,
         limit: 5,
       });
       for (const s of existingSubs.data) {
-        if (s.metadata?.planType === "family") continue;
+        // Cancel ALL stale family/incomplete/unpaid subs — skipping family unpaid
+        // left duplicates after STALE_PAST_DUE_CEILING. Active/trialing upgrades
+        // are handled above via stripe.subscriptions.update.
         await stripe.subscriptions.cancel(s.id).catch((e) =>
           console.warn(`[CREATE-FAMILY-SUB] Could not cancel ${statusFilter} sub ${s.id}:`, e)
         );
@@ -256,7 +259,7 @@ async function sendUpgradeConfirmationEmail(
   const resend  = new Resend(process.env.RESEND_API_KEY);
   const appUrl  = process.env.NEXT_PUBLIC_APP_URL ?? "https://themuslimman.com";
   const year    = new Date().getFullYear();
-  const name    = fullName?.trim() || "dear student";
+  const name = escapeHtml(fullName?.trim() || "dear student");
 
   await resend.emails.send({
     from:    process.env.EMAIL_FROM ?? "TheMuslimMan <noreply@themuslimman.com>",
@@ -300,37 +303,7 @@ async function sendUpgradeConfirmationEmail(
   console.log(`[CREATE-FAMILY-SUB] Upgrade email sent to user ${userId}`);
 }
 
-// ── Profile auto-provisioning ─────────────────────────────────────────────────
-
-async function ensureFamilyProfiles(userId: string): Promise<void> {
-  const [existingProfiles, user] = await Promise.all([
-    prisma.learnerProfile.findMany({
-      where: { userId },
-      select: { id: true, isDefault: true },
-      orderBy: { createdAt: "asc" },
-    }),
-    prisma.user.findUnique({ where: { id: userId }, select: { fullName: true } }),
-  ]);
-
-  const toCreate = FAMILY_PROFILE_LIMIT - existingProfiles.length;
-  if (toCreate <= 0) return;
-
-  const hasDefault    = existingProfiles.some((p) => p.isDefault);
-  const existingCount = existingProfiles.length;
-
-  const newProfiles = Array.from({ length: toCreate }, (_, i) => {
-    const slot      = existingCount + i + 1;
-    const isMainSlot = slot === 1;
-    return {
-      id:          crypto.randomUUID(),
-      userId,
-      displayName: isMainSlot ? (user?.fullName?.trim() || "Main Learner") : `Learner ${slot}`,
-      isDefault:   isMainSlot && !hasDefault,
-      createdAt:   new Date(),
-      updatedAt:   new Date(),
-    };
-  });
-
-  await prisma.learnerProfile.createMany({ data: newProfiles });
-  console.log(`[CREATE-FAMILY-SUB] ensureFamilyProfiles: created ${newProfiles.length} profiles for user ${userId}`);
-}
+// Profile auto-provisioning is centralized in lib/access.ts's
+// ensureFamilyProfilesForUser — this used to be an independent, non-
+// transactional copy-paste of that logic (race-prone if this route and the
+// Stripe webhook both fired for the same purchase).

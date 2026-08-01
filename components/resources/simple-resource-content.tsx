@@ -797,7 +797,7 @@ export function SimpleResourceContent({
                 return (
                   <div
                     key={part.id}
-                    onClick={isLocked ? undefined : () => handleOpenResource(part)}
+                    onClick={isLocked ? () => { window.location.assign("/pricing"); } : () => handleOpenResource(part)}
                     onMouseEnter={isLocked ? undefined : () => handlePrefetch(part.id)}
                     className={`group rounded-xl border border-zinc-800 bg-zinc-900/50 transition-all overflow-hidden ${
                       isLocked

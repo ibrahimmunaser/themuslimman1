@@ -6,6 +6,7 @@ import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/part_provider.dart';
 import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/adaptive_icons.dart';
 import '../widgets/video_tab.dart';
 import '../widgets/read_tab.dart';
 import '../../../core/utils/system_insets.dart';
@@ -31,6 +32,10 @@ class PartScreen extends ConsumerStatefulWidget {
 
 class _PartScreenState extends ConsumerState<PartScreen> {
   int get partNumber => widget.partNumber;
+  /// Ensures deep-link `initialTab` opens at most once, even across auth
+  /// loading → ready transitions that previously caused `_autoOpen` to bail
+  /// on `_isLocked` during restore and never retry.
+  bool _autoOpenDone = false;
 
   @override
   void initState() {
@@ -42,8 +47,28 @@ class _PartScreenState extends ConsumerState<PartScreen> {
     });
   }
 
+  /// True for a locked (paid, no access) part — must be checked before EVERY
+  /// asset-open path, not just build()'s own paywall render. build() gates
+  /// its own return value on this, but _autoOpen()/_openAssetWhenReady()
+  /// used to skip it entirely: for any deep-linked/tab-initiated navigation
+  /// (`?tab=...` query param — e.g. quiz_history_screen's row tap, which has
+  /// no access check of its own either) into a part the user no longer has
+  /// access to, build() would render the paywall for one frame and then this
+  /// already-scheduled callback would push the real, unlocked content right
+  /// on top of it.
+  bool get _isLocked =>
+      widget.partNumber > 1 && !ref.read(authProvider).hasAccess;
+
   void _autoOpen() {
-    if (!mounted) return;
+    if (!mounted || _autoOpenDone || widget.initialTab == null) return;
+    final auth = ref.read(authProvider);
+    // Wait out auth restore — during loading hasAccess is false, so paid
+    // parts look locked and we'd permanently skip the deep-link open.
+    if (widget.partNumber > 1 && auth.isLoading) return;
+    // Locked: do NOT set _autoOpenDone — wait for access restore / purchase
+    // so the deep-link can retry via the authProvider listener.
+    if (_isLocked) return;
+    _autoOpenDone = true;
     final tab = widget.initialTab;
     switch (tab) {
       case 'video':
@@ -66,40 +91,75 @@ class _PartScreenState extends ConsumerState<PartScreen> {
         _openAssetWhenReady(
           urlGetter: (a) => a.audioUrl,
           title: 'Audio — Part $partNumber',
-          builder: (url) => AudioTab(audioUrl: url, partTitle: PARTS.firstWhere((p) => p.partNumber == partNumber, orElse: () => PARTS.first).title),
+          builder: (url) => AudioTab(audioUrl: url, partNumber: partNumber, partTitle: PARTS.firstWhere((p) => p.partNumber == partNumber, orElse: () => PARTS.first).title),
         );
       case 'mindmap':
         _openAssetWhenReady(
           urlGetter: (a) => a.mindmapUrl,
           title: 'Mindmap — Part $partNumber',
-          builder: (url) => MindmapTab(mindmapUrl: url),
+          builder: (url) => MindmapTab(partNumber: partNumber, mindmapUrl: url),
         );
     }
   }
 
   /// Waits up to 8s for the partAssetsProvider to resolve, then opens the viewer.
+  /// Unlike every other tab (video/read/flashcards/quiz/slides/infographics),
+  /// audio/mindmap need their URL known *before* the widget is constructed,
+  /// so a genuinely-missing asset or a slow/failed fetch used to fail
+  /// completely silently — the user just lands on the bare Part screen with
+  /// no explanation. Surface a SnackBar in both dead-end cases instead.
   Future<void> _openAssetWhenReady({
     required String? Function(PartAssets) urlGetter,
     required String title,
     required Widget Function(String url) builder,
   }) async {
-    final existing = ref.read(partAssetsProvider(partNumber)).valueOrNull;
+    if (_isLocked) return;
+    final existingState = ref.read(partAssetsProvider(partNumber));
+    final existing = existingState.valueOrNull;
     if (existing != null) {
       final url = urlGetter(existing);
-      if (url != null && mounted) _open(context, title: title, child: builder(url));
+      if (url != null) {
+        if (mounted) _open(context, title: title, child: builder(url));
+      } else {
+        _notifyAssetUnavailable(title);
+      }
+      return;
+    }
+    if (existingState.hasError) {
+      _notifyAssetUnavailable(title);
       return;
     }
     // Assets are still loading — wait for them
     for (var i = 0; i < 16; i++) {
       await Future<void>.delayed(const Duration(milliseconds: 500));
-      if (!mounted) return;
-      final assets = ref.read(partAssetsProvider(partNumber)).valueOrNull;
+      if (!mounted || _isLocked) return;
+      final assetsState = ref.read(partAssetsProvider(partNumber));
+      final assets = assetsState.valueOrNull;
       if (assets != null) {
         final url = urlGetter(assets);
-        if (url != null && mounted) _open(context, title: title, child: builder(url));
+        if (url != null) {
+          if (mounted) _open(context, title: title, child: builder(url));
+        } else {
+          _notifyAssetUnavailable(title);
+        }
+        return;
+      }
+      if (assetsState.hasError) {
+        _notifyAssetUnavailable(title);
         return;
       }
     }
+    _notifyAssetUnavailable(title);
+  }
+
+  void _notifyAssetUnavailable(String title) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        content: Text('$title isn\'t available right now. Please try again.'),
+        backgroundColor: Colors.red.shade700,
+      ));
   }
 
   @override
@@ -113,6 +173,32 @@ class _PartScreenState extends ConsumerState<PartScreen> {
     final authState = ref.watch(authProvider);
     final isPaidPart = partNumber > 1;
     final hasAccess = authState.hasAccess;
+
+    // Deep-link retry: initial postFrameCallback often runs while auth is
+    // still restoring (paid parts look locked). Re-attempt once auth settles
+    // or the user gains access mid-session.
+    ref.listen(authProvider, (prev, next) {
+      if (widget.initialTab == null || _autoOpenDone) return;
+      final leftLoading = (prev?.isLoading ?? true) && !next.isLoading;
+      final gainedAccess = !(prev?.hasAccess ?? false) && next.hasAccess;
+      if (leftLoading || gainedAccess) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _autoOpen();
+        });
+      }
+    });
+
+    // Auth is still restoring (e.g. cold start / session refresh) — avoid
+    // flashing the paywall at a legitimately-entitled user before `hasAccess`
+    // has a real value to check.
+    if (isPaidPart && authState.isLoading) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(
+          child: CircularProgressIndicator(color: AppColors.gold),
+        ),
+      );
+    }
 
     if (isPaidPart && !hasAccess) {
       return _PaywallScreen(
@@ -147,7 +233,8 @@ class _PartScreenState extends ConsumerState<PartScreen> {
             pinned: true,
             backgroundColor: AppColors.background,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+              icon: const BackIcon(size: 20),
+              tooltip: 'Back',
               onPressed: () => context.pop(),
             ),
             flexibleSpace: FlexibleSpaceBar(
@@ -258,13 +345,13 @@ class _PartScreenState extends ConsumerState<PartScreen> {
                             _open(
                               context,
                               title: 'Listen — Part $partNumber',
-                              child: AudioTab(audioUrl: assets!.audioUrl!, partTitle: part.title),
+                              child: AudioTab(audioUrl: assets!.audioUrl!, partNumber: partNumber, partTitle: part.title),
                             );
                           } else if (isFreePart) {
                             _openAssetWhenReady(
                               urlGetter: (a) => a.audioUrl,
                               title: 'Listen — Part $partNumber',
-                              builder: (url) => AudioTab(audioUrl: url, partTitle: part.title),
+                              builder: (url) => AudioTab(audioUrl: url, partNumber: partNumber, partTitle: part.title),
                             );
                           }
                         },
@@ -339,13 +426,13 @@ class _PartScreenState extends ConsumerState<PartScreen> {
                       _open(
                         context,
                         title: 'Mindmap — Part $partNumber',
-                        child: MindmapTab(mindmapUrl: assets!.mindmapUrl!),
+                        child: MindmapTab(partNumber: partNumber, mindmapUrl: assets!.mindmapUrl!),
                       );
                     } else if (isFreePart) {
                       _openAssetWhenReady(
                         urlGetter: (a) => a.mindmapUrl,
                         title: 'Mindmap — Part $partNumber',
-                        builder: (url) => MindmapTab(mindmapUrl: url),
+                        builder: (url) => MindmapTab(partNumber: partNumber, mindmapUrl: url),
                       );
                     }
                   },
@@ -395,7 +482,7 @@ class _PartScreenState extends ConsumerState<PartScreen> {
                 ],
 
                 // ── Up Next card ─────────────────────────────────────────
-                if (partNumber < 100 && hasAccess) ...[
+                if (partNumber < PARTS.length && hasAccess) ...[
                   const SizedBox(height: 24),
                   _UpNextCard(partNumber: partNumber),
                 ],
@@ -437,7 +524,8 @@ class _AssetViewerScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: AppColors.surface,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          icon: const BackIcon(size: 20),
+          tooltip: 'Back',
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(title,
@@ -626,7 +714,7 @@ class _AssetHero extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     available
-                        ? Icon(Icons.chevron_right_rounded,
+                        ? const ForwardChevronIcon(
                             color: AppColors.textMuted, size: 22)
                         : const Icon(Icons.lock_outline_rounded,
                             color: AppColors.textMuted, size: 18),
@@ -694,7 +782,7 @@ class _AssetCard extends StatelessWidget {
                     child: Icon(icon, color: iconColor, size: 20),
                   ),
                   available
-                      ? Icon(Icons.chevron_right_rounded,
+                      ? const ForwardChevronIcon(
                           color: AppColors.textMuted, size: 18)
                       : const Icon(Icons.lock_outline_rounded,
                           color: AppColors.textMuted, size: 14),
@@ -755,15 +843,17 @@ class _PaywallScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          icon: const BackIcon(size: 20),
+          tooltip: 'Back',
           onPressed: () => context.pop(),
         ),
         title: Text('Part $partNumber'),
       ),
       body: SafeArea(
+        bottom: false,
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(32),
+            padding: EdgeInsets.fromLTRB(32, 32, 32, 32 + bottomSystemInset(context)),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
@@ -788,9 +878,9 @@ class _PaywallScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
-              const Text(
-                'This part requires a full-access subscription.\nUnlock all 100 parts of the Seerah course.',
-                style: TextStyle(
+              Text(
+                'This part requires a full-access subscription.\nUnlock all ${PARTS.length} parts of the Seerah course.',
+                style: const TextStyle(
                   color: AppColors.textSecondary,
                   fontSize: 14,
                   height: 1.6,
@@ -804,7 +894,11 @@ class _PaywallScreen extends StatelessWidget {
                   return SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () => context.go(isLoggedIn ? '/pricing' : '/landing'),
+                      // push (not go) so the back button returns here instead
+                      // of wiping the whole nav stack back to the paywall's
+                      // parent — losing wherever the user came from (course
+                      // list, a deep link, etc).
+                      onPressed: () => context.push(isLoggedIn ? '/pricing' : '/landing'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.gold,
                         foregroundColor: Colors.black,
@@ -857,9 +951,9 @@ class _ContinueCTA extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text(
-            'Continue the full 100-part course',
-            style: TextStyle(
+          Text(
+            'Continue the full ${PARTS.length}-part course',
+            style: const TextStyle(
               color: AppColors.textPrimary,
               fontSize: 17,
               fontWeight: FontWeight.w700,
@@ -879,7 +973,11 @@ class _ContinueCTA extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           ElevatedButton(
-            onPressed: () => context.go(paywall),
+            // pushReplacement (not push) — this and Landing's "Watch Part 1"
+            // preview CTA form a two-screen loop; a plain push here would
+            // grow the back stack forever if a logged-out user bounces
+            // between the two.
+            onPressed: () => context.pushReplacement(paywall),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.gold,
               foregroundColor: Colors.black,
@@ -962,7 +1060,7 @@ class _UpNextCard extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            const Icon(Icons.arrow_forward_ios_rounded, color: AppColors.gold, size: 16),
+            const ForwardChevronIcon(color: AppColors.gold, size: 16),
           ],
         ),
         ),
@@ -981,7 +1079,11 @@ class _PartNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.fromLTRB(16, 10, 16, MediaQuery.of(context).padding.bottom + 10),
+      // Audit H10 fix: MediaQuery.padding.bottom alone can report 0 on some
+      // Android devices even while the 3-button nav bar still overlaps this
+      // bar — bottomSystemInset() is the shared helper with the fallback for
+      // exactly that case; every other bottom-inset spot in the app uses it.
+      padding: EdgeInsets.fromLTRB(16, 10, 16, bottomSystemInset(context) + 10),
       decoration: const BoxDecoration(
         color: AppColors.surface,
         border: Border(top: BorderSide(color: AppColors.border)),
@@ -992,7 +1094,7 @@ class _PartNavBar extends StatelessWidget {
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: () => context.pushReplacement('/part/${partNumber - 1}'),
-                icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 14),
+                icon: const BackIcon(size: 14),
                 label: Text('Part ${partNumber - 1}'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.textSecondary,
@@ -1004,34 +1106,28 @@ class _PartNavBar extends StatelessWidget {
                 ),
               ),
             ),
-          if (partNumber > 1 && partNumber < 100) const SizedBox(width: 12),
+          if (partNumber > 1 && partNumber < PARTS.length) const SizedBox(width: 12),
           // On Part 1 with no access the in-page CTA card already has the
           // "Unlock full access" button — hide the nav bar duplicate.
-          if (partNumber < 100 && !(partNumber == 1 && !hasAccess))
+          if (partNumber < PARTS.length && !(partNumber == 1 && !hasAccess))
             Expanded(
+              // This button only ever renders when hasAccess is true (the
+              // `partNumber == 1 && !hasAccess` case is excluded above, and
+              // any other locked part already returns _PaywallScreen earlier
+              // in build()) — so unlike the locked-content styling this
+              // block used to carry, there's no lock/unlock branch to handle
+              // here; it's always the plain "continue to next part" button.
               child: ElevatedButton(
                 onPressed: () {
                   final nextPart = partNumber + 1;
-                  // Locked content — route to paywall directly for clarity
-                  if (!hasAccess && nextPart > 1) {
-                    context.go('/landing');
-                  } else {
-                    context.pushReplacement('/part/$nextPart');
-                  }
+                  context.pushReplacement('/part/$nextPart');
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: (!hasAccess && partNumber + 1 > 1)
-                      ? AppColors.surface
-                      : AppColors.gold,
-                  foregroundColor: (!hasAccess && partNumber + 1 > 1)
-                      ? AppColors.gold
-                      : Colors.black,
+                  backgroundColor: AppColors.gold,
+                  foregroundColor: Colors.black,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
-                    side: (!hasAccess && partNumber + 1 > 1)
-                        ? const BorderSide(color: AppColors.gold)
-                        : BorderSide.none,
                   ),
                   elevation: 0,
                 ),
@@ -1039,21 +1135,10 @@ class _PartNavBar extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (!hasAccess && partNumber + 1 > 1) ...[
-                      const Icon(Icons.lock_outline_rounded, size: 14),
-                      const SizedBox(width: 6),
-                      const Flexible(
-                        child: Text('Unlock to continue',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-                      ),
-                    ] else ...[
-                      Text('Part ${partNumber + 1}',
-                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: Colors.black)),
-                      const SizedBox(width: 6),
-                      const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.black),
-                    ],
+                    Text('Part ${partNumber + 1}',
+                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: Colors.black)),
+                    const SizedBox(width: 6),
+                    const ForwardChevronIcon(size: 14, color: Colors.black),
                   ],
                 ),
               ),
