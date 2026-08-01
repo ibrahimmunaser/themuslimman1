@@ -51,6 +51,11 @@
 		     so a blanket NSAllowsArbitraryLoadsForMedia exception isn't
 		     needed and only weakens transport security / invites extra App
 		     Review scrutiny. -->
+		<!-- Declares standard HTTPS-only crypto (no custom/proprietary
+		     encryption). Required so TestFlight beta review submission
+		     doesn't fail with "Build is missing export compliance". -->
+		<key>ITSAppUsesNonExemptEncryption</key>
+		<false/>
 		<key>UIStatusBarHidden</key>
 		<true/>
 	</dict>
