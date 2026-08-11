@@ -7,7 +7,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     easy: [
       {
         id: "Part_51__30",
-        file: "seerah",
         card_number: 30,
         side1: "كيف قُتل كعب بن الأشرف حسب الرواية؟",
         side2: "ضربوه بأسلحتهم فقتلوه.",
@@ -15,7 +14,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_51__16",
-        file: "seerah",
         card_number: 16,
         side1: "أي صحابي استأذن في قتل كعب بن الأشرف؟",
         side2: "محمد بن مسلمة الأنصاري.",
@@ -23,7 +21,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_51__13",
-        file: "seerah",
         card_number: 13,
         side1: "أي معركة بلغ كعبَ بن الأشرف خبرُ نتيجتها فحرّك ردّ فعله؟",
         side2: "انتصار المسلمين في بدر.",
@@ -31,7 +28,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_51__14",
-        file: "seerah",
         card_number: 14,
         side1: "بعد سماعه بانتصار المسلمين في بدر، إلى أين سافر كعب بن الأشرف؟",
         side2: "إلى مكة.",
@@ -39,7 +35,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_51__6",
-        file: "seerah",
         card_number: 6,
         side1: "ماذا فعل بنو ثعلبة وبنو محارب حين سمعوا بتقدم المسلمين؟",
         side2: "تفرّقوا في الجبال المحيطة.",
@@ -47,7 +42,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_51__2",
-        file: "seerah",
         card_number: 2,
         side1: "أي القبائل ذُكر أنها كانت تجمع المقاتلين للإغارة على أطراف المدينة قبل غزوة ذي أمر؟",
         side2: "بنو ثعلبة وبنو محارب.",
@@ -57,7 +51,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     medium: [
       {
         id: "Part_51__30",
-        file: "seerah",
         card_number: 30,
         side1: "كيف قُتل كعب بن الأشرف حسب الرواية؟",
         side2: "ضربوه بأسلحتهم فقتلوه.",
@@ -65,7 +58,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_51__16",
-        file: "seerah",
         card_number: 16,
         side1: "أي صحابي استأذن في قتل كعب بن الأشرف؟",
         side2: "محمد بن مسلمة الأنصاري.",
@@ -73,7 +65,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_51__13",
-        file: "seerah",
         card_number: 13,
         side1: "أي معركة بلغ كعبَ بن الأشرف خبرُ نتيجتها فحرّك ردّ فعله؟",
         side2: "انتصار المسلمين في بدر.",
@@ -81,7 +72,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_51__14",
-        file: "seerah",
         card_number: 14,
         side1: "بعد سماعه بانتصار المسلمين في بدر، إلى أين سافر كعب بن الأشرف؟",
         side2: "إلى مكة.",
@@ -89,7 +79,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_51__6",
-        file: "seerah",
         card_number: 6,
         side1: "ماذا فعل بنو ثعلبة وبنو محارب حين سمعوا بتقدم المسلمين؟",
         side2: "تفرّقوا في الجبال المحيطة.",
@@ -97,7 +86,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_51__2",
-        file: "seerah",
         card_number: 2,
         side1: "أي القبائل ذُكر أنها كانت تجمع المقاتلين للإغارة على أطراف المدينة قبل غزوة ذي أمر؟",
         side2: "بنو ثعلبة وبنو محارب.",
@@ -105,7 +93,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_51__1",
-        file: "seerah",
         card_number: 1,
         side1: "متى وقعت غزوة ذي أمر؟",
         side2: "في المحرّم–صفر سنة ٣ هـ.",
@@ -113,7 +100,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_51__11",
-        file: "seerah",
         card_number: 11,
         side1: "بماذا عُرف كعب بن الأشرف في مهنته؟",
         side2: "كان شاعراً.",
@@ -121,7 +107,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_51__28",
-        file: "seerah",
         card_number: 28,
         side1: "ما علاقة أبي نائلة بكعب بن الأشرف؟",
         side2: "كان أخاه من الرضاعة.",
@@ -129,7 +114,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_51__23",
-        file: "seerah",
         card_number: 23,
         side1: "أي رهن قدّمته جماعة محمد بن مسلمة أخيراً لكعب بن الأشرف؟",
         side2: "أسلحتهم.",
@@ -137,7 +121,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_51__17",
-        file: "seerah",
         card_number: 17,
         side1: "أي إذن إضافي طلبه محمد بن مسلمة قبل أن يقترب من كعب بن الأشرف؟",
         side2: "الإذن أن يقول لكعب شيئاً.",
@@ -145,7 +128,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_51__10",
-        file: "seerah",
         card_number: 10,
         side1: "من أي قبيلة كانت أم كعب بن الأشرف؟",
         side2: "بنو النضير.",
@@ -153,7 +135,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_51__20",
-        file: "seerah",
         card_number: 20,
         side1: "ماذا اشترط كعب بن الأشرف مقابل إقراض الطعام؟",
         side2: "رهناً.",
@@ -161,7 +142,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_51__18",
-        file: "seerah",
         card_number: 18,
         side1: "ماذا طلب محمد بن مسلمة من كعب بن الأشرف أن يُقرضهم؟",
         side2: "طعاماً.",
@@ -169,7 +149,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_51__3",
-        file: "seerah",
         card_number: 3,
         side1: "كم رجلاً خرج مع النبي ﷺ في غزوة ذي أمر؟",
         side2: "نحو أربعمائة وخمسين من الفرسان والرجّالة.",
@@ -179,7 +158,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     full: [
       {
         id: "Part_51__30",
-        file: "seerah",
         card_number: 30,
         side1: "كيف قُتل كعب بن الأشرف حسب الرواية؟",
         side2: "ضربوه بأسلحتهم فقتلوه.",
@@ -187,7 +165,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_51__16",
-        file: "seerah",
         card_number: 16,
         side1: "أي صحابي استأذن في قتل كعب بن الأشرف؟",
         side2: "محمد بن مسلمة الأنصاري.",
@@ -195,7 +172,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_51__13",
-        file: "seerah",
         card_number: 13,
         side1: "أي معركة بلغ كعبَ بن الأشرف خبرُ نتيجتها فحرّك ردّ فعله؟",
         side2: "انتصار المسلمين في بدر.",
@@ -203,7 +179,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_51__14",
-        file: "seerah",
         card_number: 14,
         side1: "بعد سماعه بانتصار المسلمين في بدر، إلى أين سافر كعب بن الأشرف؟",
         side2: "إلى مكة.",
@@ -211,7 +186,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_51__6",
-        file: "seerah",
         card_number: 6,
         side1: "ماذا فعل بنو ثعلبة وبنو محارب حين سمعوا بتقدم المسلمين؟",
         side2: "تفرّقوا في الجبال المحيطة.",
@@ -219,7 +193,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_51__2",
-        file: "seerah",
         card_number: 2,
         side1: "أي القبائل ذُكر أنها كانت تجمع المقاتلين للإغارة على أطراف المدينة قبل غزوة ذي أمر؟",
         side2: "بنو ثعلبة وبنو محارب.",
@@ -227,7 +200,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_51__1",
-        file: "seerah",
         card_number: 1,
         side1: "متى وقعت غزوة ذي أمر؟",
         side2: "في المحرّم–صفر سنة ٣ هـ.",
@@ -235,7 +207,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_51__11",
-        file: "seerah",
         card_number: 11,
         side1: "بماذا عُرف كعب بن الأشرف في مهنته؟",
         side2: "كان شاعراً.",
@@ -243,7 +214,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_51__28",
-        file: "seerah",
         card_number: 28,
         side1: "ما علاقة أبي نائلة بكعب بن الأشرف؟",
         side2: "كان أخاه من الرضاعة.",
@@ -251,7 +221,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_51__23",
-        file: "seerah",
         card_number: 23,
         side1: "أي رهن قدّمته جماعة محمد بن مسلمة أخيراً لكعب بن الأشرف؟",
         side2: "أسلحتهم.",
@@ -259,7 +228,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_51__17",
-        file: "seerah",
         card_number: 17,
         side1: "أي إذن إضافي طلبه محمد بن مسلمة قبل أن يقترب من كعب بن الأشرف؟",
         side2: "الإذن أن يقول لكعب شيئاً.",
@@ -267,7 +235,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_51__10",
-        file: "seerah",
         card_number: 10,
         side1: "من أي قبيلة كانت أم كعب بن الأشرف؟",
         side2: "بنو النضير.",
@@ -275,7 +242,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_51__20",
-        file: "seerah",
         card_number: 20,
         side1: "ماذا اشترط كعب بن الأشرف مقابل إقراض الطعام؟",
         side2: "رهناً.",
@@ -283,7 +249,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_51__18",
-        file: "seerah",
         card_number: 18,
         side1: "ماذا طلب محمد بن مسلمة من كعب بن الأشرف أن يُقرضهم؟",
         side2: "طعاماً.",
@@ -291,7 +256,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_51__3",
-        file: "seerah",
         card_number: 3,
         side1: "كم رجلاً خرج مع النبي ﷺ في غزوة ذي أمر؟",
         side2: "نحو أربعمائة وخمسين من الفرسان والرجّالة.",
@@ -299,7 +263,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_51__7",
-        file: "seerah",
         card_number: 7,
         side1: "عند أي ماء نزل المسلمون أثناء غزوة ذي أمر؟",
         side2: "ذي أمر.",
@@ -307,7 +270,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_51__5",
-        file: "seerah",
         card_number: 5,
         side1: "ماذا حدث للرجل الذي أُسر في الطريق أثناء غزوة ذي أمر؟",
         side2: "أسلم ثم صار دليلاً للجيش.",
@@ -315,7 +277,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_51__4",
-        file: "seerah",
         card_number: 4,
         side1: "من استُخلف على أمور المسلمين في المدينة أثناء غزوة ذي أمر؟",
         side2: "عثمان بن عفان.",
@@ -323,7 +284,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_51__24",
-        file: "seerah",
         card_number: 24,
         side1: "متى جُعل الموعد لعودة جماعة محمد بن مسلمة إلى كعب بن الأشرف؟",
         side2: "ليلاً، ومعهم سلاحهم.",
@@ -331,7 +291,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_51__27",
-        file: "seerah",
         card_number: 27,
         side1: "اذكر أحد الأعضاء المذكورين في الجماعة التي ذهبت مع محمد بن مسلمة ضد كعب بن الأشرف.",
         side2: "أبو نائلة (سلكان بن سلامة)، أو الحارث بن أوس، أو أبو عبس بن جبر، أو عباد بن بشر.",
@@ -339,7 +298,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_51__25",
-        file: "seerah",
         card_number: 25,
         side1: "من أي فئة أعدّ محمد بن مسلمة الفريق الصغير لمهمة كعب بن الأشرف؟",
         side2: "من الأنصار.",
@@ -353,7 +311,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     easy: [
       {
         id: "Part_52__12",
-        file: "seerah_flashcards.json",
         card_number: 12,
         side1: "أي تغيير في الطريق قرّرته قريش لقافلة؟",
         side2: "قرّروا إرسالها في طريق أكثر شرقاً.",
@@ -361,7 +318,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__24",
-        file: "seerah_flashcards.json",
         card_number: 24,
         side1: "ماذا فعل المسلمون حين صادفوا قافلة قريش عند القَرَدة؟",
         side2: "هاجموا القافلة.",
@@ -369,7 +325,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__20",
-        file: "seerah_flashcards.json",
         card_number: 20,
         side1: "من قاد المائة فارس الذين أُرسلوا ضد قافلة قريش؟",
         side2: "زيد بن حارثة الكلبي.",
@@ -377,7 +332,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__25",
-        file: "seerah_flashcards.json",
         card_number: 25,
         side1: "كيف ردّ صفوان بن أمية وأصحابه على هجوم المسلمين عند القَرَدة؟",
         side2: "فرّوا دون قتال.",
@@ -385,7 +339,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__33",
-        file: "seerah_flashcards.json",
         card_number: 33,
         side1: "أي نصيب خصّه رسول الله ﷺ لله ولرسوله من الأموال المأسورة؟",
         side2: "الخُمس.",
@@ -393,7 +346,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__23",
-        file: "seerah_flashcards.json",
         card_number: 23,
         side1: "ماذا وجدت السرية المسلمة عند القَرَدة؟",
         side2: "قافلة قريش.",
@@ -401,7 +353,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__22",
-        file: "seerah_flashcards.json",
         card_number: 22,
         side1: "إلى أي موضع بلغت سرية زيد بن حارثة؟",
         side2: "القَرَدة.",
@@ -409,7 +360,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__13",
-        file: "seerah_flashcards.json",
         card_number: 13,
         side1: "أي منطقة مرّ بها طريق قافلة قريش الجديد؟",
         side2: "نجد.",
@@ -419,7 +369,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     medium: [
       {
         id: "Part_52__12",
-        file: "seerah_flashcards.json",
         card_number: 12,
         side1: "أي تغيير في الطريق قرّرته قريش لقافلة؟",
         side2: "قرّروا إرسالها في طريق أكثر شرقاً.",
@@ -427,7 +376,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__24",
-        file: "seerah_flashcards.json",
         card_number: 24,
         side1: "ماذا فعل المسلمون حين صادفوا قافلة قريش عند القَرَدة؟",
         side2: "هاجموا القافلة.",
@@ -435,7 +383,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__20",
-        file: "seerah_flashcards.json",
         card_number: 20,
         side1: "من قاد المائة فارس الذين أُرسلوا ضد قافلة قريش؟",
         side2: "زيد بن حارثة الكلبي.",
@@ -443,7 +390,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__25",
-        file: "seerah_flashcards.json",
         card_number: 25,
         side1: "كيف ردّ صفوان بن أمية وأصحابه على هجوم المسلمين عند القَرَدة؟",
         side2: "فرّوا دون قتال.",
@@ -451,7 +397,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__33",
-        file: "seerah_flashcards.json",
         card_number: 33,
         side1: "أي نصيب خصّه رسول الله ﷺ لله ولرسوله من الأموال المأسورة؟",
         side2: "الخُمس.",
@@ -459,7 +404,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__23",
-        file: "seerah_flashcards.json",
         card_number: 23,
         side1: "ماذا وجدت السرية المسلمة عند القَرَدة؟",
         side2: "قافلة قريش.",
@@ -467,7 +411,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__22",
-        file: "seerah_flashcards.json",
         card_number: 22,
         side1: "إلى أي موضع بلغت سرية زيد بن حارثة؟",
         side2: "القَرَدة.",
@@ -475,7 +418,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__13",
-        file: "seerah_flashcards.json",
         card_number: 13,
         side1: "أي منطقة مرّ بها طريق قافلة قريش الجديد؟",
         side2: "نجد.",
@@ -483,7 +425,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__8",
-        file: "seerah_flashcards.json",
         card_number: 8,
         side1: "هل وقع قتال أثناء غزوة بُحران؟",
         side2: "لا، لم يقع قتال.",
@@ -491,7 +432,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__39",
-        file: "seerah_flashcards.json",
         card_number: 39,
         side1: "في أي شهر وسنة وقعت غارة القَرَدة؟",
         side2: "جمادى الآخرة سنة ٣ هـ.",
@@ -499,7 +439,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__14",
-        file: "seerah_flashcards.json",
         card_number: 14,
         side1: "نحو أي وجهة اتجه طريق قافلة قريش الجديد؟",
         side2: "العراق.",
@@ -507,7 +446,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__36",
-        file: "seerah_flashcards.json",
         card_number: 36,
         side1: "ماذا فعل فرات بن حيّان لاحقاً بعد أن أُتي به إلى المدينة؟",
         side2: "أسلم.",
@@ -515,7 +453,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__28",
-        file: "seerah_flashcards.json",
         card_number: 28,
         side1: "أي دليل أسره المسلمون أثناء الغارة عند القَرَدة؟",
         side2: "فرات بن حيّان.",
@@ -523,7 +460,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__37",
-        file: "seerah_flashcards.json",
         card_number: 37,
         side1: "ماذا فعل النبي ﷺ بفرات بن حيّان بعد إسلامه؟",
         side2: "أعتقه.",
@@ -531,7 +467,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__16",
-        file: "seerah_flashcards.json",
         card_number: 16,
         side1: "من تولّى أمر قافلة قريش على طريق نجد نحو العراق؟",
         side2: "صفوان بن أمية.",
@@ -539,7 +474,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__2",
-        file: "seerah_flashcards.json",
         card_number: 2,
         side1: "من قاد السرية نحو بُحران؟",
         side2: "رسول الله ﷺ.",
@@ -547,7 +481,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__4",
-        file: "seerah_flashcards.json",
         card_number: 4,
         side1: "كم تقريباً كان عدد المسلمين في السرية نحو بُحران؟",
         side2: "نحو ثلاثمائة مسلم.",
@@ -555,7 +488,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__10",
-        file: "seerah_flashcards.json",
         card_number: 10,
         side1: "في أي فصل كانت قوافل قريش تسافر جنوباً إلى اليمن؟",
         side2: "في الشتاء.",
@@ -565,7 +497,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     full: [
       {
         id: "Part_52__12",
-        file: "seerah_flashcards.json",
         card_number: 12,
         side1: "أي تغيير في الطريق قرّرته قريش لقافلة؟",
         side2: "قرّروا إرسالها في طريق أكثر شرقاً.",
@@ -573,7 +504,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__24",
-        file: "seerah_flashcards.json",
         card_number: 24,
         side1: "ماذا فعل المسلمون حين صادفوا قافلة قريش عند القَرَدة؟",
         side2: "هاجموا القافلة.",
@@ -581,7 +511,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__20",
-        file: "seerah_flashcards.json",
         card_number: 20,
         side1: "من قاد المائة فارس الذين أُرسلوا ضد قافلة قريش؟",
         side2: "زيد بن حارثة الكلبي.",
@@ -589,7 +518,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__25",
-        file: "seerah_flashcards.json",
         card_number: 25,
         side1: "كيف ردّ صفوان بن أمية وأصحابه على هجوم المسلمين عند القَرَدة؟",
         side2: "فرّوا دون قتال.",
@@ -597,7 +525,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__33",
-        file: "seerah_flashcards.json",
         card_number: 33,
         side1: "أي نصيب خصّه رسول الله ﷺ لله ولرسوله من الأموال المأسورة؟",
         side2: "الخُمس.",
@@ -605,7 +532,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__23",
-        file: "seerah_flashcards.json",
         card_number: 23,
         side1: "ماذا وجدت السرية المسلمة عند القَرَدة؟",
         side2: "قافلة قريش.",
@@ -613,7 +539,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__22",
-        file: "seerah_flashcards.json",
         card_number: 22,
         side1: "إلى أي موضع بلغت سرية زيد بن حارثة؟",
         side2: "القَرَدة.",
@@ -621,7 +546,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__13",
-        file: "seerah_flashcards.json",
         card_number: 13,
         side1: "أي منطقة مرّ بها طريق قافلة قريش الجديد؟",
         side2: "نجد.",
@@ -629,7 +553,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__8",
-        file: "seerah_flashcards.json",
         card_number: 8,
         side1: "هل وقع قتال أثناء غزوة بُحران؟",
         side2: "لا، لم يقع قتال.",
@@ -637,7 +560,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__39",
-        file: "seerah_flashcards.json",
         card_number: 39,
         side1: "في أي شهر وسنة وقعت غارة القَرَدة؟",
         side2: "جمادى الآخرة سنة ٣ هـ.",
@@ -645,7 +567,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__14",
-        file: "seerah_flashcards.json",
         card_number: 14,
         side1: "نحو أي وجهة اتجه طريق قافلة قريش الجديد؟",
         side2: "العراق.",
@@ -653,7 +574,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__36",
-        file: "seerah_flashcards.json",
         card_number: 36,
         side1: "ماذا فعل فرات بن حيّان لاحقاً بعد أن أُتي به إلى المدينة؟",
         side2: "أسلم.",
@@ -661,7 +581,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__28",
-        file: "seerah_flashcards.json",
         card_number: 28,
         side1: "أي دليل أسره المسلمون أثناء الغارة عند القَرَدة؟",
         side2: "فرات بن حيّان.",
@@ -669,7 +588,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__37",
-        file: "seerah_flashcards.json",
         card_number: 37,
         side1: "ماذا فعل النبي ﷺ بفرات بن حيّان بعد إسلامه؟",
         side2: "أعتقه.",
@@ -677,7 +595,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__16",
-        file: "seerah_flashcards.json",
         card_number: 16,
         side1: "من تولّى أمر قافلة قريش على طريق نجد نحو العراق؟",
         side2: "صفوان بن أمية.",
@@ -685,7 +602,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__2",
-        file: "seerah_flashcards.json",
         card_number: 2,
         side1: "من قاد السرية نحو بُحران؟",
         side2: "رسول الله ﷺ.",
@@ -693,7 +609,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__4",
-        file: "seerah_flashcards.json",
         card_number: 4,
         side1: "كم تقريباً كان عدد المسلمين في السرية نحو بُحران؟",
         side2: "نحو ثلاثمائة مسلم.",
@@ -701,7 +616,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__10",
-        file: "seerah_flashcards.json",
         card_number: 10,
         side1: "في أي فصل كانت قوافل قريش تسافر جنوباً إلى اليمن؟",
         side2: "في الشتاء.",
@@ -709,7 +623,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__31",
-        file: "seerah_flashcards.json",
         card_number: 31,
         side1: "ممّ تكوّنت الأموال المأسورة في غارة القَرَدة؟",
         side2: "من الفضة والبضائع.",
@@ -717,7 +630,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__21",
-        file: "seerah_flashcards.json",
         card_number: 21,
         side1: "على أي طريق أُرسلت سرية زيد بن حارثة؟",
         side2: "على طريق نجد.",
@@ -725,7 +637,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__11",
-        file: "seerah_flashcards.json",
         card_number: 11,
         side1: "في أي فصل كانت قوافل قريش تذهب شمالاً إلى الشام وفلسطين؟",
         side2: "في الصيف.",
@@ -733,7 +644,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__18",
-        file: "seerah_flashcards.json",
         card_number: 18,
         side1: "ماذا علم رسول الله ﷺ عن قافلة قريش؟",
         side2: "طريقها ووجهتها.",
@@ -741,7 +651,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__30",
-        file: "seerah_flashcards.json",
         card_number: 30,
         side1: "ما القيمة التقريبية للأموال المأسورة في روايات السيرة؟",
         side2: "نحو مائة ألف درهم.",
@@ -749,7 +658,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__15",
-        file: "seerah_flashcards.json",
         card_number: 15,
         side1: "من عُيّن دليلاً لقافلة قريش على الطريق الشرقي؟",
         side2: "فرات بن حيّان.",
@@ -757,7 +665,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__1",
-        file: "seerah_flashcards.json",
         card_number: 1,
         side1: "في أي شهر وسنة بعد الهجرة وقعت سرية بُحران؟",
         side2: "ربيع الثاني سنة ٣ هـ.",
@@ -765,7 +672,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_52__19",
-        file: "seerah_flashcards.json",
         card_number: 19,
         side1: "كم فارساً وضع رسول الله ﷺ تحت زيد بن حارثة الكلبي؟",
         side2: "مائة فارس.",
@@ -779,7 +685,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     easy: [
       {
         id: "Part_53__18",
-        file: "seerah",
         card_number: 18,
         side1: "من قاد خيل قريش في أحد؟",
         side2: "خالد بن الوليد.",
@@ -787,7 +692,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__12",
-        file: "seerah",
         card_number: 12,
         side1: "كم تقريباً كان عدد مقاتلي جيش قريش في أحد؟",
         side2: "نحو ثلاثة آلاف مقاتل.",
@@ -795,7 +699,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__17",
-        file: "seerah",
         card_number: 17,
         side1: "من أُعطي القيادة العامة لجيش قريش في أحد؟",
         side2: "أبو سفيان بن حرب.",
@@ -803,7 +706,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__47",
-        file: "seerah",
         card_number: 47,
         side1: "ما الخطة الدفاعية التي تقرّرت للمسلمين قبل أحد؟",
         side2: "الخروج من المدينة واتخاذ موقع دفاعي قرب جبل أحد.",
@@ -811,7 +713,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__46",
-        file: "seerah",
         card_number: 46,
         side1: "أي رأي وافق عليه رسول الله ﷺ أخيراً قبل أحد؟",
         side2: "الخروج لملاقاة جيش قريش.",
@@ -819,7 +720,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__14",
-        file: "seerah",
         card_number: 14,
         side1: "كم تقريباً كان فرسان قريش في أحد؟",
         side2: "مائتا فارس.",
@@ -827,7 +727,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__44",
-        file: "seerah",
         card_number: 44,
         side1: "ماذا ألحّ عليه عدد من الصحابة قبل أحد؟",
         side2: "أن يخرج المسلمون لملاقاة العدو خارج المدينة.",
@@ -835,7 +734,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__39",
-        file: "seerah",
         card_number: 39,
         side1: "أين عسكر جيش قريش قبل غزوة أحد؟",
         side2: "عند العينين أسفل جبل أحد.",
@@ -843,7 +741,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__32",
-        file: "seerah",
         card_number: 32,
         side1: "لماذا أُرسلت سرايا استطلاع صغيرة قبل أحد؟",
         side2: "لمتابعة تحرّكات جيش أهل مكة.",
@@ -851,7 +748,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__41",
-        file: "seerah",
         card_number: 41,
         side1: "من جمع رسول الله ﷺ للشورى قبل أحد؟",
         side2: "المهاجرين والأنصار.",
@@ -861,7 +757,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     medium: [
       {
         id: "Part_53__18",
-        file: "seerah",
         card_number: 18,
         side1: "من قاد خيل قريش في أحد؟",
         side2: "خالد بن الوليد.",
@@ -869,7 +764,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__12",
-        file: "seerah",
         card_number: 12,
         side1: "كم تقريباً كان عدد مقاتلي جيش قريش في أحد؟",
         side2: "نحو ثلاثة آلاف مقاتل.",
@@ -877,7 +771,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__17",
-        file: "seerah",
         card_number: 17,
         side1: "من أُعطي القيادة العامة لجيش قريش في أحد؟",
         side2: "أبو سفيان بن حرب.",
@@ -885,7 +778,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__47",
-        file: "seerah",
         card_number: 47,
         side1: "ما الخطة الدفاعية التي تقرّرت للمسلمين قبل أحد؟",
         side2: "الخروج من المدينة واتخاذ موقع دفاعي قرب جبل أحد.",
@@ -893,7 +785,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__46",
-        file: "seerah",
         card_number: 46,
         side1: "أي رأي وافق عليه رسول الله ﷺ أخيراً قبل أحد؟",
         side2: "الخروج لملاقاة جيش قريش.",
@@ -901,7 +792,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__14",
-        file: "seerah",
         card_number: 14,
         side1: "كم تقريباً كان فرسان قريش في أحد؟",
         side2: "مائتا فارس.",
@@ -909,7 +799,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__44",
-        file: "seerah",
         card_number: 44,
         side1: "ماذا ألحّ عليه عدد من الصحابة قبل أحد؟",
         side2: "أن يخرج المسلمون لملاقاة العدو خارج المدينة.",
@@ -917,7 +806,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__39",
-        file: "seerah",
         card_number: 39,
         side1: "أين عسكر جيش قريش قبل غزوة أحد؟",
         side2: "عند العينين أسفل جبل أحد.",
@@ -925,7 +813,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__32",
-        file: "seerah",
         card_number: 32,
         side1: "لماذا أُرسلت سرايا استطلاع صغيرة قبل أحد؟",
         side2: "لمتابعة تحرّكات جيش أهل مكة.",
@@ -933,7 +820,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__41",
-        file: "seerah",
         card_number: 41,
         side1: "من جمع رسول الله ﷺ للشورى قبل أحد؟",
         side2: "المهاجرين والأنصار.",
@@ -941,7 +827,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__43",
-        file: "seerah",
         card_number: 43,
         side1: "أي رأي عسكري أيّده عبد الله بن أُبيّ بن سلول قبل أحد؟",
         side2: "البقاء داخل المدينة.",
@@ -949,7 +834,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__22",
-        file: "seerah",
         card_number: 22,
         side1: "ماذا أرسل العباس بن عبد المطلب حين خرج جيش قريش؟",
         side2: "تقريراً مكتوباً مفصّلاً إلى رسول الله ﷺ.",
@@ -957,7 +841,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__5",
-        file: "seerah",
         card_number: 5,
         side1: "أي قافلة خُصّصت أرباحها لتجهيز جيش قريش الجديد بعد بدر؟",
         side2: "القافلة التي قادها أبو سفيان ونجت في بدر.",
@@ -965,7 +848,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__42",
-        file: "seerah",
         card_number: 42,
         side1: "من كان زعيم الخزرج قبل أحد؟",
         side2: "عبد الله بن أُبيّ بن سلول.",
@@ -973,7 +855,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__6",
-        file: "seerah",
         card_number: 6,
         side1: "كيف استخدمت قريش الشعراء في الإعداد للحرب؟",
         side2: "استعانت بالشعراء لتحريض القبائل على المسلمين.",
@@ -981,7 +862,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__31",
-        file: "seerah",
         card_number: 31,
         side1: "أين كانت الدوريات المسلّحة تتحرك في المدينة قبل أحد؟",
         side2: "حول المداخل والطرق المؤدّية إلى المدينة.",
@@ -989,7 +869,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__40",
-        file: "seerah",
         card_number: 40,
         side1: "في أي تاريخ عسكر جيش قريش عند العينين قبل أحد؟",
         side2: "يوم الجمعة السادس من شوّال في السنة الثالثة بعد الهجرة.",
@@ -997,7 +876,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__1",
-        file: "seerah",
         card_number: 1,
         side1: "من كان من أشدّ الناس إلحاحاً على التهيّؤ للحرب بعد بدر؟",
         side2: "عكرمة بن أبي جهل، وصفوان بن أمية، وأبو سفيان بن حرب، وعبد الله بن أبي ربيعة.",
@@ -1005,7 +883,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__2",
-        file: "seerah",
         card_number: 2,
         side1: "من أي الحلفاء استعانت قريش في حملة أحد؟",
         side2: "جماعات من كنانة، وأهل تهامة، والأحابيش.",
@@ -1013,7 +890,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__27",
-        file: "seerah",
         card_number: 27,
         side1: "من تطوّع لحراسة رسول الله ﷺ ليلاً في المدينة؟",
         side2: "جماعة من الأنصار.",
@@ -1021,7 +897,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__45",
-        file: "seerah",
         card_number: 45,
         side1: "من كان من أشدّ الناس إلحاحاً على الخروج لملاقاة العدو قبل أحد؟",
         side2: "حمزة بن عبد المطلب.",
@@ -1029,7 +904,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__7",
-        file: "seerah",
         card_number: 7,
         side1: "ما الشرط الذي وُضع على أبي عزّة الجمحي حين أُطلق بعد بدر؟",
         side2: "ألا يقف ضد رسول الله ﷺ مرة أخرى.",
@@ -1037,7 +911,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__11",
-        file: "seerah",
         card_number: 11,
         side1: "أي قرار غير معتاد اتخذته قريش بشأن نسائها في حملة أحد؟",
         side2: "قرّروا اصطحاب بعض نسائهم.",
@@ -1045,7 +918,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__25",
-        file: "seerah",
         card_number: 25,
         side1: "أي تعليم أعطاه رسول الله ﷺ لأُبيّ بن كعب بشأن رسالة العباس؟",
         side2: "أن يُبقي مضمونها سرّاً.",
@@ -1053,7 +925,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__3",
-        file: "seerah",
         card_number: 3,
         side1: "إلى أين كانت قوافل تجارة قريش تسافر في الصيف؟",
         side2: "إلى الشام.",
@@ -1063,7 +934,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     full: [
       {
         id: "Part_53__18",
-        file: "seerah",
         card_number: 18,
         side1: "من قاد خيل قريش في أحد؟",
         side2: "خالد بن الوليد.",
@@ -1071,7 +941,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__12",
-        file: "seerah",
         card_number: 12,
         side1: "كم تقريباً كان عدد مقاتلي جيش قريش في أحد؟",
         side2: "نحو ثلاثة آلاف مقاتل.",
@@ -1079,7 +948,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__17",
-        file: "seerah",
         card_number: 17,
         side1: "من أُعطي القيادة العامة لجيش قريش في أحد؟",
         side2: "أبو سفيان بن حرب.",
@@ -1087,7 +955,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__47",
-        file: "seerah",
         card_number: 47,
         side1: "ما الخطة الدفاعية التي تقرّرت للمسلمين قبل أحد؟",
         side2: "الخروج من المدينة واتخاذ موقع دفاعي قرب جبل أحد.",
@@ -1095,7 +962,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__46",
-        file: "seerah",
         card_number: 46,
         side1: "أي رأي وافق عليه رسول الله ﷺ أخيراً قبل أحد؟",
         side2: "الخروج لملاقاة جيش قريش.",
@@ -1103,7 +969,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__14",
-        file: "seerah",
         card_number: 14,
         side1: "كم تقريباً كان فرسان قريش في أحد؟",
         side2: "مائتا فارس.",
@@ -1111,7 +976,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__44",
-        file: "seerah",
         card_number: 44,
         side1: "ماذا ألحّ عليه عدد من الصحابة قبل أحد؟",
         side2: "أن يخرج المسلمون لملاقاة العدو خارج المدينة.",
@@ -1119,7 +983,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__39",
-        file: "seerah",
         card_number: 39,
         side1: "أين عسكر جيش قريش قبل غزوة أحد؟",
         side2: "عند العينين أسفل جبل أحد.",
@@ -1127,7 +990,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__32",
-        file: "seerah",
         card_number: 32,
         side1: "لماذا أُرسلت سرايا استطلاع صغيرة قبل أحد؟",
         side2: "لمتابعة تحرّكات جيش أهل مكة.",
@@ -1135,7 +997,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__41",
-        file: "seerah",
         card_number: 41,
         side1: "من جمع رسول الله ﷺ للشورى قبل أحد؟",
         side2: "المهاجرين والأنصار.",
@@ -1143,7 +1004,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__43",
-        file: "seerah",
         card_number: 43,
         side1: "أي رأي عسكري أيّده عبد الله بن أُبيّ بن سلول قبل أحد؟",
         side2: "البقاء داخل المدينة.",
@@ -1151,7 +1011,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__22",
-        file: "seerah",
         card_number: 22,
         side1: "ماذا أرسل العباس بن عبد المطلب حين خرج جيش قريش؟",
         side2: "تقريراً مكتوباً مفصّلاً إلى رسول الله ﷺ.",
@@ -1159,7 +1018,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__5",
-        file: "seerah",
         card_number: 5,
         side1: "أي قافلة خُصّصت أرباحها لتجهيز جيش قريش الجديد بعد بدر؟",
         side2: "القافلة التي قادها أبو سفيان ونجت في بدر.",
@@ -1167,7 +1025,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__42",
-        file: "seerah",
         card_number: 42,
         side1: "من كان زعيم الخزرج قبل أحد؟",
         side2: "عبد الله بن أُبيّ بن سلول.",
@@ -1175,7 +1032,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__6",
-        file: "seerah",
         card_number: 6,
         side1: "كيف استخدمت قريش الشعراء في الإعداد للحرب؟",
         side2: "استعانت بالشعراء لتحريض القبائل على المسلمين.",
@@ -1183,7 +1039,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__31",
-        file: "seerah",
         card_number: 31,
         side1: "أين كانت الدوريات المسلّحة تتحرك في المدينة قبل أحد؟",
         side2: "حول المداخل والطرق المؤدّية إلى المدينة.",
@@ -1191,7 +1046,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__40",
-        file: "seerah",
         card_number: 40,
         side1: "في أي تاريخ عسكر جيش قريش عند العينين قبل أحد؟",
         side2: "يوم الجمعة السادس من شوّال في السنة الثالثة بعد الهجرة.",
@@ -1199,7 +1053,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__1",
-        file: "seerah",
         card_number: 1,
         side1: "من كان من أشدّ الناس إلحاحاً على التهيّؤ للحرب بعد بدر؟",
         side2: "عكرمة بن أبي جهل، وصفوان بن أمية، وأبو سفيان بن حرب، وعبد الله بن أبي ربيعة.",
@@ -1207,7 +1060,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__2",
-        file: "seerah",
         card_number: 2,
         side1: "من أي الحلفاء استعانت قريش في حملة أحد؟",
         side2: "جماعات من كنانة، وأهل تهامة، والأحابيش.",
@@ -1215,7 +1067,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__27",
-        file: "seerah",
         card_number: 27,
         side1: "من تطوّع لحراسة رسول الله ﷺ ليلاً في المدينة؟",
         side2: "جماعة من الأنصار.",
@@ -1223,7 +1074,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__45",
-        file: "seerah",
         card_number: 45,
         side1: "من كان من أشدّ الناس إلحاحاً على الخروج لملاقاة العدو قبل أحد؟",
         side2: "حمزة بن عبد المطلب.",
@@ -1231,7 +1081,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__7",
-        file: "seerah",
         card_number: 7,
         side1: "ما الشرط الذي وُضع على أبي عزّة الجمحي حين أُطلق بعد بدر؟",
         side2: "ألا يقف ضد رسول الله ﷺ مرة أخرى.",
@@ -1239,7 +1088,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__11",
-        file: "seerah",
         card_number: 11,
         side1: "أي قرار غير معتاد اتخذته قريش بشأن نسائها في حملة أحد؟",
         side2: "قرّروا اصطحاب بعض نسائهم.",
@@ -1247,7 +1095,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__25",
-        file: "seerah",
         card_number: 25,
         side1: "أي تعليم أعطاه رسول الله ﷺ لأُبيّ بن كعب بشأن رسالة العباس؟",
         side2: "أن يُبقي مضمونها سرّاً.",
@@ -1255,7 +1102,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__3",
-        file: "seerah",
         card_number: 3,
         side1: "إلى أين كانت قوافل تجارة قريش تسافر في الصيف؟",
         side2: "إلى الشام.",
@@ -1263,7 +1109,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__4",
-        file: "seerah",
         card_number: 4,
         side1: "إلى أين كانت قوافل تجارة قريش تسافر في الشتاء؟",
         side2: "إلى اليمن.",
@@ -1271,7 +1116,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__34",
-        file: "seerah",
         card_number: 34,
         side1: "أي منطقة بلغها جيش قريش في طريقه إلى أحد؟",
         side2: "الأبواء.",
@@ -1279,7 +1123,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__20",
-        file: "seerah",
         card_number: 20,
         side1: "أي بطن أُوكل إليه لواء قريش في أحد؟",
         side2: "بنو عبد الدار.",
@@ -1287,7 +1130,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__10",
-        file: "seerah",
         card_number: 10,
         side1: "من قاد الغارة الناجحة المذكورة قبل حملة أحد؟",
         side2: "زيد بن حارثة.",
@@ -1295,7 +1137,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__19",
-        file: "seerah",
         card_number: 19,
         side1: "من أعان خالد بن الوليد في قيادة الخيل في أحد؟",
         side2: "عكرمة بن أبي جهل.",
@@ -1303,7 +1144,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__9",
-        file: "seerah",
         card_number: 9,
         side1: "في أي غزوة رأى أبو سفيان زادَه يُطرح؟",
         side2: "غزوة السويق.",
@@ -1311,7 +1151,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__8",
-        file: "seerah",
         card_number: 8,
         side1: "من حثّ أبا عزّة الجمحي—حسب الرواية—على العودة إلى صفوف قريش؟",
         side2: "صفوان بن أمية.",
@@ -1319,7 +1158,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__35",
-        file: "seerah",
         card_number: 35,
         side1: "من اقترح—حسب الرواية—نبش قبر أم النبي عند الأبواء؟",
         side2: "هند بنت عتبة.",
@@ -1327,7 +1165,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_53__36",
-        file: "seerah",
         card_number: 36,
         side1: "ما كان ردّ رؤساء قريش على اقتراح نبش القبر عند الأبواء؟",
         side2: "رفضوا.",
@@ -1341,7 +1178,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     easy: [
       {
         id: "Part_54__63",
-        file: "seerah",
         card_number: 63,
         side1: "كيف رتّب النبي ﷺ جيش المسلمين حين عسكر في أحد؟",
         side2: "ظهورهم إلى الجبل ووجوههم إلى المدينة.",
@@ -1349,7 +1185,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__46",
-        file: "seerah",
         card_number: 46,
         side1: "من انسحب مع جماعة كبيرة من أتباعه قبل غزوة أحد؟",
         side2: "عبد الله بن أُبيّ.",
@@ -1357,7 +1192,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__48",
-        file: "seerah",
         card_number: 48,
         side1: "كم رجلاً تقريباً انسحب مع عبد الله بن أُبيّ قبل أحد؟",
         side2: "نحو ثلاثمائة رجل.",
@@ -1365,7 +1199,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__47",
-        file: "seerah",
         card_number: 47,
         side1: "نحو أي جزء من الجيش انسحب حين رجع عبد الله بن أُبيّ؟",
         side2: "نحو ثلث الجيش.",
@@ -1373,7 +1206,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__33",
-        file: "seerah",
         card_number: 33,
         side1: "أيّ شابّين أُذن لهما بالانضمام إلى الجيش بعد العرض عند الشيخين؟",
         side2: "رافع بن خديج وسمرة بن جندب.",
@@ -1381,7 +1213,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__62",
-        file: "seerah",
         card_number: 62,
         side1: "أين نزل النبي ﷺ أخيراً وعسكر بجيشه في أحد؟",
         side2: "في سفوح جبل أحد السفلى، في الوادي.",
@@ -1389,7 +1220,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__9",
-        file: "seerah",
         card_number: 9,
         side1: "كم تقريباً كان عدد مقاتلي جيش المسلمين حين خرج أولاً لأحد؟",
         side2: "نحو ألف رجل.",
@@ -1397,7 +1227,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__52",
-        file: "seerah",
         card_number: 52,
         side1: "كم مقاتلاً تقريباً بقي مع النبي ﷺ بعد انسحاب عبد الله بن أُبيّ؟",
         side2: "نحو سبعمائة رجل.",
@@ -1405,7 +1234,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__6",
-        file: "seerah",
         card_number: 6,
         side1: "من قاد كتيبة المهاجرين في أحد؟",
         side2: "مصعب بن عمير العبدري.",
@@ -1413,7 +1241,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__16",
-        file: "seerah",
         card_number: 16,
         side1: "من كانت الجماعة المسلّحة جيّداً التي رُؤيت عند ثنيّة الوداع؟",
         side2: "يهود حلفاء للخزرج.",
@@ -1423,7 +1250,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     medium: [
       {
         id: "Part_54__63",
-        file: "seerah",
         card_number: 63,
         side1: "كيف رتّب النبي ﷺ جيش المسلمين حين عسكر في أحد؟",
         side2: "ظهورهم إلى الجبل ووجوههم إلى المدينة.",
@@ -1431,7 +1257,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__46",
-        file: "seerah",
         card_number: 46,
         side1: "من انسحب مع جماعة كبيرة من أتباعه قبل غزوة أحد؟",
         side2: "عبد الله بن أُبيّ.",
@@ -1439,7 +1264,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__48",
-        file: "seerah",
         card_number: 48,
         side1: "كم رجلاً تقريباً انسحب مع عبد الله بن أُبيّ قبل أحد؟",
         side2: "نحو ثلاثمائة رجل.",
@@ -1447,7 +1271,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__47",
-        file: "seerah",
         card_number: 47,
         side1: "نحو أي جزء من الجيش انسحب حين رجع عبد الله بن أُبيّ؟",
         side2: "نحو ثلث الجيش.",
@@ -1455,7 +1278,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__33",
-        file: "seerah",
         card_number: 33,
         side1: "أيّ شابّين أُذن لهما بالانضمام إلى الجيش بعد العرض عند الشيخين؟",
         side2: "رافع بن خديج وسمرة بن جندب.",
@@ -1463,7 +1285,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__62",
-        file: "seerah",
         card_number: 62,
         side1: "أين نزل النبي ﷺ أخيراً وعسكر بجيشه في أحد؟",
         side2: "في سفوح جبل أحد السفلى، في الوادي.",
@@ -1471,7 +1292,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__9",
-        file: "seerah",
         card_number: 9,
         side1: "كم تقريباً كان عدد مقاتلي جيش المسلمين حين خرج أولاً لأحد؟",
         side2: "نحو ألف رجل.",
@@ -1479,7 +1299,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__52",
-        file: "seerah",
         card_number: 52,
         side1: "كم مقاتلاً تقريباً بقي مع النبي ﷺ بعد انسحاب عبد الله بن أُبيّ؟",
         side2: "نحو سبعمائة رجل.",
@@ -1487,7 +1306,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__6",
-        file: "seerah",
         card_number: 6,
         side1: "من قاد كتيبة المهاجرين في أحد؟",
         side2: "مصعب بن عمير العبدري.",
@@ -1495,7 +1313,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__16",
-        file: "seerah",
         card_number: 16,
         side1: "من كانت الجماعة المسلّحة جيّداً التي رُؤيت عند ثنيّة الوداع؟",
         side2: "يهود حلفاء للخزرج.",
@@ -1503,7 +1320,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__51",
-        file: "seerah",
         card_number: 51,
         side1: "من حاول منع الجماعة المنسحبة بقيادة عبد الله بن أُبيّ؟",
         side2: "عبد الله بن حرام، أبو جابر بن عبد الله.",
@@ -1511,7 +1327,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__41",
-        file: "seerah",
         card_number: 41,
         side1: "من وُضع على رأس الحرّاس في معسكر الليلة قبل أحد؟",
         side2: "محمد بن مسلمة الأنصاري.",
@@ -1519,7 +1334,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__5",
-        file: "seerah",
         card_number: 5,
         side1: "إلى كم كتيبة رئيسية نظّم النبي ﷺ الجيش؟",
         side2: "ثلاث كتائب رئيسية.",
@@ -1527,7 +1341,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__34",
-        file: "seerah",
         card_number: 34,
         side1: "أي مهارة ساعدت رافع بن خديج على الإذن بالبقاء مع الجيش؟",
         side2: "مهارته في الرماية.",
@@ -1535,7 +1348,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__49",
-        file: "seerah",
         card_number: 49,
         side1: "أي بطن من الأوس اضطرب وكاد يتبع انسحاب عبد الله بن أُبيّ؟",
         side2: "بنو حارثة.",
@@ -1543,7 +1355,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__37",
-        file: "seerah",
         card_number: 37,
         side1: "من أُذن له بالبقاء مع المقاتلين بعد أن غلب رافعاً في المصارعة؟",
         side2: "سمرة بن جندب.",
@@ -1551,7 +1362,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__50",
-        file: "seerah",
         card_number: 50,
         side1: "أي بطن من الخزرج اضطرب وكاد يتبع انسحاب عبد الله بن أُبيّ؟",
         side2: "بنو سلمة.",
@@ -1559,7 +1369,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__18",
-        file: "seerah",
         card_number: 18,
         side1: "لماذا رفض النبي ﷺ مشاركة الحلفاء اليهود في أحد؟",
         side2: "لأنهم لم يسلموا.",
@@ -1567,7 +1376,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__19",
-        file: "seerah",
         card_number: 19,
         side1: "في أي موضع وقف النبي ﷺ واستعرض جيشه في الطريق إلى أحد؟",
         side2: "الشيخان.",
@@ -1575,7 +1383,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__61",
-        file: "seerah",
         card_number: 61,
         side1: "كيف ردّ النبي ﷺ حين همّ بعض المسلمين بضرب مربّع بن قيظي؟",
         side2: "نهاهم.",
@@ -1583,7 +1390,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__35",
-        file: "seerah",
         card_number: 35,
         side1: "أي مباراة أمر النبي ﷺ رافعاً وسمرة بأدائها أمامه؟",
         side2: "مصارعة.",
@@ -1591,7 +1397,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__20",
-        file: "seerah",
         card_number: 20,
         side1: "ماذا فعل النبي ﷺ بمن رآهم أصغر من أن يقاتلوا أو غير صالحين عند الشيخين؟",
         side2: "ردّهم.",
@@ -1599,7 +1404,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__45",
-        file: "seerah",
         card_number: 45,
         side1: "كم اقترب جيشا المسلمين وأهل مكة وقت صلاة الفجر عند الشوط؟",
         side2: "اقتربا حتى يرى كل جانب الآخر.",
@@ -1607,7 +1411,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__54",
-        file: "seerah",
         card_number: 54,
         side1: "أي نوع من الطرق طلبه النبي ﷺ بعد أن وجد المداخل الرئيسية مسدودة في أحد؟",
         side2: "طريقاً أقصر لا يمرّ مباشرة بالعدو.",
@@ -1615,7 +1418,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__7",
-        file: "seerah",
         card_number: 7,
         side1: "من قاد أنصار الأوس في أحد؟",
         side2: "أسيد بن حُضير.",
@@ -1625,7 +1427,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     full: [
       {
         id: "Part_54__63",
-        file: "seerah",
         card_number: 63,
         side1: "كيف رتّب النبي ﷺ جيش المسلمين حين عسكر في أحد؟",
         side2: "ظهورهم إلى الجبل ووجوههم إلى المدينة.",
@@ -1633,7 +1434,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__46",
-        file: "seerah",
         card_number: 46,
         side1: "من انسحب مع جماعة كبيرة من أتباعه قبل غزوة أحد؟",
         side2: "عبد الله بن أُبيّ.",
@@ -1641,7 +1441,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__48",
-        file: "seerah",
         card_number: 48,
         side1: "كم رجلاً تقريباً انسحب مع عبد الله بن أُبيّ قبل أحد؟",
         side2: "نحو ثلاثمائة رجل.",
@@ -1649,7 +1448,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__47",
-        file: "seerah",
         card_number: 47,
         side1: "نحو أي جزء من الجيش انسحب حين رجع عبد الله بن أُبيّ؟",
         side2: "نحو ثلث الجيش.",
@@ -1657,7 +1455,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__33",
-        file: "seerah",
         card_number: 33,
         side1: "أيّ شابّين أُذن لهما بالانضمام إلى الجيش بعد العرض عند الشيخين؟",
         side2: "رافع بن خديج وسمرة بن جندب.",
@@ -1665,7 +1462,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__62",
-        file: "seerah",
         card_number: 62,
         side1: "أين نزل النبي ﷺ أخيراً وعسكر بجيشه في أحد؟",
         side2: "في سفوح جبل أحد السفلى، في الوادي.",
@@ -1673,7 +1469,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__9",
-        file: "seerah",
         card_number: 9,
         side1: "كم تقريباً كان عدد مقاتلي جيش المسلمين حين خرج أولاً لأحد؟",
         side2: "نحو ألف رجل.",
@@ -1681,7 +1476,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__52",
-        file: "seerah",
         card_number: 52,
         side1: "كم مقاتلاً تقريباً بقي مع النبي ﷺ بعد انسحاب عبد الله بن أُبيّ؟",
         side2: "نحو سبعمائة رجل.",
@@ -1689,7 +1483,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__6",
-        file: "seerah",
         card_number: 6,
         side1: "من قاد كتيبة المهاجرين في أحد؟",
         side2: "مصعب بن عمير العبدري.",
@@ -1697,7 +1490,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__16",
-        file: "seerah",
         card_number: 16,
         side1: "من كانت الجماعة المسلّحة جيّداً التي رُؤيت عند ثنيّة الوداع؟",
         side2: "يهود حلفاء للخزرج.",
@@ -1705,7 +1497,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__51",
-        file: "seerah",
         card_number: 51,
         side1: "من حاول منع الجماعة المنسحبة بقيادة عبد الله بن أُبيّ؟",
         side2: "عبد الله بن حرام، أبو جابر بن عبد الله.",
@@ -1713,7 +1504,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__41",
-        file: "seerah",
         card_number: 41,
         side1: "من وُضع على رأس الحرّاس في معسكر الليلة قبل أحد؟",
         side2: "محمد بن مسلمة الأنصاري.",
@@ -1721,7 +1511,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__5",
-        file: "seerah",
         card_number: 5,
         side1: "إلى كم كتيبة رئيسية نظّم النبي ﷺ الجيش؟",
         side2: "ثلاث كتائب رئيسية.",
@@ -1729,7 +1518,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__34",
-        file: "seerah",
         card_number: 34,
         side1: "أي مهارة ساعدت رافع بن خديج على الإذن بالبقاء مع الجيش؟",
         side2: "مهارته في الرماية.",
@@ -1737,7 +1525,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__49",
-        file: "seerah",
         card_number: 49,
         side1: "أي بطن من الأوس اضطرب وكاد يتبع انسحاب عبد الله بن أُبيّ؟",
         side2: "بنو حارثة.",
@@ -1745,7 +1532,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__37",
-        file: "seerah",
         card_number: 37,
         side1: "من أُذن له بالبقاء مع المقاتلين بعد أن غلب رافعاً في المصارعة؟",
         side2: "سمرة بن جندب.",
@@ -1753,7 +1539,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__50",
-        file: "seerah",
         card_number: 50,
         side1: "أي بطن من الخزرج اضطرب وكاد يتبع انسحاب عبد الله بن أُبيّ؟",
         side2: "بنو سلمة.",
@@ -1761,7 +1546,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__18",
-        file: "seerah",
         card_number: 18,
         side1: "لماذا رفض النبي ﷺ مشاركة الحلفاء اليهود في أحد؟",
         side2: "لأنهم لم يسلموا.",
@@ -1769,7 +1553,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__19",
-        file: "seerah",
         card_number: 19,
         side1: "في أي موضع وقف النبي ﷺ واستعرض جيشه في الطريق إلى أحد؟",
         side2: "الشيخان.",
@@ -1777,7 +1560,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__61",
-        file: "seerah",
         card_number: 61,
         side1: "كيف ردّ النبي ﷺ حين همّ بعض المسلمين بضرب مربّع بن قيظي؟",
         side2: "نهاهم.",
@@ -1785,7 +1567,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__35",
-        file: "seerah",
         card_number: 35,
         side1: "أي مباراة أمر النبي ﷺ رافعاً وسمرة بأدائها أمامه؟",
         side2: "مصارعة.",
@@ -1793,7 +1574,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__20",
-        file: "seerah",
         card_number: 20,
         side1: "ماذا فعل النبي ﷺ بمن رآهم أصغر من أن يقاتلوا أو غير صالحين عند الشيخين؟",
         side2: "ردّهم.",
@@ -1801,7 +1581,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__45",
-        file: "seerah",
         card_number: 45,
         side1: "كم اقترب جيشا المسلمين وأهل مكة وقت صلاة الفجر عند الشوط؟",
         side2: "اقتربا حتى يرى كل جانب الآخر.",
@@ -1809,7 +1588,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__54",
-        file: "seerah",
         card_number: 54,
         side1: "أي نوع من الطرق طلبه النبي ﷺ بعد أن وجد المداخل الرئيسية مسدودة في أحد؟",
         side2: "طريقاً أقصر لا يمرّ مباشرة بالعدو.",
@@ -1817,7 +1595,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__7",
-        file: "seerah",
         card_number: 7,
         side1: "من قاد أنصار الأوس في أحد؟",
         side2: "أسيد بن حُضير.",
@@ -1825,7 +1602,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__8",
-        file: "seerah",
         card_number: 8,
         side1: "من قاد أنصار الخزرج في أحد؟",
         side2: "الحُباب بن المنذر.",
@@ -1833,7 +1609,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__55",
-        file: "seerah",
         card_number: 55,
         side1: "من عرض أن يدلّ جيش المسلمين على طريق أقصر إلى أحد؟",
         side2: "أبو خيثمة.",
@@ -1841,7 +1616,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__60",
-        file: "seerah",
         card_number: 60,
         side1: "ماذا فعل مربّع بن قيظي حين مرّ جيش المسلمين ببستانه؟",
         side2: "رمى التراب في وجوههم.",
@@ -1849,7 +1623,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__11",
-        file: "seerah",
         card_number: 11,
         side1: "كم تقريباً كان فرسان جيش المسلمين في بداية أحد؟",
         side2: "نحو خمسين فارساً.",
@@ -1857,7 +1630,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__10",
-        file: "seerah",
         card_number: 10,
         side1: "كم تقريباً من مقاتلي المسلمين في أحد كانوا في دروع في البداية؟",
         side2: "نحو مائة.",
@@ -1865,7 +1637,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__53",
-        file: "seerah",
         card_number: 53,
         side1: "ماذا سدّ المداخل الرئيسية إلى جبل أحد حين وصل جيش المسلمين؟",
         side2: "معسكر المشركين.",
@@ -1873,7 +1644,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__44",
-        file: "seerah",
         card_number: 44,
         side1: "في أي موضع صلّى النبي ﷺ بالناس صلاة الفجر في الطريق إلى أحد؟",
         side2: "الشوط.",
@@ -1881,7 +1651,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__3",
-        file: "seerah",
         card_number: 3,
         side1: "كم درعاً لبس النبي ﷺ عند التهيّؤ للقتال؟",
         side2: "درعين، إحداهما فوق الأخرى.",
@@ -1889,7 +1658,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__32",
-        file: "seerah",
         card_number: 32,
         side1: "أيٌّ ممن رُدّوا أولاً أُذن له لاحقاً بالمشاركة في القتال؟",
         side2: "البراء بن عازب.",
@@ -1897,7 +1665,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__40",
-        file: "seerah",
         card_number: 40,
         side1: "كم رجلاً تقريباً اختيروا لحراسة المعسكر والدورية فيه ليلة أحد؟",
         side2: "نحو خمسين رجلاً.",
@@ -1905,7 +1672,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__58",
-        file: "seerah",
         card_number: 58,
         side1: "ببستان من مرّ جيش المسلمين في الطريق إلى أحد بعد اتخاذ الطريق الأقصر؟",
         side2: "بستان مربّع بن قيظي.",
@@ -1913,7 +1679,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__42",
-        file: "seerah",
         card_number: 42,
         side1: "من كُلّف بحراسة النبي ﷺ خصوصاً في الليلة قبل أحد؟",
         side2: "ذكوان بن عبد قيس.",
@@ -1921,7 +1686,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__43",
-        file: "seerah",
         card_number: 43,
         side1: "متى حرّك رسول الله ﷺ الجيش من معسكر الليل قبل أحد؟",
         side2: "قبل الفجر.",
@@ -1929,7 +1693,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__12",
-        file: "seerah",
         card_number: 12,
         side1: "من عيّنه النبي ﷺ ليؤمّ الناس في المدينة أثناء غيبته في أحد؟",
         side2: "ابن أم مكتوم.",
@@ -1937,7 +1700,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__38",
-        file: "seerah",
         card_number: 38,
         side1: "أي صلوات صلّاها الجيش حين نزلوا بين المدينة وأحد مع اقتراب المساء؟",
         side2: "المغرب والعشاء.",
@@ -1945,7 +1707,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_54__21",
-        file: "seerah",
         card_number: 21,
         side1: "اذكر أحد من رُدّوا أولاً عند الشيخين لصغرهم أو عدم صلاحيتهم.",
         side2: "عبد الله بن عمر بن الخطاب.",
@@ -1959,7 +1720,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     easy: [
       {
         id: "Part_55__7",
-        file: "seerah",
         card_number: 7,
         side1: "ما الأمر الثابت الذي أعطاه النبي ﷺ للرماة بشأن موقعهم؟",
         side2: "أن يثبتوا في موقعهم ولا يبرحوه.",
@@ -1967,7 +1727,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__6",
-        file: "seerah",
         card_number: 6,
         side1: "ما المهمة التكتيكية الرئيسية للرماة في أحد؟",
         side2: "صدّ خيل العدو عن المسلمين بسهامهم.",
@@ -1975,7 +1734,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__25",
-        file: "seerah",
         card_number: 25,
         side1: "من قاد ميمنة جيش أهل مكة في أحد؟",
         side2: "خالد بن الوليد.",
@@ -1983,7 +1741,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__23",
-        file: "seerah",
         card_number: 23,
         side1: "من كانت له القيادة العامة لجيش المشركين في أحد؟",
         side2: "أبو سفيان صخر بن حرب.",
@@ -1991,7 +1748,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__3",
-        file: "seerah",
         card_number: 3,
         side1: "أين وضع النبي ﷺ الرماة في أحد؟",
         side2: "على تلّ صغير في الجانب الجنوبي من ساحة القتال.",
@@ -1999,7 +1755,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__42",
-        file: "seerah",
         card_number: 42,
         side1: "من قادت جماعة نساء قريش الحاضرات مع الجيش في أحد؟",
         side2: "هند بنت عتبة.",
@@ -2007,7 +1762,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__1",
-        file: "seerah",
         card_number: 1,
         side1: "كم رامياً ماهراً اختار النبي ﷺ قبل المعركة؟",
         side2: "خمسين رامياً ماهراً.",
@@ -2015,7 +1769,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__19",
-        file: "seerah",
         card_number: 19,
         side1: "من تلقّى سيف النبي في أحد؟",
         side2: "أبو دجانة.",
@@ -2025,7 +1778,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     medium: [
       {
         id: "Part_55__7",
-        file: "seerah",
         card_number: 7,
         side1: "ما الأمر الثابت الذي أعطاه النبي ﷺ للرماة بشأن موقعهم؟",
         side2: "أن يثبتوا في موقعهم ولا يبرحوه.",
@@ -2033,7 +1785,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__6",
-        file: "seerah",
         card_number: 6,
         side1: "ما المهمة التكتيكية الرئيسية للرماة في أحد؟",
         side2: "صدّ خيل العدو عن المسلمين بسهامهم.",
@@ -2041,7 +1792,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__25",
-        file: "seerah",
         card_number: 25,
         side1: "من قاد ميمنة جيش أهل مكة في أحد؟",
         side2: "خالد بن الوليد.",
@@ -2049,7 +1799,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__23",
-        file: "seerah",
         card_number: 23,
         side1: "من كانت له القيادة العامة لجيش المشركين في أحد؟",
         side2: "أبو سفيان صخر بن حرب.",
@@ -2057,7 +1806,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__3",
-        file: "seerah",
         card_number: 3,
         side1: "أين وضع النبي ﷺ الرماة في أحد؟",
         side2: "على تلّ صغير في الجانب الجنوبي من ساحة القتال.",
@@ -2065,7 +1813,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__42",
-        file: "seerah",
         card_number: 42,
         side1: "من قادت جماعة نساء قريش الحاضرات مع الجيش في أحد؟",
         side2: "هند بنت عتبة.",
@@ -2073,7 +1820,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__1",
-        file: "seerah",
         card_number: 1,
         side1: "كم رامياً ماهراً اختار النبي ﷺ قبل المعركة؟",
         side2: "خمسين رامياً ماهراً.",
@@ -2081,7 +1827,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__19",
-        file: "seerah",
         card_number: 19,
         side1: "من تلقّى سيف النبي في أحد؟",
         side2: "أبو دجانة.",
@@ -2089,7 +1834,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__37",
-        file: "seerah",
         card_number: 37,
         side1: "ماذا فعل أبو عامر بعد مغادرته المدينة؟",
         side2: "انضمّ إلى قريش.",
@@ -2097,7 +1841,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__39",
-        file: "seerah",
         card_number: 39,
         side1: "من نادى أبو عامر بأسمائهم في أحد؟",
         side2: "الأوس.",
@@ -2105,7 +1848,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__29",
-        file: "seerah",
         card_number: 29,
         side1: "أي بطن حمل لواء أهل مكة في أحد؟",
         side2: "بنو عبد الدار.",
@@ -2113,7 +1855,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__2",
-        file: "seerah",
         card_number: 2,
         side1: "من قاد وحدة الخمسين رامياً في أحد؟",
         side2: "عبد الله بن جبير بن النعمان الأنصاري الأوسي.",
@@ -2121,7 +1862,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__4",
-        file: "seerah",
         card_number: 4,
         side1: "على ماذا كان يُشرف تلّ الرماة في أحد؟",
         side2: "على السهل ومؤخّرة معسكر المسلمين.",
@@ -2129,7 +1869,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__44",
-        file: "seerah",
         card_number: 44,
         side1: "ماذا فعلت نساء قريش بين الصفوف في أحد؟",
         side2: "ضربن الدفوف وأنشدن الأشعار.",
@@ -2137,7 +1876,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__34",
-        file: "seerah",
         card_number: 34,
         side1: "ماذا كان أبو عامر قبل أن يعارض الرسول ﷺ؟",
         side2: "راهباً.",
@@ -2145,7 +1883,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__10",
-        file: "seerah",
         card_number: 10,
         side1: "من عُيّن على الميسرة في جيش المسلمين في أحد؟",
         side2: "الزبير بن العوّام.",
@@ -2153,7 +1890,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__33",
-        file: "seerah",
         card_number: 33,
         side1: "إلى من أرسل أبو سفيان رسالة خاصة قبل أحد؟",
         side2: "إلى أنصار المدينة.",
@@ -2161,7 +1897,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__15",
-        file: "seerah",
         card_number: 15,
         side1: "ماذا نهى النبي ﷺ المسلمين عنه قبل أمره في أحد؟",
         side2: "أن يبدؤوا القتال.",
@@ -2169,7 +1904,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__12",
-        file: "seerah",
         card_number: 12,
         side1: "أمام خيل من أُمر قادة جناحي المسلمين بالثبات في أحد؟",
         side2: "الخيل التي يقودها خالد بن الوليد.",
@@ -2179,7 +1913,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     full: [
       {
         id: "Part_55__7",
-        file: "seerah",
         card_number: 7,
         side1: "ما الأمر الثابت الذي أعطاه النبي ﷺ للرماة بشأن موقعهم؟",
         side2: "أن يثبتوا في موقعهم ولا يبرحوه.",
@@ -2187,7 +1920,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__6",
-        file: "seerah",
         card_number: 6,
         side1: "ما المهمة التكتيكية الرئيسية للرماة في أحد؟",
         side2: "صدّ خيل العدو عن المسلمين بسهامهم.",
@@ -2195,7 +1927,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__25",
-        file: "seerah",
         card_number: 25,
         side1: "من قاد ميمنة جيش أهل مكة في أحد؟",
         side2: "خالد بن الوليد.",
@@ -2203,7 +1934,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__23",
-        file: "seerah",
         card_number: 23,
         side1: "من كانت له القيادة العامة لجيش المشركين في أحد؟",
         side2: "أبو سفيان صخر بن حرب.",
@@ -2211,7 +1941,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__3",
-        file: "seerah",
         card_number: 3,
         side1: "أين وضع النبي ﷺ الرماة في أحد؟",
         side2: "على تلّ صغير في الجانب الجنوبي من ساحة القتال.",
@@ -2219,7 +1948,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__42",
-        file: "seerah",
         card_number: 42,
         side1: "من قادت جماعة نساء قريش الحاضرات مع الجيش في أحد؟",
         side2: "هند بنت عتبة.",
@@ -2227,7 +1955,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__1",
-        file: "seerah",
         card_number: 1,
         side1: "كم رامياً ماهراً اختار النبي ﷺ قبل المعركة؟",
         side2: "خمسين رامياً ماهراً.",
@@ -2235,7 +1962,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__19",
-        file: "seerah",
         card_number: 19,
         side1: "من تلقّى سيف النبي في أحد؟",
         side2: "أبو دجانة.",
@@ -2243,7 +1969,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__37",
-        file: "seerah",
         card_number: 37,
         side1: "ماذا فعل أبو عامر بعد مغادرته المدينة؟",
         side2: "انضمّ إلى قريش.",
@@ -2251,7 +1976,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__39",
-        file: "seerah",
         card_number: 39,
         side1: "من نادى أبو عامر بأسمائهم في أحد؟",
         side2: "الأوس.",
@@ -2259,7 +1983,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__29",
-        file: "seerah",
         card_number: 29,
         side1: "أي بطن حمل لواء أهل مكة في أحد؟",
         side2: "بنو عبد الدار.",
@@ -2267,7 +1990,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__2",
-        file: "seerah",
         card_number: 2,
         side1: "من قاد وحدة الخمسين رامياً في أحد؟",
         side2: "عبد الله بن جبير بن النعمان الأنصاري الأوسي.",
@@ -2275,7 +1997,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__4",
-        file: "seerah",
         card_number: 4,
         side1: "على ماذا كان يُشرف تلّ الرماة في أحد؟",
         side2: "على السهل ومؤخّرة معسكر المسلمين.",
@@ -2283,7 +2004,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__44",
-        file: "seerah",
         card_number: 44,
         side1: "ماذا فعلت نساء قريش بين الصفوف في أحد؟",
         side2: "ضربن الدفوف وأنشدن الأشعار.",
@@ -2291,7 +2011,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__34",
-        file: "seerah",
         card_number: 34,
         side1: "ماذا كان أبو عامر قبل أن يعارض الرسول ﷺ؟",
         side2: "راهباً.",
@@ -2299,7 +2018,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__10",
-        file: "seerah",
         card_number: 10,
         side1: "من عُيّن على الميسرة في جيش المسلمين في أحد؟",
         side2: "الزبير بن العوّام.",
@@ -2307,7 +2025,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__33",
-        file: "seerah",
         card_number: 33,
         side1: "إلى من أرسل أبو سفيان رسالة خاصة قبل أحد؟",
         side2: "إلى أنصار المدينة.",
@@ -2315,7 +2032,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__15",
-        file: "seerah",
         card_number: 15,
         side1: "ماذا نهى النبي ﷺ المسلمين عنه قبل أمره في أحد؟",
         side2: "أن يبدؤوا القتال.",
@@ -2323,7 +2039,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__12",
-        file: "seerah",
         card_number: 12,
         side1: "أمام خيل من أُمر قادة جناحي المسلمين بالثبات في أحد؟",
         side2: "الخيل التي يقودها خالد بن الوليد.",
@@ -2331,7 +2046,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__35",
-        file: "seerah",
         card_number: 35,
         side1: "لأي قبيلة كان أبو عامر زعيماً؟",
         side2: "الأوس.",
@@ -2339,7 +2053,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__21",
-        file: "seerah",
         card_number: 21,
         side1: "ماذا ربط أبو دجانة بعد أن تلقّى السيف؟",
         side2: "عصابة حمراء.",
@@ -2347,7 +2060,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__43",
-        file: "seerah",
         card_number: 43,
         side1: "ما علاقة هند بنت عتبة بأبي سفيان؟",
         side2: "كانت زوجته.",
@@ -2355,7 +2067,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__26",
-        file: "seerah",
         card_number: 26,
         side1: "من قاد ميسرة جيش أهل مكة في أحد؟",
         side2: "عكرمة بن أبي جهل.",
@@ -2363,7 +2074,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__14",
-        file: "seerah",
         card_number: 14,
         side1: "في أي تاريخ اكتمل انتشار جيش النبي في أحد؟",
         side2: "يوم السبت ٧ شوّال سنة ٣ هـ.",
@@ -2371,7 +2081,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__9",
-        file: "seerah",
         card_number: 9,
         side1: "من وُضع على الميمنة في جيش المسلمين في أحد؟",
         side2: "المنذر بن عمرو.",
@@ -2379,7 +2088,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__16",
-        file: "seerah",
         card_number: 16,
         side1: "كم درعاً لبس النبي ﷺ في أحد؟",
         side2: "درعين، إحداهما فوق الأخرى.",
@@ -2387,7 +2095,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_55__45",
-        file: "seerah",
         card_number: 45,
         side1: "أي جماعة نادتها نساء قريش خاصة في أحد؟",
         side2: "حملة اللواء من بني عبد الدار.",
@@ -2401,7 +2108,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     easy: [
       {
         id: "Part_56__43",
-        file: "seerah",
         card_number: 43,
         side1: "ماذا وعد جبير بن مطعم وحشياً إن قتل حمزة؟",
         side2: "العتق.",
@@ -2409,7 +2115,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__41",
-        file: "seerah",
         card_number: 41,
         side1: "لمن كان وحشي بن حرب عبداً؟",
         side2: "لعبد جبير بن مطعم.",
@@ -2417,7 +2122,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__49",
-        file: "seerah",
         card_number: 49,
         side1: "أين أصاب رمح وحشي حمزة؟",
         side2: "في أسفل بطنه.",
@@ -2425,7 +2129,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__56",
-        file: "seerah",
         card_number: 56,
         side1: "لماذا قال وحشي إنه قتل حمزة؟",
         side2: "لكي يُعتق.",
@@ -2433,7 +2136,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__45",
-        file: "seerah",
         card_number: 45,
         side1: "عمّن كان وحشي يبحث حين التقى الصفّان في أحد؟",
         side2: "عن حمزة.",
@@ -2441,7 +2143,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__62",
-        file: "seerah",
         card_number: 62,
         side1: "من كان زعيم قريش في أحد حسب النص؟",
         side2: "أبو سفيان صخر بن حرب.",
@@ -2449,7 +2150,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__61",
-        file: "seerah",
         card_number: 61,
         side1: "إلى من وصل حنظلة بن أبي عامر في القتال؟",
         side2: "إلى أبي سفيان صخر بن حرب.",
@@ -2457,7 +2157,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__63",
-        file: "seerah",
         card_number: 63,
         side1: "من ضرب حنظلة بن أبي عامر فقتله؟",
         side2: "شدّاد بن الأسود.",
@@ -2465,7 +2164,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__57",
-        file: "seerah",
         card_number: 57,
         side1: "ماذا حدث لوحشي حين عاد إلى مكة؟",
         side2: "أُعتق.",
@@ -2473,7 +2171,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__33",
-        file: "seerah",
         card_number: 33,
         side1: "ماذا حدث للواء بعد مقتل صواب؟",
         side2: "سقط وبقي على الأرض.",
@@ -2483,7 +2180,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     medium: [
       {
         id: "Part_56__43",
-        file: "seerah",
         card_number: 43,
         side1: "ماذا وعد جبير بن مطعم وحشياً إن قتل حمزة؟",
         side2: "العتق.",
@@ -2491,7 +2187,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__41",
-        file: "seerah",
         card_number: 41,
         side1: "لمن كان وحشي بن حرب عبداً؟",
         side2: "لعبد جبير بن مطعم.",
@@ -2499,7 +2194,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__49",
-        file: "seerah",
         card_number: 49,
         side1: "أين أصاب رمح وحشي حمزة؟",
         side2: "في أسفل بطنه.",
@@ -2507,7 +2201,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__56",
-        file: "seerah",
         card_number: 56,
         side1: "لماذا قال وحشي إنه قتل حمزة؟",
         side2: "لكي يُعتق.",
@@ -2515,7 +2208,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__45",
-        file: "seerah",
         card_number: 45,
         side1: "عمّن كان وحشي يبحث حين التقى الصفّان في أحد؟",
         side2: "عن حمزة.",
@@ -2523,7 +2215,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__62",
-        file: "seerah",
         card_number: 62,
         side1: "من كان زعيم قريش في أحد حسب النص؟",
         side2: "أبو سفيان صخر بن حرب.",
@@ -2531,7 +2222,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__61",
-        file: "seerah",
         card_number: 61,
         side1: "إلى من وصل حنظلة بن أبي عامر في القتال؟",
         side2: "إلى أبي سفيان صخر بن حرب.",
@@ -2539,7 +2229,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__63",
-        file: "seerah",
         card_number: 63,
         side1: "من ضرب حنظلة بن أبي عامر فقتله؟",
         side2: "شدّاد بن الأسود.",
@@ -2547,7 +2236,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__57",
-        file: "seerah",
         card_number: 57,
         side1: "ماذا حدث لوحشي حين عاد إلى مكة؟",
         side2: "أُعتق.",
@@ -2555,7 +2243,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__33",
-        file: "seerah",
         card_number: 33,
         side1: "ماذا حدث للواء بعد مقتل صواب؟",
         side2: "سقط وبقي على الأرض.",
@@ -2563,7 +2250,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__42",
-        file: "seerah",
         card_number: 42,
         side1: "أي قريب لجبير بن مطعم قُتل في بدر؟",
         side2: "عمّه طعيمة بن عدي.",
@@ -2571,7 +2257,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__37",
-        file: "seerah",
         card_number: 37,
         side1: "بأي سلاح قتل أبو دجانة المشرك الذي بارزه؟",
         side2: "بسيف النبي.",
@@ -2579,7 +2264,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__29",
-        file: "seerah",
         card_number: 29,
         side1: "كم من حملة اللواء من بني عبد الدار قُتلوا جميعاً؟",
         side2: "عشرة.",
@@ -2587,7 +2271,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__59",
-        file: "seerah",
         card_number: 59,
         side1: "ما حال حنظلة بن أبي عامر الزوجية حين خرج إلى القتال؟",
         side2: "كان حديث عهد بزواج.",
@@ -2595,7 +2278,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__6",
-        file: "seerah",
         card_number: 6,
         side1: "أي بطن تتابع على حمل اللواء بعد مقتل طلحة بن أبي طلحة؟",
         side2: "بنو عبد الدار.",
@@ -2603,7 +2285,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__38",
-        file: "seerah",
         card_number: 38,
         side1: "من الشخص الذي رفع أبو دجانة سيفه عليه ثم كفّ عن قتله؟",
         side2: "هند بنت عتبة.",
@@ -2611,7 +2292,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__5",
-        file: "seerah",
         card_number: 5,
         side1: "من وثب—حسب الرواية—على جمل طلحة بن أبي طلحة فأنزله وقتله؟",
         side2: "الزبير بن العوّام.",
@@ -2619,7 +2299,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__58",
-        file: "seerah",
         card_number: 58,
         side1: "من هو حنظلة الغسيل؟",
         side2: "حنظلة بن أبي عامر.",
@@ -2627,7 +2306,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__16",
-        file: "seerah",
         card_number: 16,
         side1: "من قتل كلاب بن طلحة؟",
         side2: "الزبير.",
@@ -2635,7 +2313,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__24",
-        file: "seerah",
         card_number: 24,
         side1: "من قتل شريح بن قاريظ؟",
         side2: "قزمان.",
@@ -2643,7 +2320,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__44",
-        file: "seerah",
         card_number: 44,
         side1: "بأي سلاح كان وحشي ماهراً؟",
         side2: "الرمح.",
@@ -2651,7 +2327,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__34",
-        file: "seerah",
         card_number: 34,
         side1: "بم تميّز أبو دجانة في القتال؟",
         side2: "بعصابة حمراء.",
@@ -2659,7 +2334,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__14",
-        file: "seerah",
         card_number: 14,
         side1: "من رمى مسافع بن طلحة بسهم؟",
         side2: "عاصم بن ثابت بن أبي الأقلح.",
@@ -2667,7 +2341,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__48",
-        file: "seerah",
         card_number: 48,
         side1: "ماذا فعل حمزة بسباع بن عبد العزّى؟",
         side2: "ضربه ضربة.",
@@ -2675,7 +2348,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__46",
-        file: "seerah",
         card_number: 46,
         side1: "أين اختبأ وحشي وهو يراقب حمزة؟",
         side2: "خلف شجرة أو صخرة.",
@@ -2685,7 +2357,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     full: [
       {
         id: "Part_56__43",
-        file: "seerah",
         card_number: 43,
         side1: "ماذا وعد جبير بن مطعم وحشياً إن قتل حمزة؟",
         side2: "العتق.",
@@ -2693,7 +2364,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__41",
-        file: "seerah",
         card_number: 41,
         side1: "لمن كان وحشي بن حرب عبداً؟",
         side2: "لعبد جبير بن مطعم.",
@@ -2701,7 +2371,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__49",
-        file: "seerah",
         card_number: 49,
         side1: "أين أصاب رمح وحشي حمزة؟",
         side2: "في أسفل بطنه.",
@@ -2709,7 +2378,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__56",
-        file: "seerah",
         card_number: 56,
         side1: "لماذا قال وحشي إنه قتل حمزة؟",
         side2: "لكي يُعتق.",
@@ -2717,7 +2385,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__45",
-        file: "seerah",
         card_number: 45,
         side1: "عمّن كان وحشي يبحث حين التقى الصفّان في أحد؟",
         side2: "عن حمزة.",
@@ -2725,7 +2392,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__62",
-        file: "seerah",
         card_number: 62,
         side1: "من كان زعيم قريش في أحد حسب النص؟",
         side2: "أبو سفيان صخر بن حرب.",
@@ -2733,7 +2399,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__61",
-        file: "seerah",
         card_number: 61,
         side1: "إلى من وصل حنظلة بن أبي عامر في القتال؟",
         side2: "إلى أبي سفيان صخر بن حرب.",
@@ -2741,7 +2406,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__63",
-        file: "seerah",
         card_number: 63,
         side1: "من ضرب حنظلة بن أبي عامر فقتله؟",
         side2: "شدّاد بن الأسود.",
@@ -2749,7 +2413,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__57",
-        file: "seerah",
         card_number: 57,
         side1: "ماذا حدث لوحشي حين عاد إلى مكة؟",
         side2: "أُعتق.",
@@ -2757,7 +2420,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__33",
-        file: "seerah",
         card_number: 33,
         side1: "ماذا حدث للواء بعد مقتل صواب؟",
         side2: "سقط وبقي على الأرض.",
@@ -2765,7 +2427,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__42",
-        file: "seerah",
         card_number: 42,
         side1: "أي قريب لجبير بن مطعم قُتل في بدر؟",
         side2: "عمّه طعيمة بن عدي.",
@@ -2773,7 +2434,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__37",
-        file: "seerah",
         card_number: 37,
         side1: "بأي سلاح قتل أبو دجانة المشرك الذي بارزه؟",
         side2: "بسيف النبي.",
@@ -2781,7 +2441,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__29",
-        file: "seerah",
         card_number: 29,
         side1: "كم من حملة اللواء من بني عبد الدار قُتلوا جميعاً؟",
         side2: "عشرة.",
@@ -2789,7 +2448,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__59",
-        file: "seerah",
         card_number: 59,
         side1: "ما حال حنظلة بن أبي عامر الزوجية حين خرج إلى القتال؟",
         side2: "كان حديث عهد بزواج.",
@@ -2797,7 +2455,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__6",
-        file: "seerah",
         card_number: 6,
         side1: "أي بطن تتابع على حمل اللواء بعد مقتل طلحة بن أبي طلحة؟",
         side2: "بنو عبد الدار.",
@@ -2805,7 +2462,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__38",
-        file: "seerah",
         card_number: 38,
         side1: "من الشخص الذي رفع أبو دجانة سيفه عليه ثم كفّ عن قتله؟",
         side2: "هند بنت عتبة.",
@@ -2813,7 +2469,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__5",
-        file: "seerah",
         card_number: 5,
         side1: "من وثب—حسب الرواية—على جمل طلحة بن أبي طلحة فأنزله وقتله؟",
         side2: "الزبير بن العوّام.",
@@ -2821,7 +2476,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__58",
-        file: "seerah",
         card_number: 58,
         side1: "من هو حنظلة الغسيل؟",
         side2: "حنظلة بن أبي عامر.",
@@ -2829,7 +2483,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__16",
-        file: "seerah",
         card_number: 16,
         side1: "من قتل كلاب بن طلحة؟",
         side2: "الزبير.",
@@ -2837,7 +2490,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__24",
-        file: "seerah",
         card_number: 24,
         side1: "من قتل شريح بن قاريظ؟",
         side2: "قزمان.",
@@ -2845,7 +2497,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__44",
-        file: "seerah",
         card_number: 44,
         side1: "بأي سلاح كان وحشي ماهراً؟",
         side2: "الرمح.",
@@ -2853,7 +2504,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__34",
-        file: "seerah",
         card_number: 34,
         side1: "بم تميّز أبو دجانة في القتال؟",
         side2: "بعصابة حمراء.",
@@ -2861,7 +2511,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__14",
-        file: "seerah",
         card_number: 14,
         side1: "من رمى مسافع بن طلحة بسهم؟",
         side2: "عاصم بن ثابت بن أبي الأقلح.",
@@ -2869,7 +2518,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__48",
-        file: "seerah",
         card_number: 48,
         side1: "ماذا فعل حمزة بسباع بن عبد العزّى؟",
         side2: "ضربه ضربة.",
@@ -2877,7 +2525,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__46",
-        file: "seerah",
         card_number: 46,
         side1: "أين اختبأ وحشي وهو يراقب حمزة؟",
         side2: "خلف شجرة أو صخرة.",
@@ -2885,7 +2532,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__47",
-        file: "seerah",
         card_number: 47,
         side1: "من جاء نحو حمزة قبل أن يرمي وحشي رمحه؟",
         side2: "سباع بن عبد العزّى.",
@@ -2893,7 +2539,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__8",
-        file: "seerah",
         card_number: 8,
         side1: "من قتل عثمان، أخا طلحة بن أبي طلحة؟",
         side2: "حمزة بن عبد المطلب.",
@@ -2901,7 +2546,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__4",
-        file: "seerah",
         card_number: 4,
         side1: "إلى أي شيء دعا طلحة بن أبي طلحة العبدري المسلمين؟",
         side2: "إلى المبارزة.",
@@ -2909,7 +2553,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__55",
-        file: "seerah",
         card_number: 55,
         side1: "كم غير حمزة قال وحشي إنه قتل في أحد؟",
         side2: "لم يقتل أحداً غيره.",
@@ -2917,7 +2560,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__1",
-        file: "seerah",
         card_number: 1,
         side1: "من كان أول مشرك تقدّم حاملاً اللواء في أحد؟",
         side2: "طلحة بن أبي طلحة العبدري.",
@@ -2925,7 +2567,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__10",
-        file: "seerah",
         card_number: 10,
         side1: "من رمى أبا سعد بن أبي طلحة بسهم قاتل في حلقه؟",
         side2: "سعد بن أبي وقاص.",
@@ -2933,7 +2574,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__32",
-        file: "seerah",
         card_number: 32,
         side1: "كيف أمسك صواب اللواء كي لا يسقط بعد قطع يده؟",
         side2: "ضمّه إلى صدره وعنقه.",
@@ -2941,7 +2581,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_56__30",
-        file: "seerah",
         card_number: 30,
         side1: "من أخذ اللواء بعد مقتل العشرة من حملة بني عبد الدار؟",
         side2: "مولاهم صواب.",
@@ -2955,7 +2594,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     easy: [
       {
         id: "Part_57__10",
-        file: "seerah",
         card_number: 10,
         side1: "لماذا ترك أكثر الرماة مواقعهم؟",
         side2: "لأنهم رأوا إخوانهم يجمعون الغنائم.",
@@ -2963,7 +2601,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__37",
-        file: "seerah",
         card_number: 37,
         side1: "أي صيحة انتشرت في الصفوف أثناء غزوة أحد؟",
         side2: "«قُتل محمد».",
@@ -2971,7 +2608,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__8",
-        file: "seerah",
         card_number: 8,
         side1: "أي أمر صريح أعطاه رسول الله ﷺ للرماة؟",
         side2: "أن يثبتوا في مواقعهم مهما حدث في الميدان.",
@@ -2979,7 +2615,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__13",
-        file: "seerah",
         card_number: 13,
         side1: "كيف ناورت خيل خالد بن الوليد بعد ضعف موقع الرماة؟",
         side2: "قاد خيله حول الجبل إلى مؤخّرة جيش المسلمين.",
@@ -2987,7 +2622,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__2",
-        file: "seerah",
         card_number: 2,
         side1: "من قاد خيل أهل مكة في أحد؟",
         side2: "خالد بن الوليد.",
@@ -2995,7 +2629,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__21",
-        file: "seerah",
         card_number: 21,
         side1: "بين أي قوتين وقع المسلمون؟",
         side2: "بين مهاجمين من الخلف ومهاجمين من الأمام.",
@@ -3003,7 +2636,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__27",
-        file: "seerah",
         card_number: 27,
         side1: "ماذا فعل بعض المسلمين أثناء الفوضى في أحد؟",
         side2: "فرّوا من الميدان.",
@@ -3011,7 +2643,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__45",
-        file: "seerah",
         card_number: 45,
         side1: "ما الذي مكّن المسلمين من فكّ أجزاء من الحصار؟",
         side2: "اتضح أن النبي ﷺ حيّ.",
@@ -3021,7 +2652,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     medium: [
       {
         id: "Part_57__10",
-        file: "seerah",
         card_number: 10,
         side1: "لماذا ترك أكثر الرماة مواقعهم؟",
         side2: "لأنهم رأوا إخوانهم يجمعون الغنائم.",
@@ -3029,7 +2659,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__37",
-        file: "seerah",
         card_number: 37,
         side1: "أي صيحة انتشرت في الصفوف أثناء غزوة أحد؟",
         side2: "«قُتل محمد».",
@@ -3037,7 +2666,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__8",
-        file: "seerah",
         card_number: 8,
         side1: "أي أمر صريح أعطاه رسول الله ﷺ للرماة؟",
         side2: "أن يثبتوا في مواقعهم مهما حدث في الميدان.",
@@ -3045,7 +2673,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__13",
-        file: "seerah",
         card_number: 13,
         side1: "كيف ناورت خيل خالد بن الوليد بعد ضعف موقع الرماة؟",
         side2: "قاد خيله حول الجبل إلى مؤخّرة جيش المسلمين.",
@@ -3053,7 +2680,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__2",
-        file: "seerah",
         card_number: 2,
         side1: "من قاد خيل أهل مكة في أحد؟",
         side2: "خالد بن الوليد.",
@@ -3061,7 +2687,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__21",
-        file: "seerah",
         card_number: 21,
         side1: "بين أي قوتين وقع المسلمون؟",
         side2: "بين مهاجمين من الخلف ومهاجمين من الأمام.",
@@ -3069,7 +2694,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__27",
-        file: "seerah",
         card_number: 27,
         side1: "ماذا فعل بعض المسلمين أثناء الفوضى في أحد؟",
         side2: "فرّوا من الميدان.",
@@ -3077,7 +2701,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__45",
-        file: "seerah",
         card_number: 45,
         side1: "ما الذي مكّن المسلمين من فكّ أجزاء من الحصار؟",
         side2: "اتضح أن النبي ﷺ حيّ.",
@@ -3085,7 +2708,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__18",
-        file: "seerah",
         card_number: 18,
         side1: "ماذا فعل المشركون حين هاجم خالد من الخلف؟",
         side2: "شنّوا هجوماً مضاداً من الأمام.",
@@ -3093,7 +2715,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__46",
-        file: "seerah",
         card_number: 46,
         side1: "ماذا فعل المسلمون بعد فكّ أجزاء من الحصار؟",
         side2: "تجمّعوا في موضع أكثر تحصيناً.",
@@ -3101,7 +2722,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__12",
-        file: "seerah",
         card_number: 12,
         side1: "ما نتيجة ترك أكثر الرماة مواقعهم؟",
         side2: "تُركت الثغرة خلف صفوف المسلمين ضعيفة الدفاع.",
@@ -3109,7 +2729,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__38",
-        file: "seerah",
         card_number: 38,
         side1: "كيف ردّ بعض المسلمين على صيحة أن محمداً قد قُتل؟",
         side2: "ألقوا أسلحتهم.",
@@ -3117,7 +2736,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__1",
-        file: "seerah",
         card_number: 1,
         side1: "أين وضع رسول الله ﷺ سرية الرماة؟",
         side2: "على جبل عُرف لاحقاً بجبل الرماة.",
@@ -3125,7 +2743,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__40",
-        file: "seerah",
         card_number: 40,
         side1: "أي صحابي واصل القتال حتى قُتل بعد انتشار الإشاعة؟",
         side2: "أنس بن النضر.",
@@ -3133,7 +2750,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__25",
-        file: "seerah",
         card_number: 25,
         side1: "ماذا نادى رسول الله ﷺ حين اقترب العدو؟",
         side2: "«إليّ؛ أنا رسول الله».",
@@ -3141,7 +2757,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__17",
-        file: "seerah",
         card_number: 17,
         side1: "بعد أن غلب الرماة الباقين، أين هاجم خالد بن الوليد؟",
         side2: "مؤخّرة المسلمين.",
@@ -3149,7 +2764,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__34",
-        file: "seerah",
         card_number: 34,
         side1: "ماذا حدث لليمان في أحد؟",
         side2: "لم يعرفه المهاجمون فقتلوه.",
@@ -3157,7 +2771,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__5",
-        file: "seerah",
         card_number: 5,
         side1: "من صدّ كل هجوم لخيل أهل مكة في البداية؟",
         side2: "الرماة.",
@@ -3165,7 +2778,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__9",
-        file: "seerah",
         card_number: 9,
         side1: "أي قائد حذّر الرماة أن يثبتوا في مواقعهم؟",
         side2: "عبد الله بن جبير.",
@@ -3173,7 +2785,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__47",
-        file: "seerah",
         card_number: 47,
         side1: "ماذا فعل المسلمون بعد التجمّع في موضع أكثر تحصيناً؟",
         side2: "جدّدوا القتال.",
@@ -3183,7 +2794,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     full: [
       {
         id: "Part_57__10",
-        file: "seerah",
         card_number: 10,
         side1: "لماذا ترك أكثر الرماة مواقعهم؟",
         side2: "لأنهم رأوا إخوانهم يجمعون الغنائم.",
@@ -3191,7 +2801,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__37",
-        file: "seerah",
         card_number: 37,
         side1: "أي صيحة انتشرت في الصفوف أثناء غزوة أحد؟",
         side2: "«قُتل محمد».",
@@ -3199,7 +2808,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__8",
-        file: "seerah",
         card_number: 8,
         side1: "أي أمر صريح أعطاه رسول الله ﷺ للرماة؟",
         side2: "أن يثبتوا في مواقعهم مهما حدث في الميدان.",
@@ -3207,7 +2815,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__13",
-        file: "seerah",
         card_number: 13,
         side1: "كيف ناورت خيل خالد بن الوليد بعد ضعف موقع الرماة؟",
         side2: "قاد خيله حول الجبل إلى مؤخّرة جيش المسلمين.",
@@ -3215,7 +2822,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__2",
-        file: "seerah",
         card_number: 2,
         side1: "من قاد خيل أهل مكة في أحد؟",
         side2: "خالد بن الوليد.",
@@ -3223,7 +2829,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__21",
-        file: "seerah",
         card_number: 21,
         side1: "بين أي قوتين وقع المسلمون؟",
         side2: "بين مهاجمين من الخلف ومهاجمين من الأمام.",
@@ -3231,7 +2836,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__27",
-        file: "seerah",
         card_number: 27,
         side1: "ماذا فعل بعض المسلمين أثناء الفوضى في أحد؟",
         side2: "فرّوا من الميدان.",
@@ -3239,7 +2843,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__45",
-        file: "seerah",
         card_number: 45,
         side1: "ما الذي مكّن المسلمين من فكّ أجزاء من الحصار؟",
         side2: "اتضح أن النبي ﷺ حيّ.",
@@ -3247,7 +2850,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__18",
-        file: "seerah",
         card_number: 18,
         side1: "ماذا فعل المشركون حين هاجم خالد من الخلف؟",
         side2: "شنّوا هجوماً مضاداً من الأمام.",
@@ -3255,7 +2857,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__46",
-        file: "seerah",
         card_number: 46,
         side1: "ماذا فعل المسلمون بعد فكّ أجزاء من الحصار؟",
         side2: "تجمّعوا في موضع أكثر تحصيناً.",
@@ -3263,7 +2864,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__12",
-        file: "seerah",
         card_number: 12,
         side1: "ما نتيجة ترك أكثر الرماة مواقعهم؟",
         side2: "تُركت الثغرة خلف صفوف المسلمين ضعيفة الدفاع.",
@@ -3271,7 +2871,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__38",
-        file: "seerah",
         card_number: 38,
         side1: "كيف ردّ بعض المسلمين على صيحة أن محمداً قد قُتل؟",
         side2: "ألقوا أسلحتهم.",
@@ -3279,7 +2878,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__1",
-        file: "seerah",
         card_number: 1,
         side1: "أين وضع رسول الله ﷺ سرية الرماة؟",
         side2: "على جبل عُرف لاحقاً بجبل الرماة.",
@@ -3287,7 +2885,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__40",
-        file: "seerah",
         card_number: 40,
         side1: "أي صحابي واصل القتال حتى قُتل بعد انتشار الإشاعة؟",
         side2: "أنس بن النضر.",
@@ -3295,7 +2892,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__25",
-        file: "seerah",
         card_number: 25,
         side1: "ماذا نادى رسول الله ﷺ حين اقترب العدو؟",
         side2: "«إليّ؛ أنا رسول الله».",
@@ -3303,7 +2899,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__17",
-        file: "seerah",
         card_number: 17,
         side1: "بعد أن غلب الرماة الباقين، أين هاجم خالد بن الوليد؟",
         side2: "مؤخّرة المسلمين.",
@@ -3311,7 +2906,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__34",
-        file: "seerah",
         card_number: 34,
         side1: "ماذا حدث لليمان في أحد؟",
         side2: "لم يعرفه المهاجمون فقتلوه.",
@@ -3319,7 +2913,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__5",
-        file: "seerah",
         card_number: 5,
         side1: "من صدّ كل هجوم لخيل أهل مكة في البداية؟",
         side2: "الرماة.",
@@ -3327,7 +2920,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__9",
-        file: "seerah",
         card_number: 9,
         side1: "أي قائد حذّر الرماة أن يثبتوا في مواقعهم؟",
         side2: "عبد الله بن جبير.",
@@ -3335,7 +2927,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__47",
-        file: "seerah",
         card_number: 47,
         side1: "ماذا فعل المسلمون بعد التجمّع في موضع أكثر تحصيناً؟",
         side2: "جدّدوا القتال.",
@@ -3343,7 +2934,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__31",
-        file: "seerah",
         card_number: 31,
         side1: "لماذا ضرب بعض المسلمين إخوانهم أثناء فوضى أحد؟",
         side2: "لأنهم لم يعودوا يميّزون الصديق من العدو.",
@@ -3351,7 +2941,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__15",
-        file: "seerah",
         card_number: 15,
         side1: "من هاجم خالد بن الوليد بعد بلوغه المدخل الخلفي؟",
         side2: "القلة من الرماة الذين بقوا مع ابن جبير.",
@@ -3359,7 +2948,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__22",
-        file: "seerah",
         card_number: 22,
         side1: "أين كان رسول الله ﷺ في هذه المرحلة من المعركة؟",
         side2: "في المؤخّرة مع سرية صغيرة من الصحابة.",
@@ -3367,7 +2955,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__24",
-        file: "seerah",
         card_number: 24,
         side1: "من ظهر قرب رسول الله ﷺ أثناء أزمة أحد؟",
         side2: "خالد بن الوليد ومن معه.",
@@ -3375,7 +2962,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__35",
-        file: "seerah",
         card_number: 35,
         side1: "ما كان ردّ حذيفة بن اليمان بشأن دية أبيه؟",
         side2: "رفض أن يقبل أي دية.",
@@ -3383,7 +2969,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__7",
-        file: "seerah",
         card_number: 7,
         side1: "ماذا فعل المسلمون بالمشركين ومعسكرهم في المرحلة الأولى من المعركة؟",
         side2: "طاردوا المشركين وأجلوهم عن معسكرهم.",
@@ -3391,7 +2976,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__51",
-        file: "seerah",
         card_number: 51,
         side1: "كيف حمى أبو بكر وعمر بن الخطاب وعلي بن أبي طالب رسول الله ﷺ؟",
         side2: "بأجسادهم وأسلحتهم.",
@@ -3399,7 +2983,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_57__52",
-        file: "seerah",
         card_number: 52,
         side1: "حسب رواية عن أنس بن مالك، كم رجلاً كانوا مع رسول الله ﷺ في الموضع الضيّق حين هاجم المشركون؟",
         side2: "تسعة رجال: سبعة من الأنصار واثنان من المهاجرين.",
@@ -3413,7 +2996,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     easy: [
       {
         id: "Part_58__54",
-        file: "seerah",
         card_number: 54,
         side1: "ماذا صاح ابن قَمِئة بعد قتل مصعب بن عمير؟",
         side2: "«قُتل محمد».",
@@ -3421,7 +3003,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__53",
-        file: "seerah",
         card_number: 53,
         side1: "من قتل مصعب بن عمير في أحد؟",
         side2: "ابن قَمِئة.",
@@ -3429,7 +3010,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__47",
-        file: "seerah",
         card_number: 47,
         side1: "من حمل لواء المسلمين يوم أحد؟",
         side2: "مصعب بن عمير.",
@@ -3437,7 +3017,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__75",
-        file: "seerah",
         card_number: 75,
         side1: "أين طعن النبي أُبيّ بن خلف بالحربة؟",
         side2: "في فرجة بين درعه وعنقه.",
@@ -3445,7 +3024,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__26",
-        file: "seerah",
         card_number: 26,
         side1: "ماذا فعلت حلقة الصحابة حول النبي في أحد؟",
         side2: "حمَوه بأجسادهم وأسلحتهم.",
@@ -3453,7 +3031,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__22",
-        file: "seerah",
         card_number: 22,
         side1: "كيف أخرج أبو عبيدة حلقتي المغفر من خدّ النبي؟",
         side2: "نزعهما بأسنانه.",
@@ -3461,7 +3038,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__72",
-        file: "seerah",
         card_number: 72,
         side1: "من تقدّم ضد النبي وهو يصعد نحو التل؟",
         side2: "أُبيّ بن خلف.",
@@ -3469,7 +3045,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__1",
-        file: "seerah",
         card_number: 1,
         side1: "من بقي مع النبي في أحد حين قلّ من معه؟",
         side2: "طلحة بن عبيد الله وسعد بن أبي وقاص.",
@@ -3477,7 +3052,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__9",
-        file: "seerah",
         card_number: 9,
         side1: "ما الإصابتان الكبيرتان المتعلقتان بالرأس اللتان أصابتا النبي يوم أحد؟",
         side2: "كُسرت سنّه وجُرح رأسه.",
@@ -3485,7 +3059,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__60",
-        file: "seerah",
         card_number: 60,
         side1: "نحو أين بدأ النبي الانسحاب بعد اجتماع المسلمين حوله؟",
         side2: "نحو المرتفع قرب جبل أحد.",
@@ -3493,7 +3066,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__10",
-        file: "seerah",
         card_number: 10,
         side1: "أي صحابيين وقفا أمام النبي ورميا السهام دفاعاً عنه في أحد؟",
         side2: "سعد بن أبي وقاص وطلحة بن عبيد الله.",
@@ -3501,7 +3073,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__28",
-        file: "seerah",
         card_number: 28,
         side1: "في أي شيء سقط النبي أثناء أحد؟",
         side2: "في إحدى الحفر التي حفرها أبو عامر الفاسق فخاخاً.",
@@ -3511,7 +3082,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     medium: [
       {
         id: "Part_58__54",
-        file: "seerah",
         card_number: 54,
         side1: "ماذا صاح ابن قَمِئة بعد قتل مصعب بن عمير؟",
         side2: "«قُتل محمد».",
@@ -3519,7 +3089,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__53",
-        file: "seerah",
         card_number: 53,
         side1: "من قتل مصعب بن عمير في أحد؟",
         side2: "ابن قَمِئة.",
@@ -3527,7 +3096,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__47",
-        file: "seerah",
         card_number: 47,
         side1: "من حمل لواء المسلمين يوم أحد؟",
         side2: "مصعب بن عمير.",
@@ -3535,7 +3103,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__75",
-        file: "seerah",
         card_number: 75,
         side1: "أين طعن النبي أُبيّ بن خلف بالحربة؟",
         side2: "في فرجة بين درعه وعنقه.",
@@ -3543,7 +3110,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__26",
-        file: "seerah",
         card_number: 26,
         side1: "ماذا فعلت حلقة الصحابة حول النبي في أحد؟",
         side2: "حمَوه بأجسادهم وأسلحتهم.",
@@ -3551,7 +3117,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__22",
-        file: "seerah",
         card_number: 22,
         side1: "كيف أخرج أبو عبيدة حلقتي المغفر من خدّ النبي؟",
         side2: "نزعهما بأسنانه.",
@@ -3559,7 +3124,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__72",
-        file: "seerah",
         card_number: 72,
         side1: "من تقدّم ضد النبي وهو يصعد نحو التل؟",
         side2: "أُبيّ بن خلف.",
@@ -3567,7 +3131,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__1",
-        file: "seerah",
         card_number: 1,
         side1: "من بقي مع النبي في أحد حين قلّ من معه؟",
         side2: "طلحة بن عبيد الله وسعد بن أبي وقاص.",
@@ -3575,7 +3138,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__9",
-        file: "seerah",
         card_number: 9,
         side1: "ما الإصابتان الكبيرتان المتعلقتان بالرأس اللتان أصابتا النبي يوم أحد؟",
         side2: "كُسرت سنّه وجُرح رأسه.",
@@ -3583,7 +3145,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__60",
-        file: "seerah",
         card_number: 60,
         side1: "نحو أين بدأ النبي الانسحاب بعد اجتماع المسلمين حوله؟",
         side2: "نحو المرتفع قرب جبل أحد.",
@@ -3591,7 +3152,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__10",
-        file: "seerah",
         card_number: 10,
         side1: "أي صحابيين وقفا أمام النبي ورميا السهام دفاعاً عنه في أحد؟",
         side2: "سعد بن أبي وقاص وطلحة بن عبيد الله.",
@@ -3599,7 +3159,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__28",
-        file: "seerah",
         card_number: 28,
         side1: "في أي شيء سقط النبي أثناء أحد؟",
         side2: "في إحدى الحفر التي حفرها أبو عامر الفاسق فخاخاً.",
@@ -3607,7 +3166,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__30",
-        file: "seerah",
         card_number: 30,
         side1: "من أخرج النبي من الحفرة في أحد؟",
         side2: "أخذ عليّ بيده فأخرجه.",
@@ -3615,7 +3173,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__16",
-        file: "seerah",
         card_number: 16,
         side1: "أي إصابة أصابت يد طلحة في أحد؟",
         side2: "ضُربت يده وقُطعت أصابعه.",
@@ -3623,7 +3180,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__14",
-        file: "seerah",
         card_number: 14,
         side1: "من أجاب نداء النبي بقوله: «أنا»؟",
         side2: "طلحة.",
@@ -3631,7 +3187,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__80",
-        file: "seerah",
         card_number: 80,
         side1: "كيف ساعد طلحة النبي على صعود الصخرة في أحد؟",
         side2: "جثا طلحة وقدّم ظهره ليخطو النبي عليه.",
@@ -3639,7 +3194,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__58",
-        file: "seerah",
         card_number: 58,
         side1: "لماذا أشار النبي إلى كعب بن مالك أن يسكت؟",
         side2: "كي لا يعرف المشركون موضعَه بدقة.",
@@ -3647,7 +3201,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__50",
-        file: "seerah",
         card_number: 50,
         side1: "ماذا فعل مصعب بن عمير بعد قطع يده اليمنى؟",
         side2: "أخذ اللواء بيده اليسرى.",
@@ -3655,7 +3208,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__41",
-        file: "seerah",
         card_number: 41,
         side1: "كيف حمى أبو دجانة النبي من السهام في أحد؟",
         side2: "وقف أمام النبي وحماه بظهره.",
@@ -3663,7 +3215,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__48",
-        file: "seerah",
         card_number: 48,
         side1: "عمّن دافع مصعب بن عمير عن النبي في أحد؟",
         side2: "عن ابن قَمِئة وغيره.",
@@ -3671,7 +3222,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__71",
-        file: "seerah",
         card_number: 71,
         side1: "إلى أين وصل المسلمون أخيراً للاحتماء أثناء أحد؟",
         side2: "إلى ستر الجبل.",
@@ -3679,7 +3229,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__78",
-        file: "seerah",
         card_number: 78,
         side1: "أين مات أُبيّ بن خلف بعد أن جرحه النبي؟",
         side2: "في الطريق راجعاً إلى مكة.",
@@ -3687,7 +3236,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__8",
-        file: "seerah",
         card_number: 8,
         side1: "ماذا حدث حين ضرب عبد الله بن قَمِئة خدّ النبي؟",
         side2: "دخلت حلقتان من المغفر الحديد في وجه النبي.",
@@ -3695,7 +3243,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__52",
-        file: "seerah",
         card_number: 52,
         side1: "كيف أمسك مصعب بن عمير اللواء بعد قطع كلتا يديه؟",
         side2: "أمسكه ببقايا ذراعيه إلى صدره.",
@@ -3703,7 +3250,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__25",
-        file: "seerah",
         card_number: 25,
         side1: "كم جرحاً ذكرت الروايات أن طلحة أصيب به في جسده في أحد؟",
         side2: "أكثر من عشرة جروح.",
@@ -3711,7 +3257,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__59",
-        file: "seerah",
         card_number: 59,
         side1: "كم مسلماً تقريباً اجتمع حول النبي بعد ذلك في أحد؟",
         side2: "نحو ثلاثين مسلماً.",
@@ -3719,7 +3264,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__56",
-        file: "seerah",
         card_number: 56,
         side1: "من كان أول من عرف النبي بعد الارتباك في أحد؟",
         side2: "كعب بن مالك.",
@@ -3727,7 +3271,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__12",
-        file: "seerah",
         card_number: 12,
         side1: "ماذا قال النبي لسعد بن أبي وقاص وهو يناوله السهام؟",
         side2: "«ارمِ سعد؛ فداك أبي وأمي».",
@@ -3737,7 +3280,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     full: [
       {
         id: "Part_58__54",
-        file: "seerah",
         card_number: 54,
         side1: "ماذا صاح ابن قَمِئة بعد قتل مصعب بن عمير؟",
         side2: "«قُتل محمد».",
@@ -3745,7 +3287,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__53",
-        file: "seerah",
         card_number: 53,
         side1: "من قتل مصعب بن عمير في أحد؟",
         side2: "ابن قَمِئة.",
@@ -3753,7 +3294,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__47",
-        file: "seerah",
         card_number: 47,
         side1: "من حمل لواء المسلمين يوم أحد؟",
         side2: "مصعب بن عمير.",
@@ -3761,7 +3301,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__75",
-        file: "seerah",
         card_number: 75,
         side1: "أين طعن النبي أُبيّ بن خلف بالحربة؟",
         side2: "في فرجة بين درعه وعنقه.",
@@ -3769,7 +3308,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__26",
-        file: "seerah",
         card_number: 26,
         side1: "ماذا فعلت حلقة الصحابة حول النبي في أحد؟",
         side2: "حمَوه بأجسادهم وأسلحتهم.",
@@ -3777,7 +3315,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__22",
-        file: "seerah",
         card_number: 22,
         side1: "كيف أخرج أبو عبيدة حلقتي المغفر من خدّ النبي؟",
         side2: "نزعهما بأسنانه.",
@@ -3785,7 +3322,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__72",
-        file: "seerah",
         card_number: 72,
         side1: "من تقدّم ضد النبي وهو يصعد نحو التل؟",
         side2: "أُبيّ بن خلف.",
@@ -3793,7 +3329,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__1",
-        file: "seerah",
         card_number: 1,
         side1: "من بقي مع النبي في أحد حين قلّ من معه؟",
         side2: "طلحة بن عبيد الله وسعد بن أبي وقاص.",
@@ -3801,7 +3336,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__9",
-        file: "seerah",
         card_number: 9,
         side1: "ما الإصابتان الكبيرتان المتعلقتان بالرأس اللتان أصابتا النبي يوم أحد؟",
         side2: "كُسرت سنّه وجُرح رأسه.",
@@ -3809,7 +3343,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__60",
-        file: "seerah",
         card_number: 60,
         side1: "نحو أين بدأ النبي الانسحاب بعد اجتماع المسلمين حوله؟",
         side2: "نحو المرتفع قرب جبل أحد.",
@@ -3817,7 +3350,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__10",
-        file: "seerah",
         card_number: 10,
         side1: "أي صحابيين وقفا أمام النبي ورميا السهام دفاعاً عنه في أحد؟",
         side2: "سعد بن أبي وقاص وطلحة بن عبيد الله.",
@@ -3825,7 +3357,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__28",
-        file: "seerah",
         card_number: 28,
         side1: "في أي شيء سقط النبي أثناء أحد؟",
         side2: "في إحدى الحفر التي حفرها أبو عامر الفاسق فخاخاً.",
@@ -3833,7 +3364,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__30",
-        file: "seerah",
         card_number: 30,
         side1: "من أخرج النبي من الحفرة في أحد؟",
         side2: "أخذ عليّ بيده فأخرجه.",
@@ -3841,7 +3371,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__16",
-        file: "seerah",
         card_number: 16,
         side1: "أي إصابة أصابت يد طلحة في أحد؟",
         side2: "ضُربت يده وقُطعت أصابعه.",
@@ -3849,7 +3378,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__14",
-        file: "seerah",
         card_number: 14,
         side1: "من أجاب نداء النبي بقوله: «أنا»؟",
         side2: "طلحة.",
@@ -3857,7 +3385,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__80",
-        file: "seerah",
         card_number: 80,
         side1: "كيف ساعد طلحة النبي على صعود الصخرة في أحد؟",
         side2: "جثا طلحة وقدّم ظهره ليخطو النبي عليه.",
@@ -3865,7 +3392,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__58",
-        file: "seerah",
         card_number: 58,
         side1: "لماذا أشار النبي إلى كعب بن مالك أن يسكت؟",
         side2: "كي لا يعرف المشركون موضعَه بدقة.",
@@ -3873,7 +3399,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__50",
-        file: "seerah",
         card_number: 50,
         side1: "ماذا فعل مصعب بن عمير بعد قطع يده اليمنى؟",
         side2: "أخذ اللواء بيده اليسرى.",
@@ -3881,7 +3406,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__41",
-        file: "seerah",
         card_number: 41,
         side1: "كيف حمى أبو دجانة النبي من السهام في أحد؟",
         side2: "وقف أمام النبي وحماه بظهره.",
@@ -3889,7 +3413,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__48",
-        file: "seerah",
         card_number: 48,
         side1: "عمّن دافع مصعب بن عمير عن النبي في أحد؟",
         side2: "عن ابن قَمِئة وغيره.",
@@ -3897,7 +3420,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__71",
-        file: "seerah",
         card_number: 71,
         side1: "إلى أين وصل المسلمون أخيراً للاحتماء أثناء أحد؟",
         side2: "إلى ستر الجبل.",
@@ -3905,7 +3427,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__78",
-        file: "seerah",
         card_number: 78,
         side1: "أين مات أُبيّ بن خلف بعد أن جرحه النبي؟",
         side2: "في الطريق راجعاً إلى مكة.",
@@ -3913,7 +3434,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__8",
-        file: "seerah",
         card_number: 8,
         side1: "ماذا حدث حين ضرب عبد الله بن قَمِئة خدّ النبي؟",
         side2: "دخلت حلقتان من المغفر الحديد في وجه النبي.",
@@ -3921,7 +3441,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__52",
-        file: "seerah",
         card_number: 52,
         side1: "كيف أمسك مصعب بن عمير اللواء بعد قطع كلتا يديه؟",
         side2: "أمسكه ببقايا ذراعيه إلى صدره.",
@@ -3929,7 +3448,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__25",
-        file: "seerah",
         card_number: 25,
         side1: "كم جرحاً ذكرت الروايات أن طلحة أصيب به في جسده في أحد؟",
         side2: "أكثر من عشرة جروح.",
@@ -3937,7 +3455,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__59",
-        file: "seerah",
         card_number: 59,
         side1: "كم مسلماً تقريباً اجتمع حول النبي بعد ذلك في أحد؟",
         side2: "نحو ثلاثين مسلماً.",
@@ -3945,7 +3462,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__56",
-        file: "seerah",
         card_number: 56,
         side1: "من كان أول من عرف النبي بعد الارتباك في أحد؟",
         side2: "كعب بن مالك.",
@@ -3953,7 +3469,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__12",
-        file: "seerah",
         card_number: 12,
         side1: "ماذا قال النبي لسعد بن أبي وقاص وهو يناوله السهام؟",
         side2: "«ارمِ سعد؛ فداك أبي وأمي».",
@@ -3961,7 +3476,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__69",
-        file: "seerah",
         card_number: 69,
         side1: "أي حال غير معتاد قال أبو طلحة إنه غلبه يوم أحد؟",
         side2: "غلبه النوم.",
@@ -3969,7 +3483,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__15",
-        file: "seerah",
         card_number: 15,
         side1: "ماذا حدث للأنصار الذين تقدّموا أمام النبي في أحد؟",
         side2: "قُتلوا واحداً بعد آخر.",
@@ -3977,7 +3490,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__37",
-        file: "seerah",
         card_number: 37,
         side1: "أي صحابي حمى النبي بجسده وصدره من السهام؟",
         side2: "أبو طلحة الأنصاري.",
@@ -3985,7 +3497,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__3",
-        file: "seerah",
         card_number: 3,
         side1: "أي إصابة أحدثها حجر عتبة بن أبي وقاص في وجه النبي؟",
         side2: "أصاب وجه النبي وكسر إحدى ثناياه.",
@@ -3993,7 +3504,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__46",
-        file: "seerah",
         card_number: 46,
         side1: "من واجه ابن قَمِئة فأصابها جرح في كتفها من ضربته؟",
         side2: "أم عمارة نسيبة بنت كعب.",
@@ -4001,7 +3511,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__49",
-        file: "seerah",
         card_number: 49,
         side1: "ماذا حدث ليد مصعب بن عمير اليمنى وهو يحمل اللواء؟",
         side2: "قُطعت يده اليمنى التي كانت تمسك اللواء.",
@@ -4009,7 +3518,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__31",
-        file: "seerah",
         card_number: 31,
         side1: "من أسند النبي بعد إخراجه من الحفرة حتى ثبت قائماً؟",
         side2: "طلحة.",
@@ -4017,7 +3525,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__19",
-        file: "seerah",
         card_number: 19,
         side1: "ماذا روى سعد بن أبي وقاص أنه رأى بجانب النبي يوم أحد؟",
         side2: "رجلين في ثياب بيض يقاتلان بشدة دفاعاً عنه.",
@@ -4025,7 +3532,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__82",
-        file: "seerah",
         card_number: 82,
         side1: "من قاتل جماعة قريش الصاعدة نحو مرتفع المسلمين فردّهم؟",
         side2: "عمر بن الخطاب وبعض المهاجرين.",
@@ -4033,7 +3539,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__36",
-        file: "seerah",
         card_number: 36,
         side1: "هل نجح الذين تعهّدوا بمحاولة الوصول إلى النبي مرة أخرى؟",
         side2: "لا، لم ينجحوا في الوصول إليه.",
@@ -4041,7 +3546,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__76",
-        file: "seerah",
         card_number: 76,
         side1: "ماذا حدث مباشرة بعد أن طعن النبي أُبيّ بن خلف؟",
         side2: "سقط أُبيّ بن خلف عن فرسه.",
@@ -4049,7 +3553,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__40",
-        file: "seerah",
         card_number: 40,
         side1: "أي تحذير أعطاه أبو طلحة للنبي أثناء رمي السهام؟",
         side2: "«لا تدنُ كثيراً كي لا يصيبك سهم من العدو».",
@@ -4057,7 +3560,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__55",
-        file: "seerah",
         card_number: 55,
         side1: "لمن أعطى النبي اللواء بعد مقتل مصعب بن عمير؟",
         side2: "لعلي بن أبي طالب.",
@@ -4065,7 +3567,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__84",
-        file: "seerah",
         card_number: 84,
         side1: "ماذا قال النبي لسعد حين حاول المشركون الصعود مرة أخرى؟",
         side2: "«اطردهم».",
@@ -4073,7 +3574,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__42",
-        file: "seerah",
         card_number: 42,
         side1: "من طارد عتبة بن أبي وقاص بعد أن أصاب سنّ النبي؟",
         side2: "حاطب بن أبي بلتعة.",
@@ -4081,7 +3581,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__79",
-        file: "seerah",
         card_number: 79,
         side1: "لماذا لم يستطع النبي صعود الصخرة الكبيرة أثناء الصعود في أحد؟",
         side2: "بسبب درعه وجراحه.",
@@ -4089,7 +3588,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__85",
-        file: "seerah",
         card_number: 85,
         side1: "كم رجلاً صرع سعد حين حاول المشركون الصعود مرة أخرى؟",
         side2: "ثلاثة رجال.",
@@ -4097,7 +3595,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__81",
-        file: "seerah",
         card_number: 81,
         side1: "من كان ضمن جماعة قريش التي صعدت نحو مرتفع المسلمين؟",
         side2: "خالد بن الوليد وأبو سفيان.",
@@ -4105,7 +3602,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_58__44",
-        file: "seerah",
         card_number: 44,
         side1: "أي صحابي رُوي أنه ضُرب في عينه حتى سقطت على خدّه؟",
         side2: "قتادة بن النعمان.",
@@ -4119,7 +3615,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     easy: [
       {
         id: "Part_59__73",
-        file: "seerah_uhud_aftermath",
         card_number: 73,
         side1: "ماذا يُروى عن صلاة العصيرم قبل موته؟",
         side2: "لم يصلِّ صلاة واحدة قبل أن يموت.",
@@ -4127,7 +3622,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__8",
-        file: "seerah_uhud_aftermath",
         card_number: 8,
         side1: "كبد من تقول الروايات إن هند بنت عتبة انتزعته في أحد؟",
         side2: "كبد حمزة.",
@@ -4135,7 +3629,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__47",
-        file: "seerah_uhud_aftermath",
         card_number: 47,
         side1: "ما أول نداء لأبي سفيان من الجبل بعد أحد؟",
         side2: "«أفيكم محمد؟»",
@@ -4143,7 +3636,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__5",
-        file: "seerah_uhud_aftermath",
         card_number: 5,
         side1: "ماذا فعل بعض المشركين بجثث المسلمين القتلى بعد أحد؟",
         side2: "مثّلوا بها.",
@@ -4151,7 +3643,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__67",
-        file: "seerah_uhud_aftermath",
         card_number: 67,
         side1: "أين وجد زيد بن ثابت سعد بن الربيع؟",
         side2: "بين القتلى، في آخر لحظاته.",
@@ -4159,7 +3650,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__77",
-        file: "seerah_uhud_aftermath",
         card_number: 77,
         side1: "ماذا فعل قزمان بعد أن جُرح جرحاً بليغاً في أحد؟",
         side2: "قتل نفسه.",
@@ -4167,7 +3657,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__46",
-        file: "seerah_uhud_aftermath",
         card_number: 46,
         side1: "من صعد إلى موضع عالٍ في الجبل بعد أحد؟",
         side2: "أبو سفيان.",
@@ -4175,7 +3664,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__76",
-        file: "seerah_uhud_aftermath",
         card_number: 76,
         side1: "ماذا قال قزمان عن دافعه للقتال في أحد؟",
         side2: "«ما قاتلت إلا حميّة لقومي».",
@@ -4183,7 +3671,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__80",
-        file: "seerah_uhud_aftermath",
         card_number: 80,
         side1: "ماذا قال مُخيريق عن ماله إن قُتل؟",
         side2: "«إن قُتلت فمالي لمحمد؛ يصنع فيه ما شاء».",
@@ -4191,7 +3678,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__9",
-        file: "seerah_uhud_aftermath",
         card_number: 9,
         side1: "ماذا تقول الروايات إن هند بنت عتبة فعلت بكبد حمزة؟",
         side2: "مضغته ثم لفظته.",
@@ -4199,7 +3685,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__65",
-        file: "seerah_uhud_aftermath",
         card_number: 65,
         side1: "ماذا فعل المسلمون بعد رحيل قريش عن أحد؟",
         side2: "دخلوا الميدان يبحثون عن القتلى والجرحى.",
@@ -4209,7 +3694,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     medium: [
       {
         id: "Part_59__73",
-        file: "seerah_uhud_aftermath",
         card_number: 73,
         side1: "ماذا يُروى عن صلاة العصيرم قبل موته؟",
         side2: "لم يصلِّ صلاة واحدة قبل أن يموت.",
@@ -4217,7 +3701,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__8",
-        file: "seerah_uhud_aftermath",
         card_number: 8,
         side1: "كبد من تقول الروايات إن هند بنت عتبة انتزعته في أحد؟",
         side2: "كبد حمزة.",
@@ -4225,7 +3708,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__47",
-        file: "seerah_uhud_aftermath",
         card_number: 47,
         side1: "ما أول نداء لأبي سفيان من الجبل بعد أحد؟",
         side2: "«أفيكم محمد؟»",
@@ -4233,7 +3715,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__5",
-        file: "seerah_uhud_aftermath",
         card_number: 5,
         side1: "ماذا فعل بعض المشركين بجثث المسلمين القتلى بعد أحد؟",
         side2: "مثّلوا بها.",
@@ -4241,7 +3722,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__67",
-        file: "seerah_uhud_aftermath",
         card_number: 67,
         side1: "أين وجد زيد بن ثابت سعد بن الربيع؟",
         side2: "بين القتلى، في آخر لحظاته.",
@@ -4249,7 +3729,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__77",
-        file: "seerah_uhud_aftermath",
         card_number: 77,
         side1: "ماذا فعل قزمان بعد أن جُرح جرحاً بليغاً في أحد؟",
         side2: "قتل نفسه.",
@@ -4257,7 +3736,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__46",
-        file: "seerah_uhud_aftermath",
         card_number: 46,
         side1: "من صعد إلى موضع عالٍ في الجبل بعد أحد؟",
         side2: "أبو سفيان.",
@@ -4265,7 +3743,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__76",
-        file: "seerah_uhud_aftermath",
         card_number: 76,
         side1: "ماذا قال قزمان عن دافعه للقتال في أحد؟",
         side2: "«ما قاتلت إلا حميّة لقومي».",
@@ -4273,7 +3750,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__80",
-        file: "seerah_uhud_aftermath",
         card_number: 80,
         side1: "ماذا قال مُخيريق عن ماله إن قُتل؟",
         side2: "«إن قُتلت فمالي لمحمد؛ يصنع فيه ما شاء».",
@@ -4281,7 +3757,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__9",
-        file: "seerah_uhud_aftermath",
         card_number: 9,
         side1: "ماذا تقول الروايات إن هند بنت عتبة فعلت بكبد حمزة؟",
         side2: "مضغته ثم لفظته.",
@@ -4289,7 +3764,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__65",
-        file: "seerah_uhud_aftermath",
         card_number: 65,
         side1: "ماذا فعل المسلمون بعد رحيل قريش عن أحد؟",
         side2: "دخلوا الميدان يبحثون عن القتلى والجرحى.",
@@ -4297,7 +3771,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__17",
-        file: "seerah_uhud_aftermath",
         card_number: 17,
         side1: "أي امرأتين قال أنس إنه رآهما في أحد بعد القتال؟",
         side2: "عائشة بنت أبي بكر وأم سليم.",
@@ -4305,7 +3778,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__24",
-        file: "seerah_uhud_aftermath",
         card_number: 24,
         side1: "ماذا فعلت أم أيمن ببعض المقاتلين المنهزمين الداخلين المدينة؟",
         side2: "رمت التراب في وجوههم.",
@@ -4313,7 +3785,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__60",
-        file: "seerah_uhud_aftermath",
         card_number: 60,
         side1: "ماذا أُرسل علي بن أبي طالب ليتحقّق منه بمتابعة قريش؟",
         side2: "ما ينوون فعله.",
@@ -4321,7 +3792,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__40",
-        file: "seerah_uhud_aftermath",
         card_number: 40,
         side1: "ماذا ضغطت فاطمة على جرح النبي لإيقاف النزف؟",
         side2: "رماد الحصير المحروق.",
@@ -4329,7 +3799,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__56",
-        file: "seerah_uhud_aftermath",
         card_number: 56,
         side1: "كيف أجاب عمر حين سأل أبو سفيان: «هل قتلنا محمداً؟»",
         side2: "«لا. وهو يسمع كلامك الآن».",
@@ -4337,7 +3806,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__20",
-        file: "seerah_uhud_aftermath",
         card_number: 20,
         side1: "ماذا فعلت عائشة بنت أبي بكر وأم سليم للجرحى في أحد؟",
         side2: "صبّتا الماء في أفواههم.",
@@ -4345,7 +3813,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__48",
-        file: "seerah_uhud_aftermath",
         card_number: 48,
         side1: "كيف ردّ المسلمون حين سأل أبو سفيان: «أفيكم محمد؟»",
         side2: "لم يجيبوا.",
@@ -4353,7 +3820,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__19",
-        file: "seerah_uhud_aftermath",
         card_number: 19,
         side1: "ماذا حملت عائشة بنت أبي بكر وأم سليم على أكتافهما في أحد؟",
         side2: "قرب الماء.",
@@ -4361,7 +3827,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__64",
-        file: "seerah_uhud_aftermath",
         card_number: 64,
         side1: "ماذا استنتج علي من رؤية قريش راكبة الإبل تقود الخيل؟",
         side2: "أنهم متوجهون إلى مكة.",
@@ -4369,7 +3834,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__57",
-        file: "seerah_uhud_aftermath",
         card_number: 57,
         side1: "حسب ابن إسحاق، أين قال أبو سفيان إنهم سيلتقون في العام القادم؟",
         side2: "في بدر.",
@@ -4377,7 +3841,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__34",
-        file: "seerah_uhud_aftermath",
         card_number: 34,
         side1: "ماذا فعل النبي ﷺ بماء المِهراس بدل شربه؟",
         side2: "غسل الدم عن وجهه وصبّ بعضه على رأسه.",
@@ -4385,7 +3848,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__74",
-        file: "seerah_uhud_aftermath",
         card_number: 74,
         side1: "من وُجد جريحاً بشدة بعد أن قاتل قتالاً شديداً وقتل عدداً من المشركين في أحد؟",
         side2: "قزمان.",
@@ -4393,7 +3855,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__44",
-        file: "seerah_uhud_aftermath",
         card_number: 44,
         side1: "في أي هيئة صلّى رسول الله ﷺ بالناس بسبب جراحه بعد أحد؟",
         side2: "جالساً.",
@@ -4401,7 +3862,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__58",
-        file: "seerah_uhud_aftermath",
         card_number: 58,
         side1: "أي ردّ أمر النبي ﷺ أحد رجاله أن يقوله لأبي سفيان عن اللقاء مجدداً في بدر؟",
         side2: "«نعم، إنه موعد بيننا وبينكم».",
@@ -4409,7 +3869,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__82",
-        file: "seerah_uhud_aftermath",
         card_number: 82,
         side1: "كيف مات مُخيريق بعد خروجه صباح اليوم التالي؟",
         side2: "قاتل حتى قُتل.",
@@ -4417,7 +3876,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__26",
-        file: "seerah_uhud_aftermath",
         card_number: 26,
         side1: "أي خدمة قدّمتها أم أيمن في ساحة أحد؟",
         side2: "سقت الجرحى الماء.",
@@ -4427,7 +3885,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     full: [
       {
         id: "Part_59__73",
-        file: "seerah_uhud_aftermath",
         card_number: 73,
         side1: "ماذا يُروى عن صلاة العصيرم قبل موته؟",
         side2: "لم يصلِّ صلاة واحدة قبل أن يموت.",
@@ -4435,7 +3892,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__8",
-        file: "seerah_uhud_aftermath",
         card_number: 8,
         side1: "كبد من تقول الروايات إن هند بنت عتبة انتزعته في أحد؟",
         side2: "كبد حمزة.",
@@ -4443,7 +3899,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__47",
-        file: "seerah_uhud_aftermath",
         card_number: 47,
         side1: "ما أول نداء لأبي سفيان من الجبل بعد أحد؟",
         side2: "«أفيكم محمد؟»",
@@ -4451,7 +3906,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__5",
-        file: "seerah_uhud_aftermath",
         card_number: 5,
         side1: "ماذا فعل بعض المشركين بجثث المسلمين القتلى بعد أحد؟",
         side2: "مثّلوا بها.",
@@ -4459,7 +3913,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__67",
-        file: "seerah_uhud_aftermath",
         card_number: 67,
         side1: "أين وجد زيد بن ثابت سعد بن الربيع؟",
         side2: "بين القتلى، في آخر لحظاته.",
@@ -4467,7 +3920,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__77",
-        file: "seerah_uhud_aftermath",
         card_number: 77,
         side1: "ماذا فعل قزمان بعد أن جُرح جرحاً بليغاً في أحد؟",
         side2: "قتل نفسه.",
@@ -4475,7 +3927,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__46",
-        file: "seerah_uhud_aftermath",
         card_number: 46,
         side1: "من صعد إلى موضع عالٍ في الجبل بعد أحد؟",
         side2: "أبو سفيان.",
@@ -4483,7 +3934,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__76",
-        file: "seerah_uhud_aftermath",
         card_number: 76,
         side1: "ماذا قال قزمان عن دافعه للقتال في أحد؟",
         side2: "«ما قاتلت إلا حميّة لقومي».",
@@ -4491,7 +3941,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__80",
-        file: "seerah_uhud_aftermath",
         card_number: 80,
         side1: "ماذا قال مُخيريق عن ماله إن قُتل؟",
         side2: "«إن قُتلت فمالي لمحمد؛ يصنع فيه ما شاء».",
@@ -4499,7 +3948,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__9",
-        file: "seerah_uhud_aftermath",
         card_number: 9,
         side1: "ماذا تقول الروايات إن هند بنت عتبة فعلت بكبد حمزة؟",
         side2: "مضغته ثم لفظته.",
@@ -4507,7 +3955,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__65",
-        file: "seerah_uhud_aftermath",
         card_number: 65,
         side1: "ماذا فعل المسلمون بعد رحيل قريش عن أحد؟",
         side2: "دخلوا الميدان يبحثون عن القتلى والجرحى.",
@@ -4515,7 +3962,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__17",
-        file: "seerah_uhud_aftermath",
         card_number: 17,
         side1: "أي امرأتين قال أنس إنه رآهما في أحد بعد القتال؟",
         side2: "عائشة بنت أبي بكر وأم سليم.",
@@ -4523,7 +3969,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__24",
-        file: "seerah_uhud_aftermath",
         card_number: 24,
         side1: "ماذا فعلت أم أيمن ببعض المقاتلين المنهزمين الداخلين المدينة؟",
         side2: "رمت التراب في وجوههم.",
@@ -4531,7 +3976,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__60",
-        file: "seerah_uhud_aftermath",
         card_number: 60,
         side1: "ماذا أُرسل علي بن أبي طالب ليتحقّق منه بمتابعة قريش؟",
         side2: "ما ينوون فعله.",
@@ -4539,7 +3983,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__40",
-        file: "seerah_uhud_aftermath",
         card_number: 40,
         side1: "ماذا ضغطت فاطمة على جرح النبي لإيقاف النزف؟",
         side2: "رماد الحصير المحروق.",
@@ -4547,7 +3990,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__56",
-        file: "seerah_uhud_aftermath",
         card_number: 56,
         side1: "كيف أجاب عمر حين سأل أبو سفيان: «هل قتلنا محمداً؟»",
         side2: "«لا. وهو يسمع كلامك الآن».",
@@ -4555,7 +3997,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__20",
-        file: "seerah_uhud_aftermath",
         card_number: 20,
         side1: "ماذا فعلت عائشة بنت أبي بكر وأم سليم للجرحى في أحد؟",
         side2: "صبّتا الماء في أفواههم.",
@@ -4563,7 +4004,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__48",
-        file: "seerah_uhud_aftermath",
         card_number: 48,
         side1: "كيف ردّ المسلمون حين سأل أبو سفيان: «أفيكم محمد؟»",
         side2: "لم يجيبوا.",
@@ -4571,7 +4011,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__19",
-        file: "seerah_uhud_aftermath",
         card_number: 19,
         side1: "ماذا حملت عائشة بنت أبي بكر وأم سليم على أكتافهما في أحد؟",
         side2: "قرب الماء.",
@@ -4579,7 +4018,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__64",
-        file: "seerah_uhud_aftermath",
         card_number: 64,
         side1: "ماذا استنتج علي من رؤية قريش راكبة الإبل تقود الخيل؟",
         side2: "أنهم متوجهون إلى مكة.",
@@ -4587,7 +4025,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__57",
-        file: "seerah_uhud_aftermath",
         card_number: 57,
         side1: "حسب ابن إسحاق، أين قال أبو سفيان إنهم سيلتقون في العام القادم؟",
         side2: "في بدر.",
@@ -4595,7 +4032,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__34",
-        file: "seerah_uhud_aftermath",
         card_number: 34,
         side1: "ماذا فعل النبي ﷺ بماء المِهراس بدل شربه؟",
         side2: "غسل الدم عن وجهه وصبّ بعضه على رأسه.",
@@ -4603,7 +4039,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__74",
-        file: "seerah_uhud_aftermath",
         card_number: 74,
         side1: "من وُجد جريحاً بشدة بعد أن قاتل قتالاً شديداً وقتل عدداً من المشركين في أحد؟",
         side2: "قزمان.",
@@ -4611,7 +4046,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__44",
-        file: "seerah_uhud_aftermath",
         card_number: 44,
         side1: "في أي هيئة صلّى رسول الله ﷺ بالناس بسبب جراحه بعد أحد؟",
         side2: "جالساً.",
@@ -4619,7 +4053,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__58",
-        file: "seerah_uhud_aftermath",
         card_number: 58,
         side1: "أي ردّ أمر النبي ﷺ أحد رجاله أن يقوله لأبي سفيان عن اللقاء مجدداً في بدر؟",
         side2: "«نعم، إنه موعد بيننا وبينكم».",
@@ -4627,7 +4060,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__82",
-        file: "seerah_uhud_aftermath",
         card_number: 82,
         side1: "كيف مات مُخيريق بعد خروجه صباح اليوم التالي؟",
         side2: "قاتل حتى قُتل.",
@@ -4635,7 +4067,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__26",
-        file: "seerah_uhud_aftermath",
         card_number: 26,
         side1: "أي خدمة قدّمتها أم أيمن في ساحة أحد؟",
         side2: "سقت الجرحى الماء.",
@@ -4643,7 +4074,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__42",
-        file: "seerah_uhud_aftermath",
         card_number: 42,
         side1: "من جاء النبي ﷺ بماء عذب ليشرب بعد أحد؟",
         side2: "محمد بن مسلمة.",
@@ -4651,7 +4081,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__50",
-        file: "seerah_uhud_aftermath",
         card_number: 50,
         side1: "عمّن سأل أبو سفيان بعد سؤاله عن ابن أبي قحافة؟",
         side2: "عن عمر بن الخطاب.",
@@ -4659,7 +4088,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__37",
-        file: "seerah_uhud_aftermath",
         card_number: 37,
         side1: "ماذا حدث حين صُبّ الماء على جرح النبي في أحد؟",
         side2: "ازداد النزف.",
@@ -4667,7 +4095,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__45",
-        file: "seerah_uhud_aftermath",
         card_number: 45,
         side1: "كيف صلّى المسلمون خلف النبي ﷺ الجريح بعد أحد؟",
         side2: "صلّوا جلوساً.",
@@ -4675,7 +4102,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__33",
-        file: "seerah_uhud_aftermath",
         card_number: 33,
         side1: "لماذا لم يشرب النبي ﷺ الماء المجلوب من المِهراس؟",
         side2: "وجد رائحته كريهة.",
@@ -4683,7 +4109,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__41",
-        file: "seerah_uhud_aftermath",
         card_number: 41,
         side1: "ما النتيجة بعد أن ضغطت فاطمة الرماد على جرح النبي؟",
         side2: "توقف النزف.",
@@ -4691,7 +4116,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__49",
-        file: "seerah_uhud_aftermath",
         card_number: 49,
         side1: "عمّن سأل أبو سفيان بقوله: «أفيكم ابن أبي قحافة؟»",
         side2: "عن أبي بكر.",
@@ -4699,7 +4123,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__4",
-        file: "seerah_uhud_aftermath",
         card_number: 4,
         side1: "ماذا كان المشركون يستعدون لفعله بعد رجوعهم إلى المعسكر في أحد؟",
         side2: "العودة إلى مكة.",
@@ -4707,7 +4130,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__51",
-        file: "seerah_uhud_aftermath",
         card_number: 51,
         side1: "لماذا بقي المسلمون صامتين حين نادى أبو سفيان بعد أحد؟",
         side2: "لأن النبي ﷺ نهاهم عن الإجابة.",
@@ -4715,7 +4137,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__78",
-        file: "seerah_uhud_aftermath",
         card_number: 78,
         side1: "ما اسم الرجل اليهودي من بني ثعلبة الذي قاتل في أحد؟",
         side2: "مُخيريق.",
@@ -4723,7 +4144,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__22",
-        file: "seerah_uhud_aftermath",
         card_number: 22,
         side1: "من قال عمر إنها كانت تحمل قرب الماء للمسلمين يوم أحد؟",
         side2: "أم سُليط.",
@@ -4731,7 +4151,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__15",
-        file: "seerah_uhud_aftermath",
         card_number: 15,
         side1: "من عرّف بنفسه قائلاً: «أنا أبو دجانة» بعد قتل المشرك؟",
         side2: "أبو دجانة.",
@@ -4739,7 +4158,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__54",
-        file: "seerah_uhud_aftermath",
         card_number: 54,
         side1: "ماذا قال رسول الله ﷺ لعمر حين ناداه أبو سفيان؟",
         side2: "«اذهب إليه فانظر ماذا يريد».",
@@ -4747,7 +4165,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__31",
-        file: "seerah_uhud_aftermath",
         card_number: 31,
         side1: "من جاء النبي ﷺ بماء من المِهراس عند الثغرة المحمية في الجبل؟",
         side2: "علي بن أبي طالب.",
@@ -4755,7 +4172,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__36",
-        file: "seerah_uhud_aftermath",
         card_number: 36,
         side1: "حسب سهل بن سعد، من صبّ الماء من إناء على جرح النبي؟",
         side2: "علي بن أبي طالب.",
@@ -4763,7 +4179,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__66",
-        file: "seerah_uhud_aftermath",
         card_number: 66,
         side1: "من أرسله رسول الله ﷺ يبحث عن سعد بن الربيع يوم أحد؟",
         side2: "زيد بن ثابت.",
@@ -4771,7 +4186,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__29",
-        file: "seerah_uhud_aftermath",
         card_number: 29,
         side1: "أي صحابي رُوي أن رسول الله ﷺ ناوله سهماً بلا نصل حديدي؟",
         side2: "سعد بن أبي وقاص.",
@@ -4779,7 +4193,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_59__70",
-        file: "seerah_uhud_aftermath",
         card_number: 70,
         side1: "ما اسم الرجل الجريح الذي وُجد بين المقاتلين ويُدعى أيضاً عمرو بن ثابت من بني عبد الأشهل؟",
         side2: "العصيرم.",
@@ -4793,7 +4206,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     easy: [
       {
         id: "Part_60__11",
-        file: "seerah",
         card_number: 11,
         side1: "أي قرار اتخذته قريش بعد وصول معبد بن أبي معبد إلى معسكرهم؟",
         side2: "قرّروا مواصلة الانسحاب والرجوع إلى مكة.",
@@ -4801,7 +4213,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__2",
-        file: "seerah",
         card_number: 2,
         side1: "من قال النبي إنه يجوز له الخروج بعد أحد؟",
         side2: "من شهد غزوة أحد فقط.",
@@ -4809,7 +4220,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__21",
-        file: "seerah",
         card_number: 21,
         side1: "على أي شرط أُطلق أبو عزّة الجمحي بعد بدر؟",
         side2: "ألا يقاتل المسلمين مرة أخرى ولا يعين أعداءهم.",
@@ -4817,7 +4227,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__23",
-        file: "seerah",
         card_number: 23,
         side1: "ماذا أمر النبي حين أُسر أبو عزّة الجمحي مرة أخرى في حمراء الأسد؟",
         side2: "أمر بقتله.",
@@ -4825,7 +4234,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__8",
-        file: "seerah",
         card_number: 8,
         side1: "إلى من وُجّه معبد بن أبي معبد ليلاقيهم؟",
         side2: "إلى أبي سفيان وقومه.",
@@ -4833,7 +4241,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__13",
-        file: "seerah",
         card_number: 13,
         side1: "إلى من أوكل أبو سفيان رسالة لمحمد؟",
         side2: "إلى قافلة عبد القيس.",
@@ -4841,7 +4248,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__24",
-        file: "seerah",
         card_number: 24,
         side1: "من جاء إلى المدينة بعد أحد جاسوساً للمشركين؟",
         side2: "معاوية بن المغيرة بن أبي العاص.",
@@ -4851,7 +4257,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     medium: [
       {
         id: "Part_60__11",
-        file: "seerah",
         card_number: 11,
         side1: "أي قرار اتخذته قريش بعد وصول معبد بن أبي معبد إلى معسكرهم؟",
         side2: "قرّروا مواصلة الانسحاب والرجوع إلى مكة.",
@@ -4859,7 +4264,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__2",
-        file: "seerah",
         card_number: 2,
         side1: "من قال النبي إنه يجوز له الخروج بعد أحد؟",
         side2: "من شهد غزوة أحد فقط.",
@@ -4867,7 +4271,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__21",
-        file: "seerah",
         card_number: 21,
         side1: "على أي شرط أُطلق أبو عزّة الجمحي بعد بدر؟",
         side2: "ألا يقاتل المسلمين مرة أخرى ولا يعين أعداءهم.",
@@ -4875,7 +4278,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__23",
-        file: "seerah",
         card_number: 23,
         side1: "ماذا أمر النبي حين أُسر أبو عزّة الجمحي مرة أخرى في حمراء الأسد؟",
         side2: "أمر بقتله.",
@@ -4883,7 +4285,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__8",
-        file: "seerah",
         card_number: 8,
         side1: "إلى من وُجّه معبد بن أبي معبد ليلاقيهم؟",
         side2: "إلى أبي سفيان وقومه.",
@@ -4891,7 +4292,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__13",
-        file: "seerah",
         card_number: 13,
         side1: "إلى من أوكل أبو سفيان رسالة لمحمد؟",
         side2: "إلى قافلة عبد القيس.",
@@ -4899,7 +4299,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__24",
-        file: "seerah",
         card_number: 24,
         side1: "من جاء إلى المدينة بعد أحد جاسوساً للمشركين؟",
         side2: "معاوية بن المغيرة بن أبي العاص.",
@@ -4907,7 +4306,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__19",
-        file: "seerah",
         card_number: 19,
         side1: "من أسره المسلمون قبل الرجوع من حمراء الأسد؟",
         side2: "أبا عزّة الجمحي.",
@@ -4915,7 +4313,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__30",
-        file: "seerah",
         card_number: 30,
         side1: "ما نتيجة مطاردة معاوية بن المغيرة؟",
         side2: "أدركه زيد بن حارثة وعمّار بن ياسر فقتلاه.",
@@ -4923,7 +4320,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__16",
-        file: "seerah",
         card_number: 16,
         side1: "كم بقي رسول الله معسكراً في حمراء الأسد؟",
         side2: "ثلاثة أيام.",
@@ -4931,7 +4327,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__6",
-        file: "seerah",
         card_number: 6,
         side1: "أي رجل من خزاعة جاء إلى رسول الله في حمراء الأسد؟",
         side2: "معبد بن أبي معبد.",
@@ -4939,7 +4334,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__1",
-        file: "seerah",
         card_number: 1,
         side1: "في أي تاريخ دعا رسول الله الناس للخروج بعد أحد؟",
         side2: "صباح الأحد ٨ شوّال سنة ٣ هـ، في اليوم التالي لأحد.",
@@ -4947,7 +4341,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__29",
-        file: "seerah",
         card_number: 29,
         side1: "أي أمر أعطاه النبي بشأن معاوية بن المغيرة إن وُجد؟",
         side2: "أن يُقتل.",
@@ -4955,7 +4348,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__4",
-        file: "seerah",
         card_number: 4,
         side1: "أي صحابي أُذن له خصوصاً بالمشاركة في غزوة حمراء الأسد؟",
         side2: "جابر بن عبد الله.",
@@ -4963,7 +4355,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__27",
-        file: "seerah",
         card_number: 27,
         side1: "ماذا فعل معاوية بن المغيرة بعد تجاوز الثلاثة أيام المأذون بها؟",
         side2: "واصل جمع الأخبار لقريش.",
@@ -4971,7 +4362,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__5",
-        file: "seerah",
         card_number: 5,
         side1: "كم كانت المسافة بين حمراء الأسد والمدينة؟",
         side2: "نحو ثمانية أميال من المدينة.",
@@ -4979,7 +4369,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__22",
-        file: "seerah",
         card_number: 22,
         side1: "مع من خرج أبو عزّة الجمحي في أحد؟",
         side2: "مع المشركين.",
@@ -4989,7 +4378,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     full: [
       {
         id: "Part_60__11",
-        file: "seerah",
         card_number: 11,
         side1: "أي قرار اتخذته قريش بعد وصول معبد بن أبي معبد إلى معسكرهم؟",
         side2: "قرّروا مواصلة الانسحاب والرجوع إلى مكة.",
@@ -4997,7 +4385,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__2",
-        file: "seerah",
         card_number: 2,
         side1: "من قال النبي إنه يجوز له الخروج بعد أحد؟",
         side2: "من شهد غزوة أحد فقط.",
@@ -5005,7 +4392,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__21",
-        file: "seerah",
         card_number: 21,
         side1: "على أي شرط أُطلق أبو عزّة الجمحي بعد بدر؟",
         side2: "ألا يقاتل المسلمين مرة أخرى ولا يعين أعداءهم.",
@@ -5013,7 +4399,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__23",
-        file: "seerah",
         card_number: 23,
         side1: "ماذا أمر النبي حين أُسر أبو عزّة الجمحي مرة أخرى في حمراء الأسد؟",
         side2: "أمر بقتله.",
@@ -5021,7 +4406,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__8",
-        file: "seerah",
         card_number: 8,
         side1: "إلى من وُجّه معبد بن أبي معبد ليلاقيهم؟",
         side2: "إلى أبي سفيان وقومه.",
@@ -5029,7 +4413,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__13",
-        file: "seerah",
         card_number: 13,
         side1: "إلى من أوكل أبو سفيان رسالة لمحمد؟",
         side2: "إلى قافلة عبد القيس.",
@@ -5037,7 +4420,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__24",
-        file: "seerah",
         card_number: 24,
         side1: "من جاء إلى المدينة بعد أحد جاسوساً للمشركين؟",
         side2: "معاوية بن المغيرة بن أبي العاص.",
@@ -5045,7 +4427,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__19",
-        file: "seerah",
         card_number: 19,
         side1: "من أسره المسلمون قبل الرجوع من حمراء الأسد؟",
         side2: "أبا عزّة الجمحي.",
@@ -5053,7 +4434,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__30",
-        file: "seerah",
         card_number: 30,
         side1: "ما نتيجة مطاردة معاوية بن المغيرة؟",
         side2: "أدركه زيد بن حارثة وعمّار بن ياسر فقتلاه.",
@@ -5061,7 +4441,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__16",
-        file: "seerah",
         card_number: 16,
         side1: "كم بقي رسول الله معسكراً في حمراء الأسد؟",
         side2: "ثلاثة أيام.",
@@ -5069,7 +4448,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__6",
-        file: "seerah",
         card_number: 6,
         side1: "أي رجل من خزاعة جاء إلى رسول الله في حمراء الأسد؟",
         side2: "معبد بن أبي معبد.",
@@ -5077,7 +4455,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__1",
-        file: "seerah",
         card_number: 1,
         side1: "في أي تاريخ دعا رسول الله الناس للخروج بعد أحد؟",
         side2: "صباح الأحد ٨ شوّال سنة ٣ هـ، في اليوم التالي لأحد.",
@@ -5085,7 +4462,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__29",
-        file: "seerah",
         card_number: 29,
         side1: "أي أمر أعطاه النبي بشأن معاوية بن المغيرة إن وُجد؟",
         side2: "أن يُقتل.",
@@ -5093,7 +4469,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__4",
-        file: "seerah",
         card_number: 4,
         side1: "أي صحابي أُذن له خصوصاً بالمشاركة في غزوة حمراء الأسد؟",
         side2: "جابر بن عبد الله.",
@@ -5101,7 +4476,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__27",
-        file: "seerah",
         card_number: 27,
         side1: "ماذا فعل معاوية بن المغيرة بعد تجاوز الثلاثة أيام المأذون بها؟",
         side2: "واصل جمع الأخبار لقريش.",
@@ -5109,7 +4483,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__5",
-        file: "seerah",
         card_number: 5,
         side1: "كم كانت المسافة بين حمراء الأسد والمدينة؟",
         side2: "نحو ثمانية أميال من المدينة.",
@@ -5117,7 +4490,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__22",
-        file: "seerah",
         card_number: 22,
         side1: "مع من خرج أبو عزّة الجمحي في أحد؟",
         side2: "مع المشركين.",
@@ -5125,7 +4497,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__25",
-        file: "seerah",
         card_number: 25,
         side1: "أي صحابي آوى معاوية بن المغيرة؟",
         side2: "عثمان بن عفان.",
@@ -5133,7 +4504,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__12",
-        file: "seerah",
         card_number: 12,
         side1: "قافلة أي قبيلة كانت تمرّ في طريقها إلى المدينة؟",
         side2: "قبيلة عبد القيس.",
@@ -5141,7 +4511,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__9",
-        file: "seerah",
         card_number: 9,
         side1: "في أي موضع توقف المشركون وعسكروا بعد أحد؟",
         side2: "الروحاء.",
@@ -5149,7 +4518,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__15",
-        file: "seerah",
         card_number: 15,
         side1: "أين بلّغت قافلة عبد القيس رسالة أبي سفيان؟",
         side2: "في حمراء الأسد.",
@@ -5157,7 +4525,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__20",
-        file: "seerah",
         card_number: 20,
         side1: "في أي معركة سابقة أُسر أبو عزّة الجمحي أولاً؟",
         side2: "غزوة بدر.",
@@ -5165,7 +4532,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__3",
-        file: "seerah",
         card_number: 3,
         side1: "ما ردّ النبي حين قال عبد الله بن أُبيّ: «أخرج معك»؟",
         side2: "قال: «لا».",
@@ -5173,7 +4539,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_60__26",
-        file: "seerah",
         card_number: 26,
         side1: "أي شرط وُضع على معاوية بن المغيرة حين أُوي في المدينة؟",
         side2: "أن يغادر المدينة خلال ثلاثة أيام.",
@@ -5187,7 +4552,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     easy: [
       {
         id: "Part_61__40",
-        file: "seerah",
         card_number: 40,
         side1: "ماذا حدث للمعلّمين المسلمين في الرجيع؟",
         side2: "خُدعوا.",
@@ -5195,7 +4559,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__6",
-        file: "seerah",
         card_number: 6,
         side1: "أي قبيلة تآمرت لاغتيال النبي في ربيع الأول سنة ٤ هـ؟",
         side2: "بنو النضير.",
@@ -5203,7 +4566,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__1",
-        file: "seerah",
         card_number: 1,
         side1: "أي جماعة تركت موقع التل في أحد رغم أمر النبي الصريح بالثبات فيه حتى نهاية المعركة؟",
         side2: "الرماة الذين وُضعوا على التل.",
@@ -5211,7 +4573,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__48",
-        file: "seerah",
         card_number: 48,
         side1: "كيف مات عاصم بن ثابت في الرجيع؟",
         side2: "قاتل حتى قُتل هو وستة آخرون.",
@@ -5219,7 +4580,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__58",
-        file: "seerah",
         card_number: 58,
         side1: "ماذا طلب خُبيب قبل قتله؟",
         side2: "أن يصلّي ركعتين.",
@@ -5227,7 +4587,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__8",
-        file: "seerah",
         card_number: 8,
         side1: "أي غزوة لاحقت قريشاً بعد أحد؟",
         side2: "غزوة حمراء الأسد.",
@@ -5235,7 +4594,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__5",
-        file: "seerah",
         card_number: 5,
         side1: "كم تقريباً قُتل من قرّاء القرآن في بئر معونة؟",
         side2: "نحو سبعين.",
@@ -5243,7 +4601,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__44",
-        file: "seerah",
         card_number: 44,
         side1: "لماذا استأجرت قريش بني لحيان ضد المسلمين في الرجيع؟",
         side2: "ثأراً لرجال منهم قُتلوا في بدر.",
@@ -5251,7 +4608,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__38",
-        file: "seerah",
         card_number: 38,
         side1: "إلى أي موضع بلغت الجماعة المرسَلة معلّمين قبل أن يُخانوا؟",
         side2: "الرجيع.",
@@ -5259,7 +4615,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__4",
-        file: "seerah",
         card_number: 4,
         side1: "أي قبيلة دخلت في الأحداث المؤدية إلى مأساة بئر معونة؟",
         side2: "بنو عامر.",
@@ -5267,7 +4622,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__42",
-        file: "seerah",
         card_number: 42,
         side1: "أي قبيلة قدّمت المائة رامٍ الذين أحاطوا بالمسلمين في الرجيع؟",
         side2: "بنو لحيان.",
@@ -5277,7 +4631,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     medium: [
       {
         id: "Part_61__40",
-        file: "seerah",
         card_number: 40,
         side1: "ماذا حدث للمعلّمين المسلمين في الرجيع؟",
         side2: "خُدعوا.",
@@ -5285,7 +4638,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__6",
-        file: "seerah",
         card_number: 6,
         side1: "أي قبيلة تآمرت لاغتيال النبي في ربيع الأول سنة ٤ هـ؟",
         side2: "بنو النضير.",
@@ -5293,7 +4645,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__1",
-        file: "seerah",
         card_number: 1,
         side1: "أي جماعة تركت موقع التل في أحد رغم أمر النبي الصريح بالثبات فيه حتى نهاية المعركة؟",
         side2: "الرماة الذين وُضعوا على التل.",
@@ -5301,7 +4652,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__48",
-        file: "seerah",
         card_number: 48,
         side1: "كيف مات عاصم بن ثابت في الرجيع؟",
         side2: "قاتل حتى قُتل هو وستة آخرون.",
@@ -5309,7 +4659,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__58",
-        file: "seerah",
         card_number: 58,
         side1: "ماذا طلب خُبيب قبل قتله؟",
         side2: "أن يصلّي ركعتين.",
@@ -5317,7 +4666,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__8",
-        file: "seerah",
         card_number: 8,
         side1: "أي غزوة لاحقت قريشاً بعد أحد؟",
         side2: "غزوة حمراء الأسد.",
@@ -5325,7 +4673,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__5",
-        file: "seerah",
         card_number: 5,
         side1: "كم تقريباً قُتل من قرّاء القرآن في بئر معونة؟",
         side2: "نحو سبعين.",
@@ -5333,7 +4680,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__44",
-        file: "seerah",
         card_number: 44,
         side1: "لماذا استأجرت قريش بني لحيان ضد المسلمين في الرجيع؟",
         side2: "ثأراً لرجال منهم قُتلوا في بدر.",
@@ -5341,7 +4687,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__38",
-        file: "seerah",
         card_number: 38,
         side1: "إلى أي موضع بلغت الجماعة المرسَلة معلّمين قبل أن يُخانوا؟",
         side2: "الرجيع.",
@@ -5349,7 +4694,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__4",
-        file: "seerah",
         card_number: 4,
         side1: "أي قبيلة دخلت في الأحداث المؤدية إلى مأساة بئر معونة؟",
         side2: "بنو عامر.",
@@ -5357,7 +4701,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__42",
-        file: "seerah",
         card_number: 42,
         side1: "أي قبيلة قدّمت المائة رامٍ الذين أحاطوا بالمسلمين في الرجيع؟",
         side2: "بنو لحيان.",
@@ -5365,7 +4708,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__31",
-        file: "seerah",
         card_number: 31,
         side1: "أي القبائل أرسلت جماعة إلى رسول الله في المدينة تطلب معلّمين؟",
         side2: "عضل والقارة.",
@@ -5373,7 +4715,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__3",
-        file: "seerah",
         card_number: 3,
         side1: "أي القبائل تآمرت على المسلمين في صفر سنة ٤ هـ مما أدى إلى قتل جماعة من أصحاب النبي؟",
         side2: "عضل والقارة.",
@@ -5381,7 +4722,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__60",
-        file: "seerah",
         card_number: 60,
         side1: "ماذا فعلت قريش بخُبيب بعد قتله؟",
         side2: "صلبوا جثته.",
@@ -5389,7 +4729,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__12",
-        file: "seerah",
         card_number: 12,
         side1: "من قاد السرية المرسَلة ضد بني أسد بعد أحد؟",
         side2: "أبو سلمة.",
@@ -5397,7 +4736,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__47",
-        file: "seerah",
         card_number: 47,
         side1: "أي صحابي رفض عرض العدو بالأمان في الرجيع؟",
         side2: "عاصم بن ثابت.",
@@ -5405,7 +4743,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__9",
-        file: "seerah",
         card_number: 9,
         side1: "من كان أول من حمل السلاح على المسلمين بعد أحد؟",
         side2: "بنو أسد بن خزيمة.",
@@ -5413,7 +4750,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__7",
-        file: "seerah",
         card_number: 7,
         side1: "أي قبيلة كادت تهاجم المدينة في جمادى الأولى سنة ٤ هـ؟",
         side2: "بنو غطفان.",
@@ -5421,7 +4757,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__24",
-        file: "seerah",
         card_number: 24,
         side1: "ماذا فعل عبد الله بن أُنيس حين صادف خالد بن سفيان؟",
         side2: "صرعه.",
@@ -5429,7 +4764,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__45",
-        file: "seerah",
         card_number: 45,
         side1: "أي تحرّك دفاعي قام به المسلمون حين أُحيط بهم في الرجيع؟",
         side2: "انسحبوا إلى مرتفع واتخذوا موقعاً دفاعياً.",
@@ -5437,7 +4771,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__54",
-        file: "seerah",
         card_number: 54,
         side1: "إلى أين أُخذ خُبيب بن عدي وزيد بن الدثنة وبُيعا؟",
         side2: "إلى مكة.",
@@ -5445,7 +4778,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__19",
-        file: "seerah",
         card_number: 19,
         side1: "ماذا حدث لأبي سلمة بعد غزوة بني أسد بقليل؟",
         side2: "توفي.",
@@ -5453,7 +4785,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__55",
-        file: "seerah",
         card_number: 55,
         side1: "إلى من سُلّم كلّ من الأسيرين من الرجيع في مكة؟",
         side2: "إلى أهل الرجل الذي قتله.",
@@ -5461,7 +4792,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__16",
-        file: "seerah",
         card_number: 16,
         side1: "ماذا حدث لتجمّع بني أسد حين وصل الجيش المسلم؟",
         side2: "تفرّق.",
@@ -5469,7 +4799,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__33",
-        file: "seerah",
         card_number: 33,
         side1: "ماذا أرسل النبي إلى عضل والقارة استجابة لطلبهما؟",
         side2: "جماعة من أصحابه معلّمين.",
@@ -5477,7 +4806,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__23",
-        file: "seerah",
         card_number: 23,
         side1: "من أرسله رسول الله وحده ضد خالد بن سفيان الهذلي؟",
         side2: "عبد الله بن أُنيس.",
@@ -5485,7 +4813,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__64",
-        file: "seerah",
         card_number: 64,
         side1: "لماذا أخذ صفوان بن أمية زيد بن الدثنة خارج الحرم ليقتله؟",
         side2: "ثأراً لأبيه أمية.",
@@ -5495,7 +4822,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     full: [
       {
         id: "Part_61__40",
-        file: "seerah",
         card_number: 40,
         side1: "ماذا حدث للمعلّمين المسلمين في الرجيع؟",
         side2: "خُدعوا.",
@@ -5503,7 +4829,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__6",
-        file: "seerah",
         card_number: 6,
         side1: "أي قبيلة تآمرت لاغتيال النبي في ربيع الأول سنة ٤ هـ؟",
         side2: "بنو النضير.",
@@ -5511,7 +4836,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__1",
-        file: "seerah",
         card_number: 1,
         side1: "أي جماعة تركت موقع التل في أحد رغم أمر النبي الصريح بالثبات فيه حتى نهاية المعركة؟",
         side2: "الرماة الذين وُضعوا على التل.",
@@ -5519,7 +4843,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__48",
-        file: "seerah",
         card_number: 48,
         side1: "كيف مات عاصم بن ثابت في الرجيع؟",
         side2: "قاتل حتى قُتل هو وستة آخرون.",
@@ -5527,7 +4850,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__58",
-        file: "seerah",
         card_number: 58,
         side1: "ماذا طلب خُبيب قبل قتله؟",
         side2: "أن يصلّي ركعتين.",
@@ -5535,7 +4857,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__8",
-        file: "seerah",
         card_number: 8,
         side1: "أي غزوة لاحقت قريشاً بعد أحد؟",
         side2: "غزوة حمراء الأسد.",
@@ -5543,7 +4864,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__5",
-        file: "seerah",
         card_number: 5,
         side1: "كم تقريباً قُتل من قرّاء القرآن في بئر معونة؟",
         side2: "نحو سبعين.",
@@ -5551,7 +4871,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__44",
-        file: "seerah",
         card_number: 44,
         side1: "لماذا استأجرت قريش بني لحيان ضد المسلمين في الرجيع؟",
         side2: "ثأراً لرجال منهم قُتلوا في بدر.",
@@ -5559,7 +4878,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__38",
-        file: "seerah",
         card_number: 38,
         side1: "إلى أي موضع بلغت الجماعة المرسَلة معلّمين قبل أن يُخانوا؟",
         side2: "الرجيع.",
@@ -5567,7 +4885,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__4",
-        file: "seerah",
         card_number: 4,
         side1: "أي قبيلة دخلت في الأحداث المؤدية إلى مأساة بئر معونة؟",
         side2: "بنو عامر.",
@@ -5575,7 +4892,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__42",
-        file: "seerah",
         card_number: 42,
         side1: "أي قبيلة قدّمت المائة رامٍ الذين أحاطوا بالمسلمين في الرجيع؟",
         side2: "بنو لحيان.",
@@ -5583,7 +4899,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__31",
-        file: "seerah",
         card_number: 31,
         side1: "أي القبائل أرسلت جماعة إلى رسول الله في المدينة تطلب معلّمين؟",
         side2: "عضل والقارة.",
@@ -5591,7 +4906,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__3",
-        file: "seerah",
         card_number: 3,
         side1: "أي القبائل تآمرت على المسلمين في صفر سنة ٤ هـ مما أدى إلى قتل جماعة من أصحاب النبي؟",
         side2: "عضل والقارة.",
@@ -5599,7 +4913,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__60",
-        file: "seerah",
         card_number: 60,
         side1: "ماذا فعلت قريش بخُبيب بعد قتله؟",
         side2: "صلبوا جثته.",
@@ -5607,7 +4920,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__12",
-        file: "seerah",
         card_number: 12,
         side1: "من قاد السرية المرسَلة ضد بني أسد بعد أحد؟",
         side2: "أبو سلمة.",
@@ -5615,7 +4927,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__47",
-        file: "seerah",
         card_number: 47,
         side1: "أي صحابي رفض عرض العدو بالأمان في الرجيع؟",
         side2: "عاصم بن ثابت.",
@@ -5623,7 +4934,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__9",
-        file: "seerah",
         card_number: 9,
         side1: "من كان أول من حمل السلاح على المسلمين بعد أحد؟",
         side2: "بنو أسد بن خزيمة.",
@@ -5631,7 +4941,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__7",
-        file: "seerah",
         card_number: 7,
         side1: "أي قبيلة كادت تهاجم المدينة في جمادى الأولى سنة ٤ هـ؟",
         side2: "بنو غطفان.",
@@ -5639,7 +4948,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__24",
-        file: "seerah",
         card_number: 24,
         side1: "ماذا فعل عبد الله بن أُنيس حين صادف خالد بن سفيان؟",
         side2: "صرعه.",
@@ -5647,7 +4955,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__45",
-        file: "seerah",
         card_number: 45,
         side1: "أي تحرّك دفاعي قام به المسلمون حين أُحيط بهم في الرجيع؟",
         side2: "انسحبوا إلى مرتفع واتخذوا موقعاً دفاعياً.",
@@ -5655,7 +4962,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__54",
-        file: "seerah",
         card_number: 54,
         side1: "إلى أين أُخذ خُبيب بن عدي وزيد بن الدثنة وبُيعا؟",
         side2: "إلى مكة.",
@@ -5663,7 +4969,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__19",
-        file: "seerah",
         card_number: 19,
         side1: "ماذا حدث لأبي سلمة بعد غزوة بني أسد بقليل؟",
         side2: "توفي.",
@@ -5671,7 +4976,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__55",
-        file: "seerah",
         card_number: 55,
         side1: "إلى من سُلّم كلّ من الأسيرين من الرجيع في مكة؟",
         side2: "إلى أهل الرجل الذي قتله.",
@@ -5679,7 +4983,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__16",
-        file: "seerah",
         card_number: 16,
         side1: "ماذا حدث لتجمّع بني أسد حين وصل الجيش المسلم؟",
         side2: "تفرّق.",
@@ -5687,7 +4990,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__33",
-        file: "seerah",
         card_number: 33,
         side1: "ماذا أرسل النبي إلى عضل والقارة استجابة لطلبهما؟",
         side2: "جماعة من أصحابه معلّمين.",
@@ -5695,7 +4997,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__23",
-        file: "seerah",
         card_number: 23,
         side1: "من أرسله رسول الله وحده ضد خالد بن سفيان الهذلي؟",
         side2: "عبد الله بن أُنيس.",
@@ -5703,7 +5004,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__64",
-        file: "seerah",
         card_number: 64,
         side1: "لماذا أخذ صفوان بن أمية زيد بن الدثنة خارج الحرم ليقتله؟",
         side2: "ثأراً لأبيه أمية.",
@@ -5711,7 +5011,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__46",
-        file: "seerah",
         card_number: 46,
         side1: "ماذا عرض العدو على المسلمين في الرجيع إن نزلوا وسلّموا؟",
         side2: "الأمان.",
@@ -5719,7 +5018,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__26",
-        file: "seerah",
         card_number: 26,
         side1: "ماذا أحضر عبد الله بن أُنيس معه من مهمته ضد خالد بن سفيان؟",
         side2: "رأس خالد بن سفيان.",
@@ -5727,7 +5025,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__37",
-        file: "seerah",
         card_number: 37,
         side1: "أي صحابي يُذكر في روايات أخرى قائداً للجماعة المرسَلة إلى عضل والقارة؟",
         side2: "عاصم بن ثابت.",
@@ -5735,7 +5032,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__52",
-        file: "seerah",
         card_number: 52,
         side1: "ماذا حدث للصحابي الثالث الباقي في الرجيع حين رفض أن يسير معهم مقيّداً؟",
         side2: "قُتل.",
@@ -5743,7 +5039,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__22",
-        file: "seerah",
         card_number: 22,
         side1: "من كان يعبّئ قومه وغيرهم لمهاجمة مواقع المسلمين في الخامس من المحرّم سنة ٤ هـ؟",
         side2: "خالد بن سفيان الهذلي.",
@@ -5751,7 +5046,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__51",
-        file: "seerah",
         card_number: 51,
         side1: "ماذا فعل الأعراب بالثلاثة المسلمين الباقين بعد أن نزلوا تحت ظاهر الأمان؟",
         side2: "قيّدوهم.",
@@ -5759,7 +5053,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__63",
-        file: "seerah",
         card_number: 63,
         side1: "من اشترى زيد بن الدثنة؟",
         side2: "صفوان بن أمية.",
@@ -5767,7 +5060,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__57",
-        file: "seerah",
         card_number: 57,
         side1: "إلى أين أخذت قريش خُبيباً لقتله؟",
         side2: "خارج الحرم إلى موضع يُدعى التنعيم.",
@@ -5775,7 +5067,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__41",
-        file: "seerah",
         card_number: 41,
         side1: "كم رامياً أحاط بالمسلمين في الرجيع؟",
         side2: "مائة رامٍ.",
@@ -5783,7 +5074,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__61",
-        file: "seerah",
         card_number: 61,
         side1: "لماذا وُضع حرّاس على جثة خُبيب بعد قتله؟",
         side2: "لمنع أصحابه من إنزاله.",
@@ -5791,7 +5081,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__66",
-        file: "seerah",
         card_number: 66,
         side1: "ماذا أراد قتلة عاصم بن ثابت أن يفعلوا بجثته؟",
         side2: "أن يمثّلوا به ويأخذوا جزءاً من جسده.",
@@ -5799,7 +5088,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__10",
-        file: "seerah",
         card_number: 10,
         side1: "تعبئة من بلغت المدينة بعد أحد تهديداً للمسلمين؟",
         side2: "طلحة وسلمة ابنا خويلد.",
@@ -5807,7 +5095,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__27",
-        file: "seerah",
         card_number: 27,
         side1: "ماذا أعطى رسول الله عبد الله بن أُنيس بعد مهمته؟",
         side2: "عصاً.",
@@ -5815,7 +5102,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__53",
-        file: "seerah",
         card_number: 53,
         side1: "أي أسيرين من الرجيع كان كلاهما قد قتل زعماء من قريش في بدر؟",
         side2: "خُبيب بن عدي وزيد بن الدثنة.",
@@ -5823,7 +5109,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__35",
-        file: "seerah",
         card_number: 35,
         side1: "حسب روايات أخرى، كم صحابياً أُرسل معلّمين إلى عضل والقارة؟",
         side2: "عشرة.",
@@ -5831,7 +5116,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__30",
-        file: "seerah",
         card_number: 30,
         side1: "في أي شهر من سنة ٤ هـ طلبت جماعة من عضل والقارة من النبي أن يرسل معلّمين؟",
         side2: "صفر.",
@@ -5839,7 +5123,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__49",
-        file: "seerah",
         card_number: 49,
         side1: "كم مسلماً بقي حيّاً بعد مقتل عاصم بن ثابت وستة آخرين في الرجيع؟",
         side2: "ثلاثة.",
@@ -5847,7 +5130,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_61__62",
-        file: "seerah",
         card_number: 62,
         side1: "أي صحابي جاء ليلاً فغلب الحرّاس وأنزل جثة خُبيب ودفنه؟",
         side2: "عمرو بن أمية الضمري.",
@@ -5861,7 +5143,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     easy: [
       {
         id: "Part_62__85",
-        file: "seerah",
         card_number: 85,
         side1: "هل التقت قريش بالمسلمين في قتال في بدر الموعد؟",
         side2: "لا، رجعت قريش نحو مكة دون أن تلتقي بهم.",
@@ -5869,7 +5150,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__34",
-        file: "seerah",
         card_number: 34,
         side1: "ماذا خطّط رؤساء بني النضير سرّاً والنبي عندهم؟",
         side2: "خطّطوا لقتل النبي.",
@@ -5877,7 +5157,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__31",
-        file: "seerah",
         card_number: 31,
         side1: "لماذا ذهب النبي إلى بني النضير بعد قتل الرجلين من بني كلاب؟",
         side2: "ليطلب منهم العون في أداء دية الرجلين اللذين قتلهما عمرو بن أمية خطأ.",
@@ -5885,7 +5164,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__63",
-        file: "seerah",
         card_number: 63,
         side1: "كيف صُنّفت غنائم بني النضير إذ أُخذت بلا قتال فعلي؟",
         side2: "صُنّفت فيئاً.",
@@ -5893,7 +5171,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__71",
-        file: "seerah",
         card_number: 71,
         side1: "لماذا سار النبي نحو نجد؟",
         side2: "لمواجهة القوات المتجمّعة هناك.",
@@ -5901,7 +5178,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__53",
-        file: "seerah",
         card_number: 53,
         side1: "على أي شرط طلب بنو النضير أن يُعفَوا؟",
         side2: "على شرط أن يغادروا.",
@@ -5909,7 +5185,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__9",
-        file: "seerah",
         card_number: 9,
         side1: "ماذا أمر عامر بن الطفيل أن يُفعل بحرام بن ملحان؟",
         side2: "أمر رجلاً أن يطعنه من خلفه برمح.",
@@ -5917,7 +5192,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__99",
-        file: "seerah",
         card_number: 99,
         side1: "هل صادف المسلمون عدواً مجتمعاً في دومة الجندل؟",
         side2: "لا، لم يصادفوا عدواً مجتمعاً.",
@@ -5925,7 +5199,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__64",
-        file: "seerah",
         card_number: 64,
         side1: "لمن خصّ النبي فيء بني النضير في الغالب؟",
         side2: "للمهاجرين الأولين في الغالب.",
@@ -5933,7 +5206,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__37",
-        file: "seerah",
         card_number: 37,
         side1: "كيف ردّ النبي بعد علمه بمكيدة بني النضير؟",
         side2: "قام سريعاً ورجع إلى المدينة دون أن يُعلمهم.",
@@ -5941,7 +5213,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__13",
-        file: "seerah",
         card_number: 13,
         side1: "أي بطون من بني سليم استجابت لدعوة عامر بن الطفيل؟",
         side2: "عصيّة ورِعل وذكوان.",
@@ -5949,7 +5220,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__61",
-        file: "seerah",
         card_number: 61,
         side1: "ماذا استولى عليه النبي بعد مغادرة بني النضير المدينة؟",
         side2: "أرضهم وديارهم وأموالهم وسلاحهم.",
@@ -5957,7 +5227,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__21",
-        file: "seerah",
         card_number: 21,
         side1: "أي خبر أحضره عمرو بن أمية إلى المدينة من بئر معونة؟",
         side2: "أن نحو سبعين قُتلوا في بئر معونة.",
@@ -5965,7 +5234,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__41",
-        file: "seerah",
         card_number: 41,
         side1: "من شجّع بني النضير على عصيان النبي ووعدهم بالنصر؟",
         side2: "عبد الله بن أُبيّ.",
@@ -5973,7 +5241,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__24",
-        file: "seerah",
         card_number: 24,
         side1: "ماذا فعل عمرو بن أمية بالرجلين من بني كلاب في قرقرة؟",
         side2: "قتلهما وهما نائمان.",
@@ -5983,7 +5250,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     medium: [
       {
         id: "Part_62__85",
-        file: "seerah",
         card_number: 85,
         side1: "هل التقت قريش بالمسلمين في قتال في بدر الموعد؟",
         side2: "لا، رجعت قريش نحو مكة دون أن تلتقي بهم.",
@@ -5991,7 +5257,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__34",
-        file: "seerah",
         card_number: 34,
         side1: "ماذا خطّط رؤساء بني النضير سرّاً والنبي عندهم؟",
         side2: "خطّطوا لقتل النبي.",
@@ -5999,7 +5264,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__31",
-        file: "seerah",
         card_number: 31,
         side1: "لماذا ذهب النبي إلى بني النضير بعد قتل الرجلين من بني كلاب؟",
         side2: "ليطلب منهم العون في أداء دية الرجلين اللذين قتلهما عمرو بن أمية خطأ.",
@@ -6007,7 +5271,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__63",
-        file: "seerah",
         card_number: 63,
         side1: "كيف صُنّفت غنائم بني النضير إذ أُخذت بلا قتال فعلي؟",
         side2: "صُنّفت فيئاً.",
@@ -6015,7 +5278,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__71",
-        file: "seerah",
         card_number: 71,
         side1: "لماذا سار النبي نحو نجد؟",
         side2: "لمواجهة القوات المتجمّعة هناك.",
@@ -6023,7 +5285,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__53",
-        file: "seerah",
         card_number: 53,
         side1: "على أي شرط طلب بنو النضير أن يُعفَوا؟",
         side2: "على شرط أن يغادروا.",
@@ -6031,7 +5292,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__9",
-        file: "seerah",
         card_number: 9,
         side1: "ماذا أمر عامر بن الطفيل أن يُفعل بحرام بن ملحان؟",
         side2: "أمر رجلاً أن يطعنه من خلفه برمح.",
@@ -6039,7 +5299,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__99",
-        file: "seerah",
         card_number: 99,
         side1: "هل صادف المسلمون عدواً مجتمعاً في دومة الجندل؟",
         side2: "لا، لم يصادفوا عدواً مجتمعاً.",
@@ -6047,7 +5306,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__64",
-        file: "seerah",
         card_number: 64,
         side1: "لمن خصّ النبي فيء بني النضير في الغالب؟",
         side2: "للمهاجرين الأولين في الغالب.",
@@ -6055,7 +5313,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__37",
-        file: "seerah",
         card_number: 37,
         side1: "كيف ردّ النبي بعد علمه بمكيدة بني النضير؟",
         side2: "قام سريعاً ورجع إلى المدينة دون أن يُعلمهم.",
@@ -6063,7 +5320,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__13",
-        file: "seerah",
         card_number: 13,
         side1: "أي بطون من بني سليم استجابت لدعوة عامر بن الطفيل؟",
         side2: "عصيّة ورِعل وذكوان.",
@@ -6071,7 +5327,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__61",
-        file: "seerah",
         card_number: 61,
         side1: "ماذا استولى عليه النبي بعد مغادرة بني النضير المدينة؟",
         side2: "أرضهم وديارهم وأموالهم وسلاحهم.",
@@ -6079,7 +5334,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__21",
-        file: "seerah",
         card_number: 21,
         side1: "أي خبر أحضره عمرو بن أمية إلى المدينة من بئر معونة؟",
         side2: "أن نحو سبعين قُتلوا في بئر معونة.",
@@ -6087,7 +5341,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__41",
-        file: "seerah",
         card_number: 41,
         side1: "من شجّع بني النضير على عصيان النبي ووعدهم بالنصر؟",
         side2: "عبد الله بن أُبيّ.",
@@ -6095,7 +5348,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__24",
-        file: "seerah",
         card_number: 24,
         side1: "ماذا فعل عمرو بن أمية بالرجلين من بني كلاب في قرقرة؟",
         side2: "قتلهما وهما نائمان.",
@@ -6103,7 +5355,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__54",
-        file: "seerah",
         card_number: 54,
         side1: "ماذا أذن النبي لبني النضير أن يأخذوه عند مغادرتهم المدينة؟",
         side2: "ما تحمله إبلهم، إلا السلاح.",
@@ -6111,7 +5362,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__52",
-        file: "seerah",
         card_number: 52,
         side1: "هل وصل النصر الموعود من عبد الله بن أُبيّ وغطفان إلى بني النضير؟",
         side2: "لا، لم يأتِ النصر الموعود.",
@@ -6119,7 +5369,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__25",
-        file: "seerah",
         card_number: 25,
         side1: "أي منزلة خاصة كانت للرجلين من بني كلاب قبل أن يقتلهما عمرو بن أمية؟",
         side2: "كانا في أمان رسول الله.",
@@ -6127,7 +5376,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__47",
-        file: "seerah",
         card_number: 47,
         side1: "أي عمل عسكري قام به المسلمون ضد بني النضير بعد انسحابهم إلى حصونهم؟",
         side2: "حاصروهم.",
@@ -6135,7 +5383,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__4",
-        file: "seerah",
         card_number: 4,
         side1: "حسب أشهر الروايات، كم رجلاً تقريباً أُرسل في سرية بئر معونة؟",
         side2: "كانوا نحو سبعين.",
@@ -6143,7 +5390,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__30",
-        file: "seerah",
         card_number: 30,
         side1: "على أي قبائل دعا النبي في صلاة الفجر بعد بئر معونة كما روى أنس بن مالك؟",
         side2: "رِعل وذكوان ولحيان وعصيّة.",
@@ -6151,7 +5397,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__103",
-        file: "seerah",
         card_number: 103,
         side1: "على أي طريق تقع دومة الجندل؟",
         side2: "على الطريق نحو الشام.",
@@ -6159,7 +5404,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__8",
-        file: "seerah",
         card_number: 8,
         side1: "من حمل الرسالة إلى عامر بن الطفيل؟",
         side2: "حمل حرام بن ملحان الرسالة.",
@@ -6167,7 +5411,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__5",
-        file: "seerah",
         card_number: 5,
         side1: "من قاد الجماعة المرسَلة في سرية بئر معونة؟",
         side2: "المنذر بن عمرو من بني ساعدة.",
@@ -6175,7 +5418,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__70",
-        file: "seerah",
         card_number: 70,
         side1: "أي جماعات كانت تجمع القوات في نجد قرب المدينة؟",
         side2: "جماعات من بني محارب وثعلبة من غطفان.",
@@ -6183,7 +5425,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__91",
-        file: "seerah",
         card_number: 91,
         side1: "كم رجلاً تقريباً رافق النبي إلى دومة الجندل؟",
         side2: "نحو ألف.",
@@ -6191,7 +5432,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__94",
-        file: "seerah",
         card_number: 94,
         side1: "كيف سار الجيش المسلم في الطريق إلى دومة الجندل؟",
         side2: "ساروا ليلاً وتستّروا نهاراً.",
@@ -6199,7 +5439,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__39",
-        file: "seerah",
         card_number: 39,
         side1: "كم يوماً أعطى النبي بني النضير لمغادرة المدينة؟",
         side2: "عشرة أيام.",
@@ -6207,7 +5446,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__11",
-        file: "seerah",
         card_number: 11,
         side1: "لماذا رفض بنو عامر مهاجمة المسلمين في بئر معونة؟",
         side2: "لأن الجماعة كانت في جوار أبي براء.",
@@ -6215,7 +5453,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__78",
-        file: "seerah",
         card_number: 78,
         side1: "كم مقاتلاً تقريباً خرج مع النبي لبدر الموعد؟",
         side2: "نحو ألف وخمسمائة مقاتل.",
@@ -6223,7 +5460,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__72",
-        file: "seerah",
         card_number: 72,
         side1: "ماذا فعلت قبائل نجد حين سمعت باقتراب النبي؟",
         side2: "فرّوا إلى الجبال وتفرّقوا.",
@@ -6231,7 +5467,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__45",
-        file: "seerah",
         card_number: 45,
         side1: "إلى أين انسحب بنو النضير أثناء حملة المسلمين عليهم؟",
         side2: "إلى حصونهم بين النخيل.",
@@ -6239,7 +5474,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__98",
-        file: "seerah",
         card_number: 98,
         side1: "ماذا أرسل الرسول وهو في ناحية دومة الجندل؟",
         side2: "دوريات وسرايا استطلاع.",
@@ -6247,7 +5481,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__83",
-        file: "seerah",
         card_number: 83,
         side1: "كم رجلاً تقريباً جمع أبو سفيان من قريش لبدر الموعد؟",
         side2: "نحو ألفي رجل.",
@@ -6255,7 +5488,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__74",
-        file: "seerah",
         card_number: 74,
         side1: "أي غزوة مشهورة تُعدّ من غزوات تلك الناحية من نجد؟",
         side2: "ذات الرقاع.",
@@ -6263,7 +5495,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__66",
-        file: "seerah",
         card_number: 66,
         side1: "ماذا خصّ النبي من فيء بني النضير لأهله؟",
         side2: "نفقة سنة.",
@@ -6271,7 +5502,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__18",
-        file: "seerah",
         card_number: 18,
         side1: "ماذا حدث لعمرو بن أمية الضمري بعد الهجوم في بئر معونة؟",
         side2: "أُسر.",
@@ -6279,7 +5509,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__68",
-        file: "seerah",
         card_number: 68,
         side1: "في أي شهر وسنة بعد الهجرة وقع إجلاء بني النضير؟",
         side2: "في ربيع الأول من السنة الرابعة بعد الهجرة.",
@@ -6287,7 +5516,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__50",
-        file: "seerah",
         card_number: 50,
         side1: "ماذا فعل المسلمون ببعض النخيل أثناء حصار بني النضير؟",
         side2: "قطعوها وأحرقوها.",
@@ -6295,7 +5523,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__27",
-        file: "seerah",
         card_number: 27,
         side1: "ممّن جمع الرسول دية الرجلين من بني كلاب؟",
         side2: "من المسلمين ومن حلفائهم من اليهود.",
@@ -6305,7 +5532,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     full: [
       {
         id: "Part_62__85",
-        file: "seerah",
         card_number: 85,
         side1: "هل التقت قريش بالمسلمين في قتال في بدر الموعد؟",
         side2: "لا، رجعت قريش نحو مكة دون أن تلتقي بهم.",
@@ -6313,7 +5539,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__34",
-        file: "seerah",
         card_number: 34,
         side1: "ماذا خطّط رؤساء بني النضير سرّاً والنبي عندهم؟",
         side2: "خطّطوا لقتل النبي.",
@@ -6321,7 +5546,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__31",
-        file: "seerah",
         card_number: 31,
         side1: "لماذا ذهب النبي إلى بني النضير بعد قتل الرجلين من بني كلاب؟",
         side2: "ليطلب منهم العون في أداء دية الرجلين اللذين قتلهما عمرو بن أمية خطأ.",
@@ -6329,7 +5553,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__63",
-        file: "seerah",
         card_number: 63,
         side1: "كيف صُنّفت غنائم بني النضير إذ أُخذت بلا قتال فعلي؟",
         side2: "صُنّفت فيئاً.",
@@ -6337,7 +5560,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__71",
-        file: "seerah",
         card_number: 71,
         side1: "لماذا سار النبي نحو نجد؟",
         side2: "لمواجهة القوات المتجمّعة هناك.",
@@ -6345,7 +5567,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__53",
-        file: "seerah",
         card_number: 53,
         side1: "على أي شرط طلب بنو النضير أن يُعفَوا؟",
         side2: "على شرط أن يغادروا.",
@@ -6353,7 +5574,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__9",
-        file: "seerah",
         card_number: 9,
         side1: "ماذا أمر عامر بن الطفيل أن يُفعل بحرام بن ملحان؟",
         side2: "أمر رجلاً أن يطعنه من خلفه برمح.",
@@ -6361,7 +5581,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__99",
-        file: "seerah",
         card_number: 99,
         side1: "هل صادف المسلمون عدواً مجتمعاً في دومة الجندل؟",
         side2: "لا، لم يصادفوا عدواً مجتمعاً.",
@@ -6369,7 +5588,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__64",
-        file: "seerah",
         card_number: 64,
         side1: "لمن خصّ النبي فيء بني النضير في الغالب؟",
         side2: "للمهاجرين الأولين في الغالب.",
@@ -6377,7 +5595,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__37",
-        file: "seerah",
         card_number: 37,
         side1: "كيف ردّ النبي بعد علمه بمكيدة بني النضير؟",
         side2: "قام سريعاً ورجع إلى المدينة دون أن يُعلمهم.",
@@ -6385,7 +5602,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__13",
-        file: "seerah",
         card_number: 13,
         side1: "أي بطون من بني سليم استجابت لدعوة عامر بن الطفيل؟",
         side2: "عصيّة ورِعل وذكوان.",
@@ -6393,7 +5609,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__61",
-        file: "seerah",
         card_number: 61,
         side1: "ماذا استولى عليه النبي بعد مغادرة بني النضير المدينة؟",
         side2: "أرضهم وديارهم وأموالهم وسلاحهم.",
@@ -6401,7 +5616,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__21",
-        file: "seerah",
         card_number: 21,
         side1: "أي خبر أحضره عمرو بن أمية إلى المدينة من بئر معونة؟",
         side2: "أن نحو سبعين قُتلوا في بئر معونة.",
@@ -6409,7 +5623,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__41",
-        file: "seerah",
         card_number: 41,
         side1: "من شجّع بني النضير على عصيان النبي ووعدهم بالنصر؟",
         side2: "عبد الله بن أُبيّ.",
@@ -6417,7 +5630,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__24",
-        file: "seerah",
         card_number: 24,
         side1: "ماذا فعل عمرو بن أمية بالرجلين من بني كلاب في قرقرة؟",
         side2: "قتلهما وهما نائمان.",
@@ -6425,7 +5637,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__54",
-        file: "seerah",
         card_number: 54,
         side1: "ماذا أذن النبي لبني النضير أن يأخذوه عند مغادرتهم المدينة؟",
         side2: "ما تحمله إبلهم، إلا السلاح.",
@@ -6433,7 +5644,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__52",
-        file: "seerah",
         card_number: 52,
         side1: "هل وصل النصر الموعود من عبد الله بن أُبيّ وغطفان إلى بني النضير؟",
         side2: "لا، لم يأتِ النصر الموعود.",
@@ -6441,7 +5651,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__25",
-        file: "seerah",
         card_number: 25,
         side1: "أي منزلة خاصة كانت للرجلين من بني كلاب قبل أن يقتلهما عمرو بن أمية؟",
         side2: "كانا في أمان رسول الله.",
@@ -6449,7 +5658,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__47",
-        file: "seerah",
         card_number: 47,
         side1: "أي عمل عسكري قام به المسلمون ضد بني النضير بعد انسحابهم إلى حصونهم؟",
         side2: "حاصروهم.",
@@ -6457,7 +5665,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__4",
-        file: "seerah",
         card_number: 4,
         side1: "حسب أشهر الروايات، كم رجلاً تقريباً أُرسل في سرية بئر معونة؟",
         side2: "كانوا نحو سبعين.",
@@ -6465,7 +5672,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__30",
-        file: "seerah",
         card_number: 30,
         side1: "على أي قبائل دعا النبي في صلاة الفجر بعد بئر معونة كما روى أنس بن مالك؟",
         side2: "رِعل وذكوان ولحيان وعصيّة.",
@@ -6473,7 +5679,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__103",
-        file: "seerah",
         card_number: 103,
         side1: "على أي طريق تقع دومة الجندل؟",
         side2: "على الطريق نحو الشام.",
@@ -6481,7 +5686,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__8",
-        file: "seerah",
         card_number: 8,
         side1: "من حمل الرسالة إلى عامر بن الطفيل؟",
         side2: "حمل حرام بن ملحان الرسالة.",
@@ -6489,7 +5693,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__5",
-        file: "seerah",
         card_number: 5,
         side1: "من قاد الجماعة المرسَلة في سرية بئر معونة؟",
         side2: "المنذر بن عمرو من بني ساعدة.",
@@ -6497,7 +5700,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__70",
-        file: "seerah",
         card_number: 70,
         side1: "أي جماعات كانت تجمع القوات في نجد قرب المدينة؟",
         side2: "جماعات من بني محارب وثعلبة من غطفان.",
@@ -6505,7 +5707,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__91",
-        file: "seerah",
         card_number: 91,
         side1: "كم رجلاً تقريباً رافق النبي إلى دومة الجندل؟",
         side2: "نحو ألف.",
@@ -6513,7 +5714,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__94",
-        file: "seerah",
         card_number: 94,
         side1: "كيف سار الجيش المسلم في الطريق إلى دومة الجندل؟",
         side2: "ساروا ليلاً وتستّروا نهاراً.",
@@ -6521,7 +5721,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__39",
-        file: "seerah",
         card_number: 39,
         side1: "كم يوماً أعطى النبي بني النضير لمغادرة المدينة؟",
         side2: "عشرة أيام.",
@@ -6529,7 +5728,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__11",
-        file: "seerah",
         card_number: 11,
         side1: "لماذا رفض بنو عامر مهاجمة المسلمين في بئر معونة؟",
         side2: "لأن الجماعة كانت في جوار أبي براء.",
@@ -6537,7 +5735,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__78",
-        file: "seerah",
         card_number: 78,
         side1: "كم مقاتلاً تقريباً خرج مع النبي لبدر الموعد؟",
         side2: "نحو ألف وخمسمائة مقاتل.",
@@ -6545,7 +5742,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__72",
-        file: "seerah",
         card_number: 72,
         side1: "ماذا فعلت قبائل نجد حين سمعت باقتراب النبي؟",
         side2: "فرّوا إلى الجبال وتفرّقوا.",
@@ -6553,7 +5749,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__45",
-        file: "seerah",
         card_number: 45,
         side1: "إلى أين انسحب بنو النضير أثناء حملة المسلمين عليهم؟",
         side2: "إلى حصونهم بين النخيل.",
@@ -6561,7 +5756,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__98",
-        file: "seerah",
         card_number: 98,
         side1: "ماذا أرسل الرسول وهو في ناحية دومة الجندل؟",
         side2: "دوريات وسرايا استطلاع.",
@@ -6569,7 +5763,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__83",
-        file: "seerah",
         card_number: 83,
         side1: "كم رجلاً تقريباً جمع أبو سفيان من قريش لبدر الموعد؟",
         side2: "نحو ألفي رجل.",
@@ -6577,7 +5770,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__74",
-        file: "seerah",
         card_number: 74,
         side1: "أي غزوة مشهورة تُعدّ من غزوات تلك الناحية من نجد؟",
         side2: "ذات الرقاع.",
@@ -6585,7 +5777,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__66",
-        file: "seerah",
         card_number: 66,
         side1: "ماذا خصّ النبي من فيء بني النضير لأهله؟",
         side2: "نفقة سنة.",
@@ -6593,7 +5784,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__18",
-        file: "seerah",
         card_number: 18,
         side1: "ماذا حدث لعمرو بن أمية الضمري بعد الهجوم في بئر معونة؟",
         side2: "أُسر.",
@@ -6601,7 +5791,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__68",
-        file: "seerah",
         card_number: 68,
         side1: "في أي شهر وسنة بعد الهجرة وقع إجلاء بني النضير؟",
         side2: "في ربيع الأول من السنة الرابعة بعد الهجرة.",
@@ -6609,7 +5798,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__50",
-        file: "seerah",
         card_number: 50,
         side1: "ماذا فعل المسلمون ببعض النخيل أثناء حصار بني النضير؟",
         side2: "قطعوها وأحرقوها.",
@@ -6617,7 +5805,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__27",
-        file: "seerah",
         card_number: 27,
         side1: "ممّن جمع الرسول دية الرجلين من بني كلاب؟",
         side2: "من المسلمين ومن حلفائهم من اليهود.",
@@ -6625,7 +5812,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__57",
-        file: "seerah",
         card_number: 57,
         side1: "إلى أين ذهب حُييّ بن أخطب وسلام بن أبي الحُقيق بعد مغادرة المدينة؟",
         side2: "ذهبا إلى خيبر.",
@@ -6633,7 +5819,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__100",
-        file: "seerah",
         card_number: 100,
         side1: "مع من عقد النبي صلحاً في طريق العودة من دومة الجندل؟",
         side2: "مع عيينة بن حصن.",
@@ -6641,7 +5826,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__67",
-        file: "seerah",
         card_number: 67,
         side1: "ماذا فعل النبي ببقية فيء بني النضير بعد كفاية أهله؟",
         side2: "استعمله في إعداد الجيوش.",
@@ -6649,7 +5833,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__26",
-        file: "seerah",
         card_number: 26,
         side1: "ماذا قال الرسول بشأن الرجلين المحميين من بني كلاب اللذين قتلهما عمرو بن أمية؟",
         side2: "أن ديتهما دين عليه أن يؤدّيه.",
@@ -6657,7 +5840,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__29",
-        file: "seerah",
         card_number: 29,
         side1: "نحو كم يوماً دعا النبي على رِعل وذكوان ولحيان وعصيّة في صلاة الفجر؟",
         side2: "نحو ثلاثين يوماً.",
@@ -6665,7 +5847,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__33",
-        file: "seerah",
         card_number: 33,
         side1: "أين دعا بنو النضير النبي وأصحابه للجلوس وهم يزعمون جمع المساهمة؟",
         side2: "تحت جدار.",
@@ -6673,7 +5854,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__7",
-        file: "seerah",
         card_number: 7,
         side1: "أين تقع بئر معونة؟",
         side2: "بئر بين بلاد بني عامر والحَرّة وبني سليم.",
@@ -6681,7 +5861,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__87",
-        file: "seerah",
         card_number: 87,
         side1: "ما الاسم الآخر لبدر الموعد؟",
         side2: "بدر الآخرة.",
@@ -6689,7 +5868,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__69",
-        file: "seerah",
         card_number: 69,
         side1: "بأي اسم كان ابن عباس يسمّي سورة الحشر؟",
         side2: "كان يسمّيها «سورة النضير».",
@@ -6697,7 +5875,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__19",
-        file: "seerah",
         card_number: 19,
         side1: "لماذا أطلق عامر بن الطفيل عمرو بن أمية؟",
         side2: "لأنه علم أن عمراً من مضر.",
@@ -6705,7 +5882,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__51",
-        file: "seerah",
         card_number: 51,
         side1: "كيف ردّ بنو قريظة أثناء حصار بني النضير؟",
         side2: "بقوا على الحياد ولم ينصروا بني النضير.",
@@ -6713,7 +5889,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__75",
-        file: "seerah",
         card_number: 75,
         side1: "حسب بعض العلماء، متى وقعت ذات الرقاع؟",
         side2: "ضمن غزوات نجد في السنة الرابعة بعد الهجرة.",
@@ -6721,7 +5896,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__58",
-        file: "seerah",
         card_number: 58,
         side1: "إلى أين ذهب بعض آخرين من بني النضير بعد إجلائهم؟",
         side2: "نحو الشام.",
@@ -6729,7 +5903,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__55",
-        file: "seerah",
         card_number: 55,
         side1: "ماذا نزع بنو النضير من بيوتهم عند مغادرة المدينة؟",
         side2: "نزعوا الخشب والأبواب ليحملوها.",
@@ -6737,7 +5910,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__35",
-        file: "seerah",
         card_number: 35,
         side1: "أي فرد من بني النضير عرض أن يسقط حجراً ثقيلاً على النبي؟",
         side2: "عمرو بن جحاش.",
@@ -6745,7 +5917,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__42",
-        file: "seerah",
         card_number: 42,
         side1: "من أرسل إلى النبي الرسالة: «لن نغادر ديارنا»؟",
         side2: "حُييّ بن أخطب.",
@@ -6753,7 +5924,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__23",
-        file: "seerah",
         card_number: 23,
         side1: "من أي قبيلة كان الرجلان اللذان انضمّا إلى عمرو بن أمية في قرقرة؟",
         side2: "كانا من بني كلاب.",
@@ -6761,7 +5931,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__40",
-        file: "seerah",
         card_number: 40,
         side1: "ماذا فعل بنو النضير في البداية بعد تلقّي الأمر بمغادرة المدينة؟",
         side2: "قبلوا وبدأوا التهيّؤ للرحيل.",
@@ -6769,7 +5938,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__12",
-        file: "seerah",
         card_number: 12,
         side1: "بعد رفض بني عامر، من أي قبيلة طلب عامر بن الطفيل العون؟",
         side2: "التفت إلى بني سليم.",
@@ -6777,7 +5945,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__10",
-        file: "seerah",
         card_number: 10,
         side1: "أي قبيلة دعاها عامر بن الطفيل أولاً لمهاجمة بقية المسلمين في بئر معونة؟",
         side2: "دعا بني عامر.",
@@ -6785,7 +5952,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__38",
-        file: "seerah",
         card_number: 38,
         side1: "من أرسله النبي بالرسالة الآمرة بني النضير بمغادرة المدينة خلال عشرة أيام؟",
         side2: "محمد بن مسلمة.",
@@ -6793,7 +5959,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__16",
-        file: "seerah",
         card_number: 16,
         side1: "ماذا كان يفعل عمرو بن أمية الضمري وصحابي آخر حين وقع الهجوم في بئر معونة؟",
         side2: "كانا على بُعد يرعيان الدواب والركائب.",
@@ -6801,7 +5966,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_62__59",
-        file: "seerah",
         card_number: 59,
         side1: "أي فرد من بني النضير أسلم وأُذن له بالاحتفاظ بماله: يامين بن عمرو أم حُييّ بن أخطب؟",
         side2: "يامين بن عمرو.",
@@ -6815,7 +5979,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     easy: [
       {
         id: "Part_63__33",
-        file: "seerah",
         card_number: 33,
         side1: "ماذا وافق كعب بن أسد القرظي أخيراً أن يفعله بعد الضغط المتكرر؟",
         side2: "نقض العهد والانضمام إلى الأحزاب.",
@@ -6823,7 +5986,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__49",
-        file: "seerah",
         card_number: 49,
         side1: "أي طقس أصاب معسكر الأحزاب ليلاً قرب نهاية الحصار؟",
         side2: "ريح باردة ذات هبّات شديدة.",
@@ -6831,7 +5993,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__31",
-        file: "seerah",
         card_number: 31,
         side1: "أي اتفاق كان لبني قريظة مع رسول الله قبل أن ينقضوه؟",
         side2: "عهد ملزم بالدفاع عن المدينة مع المسلمين.",
@@ -6839,7 +6000,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__7",
-        file: "seerah",
         card_number: 7,
         side1: "اقتراح من قبل النبي للخطة الدفاعية في غزوة الخندق؟",
         side2: "اقتراح سلمان الفارسي.",
@@ -6847,7 +6007,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__6",
-        file: "seerah",
         card_number: 6,
         side1: "كم تقريباً بلغ عدد قوات الأحزاب مجتمعة في غزوة الخندق؟",
         side2: "نحو عشرة آلاف.",
@@ -6855,7 +6014,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__59",
-        file: "seerah",
         card_number: 59,
         side1: "ماذا قال رسول الله بعد نهاية غزوة الخندق بشأن الصراع المقبل مع العدو؟",
         side2: "«الآن نغزوهم ولا يغزوننا».",
@@ -6863,7 +6021,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__20",
-        file: "seerah",
         card_number: 20,
         side1: "من بارز عمرو بن عبد ودّ؟",
         side2: "علي بن أبي طالب.",
@@ -6871,7 +6028,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__8",
-        file: "seerah",
         card_number: 8,
         side1: "على أي جانب من المدينة حُفر الخندق؟",
         side2: "على الجانب الشمالي المكشوف من المدينة.",
@@ -6879,7 +6035,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__11",
-        file: "seerah",
         card_number: 11,
         side1: "ما الذي كان مميّزاً في أسلوب الخندق في جزيرة العرب؟",
         side2: "كان مجهولاً في جزيرة العرب.",
@@ -6887,7 +6042,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__38",
-        file: "seerah",
         card_number: 38,
         side1: "ماذا أعلن بنو قريظة لوفد النبي؟",
         side2: "أنه لا عهد بينهم وبين النبي.",
@@ -6895,7 +6049,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__56",
-        file: "seerah",
         card_number: 56,
         side1: "في أي سنة بعد الهجرة وقعت غزوة الخندق؟",
         side2: "السنة الخامسة بعد الهجرة.",
@@ -6903,7 +6056,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__53",
-        file: "seerah",
         card_number: 53,
         side1: "أي سببين ذكرهما أبو سفيان للانسحاب من الحصار؟",
         side2: "هلاك دوابهم ونفاد زادهم.",
@@ -6913,7 +6065,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     medium: [
       {
         id: "Part_63__33",
-        file: "seerah",
         card_number: 33,
         side1: "ماذا وافق كعب بن أسد القرظي أخيراً أن يفعله بعد الضغط المتكرر؟",
         side2: "نقض العهد والانضمام إلى الأحزاب.",
@@ -6921,7 +6072,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__49",
-        file: "seerah",
         card_number: 49,
         side1: "أي طقس أصاب معسكر الأحزاب ليلاً قرب نهاية الحصار؟",
         side2: "ريح باردة ذات هبّات شديدة.",
@@ -6929,7 +6079,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__31",
-        file: "seerah",
         card_number: 31,
         side1: "أي اتفاق كان لبني قريظة مع رسول الله قبل أن ينقضوه؟",
         side2: "عهد ملزم بالدفاع عن المدينة مع المسلمين.",
@@ -6937,7 +6086,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__7",
-        file: "seerah",
         card_number: 7,
         side1: "اقتراح من قبل النبي للخطة الدفاعية في غزوة الخندق؟",
         side2: "اقتراح سلمان الفارسي.",
@@ -6945,7 +6093,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__6",
-        file: "seerah",
         card_number: 6,
         side1: "كم تقريباً بلغ عدد قوات الأحزاب مجتمعة في غزوة الخندق؟",
         side2: "نحو عشرة آلاف.",
@@ -6953,7 +6100,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__59",
-        file: "seerah",
         card_number: 59,
         side1: "ماذا قال رسول الله بعد نهاية غزوة الخندق بشأن الصراع المقبل مع العدو؟",
         side2: "«الآن نغزوهم ولا يغزوننا».",
@@ -6961,7 +6107,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__20",
-        file: "seerah",
         card_number: 20,
         side1: "من بارز عمرو بن عبد ودّ؟",
         side2: "علي بن أبي طالب.",
@@ -6969,7 +6114,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__8",
-        file: "seerah",
         card_number: 8,
         side1: "على أي جانب من المدينة حُفر الخندق؟",
         side2: "على الجانب الشمالي المكشوف من المدينة.",
@@ -6977,7 +6121,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__11",
-        file: "seerah",
         card_number: 11,
         side1: "ما الذي كان مميّزاً في أسلوب الخندق في جزيرة العرب؟",
         side2: "كان مجهولاً في جزيرة العرب.",
@@ -6985,7 +6128,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__38",
-        file: "seerah",
         card_number: 38,
         side1: "ماذا أعلن بنو قريظة لوفد النبي؟",
         side2: "أنه لا عهد بينهم وبين النبي.",
@@ -6993,7 +6135,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__56",
-        file: "seerah",
         card_number: 56,
         side1: "في أي سنة بعد الهجرة وقعت غزوة الخندق؟",
         side2: "السنة الخامسة بعد الهجرة.",
@@ -7001,7 +6142,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__53",
-        file: "seerah",
         card_number: 53,
         side1: "أي سببين ذكرهما أبو سفيان للانسحاب من الحصار؟",
         side2: "هلاك دوابهم ونفاد زادهم.",
@@ -7009,7 +6149,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__21",
-        file: "seerah",
         card_number: 21,
         side1: "ما نتيجة المبارزة بين علي وعمرو بن عبد ودّ؟",
         side2: "قُتل عمرو بن عبد ودّ.",
@@ -7017,7 +6156,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__48",
-        file: "seerah",
         card_number: 48,
         side1: "كيف ردّت قريش وغطفان على طلب بني قريظة للرهائن؟",
         side2: "رفضوا تقديم الرهائن.",
@@ -7025,7 +6163,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__30",
-        file: "seerah",
         card_number: 30,
         side1: "من ذهب إلى حصن بني قريظة ليؤثّر فيهم أثناء الحصار؟",
         side2: "حُييّ بن أخطب.",
@@ -7033,7 +6170,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__16",
-        file: "seerah",
         card_number: 16,
         side1: "كم مسلماً تقريباً اتخذ موقعه عند جبل سَلع أثناء غزوة الخندق؟",
         side2: "نحو ثلاثة آلاف.",
@@ -7041,7 +6177,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__28",
-        file: "seerah",
         card_number: 28,
         side1: "من أصابه سهم قطع عرقاً في ذراعه أثناء غزوة الخندق؟",
         side2: "سعد بن معاذ.",
@@ -7049,7 +6184,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__43",
-        file: "seerah",
         card_number: 43,
         side1: "أي مهمة أعطى النبي نعيماً بن مسعود بعد إسلامه سرّاً؟",
         side2: "أن يسعى لكسر وحدة العدو.",
@@ -7057,7 +6191,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__47",
-        file: "seerah",
         card_number: 47,
         side1: "ماذا طلب بنو قريظة حين طلبت منهم قريش وغطفان الخروج للقتال؟",
         side2: "رهائن من أشرافهم.",
@@ -7065,7 +6198,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__42",
-        file: "seerah",
         card_number: 42,
         side1: "أي رجل من غطفان أسلم سرّاً أثناء أحداث غزوة الخندق؟",
         side2: "نعيم بن مسعود الأشجعي.",
@@ -7073,7 +6205,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__2",
-        file: "seerah",
         card_number: 2,
         side1: "بعد زيارة مكة، أي قبيلة حثّها الوفد اليهودي على الانضمام إلى الحلف ضد المدينة؟",
         side2: "غطفان.",
@@ -7081,7 +6212,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__1",
-        file: "seerah",
         card_number: 1,
         side1: "أي قبيلة يهودية كان رؤساؤها ضمن الزعماء الذين سافروا إلى مكة لعقد حلف مع قريش؟",
         side2: "بنو النضير.",
@@ -7089,7 +6219,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__10",
-        file: "seerah",
         card_number: 10,
         side1: "كيف نظّم النبي حفر الخندق؟",
         side2: "قسّم الخطّ إلى أقسام وعيّن لكل عشرة رجال مقطعاً يحفرونه.",
@@ -7097,7 +6226,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__52",
-        file: "seerah",
         card_number: 52,
         side1: "من أمر قوات الأحزاب بالركوب والانسحاب؟",
         side2: "أبو سفيان.",
@@ -7105,7 +6233,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__51",
-        file: "seerah",
         card_number: 51,
         side1: "من ذهب ليلاً ليراقب معسكر الأحزاب؟",
         side2: "حذيفة بن اليمان.",
@@ -7113,7 +6240,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__32",
-        file: "seerah",
         card_number: 32,
         side1: "من ضغط عليه حُييّ بن أخطب لنقض عهد بني قريظة؟",
         side2: "كعب بن أسد القرظي.",
@@ -7121,7 +6247,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__3",
-        file: "seerah",
         card_number: 3,
         side1: "ماذا وعد الوفد اليهودي غطفان إن سُقطت المدينة؟",
         side2: "نصيباً من الغنائم.",
@@ -7129,7 +6254,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__44",
-        file: "seerah",
         card_number: 44,
         side1: "بماذا نصح نعيم بني قريظة أن يطلبوا من قريش وغطفان؟",
         side2: "رهائن ضماناً.",
@@ -7139,7 +6263,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     full: [
       {
         id: "Part_63__33",
-        file: "seerah",
         card_number: 33,
         side1: "ماذا وافق كعب بن أسد القرظي أخيراً أن يفعله بعد الضغط المتكرر؟",
         side2: "نقض العهد والانضمام إلى الأحزاب.",
@@ -7147,7 +6270,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__49",
-        file: "seerah",
         card_number: 49,
         side1: "أي طقس أصاب معسكر الأحزاب ليلاً قرب نهاية الحصار؟",
         side2: "ريح باردة ذات هبّات شديدة.",
@@ -7155,7 +6277,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__31",
-        file: "seerah",
         card_number: 31,
         side1: "أي اتفاق كان لبني قريظة مع رسول الله قبل أن ينقضوه؟",
         side2: "عهد ملزم بالدفاع عن المدينة مع المسلمين.",
@@ -7163,7 +6284,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__7",
-        file: "seerah",
         card_number: 7,
         side1: "اقتراح من قبل النبي للخطة الدفاعية في غزوة الخندق؟",
         side2: "اقتراح سلمان الفارسي.",
@@ -7171,7 +6291,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__6",
-        file: "seerah",
         card_number: 6,
         side1: "كم تقريباً بلغ عدد قوات الأحزاب مجتمعة في غزوة الخندق؟",
         side2: "نحو عشرة آلاف.",
@@ -7179,7 +6298,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__59",
-        file: "seerah",
         card_number: 59,
         side1: "ماذا قال رسول الله بعد نهاية غزوة الخندق بشأن الصراع المقبل مع العدو؟",
         side2: "«الآن نغزوهم ولا يغزوننا».",
@@ -7187,7 +6305,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__20",
-        file: "seerah",
         card_number: 20,
         side1: "من بارز عمرو بن عبد ودّ؟",
         side2: "علي بن أبي طالب.",
@@ -7195,7 +6312,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__8",
-        file: "seerah",
         card_number: 8,
         side1: "على أي جانب من المدينة حُفر الخندق؟",
         side2: "على الجانب الشمالي المكشوف من المدينة.",
@@ -7203,7 +6319,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__11",
-        file: "seerah",
         card_number: 11,
         side1: "ما الذي كان مميّزاً في أسلوب الخندق في جزيرة العرب؟",
         side2: "كان مجهولاً في جزيرة العرب.",
@@ -7211,7 +6326,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__38",
-        file: "seerah",
         card_number: 38,
         side1: "ماذا أعلن بنو قريظة لوفد النبي؟",
         side2: "أنه لا عهد بينهم وبين النبي.",
@@ -7219,7 +6333,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__56",
-        file: "seerah",
         card_number: 56,
         side1: "في أي سنة بعد الهجرة وقعت غزوة الخندق؟",
         side2: "السنة الخامسة بعد الهجرة.",
@@ -7227,7 +6340,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__53",
-        file: "seerah",
         card_number: 53,
         side1: "أي سببين ذكرهما أبو سفيان للانسحاب من الحصار؟",
         side2: "هلاك دوابهم ونفاد زادهم.",
@@ -7235,7 +6347,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__21",
-        file: "seerah",
         card_number: 21,
         side1: "ما نتيجة المبارزة بين علي وعمرو بن عبد ودّ؟",
         side2: "قُتل عمرو بن عبد ودّ.",
@@ -7243,7 +6354,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__48",
-        file: "seerah",
         card_number: 48,
         side1: "كيف ردّت قريش وغطفان على طلب بني قريظة للرهائن؟",
         side2: "رفضوا تقديم الرهائن.",
@@ -7251,7 +6361,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__30",
-        file: "seerah",
         card_number: 30,
         side1: "من ذهب إلى حصن بني قريظة ليؤثّر فيهم أثناء الحصار؟",
         side2: "حُييّ بن أخطب.",
@@ -7259,7 +6368,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__16",
-        file: "seerah",
         card_number: 16,
         side1: "كم مسلماً تقريباً اتخذ موقعه عند جبل سَلع أثناء غزوة الخندق؟",
         side2: "نحو ثلاثة آلاف.",
@@ -7267,7 +6375,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__28",
-        file: "seerah",
         card_number: 28,
         side1: "من أصابه سهم قطع عرقاً في ذراعه أثناء غزوة الخندق؟",
         side2: "سعد بن معاذ.",
@@ -7275,7 +6382,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__43",
-        file: "seerah",
         card_number: 43,
         side1: "أي مهمة أعطى النبي نعيماً بن مسعود بعد إسلامه سرّاً؟",
         side2: "أن يسعى لكسر وحدة العدو.",
@@ -7283,7 +6389,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__47",
-        file: "seerah",
         card_number: 47,
         side1: "ماذا طلب بنو قريظة حين طلبت منهم قريش وغطفان الخروج للقتال؟",
         side2: "رهائن من أشرافهم.",
@@ -7291,7 +6396,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__42",
-        file: "seerah",
         card_number: 42,
         side1: "أي رجل من غطفان أسلم سرّاً أثناء أحداث غزوة الخندق؟",
         side2: "نعيم بن مسعود الأشجعي.",
@@ -7299,7 +6403,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__2",
-        file: "seerah",
         card_number: 2,
         side1: "بعد زيارة مكة، أي قبيلة حثّها الوفد اليهودي على الانضمام إلى الحلف ضد المدينة؟",
         side2: "غطفان.",
@@ -7307,7 +6410,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__1",
-        file: "seerah",
         card_number: 1,
         side1: "أي قبيلة يهودية كان رؤساؤها ضمن الزعماء الذين سافروا إلى مكة لعقد حلف مع قريش؟",
         side2: "بنو النضير.",
@@ -7315,7 +6417,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__10",
-        file: "seerah",
         card_number: 10,
         side1: "كيف نظّم النبي حفر الخندق؟",
         side2: "قسّم الخطّ إلى أقسام وعيّن لكل عشرة رجال مقطعاً يحفرونه.",
@@ -7323,7 +6424,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__52",
-        file: "seerah",
         card_number: 52,
         side1: "من أمر قوات الأحزاب بالركوب والانسحاب؟",
         side2: "أبو سفيان.",
@@ -7331,7 +6431,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__51",
-        file: "seerah",
         card_number: 51,
         side1: "من ذهب ليلاً ليراقب معسكر الأحزاب؟",
         side2: "حذيفة بن اليمان.",
@@ -7339,7 +6438,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__32",
-        file: "seerah",
         card_number: 32,
         side1: "من ضغط عليه حُييّ بن أخطب لنقض عهد بني قريظة؟",
         side2: "كعب بن أسد القرظي.",
@@ -7347,7 +6445,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__3",
-        file: "seerah",
         card_number: 3,
         side1: "ماذا وعد الوفد اليهودي غطفان إن سُقطت المدينة؟",
         side2: "نصيباً من الغنائم.",
@@ -7355,7 +6452,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__44",
-        file: "seerah",
         card_number: 44,
         side1: "بماذا نصح نعيم بني قريظة أن يطلبوا من قريش وغطفان؟",
         side2: "رهائن ضماناً.",
@@ -7363,7 +6459,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__45",
-        file: "seerah",
         card_number: 45,
         side1: "أي تحذير أعطاه نعيم لقريش بشأن طلب بني قريظة المحتمل؟",
         side2: "أن بني قريظة قد يطلبون رهائن فلا يعطوهم أحداً.",
@@ -7371,7 +6466,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__22",
-        file: "seerah",
         card_number: 22,
         side1: "لماذا لم يكن قتال متواصل يداً بيد في غزوة الخندق؟",
         side2: "لأن الخندق فصل بين الصفوف.",
@@ -7379,7 +6473,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__9",
-        file: "seerah",
         card_number: 9,
         side1: "ما الذي حمى الجوانب الأخرى من المدينة طبيعياً غير الجانب الشمالي؟",
         side2: "الجبال وبساتين النخيل الكثيفة.",
@@ -7387,7 +6480,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__18",
-        file: "seerah",
         card_number: 18,
         side1: "أي زعيمين قادا الفرسان الذين عبروا عند مقطع ضيّق من الخندق؟",
         side2: "عمرو بن عبد ودّ وعكرمة بن أبي جهل.",
@@ -7395,7 +6487,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__34",
-        file: "seerah",
         card_number: 34,
         side1: "من كانت في أحد الحصون مع النساء والأطفال أثناء الحصار وقتلت جاسوساً؟",
         side2: "صفية بنت عبد المطلب.",
@@ -7403,7 +6494,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__41",
-        file: "seerah",
         card_number: 41,
         side1: "ماذا فعل النبي أخيراً بفكرة إعطاء غطفان جزءاً من ثمر المدينة؟",
         side2: "ترك الفكرة.",
@@ -7411,7 +6501,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__39",
-        file: "seerah",
         card_number: 39,
         side1: "ماذا فكّر رسول الله أن يعرض على بعض رؤساء غطفان ليحملهم على الانسحاب؟",
         side2: "نصيباً من ثمر المدينة.",
@@ -7419,7 +6508,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__25",
-        file: "seerah",
         card_number: 25,
         side1: "أي صلاة فاتت رسول الله وأصحابه في وقتها بسبب شدة القتال والدفاع؟",
         side2: "العصر.",
@@ -7427,7 +6515,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__29",
-        file: "seerah",
         card_number: 29,
         side1: "أين نُصبت خيمة لعلاج سعد بن معاذ؟",
         side2: "في المسجد.",
@@ -7435,7 +6522,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__58",
-        file: "seerah",
         card_number: 58,
         side1: "في أي شهر انتهى حصار غزوة الخندق؟",
         side2: "ذو القعدة.",
@@ -7443,7 +6529,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__57",
-        file: "seerah",
         card_number: 57,
         side1: "في أي شهر بدأ حصار غزوة الخندق؟",
         side2: "شوّال.",
@@ -7451,7 +6536,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__5",
-        file: "seerah",
         card_number: 5,
         side1: "أي القبائل تقدّمت من الشرق أثناء غزوة الخندق؟",
         side2: "بنو سليم وغطفان وبنو مرّة وغيرهم.",
@@ -7459,7 +6543,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__23",
-        file: "seerah",
         card_number: 23,
         side1: "كم مسلماً تقريباً رُوي قتله في غزوة الخندق؟",
         side2: "نحو ستة.",
@@ -7467,7 +6550,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__55",
-        file: "seerah",
         card_number: 55,
         side1: "ما حال معسكر الأعداء صباحاً بعد الانسحاب؟",
         side2: "كان خالياً.",
@@ -7475,7 +6557,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__24",
-        file: "seerah",
         card_number: 24,
         side1: "كم تقريباً رُوي قتلهم من الأحزاب في غزوة الخندق؟",
         side2: "نحو عشرة.",
@@ -7483,7 +6564,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__4",
-        file: "seerah",
         card_number: 4,
         side1: "أي القبائل التفت من الجنوب حول أبي سفيان أثناء غزوة الخندق؟",
         side2: "قريش وكنانة وقبائل تهامة الحليفة.",
@@ -7491,7 +6571,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__40",
-        file: "seerah",
         card_number: 40,
         side1: "أي صحابيين استشارهما النبي في عرض جزء من ثمر المدينة على غطفان؟",
         side2: "سعد بن معاذ وسعد بن عبادة.",
@@ -7499,7 +6578,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_63__26",
-        file: "seerah",
         card_number: 26,
         side1: "متى صلّى المسلمون العصر أثناء غزوة الخندق بعد أن مُنعوا من صلاتها في وقتها؟",
         side2: "بعد غروب الشمس.",
@@ -7513,7 +6591,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     easy: [
       {
         id: "Part_64__34",
-        file: "seerah_banu_qurayzah",
         card_number: 34,
         side1: "من سمّاه الناس ليحكم في بني قريظة؟",
         side2: "سعد بن معاذ.",
@@ -7521,7 +6598,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__70",
-        file: "seerah_banu_qurayzah",
         card_number: 70,
         side1: "ما النتيجة النهائية لجرح سعد بن معاذ؟",
         side2: "استمر النزف حتى مات.",
@@ -7529,7 +6605,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__44",
-        file: "seerah_banu_qurayzah",
         card_number: 44,
         side1: "ما حكم سعد بن معاذ في رجال بني قريظة؟",
         side2: "أن يُقتل الرجال.",
@@ -7537,7 +6612,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__18",
-        file: "seerah_banu_qurayzah",
         card_number: 18,
         side1: "أي إشارة قام بها أبو لبابة جواباً على سؤال بني قريظة؟",
         side2: "وضع يده على حلقه إشارة إلى القتل.",
@@ -7545,7 +6619,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__25",
-        file: "seerah_banu_qurayzah",
         card_number: 25,
         side1: "على أي شرط وافق بنو قريظة على التسليم لحكم النبي؟",
         side2: "أن يُعيّن أحداً من حلفائهم في الأوس ليحكم فيهم.",
@@ -7553,7 +6626,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__11",
-        file: "seerah_banu_qurayzah",
         card_number: 11,
         side1: "أي عمل عسكري قام به المسلمون ضد بني قريظة بعد وصولهم؟",
         side2: "أحاطوا بالحصون وحاصروهم.",
@@ -7561,7 +6633,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__45",
-        file: "seerah_banu_qurayzah",
         card_number: 45,
         side1: "ما حكم سعد بن معاذ في نساء بني قريظة وأطفالهم؟",
         side2: "أن يُسبَوا.",
@@ -7569,7 +6640,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__7",
-        file: "seerah_banu_qurayzah",
         card_number: 7,
         side1: "أي تعليم أعطاه النبي ﷺ بشأن العصر في الطريق إلى بني قريظة؟",
         side2: "ألا يصلّي أحد العصر إلا في ديار بني قريظة.",
@@ -7577,7 +6647,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__17",
-        file: "seerah_banu_qurayzah",
         card_number: 17,
         side1: "أي سؤال سأل بنو قريظة أبا لبابة؟",
         side2: "هل ينزلون ويسلّمون لحكم محمد ﷺ.",
@@ -7585,7 +6654,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__13",
-        file: "seerah_banu_qurayzah",
         card_number: 13,
         side1: "من دعا بنو قريظة أثناء الحصار؟",
         side2: "أبا لبابة بن عبد المنذر.",
@@ -7593,7 +6661,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__20",
-        file: "seerah_banu_qurayzah",
         card_number: 20,
         side1: "ماذا فعل أبو لبابة في المسجد بعد رجوعه إلى المدينة؟",
         side2: "ربط نفسه إلى سارية.",
@@ -7601,7 +6668,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__67",
-        file: "seerah_banu_qurayzah",
         card_number: 67,
         side1: "ماذا حدث لجرح سعد بن معاذ بعد حكمه؟",
         side2: "انفتح العرق في ذراعه ونزف نزيفاً شديداً.",
@@ -7609,7 +6675,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__31",
-        file: "seerah_banu_qurayzah",
         card_number: 31,
         side1: "أي قبيلة طلبت من النبي ﷺ أن يحسن إلى بني قريظة؟",
         side2: "الأوس.",
@@ -7617,7 +6682,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__49",
-        file: "seerah_banu_qurayzah",
         card_number: 49,
         side1: "كم رجلاً تقريباً من بني قريظة قُتل حسب الروايات؟",
         side2: "نحو ستمائة إلى سبعمائة رجل.",
@@ -7627,7 +6691,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     medium: [
       {
         id: "Part_64__34",
-        file: "seerah_banu_qurayzah",
         card_number: 34,
         side1: "من سمّاه الناس ليحكم في بني قريظة؟",
         side2: "سعد بن معاذ.",
@@ -7635,7 +6698,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__70",
-        file: "seerah_banu_qurayzah",
         card_number: 70,
         side1: "ما النتيجة النهائية لجرح سعد بن معاذ؟",
         side2: "استمر النزف حتى مات.",
@@ -7643,7 +6705,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__44",
-        file: "seerah_banu_qurayzah",
         card_number: 44,
         side1: "ما حكم سعد بن معاذ في رجال بني قريظة؟",
         side2: "أن يُقتل الرجال.",
@@ -7651,7 +6712,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__18",
-        file: "seerah_banu_qurayzah",
         card_number: 18,
         side1: "أي إشارة قام بها أبو لبابة جواباً على سؤال بني قريظة؟",
         side2: "وضع يده على حلقه إشارة إلى القتل.",
@@ -7659,7 +6719,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__25",
-        file: "seerah_banu_qurayzah",
         card_number: 25,
         side1: "على أي شرط وافق بنو قريظة على التسليم لحكم النبي؟",
         side2: "أن يُعيّن أحداً من حلفائهم في الأوس ليحكم فيهم.",
@@ -7667,7 +6726,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__11",
-        file: "seerah_banu_qurayzah",
         card_number: 11,
         side1: "أي عمل عسكري قام به المسلمون ضد بني قريظة بعد وصولهم؟",
         side2: "أحاطوا بالحصون وحاصروهم.",
@@ -7675,7 +6733,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__45",
-        file: "seerah_banu_qurayzah",
         card_number: 45,
         side1: "ما حكم سعد بن معاذ في نساء بني قريظة وأطفالهم؟",
         side2: "أن يُسبَوا.",
@@ -7683,7 +6740,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__7",
-        file: "seerah_banu_qurayzah",
         card_number: 7,
         side1: "أي تعليم أعطاه النبي ﷺ بشأن العصر في الطريق إلى بني قريظة؟",
         side2: "ألا يصلّي أحد العصر إلا في ديار بني قريظة.",
@@ -7691,7 +6747,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__17",
-        file: "seerah_banu_qurayzah",
         card_number: 17,
         side1: "أي سؤال سأل بنو قريظة أبا لبابة؟",
         side2: "هل ينزلون ويسلّمون لحكم محمد ﷺ.",
@@ -7699,7 +6754,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__13",
-        file: "seerah_banu_qurayzah",
         card_number: 13,
         side1: "من دعا بنو قريظة أثناء الحصار؟",
         side2: "أبا لبابة بن عبد المنذر.",
@@ -7707,7 +6761,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__20",
-        file: "seerah_banu_qurayzah",
         card_number: 20,
         side1: "ماذا فعل أبو لبابة في المسجد بعد رجوعه إلى المدينة؟",
         side2: "ربط نفسه إلى سارية.",
@@ -7715,7 +6768,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__67",
-        file: "seerah_banu_qurayzah",
         card_number: 67,
         side1: "ماذا حدث لجرح سعد بن معاذ بعد حكمه؟",
         side2: "انفتح العرق في ذراعه ونزف نزيفاً شديداً.",
@@ -7723,7 +6775,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__31",
-        file: "seerah_banu_qurayzah",
         card_number: 31,
         side1: "أي قبيلة طلبت من النبي ﷺ أن يحسن إلى بني قريظة؟",
         side2: "الأوس.",
@@ -7731,7 +6782,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__49",
-        file: "seerah_banu_qurayzah",
         card_number: 49,
         side1: "كم رجلاً تقريباً من بني قريظة قُتل حسب الروايات؟",
         side2: "نحو ستمائة إلى سبعمائة رجل.",
@@ -7739,7 +6789,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__53",
-        file: "seerah_banu_qurayzah",
         card_number: 53,
         side1: "أي زعيم من بني النضير قُتل بعد سقوط بني قريظة؟",
         side2: "حُييّ بن أخطب.",
@@ -7747,7 +6796,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__46",
-        file: "seerah_banu_qurayzah",
         card_number: 46,
         side1: "ما حكم سعد بن معاذ في أموال بني قريظة؟",
         side2: "أن تُقسَم.",
@@ -7755,7 +6803,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__75",
-        file: "seerah_banu_qurayzah",
         card_number: 75,
         side1: "في أي سنة بعد الهجرة وقعت غزوة بني قريظة؟",
         side2: "في السنة الخامسة بعد الهجرة.",
@@ -7763,7 +6810,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__24",
-        file: "seerah_banu_qurayzah",
         card_number: 24,
         side1: "ماذا كان قد حدث للأحزاب حين وافق بنو قريظة على الشروط؟",
         side2: "كان الأحزاب قد انسحبوا.",
@@ -7771,7 +6817,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__33",
-        file: "seerah_banu_qurayzah",
         card_number: 33,
         side1: "ماذا قال النبي ﷺ إنه سيفعل استجابة للأوس بشأن بني قريظة؟",
         side2: "سيعيّن رجلاً من الأوس ليحكم فيهم.",
@@ -7779,7 +6824,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__76",
-        file: "seerah_banu_qurayzah",
         card_number: 76,
         side1: "متى وقعت غزوة بني قريظة بالنسبة لانسحاب الأحزاب؟",
         side2: "بعد انسحاب الأحزاب بقليل.",
@@ -7787,7 +6831,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__10",
-        file: "seerah_banu_qurayzah",
         card_number: 10,
         side1: "كيف ردّ النبي ﷺ على الفريقين اللذين اختلفا في صلاة العصر في الطريق إلى بني قريظة؟",
         side2: "لم يعنّف أحداً من الفريقين.",
@@ -7795,7 +6838,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__74",
-        file: "seerah_banu_qurayzah",
         card_number: 74,
         side1: "من حلّ أبا لبابة من السارية؟",
         side2: "حلّه النبي ﷺ بيده.",
@@ -7803,7 +6845,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__52",
-        file: "seerah_banu_qurayzah",
         card_number: 52,
         side1: "لماذا قُتلت امرأة من بني قريظة؟",
         side2: "لأنها قتلت مقاتلاً مسلماً بإلقاء رحى عليه أثناء الحصار.",
@@ -7811,7 +6852,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__42",
-        file: "seerah_banu_qurayzah",
         card_number: 42,
         side1: "ماذا سأل سعد بن معاذ قبل أن يحكم؟",
         side2: "هل حكمه نافذ عليهم وعلى المسلمين وعلى رسول الله ﷺ.",
@@ -7819,7 +6859,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__73",
-        file: "seerah_banu_qurayzah",
         card_number: 73,
         side1: "ماذا قال أبو لبابة حين ذهب الناس ليحلّوه؟",
         side2: "أنه لن يُحلّ إلا بيد رسول الله ﷺ.",
@@ -7827,7 +6866,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__51",
-        file: "seerah_banu_qurayzah",
         card_number: 51,
         side1: "ماذا حدث لمن أسلم من بني قريظة؟",
         side2: "أُبقوا مع أهليهم وأموالهم.",
@@ -7835,7 +6873,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__14",
-        file: "seerah_banu_qurayzah",
         card_number: 14,
         side1: "ما العلاقة السابقة لأبي لبابة ببني قريظة؟",
         side2: "كانت له معهم روابط حلف وضيافة قبل الإسلام.",
@@ -7843,7 +6880,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__30",
-        file: "seerah_banu_qurayzah",
         card_number: 30,
         side1: "أي قبيلة كانت حليفة لبني قريظة في الجاهلية؟",
         side2: "الأوس.",
@@ -7851,7 +6887,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__41",
-        file: "seerah_banu_qurayzah",
         card_number: 41,
         side1: "ماذا قيل لسعد بن معاذ عند قدومه بشأن بني قريظة؟",
         side2: "أنهم قبلوا حكمه.",
@@ -7859,7 +6894,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__8",
-        file: "seerah_banu_qurayzah",
         card_number: 8,
         side1: "ماذا فعل بعض الصحابة بصلاة العصر في الطريق إلى بني قريظة؟",
         side2: "صلّوا العصر في الطريق.",
@@ -7867,7 +6901,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__36",
-        file: "seerah_banu_qurayzah",
         card_number: 36,
         side1: "في أي معركة جُرح سعد بن معاذ قبل حكمه في بني قريظة؟",
         side2: "غزوة الخندق.",
@@ -7875,7 +6908,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__9",
-        file: "seerah_banu_qurayzah",
         card_number: 9,
         side1: "ماذا فعل صحابة آخرون بصلاة العصر في الطريق إلى بني قريظة؟",
         side2: "أخّروها حتى بلغوا بني قريظة بعد غروب الشمس.",
@@ -7885,7 +6917,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     full: [
       {
         id: "Part_64__34",
-        file: "seerah_banu_qurayzah",
         card_number: 34,
         side1: "من سمّاه الناس ليحكم في بني قريظة؟",
         side2: "سعد بن معاذ.",
@@ -7893,7 +6924,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__70",
-        file: "seerah_banu_qurayzah",
         card_number: 70,
         side1: "ما النتيجة النهائية لجرح سعد بن معاذ؟",
         side2: "استمر النزف حتى مات.",
@@ -7901,7 +6931,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__44",
-        file: "seerah_banu_qurayzah",
         card_number: 44,
         side1: "ما حكم سعد بن معاذ في رجال بني قريظة؟",
         side2: "أن يُقتل الرجال.",
@@ -7909,7 +6938,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__18",
-        file: "seerah_banu_qurayzah",
         card_number: 18,
         side1: "أي إشارة قام بها أبو لبابة جواباً على سؤال بني قريظة؟",
         side2: "وضع يده على حلقه إشارة إلى القتل.",
@@ -7917,7 +6945,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__25",
-        file: "seerah_banu_qurayzah",
         card_number: 25,
         side1: "على أي شرط وافق بنو قريظة على التسليم لحكم النبي؟",
         side2: "أن يُعيّن أحداً من حلفائهم في الأوس ليحكم فيهم.",
@@ -7925,7 +6952,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__11",
-        file: "seerah_banu_qurayzah",
         card_number: 11,
         side1: "أي عمل عسكري قام به المسلمون ضد بني قريظة بعد وصولهم؟",
         side2: "أحاطوا بالحصون وحاصروهم.",
@@ -7933,7 +6959,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__45",
-        file: "seerah_banu_qurayzah",
         card_number: 45,
         side1: "ما حكم سعد بن معاذ في نساء بني قريظة وأطفالهم؟",
         side2: "أن يُسبَوا.",
@@ -7941,7 +6966,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__7",
-        file: "seerah_banu_qurayzah",
         card_number: 7,
         side1: "أي تعليم أعطاه النبي ﷺ بشأن العصر في الطريق إلى بني قريظة؟",
         side2: "ألا يصلّي أحد العصر إلا في ديار بني قريظة.",
@@ -7949,7 +6973,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__17",
-        file: "seerah_banu_qurayzah",
         card_number: 17,
         side1: "أي سؤال سأل بنو قريظة أبا لبابة؟",
         side2: "هل ينزلون ويسلّمون لحكم محمد ﷺ.",
@@ -7957,7 +6980,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__13",
-        file: "seerah_banu_qurayzah",
         card_number: 13,
         side1: "من دعا بنو قريظة أثناء الحصار؟",
         side2: "أبا لبابة بن عبد المنذر.",
@@ -7965,7 +6987,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__20",
-        file: "seerah_banu_qurayzah",
         card_number: 20,
         side1: "ماذا فعل أبو لبابة في المسجد بعد رجوعه إلى المدينة؟",
         side2: "ربط نفسه إلى سارية.",
@@ -7973,7 +6994,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__67",
-        file: "seerah_banu_qurayzah",
         card_number: 67,
         side1: "ماذا حدث لجرح سعد بن معاذ بعد حكمه؟",
         side2: "انفتح العرق في ذراعه ونزف نزيفاً شديداً.",
@@ -7981,7 +7001,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__31",
-        file: "seerah_banu_qurayzah",
         card_number: 31,
         side1: "أي قبيلة طلبت من النبي ﷺ أن يحسن إلى بني قريظة؟",
         side2: "الأوس.",
@@ -7989,7 +7008,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__49",
-        file: "seerah_banu_qurayzah",
         card_number: 49,
         side1: "كم رجلاً تقريباً من بني قريظة قُتل حسب الروايات؟",
         side2: "نحو ستمائة إلى سبعمائة رجل.",
@@ -7997,7 +7015,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__53",
-        file: "seerah_banu_qurayzah",
         card_number: 53,
         side1: "أي زعيم من بني النضير قُتل بعد سقوط بني قريظة؟",
         side2: "حُييّ بن أخطب.",
@@ -8005,7 +7022,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__46",
-        file: "seerah_banu_qurayzah",
         card_number: 46,
         side1: "ما حكم سعد بن معاذ في أموال بني قريظة؟",
         side2: "أن تُقسَم.",
@@ -8013,7 +7029,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__75",
-        file: "seerah_banu_qurayzah",
         card_number: 75,
         side1: "في أي سنة بعد الهجرة وقعت غزوة بني قريظة؟",
         side2: "في السنة الخامسة بعد الهجرة.",
@@ -8021,7 +7036,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__24",
-        file: "seerah_banu_qurayzah",
         card_number: 24,
         side1: "ماذا كان قد حدث للأحزاب حين وافق بنو قريظة على الشروط؟",
         side2: "كان الأحزاب قد انسحبوا.",
@@ -8029,7 +7043,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__33",
-        file: "seerah_banu_qurayzah",
         card_number: 33,
         side1: "ماذا قال النبي ﷺ إنه سيفعل استجابة للأوس بشأن بني قريظة؟",
         side2: "سيعيّن رجلاً من الأوس ليحكم فيهم.",
@@ -8037,7 +7050,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__76",
-        file: "seerah_banu_qurayzah",
         card_number: 76,
         side1: "متى وقعت غزوة بني قريظة بالنسبة لانسحاب الأحزاب؟",
         side2: "بعد انسحاب الأحزاب بقليل.",
@@ -8045,7 +7057,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__10",
-        file: "seerah_banu_qurayzah",
         card_number: 10,
         side1: "كيف ردّ النبي ﷺ على الفريقين اللذين اختلفا في صلاة العصر في الطريق إلى بني قريظة؟",
         side2: "لم يعنّف أحداً من الفريقين.",
@@ -8053,7 +7064,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__74",
-        file: "seerah_banu_qurayzah",
         card_number: 74,
         side1: "من حلّ أبا لبابة من السارية؟",
         side2: "حلّه النبي ﷺ بيده.",
@@ -8061,7 +7071,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__52",
-        file: "seerah_banu_qurayzah",
         card_number: 52,
         side1: "لماذا قُتلت امرأة من بني قريظة؟",
         side2: "لأنها قتلت مقاتلاً مسلماً بإلقاء رحى عليه أثناء الحصار.",
@@ -8069,7 +7078,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__42",
-        file: "seerah_banu_qurayzah",
         card_number: 42,
         side1: "ماذا سأل سعد بن معاذ قبل أن يحكم؟",
         side2: "هل حكمه نافذ عليهم وعلى المسلمين وعلى رسول الله ﷺ.",
@@ -8077,7 +7085,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__73",
-        file: "seerah_banu_qurayzah",
         card_number: 73,
         side1: "ماذا قال أبو لبابة حين ذهب الناس ليحلّوه؟",
         side2: "أنه لن يُحلّ إلا بيد رسول الله ﷺ.",
@@ -8085,7 +7092,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__51",
-        file: "seerah_banu_qurayzah",
         card_number: 51,
         side1: "ماذا حدث لمن أسلم من بني قريظة؟",
         side2: "أُبقوا مع أهليهم وأموالهم.",
@@ -8093,7 +7099,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__14",
-        file: "seerah_banu_qurayzah",
         card_number: 14,
         side1: "ما العلاقة السابقة لأبي لبابة ببني قريظة؟",
         side2: "كانت له معهم روابط حلف وضيافة قبل الإسلام.",
@@ -8101,7 +7106,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__30",
-        file: "seerah_banu_qurayzah",
         card_number: 30,
         side1: "أي قبيلة كانت حليفة لبني قريظة في الجاهلية؟",
         side2: "الأوس.",
@@ -8109,7 +7113,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__41",
-        file: "seerah_banu_qurayzah",
         card_number: 41,
         side1: "ماذا قيل لسعد بن معاذ عند قدومه بشأن بني قريظة؟",
         side2: "أنهم قبلوا حكمه.",
@@ -8117,7 +7120,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__8",
-        file: "seerah_banu_qurayzah",
         card_number: 8,
         side1: "ماذا فعل بعض الصحابة بصلاة العصر في الطريق إلى بني قريظة؟",
         side2: "صلّوا العصر في الطريق.",
@@ -8125,7 +7127,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__36",
-        file: "seerah_banu_qurayzah",
         card_number: 36,
         side1: "في أي معركة جُرح سعد بن معاذ قبل حكمه في بني قريظة؟",
         side2: "غزوة الخندق.",
@@ -8133,7 +7134,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__9",
-        file: "seerah_banu_qurayzah",
         card_number: 9,
         side1: "ماذا فعل صحابة آخرون بصلاة العصر في الطريق إلى بني قريظة؟",
         side2: "أخّروها حتى بلغوا بني قريظة بعد غروب الشمس.",
@@ -8141,7 +7141,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__5",
-        file: "seerah_banu_qurayzah",
         card_number: 5,
         side1: "كم رجلاً تقريباً كان في جيش المسلمين عند بني قريظة حسب الروايات؟",
         side2: "نحو ثلاثة آلاف رجل.",
@@ -8149,7 +7148,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__61",
-        file: "seerah_banu_qurayzah",
         card_number: 61,
         side1: "أي امرأة كانت من سبايا بني قريظة واختارها النبي ﷺ لنفسه؟",
         side2: "ريحانة بنت عمرو.",
@@ -8157,7 +7155,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__32",
-        file: "seerah_banu_qurayzah",
         card_number: 32,
         side1: "أي قبيلة يهودية ألان النبي ﷺ لها سابقاً بشفاعة عبد الله بن أُبيّ؟",
         side2: "بنو قينقاع.",
@@ -8165,7 +7162,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__21",
-        file: "seerah_banu_qurayzah",
         card_number: 21,
         side1: "بماذا نذر أبو لبابة بشأن بني قريظة؟",
         side2: "ألا يعود أبداً إلى ديارهم.",
@@ -8173,7 +7169,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__68",
-        file: "seerah_banu_qurayzah",
         card_number: 68,
         side1: "أين كان سعد بن معاذ حين انفتح جرحه؟",
         side2: "في خيمة في المسجد.",
@@ -8181,7 +7176,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__35",
-        file: "seerah_banu_qurayzah",
         card_number: 35,
         side1: "أي منزلة كان لسعد بن معاذ في الأوس؟",
         side2: "كان سيّد الأوس.",
@@ -8189,7 +7183,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__37",
-        file: "seerah_banu_qurayzah",
         card_number: 37,
         side1: "أين كان سعد بن معاذ يُعالَج من جرحه؟",
         side2: "في خيمة في المسجد.",
@@ -8197,7 +7190,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__62",
-        file: "seerah_banu_qurayzah",
         card_number: 62,
         side1: "فيم تختلف الروايات بشأن ريحانة بنت عمرو؟",
         side2: "هل أعتقها النبي ﷺ وتزوّجها أم أمسكها مما ملكت يمينه.",
@@ -8205,7 +7197,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__16",
-        file: "seerah_banu_qurayzah",
         card_number: 16,
         side1: "من بكى أمام أبي لبابة داخل حصن بني قريظة؟",
         side2: "النساء والأطفال.",
@@ -8213,7 +7204,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__39",
-        file: "seerah_banu_qurayzah",
         card_number: 39,
         side1: "ماذا طلب بعض رجال بني قريظة من سعد بن معاذ؟",
         side2: "أن يُلين الحكم.",
@@ -8221,7 +7211,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__56",
-        file: "seerah_banu_qurayzah",
         card_number: 56,
         side1: "أي نصيب من غنائم بني قريظة خُصّ أولاً؟",
         side2: "الخُمس.",
@@ -8229,7 +7218,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__71",
-        file: "seerah_banu_qurayzah",
         card_number: 71,
         side1: "كم بقي أبو لبابة مربوطاً إلى سارية المسجد؟",
         side2: "أياماً عدّة.",
@@ -8237,7 +7225,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__47",
-        file: "seerah_banu_qurayzah",
         card_number: 47,
         side1: "أين حُفرت خنادق لقتل رجال بني قريظة؟",
         side2: "في سوق المدينة.",
@@ -8245,7 +7232,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__60",
-        file: "seerah_banu_qurayzah",
         card_number: 60,
         side1: "بماذا استُبدل بعض سبايا بني قريظة لاحقاً في نجد؟",
         side2: "بخيل وسلاح.",
@@ -8253,7 +7239,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__58",
-        file: "seerah_banu_qurayzah",
         card_number: 58,
         side1: "كم سهماً نال الفارس من غنائم بني قريظة؟",
         side2: "ثلاثة أسهم.",
@@ -8261,7 +7246,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__59",
-        file: "seerah_banu_qurayzah",
         card_number: 59,
         side1: "كم سهماً نال الراجل من غنائم بني قريظة؟",
         side2: "سهماً واحداً.",
@@ -8269,7 +7253,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__12",
-        file: "seerah_banu_qurayzah",
         card_number: 12,
         side1: "أي ميزة دفاعية كانت ليهود بني قريظة أثناء الحصار؟",
         side2: "كانوا محصّنين جيداً ولديهم مؤن من الطعام والماء.",
@@ -8277,7 +7260,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__40",
-        file: "seerah_banu_qurayzah",
         card_number: 40,
         side1: "ماذا قال النبي ﷺ للناس أن يفعلوا حين قدم سعد بن معاذ؟",
         side2: "أن يقوموا لسيّدهم.",
@@ -8285,7 +7267,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__27",
-        file: "seerah_banu_qurayzah",
         card_number: 27,
         side1: "ماذا أمر النبي ﷺ بشأن نساء بني قريظة وأطفالهم؟",
         side2: "أن يُفرَقوا عنهم.",
@@ -8293,7 +7274,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__3",
-        file: "seerah_banu_qurayzah",
         card_number: 3,
         side1: "لمن سلّم النبي ﷺ اللواء في غزوة بني قريظة؟",
         side2: "علي بن أبي طالب.",
@@ -8301,7 +7281,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__2",
-        file: "seerah_banu_qurayzah",
         card_number: 2,
         side1: "من استخلفه النبي ﷺ على المدينة أثناء غيبته في بني قريظة؟",
         side2: "ابن أم مكتوم.",
@@ -8309,7 +7288,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_64__26",
-        file: "seerah_banu_qurayzah",
         card_number: 26,
         side1: "ماذا أمر النبي ﷺ بشأن رجال بني قريظة بعد تسليمهم؟",
         side2: "أن يُخرجوا ويُقيَّدوا تحت الحراسة.",
@@ -8323,7 +7301,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     easy: [
       {
         id: "Part_65__44",
-        file: "seerah",
         card_number: 44,
         side1: "من كان يسير خلف الجيش فوجد عائشة رضي الله عنها؟",
         side2: "صفوان بن المعطّل السلمي الذكواني.",
@@ -8331,7 +7308,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__15",
-        file: "seerah",
         card_number: 15,
         side1: "ما نتيجة بني المصطلق بعد تقدّم المسلمين؟",
         side2: "قُتل بعضهم، وأُسر كثير، وغُنمت أموال كثيرة.",
@@ -8339,7 +7315,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__29",
-        file: "seerah",
         card_number: 29,
         side1: "ماذا رُوي أن عبد الله بن أُبيّ قاله عن الرجوع إلى المدينة؟",
         side2: "«لئن رجعنا إلى المدينة ليخرجنّ الأعزّ منها الأذلّ».",
@@ -8347,7 +7322,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__75",
-        file: "seerah",
         card_number: 75,
         side1: "في أي سورة نزلت الآيات المتعلقة بحادثة الإفك؟",
         side2: "سورة النور.",
@@ -8355,7 +7329,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__52",
-        file: "seerah",
         card_number: 52,
         side1: "من أشاع الإفك على عائشة رضي الله عنها بعد رجوعها مع صفوان؟",
         side2: "عبد الله بن أُبيّ ومن تبعه.",
@@ -8363,7 +7336,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__22",
-        file: "seerah",
         card_number: 22,
         side1: "ماذا فعل كثير من المسلمين بعد سماعهم بزواج النبي من جويرية؟",
         side2: "أعتقوا سبايا بني المصطلق.",
@@ -8371,7 +7343,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__3",
-        file: "seerah",
         card_number: 3,
         side1: "أي خبر بلغ النبي ﷺ في شعبان من السنة السادسة بعد الهجرة؟",
         side2: "أن الحارث بن ضرار جمع بني المصطلق وعرباً حلفاء ينوون مهاجمة المدينة.",
@@ -8379,7 +7350,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__21",
-        file: "seerah",
         card_number: 21,
         side1: "ماذا فعل النبي ﷺ لجويرية بنت الحارث بعد أن أتته؟",
         side2: "أعتقها وتزوّجها.",
@@ -8387,7 +7357,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__50",
-        file: "seerah",
         card_number: 50,
         side1: "كيف ساعد صفوان عائشة رضي الله عنها على اللحاق بالمسلمين؟",
         side2: "قرّب بعيره وأركبها وقاد الجمل.",
@@ -8395,7 +7364,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__66",
-        file: "seerah",
         card_number: 66,
         side1: "بماذا شهدت بريرة بشأن عائشة رضي الله عنها؟",
         side2: "لم تشهد إلا خيراً.",
@@ -8403,7 +7371,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__39",
-        file: "seerah",
         card_number: 39,
         side1: "ما الذي جعل عائشة رضي الله عنها ترجع بعد قضاء حاجتها؟",
         side2: "أدركت أن عقدها مفقود.",
@@ -8411,7 +7378,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__11",
-        file: "seerah",
         card_number: 11,
         side1: "في أي موضع التقى جيشا المسلمين وبني المصطلق؟",
         side2: "عند ماء المريسيع.",
@@ -8419,7 +7385,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__40",
-        file: "seerah",
         card_number: 40,
         side1: "لماذا مضى الرجال الحاملون هودج عائشة دونها؟",
         side2: "رفعوا الهودج على الجمل ظانّين أنها فيه.",
@@ -8427,7 +7392,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__74",
-        file: "seerah",
         card_number: 74,
         side1: "أي كلمات تلَت عائشة رضي الله عنها جواباً على الاتهام؟",
         side2: "«فصبر جميل والله المستعان على ما تصفون».",
@@ -8437,7 +7401,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     medium: [
       {
         id: "Part_65__44",
-        file: "seerah",
         card_number: 44,
         side1: "من كان يسير خلف الجيش فوجد عائشة رضي الله عنها؟",
         side2: "صفوان بن المعطّل السلمي الذكواني.",
@@ -8445,7 +7408,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__15",
-        file: "seerah",
         card_number: 15,
         side1: "ما نتيجة بني المصطلق بعد تقدّم المسلمين؟",
         side2: "قُتل بعضهم، وأُسر كثير، وغُنمت أموال كثيرة.",
@@ -8453,7 +7415,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__29",
-        file: "seerah",
         card_number: 29,
         side1: "ماذا رُوي أن عبد الله بن أُبيّ قاله عن الرجوع إلى المدينة؟",
         side2: "«لئن رجعنا إلى المدينة ليخرجنّ الأعزّ منها الأذلّ».",
@@ -8461,7 +7422,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__75",
-        file: "seerah",
         card_number: 75,
         side1: "في أي سورة نزلت الآيات المتعلقة بحادثة الإفك؟",
         side2: "سورة النور.",
@@ -8469,7 +7429,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__52",
-        file: "seerah",
         card_number: 52,
         side1: "من أشاع الإفك على عائشة رضي الله عنها بعد رجوعها مع صفوان؟",
         side2: "عبد الله بن أُبيّ ومن تبعه.",
@@ -8477,7 +7436,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__22",
-        file: "seerah",
         card_number: 22,
         side1: "ماذا فعل كثير من المسلمين بعد سماعهم بزواج النبي من جويرية؟",
         side2: "أعتقوا سبايا بني المصطلق.",
@@ -8485,7 +7443,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__3",
-        file: "seerah",
         card_number: 3,
         side1: "أي خبر بلغ النبي ﷺ في شعبان من السنة السادسة بعد الهجرة؟",
         side2: "أن الحارث بن ضرار جمع بني المصطلق وعرباً حلفاء ينوون مهاجمة المدينة.",
@@ -8493,7 +7450,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__21",
-        file: "seerah",
         card_number: 21,
         side1: "ماذا فعل النبي ﷺ لجويرية بنت الحارث بعد أن أتته؟",
         side2: "أعتقها وتزوّجها.",
@@ -8501,7 +7457,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__50",
-        file: "seerah",
         card_number: 50,
         side1: "كيف ساعد صفوان عائشة رضي الله عنها على اللحاق بالمسلمين؟",
         side2: "قرّب بعيره وأركبها وقاد الجمل.",
@@ -8509,7 +7464,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__66",
-        file: "seerah",
         card_number: 66,
         side1: "بماذا شهدت بريرة بشأن عائشة رضي الله عنها؟",
         side2: "لم تشهد إلا خيراً.",
@@ -8517,7 +7471,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__39",
-        file: "seerah",
         card_number: 39,
         side1: "ما الذي جعل عائشة رضي الله عنها ترجع بعد قضاء حاجتها؟",
         side2: "أدركت أن عقدها مفقود.",
@@ -8525,7 +7478,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__11",
-        file: "seerah",
         card_number: 11,
         side1: "في أي موضع التقى جيشا المسلمين وبني المصطلق؟",
         side2: "عند ماء المريسيع.",
@@ -8533,7 +7485,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__40",
-        file: "seerah",
         card_number: 40,
         side1: "لماذا مضى الرجال الحاملون هودج عائشة دونها؟",
         side2: "رفعوا الهودج على الجمل ظانّين أنها فيه.",
@@ -8541,7 +7492,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__74",
-        file: "seerah",
         card_number: 74,
         side1: "أي كلمات تلَت عائشة رضي الله عنها جواباً على الاتهام؟",
         side2: "«فصبر جميل والله المستعان على ما تصفون».",
@@ -8549,7 +7499,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__42",
-        file: "seerah",
         card_number: 42,
         side1: "ماذا فعلت عائشة رضي الله عنها حين رجعت فوجدت الجيش قد رحل؟",
         side2: "جلست في موضع معسكر الجيش.",
@@ -8557,7 +7506,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__64",
-        file: "seerah",
         card_number: 64,
         side1: "ماذا فعل النبي ﷺ بعد انتشار الإفك في المدينة؟",
         side2: "جمع بعض أصحابه واستشارهم.",
@@ -8565,7 +7513,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__18",
-        file: "seerah",
         card_number: 18,
         side1: "أي ابنة لسيّد بني المصطلق كانت من السبايا؟",
         side2: "جويرية بنت الحارث.",
@@ -8573,7 +7520,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__53",
-        file: "seerah",
         card_number: 53,
         side1: "ماذا فعل بعض المسلمين بشأن الإفك على عائشة رضي الله عنها؟",
         side2: "كرّروا بعض ما سمعوا.",
@@ -8581,7 +7527,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__37",
-        file: "seerah",
         card_number: 37,
         side1: "أي زوجة للنبي ﷺ رافقته في سفر بني المصطلق؟",
         side2: "عائشة بنت أبي بكر.",
@@ -8589,7 +7534,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__24",
-        file: "seerah",
         card_number: 24,
         side1: "أي حادث أشعل خصومة في العودة من غزوة بني المصطلق؟",
         side2: "نزاع بين مهاجري وأنصاري على الماء أو الوصول إلى العين.",
@@ -8597,7 +7541,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__23",
-        file: "seerah",
         card_number: 23,
         side1: "من تزوّجها النبي ﷺ لاحقاً بعد فراقها زيد بن حارثة؟",
         side2: "زينب بنت جحش.",
@@ -8605,7 +7548,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__31",
-        file: "seerah",
         card_number: 31,
         side1: "كيف ردّ النبي ﷺ حين استأذن عمر في قتل عبد الله بن أُبيّ؟",
         side2: "رفض.",
@@ -8613,7 +7555,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__36",
-        file: "seerah",
         card_number: 36,
         side1: "ماذا أمر النبي ﷺ بشأن عبد الله بن أُبيّ عند مدخل المدينة؟",
         side2: "أذن له بالدخول وأمر ابنه أن يدعه يمرّ.",
@@ -8621,7 +7562,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__32",
-        file: "seerah",
         card_number: 32,
         side1: "أي أمر غير معتاد أعطاه النبي ﷺ بعد أن بلغه كلام عبد الله بن أُبيّ؟",
         side2: "أمر القافلة بالرحيل فوراً في وقت غير معتاد.",
@@ -8629,7 +7569,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__28",
-        file: "seerah",
         card_number: 28,
         side1: "من قال: «لقد كاثرونا في بلادنا»؟",
         side2: "عبد الله بن أُبيّ.",
@@ -8637,7 +7576,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__59",
-        file: "seerah",
         card_number: 59,
         side1: "ماذا قالت أم مسطح لعائشة رضي الله عنها عن ابنها؟",
         side2: "أنه شارك في نشر الإفك عنها.",
@@ -8645,7 +7583,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__46",
-        file: "seerah",
         card_number: 46,
         side1: "لماذا عرف صفوان بن المعطّل عائشة رضي الله عنها؟",
         side2: "كان قد رآها قبل نزول آية الحجاب.",
@@ -8653,7 +7590,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__34",
-        file: "seerah",
         card_number: 34,
         side1: "من أوقف عبد الله بن أُبيّ عند مدخل المدينة؟",
         side2: "ابنه عبد الله بن عبد الله بن أُبيّ.",
@@ -8661,7 +7597,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__20",
-        file: "seerah",
         card_number: 20,
         side1: "ماذا طلبت جويرية بنت الحارث بعد أن صارت سبيّة؟",
         side2: "أن تفادي نفسها.",
@@ -8669,7 +7604,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__2",
-        file: "seerah",
         card_number: 2,
         side1: "من كان سيّد بني المصطلق يستعدّ لمهاجمة المدينة؟",
         side2: "الحارث بن ضرار.",
@@ -8677,7 +7611,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__41",
-        file: "seerah",
         card_number: 41,
         side1: "لماذا لم يدرك الرجال غياب عائشة رضي الله عنها عن الهودج؟",
         side2: "لأنها كانت خفيفة الوزن وكانت النساء يُحملن في هوادج مغطّاة.",
@@ -8685,7 +7618,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__82",
-        file: "seerah",
         card_number: 82,
         side1: "ماذا قال النبي ﷺ لعمر عن قتل الرجل لاحقاً؟",
         side2: "أنه لو أمر به الآن لنفّذوه.",
@@ -8693,7 +7625,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__30",
-        file: "seerah",
         card_number: 30,
         side1: "من استأذن في قتل عبد الله بن أُبيّ بعد سماع كلامه؟",
         side2: "عمر.",
@@ -8703,7 +7634,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     full: [
       {
         id: "Part_65__44",
-        file: "seerah",
         card_number: 44,
         side1: "من كان يسير خلف الجيش فوجد عائشة رضي الله عنها؟",
         side2: "صفوان بن المعطّل السلمي الذكواني.",
@@ -8711,7 +7641,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__15",
-        file: "seerah",
         card_number: 15,
         side1: "ما نتيجة بني المصطلق بعد تقدّم المسلمين؟",
         side2: "قُتل بعضهم، وأُسر كثير، وغُنمت أموال كثيرة.",
@@ -8719,7 +7648,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__29",
-        file: "seerah",
         card_number: 29,
         side1: "ماذا رُوي أن عبد الله بن أُبيّ قاله عن الرجوع إلى المدينة؟",
         side2: "«لئن رجعنا إلى المدينة ليخرجنّ الأعزّ منها الأذلّ».",
@@ -8727,7 +7655,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__75",
-        file: "seerah",
         card_number: 75,
         side1: "في أي سورة نزلت الآيات المتعلقة بحادثة الإفك؟",
         side2: "سورة النور.",
@@ -8735,7 +7662,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__52",
-        file: "seerah",
         card_number: 52,
         side1: "من أشاع الإفك على عائشة رضي الله عنها بعد رجوعها مع صفوان؟",
         side2: "عبد الله بن أُبيّ ومن تبعه.",
@@ -8743,7 +7669,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__22",
-        file: "seerah",
         card_number: 22,
         side1: "ماذا فعل كثير من المسلمين بعد سماعهم بزواج النبي من جويرية؟",
         side2: "أعتقوا سبايا بني المصطلق.",
@@ -8751,7 +7676,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__3",
-        file: "seerah",
         card_number: 3,
         side1: "أي خبر بلغ النبي ﷺ في شعبان من السنة السادسة بعد الهجرة؟",
         side2: "أن الحارث بن ضرار جمع بني المصطلق وعرباً حلفاء ينوون مهاجمة المدينة.",
@@ -8759,7 +7683,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__21",
-        file: "seerah",
         card_number: 21,
         side1: "ماذا فعل النبي ﷺ لجويرية بنت الحارث بعد أن أتته؟",
         side2: "أعتقها وتزوّجها.",
@@ -8767,7 +7690,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__50",
-        file: "seerah",
         card_number: 50,
         side1: "كيف ساعد صفوان عائشة رضي الله عنها على اللحاق بالمسلمين؟",
         side2: "قرّب بعيره وأركبها وقاد الجمل.",
@@ -8775,7 +7697,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__66",
-        file: "seerah",
         card_number: 66,
         side1: "بماذا شهدت بريرة بشأن عائشة رضي الله عنها؟",
         side2: "لم تشهد إلا خيراً.",
@@ -8783,7 +7704,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__39",
-        file: "seerah",
         card_number: 39,
         side1: "ما الذي جعل عائشة رضي الله عنها ترجع بعد قضاء حاجتها؟",
         side2: "أدركت أن عقدها مفقود.",
@@ -8791,7 +7711,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__11",
-        file: "seerah",
         card_number: 11,
         side1: "في أي موضع التقى جيشا المسلمين وبني المصطلق؟",
         side2: "عند ماء المريسيع.",
@@ -8799,7 +7718,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__40",
-        file: "seerah",
         card_number: 40,
         side1: "لماذا مضى الرجال الحاملون هودج عائشة دونها؟",
         side2: "رفعوا الهودج على الجمل ظانّين أنها فيه.",
@@ -8807,7 +7725,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__74",
-        file: "seerah",
         card_number: 74,
         side1: "أي كلمات تلَت عائشة رضي الله عنها جواباً على الاتهام؟",
         side2: "«فصبر جميل والله المستعان على ما تصفون».",
@@ -8815,7 +7732,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__42",
-        file: "seerah",
         card_number: 42,
         side1: "ماذا فعلت عائشة رضي الله عنها حين رجعت فوجدت الجيش قد رحل؟",
         side2: "جلست في موضع معسكر الجيش.",
@@ -8823,7 +7739,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__64",
-        file: "seerah",
         card_number: 64,
         side1: "ماذا فعل النبي ﷺ بعد انتشار الإفك في المدينة؟",
         side2: "جمع بعض أصحابه واستشارهم.",
@@ -8831,7 +7746,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__18",
-        file: "seerah",
         card_number: 18,
         side1: "أي ابنة لسيّد بني المصطلق كانت من السبايا؟",
         side2: "جويرية بنت الحارث.",
@@ -8839,7 +7753,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__53",
-        file: "seerah",
         card_number: 53,
         side1: "ماذا فعل بعض المسلمين بشأن الإفك على عائشة رضي الله عنها؟",
         side2: "كرّروا بعض ما سمعوا.",
@@ -8847,7 +7760,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__37",
-        file: "seerah",
         card_number: 37,
         side1: "أي زوجة للنبي ﷺ رافقته في سفر بني المصطلق؟",
         side2: "عائشة بنت أبي بكر.",
@@ -8855,7 +7767,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__24",
-        file: "seerah",
         card_number: 24,
         side1: "أي حادث أشعل خصومة في العودة من غزوة بني المصطلق؟",
         side2: "نزاع بين مهاجري وأنصاري على الماء أو الوصول إلى العين.",
@@ -8863,7 +7774,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__23",
-        file: "seerah",
         card_number: 23,
         side1: "من تزوّجها النبي ﷺ لاحقاً بعد فراقها زيد بن حارثة؟",
         side2: "زينب بنت جحش.",
@@ -8871,7 +7781,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__31",
-        file: "seerah",
         card_number: 31,
         side1: "كيف ردّ النبي ﷺ حين استأذن عمر في قتل عبد الله بن أُبيّ؟",
         side2: "رفض.",
@@ -8879,7 +7788,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__36",
-        file: "seerah",
         card_number: 36,
         side1: "ماذا أمر النبي ﷺ بشأن عبد الله بن أُبيّ عند مدخل المدينة؟",
         side2: "أذن له بالدخول وأمر ابنه أن يدعه يمرّ.",
@@ -8887,7 +7795,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__32",
-        file: "seerah",
         card_number: 32,
         side1: "أي أمر غير معتاد أعطاه النبي ﷺ بعد أن بلغه كلام عبد الله بن أُبيّ؟",
         side2: "أمر القافلة بالرحيل فوراً في وقت غير معتاد.",
@@ -8895,7 +7802,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__28",
-        file: "seerah",
         card_number: 28,
         side1: "من قال: «لقد كاثرونا في بلادنا»؟",
         side2: "عبد الله بن أُبيّ.",
@@ -8903,7 +7809,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__59",
-        file: "seerah",
         card_number: 59,
         side1: "ماذا قالت أم مسطح لعائشة رضي الله عنها عن ابنها؟",
         side2: "أنه شارك في نشر الإفك عنها.",
@@ -8911,7 +7816,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__46",
-        file: "seerah",
         card_number: 46,
         side1: "لماذا عرف صفوان بن المعطّل عائشة رضي الله عنها؟",
         side2: "كان قد رآها قبل نزول آية الحجاب.",
@@ -8919,7 +7823,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__34",
-        file: "seerah",
         card_number: 34,
         side1: "من أوقف عبد الله بن أُبيّ عند مدخل المدينة؟",
         side2: "ابنه عبد الله بن عبد الله بن أُبيّ.",
@@ -8927,7 +7830,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__20",
-        file: "seerah",
         card_number: 20,
         side1: "ماذا طلبت جويرية بنت الحارث بعد أن صارت سبيّة؟",
         side2: "أن تفادي نفسها.",
@@ -8935,7 +7837,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__2",
-        file: "seerah",
         card_number: 2,
         side1: "من كان سيّد بني المصطلق يستعدّ لمهاجمة المدينة؟",
         side2: "الحارث بن ضرار.",
@@ -8943,7 +7844,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__41",
-        file: "seerah",
         card_number: 41,
         side1: "لماذا لم يدرك الرجال غياب عائشة رضي الله عنها عن الهودج؟",
         side2: "لأنها كانت خفيفة الوزن وكانت النساء يُحملن في هوادج مغطّاة.",
@@ -8951,7 +7851,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__82",
-        file: "seerah",
         card_number: 82,
         side1: "ماذا قال النبي ﷺ لعمر عن قتل الرجل لاحقاً؟",
         side2: "أنه لو أمر به الآن لنفّذوه.",
@@ -8959,7 +7858,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__30",
-        file: "seerah",
         card_number: 30,
         side1: "من استأذن في قتل عبد الله بن أُبيّ بعد سماع كلامه؟",
         side2: "عمر.",
@@ -8967,7 +7865,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__60",
-        file: "seerah",
         card_number: 60,
         side1: "ماذا طلبت عائشة رضي الله عنها من النبي ﷺ بعد علمها بالإفك؟",
         side2: "الإذن بالذهاب إلى بيت أبويها.",
@@ -8975,7 +7872,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__16",
-        file: "seerah",
         card_number: 16,
         side1: "كم مسلماً رُوي سقوطه في غزوة بني المصطلق؟",
         side2: "مسلم واحد فقط.",
@@ -8983,7 +7879,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__65",
-        file: "seerah",
         card_number: 65,
         side1: "أي خادمة لعائشة رضي الله عنها سألها النبي ﷺ عن الأمر؟",
         side2: "بريرة.",
@@ -8991,7 +7886,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__26",
-        file: "seerah",
         card_number: 26,
         side1: "ماذا فعل كل رجل في خصومة طريق العودة بعد تصاعد النزاع؟",
         side2: "نادى كلٌّ قومه.",
@@ -8999,7 +7893,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__27",
-        file: "seerah",
         card_number: 27,
         side1: "أي نوع من الكلام عاد أثناء الخصومة في العودة من بني المصطلق؟",
         side2: "كلام الجاهلية.",
@@ -9007,7 +7900,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__57",
-        file: "seerah",
         card_number: 57,
         side1: "ماذا حدث لأم مسطح في طريق العودة مما جعل عائشة تعلم بالإفك؟",
         side2: "تعثّرت أم مسطح فلعنت ابنها.",
@@ -9015,7 +7907,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__4",
-        file: "seerah",
         card_number: 4,
         side1: "ماذا فعل النبي ﷺ بعد سماعه أن بني المصطلق يستعدّون للحرب؟",
         side2: "أرسل رجلاً ليتحقّق من الخبر.",
@@ -9023,7 +7914,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__1",
-        file: "seerah",
         card_number: 1,
         side1: "في أي شهر وسنة بعد الهجرة وقعت غزوة بني المصطلق؟",
         side2: "في شعبان من السنة السادسة بعد الهجرة.",
@@ -9031,7 +7921,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__81",
-        file: "seerah",
         card_number: 81,
         side1: "ماذا قال النبي ﷺ لعمر عن قتل الرجل في بداية الحادثة؟",
         side2: "أنه لو أمر بذلك أولاً لدافع عنه كثير من الأشراف.",
@@ -9039,7 +7928,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__55",
-        file: "seerah",
         card_number: 55,
         side1: "كيف كان النبي ﷺ يعامل عائشة رضي الله عنها أثناء مرضها قبل نزول الوحي؟",
         side2: "كان يسلّم عليها ويسأل كيف حالها ثم ينصرف.",
@@ -9047,7 +7935,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__68",
-        file: "seerah",
         card_number: 68,
         side1: "أي فريقين رفعا أصواتهما بعد خطاب النبي ﷺ للناس عن الإفك؟",
         side2: "الأوس والخزرج.",
@@ -9055,7 +7942,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__54",
-        file: "seerah",
         card_number: 54,
         side1: "ماذا حدث لعائشة رضي الله عنها بعد بلوغ المدينة؟",
         side2: "مرضت.",
@@ -9063,7 +7949,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__56",
-        file: "seerah",
         card_number: 56,
         side1: "مع من خرجت عائشة رضي الله عنها بعد أيام في المدينة؟",
         side2: "مع أم مسطح.",
@@ -9071,7 +7956,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__58",
-        file: "seerah",
         card_number: 58,
         side1: "لماذا عاتبت عائشة رضي الله عنها أم مسطح على لعن ابنها؟",
         side2: "لأنه شهد بدراً.",
@@ -9079,7 +7963,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__62",
-        file: "seerah",
         card_number: 62,
         side1: "كيف ردّت أم عائشة حين سُئلت عن الإفك؟",
         side2: "أمرتها أن تهون الأمر.",
@@ -9087,7 +7970,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__72",
-        file: "seerah",
         card_number: 72,
         side1: "ماذا قال أبو عائشة حين طُلب منه أن يجيب عنها؟",
         side2: "أنه لا يدري ما يقول.",
@@ -9095,7 +7977,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__73",
-        file: "seerah",
         card_number: 73,
         side1: "ماذا قالت أم عائشة حين طُلب منها أن تجيب عنها؟",
         side2: "أنها لا تدري ما تقول.",
@@ -9103,7 +7984,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__77",
-        file: "seerah",
         card_number: 77,
         side1: "كم جلدة رُوي أن مسطح بن أثاثة جُلد بقذف؟",
         side2: "ثمانون جلدة.",
@@ -9111,7 +7991,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__69",
-        file: "seerah",
         card_number: 69,
         side1: "ماذا فعل النبي ﷺ حين رفع الأوس والخزرج أصواتهم؟",
         side2: "سكّنهم.",
@@ -9119,7 +7998,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__67",
-        file: "seerah",
         card_number: 67,
         side1: "أين خاطب النبي ﷺ الناس بشأن حادثة الإفك؟",
         side2: "على المنبر.",
@@ -9127,7 +8005,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__70",
-        file: "seerah",
         card_number: 70,
         side1: "إلى أين ذهب النبي ﷺ ليكلّم عائشة رضي الله عنها أثناء حادثة الإفك؟",
         side2: "إلى بيت أبويها.",
@@ -9135,7 +8012,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_65__71",
-        file: "seerah",
         card_number: 71,
         side1: "من طلبت عائشة رضي الله عنها أولاً أن يجيب عنها حين جاء النبي ﷺ إلى بيت أبويها؟",
         side2: "أباها.",
@@ -9149,7 +8025,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     easy: [
       {
         id: "Part_66__34",
-        file: "seerah_flashcards.json",
         card_number: 34,
         side1: "ماذا فعل رجال عُكل أو عُرينة بعد برئهم؟",
         side2: "ارتدّوا.",
@@ -9157,7 +8032,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__39",
-        file: "seerah_flashcards.json",
         card_number: 39,
         side1: "ماذا حدث لرجال عُكل أو عُرينة بعد المطاردة؟",
         side2: "أُسروا وأُتي بهم.",
@@ -9165,7 +8039,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__36",
-        file: "seerah_flashcards.json",
         card_number: 36,
         side1: "ماذا فعل المرتدّون من عُكل أو عُرينة براعي النبي؟",
         side2: "قتلوه.",
@@ -9173,7 +8046,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__8",
-        file: "seerah_flashcards.json",
         card_number: 8,
         side1: "كيف استجاب أهل دومة الجندل لدعوة عبد الرحمن إلى الإسلام؟",
         side2: "استجابوا ودخلوا في دين الله.",
@@ -9181,7 +8053,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__37",
-        file: "seerah_flashcards.json",
         card_number: 37,
         side1: "أي مال أخذ المرتدّون من عُكل أو عُرينة بعد قتل الراعي؟",
         side2: "ساقوا الإبل.",
@@ -9189,7 +8060,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__6",
-        file: "seerah_flashcards.json",
         card_number: 6,
         side1: "قبل أي قتال في دومة الجندل، ماذا أُمر عبد الرحمن بن عوف أن يفعله أولاً؟",
         side2: "أن يدعو الناس إلى الله ورسوله.",
@@ -9197,7 +8067,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__40",
-        file: "seerah_flashcards.json",
         card_number: 40,
         side1: "أي عقوبة بدنية أمر بها النبي ﷺ في أطراف الرجال المأسورين من عُكل أو عُرينة؟",
         side2: "أن تُقطع أيديهم وأرجلهم.",
@@ -9205,7 +8074,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__28",
-        file: "seerah_flashcards.json",
         card_number: 28,
         side1: "بماذا استُبدلت ابنة أم قِرفة؟",
         side2: "فداءً لأسرى مسلمين.",
@@ -9213,7 +8081,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__9",
-        file: "seerah_flashcards.json",
         card_number: 9,
         side1: "من تزوّج عبد الرحمن بن عوف من دومة الجندل؟",
         side2: "تماضر بنت الأصبع، ابنة السيّد.",
@@ -9221,7 +8088,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__20",
-        file: "seerah_flashcards.json",
         card_number: 20,
         side1: "ضد أي بطن أُرسلت غزوة في رمضان سنة ٦ هـ؟",
         side2: "بطن فزارة.",
@@ -9231,7 +8097,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     medium: [
       {
         id: "Part_66__34",
-        file: "seerah_flashcards.json",
         card_number: 34,
         side1: "ماذا فعل رجال عُكل أو عُرينة بعد برئهم؟",
         side2: "ارتدّوا.",
@@ -9239,7 +8104,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__39",
-        file: "seerah_flashcards.json",
         card_number: 39,
         side1: "ماذا حدث لرجال عُكل أو عُرينة بعد المطاردة؟",
         side2: "أُسروا وأُتي بهم.",
@@ -9247,7 +8111,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__36",
-        file: "seerah_flashcards.json",
         card_number: 36,
         side1: "ماذا فعل المرتدّون من عُكل أو عُرينة براعي النبي؟",
         side2: "قتلوه.",
@@ -9255,7 +8118,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__8",
-        file: "seerah_flashcards.json",
         card_number: 8,
         side1: "كيف استجاب أهل دومة الجندل لدعوة عبد الرحمن إلى الإسلام؟",
         side2: "استجابوا ودخلوا في دين الله.",
@@ -9263,7 +8125,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__37",
-        file: "seerah_flashcards.json",
         card_number: 37,
         side1: "أي مال أخذ المرتدّون من عُكل أو عُرينة بعد قتل الراعي؟",
         side2: "ساقوا الإبل.",
@@ -9271,7 +8132,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__6",
-        file: "seerah_flashcards.json",
         card_number: 6,
         side1: "قبل أي قتال في دومة الجندل، ماذا أُمر عبد الرحمن بن عوف أن يفعله أولاً؟",
         side2: "أن يدعو الناس إلى الله ورسوله.",
@@ -9279,7 +8139,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__40",
-        file: "seerah_flashcards.json",
         card_number: 40,
         side1: "أي عقوبة بدنية أمر بها النبي ﷺ في أطراف الرجال المأسورين من عُكل أو عُرينة؟",
         side2: "أن تُقطع أيديهم وأرجلهم.",
@@ -9287,7 +8146,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__28",
-        file: "seerah_flashcards.json",
         card_number: 28,
         side1: "بماذا استُبدلت ابنة أم قِرفة؟",
         side2: "فداءً لأسرى مسلمين.",
@@ -9295,7 +8153,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__9",
-        file: "seerah_flashcards.json",
         card_number: 9,
         side1: "من تزوّج عبد الرحمن بن عوف من دومة الجندل؟",
         side2: "تماضر بنت الأصبع، ابنة السيّد.",
@@ -9303,7 +8160,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__20",
-        file: "seerah_flashcards.json",
         card_number: 20,
         side1: "ضد أي بطن أُرسلت غزوة في رمضان سنة ٦ هـ؟",
         side2: "بطن فزارة.",
@@ -9311,7 +8167,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__14",
-        file: "seerah_flashcards.json",
         card_number: 14,
         side1: "ماذا اعترف الجاسوس المأسور أثناء غزوة فدك؟",
         side2: "أنه أُرسل إلى خيبر يطلب العون مقابل تمر.",
@@ -9319,7 +8174,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__10",
-        file: "seerah_flashcards.json",
         card_number: 10,
         side1: "من قاد السرية نحو فدك في الشهر والسنة نفسيهما؟",
         side2: "علي بن أبي طالب.",
@@ -9327,7 +8181,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__31",
-        file: "seerah_flashcards.json",
         card_number: 31,
         side1: "أي صعوبة واجهها رجال عُكل أو عُرينة في المدينة؟",
         side2: "وجدوا الجوّ ثقيلاً فمرضوا واشتكوا.",
@@ -9335,7 +8188,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__45",
-        file: "seerah_flashcards.json",
         card_number: 45,
         side1: "هل بلغ عمرو بن أمية الضمري وسلامة بن أبي سلمة أبا سفيان؟",
         side2: "لا، لم يبلغاه.",
@@ -9343,7 +8195,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__2",
-        file: "seerah_flashcards.json",
         card_number: 2,
         side1: "في أي شهر وسنة أُرسل عبد الرحمن بن عوف إلى دومة الجندل؟",
         side2: "شعبان سنة ٦ هـ.",
@@ -9351,7 +8202,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__32",
-        file: "seerah_flashcards.json",
         card_number: 32,
         side1: "إلى أين أذن النبي ﷺ للمرضى من عُكل أو عُرينة أن يذهبوا؟",
         side2: "إلى إبل الصدقة خارج المدينة.",
@@ -9359,7 +8209,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__33",
-        file: "seerah_flashcards.json",
         card_number: 33,
         side1: "ماذا أُذن لرجال عُكل أو عُرينة أن يشربوا حتى يبرؤوا؟",
         side2: "أبوال الإبل وألبانها.",
@@ -9367,7 +8216,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__30",
-        file: "seerah_flashcards.json",
         card_number: 30,
         side1: "من أي القبائل جاء الرجال الذين أسلموا في المدينة ثم ارتدّوا؟",
         side2: "عُكل أو عُرينة.",
@@ -9375,7 +8223,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__16",
-        file: "seerah_flashcards.json",
         card_number: 16,
         side1: "ماذا حدث للعدو حين أغار علي وأصحابه على المعسكر في فدك؟",
         side2: "كانوا قد فرّوا مع سيّدهم وَبْر بن عُلَيم.",
@@ -9383,7 +8230,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__41",
-        file: "seerah_flashcards.json",
         card_number: 41,
         side1: "ماذا أمر النبي ﷺ أن يُفعل بعيون الرجال المأسورين من عُكل أو عُرينة؟",
         side2: "سُملت أعينهم.",
@@ -9391,7 +8237,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__38",
-        file: "seerah_flashcards.json",
         card_number: 38,
         side1: "من قاد مطاردة المرتدّين من عُكل أو عُرينة؟",
         side2: "كرز بن جابر الفهري.",
@@ -9399,7 +8244,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__19",
-        file: "seerah_flashcards.json",
         card_number: 19,
         side1: "كم شاة غنم المسلمون في غزوة فدك؟",
         side2: "نحو مائتي شاة.",
@@ -9407,7 +8251,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__18",
-        file: "seerah_flashcards.json",
         card_number: 18,
         side1: "كم بعيراً غنم المسلمون في غزوة فدك؟",
         side2: "نحو خمسمائة بعير.",
@@ -9415,7 +8258,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__12",
-        file: "seerah_flashcards.json",
         card_number: 12,
         side1: "كيف سار المسلمون أثناء الغزوة نحو فدك؟",
         side2: "ساروا نهاراً وتستّروا ليلاً.",
@@ -9423,7 +8265,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__44",
-        file: "seerah_flashcards.json",
         card_number: 44,
         side1: "أي رجلين أُرسلا لمحاولة قتل أبي سفيان؟",
         side2: "عمرو بن أمية الضمري وسلامة بن أبي سلمة.",
@@ -9433,7 +8274,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     full: [
       {
         id: "Part_66__34",
-        file: "seerah_flashcards.json",
         card_number: 34,
         side1: "ماذا فعل رجال عُكل أو عُرينة بعد برئهم؟",
         side2: "ارتدّوا.",
@@ -9441,7 +8281,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__39",
-        file: "seerah_flashcards.json",
         card_number: 39,
         side1: "ماذا حدث لرجال عُكل أو عُرينة بعد المطاردة؟",
         side2: "أُسروا وأُتي بهم.",
@@ -9449,7 +8288,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__36",
-        file: "seerah_flashcards.json",
         card_number: 36,
         side1: "ماذا فعل المرتدّون من عُكل أو عُرينة براعي النبي؟",
         side2: "قتلوه.",
@@ -9457,7 +8295,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__8",
-        file: "seerah_flashcards.json",
         card_number: 8,
         side1: "كيف استجاب أهل دومة الجندل لدعوة عبد الرحمن إلى الإسلام؟",
         side2: "استجابوا ودخلوا في دين الله.",
@@ -9465,7 +8302,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__37",
-        file: "seerah_flashcards.json",
         card_number: 37,
         side1: "أي مال أخذ المرتدّون من عُكل أو عُرينة بعد قتل الراعي؟",
         side2: "ساقوا الإبل.",
@@ -9473,7 +8309,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__6",
-        file: "seerah_flashcards.json",
         card_number: 6,
         side1: "قبل أي قتال في دومة الجندل، ماذا أُمر عبد الرحمن بن عوف أن يفعله أولاً؟",
         side2: "أن يدعو الناس إلى الله ورسوله.",
@@ -9481,7 +8316,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__40",
-        file: "seerah_flashcards.json",
         card_number: 40,
         side1: "أي عقوبة بدنية أمر بها النبي ﷺ في أطراف الرجال المأسورين من عُكل أو عُرينة؟",
         side2: "أن تُقطع أيديهم وأرجلهم.",
@@ -9489,7 +8323,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__28",
-        file: "seerah_flashcards.json",
         card_number: 28,
         side1: "بماذا استُبدلت ابنة أم قِرفة؟",
         side2: "فداءً لأسرى مسلمين.",
@@ -9497,7 +8330,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__9",
-        file: "seerah_flashcards.json",
         card_number: 9,
         side1: "من تزوّج عبد الرحمن بن عوف من دومة الجندل؟",
         side2: "تماضر بنت الأصبع، ابنة السيّد.",
@@ -9505,7 +8337,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__20",
-        file: "seerah_flashcards.json",
         card_number: 20,
         side1: "ضد أي بطن أُرسلت غزوة في رمضان سنة ٦ هـ؟",
         side2: "بطن فزارة.",
@@ -9513,7 +8344,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__14",
-        file: "seerah_flashcards.json",
         card_number: 14,
         side1: "ماذا اعترف الجاسوس المأسور أثناء غزوة فدك؟",
         side2: "أنه أُرسل إلى خيبر يطلب العون مقابل تمر.",
@@ -9521,7 +8351,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__10",
-        file: "seerah_flashcards.json",
         card_number: 10,
         side1: "من قاد السرية نحو فدك في الشهر والسنة نفسيهما؟",
         side2: "علي بن أبي طالب.",
@@ -9529,7 +8358,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__31",
-        file: "seerah_flashcards.json",
         card_number: 31,
         side1: "أي صعوبة واجهها رجال عُكل أو عُرينة في المدينة؟",
         side2: "وجدوا الجوّ ثقيلاً فمرضوا واشتكوا.",
@@ -9537,7 +8365,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__45",
-        file: "seerah_flashcards.json",
         card_number: 45,
         side1: "هل بلغ عمرو بن أمية الضمري وسلامة بن أبي سلمة أبا سفيان؟",
         side2: "لا، لم يبلغاه.",
@@ -9545,7 +8372,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__2",
-        file: "seerah_flashcards.json",
         card_number: 2,
         side1: "في أي شهر وسنة أُرسل عبد الرحمن بن عوف إلى دومة الجندل؟",
         side2: "شعبان سنة ٦ هـ.",
@@ -9553,7 +8379,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__32",
-        file: "seerah_flashcards.json",
         card_number: 32,
         side1: "إلى أين أذن النبي ﷺ للمرضى من عُكل أو عُرينة أن يذهبوا؟",
         side2: "إلى إبل الصدقة خارج المدينة.",
@@ -9561,7 +8386,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__33",
-        file: "seerah_flashcards.json",
         card_number: 33,
         side1: "ماذا أُذن لرجال عُكل أو عُرينة أن يشربوا حتى يبرؤوا؟",
         side2: "أبوال الإبل وألبانها.",
@@ -9569,7 +8393,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__30",
-        file: "seerah_flashcards.json",
         card_number: 30,
         side1: "من أي القبائل جاء الرجال الذين أسلموا في المدينة ثم ارتدّوا؟",
         side2: "عُكل أو عُرينة.",
@@ -9577,7 +8400,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__16",
-        file: "seerah_flashcards.json",
         card_number: 16,
         side1: "ماذا حدث للعدو حين أغار علي وأصحابه على المعسكر في فدك؟",
         side2: "كانوا قد فرّوا مع سيّدهم وَبْر بن عُلَيم.",
@@ -9585,7 +8407,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__41",
-        file: "seerah_flashcards.json",
         card_number: 41,
         side1: "ماذا أمر النبي ﷺ أن يُفعل بعيون الرجال المأسورين من عُكل أو عُرينة؟",
         side2: "سُملت أعينهم.",
@@ -9593,7 +8414,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__38",
-        file: "seerah_flashcards.json",
         card_number: 38,
         side1: "من قاد مطاردة المرتدّين من عُكل أو عُرينة؟",
         side2: "كرز بن جابر الفهري.",
@@ -9601,7 +8421,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__19",
-        file: "seerah_flashcards.json",
         card_number: 19,
         side1: "كم شاة غنم المسلمون في غزوة فدك؟",
         side2: "نحو مائتي شاة.",
@@ -9609,7 +8428,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__18",
-        file: "seerah_flashcards.json",
         card_number: 18,
         side1: "كم بعيراً غنم المسلمون في غزوة فدك؟",
         side2: "نحو خمسمائة بعير.",
@@ -9617,7 +8435,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__12",
-        file: "seerah_flashcards.json",
         card_number: 12,
         side1: "كيف سار المسلمون أثناء الغزوة نحو فدك؟",
         side2: "ساروا نهاراً وتستّروا ليلاً.",
@@ -9625,7 +8442,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__44",
-        file: "seerah_flashcards.json",
         card_number: 44,
         side1: "أي رجلين أُرسلا لمحاولة قتل أبي سفيان؟",
         side2: "عمرو بن أمية الضمري وسلامة بن أبي سلمة.",
@@ -9633,7 +8449,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__21",
-        file: "seerah_flashcards.json",
         card_number: 21,
         side1: "في بعض الروايات، من قاد الغزوة ضد بطن فزارة؟",
         side2: "أبو بكر الصديق.",
@@ -9641,7 +8456,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__22",
-        file: "seerah_flashcards.json",
         card_number: 22,
         side1: "في روايات أخرى، من قاد الغزوة ضد بطن فزارة؟",
         side2: "زيد بن حارثة.",
@@ -9649,7 +8463,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__43",
-        file: "seerah_flashcards.json",
         card_number: 43,
         side1: "حسب روايات السيرة، ضد من أُرسلت سرية صغيرة؟",
         side2: "ضد أبي سفيان.",
@@ -9657,7 +8470,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__11",
-        file: "seerah_flashcards.json",
         card_number: 11,
         side1: "أي قبيلة كانت في فدك حين قاد علي بن أبي طالب السرية إليها؟",
         side2: "بنو سعد بن بكر.",
@@ -9665,7 +8477,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__15",
-        file: "seerah_flashcards.json",
         card_number: 15,
         side1: "ماذا فعل علي وأصحابه بعد أسر الجاسوس في الطريق إلى فدك؟",
         side2: "أغاروا على المعسكر.",
@@ -9673,7 +8484,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__26",
-        file: "seerah_flashcards.json",
         card_number: 26,
         side1: "أي امرأة بارزة كانت من السبايا في الغزوة ضد فزارة؟",
         side2: "أم قِرفة.",
@@ -9681,7 +8491,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__5",
-        file: "seerah_flashcards.json",
         card_number: 5,
         side1: "أي خصال أمر النبي ﷺ عبد الرحمن بن عوف أن يظهرها في مهمة دومة الجندل؟",
         side2: "الحلم والكرم.",
@@ -9689,7 +8498,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_66__46",
-        file: "seerah_flashcards.json",
         card_number: 46,
         side1: "ماذا فعل عمرو بن أمية الضمري وسلامة بن أبي سلمة في سفرهما حين لم يبلغا أبا سفيان؟",
         side2: "صادفا وعدداً من المشركين فقتلاهم.",
@@ -9703,7 +8511,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     easy: [
       {
         id: "Part_67__34",
-        file: "seerah_hudaybiyah",
         card_number: 34,
         side1: "ما اسم البيعة التي عُقدت تحت الشجرة في الحديبية؟",
         side2: "بيعة الرضوان.",
@@ -9711,7 +8518,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__39",
-        file: "seerah_hudaybiyah",
         card_number: 39,
         side1: "ماذا اشترط الصلح بشأن حج المسلمين في ذلك العام؟",
         side2: "أن يرجعوا إلى المدينة في ذلك العام ويأتوا في العام التالي للعمرة.",
@@ -9719,7 +8525,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__32",
-        file: "seerah_hudaybiyah",
         card_number: 32,
         side1: "أي إشاعة انتشرت في معسكر المسلمين بشأن عثمان في الحديبية؟",
         side2: "أن عثمان قد قُتل.",
@@ -9727,7 +8532,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__17",
-        file: "seerah_hudaybiyah",
         card_number: 17,
         side1: "ماذا قال النبي إن مقصده من المجيء إلى مكة في الحديبية؟",
         side2: "أنه لم يأتِ لحرب، وإنما جاء لأداء العمرة في الحرم.",
@@ -9735,7 +8539,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__38",
-        file: "seerah_hudaybiyah",
         card_number: 38,
         side1: "من جاء ممثّلاً لقريش للموافقة على صلح في الحديبية؟",
         side2: "سهيل بن عمرو.",
@@ -9743,7 +8546,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__33",
-        file: "seerah_hudaybiyah",
         card_number: 33,
         side1: "أي بيعة دعا النبي المؤمنين إليها تحت شجرة في الحديبية؟",
         side2: "بيعة على ألا يفرّوا.",
@@ -9751,7 +8553,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__49",
-        file: "seerah_hudaybiyah",
         card_number: 49,
         side1: "من قدم مقيّداً بعد فراره من مكة والصلح يُكتب؟",
         side2: "أبو جندل بن سهيل بن عمرو.",
@@ -9759,7 +8560,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__42",
-        file: "seerah_hudaybiyah",
         card_number: 42,
         side1: "كم سنة نصّ صلح الحديبية على وقف القتال بين الطرفين؟",
         side2: "عشر سنين.",
@@ -9767,7 +8567,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__43",
-        file: "seerah_hudaybiyah",
         card_number: 43,
         side1: "حسب صلح الحديبية، ماذا يحدث إن جاء أحد من قريش إلى محمد بغير إذن وليّه؟",
         side2: "يُردّ إلى قريش.",
@@ -9775,7 +8574,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__28",
-        file: "seerah_hudaybiyah",
         card_number: 28,
         side1: "أي رسالة بلّغها عثمان قريشاً في الحديبية؟",
         side2: "أن المسلمين جاءوا فقط لتعظيم البيت والعبادة لا للقتال.",
@@ -9783,7 +8581,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__1",
-        file: "seerah_hudaybiyah",
         card_number: 1,
         side1: "في أي شهر وسنة وقع صلح الحديبية؟",
         side2: "ذو القعدة سنة ٦ هـ.",
@@ -9791,7 +8588,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__4",
-        file: "seerah_hudaybiyah",
         card_number: 4,
         side1: "أي سلاح حمله المسلمون في سفر الحديبية؟",
         side2: "لا سلاح إلا السيوف في أغمادها.",
@@ -9801,7 +8597,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     medium: [
       {
         id: "Part_67__34",
-        file: "seerah_hudaybiyah",
         card_number: 34,
         side1: "ما اسم البيعة التي عُقدت تحت الشجرة في الحديبية؟",
         side2: "بيعة الرضوان.",
@@ -9809,7 +8604,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__39",
-        file: "seerah_hudaybiyah",
         card_number: 39,
         side1: "ماذا اشترط الصلح بشأن حج المسلمين في ذلك العام؟",
         side2: "أن يرجعوا إلى المدينة في ذلك العام ويأتوا في العام التالي للعمرة.",
@@ -9817,7 +8611,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__32",
-        file: "seerah_hudaybiyah",
         card_number: 32,
         side1: "أي إشاعة انتشرت في معسكر المسلمين بشأن عثمان في الحديبية؟",
         side2: "أن عثمان قد قُتل.",
@@ -9825,7 +8618,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__17",
-        file: "seerah_hudaybiyah",
         card_number: 17,
         side1: "ماذا قال النبي إن مقصده من المجيء إلى مكة في الحديبية؟",
         side2: "أنه لم يأتِ لحرب، وإنما جاء لأداء العمرة في الحرم.",
@@ -9833,7 +8625,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__38",
-        file: "seerah_hudaybiyah",
         card_number: 38,
         side1: "من جاء ممثّلاً لقريش للموافقة على صلح في الحديبية؟",
         side2: "سهيل بن عمرو.",
@@ -9841,7 +8632,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__33",
-        file: "seerah_hudaybiyah",
         card_number: 33,
         side1: "أي بيعة دعا النبي المؤمنين إليها تحت شجرة في الحديبية؟",
         side2: "بيعة على ألا يفرّوا.",
@@ -9849,7 +8639,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__49",
-        file: "seerah_hudaybiyah",
         card_number: 49,
         side1: "من قدم مقيّداً بعد فراره من مكة والصلح يُكتب؟",
         side2: "أبو جندل بن سهيل بن عمرو.",
@@ -9857,7 +8646,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__42",
-        file: "seerah_hudaybiyah",
         card_number: 42,
         side1: "كم سنة نصّ صلح الحديبية على وقف القتال بين الطرفين؟",
         side2: "عشر سنين.",
@@ -9865,7 +8653,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__43",
-        file: "seerah_hudaybiyah",
         card_number: 43,
         side1: "حسب صلح الحديبية، ماذا يحدث إن جاء أحد من قريش إلى محمد بغير إذن وليّه؟",
         side2: "يُردّ إلى قريش.",
@@ -9873,7 +8660,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__28",
-        file: "seerah_hudaybiyah",
         card_number: 28,
         side1: "أي رسالة بلّغها عثمان قريشاً في الحديبية؟",
         side2: "أن المسلمين جاءوا فقط لتعظيم البيت والعبادة لا للقتال.",
@@ -9881,7 +8667,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__1",
-        file: "seerah_hudaybiyah",
         card_number: 1,
         side1: "في أي شهر وسنة وقع صلح الحديبية؟",
         side2: "ذو القعدة سنة ٦ هـ.",
@@ -9889,7 +8674,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__4",
-        file: "seerah_hudaybiyah",
         card_number: 4,
         side1: "أي سلاح حمله المسلمون في سفر الحديبية؟",
         side2: "لا سلاح إلا السيوف في أغمادها.",
@@ -9897,7 +8681,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__45",
-        file: "seerah_hudaybiyah",
         card_number: 45,
         side1: "أي خيار في الحلف أعطاه صلح الحديبية للقبائل؟",
         side2: "أي قبيلة حرّة أن تحالف محمداً أو قريشاً.",
@@ -9905,7 +8688,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__2",
-        file: "seerah_hudaybiyah",
         card_number: 2,
         side1: "كم مسلماً تقريباً رافق النبي نحو مكة سنة ٦ هـ؟",
         side2: "نحو ألف وأربعمائة مسلم.",
@@ -9913,7 +8695,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__50",
-        file: "seerah_hudaybiyah",
         card_number: 50,
         side1: "بماذا أصرّ سهيل بشأن أبي جندل أثناء مفاوضات الصلح؟",
         side2: "أن الشروط قد اتُّفق عليها شفاهاً فلا بدّ من ردّ أبي جندل.",
@@ -9921,7 +8702,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__51",
-        file: "seerah_hudaybiyah",
         card_number: 51,
         side1: "ماذا حدث لأبي جندل بعد إبرام صلح الحديبية؟",
         side2: "أُخذ مقيّداً إلى مكة.",
@@ -9929,7 +8709,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__9",
-        file: "seerah_hudaybiyah",
         card_number: 9,
         side1: "ماذا أبلغ المستطلع عن قريش أثناء السفر إلى الحديبية؟",
         side2: "أن قريشاً عبّأت قوة كبيرة، فيها كثير من العبيد، لسدّ الطريق.",
@@ -9937,7 +8716,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__29",
-        file: "seerah_hudaybiyah",
         card_number: 29,
         side1: "ما ردّ قريش على طلب المسلمين دخول مكة في ذلك العام؟",
         side2: "رفضوا أن يدخل المسلمون في ذلك العام.",
@@ -9945,7 +8723,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__52",
-        file: "seerah_hudaybiyah",
         card_number: 52,
         side1: "ماذا أمر النبي أصحابه أن يفعلوا بعد إبرام الصلح؟",
         side2: "أن ينحروا هديهم ويحلقوا أو يقصّروا.",
@@ -9953,7 +8730,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__10",
-        file: "seerah_hudaybiyah",
         card_number: 10,
         side1: "على أي مبدأ اتفق المسلمون بشأن القتال أثناء سفر الحديبية؟",
         side2: "ألا يقاتلوا أحداً إلا إن مُنعوا من أداء الحج.",
@@ -9961,7 +8737,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__53",
-        file: "seerah_hudaybiyah",
         card_number: 53,
         side1: "بماذا نصحت أم سلمة النبي حين تردّد الصحابة بعد الصلح؟",
         side2: "أن يخرج فينحر هديه ويحلق رأسه دون أن يكلّمهم.",
@@ -9969,7 +8744,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__47",
-        file: "seerah_hudaybiyah",
         card_number: 47,
         side1: "أي صياغة طلب سهيل بدل «محمد رسول الله» في نص الصلح؟",
         side2: "«محمد بن عبد الله».",
@@ -9977,7 +8751,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__44",
-        file: "seerah_hudaybiyah",
         card_number: 44,
         side1: "حسب صلح الحديبية، ماذا يحدث إن رجع أحد ممن مع محمد إلى قريش؟",
         side2: "لا يُردّون.",
@@ -9985,7 +8758,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__59",
-        file: "seerah_hudaybiyah",
         card_number: 59,
         side1: "كيف ردّ النبي حين طالب أهالي المؤمنات برّدهنّ حسب الصلح؟",
         side2: "رفض ردّهن.",
@@ -9993,7 +8765,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__20",
-        file: "seerah_hudaybiyah",
         card_number: 20,
         side1: "أي مفاوض من ثقيف جاء للتفاوض في الحديبية؟",
         side2: "عروة بن مسعود الثقفي.",
@@ -10001,7 +8772,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__30",
-        file: "seerah_hudaybiyah",
         card_number: 30,
         side1: "أي عرض خاص قدّمته قريش لعثمان في الحديبية؟",
         side2: "عرضوا عليه أن يطوف بالبيت وحده.",
@@ -10009,7 +8779,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__13",
-        file: "seerah_hudaybiyah",
         card_number: 13,
         side1: "كيف غيّر المسلمون طريقهم في المسير إلى الحديبية؟",
         side2: "تجنّبوا المدخل الرئيسي وسلكوا طريقاً وعراً صخرياً.",
@@ -10017,7 +8786,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__7",
-        file: "seerah_hudaybiyah",
         card_number: 7,
         side1: "في أي موضع أحرم المؤمنون في الطريق إلى الحديبية؟",
         side2: "ذو الحليفة.",
@@ -10027,7 +8795,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     full: [
       {
         id: "Part_67__34",
-        file: "seerah_hudaybiyah",
         card_number: 34,
         side1: "ما اسم البيعة التي عُقدت تحت الشجرة في الحديبية؟",
         side2: "بيعة الرضوان.",
@@ -10035,7 +8802,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__39",
-        file: "seerah_hudaybiyah",
         card_number: 39,
         side1: "ماذا اشترط الصلح بشأن حج المسلمين في ذلك العام؟",
         side2: "أن يرجعوا إلى المدينة في ذلك العام ويأتوا في العام التالي للعمرة.",
@@ -10043,7 +8809,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__32",
-        file: "seerah_hudaybiyah",
         card_number: 32,
         side1: "أي إشاعة انتشرت في معسكر المسلمين بشأن عثمان في الحديبية؟",
         side2: "أن عثمان قد قُتل.",
@@ -10051,7 +8816,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__17",
-        file: "seerah_hudaybiyah",
         card_number: 17,
         side1: "ماذا قال النبي إن مقصده من المجيء إلى مكة في الحديبية؟",
         side2: "أنه لم يأتِ لحرب، وإنما جاء لأداء العمرة في الحرم.",
@@ -10059,7 +8823,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__38",
-        file: "seerah_hudaybiyah",
         card_number: 38,
         side1: "من جاء ممثّلاً لقريش للموافقة على صلح في الحديبية؟",
         side2: "سهيل بن عمرو.",
@@ -10067,7 +8830,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__33",
-        file: "seerah_hudaybiyah",
         card_number: 33,
         side1: "أي بيعة دعا النبي المؤمنين إليها تحت شجرة في الحديبية؟",
         side2: "بيعة على ألا يفرّوا.",
@@ -10075,7 +8837,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__49",
-        file: "seerah_hudaybiyah",
         card_number: 49,
         side1: "من قدم مقيّداً بعد فراره من مكة والصلح يُكتب؟",
         side2: "أبو جندل بن سهيل بن عمرو.",
@@ -10083,7 +8844,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__42",
-        file: "seerah_hudaybiyah",
         card_number: 42,
         side1: "كم سنة نصّ صلح الحديبية على وقف القتال بين الطرفين؟",
         side2: "عشر سنين.",
@@ -10091,7 +8851,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__43",
-        file: "seerah_hudaybiyah",
         card_number: 43,
         side1: "حسب صلح الحديبية، ماذا يحدث إن جاء أحد من قريش إلى محمد بغير إذن وليّه؟",
         side2: "يُردّ إلى قريش.",
@@ -10099,7 +8858,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__28",
-        file: "seerah_hudaybiyah",
         card_number: 28,
         side1: "أي رسالة بلّغها عثمان قريشاً في الحديبية؟",
         side2: "أن المسلمين جاءوا فقط لتعظيم البيت والعبادة لا للقتال.",
@@ -10107,7 +8865,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__1",
-        file: "seerah_hudaybiyah",
         card_number: 1,
         side1: "في أي شهر وسنة وقع صلح الحديبية؟",
         side2: "ذو القعدة سنة ٦ هـ.",
@@ -10115,7 +8872,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__4",
-        file: "seerah_hudaybiyah",
         card_number: 4,
         side1: "أي سلاح حمله المسلمون في سفر الحديبية؟",
         side2: "لا سلاح إلا السيوف في أغمادها.",
@@ -10123,7 +8879,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__45",
-        file: "seerah_hudaybiyah",
         card_number: 45,
         side1: "أي خيار في الحلف أعطاه صلح الحديبية للقبائل؟",
         side2: "أي قبيلة حرّة أن تحالف محمداً أو قريشاً.",
@@ -10131,7 +8886,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__2",
-        file: "seerah_hudaybiyah",
         card_number: 2,
         side1: "كم مسلماً تقريباً رافق النبي نحو مكة سنة ٦ هـ؟",
         side2: "نحو ألف وأربعمائة مسلم.",
@@ -10139,7 +8893,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__50",
-        file: "seerah_hudaybiyah",
         card_number: 50,
         side1: "بماذا أصرّ سهيل بشأن أبي جندل أثناء مفاوضات الصلح؟",
         side2: "أن الشروط قد اتُّفق عليها شفاهاً فلا بدّ من ردّ أبي جندل.",
@@ -10147,7 +8900,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__51",
-        file: "seerah_hudaybiyah",
         card_number: 51,
         side1: "ماذا حدث لأبي جندل بعد إبرام صلح الحديبية؟",
         side2: "أُخذ مقيّداً إلى مكة.",
@@ -10155,7 +8907,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__9",
-        file: "seerah_hudaybiyah",
         card_number: 9,
         side1: "ماذا أبلغ المستطلع عن قريش أثناء السفر إلى الحديبية؟",
         side2: "أن قريشاً عبّأت قوة كبيرة، فيها كثير من العبيد، لسدّ الطريق.",
@@ -10163,7 +8914,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__29",
-        file: "seerah_hudaybiyah",
         card_number: 29,
         side1: "ما ردّ قريش على طلب المسلمين دخول مكة في ذلك العام؟",
         side2: "رفضوا أن يدخل المسلمون في ذلك العام.",
@@ -10171,7 +8921,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__52",
-        file: "seerah_hudaybiyah",
         card_number: 52,
         side1: "ماذا أمر النبي أصحابه أن يفعلوا بعد إبرام الصلح؟",
         side2: "أن ينحروا هديهم ويحلقوا أو يقصّروا.",
@@ -10179,7 +8928,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__10",
-        file: "seerah_hudaybiyah",
         card_number: 10,
         side1: "على أي مبدأ اتفق المسلمون بشأن القتال أثناء سفر الحديبية؟",
         side2: "ألا يقاتلوا أحداً إلا إن مُنعوا من أداء الحج.",
@@ -10187,7 +8935,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__53",
-        file: "seerah_hudaybiyah",
         card_number: 53,
         side1: "بماذا نصحت أم سلمة النبي حين تردّد الصحابة بعد الصلح؟",
         side2: "أن يخرج فينحر هديه ويحلق رأسه دون أن يكلّمهم.",
@@ -10195,7 +8942,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__47",
-        file: "seerah_hudaybiyah",
         card_number: 47,
         side1: "أي صياغة طلب سهيل بدل «محمد رسول الله» في نص الصلح؟",
         side2: "«محمد بن عبد الله».",
@@ -10203,7 +8949,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__44",
-        file: "seerah_hudaybiyah",
         card_number: 44,
         side1: "حسب صلح الحديبية، ماذا يحدث إن رجع أحد ممن مع محمد إلى قريش؟",
         side2: "لا يُردّون.",
@@ -10211,7 +8956,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__59",
-        file: "seerah_hudaybiyah",
         card_number: 59,
         side1: "كيف ردّ النبي حين طالب أهالي المؤمنات برّدهنّ حسب الصلح؟",
         side2: "رفض ردّهن.",
@@ -10219,7 +8963,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__20",
-        file: "seerah_hudaybiyah",
         card_number: 20,
         side1: "أي مفاوض من ثقيف جاء للتفاوض في الحديبية؟",
         side2: "عروة بن مسعود الثقفي.",
@@ -10227,7 +8970,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__30",
-        file: "seerah_hudaybiyah",
         card_number: 30,
         side1: "أي عرض خاص قدّمته قريش لعثمان في الحديبية؟",
         side2: "عرضوا عليه أن يطوف بالبيت وحده.",
@@ -10235,7 +8977,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__13",
-        file: "seerah_hudaybiyah",
         card_number: 13,
         side1: "كيف غيّر المسلمون طريقهم في المسير إلى الحديبية؟",
         side2: "تجنّبوا المدخل الرئيسي وسلكوا طريقاً وعراً صخرياً.",
@@ -10243,7 +8984,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__7",
-        file: "seerah_hudaybiyah",
         card_number: 7,
         side1: "في أي موضع أحرم المؤمنون في الطريق إلى الحديبية؟",
         side2: "ذو الحليفة.",
@@ -10251,7 +8991,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__37",
-        file: "seerah_hudaybiyah",
         card_number: 37,
         side1: "كيف بايع النبي عن عثمان في بيعة الرضوان؟",
         side2: "بايع بيده اليمنى ثم وضع يده اليسرى في يمينه عن عثمان.",
@@ -10259,7 +8998,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__31",
-        file: "seerah_hudaybiyah",
         card_number: 31,
         side1: "كيف ردّ عثمان على عرض قريش أن يطوف بالبيت وحده؟",
         side2: "رفض أن يطوف والبيت والنبي ممنوع.",
@@ -10267,7 +9005,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__26",
-        file: "seerah_hudaybiyah",
         card_number: 26,
         side1: "من اقترح عمر رسولاً إلى قريش بدل نفسه في الحديبية؟",
         side2: "عثمان بن عفان.",
@@ -10275,7 +9012,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__24",
-        file: "seerah_hudaybiyah",
         card_number: 24,
         side1: "من طلب النبي أولاً أن يذهب إلى أشراف قريش في الحديبية؟",
         side2: "عمر بن الخطاب.",
@@ -10283,7 +9019,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__11",
-        file: "seerah_hudaybiyah",
         card_number: 11,
         side1: "كم فارساً أرسلت قريش تحت خالد بن الوليد لمراقبة المسلمين؟",
         side2: "مائتي فارس.",
@@ -10291,7 +9026,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__58",
-        file: "seerah_hudaybiyah",
         card_number: 58,
         side1: "أي نوع من المهاجرين جاء إلى المدينة حول زمن الحديبية يطلب الملاذ؟",
         side2: "نساء مؤمنات.",
@@ -10299,7 +9033,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__25",
-        file: "seerah_hudaybiyah",
         card_number: 25,
         side1: "لماذا امتنع عمر بن الخطاب عن الذهاب إلى أشراف قريش في الحديبية؟",
         side2: "قال إنه ليس له في مكة عشيرة تحميه بقوة.",
@@ -10307,7 +9040,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__23",
-        file: "seerah_hudaybiyah",
         card_number: 23,
         side1: "ماذا فعل رسول الله بالفتيان المأسورين من قريش في الحديبية؟",
         side2: "أطلقهم.",
@@ -10315,7 +9047,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__46",
-        file: "seerah_hudaybiyah",
         card_number: 46,
         side1: "أي صياغة طلب سهيل بدل «بسم الله الرحمن الرحيم» في نص الصلح؟",
         side2: "«باسمك اللهم».",
@@ -10323,7 +9054,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__16",
-        file: "seerah_hudaybiyah",
         card_number: 16,
         side1: "أي حليف للنبي جاء مع رؤساء خزاعة الآخرين ليسأله عن مقصده في الحديبية؟",
         side2: "بُديل بن ورقاء الخزاعي.",
@@ -10331,7 +9061,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__41",
-        file: "seerah_hudaybiyah",
         card_number: 41,
         side1: "أي سلاح أُذن للمسلمين أن يحملوه لعمرة العام التالي حسب الصلح؟",
         side2: "لا سلاح إلا السيوف في أغمادها تُحفظ في أوعيتها.",
@@ -10339,7 +9068,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__40",
-        file: "seerah_hudaybiyah",
         card_number: 40,
         side1: "كم يستطيع المسلمون البقاء في مكة لعمرة القضاء حسب صلح الحديبية؟",
         side2: "لا أكثر من ثلاثة أيام.",
@@ -10347,7 +9075,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__15",
-        file: "seerah_hudaybiyah",
         card_number: 15,
         side1: "أين عسكر المسلمون في الحديبية؟",
         side2: "في أقصى الحديبية قرب بئر قليلة الماء.",
@@ -10355,7 +9082,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__3",
-        file: "seerah_hudaybiyah",
         card_number: 3,
         side1: "أي زوجة للنبي رافقته في سفر الحديبية؟",
         side2: "أم سلمة.",
@@ -10363,7 +9089,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__12",
-        file: "seerah_hudaybiyah",
         card_number: 12,
         side1: "أي صلاة صلّاها المسلمون وهم تحت التهديد قرب الحديبية؟",
         side2: "صلاة الخوف.",
@@ -10371,7 +9096,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__57",
-        file: "seerah_hudaybiyah",
         card_number: 57,
         side1: "أي خيارات فدية أُعطيت لكعب بن عجرة لحلق رأسه في الإحرام؟",
         side2: "صيام ثلاثة أيام، أو إطعام ستة مساكين، أو ذبح شاة.",
@@ -10379,7 +9103,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__60",
-        file: "seerah_hudaybiyah",
         card_number: 60,
         side1: "كم زوجة طلق عمر بن الخطاب حول زمن الحديبية؟",
         side2: "اثنتين.",
@@ -10387,7 +9110,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_67__56",
-        file: "seerah_hudaybiyah",
         card_number: 56,
         side1: "أي صحابي في الإحرام أُذن له بحلق رأسه لعلّة شديدة في رأسه؟",
         side2: "كعب بن عجرة.",
@@ -10401,7 +9123,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     easy: [
       {
         id: "Part_68__13",
-        file: "seerah",
         card_number: 13,
         side1: "ماذا طلبت قريش من النبي ﷺ بشأن الجماعة عند سيف البحر؟",
         side2: "طلبوا منه أن يدعوهم إلى المدينة وأن يقبل من جاء منهم آمناً دون ردّه.",
@@ -10409,7 +9130,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_68__4",
-        file: "seerah",
         card_number: 4,
         side1: "ماذا اشترط صلح الحديبية بشأن رجال من قريش يأتون إلى النبي ﷺ بغير إذن أوليائهم؟",
         side2: "أن يُردّوا إلى قريش.",
@@ -10417,7 +9137,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_68__11",
-        file: "seerah",
         card_number: 11,
         side1: "ماذا فعلت الجماعة عند سيف البحر بقوافل قريش؟",
         side2: "اعترضوا القوافل وغنموا أموالها.",
@@ -10425,7 +9144,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_68__12",
-        file: "seerah",
         card_number: 12,
         side1: "هل أرسل النبي ﷺ الجماعة عند سيف البحر؟",
         side2: "لا، لم يرسلهم وكان مقيّداً بالصلح.",
@@ -10433,7 +9151,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_68__7",
-        file: "seerah",
         card_number: 7,
         side1: "ماذا فعل النبي ﷺ حين طالبت قريش بردّ أبي بصير؟",
         side2: "سلّمه امتثالاً للصلح.",
@@ -10441,7 +9158,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_68__3",
-        file: "seerah",
         card_number: 3,
         side1: "كم كان مدة وقف القتال المنصوص عليها في صلح الحديبية؟",
         side2: "عشر سنين.",
@@ -10449,7 +9165,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_68__2",
-        file: "seerah",
         card_number: 2,
         side1: "كم مؤمناً سار مع النبي ﷺ إلى مكة بعد سنتين من الحديبية؟",
         side2: "عشرة آلاف مؤمن.",
@@ -10459,7 +9174,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     medium: [
       {
         id: "Part_68__13",
-        file: "seerah",
         card_number: 13,
         side1: "ماذا طلبت قريش من النبي ﷺ بشأن الجماعة عند سيف البحر؟",
         side2: "طلبوا منه أن يدعوهم إلى المدينة وأن يقبل من جاء منهم آمناً دون ردّه.",
@@ -10467,7 +9181,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_68__4",
-        file: "seerah",
         card_number: 4,
         side1: "ماذا اشترط صلح الحديبية بشأن رجال من قريش يأتون إلى النبي ﷺ بغير إذن أوليائهم؟",
         side2: "أن يُردّوا إلى قريش.",
@@ -10475,7 +9188,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_68__11",
-        file: "seerah",
         card_number: 11,
         side1: "ماذا فعلت الجماعة عند سيف البحر بقوافل قريش؟",
         side2: "اعترضوا القوافل وغنموا أموالها.",
@@ -10483,7 +9195,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_68__12",
-        file: "seerah",
         card_number: 12,
         side1: "هل أرسل النبي ﷺ الجماعة عند سيف البحر؟",
         side2: "لا، لم يرسلهم وكان مقيّداً بالصلح.",
@@ -10491,7 +9202,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_68__7",
-        file: "seerah",
         card_number: 7,
         side1: "ماذا فعل النبي ﷺ حين طالبت قريش بردّ أبي بصير؟",
         side2: "سلّمه امتثالاً للصلح.",
@@ -10499,7 +9209,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_68__3",
-        file: "seerah",
         card_number: 3,
         side1: "كم كان مدة وقف القتال المنصوص عليها في صلح الحديبية؟",
         side2: "عشر سنين.",
@@ -10507,7 +9216,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_68__2",
-        file: "seerah",
         card_number: 2,
         side1: "كم مؤمناً سار مع النبي ﷺ إلى مكة بعد سنتين من الحديبية؟",
         side2: "عشرة آلاف مؤمن.",
@@ -10515,7 +9223,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_68__15",
-        file: "seerah",
         card_number: 15,
         side1: "عمّ مُنع المسلمون في الحديبية رغم إحرامهم وإحضارهم الهدي؟",
         side2: "مُنعوا من دخول الحرم في ذلك العام.",
@@ -10523,7 +9230,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_68__1",
-        file: "seerah",
         card_number: 1,
         side1: "كم رجلاً رافق النبي ﷺ إلى الحديبية؟",
         side2: "نحو ألف وأربعمائة رجل.",
@@ -10531,7 +9237,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_68__10",
-        file: "seerah",
         card_number: 10,
         side1: "أي مسلم بارز من مكة انضمّ إلى أبي بصير عند سيف البحر؟",
         side2: "أبو جندل بن سهيل.",
@@ -10539,7 +9244,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_68__14",
-        file: "seerah",
         card_number: 14,
         side1: "ماذا حدث بعد أن أرسل النبي ﷺ إلى العصابة عند سيف البحر؟",
         side2: "جاءوا إلى المدينة وانضمّوا إلى المسلمين.",
@@ -10547,7 +9251,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_68__8",
-        file: "seerah",
         card_number: 8,
         side1: "ماذا حدث في الطريق بعد تسليم أبي بصير لمرافقي قريش؟",
         side2: "قتل أبو بصير أحد المرافقين وفرّ الآخر إلى المدينة.",
@@ -10555,7 +9258,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_68__5",
-        file: "seerah",
         card_number: 5,
         side1: "من قدم المدينة يطلب الملاذ بعد رجوع النبي ﷺ من الحديبية؟",
         side2: "أبو بصير.",
@@ -10563,7 +9265,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_68__9",
-        file: "seerah",
         card_number: 9,
         side1: "أين استقرّ أبو بصير بعد أن غادر المدينة من تلقاء نفسه؟",
         side2: "عند سيف البحر على طريق قوافل قريش الساحلي.",
@@ -10573,7 +9274,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     full: [
       {
         id: "Part_68__13",
-        file: "seerah",
         card_number: 13,
         side1: "ماذا طلبت قريش من النبي ﷺ بشأن الجماعة عند سيف البحر؟",
         side2: "طلبوا منه أن يدعوهم إلى المدينة وأن يقبل من جاء منهم آمناً دون ردّه.",
@@ -10581,7 +9281,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_68__4",
-        file: "seerah",
         card_number: 4,
         side1: "ماذا اشترط صلح الحديبية بشأن رجال من قريش يأتون إلى النبي ﷺ بغير إذن أوليائهم؟",
         side2: "أن يُردّوا إلى قريش.",
@@ -10589,7 +9288,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_68__11",
-        file: "seerah",
         card_number: 11,
         side1: "ماذا فعلت الجماعة عند سيف البحر بقوافل قريش؟",
         side2: "اعترضوا القوافل وغنموا أموالها.",
@@ -10597,7 +9295,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_68__12",
-        file: "seerah",
         card_number: 12,
         side1: "هل أرسل النبي ﷺ الجماعة عند سيف البحر؟",
         side2: "لا، لم يرسلهم وكان مقيّداً بالصلح.",
@@ -10605,7 +9302,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_68__7",
-        file: "seerah",
         card_number: 7,
         side1: "ماذا فعل النبي ﷺ حين طالبت قريش بردّ أبي بصير؟",
         side2: "سلّمه امتثالاً للصلح.",
@@ -10613,7 +9309,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_68__3",
-        file: "seerah",
         card_number: 3,
         side1: "كم كان مدة وقف القتال المنصوص عليها في صلح الحديبية؟",
         side2: "عشر سنين.",
@@ -10621,7 +9316,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_68__2",
-        file: "seerah",
         card_number: 2,
         side1: "كم مؤمناً سار مع النبي ﷺ إلى مكة بعد سنتين من الحديبية؟",
         side2: "عشرة آلاف مؤمن.",
@@ -10629,7 +9323,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_68__15",
-        file: "seerah",
         card_number: 15,
         side1: "عمّ مُنع المسلمون في الحديبية رغم إحرامهم وإحضارهم الهدي؟",
         side2: "مُنعوا من دخول الحرم في ذلك العام.",
@@ -10637,7 +9330,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_68__1",
-        file: "seerah",
         card_number: 1,
         side1: "كم رجلاً رافق النبي ﷺ إلى الحديبية؟",
         side2: "نحو ألف وأربعمائة رجل.",
@@ -10645,7 +9337,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_68__10",
-        file: "seerah",
         card_number: 10,
         side1: "أي مسلم بارز من مكة انضمّ إلى أبي بصير عند سيف البحر؟",
         side2: "أبو جندل بن سهيل.",
@@ -10653,7 +9344,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_68__14",
-        file: "seerah",
         card_number: 14,
         side1: "ماذا حدث بعد أن أرسل النبي ﷺ إلى العصابة عند سيف البحر؟",
         side2: "جاءوا إلى المدينة وانضمّوا إلى المسلمين.",
@@ -10661,7 +9351,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_68__8",
-        file: "seerah",
         card_number: 8,
         side1: "ماذا حدث في الطريق بعد تسليم أبي بصير لمرافقي قريش؟",
         side2: "قتل أبو بصير أحد المرافقين وفرّ الآخر إلى المدينة.",
@@ -10669,7 +9358,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_68__5",
-        file: "seerah",
         card_number: 5,
         side1: "من قدم المدينة يطلب الملاذ بعد رجوع النبي ﷺ من الحديبية؟",
         side2: "أبو بصير.",
@@ -10677,7 +9365,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_68__9",
-        file: "seerah",
         card_number: 9,
         side1: "أين استقرّ أبو بصير بعد أن غادر المدينة من تلقاء نفسه؟",
         side2: "عند سيف البحر على طريق قوافل قريش الساحلي.",
@@ -10691,7 +9378,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     easy: [
       {
         id: "Part_69__24",
-        file: "seerah",
         card_number: 24,
         side1: "أي صلاة صلّى رسول الله على النجاشي؟",
         side2: "صلاة الجنازة غائباً.",
@@ -10699,7 +9385,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_69__20",
-        file: "seerah",
         card_number: 20,
         side1: "من أرسله النجاشي لاحقاً بناءً على طلب الرسول؟",
         side2: "جعفر بن أبي طالب وبقية المهاجرين.",
@@ -10707,7 +9392,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_69__2",
-        file: "seerah",
         card_number: 2,
         side1: "أي نوع من التسوية دخلته قريش مع المسلمين؟",
         side2: "تسوية سلمية.",
@@ -10715,7 +9399,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_69__4",
-        file: "seerah",
         card_number: 4,
         side1: "ماذا جعل رسول الله أولوية أولى بعد إبرام الصلح بقليل؟",
         side2: "حملة حاسمة ضد يهود خيبر.",
@@ -10723,7 +9406,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_69__16",
-        file: "seerah",
         card_number: 16,
         side1: "أي صحابي وجماعة قدموا إلى النجاشي؟",
         side2: "جعفر بن أبي طالب وسائر المهاجرين.",
@@ -10731,7 +9413,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_69__22",
-        file: "seerah",
         card_number: 22,
         side1: "في أي شهر وسنة هجرية توفي النجاشي؟",
         side2: "رجب من السنة التاسعة الهجرية.",
@@ -10741,7 +9422,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     medium: [
       {
         id: "Part_69__24",
-        file: "seerah",
         card_number: 24,
         side1: "أي صلاة صلّى رسول الله على النجاشي؟",
         side2: "صلاة الجنازة غائباً.",
@@ -10749,7 +9429,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_69__20",
-        file: "seerah",
         card_number: 20,
         side1: "من أرسله النجاشي لاحقاً بناءً على طلب الرسول؟",
         side2: "جعفر بن أبي طالب وبقية المهاجرين.",
@@ -10757,7 +9436,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_69__2",
-        file: "seerah",
         card_number: 2,
         side1: "أي نوع من التسوية دخلته قريش مع المسلمين؟",
         side2: "تسوية سلمية.",
@@ -10765,7 +9443,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_69__4",
-        file: "seerah",
         card_number: 4,
         side1: "ماذا جعل رسول الله أولوية أولى بعد إبرام الصلح بقليل؟",
         side2: "حملة حاسمة ضد يهود خيبر.",
@@ -10773,7 +9450,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_69__16",
-        file: "seerah",
         card_number: 16,
         side1: "أي صحابي وجماعة قدموا إلى النجاشي؟",
         side2: "جعفر بن أبي طالب وسائر المهاجرين.",
@@ -10781,7 +9457,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_69__22",
-        file: "seerah",
         card_number: 22,
         side1: "في أي شهر وسنة هجرية توفي النجاشي؟",
         side2: "رجب من السنة التاسعة الهجرية.",
@@ -10789,7 +9464,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_69__19",
-        file: "seerah",
         card_number: 19,
         side1: "هل ردّ النجاشي على رسول الله؟",
         side2: "نعم، كتب النجاشي جواباً إلى رسول الله.",
@@ -10797,7 +9471,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_69__21",
-        file: "seerah",
         card_number: 21,
         side1: "أين لحق المهاجرون بالنبي؟",
         side2: "في خيبر.",
@@ -10805,7 +9478,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_69__15",
-        file: "seerah",
         card_number: 15,
         side1: "من بلّغ رسالة النبي إلى النجاشي؟",
         side2: "عمرو بن أمية الضمري.",
@@ -10813,7 +9485,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_69__12",
-        file: "seerah",
         card_number: 12,
         side1: "من كان ملك الحبشة المذكور في النص؟",
         side2: "النجاشي.",
@@ -10821,7 +9492,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_69__10",
-        file: "seerah",
         card_number: 10,
         side1: "في أي شهر وسنة هجرية أُرسل الرسل؟",
         side2: "المحرّم سنة ٧ هـ.",
@@ -10829,7 +9499,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_69__3",
-        file: "seerah",
         card_number: 3,
         side1: "أين تجمّع اليهود بعد إجلائهم من المدينة؟",
         side2: "خيبر.",
@@ -10837,7 +9506,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_69__6",
-        file: "seerah",
         card_number: 6,
         side1: "من أين كان رسول الله راجعاً حين عزم على إرسال دعوات مكتوبة إلى الحكّام خارج جزيرة العرب؟",
         side2: "من الحديبية.",
@@ -10847,7 +9515,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     full: [
       {
         id: "Part_69__24",
-        file: "seerah",
         card_number: 24,
         side1: "أي صلاة صلّى رسول الله على النجاشي؟",
         side2: "صلاة الجنازة غائباً.",
@@ -10855,7 +9522,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_69__20",
-        file: "seerah",
         card_number: 20,
         side1: "من أرسله النجاشي لاحقاً بناءً على طلب الرسول؟",
         side2: "جعفر بن أبي طالب وبقية المهاجرين.",
@@ -10863,7 +9529,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_69__2",
-        file: "seerah",
         card_number: 2,
         side1: "أي نوع من التسوية دخلته قريش مع المسلمين؟",
         side2: "تسوية سلمية.",
@@ -10871,7 +9536,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_69__4",
-        file: "seerah",
         card_number: 4,
         side1: "ماذا جعل رسول الله أولوية أولى بعد إبرام الصلح بقليل؟",
         side2: "حملة حاسمة ضد يهود خيبر.",
@@ -10879,7 +9543,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_69__16",
-        file: "seerah",
         card_number: 16,
         side1: "أي صحابي وجماعة قدموا إلى النجاشي؟",
         side2: "جعفر بن أبي طالب وسائر المهاجرين.",
@@ -10887,7 +9550,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_69__22",
-        file: "seerah",
         card_number: 22,
         side1: "في أي شهر وسنة هجرية توفي النجاشي؟",
         side2: "رجب من السنة التاسعة الهجرية.",
@@ -10895,7 +9557,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_69__19",
-        file: "seerah",
         card_number: 19,
         side1: "هل ردّ النجاشي على رسول الله؟",
         side2: "نعم، كتب النجاشي جواباً إلى رسول الله.",
@@ -10903,7 +9564,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_69__21",
-        file: "seerah",
         card_number: 21,
         side1: "أين لحق المهاجرون بالنبي؟",
         side2: "في خيبر.",
@@ -10911,7 +9571,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_69__15",
-        file: "seerah",
         card_number: 15,
         side1: "من بلّغ رسالة النبي إلى النجاشي؟",
         side2: "عمرو بن أمية الضمري.",
@@ -10919,7 +9578,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_69__12",
-        file: "seerah",
         card_number: 12,
         side1: "من كان ملك الحبشة المذكور في النص؟",
         side2: "النجاشي.",
@@ -10927,7 +9585,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_69__10",
-        file: "seerah",
         card_number: 10,
         side1: "في أي شهر وسنة هجرية أُرسل الرسل؟",
         side2: "المحرّم سنة ٧ هـ.",
@@ -10935,7 +9592,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_69__3",
-        file: "seerah",
         card_number: 3,
         side1: "أين تجمّع اليهود بعد إجلائهم من المدينة؟",
         side2: "خيبر.",
@@ -10943,7 +9599,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_69__6",
-        file: "seerah",
         card_number: 6,
         side1: "من أين كان رسول الله راجعاً حين عزم على إرسال دعوات مكتوبة إلى الحكّام خارج جزيرة العرب؟",
         side2: "من الحديبية.",
@@ -10951,7 +9606,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_69__5",
-        file: "seerah",
         card_number: 5,
         side1: "نحو نهاية أي سنة هجرية عزم رسول الله على إرسال دعوات مكتوبة إلى الحكّام خارج جزيرة العرب؟",
         side2: "نهاية السنة السادسة الهجرية.",
@@ -10959,7 +9613,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_69__13",
-        file: "seerah",
         card_number: 13,
         side1: "ما الاسم الشخصي للنجاشي؟",
         side2: "أصحمة بن الأبجر.",
@@ -10967,7 +9620,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_69__8",
-        file: "seerah",
         card_number: 8,
         side1: "أي كلمات نُقشت على خاتم النبي؟",
         side2: "«محمد رسول الله».",
@@ -10975,7 +9627,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_69__26",
-        file: "seerah",
         card_number: 26,
         side1: "ماذا أرسل النبي إلى خليفة النجاشي في الحبشة؟",
         side2: "رسالة أخرى يدعوه فيها إلى الإسلام.",
@@ -10983,7 +9634,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_69__23",
-        file: "seerah",
         card_number: 23,
         side1: "متى أعلم رسول الله أصحابه بوفاة النجاشي؟",
         side2: "في اليوم الذي توفي فيه النجاشي.",
@@ -10991,7 +9641,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_69__7",
-        file: "seerah",
         card_number: 7,
         side1: "أي نوع من الخاتم اتّخذه رسول الله للرسائل الرسمية؟",
         side2: "خاتماً من فضّة.",
@@ -11005,7 +9654,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     easy: [
       {
         id: "Part_70__2",
-        file: "seerah",
         card_number: 2,
         side1: "ماذا فعل محمد بعد رجوعه إلى المدينة عقب الحديبية؟",
         side2: "أرسل رسائل إلى الحكّام المحيطين.",
@@ -11013,7 +9661,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_70__12",
-        file: "seerah",
         card_number: 12,
         side1: "من هما الجاريتان القبطيتان اللتان أرسلهما المقوقس؟",
         side2: "مارية وأختها سيرين.",
@@ -11021,7 +9668,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_70__15",
-        file: "seerah",
         card_number: 15,
         side1: "من ولدت لمحمد ابناً اسمه إبراهيم في المدينة؟",
         side2: "مارية.",
@@ -11029,7 +9675,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_70__11",
-        file: "seerah",
         card_number: 11,
         side1: "أي أشياء قال المقوقس إنه يرسلها في جوابه؟",
         side2: "جاريتين من الأقباط، وثياباً، ودابّة للركوب.",
@@ -11037,7 +9682,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_70__3",
-        file: "seerah",
         card_number: 3,
         side1: "من كان المقوقس؟",
         side2: "نائب مصر والإسكندرية على الأقباط.",
@@ -11045,7 +9689,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_70__17",
-        file: "seerah",
         card_number: 17,
         side1: "لمن أُعطيت سيرين؟",
         side2: "لحسّان بن ثابت الأنصاري.",
@@ -11053,7 +9696,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_70__5",
-        file: "seerah",
         card_number: 5,
         side1: "من اختير رسولاً لمحمد إلى المقوقس؟",
         side2: "حاطب بن أبي بلتعة.",
@@ -11063,7 +9705,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     medium: [
       {
         id: "Part_70__2",
-        file: "seerah",
         card_number: 2,
         side1: "ماذا فعل محمد بعد رجوعه إلى المدينة عقب الحديبية؟",
         side2: "أرسل رسائل إلى الحكّام المحيطين.",
@@ -11071,7 +9712,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_70__12",
-        file: "seerah",
         card_number: 12,
         side1: "من هما الجاريتان القبطيتان اللتان أرسلهما المقوقس؟",
         side2: "مارية وأختها سيرين.",
@@ -11079,7 +9719,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_70__15",
-        file: "seerah",
         card_number: 15,
         side1: "من ولدت لمحمد ابناً اسمه إبراهيم في المدينة؟",
         side2: "مارية.",
@@ -11087,7 +9726,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_70__11",
-        file: "seerah",
         card_number: 11,
         side1: "أي أشياء قال المقوقس إنه يرسلها في جوابه؟",
         side2: "جاريتين من الأقباط، وثياباً، ودابّة للركوب.",
@@ -11095,7 +9733,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_70__3",
-        file: "seerah",
         card_number: 3,
         side1: "من كان المقوقس؟",
         side2: "نائب مصر والإسكندرية على الأقباط.",
@@ -11103,7 +9740,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_70__17",
-        file: "seerah",
         card_number: 17,
         side1: "لمن أُعطيت سيرين؟",
         side2: "لحسّان بن ثابت الأنصاري.",
@@ -11111,7 +9747,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_70__5",
-        file: "seerah",
         card_number: 5,
         side1: "من اختير رسولاً لمحمد إلى المقوقس؟",
         side2: "حاطب بن أبي بلتعة.",
@@ -11119,7 +9754,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_70__14",
-        file: "seerah",
         card_number: 14,
         side1: "من بقيت مع محمد حين بلغت الهدايا المدينة؟",
         side2: "مارية.",
@@ -11127,7 +9761,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_70__8",
-        file: "seerah",
         card_number: 8,
         side1: "ماذا أمر المقوقس أن يُفعل برسالة النبي؟",
         side2: "أمر بحفظها.",
@@ -11137,7 +9770,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     full: [
       {
         id: "Part_70__2",
-        file: "seerah",
         card_number: 2,
         side1: "ماذا فعل محمد بعد رجوعه إلى المدينة عقب الحديبية؟",
         side2: "أرسل رسائل إلى الحكّام المحيطين.",
@@ -11145,7 +9777,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_70__12",
-        file: "seerah",
         card_number: 12,
         side1: "من هما الجاريتان القبطيتان اللتان أرسلهما المقوقس؟",
         side2: "مارية وأختها سيرين.",
@@ -11153,7 +9784,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_70__15",
-        file: "seerah",
         card_number: 15,
         side1: "من ولدت لمحمد ابناً اسمه إبراهيم في المدينة؟",
         side2: "مارية.",
@@ -11161,7 +9791,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_70__11",
-        file: "seerah",
         card_number: 11,
         side1: "أي أشياء قال المقوقس إنه يرسلها في جوابه؟",
         side2: "جاريتين من الأقباط، وثياباً، ودابّة للركوب.",
@@ -11169,7 +9798,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_70__3",
-        file: "seerah",
         card_number: 3,
         side1: "من كان المقوقس؟",
         side2: "نائب مصر والإسكندرية على الأقباط.",
@@ -11177,7 +9805,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_70__17",
-        file: "seerah",
         card_number: 17,
         side1: "لمن أُعطيت سيرين؟",
         side2: "لحسّان بن ثابت الأنصاري.",
@@ -11185,7 +9812,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_70__5",
-        file: "seerah",
         card_number: 5,
         side1: "من اختير رسولاً لمحمد إلى المقوقس؟",
         side2: "حاطب بن أبي بلتعة.",
@@ -11193,7 +9819,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_70__14",
-        file: "seerah",
         card_number: 14,
         side1: "من بقيت مع محمد حين بلغت الهدايا المدينة؟",
         side2: "مارية.",
@@ -11201,7 +9826,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_70__8",
-        file: "seerah",
         card_number: 8,
         side1: "ماذا أمر المقوقس أن يُفعل برسالة النبي؟",
         side2: "أمر بحفظها.",
@@ -11215,7 +9839,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     easy: [
       {
         id: "Part_71__15",
-        file: "seerah",
         card_number: 15,
         side1: "ماذا أخبر محمد الرسولين أنه حدث لكسرى؟",
         side2: "أن كسرى قتله ابنه.",
@@ -11223,7 +9846,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_71__10",
-        file: "seerah",
         card_number: 10,
         side1: "ماذا أمر كسرى باذان أن يفعل؟",
         side2: "أن يرسل رجالاً ليأتوا بالرجل الذي ظهر في الحجاز إلى حضرة كسرى.",
@@ -11231,7 +9853,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_71__8",
-        file: "seerah",
         card_number: 8,
         side1: "كيف ردّ كسرى على رسالة محمد؟",
         side2: "مزّق الرسالة.",
@@ -11239,7 +9860,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_71__24",
-        file: "seerah",
         card_number: 24,
         side1: "ماذا أمر شيرويه بشأن محمد؟",
         side2: "ألا يُتخذ أي إجراء آخر ضد محمد.",
@@ -11247,7 +9867,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_71__9",
-        file: "seerah",
         card_number: 9,
         side1: "إلى من كتب كسرى بعد تمزيق الرسالة؟",
         side2: "إلى عامله في اليمن باذان.",
@@ -11257,7 +9876,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     medium: [
       {
         id: "Part_71__15",
-        file: "seerah",
         card_number: 15,
         side1: "ماذا أخبر محمد الرسولين أنه حدث لكسرى؟",
         side2: "أن كسرى قتله ابنه.",
@@ -11265,7 +9883,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_71__10",
-        file: "seerah",
         card_number: 10,
         side1: "ماذا أمر كسرى باذان أن يفعل؟",
         side2: "أن يرسل رجالاً ليأتوا بالرجل الذي ظهر في الحجاز إلى حضرة كسرى.",
@@ -11273,7 +9890,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_71__8",
-        file: "seerah",
         card_number: 8,
         side1: "كيف ردّ كسرى على رسالة محمد؟",
         side2: "مزّق الرسالة.",
@@ -11281,7 +9897,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_71__24",
-        file: "seerah",
         card_number: 24,
         side1: "ماذا أمر شيرويه بشأن محمد؟",
         side2: "ألا يُتخذ أي إجراء آخر ضد محمد.",
@@ -11289,7 +9904,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_71__9",
-        file: "seerah",
         card_number: 9,
         side1: "إلى من كتب كسرى بعد تمزيق الرسالة؟",
         side2: "إلى عامله في اليمن باذان.",
@@ -11297,7 +9911,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_71__21",
-        file: "seerah",
         card_number: 21,
         side1: "ممن تلقّى باذان رسالة التأكيد؟",
         side2: "من الحاكم الفارسي الجديد شيرويه.",
@@ -11305,7 +9918,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_71__26",
-        file: "seerah",
         card_number: 26,
         side1: "ما كان ردّ باذان بعد تلقّي رسالة شيرويه؟",
         side2: "أسلم باذان.",
@@ -11313,7 +9925,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_71__27",
-        file: "seerah",
         card_number: 27,
         side1: "ماذا فعل الفرس تحت سلطة باذان في اليمن بعد إسلامه؟",
         side2: "أسلموا.",
@@ -11321,7 +9932,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_71__11",
-        file: "seerah",
         card_number: 11,
         side1: "من بعث باذان إلى المدينة؟",
         side2: "رسولين فارسيين.",
@@ -11329,7 +9939,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_71__17",
-        file: "seerah",
         card_number: 17,
         side1: "ماذا قال محمد عن ابن كسرى؟",
         side2: "أن ابن كسرى تولّى السلطة.",
@@ -11337,7 +9946,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_71__28",
-        file: "seerah",
         card_number: 28,
         side1: "أي منصب كان لباذان تحت كسرى؟",
         side2: "كان عامل كسرى في اليمن.",
@@ -11345,7 +9953,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_71__18",
-        file: "seerah",
         card_number: 18,
         side1: "ماذا قال محمد إنه سيبلغ باذان قريباً؟",
         side2: "رسالة تؤكد الحادث.",
@@ -11355,7 +9962,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     full: [
       {
         id: "Part_71__15",
-        file: "seerah",
         card_number: 15,
         side1: "ماذا أخبر محمد الرسولين أنه حدث لكسرى؟",
         side2: "أن كسرى قتله ابنه.",
@@ -11363,7 +9969,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_71__10",
-        file: "seerah",
         card_number: 10,
         side1: "ماذا أمر كسرى باذان أن يفعل؟",
         side2: "أن يرسل رجالاً ليأتوا بالرجل الذي ظهر في الحجاز إلى حضرة كسرى.",
@@ -11371,7 +9976,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_71__8",
-        file: "seerah",
         card_number: 8,
         side1: "كيف ردّ كسرى على رسالة محمد؟",
         side2: "مزّق الرسالة.",
@@ -11379,7 +9983,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_71__24",
-        file: "seerah",
         card_number: 24,
         side1: "ماذا أمر شيرويه بشأن محمد؟",
         side2: "ألا يُتخذ أي إجراء آخر ضد محمد.",
@@ -11387,7 +9990,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_71__9",
-        file: "seerah",
         card_number: 9,
         side1: "إلى من كتب كسرى بعد تمزيق الرسالة؟",
         side2: "إلى عامله في اليمن باذان.",
@@ -11395,7 +9997,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_71__21",
-        file: "seerah",
         card_number: 21,
         side1: "ممن تلقّى باذان رسالة التأكيد؟",
         side2: "من الحاكم الفارسي الجديد شيرويه.",
@@ -11403,7 +10004,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_71__26",
-        file: "seerah",
         card_number: 26,
         side1: "ما كان ردّ باذان بعد تلقّي رسالة شيرويه؟",
         side2: "أسلم باذان.",
@@ -11411,7 +10011,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_71__27",
-        file: "seerah",
         card_number: 27,
         side1: "ماذا فعل الفرس تحت سلطة باذان في اليمن بعد إسلامه؟",
         side2: "أسلموا.",
@@ -11419,7 +10018,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_71__11",
-        file: "seerah",
         card_number: 11,
         side1: "من بعث باذان إلى المدينة؟",
         side2: "رسولين فارسيين.",
@@ -11427,7 +10025,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_71__17",
-        file: "seerah",
         card_number: 17,
         side1: "ماذا قال محمد عن ابن كسرى؟",
         side2: "أن ابن كسرى تولّى السلطة.",
@@ -11435,7 +10032,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_71__28",
-        file: "seerah",
         card_number: 28,
         side1: "أي منصب كان لباذان تحت كسرى؟",
         side2: "كان عامل كسرى في اليمن.",
@@ -11443,7 +10039,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_71__18",
-        file: "seerah",
         card_number: 18,
         side1: "ماذا قال محمد إنه سيبلغ باذان قريباً؟",
         side2: "رسالة تؤكد الحادث.",
@@ -11451,7 +10046,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_71__3",
-        file: "seerah",
         card_number: 3,
         side1: "من أُوكل إليه تبليغ رسالة محمد إلى كسرى؟",
         side2: "عبد الله بن حذافة السهمي.",
@@ -11459,7 +10053,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_71__14",
-        file: "seerah",
         card_number: 14,
         side1: "أي طلب بلّغه الرسولان لمحمد في المدينة؟",
         side2: "أن يأتي معهما إلى كسرى.",
@@ -11467,7 +10060,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_71__23",
-        file: "seerah",
         card_number: 23,
         side1: "ماذا قال شيرويه في رسالته إلى باذان عن كسرى؟",
         side2: "أنه قتل أباه كسرى.",
@@ -11475,7 +10067,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_71__1",
-        file: "seerah",
         card_number: 1,
         side1: "بعد أي صلح كتب محمد رسالة إلى كسرى إمبراطور فارس؟",
         side2: "بعد صلح الحديبية.",
@@ -11483,7 +10074,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_71__7",
-        file: "seerah",
         card_number: 7,
         side1: "اسم من جاء أولاً في الرسالة إلى كسرى؟",
         side2: "سبق اسم محمد اسم كسرى.",
@@ -11497,7 +10087,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     easy: [
       {
         id: "Part_72__1",
-        file: "seerah",
         card_number: 1,
         side1: "بعد أي حدث أرسل رسول الله ﷺ رسائل إلى الحكّام خارج جزيرة العرب؟",
         side2: "بعد هدنة الحديبية والرجوع إلى المدينة.",
@@ -11505,7 +10094,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__42",
-        file: "seerah",
         card_number: 42,
         side1: "ماذا فعلت جماعة جذام بدحية في حسمى؟",
         side2: "استولوا على ما معه، بما فيه ثياب وهدايا أخرى مقصودة لرسول الله ﷺ.",
@@ -11513,7 +10101,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__25",
-        file: "seerah",
         card_number: 25,
         side1: "عمّ سأل هرقل عن تعاليم النبي ﷺ؟",
         side2: "بماذا يأمرهم.",
@@ -11521,7 +10108,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__31",
-        file: "seerah",
         card_number: 31,
         side1: "ماذا قال أبو سفيان عن النبي ﷺ والعهود؟",
         side2: "قال إن محمداً ﷺ لا يغدر بعهوده.",
@@ -11529,7 +10115,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__43",
-        file: "seerah",
         card_number: 43,
         side1: "من بعثه النبي ﷺ بعد سماعه بالاعتداء على دحية؟",
         side2: "زيد بن حارثة.",
@@ -11537,7 +10122,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__2",
-        file: "seerah",
         card_number: 2,
         side1: "أي حاكم بيزنطي تلقّى رسالة من رسول الله ﷺ؟",
         side2: "هرقل إمبراطور الروم.",
@@ -11545,7 +10129,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__55",
-        file: "seerah",
         card_number: 55,
         side1: "ماذا أمر النبي ﷺ بشأن الأسرى والأموال المأخوذة من جذام؟",
         side2: "أن تُردّ إلى مستحقّيها.",
@@ -11553,7 +10136,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__27",
-        file: "seerah",
         card_number: 27,
         side1: "كيف أجاب أبو سفيان حين سُئل إن كان النبي ﷺ عُرف بالكذب؟",
         side2: "قال إنهم لم يتّهموا محمداً ﷺ بالكذب قط.",
@@ -11561,7 +10143,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__41",
-        file: "seerah",
         card_number: 41,
         side1: "أي قبيلة اعترضت دحية في حسمى؟",
         side2: "جماعة من قبيلة جذام.",
@@ -11569,7 +10150,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__30",
-        file: "seerah",
         card_number: 30,
         side1: "كيف وصف أبو سفيان نتائج الحرب مع النبي ﷺ؟",
         side2: "قال إنها كانت سجالاً.",
@@ -11579,7 +10159,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     medium: [
       {
         id: "Part_72__1",
-        file: "seerah",
         card_number: 1,
         side1: "بعد أي حدث أرسل رسول الله ﷺ رسائل إلى الحكّام خارج جزيرة العرب؟",
         side2: "بعد هدنة الحديبية والرجوع إلى المدينة.",
@@ -11587,7 +10166,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__42",
-        file: "seerah",
         card_number: 42,
         side1: "ماذا فعلت جماعة جذام بدحية في حسمى؟",
         side2: "استولوا على ما معه، بما فيه ثياب وهدايا أخرى مقصودة لرسول الله ﷺ.",
@@ -11595,7 +10173,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__25",
-        file: "seerah",
         card_number: 25,
         side1: "عمّ سأل هرقل عن تعاليم النبي ﷺ؟",
         side2: "بماذا يأمرهم.",
@@ -11603,7 +10180,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__31",
-        file: "seerah",
         card_number: 31,
         side1: "ماذا قال أبو سفيان عن النبي ﷺ والعهود؟",
         side2: "قال إن محمداً ﷺ لا يغدر بعهوده.",
@@ -11611,7 +10187,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__43",
-        file: "seerah",
         card_number: 43,
         side1: "من بعثه النبي ﷺ بعد سماعه بالاعتداء على دحية؟",
         side2: "زيد بن حارثة.",
@@ -11619,7 +10194,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__2",
-        file: "seerah",
         card_number: 2,
         side1: "أي حاكم بيزنطي تلقّى رسالة من رسول الله ﷺ؟",
         side2: "هرقل إمبراطور الروم.",
@@ -11627,7 +10201,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__55",
-        file: "seerah",
         card_number: 55,
         side1: "ماذا أمر النبي ﷺ بشأن الأسرى والأموال المأخوذة من جذام؟",
         side2: "أن تُردّ إلى مستحقّيها.",
@@ -11635,7 +10208,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__27",
-        file: "seerah",
         card_number: 27,
         side1: "كيف أجاب أبو سفيان حين سُئل إن كان النبي ﷺ عُرف بالكذب؟",
         side2: "قال إنهم لم يتّهموا محمداً ﷺ بالكذب قط.",
@@ -11643,7 +10215,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__41",
-        file: "seerah",
         card_number: 41,
         side1: "أي قبيلة اعترضت دحية في حسمى؟",
         side2: "جماعة من قبيلة جذام.",
@@ -11651,7 +10222,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__30",
-        file: "seerah",
         card_number: 30,
         side1: "كيف وصف أبو سفيان نتائج الحرب مع النبي ﷺ؟",
         side2: "قال إنها كانت سجالاً.",
@@ -11659,7 +10229,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__37",
-        file: "seerah",
         card_number: 37,
         side1: "أي أثر أحدثته الرسالة وكلام هرقل في البلاط؟",
         side2: "أحدثا اضطراباً بين الأشراف ورجال الدين.",
@@ -11667,7 +10236,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__24",
-        file: "seerah",
         card_number: 24,
         side1: "عمّ سأل هرقل عن معاملة النبي ﷺ للعهود؟",
         side2: "هل يغدر بعهوده.",
@@ -11675,7 +10243,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__20",
-        file: "seerah",
         card_number: 20,
         side1: "عمّ سأل هرقل عن عدد أتباع النبي ﷺ؟",
         side2: "هل يزيدون أم ينقصون.",
@@ -11683,7 +10250,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__47",
-        file: "seerah",
         card_number: 47,
         side1: "ماذا غنمت السرية المسلمة بعد مواجهة فريق الغارة؟",
         side2: "كثيراً من الدواب والأسرى.",
@@ -11691,7 +10257,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__3",
-        file: "seerah",
         card_number: 3,
         side1: "من أُوكل إليه تبليغ رسالة النبي ﷺ إلى هرقل؟",
         side2: "دحية بن خليفة الكلبي.",
@@ -11699,7 +10264,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__21",
-        file: "seerah",
         card_number: 21,
         side1: "عمّ سأل هرقل عن الردّة بين أتباع النبي ﷺ؟",
         side2: "هل ارتدّ أحد من أتباعه عن الدين سخطاً.",
@@ -11707,7 +10271,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__29",
-        file: "seerah",
         card_number: 29,
         side1: "ماذا قال أبو سفيان عن الردّة بين أتباع النبي ﷺ؟",
         side2: "قال إنه لم يرتدّ أحد من أتباعه بعد دخوله الإسلام.",
@@ -11715,7 +10278,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__11",
-        file: "seerah",
         card_number: 11,
         side1: "من قُدّم لهرقل أقرب الناس نسباً إلى النبي ﷺ؟",
         side2: "أبو سفيان.",
@@ -11723,7 +10285,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__23",
-        file: "seerah",
         card_number: 23,
         side1: "عمّ سأل هرقل عن نتائج الحروب مع النبي ﷺ؟",
         side2: "من كان الغالب في تلك الحروب.",
@@ -11731,7 +10292,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__46",
-        file: "seerah",
         card_number: 46,
         side1: "ماذا حدث لفريق الغارة حين لقيتهم سرية زيد بن حارثة؟",
         side2: "قُتل بعضهم وفرّ آخرون.",
@@ -11739,7 +10299,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__15",
-        file: "seerah",
         card_number: 15,
         side1: "لماذا قال أبو سفيان إنه لم يكذب عن النبي ﷺ أمام هرقل؟",
         side2: "خشي أن يوسم بالكذب عند أصحابه.",
@@ -11747,7 +10306,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__18",
-        file: "seerah",
         card_number: 18,
         side1: "عمّ سأل هرقل عن سمعة النبي ﷺ قبل النبوة؟",
         side2: "هل عُرف بالكذب قبل ادّعائه.",
@@ -11755,7 +10313,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__36",
-        file: "seerah",
         card_number: 36,
         side1: "ماذا أمر هرقل أن يُفعل برسالة النبي ﷺ في بلاطه؟",
         side2: "أن تُقرأ جهراً.",
@@ -11763,7 +10320,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__14",
-        file: "seerah",
         card_number: 14,
         side1: "أي تعليم أعطاه هرقل لترجمانه بشأن إجابات أبي سفيان؟",
         side2: "إن كذب أبو سفيان فليردّ عليه أصحابه.",
@@ -11771,7 +10327,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__10",
-        file: "seerah",
         card_number: 10,
         side1: "بأي معيار اختار هرقل من يسأل عن النبي ﷺ؟",
         side2: "من كان أقرب نسباً إلى الرجل المدّعي النبوة.",
@@ -11781,7 +10336,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     full: [
       {
         id: "Part_72__1",
-        file: "seerah",
         card_number: 1,
         side1: "بعد أي حدث أرسل رسول الله ﷺ رسائل إلى الحكّام خارج جزيرة العرب؟",
         side2: "بعد هدنة الحديبية والرجوع إلى المدينة.",
@@ -11789,7 +10343,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__42",
-        file: "seerah",
         card_number: 42,
         side1: "ماذا فعلت جماعة جذام بدحية في حسمى؟",
         side2: "استولوا على ما معه، بما فيه ثياب وهدايا أخرى مقصودة لرسول الله ﷺ.",
@@ -11797,7 +10350,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__25",
-        file: "seerah",
         card_number: 25,
         side1: "عمّ سأل هرقل عن تعاليم النبي ﷺ؟",
         side2: "بماذا يأمرهم.",
@@ -11805,7 +10357,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__31",
-        file: "seerah",
         card_number: 31,
         side1: "ماذا قال أبو سفيان عن النبي ﷺ والعهود؟",
         side2: "قال إن محمداً ﷺ لا يغدر بعهوده.",
@@ -11813,7 +10364,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__43",
-        file: "seerah",
         card_number: 43,
         side1: "من بعثه النبي ﷺ بعد سماعه بالاعتداء على دحية؟",
         side2: "زيد بن حارثة.",
@@ -11821,7 +10371,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__2",
-        file: "seerah",
         card_number: 2,
         side1: "أي حاكم بيزنطي تلقّى رسالة من رسول الله ﷺ؟",
         side2: "هرقل إمبراطور الروم.",
@@ -11829,7 +10378,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__55",
-        file: "seerah",
         card_number: 55,
         side1: "ماذا أمر النبي ﷺ بشأن الأسرى والأموال المأخوذة من جذام؟",
         side2: "أن تُردّ إلى مستحقّيها.",
@@ -11837,7 +10385,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__27",
-        file: "seerah",
         card_number: 27,
         side1: "كيف أجاب أبو سفيان حين سُئل إن كان النبي ﷺ عُرف بالكذب؟",
         side2: "قال إنهم لم يتّهموا محمداً ﷺ بالكذب قط.",
@@ -11845,7 +10392,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__41",
-        file: "seerah",
         card_number: 41,
         side1: "أي قبيلة اعترضت دحية في حسمى؟",
         side2: "جماعة من قبيلة جذام.",
@@ -11853,7 +10399,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__30",
-        file: "seerah",
         card_number: 30,
         side1: "كيف وصف أبو سفيان نتائج الحرب مع النبي ﷺ؟",
         side2: "قال إنها كانت سجالاً.",
@@ -11861,7 +10406,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__37",
-        file: "seerah",
         card_number: 37,
         side1: "أي أثر أحدثته الرسالة وكلام هرقل في البلاط؟",
         side2: "أحدثا اضطراباً بين الأشراف ورجال الدين.",
@@ -11869,7 +10413,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__24",
-        file: "seerah",
         card_number: 24,
         side1: "عمّ سأل هرقل عن معاملة النبي ﷺ للعهود؟",
         side2: "هل يغدر بعهوده.",
@@ -11877,7 +10420,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__20",
-        file: "seerah",
         card_number: 20,
         side1: "عمّ سأل هرقل عن عدد أتباع النبي ﷺ؟",
         side2: "هل يزيدون أم ينقصون.",
@@ -11885,7 +10427,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__47",
-        file: "seerah",
         card_number: 47,
         side1: "ماذا غنمت السرية المسلمة بعد مواجهة فريق الغارة؟",
         side2: "كثيراً من الدواب والأسرى.",
@@ -11893,7 +10434,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__3",
-        file: "seerah",
         card_number: 3,
         side1: "من أُوكل إليه تبليغ رسالة النبي ﷺ إلى هرقل؟",
         side2: "دحية بن خليفة الكلبي.",
@@ -11901,7 +10441,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__21",
-        file: "seerah",
         card_number: 21,
         side1: "عمّ سأل هرقل عن الردّة بين أتباع النبي ﷺ؟",
         side2: "هل ارتدّ أحد من أتباعه عن الدين سخطاً.",
@@ -11909,7 +10448,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__29",
-        file: "seerah",
         card_number: 29,
         side1: "ماذا قال أبو سفيان عن الردّة بين أتباع النبي ﷺ؟",
         side2: "قال إنه لم يرتدّ أحد من أتباعه بعد دخوله الإسلام.",
@@ -11917,7 +10455,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__11",
-        file: "seerah",
         card_number: 11,
         side1: "من قُدّم لهرقل أقرب الناس نسباً إلى النبي ﷺ؟",
         side2: "أبو سفيان.",
@@ -11925,7 +10462,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__23",
-        file: "seerah",
         card_number: 23,
         side1: "عمّ سأل هرقل عن نتائج الحروب مع النبي ﷺ؟",
         side2: "من كان الغالب في تلك الحروب.",
@@ -11933,7 +10469,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__46",
-        file: "seerah",
         card_number: 46,
         side1: "ماذا حدث لفريق الغارة حين لقيتهم سرية زيد بن حارثة؟",
         side2: "قُتل بعضهم وفرّ آخرون.",
@@ -11941,7 +10476,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__15",
-        file: "seerah",
         card_number: 15,
         side1: "لماذا قال أبو سفيان إنه لم يكذب عن النبي ﷺ أمام هرقل؟",
         side2: "خشي أن يوسم بالكذب عند أصحابه.",
@@ -11949,7 +10483,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__18",
-        file: "seerah",
         card_number: 18,
         side1: "عمّ سأل هرقل عن سمعة النبي ﷺ قبل النبوة؟",
         side2: "هل عُرف بالكذب قبل ادّعائه.",
@@ -11957,7 +10490,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__36",
-        file: "seerah",
         card_number: 36,
         side1: "ماذا أمر هرقل أن يُفعل برسالة النبي ﷺ في بلاطه؟",
         side2: "أن تُقرأ جهراً.",
@@ -11965,7 +10497,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__14",
-        file: "seerah",
         card_number: 14,
         side1: "أي تعليم أعطاه هرقل لترجمانه بشأن إجابات أبي سفيان؟",
         side2: "إن كذب أبو سفيان فليردّ عليه أصحابه.",
@@ -11973,7 +10504,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__10",
-        file: "seerah",
         card_number: 10,
         side1: "بأي معيار اختار هرقل من يسأل عن النبي ﷺ؟",
         side2: "من كان أقرب نسباً إلى الرجل المدّعي النبوة.",
@@ -11981,7 +10511,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__54",
-        file: "seerah",
         card_number: 54,
         side1: "أي توضيح قدّمه وفد جذام بشأن قومهم وأموالهم؟",
         side2: "بيّنوا أيّ قومهم مسلمون وأيّ أموال أُخذت منهم ظلماً.",
@@ -11989,7 +10518,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__28",
-        file: "seerah",
         card_number: 28,
         side1: "ماذا قال أبو سفيان عن اتجاه عدد أتباع النبي ﷺ؟",
         side2: "قال إن أتباعه يزيدون.",
@@ -11997,7 +10525,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__6",
-        file: "seerah",
         card_number: 6,
         side1: "أين كان أبو سفيان بن حرب وجماعة من قريش حين تلقّى هرقل الرسالة؟",
         side2: "في بلاد الشام.",
@@ -12005,7 +10532,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__8",
-        file: "seerah",
         card_number: 8,
         side1: "في أي ظرف سياسي بين قريش والنبي ﷺ وقع لقاء أبي سفيان بهرقل؟",
         side2: "في فترة الهدنة.",
@@ -12013,7 +10539,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__7",
-        file: "seerah",
         card_number: 7,
         side1: "لماذا كان أبو سفيان وجماعة قريش في الشام؟",
         side2: "كانوا في رحلة تجارة.",
@@ -12021,7 +10546,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__40",
-        file: "seerah",
         card_number: 40,
         side1: "عبر أي ناحية مرّ دحية في طريق العودة؟",
         side2: "حسمى.",
@@ -12029,7 +10553,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__38",
-        file: "seerah",
         card_number: 38,
         side1: "ماذا تذكر الروايات أن هرقل فعله لاحقاً بشأن قومه؟",
         side2: "اختبر ردّ فعلهم.",
@@ -12037,7 +10560,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__22",
-        file: "seerah",
         card_number: 22,
         side1: "عمّ سأل هرقل عن القتال مع النبي ﷺ؟",
         side2: "هل قاتلوه.",
@@ -12045,7 +10567,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__16",
-        file: "seerah",
         card_number: 16,
         side1: "عمّ سأل هرقل عن النبي ﷺ بشأن نسبه؟",
         side2: "سأل عن أصله ونسبه.",
@@ -12053,7 +10574,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__17",
-        file: "seerah",
         card_number: 17,
         side1: "أي سؤال سأله هرقل عن آباء النبي ﷺ؟",
         side2: "هل كان أحد من آبائه ملوكاً.",
@@ -12061,7 +10581,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__4",
-        file: "seerah",
         card_number: 4,
         side1: "إلى من أُمر دحية أن يسلّم أولاً الرسالة الموجّهة إلى هرقل؟",
         side2: "إلى عامل بصرى في الشام.",
@@ -12069,7 +10588,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_72__26",
-        file: "seerah",
         card_number: 26,
         side1: "كيف أجاب أبو سفيان هرقل عن كون آباء النبي ﷺ ملوكاً؟",
         side2: "قال إنه لم يملك أحد من آباء محمد ﷺ.",
@@ -12083,7 +10601,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     easy: [
       {
         id: "Part_73__11",
-        file: "seerah_flashcards.json",
         card_number: 11,
         side1: "ماذا قال النبي عن المنزلة السياسية للمنذر؟",
         side2: "«ستبقى في منصبك».",
@@ -12091,7 +10608,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_73__6",
-        file: "seerah_flashcards.json",
         card_number: 6,
         side1: "كيف استجاب أهل البحرين بعد قراءة رسالة النبي عليهم؟",
         side2: "دخل بعضهم الإسلام ولم يدخل آخرون.",
@@ -12099,7 +10615,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_73__1",
-        file: "seerah_flashcards.json",
         card_number: 1,
         side1: "بعد أي حدث أرسل رسول الله رسائل إلى الحكّام والعمّال في النواحي المحيطة؟",
         side2: "بعد صلح الحديبية.",
@@ -12107,7 +10622,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_73__15",
-        file: "seerah_flashcards.json",
         card_number: 15,
         side1: "أي حكم أعطاه النبي لمن أراد البقاء على اليهودية أو المجوسية من أهل البحرين؟",
         side2: "عليهم دفع الجزية.",
@@ -12115,7 +10629,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_73__7",
-        file: "seerah_flashcards.json",
         card_number: 7,
         side1: "أي طائفتين دينيتين ذكر المنذر أنهما في بلاده؟",
         side2: "المجوس واليهود.",
@@ -12123,7 +10636,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_73__3",
-        file: "seerah_flashcards.json",
         card_number: 3,
         side1: "أي صحابي أُرسل برسالة النبي إلى المنذر بن ساوى؟",
         side2: "العلاء بن الحضرمي.",
@@ -12131,7 +10643,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_73__12",
-        file: "seerah_flashcards.json",
         card_number: 12,
         side1: "أي تعليم أعطاه النبي بشأن المسلمين المقيمين في البحرين؟",
         side2: "«أعطِ المسلمين الذين معك فرصة كاملة ليمارسوا دينهم ويبلّغوه».",
@@ -12141,7 +10652,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     medium: [
       {
         id: "Part_73__11",
-        file: "seerah_flashcards.json",
         card_number: 11,
         side1: "ماذا قال النبي عن المنزلة السياسية للمنذر؟",
         side2: "«ستبقى في منصبك».",
@@ -12149,7 +10659,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_73__6",
-        file: "seerah_flashcards.json",
         card_number: 6,
         side1: "كيف استجاب أهل البحرين بعد قراءة رسالة النبي عليهم؟",
         side2: "دخل بعضهم الإسلام ولم يدخل آخرون.",
@@ -12157,7 +10666,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_73__1",
-        file: "seerah_flashcards.json",
         card_number: 1,
         side1: "بعد أي حدث أرسل رسول الله رسائل إلى الحكّام والعمّال في النواحي المحيطة؟",
         side2: "بعد صلح الحديبية.",
@@ -12165,7 +10673,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_73__15",
-        file: "seerah_flashcards.json",
         card_number: 15,
         side1: "أي حكم أعطاه النبي لمن أراد البقاء على اليهودية أو المجوسية من أهل البحرين؟",
         side2: "عليهم دفع الجزية.",
@@ -12173,7 +10680,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_73__7",
-        file: "seerah_flashcards.json",
         card_number: 7,
         side1: "أي طائفتين دينيتين ذكر المنذر أنهما في بلاده؟",
         side2: "المجوس واليهود.",
@@ -12181,7 +10687,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_73__3",
-        file: "seerah_flashcards.json",
         card_number: 3,
         side1: "أي صحابي أُرسل برسالة النبي إلى المنذر بن ساوى؟",
         side2: "العلاء بن الحضرمي.",
@@ -12189,7 +10694,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_73__12",
-        file: "seerah_flashcards.json",
         card_number: 12,
         side1: "أي تعليم أعطاه النبي بشأن المسلمين المقيمين في البحرين؟",
         side2: "«أعطِ المسلمين الذين معك فرصة كاملة ليمارسوا دينهم ويبلّغوه».",
@@ -12197,7 +10701,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_73__2",
-        file: "seerah_flashcards.json",
         card_number: 2,
         side1: "من كان عامل البحرين؟",
         side2: "المنذر بن ساوى.",
@@ -12205,7 +10708,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_73__5",
-        file: "seerah_flashcards.json",
         card_number: 5,
         side1: "ماذا قالت الروايات إن المنذر فعل برسالة النبي؟",
         side2: "قرأها على أهل البحرين.",
@@ -12213,7 +10715,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_73__14",
-        file: "seerah_flashcards.json",
         card_number: 14,
         side1: "ماذا قال النبي عن المذنبين من أهل البحرين؟",
         side2: "«أعفو عن المذنبين؛ فاعفُ عنهم أنت أيضاً».",
@@ -12221,7 +10722,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_73__10",
-        file: "seerah_flashcards.json",
         card_number: 10,
         side1: "ماذا قال النبي عن سلوك المنذر في جوابه المكتوب؟",
         side2: "«قد أثنى رسلي على سيرتك».",
@@ -12229,7 +10729,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_73__13",
-        file: "seerah_flashcards.json",
         card_number: 13,
         side1: "ماذا قال النبي عن توصية المنذر بشأن أهل البحرين؟",
         side2: "«أقبل توصيتك في أهل البحرين».",
@@ -12239,7 +10738,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     full: [
       {
         id: "Part_73__11",
-        file: "seerah_flashcards.json",
         card_number: 11,
         side1: "ماذا قال النبي عن المنزلة السياسية للمنذر؟",
         side2: "«ستبقى في منصبك».",
@@ -12247,7 +10745,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_73__6",
-        file: "seerah_flashcards.json",
         card_number: 6,
         side1: "كيف استجاب أهل البحرين بعد قراءة رسالة النبي عليهم؟",
         side2: "دخل بعضهم الإسلام ولم يدخل آخرون.",
@@ -12255,7 +10752,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_73__1",
-        file: "seerah_flashcards.json",
         card_number: 1,
         side1: "بعد أي حدث أرسل رسول الله رسائل إلى الحكّام والعمّال في النواحي المحيطة؟",
         side2: "بعد صلح الحديبية.",
@@ -12263,7 +10759,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_73__15",
-        file: "seerah_flashcards.json",
         card_number: 15,
         side1: "أي حكم أعطاه النبي لمن أراد البقاء على اليهودية أو المجوسية من أهل البحرين؟",
         side2: "عليهم دفع الجزية.",
@@ -12271,7 +10766,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_73__7",
-        file: "seerah_flashcards.json",
         card_number: 7,
         side1: "أي طائفتين دينيتين ذكر المنذر أنهما في بلاده؟",
         side2: "المجوس واليهود.",
@@ -12279,7 +10773,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_73__3",
-        file: "seerah_flashcards.json",
         card_number: 3,
         side1: "أي صحابي أُرسل برسالة النبي إلى المنذر بن ساوى؟",
         side2: "العلاء بن الحضرمي.",
@@ -12287,7 +10780,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_73__12",
-        file: "seerah_flashcards.json",
         card_number: 12,
         side1: "أي تعليم أعطاه النبي بشأن المسلمين المقيمين في البحرين؟",
         side2: "«أعطِ المسلمين الذين معك فرصة كاملة ليمارسوا دينهم ويبلّغوه».",
@@ -12295,7 +10787,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_73__2",
-        file: "seerah_flashcards.json",
         card_number: 2,
         side1: "من كان عامل البحرين؟",
         side2: "المنذر بن ساوى.",
@@ -12303,7 +10794,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_73__5",
-        file: "seerah_flashcards.json",
         card_number: 5,
         side1: "ماذا قالت الروايات إن المنذر فعل برسالة النبي؟",
         side2: "قرأها على أهل البحرين.",
@@ -12311,7 +10801,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_73__14",
-        file: "seerah_flashcards.json",
         card_number: 14,
         side1: "ماذا قال النبي عن المذنبين من أهل البحرين؟",
         side2: "«أعفو عن المذنبين؛ فاعفُ عنهم أنت أيضاً».",
@@ -12319,7 +10808,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_73__10",
-        file: "seerah_flashcards.json",
         card_number: 10,
         side1: "ماذا قال النبي عن سلوك المنذر في جوابه المكتوب؟",
         side2: "«قد أثنى رسلي على سيرتك».",
@@ -12327,7 +10815,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_73__13",
-        file: "seerah_flashcards.json",
         card_number: 13,
         side1: "ماذا قال النبي عن توصية المنذر بشأن أهل البحرين؟",
         side2: "«أقبل توصيتك في أهل البحرين».",
@@ -12341,7 +10828,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     easy: [
       {
         id: "Part_74__8",
-        file: "seerah_flashcards.json",
         card_number: 8,
         side1: "من قام في اليمامة يدّعي النبوة بعد وفاة رسول الله؟",
         side2: "مسيلمة الكذّاب.",
@@ -12349,7 +10835,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_74__11",
-        file: "seerah_flashcards.json",
         card_number: 11,
         side1: "في أي معركة قُتل مسيلمة الكذّاب؟",
         side2: "معركة اليمامة.",
@@ -12357,7 +10842,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_74__7",
-        file: "seerah_flashcards.json",
         card_number: 7,
         side1: "ماذا فعل رسول الله حين بلغه جواب هوذة بن علي؟",
         side2: "رفض الشرط.",
@@ -12365,7 +10849,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_74__5",
-        file: "seerah_flashcards.json",
         card_number: 5,
         side1: "أي وعد أُعطي لهوذة بن علي في رسالة النبي إن أسلم؟",
         side2: "أن ما تحت يده يبقى له.",
@@ -12373,7 +10856,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_74__1",
-        file: "seerah_flashcards.json",
         card_number: 1,
         side1: "أي حاكم في اليمامة خاطبه رسول الله بعد الحديبية؟",
         side2: "هوذة بن علي عامل اليمامة.",
@@ -12383,7 +10865,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     medium: [
       {
         id: "Part_74__8",
-        file: "seerah_flashcards.json",
         card_number: 8,
         side1: "من قام في اليمامة يدّعي النبوة بعد وفاة رسول الله؟",
         side2: "مسيلمة الكذّاب.",
@@ -12391,7 +10872,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_74__11",
-        file: "seerah_flashcards.json",
         card_number: 11,
         side1: "في أي معركة قُتل مسيلمة الكذّاب؟",
         side2: "معركة اليمامة.",
@@ -12399,7 +10879,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_74__7",
-        file: "seerah_flashcards.json",
         card_number: 7,
         side1: "ماذا فعل رسول الله حين بلغه جواب هوذة بن علي؟",
         side2: "رفض الشرط.",
@@ -12407,7 +10886,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_74__5",
-        file: "seerah_flashcards.json",
         card_number: 5,
         side1: "أي وعد أُعطي لهوذة بن علي في رسالة النبي إن أسلم؟",
         side2: "أن ما تحت يده يبقى له.",
@@ -12415,7 +10893,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_74__1",
-        file: "seerah_flashcards.json",
         card_number: 1,
         side1: "أي حاكم في اليمامة خاطبه رسول الله بعد الحديبية؟",
         side2: "هوذة بن علي عامل اليمامة.",
@@ -12423,7 +10900,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_74__3",
-        file: "seerah_flashcards.json",
         card_number: 3,
         side1: "من حمل رسالة النبي إلى هوذة بن علي؟",
         side2: "سليط بن عمرو العامري.",
@@ -12433,7 +10909,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     full: [
       {
         id: "Part_74__8",
-        file: "seerah_flashcards.json",
         card_number: 8,
         side1: "من قام في اليمامة يدّعي النبوة بعد وفاة رسول الله؟",
         side2: "مسيلمة الكذّاب.",
@@ -12441,7 +10916,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_74__11",
-        file: "seerah_flashcards.json",
         card_number: 11,
         side1: "في أي معركة قُتل مسيلمة الكذّاب؟",
         side2: "معركة اليمامة.",
@@ -12449,7 +10923,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_74__7",
-        file: "seerah_flashcards.json",
         card_number: 7,
         side1: "ماذا فعل رسول الله حين بلغه جواب هوذة بن علي؟",
         side2: "رفض الشرط.",
@@ -12457,7 +10930,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_74__5",
-        file: "seerah_flashcards.json",
         card_number: 5,
         side1: "أي وعد أُعطي لهوذة بن علي في رسالة النبي إن أسلم؟",
         side2: "أن ما تحت يده يبقى له.",
@@ -12465,7 +10937,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_74__1",
-        file: "seerah_flashcards.json",
         card_number: 1,
         side1: "أي حاكم في اليمامة خاطبه رسول الله بعد الحديبية؟",
         side2: "هوذة بن علي عامل اليمامة.",
@@ -12473,7 +10944,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_74__3",
-        file: "seerah_flashcards.json",
         card_number: 3,
         side1: "من حمل رسالة النبي إلى هوذة بن علي؟",
         side2: "سليط بن عمرو العامري.",
@@ -12487,7 +10957,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     easy: [
       {
         id: "Part_75__10",
-        file: "seerah",
         card_number: 10,
         side1: "هل قبل الحارث بن أبي شمر دعوة الإسلام؟",
         side2: "لا، رفضها.",
@@ -12495,7 +10964,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_75__3",
-        file: "seerah",
         card_number: 3,
         side1: "إلى أي شيء دعت رسالة النبي الحارث بن أبي شمر؟",
         side2: "دعته إلى الإسلام.",
@@ -12503,7 +10971,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_75__13",
-        file: "seerah",
         card_number: 13,
         side1: "كانت هذه الواقعة مع الحارث بن أبي شمر واحدةاً من أي نوع من أعمال النبي؟",
         side2: "واحدة من عدّة رسائل أُرسلت إلى حكّام النواحي.",
@@ -12511,7 +10978,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_75__1",
-        file: "seerah",
         card_number: 1,
         side1: "من كان الحارث بن أبي شمر الغسّاني؟",
         side2: "الملك الغسّاني في ناحية دمشق.",
@@ -12519,7 +10985,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_75__9",
-        file: "seerah",
         card_number: 9,
         side1: "كيف ردّ الحارث بن أبي شمر بعد سماع الرسالة؟",
         side2: "غضب.",
@@ -12527,7 +10992,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_75__4",
-        file: "seerah",
         card_number: 4,
         side1: "أي ضمان أُعطي للحارث بن أبي شمر إن آمن؟",
         side2: "أن سلطانه يبقى بيده.",
@@ -12535,7 +10999,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_75__7",
-        file: "seerah",
         card_number: 7,
         side1: "من كان الرسول الحامل رسالة النبي إلى الحارث بن أبي شمر؟",
         side2: "شجاع بن وهب.",
@@ -12545,7 +11008,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     medium: [
       {
         id: "Part_75__10",
-        file: "seerah",
         card_number: 10,
         side1: "هل قبل الحارث بن أبي شمر دعوة الإسلام؟",
         side2: "لا، رفضها.",
@@ -12553,7 +11015,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_75__3",
-        file: "seerah",
         card_number: 3,
         side1: "إلى أي شيء دعت رسالة النبي الحارث بن أبي شمر؟",
         side2: "دعته إلى الإسلام.",
@@ -12561,7 +11022,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_75__13",
-        file: "seerah",
         card_number: 13,
         side1: "كانت هذه الواقعة مع الحارث بن أبي شمر واحدةاً من أي نوع من أعمال النبي؟",
         side2: "واحدة من عدّة رسائل أُرسلت إلى حكّام النواحي.",
@@ -12569,7 +11029,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_75__1",
-        file: "seerah",
         card_number: 1,
         side1: "من كان الحارث بن أبي شمر الغسّاني؟",
         side2: "الملك الغسّاني في ناحية دمشق.",
@@ -12577,7 +11036,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_75__9",
-        file: "seerah",
         card_number: 9,
         side1: "كيف ردّ الحارث بن أبي شمر بعد سماع الرسالة؟",
         side2: "غضب.",
@@ -12585,7 +11043,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_75__4",
-        file: "seerah",
         card_number: 4,
         side1: "أي ضمان أُعطي للحارث بن أبي شمر إن آمن؟",
         side2: "أن سلطانه يبقى بيده.",
@@ -12593,7 +11050,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_75__7",
-        file: "seerah",
         card_number: 7,
         side1: "من كان الرسول الحامل رسالة النبي إلى الحارث بن أبي شمر؟",
         side2: "شجاع بن وهب.",
@@ -12601,7 +11057,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_75__2",
-        file: "seerah",
         card_number: 2,
         side1: "متى خاطب رسول الله ﷺ الحارث بن أبي شمر الغسّاني؟",
         side2: "بعد صلح الحديبية.",
@@ -12609,7 +11064,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_75__11",
-        file: "seerah",
         card_number: 11,
         side1: "أي قول منسوب رُوي عن الحارث بن أبي شمر جواباً على الرسالة؟",
         side2: "«من يجرؤ أن ينزع ملكي؟ سأقاتله».",
@@ -12619,7 +11073,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
     full: [
       {
         id: "Part_75__10",
-        file: "seerah",
         card_number: 10,
         side1: "هل قبل الحارث بن أبي شمر دعوة الإسلام؟",
         side2: "لا، رفضها.",
@@ -12627,7 +11080,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_75__3",
-        file: "seerah",
         card_number: 3,
         side1: "إلى أي شيء دعت رسالة النبي الحارث بن أبي شمر؟",
         side2: "دعته إلى الإسلام.",
@@ -12635,7 +11087,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_75__13",
-        file: "seerah",
         card_number: 13,
         side1: "كانت هذه الواقعة مع الحارث بن أبي شمر واحدةاً من أي نوع من أعمال النبي؟",
         side2: "واحدة من عدّة رسائل أُرسلت إلى حكّام النواحي.",
@@ -12643,7 +11094,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_75__1",
-        file: "seerah",
         card_number: 1,
         side1: "من كان الحارث بن أبي شمر الغسّاني؟",
         side2: "الملك الغسّاني في ناحية دمشق.",
@@ -12651,7 +11101,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_75__9",
-        file: "seerah",
         card_number: 9,
         side1: "كيف ردّ الحارث بن أبي شمر بعد سماع الرسالة؟",
         side2: "غضب.",
@@ -12659,7 +11108,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_75__4",
-        file: "seerah",
         card_number: 4,
         side1: "أي ضمان أُعطي للحارث بن أبي شمر إن آمن؟",
         side2: "أن سلطانه يبقى بيده.",
@@ -12667,7 +11115,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_75__7",
-        file: "seerah",
         card_number: 7,
         side1: "من كان الرسول الحامل رسالة النبي إلى الحارث بن أبي شمر؟",
         side2: "شجاع بن وهب.",
@@ -12675,7 +11122,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_75__2",
-        file: "seerah",
         card_number: 2,
         side1: "متى خاطب رسول الله ﷺ الحارث بن أبي شمر الغسّاني؟",
         side2: "بعد صلح الحديبية.",
@@ -12683,7 +11129,6 @@ export const PART_FLASHCARDS_AR_51_75: Record<number, FlashcardSet> = {
       },
       {
         id: "Part_75__11",
-        file: "seerah",
         card_number: 11,
         side1: "أي قول منسوب رُوي عن الحارث بن أبي شمر جواباً على الرسالة؟",
         side2: "«من يجرؤ أن ينزع ملكي؟ سأقاتله».",
