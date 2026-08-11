@@ -1,6 +1,8 @@
 import type { Part, Era, EraInfo } from "./types";
 import { ERAS } from "./types";
 import { isPartInEssentials } from "./essentials-sequence";
+import type { CourseLang } from "./course-lang";
+import { PART_TITLES_AR, ERA_LABELS_AR } from "./part-titles-ar";
 
 function makePart(
   num: number,
@@ -159,6 +161,33 @@ export const PARTS: Part[] = [
 
 export function getPartById(id: string): Part | undefined {
   return PARTS.find((p) => p.id === id);
+}
+
+/** Return PARTS with Arabic titles/subtitles when lang is "ar". */
+export function getPartsForLang(lang: CourseLang = "en"): Part[] {
+  if (lang !== "ar") return PARTS;
+  return PARTS.map((p) => {
+    const ar = PART_TITLES_AR[p.partNumber];
+    if (!ar) return p;
+    return { ...p, title: ar.title, subtitle: ar.subtitle };
+  });
+}
+
+/** Localize a single part's title/subtitle. */
+export function localizePart(part: Part, lang: CourseLang = "en"): Part {
+  if (lang !== "ar") return part;
+  const ar = PART_TITLES_AR[part.partNumber];
+  if (!ar) return part;
+  return { ...part, title: ar.title, subtitle: ar.subtitle };
+}
+
+/** Era list with Arabic labels when lang is "ar". */
+export function getErasForLang(lang: CourseLang = "en"): EraInfo[] {
+  if (lang !== "ar") return ERAS;
+  return ERAS.map((e) => {
+    const ar = ERA_LABELS_AR[e.id];
+    return ar ? { ...e, label: ar.label, description: ar.description } : e;
+  });
 }
 
 export function getPartsByEra(era: Era): Part[] {

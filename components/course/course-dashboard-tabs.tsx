@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { LayoutDashboard, BookOpen, FolderOpen, TrendingUp, Library, CircleUser } from "lucide-react";
 import { clsx } from "clsx";
+import type { CourseLang } from "@/lib/course-lang";
+import { t } from "@/lib/ui-strings";
 
 interface CourseDashboardTabsProps {
   homeContent: React.ReactNode;
@@ -11,23 +13,24 @@ interface CourseDashboardTabsProps {
   resourcesContent: React.ReactNode;
   referenceContent: React.ReactNode;
   progressContent: React.ReactNode;
+  lang?: CourseLang;
 }
 
 type TabId = "home" | "lessons" | "resources" | "reference" | "progress";
 
-interface Tab {
+interface TabDef {
   id: TabId;
-  label: string;
-  shortLabel: string;
+  labelKey: "tabDashboard" | "tabLessons" | "tabResources" | "tabReference" | "tabProgress";
+  shortLabelKey: "tabHome" | "tabLessons" | "tabMedia" | "tabRef" | "tabStats";
   icon: React.ComponentType<{ className?: string }>;
 }
 
-const TABS: Tab[] = [
-  { id: "home",      label: "Dashboard", shortLabel: "Home",    icon: LayoutDashboard },
-  { id: "lessons",   label: "Lessons",   shortLabel: "Lessons", icon: BookOpen },
-  { id: "resources", label: "Resources", shortLabel: "Media",   icon: FolderOpen },
-  { id: "reference", label: "Reference", shortLabel: "Ref",     icon: Library },
-  { id: "progress",  label: "Progress",  shortLabel: "Stats",   icon: TrendingUp },
+const TAB_DEFS: TabDef[] = [
+  { id: "home",      labelKey: "tabDashboard", shortLabelKey: "tabHome",    icon: LayoutDashboard },
+  { id: "lessons",   labelKey: "tabLessons",   shortLabelKey: "tabLessons", icon: BookOpen },
+  { id: "resources", labelKey: "tabResources", shortLabelKey: "tabMedia",   icon: FolderOpen },
+  { id: "reference", labelKey: "tabReference", shortLabelKey: "tabRef",     icon: Library },
+  { id: "progress",  labelKey: "tabProgress",  shortLabelKey: "tabStats",   icon: TrendingUp },
 ];
 
 export function CourseDashboardTabs({
@@ -36,12 +39,13 @@ export function CourseDashboardTabs({
   resourcesContent,
   referenceContent,
   progressContent,
+  lang = "en",
 }: CourseDashboardTabsProps) {
   const searchParams = useSearchParams();
 
   const tabParam = searchParams.get("tab") as TabId | null;
   const resolvedInitial: TabId =
-    tabParam && TABS.some((t) => t.id === tabParam) ? tabParam : "home";
+    tabParam && TAB_DEFS.some((td) => td.id === tabParam) ? tabParam : "home";
 
   const [activeTab, setActiveTab] = useState<TabId>(resolvedInitial);
 
@@ -55,7 +59,7 @@ export function CourseDashboardTabs({
 
   // Sync tab state when URL changes (browser back / forward / direct link)
   useEffect(() => {
-    const incoming = tabParam && TABS.some((t) => t.id === tabParam) ? tabParam : "home";
+    const incoming = tabParam && TAB_DEFS.some((td) => td.id === tabParam) ? tabParam : "home";
     if (incoming !== activeTab) setActiveTab(incoming);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tabParam]);
@@ -82,7 +86,7 @@ export function CourseDashboardTabs({
     const handler = (e: Event) => {
       if (isSelfDispatch.current) return; // ignore events we dispatched
       const tabId = (e as CustomEvent<TabId>).detail;
-      if (!TABS.some((t) => t.id === tabId)) return;
+      if (!TAB_DEFS.some((td) => td.id === tabId)) return;
       setEverMounted((prev) => { if (prev.has(tabId)) return prev; const n = new Set(prev); n.add(tabId); return n; });
       setActiveTab(tabId);
       const url = tabId === "home" ? "/seerah" : `/seerah?tab=${tabId}`;
@@ -105,8 +109,8 @@ export function CourseDashboardTabs({
       {/* Tab Navigation */}
       <div className="sticky top-0 z-50 border-b border-border bg-surface shadow-sm">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex" role="tablist" aria-label="Course sections">
-            {TABS.map((tab) => {
+          <div className="flex" role="tablist" aria-label={t(lang, "courseSections")}>
+            {TAB_DEFS.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
 
@@ -127,8 +131,8 @@ export function CourseDashboardTabs({
                 >
                   <Icon className="w-4 h-4 flex-shrink-0" />
                   <span className="truncate">
-                    <span className="min-[480px]:hidden">{tab.shortLabel}</span>
-                    <span className="hidden min-[480px]:inline">{tab.label}</span>
+                    <span className="min-[480px]:hidden">{t(lang, tab.shortLabelKey)}</span>
+                    <span className="hidden min-[480px]:inline">{t(lang, tab.labelKey)}</span>
                   </span>
                 </button>
               );
@@ -140,10 +144,10 @@ export function CourseDashboardTabs({
               className={clsx(
                 "lg:hidden flex-1 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 px-1 sm:px-4 py-3 sm:py-4 min-h-[44px] text-xs sm:text-sm font-medium transition-all border-b-2 border-transparent text-text-muted hover:text-text-secondary hover:border-border"
               )}
-              aria-label="Open account menu"
+              aria-label={t(lang, "openAccountMenu")}
             >
               <CircleUser className="w-4 h-4 flex-shrink-0" />
-              <span className="truncate">Acct</span>
+              <span className="truncate">{t(lang, "tabAcct")}</span>
             </button>
           </div>
         </div>
@@ -153,7 +157,7 @@ export function CourseDashboardTabs({
           and is hidden via the HTML `hidden` attribute (display:none) rather than
           unmounting. This prevents FadeUp/StaggerChildren from restarting their
           entrance animations (opacity:0 → 1) every time you return to a tab. */}
-      {TABS.map((tab) => {
+      {TAB_DEFS.map((tab) => {
         if (!everMounted.has(tab.id)) return null;
         const isActive = activeTab === tab.id;
         return (

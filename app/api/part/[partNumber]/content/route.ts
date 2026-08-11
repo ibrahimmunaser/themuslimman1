@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readBriefing, readStatementOfFacts, readStudyGuide, readReport } from "@/lib/files";
 import { requirePartAccess } from "@/lib/part-access";
+import { parseLang } from "@/lib/course-lang";
 
 export const dynamic = "force-dynamic";
 
@@ -21,11 +22,14 @@ export async function GET(
     const deny = await requirePartAccess(partNum);
     if (deny) return deny;
 
+    const lang = parseLang(req.nextUrl.searchParams.get("lang"));
+
     const [briefingText, statementOfFactsText, studyGuideText, reportText] = await Promise.all([
-      readBriefing(partNum),
-      readStatementOfFacts(partNum),
-      readStudyGuide(partNum),
-      readReport(partNum),
+      readBriefing(partNum, lang),
+      readStatementOfFacts(partNum, lang),
+      readStudyGuide(partNum, lang),
+      // Report has no Arabic translation; always serve English
+      lang === "en" ? readReport(partNum) : Promise.resolve(null),
     ]);
 
     const elapsed = Date.now() - startTime;

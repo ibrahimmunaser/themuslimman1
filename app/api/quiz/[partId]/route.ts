@@ -1,11 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getPartById } from "@/lib/content";
 import { readQuiz } from "@/lib/files";
 import { requirePartAccess } from "@/lib/part-access";
 import { normalizeQuizAnswer } from "@/lib/progress";
+import { parseLang } from "@/lib/course-lang";
 
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ partId: string }> }
 ) {
   const startTime = Date.now();
@@ -21,7 +22,8 @@ export async function GET(
     const deny = await requirePartAccess(part.partNumber);
     if (deny) return deny;
 
-    const quiz = await readQuiz(part.partNumber);
+    const lang = parseLang(request.nextUrl.searchParams.get("lang"));
+    const quiz = await readQuiz(part.partNumber, lang);
 
     if (!quiz) {
       return NextResponse.json({ error: "Quiz not found" }, { status: 404 });

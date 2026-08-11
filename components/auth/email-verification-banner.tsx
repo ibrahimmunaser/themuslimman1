@@ -5,9 +5,10 @@ import { Mail, X, RefreshCw, CheckCircle2 } from "lucide-react";
 
 interface EmailVerificationBannerProps {
   email: string;
+  isRtl?: boolean;
 }
 
-export function EmailVerificationBanner({ email }: EmailVerificationBannerProps) {
+export function EmailVerificationBanner({ email, isRtl }: EmailVerificationBannerProps) {
   const [dismissed, setDismissed] = useState(false);
   const [resendState, setResendState] = useState<"idle" | "loading" | "sent" | "error">("idle");
 
@@ -33,11 +34,9 @@ export function EmailVerificationBanner({ email }: EmailVerificationBannerProps)
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm text-text">
-                <span className="font-semibold">Confirm your email to secure your account.</span>{" "}
+                <span className="font-semibold">{isRtl ? "أكّد بريدك الإلكتروني لتأمين حسابك." : "Confirm your email to secure your account."}</span>{" "}
                 <span className="text-text-secondary hidden sm:inline">
-                  We sent a link to{" "}
-                  <span className="font-medium text-gold">{email}</span>
-                  . Your course access stays unlocked.
+                  {isRtl ? <>أرسلنا رابطاً إلى <span className="font-medium text-gold">{email}</span>. وصولك إلى الدورة لا يزال نشطاً.</> : <>We sent a link to{" "}<span className="font-medium text-gold">{email}</span>. Your course access stays unlocked.</>}
                 </span>
               </p>
             </div>
@@ -47,10 +46,10 @@ export function EmailVerificationBanner({ email }: EmailVerificationBannerProps)
             {resendState === "sent" ? (
               <span className="flex items-center gap-1.5 text-xs text-emerald-400 font-medium">
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                Sent!
+                {isRtl ? "تم الإرسال!" : "Sent!"}
               </span>
             ) : resendState === "error" ? (
-              <span className="text-xs text-red-400">Failed — try again</span>
+              <span className="text-xs text-red-400">{isRtl ? "فشل — حاول مرة أخرى" : "Failed — try again"}</span>
             ) : (
               <button
                 onClick={handleResend}
@@ -58,7 +57,7 @@ export function EmailVerificationBanner({ email }: EmailVerificationBannerProps)
                 className="inline-flex items-center gap-1.5 text-xs font-semibold text-gold hover:text-gold/80 transition-colors disabled:opacity-60 min-h-[32px] px-2"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${resendState === "loading" ? "animate-spin" : ""}`} />
-                {resendState === "loading" ? "Sending…" : "Resend"}
+                {resendState === "loading" ? (isRtl ? "جارٍ الإرسال…" : "Sending…") : (isRtl ? "أعد الإرسال" : "Resend")}
               </button>
             )}
 

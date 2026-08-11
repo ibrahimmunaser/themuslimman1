@@ -37,9 +37,10 @@ interface SlidesViewerProps {
   type?: "presented" | "detailed";
   partNumber?: number;
   previewMode?: boolean;
+  isRtl?: boolean;
 }
 
-export function SlidesViewer({ slides, title, type = "presented", partNumber, previewMode }: SlidesViewerProps) {
+export function SlidesViewer({ slides, title, type = "presented", partNumber, previewMode, isRtl }: SlidesViewerProps) {
   const [current, setCurrent] = useState(0);
   const [fullscreen, setFullscreen] = useState(false);
   const stripRef = useRef<HTMLDivElement>(null);
@@ -125,9 +126,13 @@ export function SlidesViewer({ slides, title, type = "presented", partNumber, pr
           <Layers className="w-6 h-6 text-gold/50" />
         </div>
         <div className="text-center">
-          <p className="text-text-secondary text-sm font-medium">No slides for this part</p>
+          <p className="text-text-secondary text-sm font-medium">
+            {isRtl ? "لا توجد شرائح لهذا الجزء" : "No slides for this part"}
+          </p>
           <p className="text-xs text-text-muted mt-1">
-            {type === "presented" ? "Presented" : "Detailed"} slides will be available shortly
+            {isRtl
+              ? `شرائح ${type === "presented" ? "المُقدَّمة" : "التفصيلية"} ستكون متاحة قريبًا`
+              : `${type === "presented" ? "Presented" : "Detailed"} slides will be available shortly`}
           </p>
         </div>
       </div>
@@ -147,15 +152,17 @@ export function SlidesViewer({ slides, title, type = "presented", partNumber, pr
       <div className="flex items-center gap-3 px-4 py-3 bg-ink/80 border-b border-border/50 flex-shrink-0">
         <Layers className="w-4 h-4 text-gold flex-shrink-0" />
         <p className="text-sm text-text-secondary flex-1 truncate">
-          {title || (type === "presented" ? "Presented Slides" : "Detailed Slides")}
+          {title || (isRtl
+            ? (type === "presented" ? "الشرائح المُقدَّمة" : "الشرائح التفصيلية")
+            : (type === "presented" ? "Presented Slides" : "Detailed Slides"))}
         </p>
         <span className="text-xs text-text-muted tabular-nums">
           {current + 1} / {slides.length}
         </span>
         <button
           onClick={() => fullscreen ? exitFullscreenMode() : enterFullscreen()}
-          className="min-h-[44px] min-w-[44px] flex items-center justify-center text-text-muted hover:text-text transition-colors -mr-2"
-          aria-label={fullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+          className="min-h-[44px] min-w-[44px] flex items-center justify-center text-text-muted hover:text-text transition-colors -me-2"
+          aria-label={isRtl ? (fullscreen ? "الخروج من ملء الشاشة" : "الدخول في ملء الشاشة") : (fullscreen ? "Exit fullscreen" : "Enter fullscreen")}
         >
           {fullscreen ? <X className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
         </button>
@@ -168,7 +175,7 @@ export function SlidesViewer({ slides, title, type = "presented", partNumber, pr
         onClick={!fullscreen ? () => enterFullscreen() : undefined}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
-        title={!fullscreen ? "Tap for fullscreen · Swipe to navigate" : undefined}
+        title={!fullscreen ? (isRtl ? "انقر لملء الشاشة · اسحب للتنقل" : "Tap for fullscreen · Swipe to navigate") : undefined}
       >
         {/* Render current ±2 slides; hidden ones are pre-loaded but invisible */}
         {slides.map((slide, idx) => {
@@ -184,7 +191,7 @@ export function SlidesViewer({ slides, title, type = "presented", partNumber, pr
                 zIndex: idx === current ? 1 : 0,
               }}
             >
-              <SlideImg src={slide.medium} alt={`Slide ${idx + 1}`} priority={idx === current} />
+              <SlideImg src={slide.medium} alt={isRtl ? `الشريحة ${idx + 1}` : `Slide ${idx + 1}`} priority={idx === current} />
             </div>
           );
         })}
@@ -194,7 +201,7 @@ export function SlidesViewer({ slides, title, type = "presented", partNumber, pr
           <div className="absolute bottom-2 left-1/2 -translate-x-1/2 pointer-events-none">
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/60 border border-white/10 text-white/50 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-[10px] font-medium">
               <Maximize2 className="w-3 h-3" />
-              <span>Tap · Swipe to navigate</span>
+              <span>{isRtl ? "انقر · اسحب للتنقل" : "Tap · Swipe to navigate"}</span>
             </div>
           </div>
         )}
@@ -203,19 +210,19 @@ export function SlidesViewer({ slides, title, type = "presented", partNumber, pr
         <button
           onClick={(e) => { e.stopPropagation(); prev(); }}
           disabled={current === 0}
-          className="absolute left-2 top-1/2 -translate-y-1/2 z-10 min-w-[44px] min-h-[44px] rounded-full bg-black/60 border border-white/15 flex items-center justify-center text-white/70 hover:text-white hover:border-white/40 disabled:opacity-20 transition-all"
-          aria-label="Previous slide"
+          className="absolute start-2 top-1/2 -translate-y-1/2 z-10 min-w-[44px] min-h-[44px] rounded-full bg-black/60 border border-white/15 flex items-center justify-center text-white/70 hover:text-white hover:border-white/40 disabled:opacity-20 transition-all"
+          aria-label={isRtl ? "الشريحة السابقة" : "Previous slide"}
         >
-          <ChevronLeft className="w-5 h-5" />
+          {isRtl ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
         </button>
         {/* Next — 44px */}
         <button
           onClick={(e) => { e.stopPropagation(); next(); }}
           disabled={current === slides.length - 1}
-          className="absolute right-2 top-1/2 -translate-y-1/2 z-10 min-w-[44px] min-h-[44px] rounded-full bg-black/60 border border-white/15 flex items-center justify-center text-white/70 hover:text-white hover:border-white/40 disabled:opacity-20 transition-all"
-          aria-label="Next slide"
+          className="absolute end-2 top-1/2 -translate-y-1/2 z-10 min-w-[44px] min-h-[44px] rounded-full bg-black/60 border border-white/15 flex items-center justify-center text-white/70 hover:text-white hover:border-white/40 disabled:opacity-20 transition-all"
+          aria-label={isRtl ? "الشريحة التالية" : "Next slide"}
         >
-          <ChevronRight className="w-5 h-5" />
+          {isRtl ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
         </button>
       </div>
 
@@ -229,7 +236,7 @@ export function SlidesViewer({ slides, title, type = "presented", partNumber, pr
             <button
               key={i}
               onClick={() => setCurrent(i)}
-              aria-label={`Go to slide ${i + 1}`}
+              aria-label={isRtl ? `الانتقال إلى الشريحة ${i + 1}` : `Go to slide ${i + 1}`}
               aria-current={i === current ? "true" : undefined}
               className={`flex-shrink-0 w-20 h-11 rounded border overflow-hidden transition-all ${
                 i === current
@@ -238,7 +245,7 @@ export function SlidesViewer({ slides, title, type = "presented", partNumber, pr
               }`}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={slide.thumb} alt={`Slide ${i + 1}`} className="w-full h-full object-cover" />
+              <img src={slide.thumb} alt={isRtl ? `الشريحة ${i + 1}` : `Slide ${i + 1}`} className="w-full h-full object-cover" />
             </button>
           ))}
           <div className="flex-shrink-0 w-8" aria-hidden />

@@ -1,14 +1,21 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { requireStudent } from "@/lib/auth";
 import { hasActiveCourseAccess, TOTAL_COURSE_PARTS } from "@/lib/access";
 import { getActiveProfileId } from "@/app/actions/profiles";
 import { prisma } from "@/lib/db";
 import { StudentLayout } from "@/components/student/student-layout";
+import { parseLang, COURSE_LANG_COOKIE } from "@/lib/course-lang";
 import { Award, Lock, CheckCircle2 } from "lucide-react";
 
-export const metadata = { title: "Certificate | Complete Seerah" };
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata() {
+  const cookieStore = await cookies();
+  const lang = parseLang(cookieStore.get(COURSE_LANG_COOKIE)?.value);
+  return { title: lang === "ar" ? "الشهادة | Complete Seerah" : "Certificate | Complete Seerah" };
+}
 
 // Must match the mobile app's certificate_screen.dart exactly — a
 // per-quiz pass is 80%+ (see PASS_SCORE in mobile-progress/track), but the
@@ -23,6 +30,10 @@ export default async function CertificatePage() {
   const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
   if (!hasAccess) redirect("/pricing");
   // Entitled unverified users keep certificate access (part-access / IAP parity).
+
+  const cookieStore = await cookies();
+  const lang = parseLang(cookieStore.get(COURSE_LANG_COOKIE)?.value);
+  const isRtl = lang === "ar";
 
   const userPlan = "complete" as const;
   const requiredLessons = TOTAL_COURSE_PARTS;
@@ -56,12 +67,12 @@ export default async function CertificatePage() {
 
   return (
     <StudentLayout userPlan={userPlan} userName={user.fullName}>
-      <div className="min-h-screen bg-[#0a0a0a]">
+      <div className="min-h-screen bg-[#0a0a0a]" dir={isRtl ? "rtl" : undefined}>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-text mb-2">Certificate of Completion</h1>
+            <h1 className="text-3xl font-bold text-text mb-2">{isRtl ? "شهادة إتمام الدورة" : "Certificate of Completion"}</h1>
             <p className="text-text-secondary">
-              Complete all required lessons to earn your certificate
+              {isRtl ? "أكمل جميع الدروس المطلوبة للحصول على شهادتك" : "Complete all required lessons to earn your certificate"}
             </p>
           </div>
 
@@ -72,15 +83,17 @@ export default async function CertificatePage() {
                 <div className="w-16 h-16 rounded-full bg-gold/10 border-2 border-gold/30 flex items-center justify-center mb-4">
                   <Lock className="w-8 h-8 text-gold" />
                 </div>
-                <h3 className="text-xl font-bold text-text mb-2">Certificate Locked</h3>
+                <h3 className="text-xl font-bold text-text mb-2">{isRtl ? "الشهادة مقفلة" : "Certificate Locked"}</h3>
                 <p className="text-text-secondary text-center max-w-md mb-6">
-                  Complete all {requiredLessons} lessons and pass enough quizzes to unlock your certificate of completion
+                  {isRtl
+                    ? `أكمل جميع الدروس (${requiredLessons}) واجتز عددًا كافيًا من الاختبارات لفتح شهادة الإتمام`
+                    : `Complete all ${requiredLessons} lessons and pass enough quizzes to unlock your certificate of completion`}
                 </p>
                 <Link
                   href="/seerah"
                   className="px-6 py-3 rounded-lg bg-gold text-ink font-semibold hover:bg-gold/90 transition-colors"
                 >
-                  Continue Learning
+                  {isRtl ? "واصل التعلّم" : "Continue Learning"}
                 </Link>
               </div>
             )}
@@ -89,15 +102,15 @@ export default async function CertificatePage() {
             <div className={isEarned ? "" : "opacity-30 blur-sm pointer-events-none"}>
               <div className="text-center py-12">
                 <Award className="w-20 h-20 text-gold mx-auto mb-6" />
-                <h2 className="text-3xl font-bold text-text mb-2">Certificate of Completion</h2>
-                <p className="text-text-secondary text-lg mb-8">This certifies that</p>
+                <h2 className="text-3xl font-bold text-text mb-2">{isRtl ? "شهادة إتمام الدورة" : "Certificate of Completion"}</h2>
+                <p className="text-text-secondary text-lg mb-8">{isRtl ? "تشهد هذه الوثيقة بأن" : "This certifies that"}</p>
                 <p className="text-4xl font-bold text-gold mb-8">{user.fullName}</p>
-                <p className="text-text-secondary mb-4">has successfully completed</p>
+                <p className="text-text-secondary mb-4">{isRtl ? "قد أكمل بنجاح" : "has successfully completed"}</p>
                 <p className="text-2xl font-semibold text-text mb-8">
-                  Complete Seerah Masterclass
+                  {isRtl ? "دورة السيرة النبوية الكاملة" : "Complete Seerah Masterclass"}
                 </p>
                 <p className="text-text-muted text-sm">
-                  {new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+                  {new Date().toLocaleDateString(isRtl ? "ar-EG" : "en-US", { year: "numeric", month: "long", day: "numeric" })}
                 </p>
               </div>
             </div>
@@ -105,7 +118,7 @@ export default async function CertificatePage() {
 
           {/* Requirements */}
           <div className="p-6 rounded-xl border border-border bg-surface">
-            <h3 className="text-lg font-semibold text-text mb-4">Requirements</h3>
+            <h3 className="text-lg font-semibold text-text mb-4">{isRtl ? "المتطلبات" : "Requirements"}</h3>
             <div className="space-y-3">
               <div className="flex items-center gap-3 text-text-secondary">
                 <div
@@ -120,7 +133,9 @@ export default async function CertificatePage() {
                   )}
                 </div>
                 <span>
-                  Complete all {requiredLessons} lessons ({studied}/{requiredLessons})
+                  {isRtl
+                    ? `أكمل جميع الدروس (${requiredLessons}) — (${studied}/${requiredLessons})`
+                    : `Complete all ${requiredLessons} lessons (${studied}/${requiredLessons})`}
                 </span>
               </div>
               <div className="flex items-center gap-3 text-text-secondary">
@@ -136,22 +151,25 @@ export default async function CertificatePage() {
                   )}
                 </div>
                 <span>
-                  Pass the quiz (80%+) for at least {REQUIRED_QUIZ_COVERAGE_PCT} of the {requiredLessons} parts (
-                  {Math.round(quizPct)}%)
+                  {isRtl
+                    ? `اجتز الاختبار (بنسبة ٨٠٪ فأعلى) لما لا يقل عن ${REQUIRED_QUIZ_COVERAGE_PCT} من أصل ${requiredLessons} جزءًا (${Math.round(quizPct)}٪)`
+                    : `Pass the quiz (80%+) for at least ${REQUIRED_QUIZ_COVERAGE_PCT} of the ${requiredLessons} parts (${Math.round(quizPct)}%)`}
                 </span>
               </div>
               <div className="flex items-center gap-3 text-text-secondary">
                 <div className="w-6 h-6 rounded-full border-2 border-emerald-500/60 bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
                   <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                 </div>
-                <span>Maintain active student status</span>
+                <span>{isRtl ? "الحفاظ على حالة طالب نشطة" : "Maintain active student status"}</span>
               </div>
             </div>
 
             <div className="mt-6 pt-6 border-t border-border">
               <p className="text-sm text-text-muted">
-                <strong className="text-text">Current Progress:</strong> {studied} of {requiredLessons} lessons
-                completed ({studiedPct}%)
+                <strong className="text-text">{isRtl ? "التقدّم الحالي:" : "Current Progress:"}</strong>{" "}
+                {isRtl
+                  ? `${studied} من ${requiredLessons} دروسًا مكتملة (${studiedPct}٪)`
+                  : `${studied} of ${requiredLessons} lessons completed (${studiedPct}%)`}
               </p>
             </div>
           </div>

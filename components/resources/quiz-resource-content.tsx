@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { PARTS } from "@/lib/content";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { getPartsForLang } from "@/lib/content";
 import { ERA_MAP, type Part } from "@/lib/types";
+import type { CourseLang } from "@/lib/course-lang";
 import { eraGradient } from "./era-gradient";
 import { ResourcePageClient } from "./resource-page-client";
 import { ClipboardCheck, Trophy, CheckCircle2, XCircle, X, Lock } from "lucide-react";
@@ -24,6 +25,7 @@ interface QuizResourceContentProps {
   totalAttempts: number;
   thumbnails?: Record<number, string>;
   lockedPartNumbers?: number[];
+  lang?: CourseLang;
 }
 
 export function QuizResourceContent({
@@ -34,8 +36,10 @@ export function QuizResourceContent({
   totalAttempts,
   thumbnails = {},
   lockedPartNumbers = [],
+  lang = "en",
 }: QuizResourceContentProps) {
   const lockedSet = new Set(lockedPartNumbers);
+  const PARTS = useMemo(() => getPartsForLang(lang), [lang]);
   const totalQuizzes = PARTS.length;
   const _notAttemptedCount = totalQuizzes - completedCount;
 
@@ -85,7 +89,7 @@ export function QuizResourceContent({
       // Track asset opened
       await trackAssetOpened(part.partNumber, "quiz");
 
-      const response = await fetch(`/api/quiz/${part.id}`);
+      const response = await fetch(`/api/quiz/${part.id}${lang === "ar" ? "?lang=ar" : ""}`);
       if (!response.ok) throw new Error("Failed to fetch quiz");
       const data = await response.json();
       setQuizData(data);
@@ -121,27 +125,27 @@ export function QuizResourceContent({
               <ClipboardCheck className="w-7 h-7 text-amber-500" />
             </div>
             <div>
-              <h1 className="text-4xl font-bold text-white">Quizzes</h1>
-              <p className="text-zinc-400 mt-1">Test your knowledge with quizzes for each part</p>
+              <h1 className="text-4xl font-bold text-white">{lang === "ar" ? "الاختبارات" : "Quizzes"}</h1>
+              <p className="text-zinc-400 mt-1">{lang === "ar" ? "اختبر معلوماتك في كل جزء" : "Test your knowledge with quizzes for each part"}</p>
             </div>
           </div>
 
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
-              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">Completed</p>
+              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">{lang === "ar" ? "مكتملة" : "Completed"}</p>
               <p className="text-3xl font-bold text-white">{completedCount}/{totalQuizzes}</p>
             </div>
             <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
-              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">Passed</p>
+              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">{lang === "ar" ? "اجتاز" : "Passed"}</p>
               <p className={`text-3xl font-bold ${passedCount > 0 ? "text-green-400" : "text-zinc-400"}`}>{passedCount}</p>
             </div>
             <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
-              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">Average Score</p>
+              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">{lang === "ar" ? "متوسط الدرجات" : "Average Score"}</p>
               <p className={`text-3xl font-bold ${avgScore > 0 ? "text-amber-400" : "text-zinc-400"}`}>{avgScore}%</p>
             </div>
             <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
-              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">Total Attempts</p>
+              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">{lang === "ar" ? "إجمالي المحاولات" : "Total Attempts"}</p>
               <p className="text-3xl font-bold text-zinc-400">{totalAttempts}</p>
             </div>
           </div>
@@ -152,6 +156,7 @@ export function QuizResourceContent({
         <ResourcePageClient
           showStatusFilter
           filterByStatus={filterByStatus}
+          lang={lang}
         >
           {(parts) => (
             <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
@@ -212,17 +217,17 @@ export function QuizResourceContent({
                       </span>
 
                       {isPerfect && (
-                        <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-amber-500/30 border border-amber-500/50 flex items-center justify-center">
+                        <div className="absolute top-2 end-2 w-6 h-6 rounded-full bg-amber-500/30 border border-amber-500/50 flex items-center justify-center">
                           <Trophy className="w-4 h-4 text-amber-400" />
                         </div>
                       )}
                       {!isPerfect && isPassed && (
-                        <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-green-500/30 border border-green-500/50 flex items-center justify-center">
+                        <div className="absolute top-2 end-2 w-6 h-6 rounded-full bg-green-500/30 border border-green-500/50 flex items-center justify-center">
                           <CheckCircle2 className="w-4 h-4 text-green-400" />
                         </div>
                       )}
                       {bestScore != null && !isPassed && (
-                        <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-red-500/30 border border-red-500/50 flex items-center justify-center">
+                        <div className="absolute top-2 end-2 w-6 h-6 rounded-full bg-red-500/30 border border-red-500/50 flex items-center justify-center">
                           <XCircle className="w-4 h-4 text-red-400" />
                         </div>
                       )}
@@ -237,7 +242,7 @@ export function QuizResourceContent({
                     {/* Info */}
                     <div className="p-4">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs font-medium text-amber-500">Part {part.partNumber}</span>
+                        <span className="text-xs font-medium text-amber-500">{lang === "ar" ? `الجزء ${part.partNumber}` : `Part ${part.partNumber}`}</span>
                         {bestScore != null && (
                           <span className={`px-2 py-0.5 border text-xs font-semibold rounded ${
                             isPerfect
@@ -246,7 +251,7 @@ export function QuizResourceContent({
                               ? "bg-green-500/10 border-green-500/20 text-green-400"
                               : "bg-red-500/10 border-red-500/20 text-red-400"
                           }`}>
-                            {bestScore}% — {isPerfect ? "Perfect" : isPassed ? "Passed" : "Failed"}
+                            {bestScore}% — {isPerfect ? (lang === "ar" ? "ممتاز" : "Perfect") : isPassed ? (lang === "ar" ? "اجتاز" : "Passed") : (lang === "ar" ? "لم يجتز" : "Failed")}
                           </span>
                         )}
                       </div>
@@ -258,7 +263,7 @@ export function QuizResourceContent({
                       )}
                       {attempts > 0 && (
                         <p className="text-xs text-zinc-500">
-                          {attempts} {attempts === 1 ? "attempt" : "attempts"}
+                          {lang === "ar" ? `${attempts} محاولة` : `${attempts} ${attempts === 1 ? "attempt" : "attempts"}`}
                         </p>
                       )}
                     </div>
@@ -277,7 +282,7 @@ export function QuizResourceContent({
           onClick={handleCloseModal}
           role="dialog"
           aria-modal="true"
-          aria-label={`Part ${selectedPart.partNumber} Quiz`}
+          aria-label={lang === "ar" ? `اختبار الجزء ${selectedPart.partNumber}` : `Part ${selectedPart.partNumber} Quiz`}
         >
           <div
             className="relative flex flex-col overflow-hidden w-full sm:max-w-4xl h-[100dvh] sm:h-[90vh] bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-950 border-0 sm:border-2 border-amber-500/20 rounded-none sm:rounded-2xl shadow-2xl"
@@ -285,9 +290,9 @@ export function QuizResourceContent({
           >
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800 bg-zinc-950 flex-shrink-0">
-              <div className="flex-1 min-w-0 pr-4">
+              <div className="flex-1 min-w-0 pe-4">
                 <h2 className="text-lg sm:text-xl font-bold text-white truncate">
-                  Part {selectedPart.partNumber} Quiz
+                  {lang === "ar" ? `اختبار الجزء ${selectedPart.partNumber}` : `Part ${selectedPart.partNumber} Quiz`}
                 </h2>
                 <p className="text-sm text-zinc-400 truncate mt-0.5">
                   {selectedPart.title}
@@ -296,7 +301,7 @@ export function QuizResourceContent({
               <button
                 onClick={handleCloseModal}
                 className="flex-shrink-0 min-w-[44px] min-h-[44px] rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center transition-colors"
-                aria-label="Close quiz"
+                aria-label={lang === "ar" ? "إغلاق الاختبار" : "Close quiz"}
               >
                 <X className="w-5 h-5 text-zinc-400" />
               </button>
@@ -310,7 +315,7 @@ export function QuizResourceContent({
             >
               {isLoadingQuiz && (
                 <div className="flex items-center justify-center py-16">
-                  <div className="text-zinc-400">Loading quiz...</div>
+                  <div className="text-zinc-400">{lang === "ar" ? "جارٍ تحميل الاختبار..." : "Loading quiz..."}</div>
                 </div>
               )}
               {!isLoadingQuiz && quizData && (
@@ -319,11 +324,12 @@ export function QuizResourceContent({
                   partNumber={selectedPart.partNumber}
                   previewMode={false}
                   initialBestScore={progressMap[selectedPart.partNumber]?.quizBestScore ?? undefined}
+                  isRtl={lang === "ar"}
                 />
               )}
               {!isLoadingQuiz && !quizData && (
                 <div className="flex items-center justify-center py-16">
-                  <div className="text-zinc-400">Quiz not available</div>
+                  <div className="text-zinc-400">{lang === "ar" ? "الاختبار غير متاح" : "Quiz not available"}</div>
                 </div>
               )}
             </div>

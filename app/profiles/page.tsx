@@ -1,14 +1,24 @@
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { getCachedStudent } from "@/lib/auth-cache";
 import { getProfiles, ensureFamilyProfiles } from "@/app/actions/profiles";
 import { isFamilyPlan, getProfileLimit, hasActiveCourseAccess } from "@/lib/access";
+import { parseLang, COURSE_LANG_COOKIE } from "@/lib/course-lang";
 import { ProfilePickerClient } from "@/components/profiles/profile-picker-client";
 
-export const metadata = { title: "Who is learning today? | Complete Seerah", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
 
 interface Props {
   searchParams: Promise<{ preview?: string }>;
+}
+
+export async function generateMetadata() {
+  const cookieStore = await cookies();
+  const lang = parseLang(cookieStore.get(COURSE_LANG_COOKIE)?.value);
+  return {
+    title: lang === "ar" ? "من يتعلّم اليوم؟ | Complete Seerah" : "Who is learning today? | Complete Seerah",
+    robots: { index: false, follow: false },
+  };
 }
 
 export default async function ProfilePickerPage({ searchParams }: Props) {
@@ -32,6 +42,8 @@ export default async function ProfilePickerPage({ searchParams }: Props) {
   }
 
   const profiles = await getProfiles();
+  const cookieStore = await cookies();
+  const lang = parseLang(cookieStore.get(COURSE_LANG_COOKIE)?.value);
 
   // Preview mode: pad with mock profiles to fill 5 slots
   const displayProfiles = isPreview && profiles.length < 5
@@ -55,6 +67,7 @@ export default async function ProfilePickerPage({ searchParams }: Props) {
       profileLimit={profileLimit}
       isFamily={isFamily}
       activeProfileId={user.activeProfileId}
+      isRtl={lang === "ar"}
     />
   );
 }

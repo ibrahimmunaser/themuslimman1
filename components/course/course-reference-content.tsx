@@ -1,7 +1,9 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { BookOpen, ChevronRight, ArrowLeft } from "lucide-react";
+import { BookOpen, ChevronRight, ChevronLeft, ArrowLeft, ArrowRight } from "lucide-react";
+import type { CourseLang } from "@/lib/course-lang";
+import { t } from "@/lib/ui-strings";
 import { FamilyHouseholdContent } from "@/components/reference/family-household-content";
 import { KeyPeopleContent } from "@/components/reference/key-people-content";
 import { TribesLineageContent } from "@/components/reference/tribes-lineage-content";
@@ -17,117 +19,84 @@ interface ReferenceCard {
   available: boolean;
 }
 
-const REFERENCE_CARDS: ReferenceCard[] = [
-  {
-    slug: "family-household",
-    title: "Family & Household",
-    description:
-      "A clear guide to the wives, children, and household of the Prophet ﷺ, with simple tables and historical notes.",
-    available: true,
-  },
-  {
-    slug: "timeline",
-    title: "Timeline of the Seerah",
-    description: "A chronological timeline of major events in the life of the Prophet ﷺ.",
-    available: false, // TODO: Extract timeline content component
-  },
-  {
-    slug: "key-people",
-    title: "Key People in the Seerah",
-    description: "Companions, leaders, and figures whose roles shaped the early Muslim community.",
-    available: true,
-  },
-  {
-    slug: "tribes-lineage",
-    title: "Tribes and Lineage",
-    description: "The major Arab tribes, their relationships, and the Prophet's ﷺ lineage traced back.",
-    available: true,
-  },
-  {
-    slug: "places-maps",
-    title: "Places and Maps",
-    description: "A reference to the key cities, routes, and locations mentioned in the Seerah.",
-    available: true,
-  },
-  {
-    slug: "battles",
-    title: "Battles and Expeditions",
-    description: "A clear reference to the major battles, campaigns, and expeditions of the Prophet ﷺ.",
-    available: true,
-  },
-  {
-    slug: "miracles",
-    title: "Miracles and Signs",
-    description: "Verified narrations of miracles and signs granted to the Prophet ﷺ.",
-    available: true,
-  },
-  {
-    slug: "important-terms",
-    title: "Important Terms",
-    description: "A glossary of Arabic and historical terms used throughout the Seerah.",
-    available: true,
-  },
+interface ReferenceCardDef {
+  slug: string;
+  titleKey: "refFamilyTitle" | "refTimelineTitle" | "refKeyPeopleTitle" | "refTribesTitle" | "refPlacesTitle" | "refBattlesTitle" | "refMiraclesTitle" | "refTermsTitle";
+  descKey: "refFamilyDesc" | "refTimelineDesc" | "refKeyPeopleDesc" | "refTribesDesc" | "refPlacesDesc" | "refBattlesDesc" | "refMiraclesDesc" | "refTermsDesc";
+  available: boolean;
+}
+
+const REFERENCE_CARD_DEFS: ReferenceCardDef[] = [
+  { slug: "family-household", titleKey: "refFamilyTitle",    descKey: "refFamilyDesc",    available: true },
+  { slug: "timeline",         titleKey: "refTimelineTitle",  descKey: "refTimelineDesc",  available: false },
+  { slug: "key-people",       titleKey: "refKeyPeopleTitle", descKey: "refKeyPeopleDesc", available: true },
+  { slug: "tribes-lineage",   titleKey: "refTribesTitle",    descKey: "refTribesDesc",    available: true },
+  { slug: "places-maps",      titleKey: "refPlacesTitle",    descKey: "refPlacesDesc",    available: true },
+  { slug: "battles",          titleKey: "refBattlesTitle",   descKey: "refBattlesDesc",   available: true },
+  { slug: "miracles",         titleKey: "refMiraclesTitle",  descKey: "refMiraclesDesc",  available: true },
+  { slug: "important-terms",  titleKey: "refTermsTitle",     descKey: "refTermsDesc",     available: true },
 ];
 
-function ReferenceIndex({ onSelectSection }: { onSelectSection: (slug: string) => void }) {
+function ReferenceIndex({ onSelectSection, lang }: { onSelectSection: (slug: string) => void; lang: CourseLang }) {
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
       {/* Header */}
       <div className="mb-8">
         <p className="text-sm text-gold font-medium mb-3 uppercase tracking-wide">
-          Reference Library
+          {t(lang, "referenceLibrary")}
         </p>
         <h1 className="text-3xl sm:text-4xl font-bold text-text mb-4">
-          Seerah Reference Library
+          {t(lang, "seerahReferenceLib")}
         </h1>
         <p className="text-lg text-text-secondary leading-relaxed max-w-2xl">
-          Extra Seerah reference guides, timelines, people, places, and historical notes
-          to help you understand the life of the Prophet ﷺ more clearly.
+          {t(lang, "referenceLibDesc")}
         </p>
       </div>
 
       {/* Cards grid */}
       <div className="grid sm:grid-cols-2 gap-4">
-        {REFERENCE_CARDS.filter((card) => card.available).map((card) => (
-          <button
-            key={card.slug}
-            onClick={() => onSelectSection(card.slug)}
-            className="relative p-5 rounded-2xl border bg-surface border-border hover:border-gold/30 transition-colors group text-left cursor-pointer"
-          >
-            <div className="flex items-start gap-3">
-              <div className="p-2 rounded-lg border bg-gold/10 border-gold/20 flex-shrink-0">
-                <BookOpen className="w-4 h-4 text-gold" />
+        {REFERENCE_CARD_DEFS.filter((card) => card.available).map((card) => {
+          const cardTitle = t(lang, card.titleKey);
+          return (
+            <button
+              key={card.slug}
+              onClick={() => onSelectSection(card.slug)}
+              className="relative p-5 rounded-2xl border bg-surface border-border hover:border-gold/30 transition-colors group text-start cursor-pointer"
+            >
+              <div className="flex items-start gap-3">
+                <div className="p-2 rounded-lg border bg-gold/10 border-gold/20 flex-shrink-0">
+                  <BookOpen className="w-4 h-4 text-gold" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-base font-semibold text-text group-hover:text-gold transition-colors">
+                    {cardTitle}
+                  </h2>
+                  <p className="mt-1 text-sm text-text-muted leading-relaxed">
+                    {t(lang, card.descKey)}
+                  </p>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <h2 className="text-base font-semibold text-text group-hover:text-gold transition-colors">
-                  {card.title}
-                </h2>
-                <p className="mt-1 text-sm text-text-muted leading-relaxed">
-                  {card.description}
-                </p>
-              </div>
-            </div>
 
-            <div className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-gold group-hover:text-gold-light transition-colors">
-              View {card.title}
-              <ChevronRight className="w-3.5 h-3.5" />
-            </div>
-          </button>
-        ))}
+              <div className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-gold group-hover:text-gold-light transition-colors">
+                {lang === "ar" ? `عرض ${cardTitle}` : `View ${cardTitle}`}
+                {lang === "ar" ? <ChevronLeft className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+              </div>
+            </button>
+          );
+        })}
       </div>
 
       {/* Footer note */}
       <div className="mt-8 pt-6 border-t border-border">
         <p className="text-sm text-text-secondary">
-          More reference sections coming soon. Use these resources alongside your lessons
-          to deepen your understanding of the Seerah.
+          {t(lang, "moreSectionsSoon")}
         </p>
       </div>
     </div>
   );
 }
 
-export function CourseReferenceContent() {
+export function CourseReferenceContent({ lang = "en" }: { lang?: CourseLang }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const section = searchParams.get("section");
@@ -142,7 +111,7 @@ export function CourseReferenceContent() {
 
   // If a section is selected, render it inline
   if (section) {
-    let DetailComponent: React.ComponentType | null = null;
+    let DetailComponent: React.ComponentType<{ lang?: CourseLang }> | null = null;
 
     switch (section) {
       case "family-household":
@@ -169,6 +138,7 @@ export function CourseReferenceContent() {
     }
 
     if (DetailComponent) {
+      const isRtl = lang === "ar";
       return (
         <div>
           {/* Back button */}
@@ -177,18 +147,19 @@ export function CourseReferenceContent() {
               onClick={handleBackToIndex}
               className="inline-flex items-center gap-1.5 text-sm text-text-secondary hover:text-text transition-colors mb-6"
             >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              Back to Reference Library
+              {isRtl ? <ArrowRight className="w-3.5 h-3.5" /> : <ArrowLeft className="w-3.5 h-3.5" />}
+              {t(lang, "backToRefLib")}
             </button>
           </div>
 
-          {/* Detail content */}
-          <DetailComponent />
+          {/* Detail content — each of these reference guides accepts a `lang` prop
+              and renders its own bilingual data/chrome with the correct dir. */}
+          <DetailComponent lang={lang} />
         </div>
       );
     }
   }
 
   // Otherwise show the index
-  return <ReferenceIndex onSelectSection={handleSelectSection} />;
+  return <ReferenceIndex onSelectSection={handleSelectSection} lang={lang} />;
 }

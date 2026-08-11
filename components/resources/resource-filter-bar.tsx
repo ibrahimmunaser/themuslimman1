@@ -2,7 +2,9 @@
 
 import { useRef } from "react";
 import { Search, SlidersHorizontal, X } from "lucide-react";
-import { ERAS, type Era } from "@/lib/types";
+import { ERAS, type Era, type EraInfo } from "@/lib/types";
+import type { CourseLang } from "@/lib/course-lang";
+import { t } from "@/lib/ui-strings";
 
 interface ResourceFilterBarProps {
   searchTerm: string;
@@ -14,6 +16,8 @@ interface ResourceFilterBarProps {
   showStatusFilter?: boolean;
   showFilters: boolean;
   onToggleFilters: () => void;
+  eras?: EraInfo[];
+  lang?: CourseLang;
 }
 
 export function ResourceFilterBar({
@@ -26,6 +30,8 @@ export function ResourceFilterBar({
   showStatusFilter = false,
   showFilters,
   onToggleFilters,
+  eras = ERAS,
+  lang = "en",
 }: ResourceFilterBarProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -38,39 +44,39 @@ export function ResourceFilterBar({
     <div className="space-y-3">
       {/* Search + Filter button in one row */}
       <div className="relative flex items-center">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
+        <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
         <input
           ref={inputRef}
           type="text"
-          placeholder="Search lessons..."
+          placeholder={t(lang, "searchLessons")}
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="flex-1 pl-10 pr-14 py-3 min-h-[44px] bg-zinc-900 border border-zinc-800 rounded-xl text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-amber-500/40 transition-colors"
+          className="flex-1 ps-10 pe-14 py-3 min-h-[44px] bg-zinc-900 border border-zinc-800 rounded-xl text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-amber-500/40 transition-colors"
         />
         {/* Clear search */}
         {searchTerm && (
           <button
             onClick={() => { onSearchChange(""); inputRef.current?.focus(); }}
-            className="absolute right-11 top-1/2 -translate-y-1/2 min-w-[28px] min-h-[28px] flex items-center justify-center text-zinc-500 hover:text-zinc-300 transition-colors"
-            aria-label="Clear search"
+            className="absolute end-11 top-1/2 -translate-y-1/2 min-w-[28px] min-h-[28px] flex items-center justify-center text-zinc-500 hover:text-zinc-300 transition-colors"
+            aria-label={t(lang, "clearSearch")}
           >
             <X className="w-3.5 h-3.5" />
           </button>
         )}
-        {/* Filter icon — integrated right side of search */}
+        {/* Filter icon — integrated end side of search */}
         <button
           onClick={onToggleFilters}
-          className={`absolute right-1 top-1/2 -translate-y-1/2 min-w-[38px] min-h-[38px] flex items-center justify-center rounded-lg transition-colors ${
+          className={`absolute end-1 top-1/2 -translate-y-1/2 min-w-[38px] min-h-[38px] flex items-center justify-center rounded-lg transition-colors ${
             showFilters || activeFilterCount > 0
               ? "text-amber-400 bg-amber-500/10"
               : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800"
           }`}
-          aria-label="Toggle filters"
+          aria-label={t(lang, "toggleFilters")}
           aria-expanded={showFilters}
         >
           <SlidersHorizontal className="w-4 h-4" />
           {activeFilterCount > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-amber-500 text-black text-[9px] font-bold flex items-center justify-center leading-none">
+            <span className="absolute -top-0.5 -end-0.5 w-4 h-4 rounded-full bg-amber-500 text-black text-[9px] font-bold flex items-center justify-center leading-none">
               {activeFilterCount}
             </span>
           )}
@@ -82,7 +88,7 @@ export function ResourceFilterBar({
         <div className="p-4 rounded-xl bg-zinc-900/80 border border-zinc-800 space-y-4">
           {/* Era Filter */}
           <div>
-            <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2.5">Stage / Era</p>
+            <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2.5">{t(lang, "stageEra")}</p>
             <div className="flex flex-wrap gap-1.5">
               <button
                 onClick={() => onEraChange("all")}
@@ -92,9 +98,9 @@ export function ResourceFilterBar({
                     : "bg-zinc-800 text-zinc-400 border border-zinc-700 hover:text-white hover:bg-zinc-700"
                 }`}
               >
-                All Stages
+                {t(lang, "allStages")}
               </button>
-              {ERAS.map((era) => (
+              {eras.map((era) => (
                 <button
                   key={era.id}
                   onClick={() => onEraChange(era.id)}
@@ -104,7 +110,7 @@ export function ResourceFilterBar({
                       : "bg-zinc-800 text-zinc-400 border border-zinc-700 hover:text-white hover:bg-zinc-700"
                   }`}
                 >
-                  {era.label}
+                  {lang === "ar" ? (era.labelAr ?? era.label) : era.label}
                 </button>
               ))}
             </div>
@@ -113,13 +119,13 @@ export function ResourceFilterBar({
           {/* Status Filter */}
           {showStatusFilter && onStatusChange && (
             <div>
-              <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2.5">Status</p>
+              <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2.5">{t(lang, "status")}</p>
               <div className="flex flex-wrap gap-1.5">
                 {[
-                  { value: "all" as const,         label: "All" },
-                  { value: "completed" as const,    label: "Completed" },
-                  { value: "in-progress" as const,  label: "In Progress" },
-                  { value: "not-started" as const,  label: "Not Started" },
+                  { value: "all" as const,         labelKey: "all" as const },
+                  { value: "completed" as const,    labelKey: "completedFilter" as const },
+                  { value: "in-progress" as const,  labelKey: "inProgressFilter" as const },
+                  { value: "not-started" as const,  labelKey: "notStarted" as const },
                 ].map((status) => (
                   <button
                     key={status.value}
@@ -130,7 +136,7 @@ export function ResourceFilterBar({
                         : "bg-zinc-800 text-zinc-400 border border-zinc-700 hover:text-white hover:bg-zinc-700"
                     }`}
                   >
-                    {status.label}
+                    {t(lang, status.labelKey)}
                   </button>
                 ))}
               </div>
@@ -147,7 +153,7 @@ export function ResourceFilterBar({
               className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
             >
               <X className="w-3.5 h-3.5" />
-              Clear filters
+              {t(lang, "clearFilters")}
             </button>
           )}
         </div>

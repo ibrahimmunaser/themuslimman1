@@ -1,10 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getPartById } from "@/lib/content";
 import { readFlashcards } from "@/lib/files";
 import { requirePartAccess } from "@/lib/part-access";
+import { parseLang } from "@/lib/course-lang";
 
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ partId: string }> }
 ) {
   try {
@@ -18,7 +19,8 @@ export async function GET(
     const deny = await requirePartAccess(part.partNumber);
     if (deny) return deny;
 
-    const flashcards = await readFlashcards(part.partNumber);
+    const lang = parseLang(request.nextUrl.searchParams.get("lang"));
+    const flashcards = await readFlashcards(part.partNumber, lang);
 
     if (!flashcards) {
       return NextResponse.json({ error: "Flashcards not found" }, { status: 404 });

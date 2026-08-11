@@ -223,6 +223,8 @@ class _PartScreenState extends ConsumerState<PartScreen> {
       return infographicsAsync.whenOrNull(data: (s) => s.hasAny) ?? isFreePart;
     }
 
+    final currentLang = ref.watch(courseLangProvider);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: CustomScrollView(
@@ -237,6 +239,14 @@ class _PartScreenState extends ConsumerState<PartScreen> {
               tooltip: 'Back',
               onPressed: () => context.pop(),
             ),
+            actions: [
+              _LangToggle(
+                current: currentLang,
+                onSwitch: (lang) =>
+                    ref.read(courseLangProvider.notifier).setLang(lang),
+              ),
+              const SizedBox(width: 8),
+            ],
             flexibleSpace: FlexibleSpaceBar(
               collapseMode: CollapseMode.pin,
               background: Container(
@@ -548,6 +558,67 @@ class _AssetViewerScreen extends StatelessWidget {
 }
 
 // ── UI components ─────────────────────────────────────────────────────────────
+
+// ── Language toggle ────────────────────────────────────────────────────────────
+
+class _LangToggle extends StatelessWidget {
+  final String current;
+  final ValueChanged<String> onSwitch;
+
+  const _LangToggle({required this.current, required this.onSwitch});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceRaised,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _LangBtn(label: 'EN', active: current == 'en', onTap: () => onSwitch('en')),
+          _LangBtn(label: 'عربي', active: current == 'ar', onTap: () => onSwitch('ar')),
+        ],
+      ),
+    );
+  }
+}
+
+class _LangBtn extends StatelessWidget {
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
+
+  const _LangBtn({required this.label, required this.active, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: active ? AppColors.gold.withValues(alpha: 0.15) : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: active ? AppColors.gold : AppColors.textMuted,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Pill ───────────────────────────────────────────────────────────────────────
 
 class _Pill extends StatelessWidget {
   final String label;

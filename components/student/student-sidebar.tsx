@@ -17,15 +17,20 @@ import {
   CreditCard,
   LogOut,
   ChevronRight,
+  ChevronLeft,
   Menu,
   X,
   PanelLeftClose,
   PanelLeftOpen,
+  PanelRightClose,
+  PanelRightOpen,
   UserCircle,
 } from "lucide-react";
 
 import dynamic from "next/dynamic";
 import { WidgetCycleProvider } from "./widget-cycle-context";
+import { LangToggle } from "@/components/part/lang-toggle";
+import type { CourseLang } from "@/lib/course-lang";
 
 // Lazy-load widget components so their bundled JSON data (facts, miracles, prophecies)
 // does not block the initial sidebar render. ssr:false avoids hydration mismatch
@@ -48,11 +53,14 @@ interface StudentSidebarProps {
   userName: string;
   activeProfileName?: string | null;
   planType?: string;
+  lang?: CourseLang;
+  isRtl?: boolean;
 }
 
 interface MenuItem {
   id: string;
   label: string;
+  labelAr: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   badge?: string;
@@ -67,6 +75,8 @@ export function StudentSidebar({
   userName,
   activeProfileName,
   planType = "individual",
+  lang = "en",
+  isRtl,
 }: StudentSidebarProps) {
   const pathname = usePathname();
 
@@ -146,21 +156,21 @@ export function StudentSidebar({
   const isOnDashboard = pathname === "/seerah";
 
   const MAIN_MENU: MenuItem[] = [
-    { id: "dashboard",  label: "Dashboard",  href: "/seerah",               icon: LayoutDashboard, tabId: "home"      },
-    { id: "lessons",    label: "Lessons",    href: "/seerah?tab=lessons",   icon: BookOpen,        tabId: "lessons"   },
-    { id: "resources",  label: "Resources",  href: "/seerah?tab=resources", icon: FolderOpen,      tabId: "resources" },
-    { id: "reference",  label: "Reference",  href: "/seerah?tab=reference", icon: Library,         tabId: "reference" },
-    { id: "progress",   label: "Progress",   href: "/seerah?tab=progress",  icon: TrendingUp,      tabId: "progress"  },
+    { id: "dashboard",  label: "Dashboard",  labelAr: "الرئيسية",   href: "/seerah",               icon: LayoutDashboard, tabId: "home"      },
+    { id: "lessons",    label: "Lessons",    labelAr: "الدروس",     href: "/seerah?tab=lessons",   icon: BookOpen,        tabId: "lessons"   },
+    { id: "resources",  label: "Resources",  labelAr: "الموارد",    href: "/seerah?tab=resources", icon: FolderOpen,      tabId: "resources" },
+    { id: "reference",  label: "Reference",  labelAr: "المرجع",     href: "/seerah?tab=reference", icon: Library,         tabId: "reference" },
+    { id: "progress",   label: "Progress",   labelAr: "التقدّم",    href: "/seerah?tab=progress",  icon: TrendingUp,      tabId: "progress"  },
   ];
 
   const isFamily = planType === "family";
   const ACCOUNT_MENU: MenuItem[] = [
-    { id: "help",    label: "Help",    href: "/help",    icon: HelpCircle },
+    { id: "help",    label: "Help",    labelAr: "المساعدة", href: "/help",    icon: HelpCircle },
     // For family plans, "Profiles" goes to the Netflix-style picker (/profiles).
     // For individual plans, it goes to the profile management page.
-    { id: "settings", label: "Settings", href: "/student/settings", icon: User },
-    { id: "profiles", label: "Profiles", href: isFamily ? "/profiles" : "/student/profiles", icon: Users },
-    { id: "billing", label: "Billing",  href: "/billing",  icon: CreditCard },
+    { id: "settings", label: "Settings", labelAr: "الإعدادات", href: "/student/settings", icon: User },
+    { id: "profiles", label: "Profiles", labelAr: "الملفات الشخصية", href: isFamily ? "/profiles" : "/student/profiles", icon: Users },
+    { id: "billing", label: "Billing",  labelAr: "الفواتير",  href: "/billing",  icon: CreditCard },
   ];
 
   const isActive = (item: MenuItem) => {
@@ -211,10 +221,10 @@ export function StudentSidebar({
           <button
             onClick={() => setCollapsed(true)}
             className="hidden lg:flex w-7 h-7 rounded-md items-center justify-center text-text-muted hover:text-text hover:bg-surface-raised transition-all flex-shrink-0"
-            aria-label="Collapse sidebar"
-            title="Collapse sidebar"
+            aria-label={isRtl ? "طيّ الشريط الجانبي" : "Collapse sidebar"}
+            title={isRtl ? "طيّ الشريط الجانبي" : "Collapse sidebar"}
           >
-            <PanelLeftClose className="w-4 h-4" />
+            {isRtl ? <PanelRightClose className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
           </button>
         </div>
       )}
@@ -229,7 +239,7 @@ export function StudentSidebar({
             <div className="flex-1 min-w-0">
               <p className="text-xs font-semibold text-text truncate">{userName}</p>
               <span className="inline-block px-2 py-0.5 rounded text-[10px] font-semibold bg-gold/10 text-gold border border-gold/20 mt-1">
-                Complete Access
+                {isRtl ? "وصول كامل" : "Complete Access"}
               </span>
             </div>
           )}
@@ -247,25 +257,30 @@ export function StudentSidebar({
                 href="/profiles"
                 className="flex-shrink-0 text-[10px] font-semibold text-gold/70 hover:text-gold transition-colors whitespace-nowrap"
               >
-                Switch
+                {isRtl ? "تبديل" : "Switch"}
               </Link>
             </div>
           </div>
         )}
+
+        {/* Course language — primary switch site-wide */}
+        <div className={clsx("mt-2", collapsed ? "flex justify-center" : "")}>
+          <LangToggle current={lang} compact={collapsed} className={collapsed ? undefined : "w-full justify-center"} />
+        </div>
       </div>
 
       {/* Course Navigation — scrollable middle */}
       <div className="flex-1 overflow-y-auto py-3 min-h-0">
         <nav className="px-3">
           {!collapsed && (
-            <p className="px-2 text-xs font-semibold text-text-muted mb-2 uppercase tracking-wider">Course</p>
+            <p className="px-2 text-xs font-semibold text-text-muted mb-2 uppercase tracking-wider">{isRtl ? "الدورة" : "Course"}</p>
           )}
           <div className="space-y-1">
             {MAIN_MENU.map((item) => {
               const Icon   = item.icon;
               const active = isActiveDisplay(item);
               const cls    = clsx(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all w-full text-left border",
+                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all w-full text-start border",
                 active
                   ? "bg-gold/10 text-gold border-gold/25"
                   : "border-transparent text-text-secondary hover:text-text hover:bg-surface-raised"
@@ -275,14 +290,14 @@ export function StudentSidebar({
                 return (
                   <button key={item.id} onClick={() => handleTabSwitch(item.tabId!)} className={cls}>
                     <Icon className="w-5 h-5 flex-shrink-0" />
-                    {!collapsed && <span className="flex-1">{item.label}</span>}
+                    {!collapsed && <span className="flex-1">{isRtl ? item.labelAr : item.label}</span>}
                   </button>
                 );
               }
               return (
                 <Link key={item.id} href={item.href} onClick={() => setPendingHref(item.href)} className={cls}>
                   <Icon className="w-5 h-5 flex-shrink-0" />
-                  {!collapsed && <span className="flex-1">{item.label}</span>}
+                  {!collapsed && <span className="flex-1">{isRtl ? item.labelAr : item.label}</span>}
                 </Link>
               );
             })}
@@ -292,12 +307,12 @@ export function StudentSidebar({
         {!collapsed && (
           <>
             <div className="px-4 pt-3 pb-1">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted/50">Explore</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted/50">{isRtl ? "اكتشف" : "Explore"}</p>
             </div>
             <WidgetCycleProvider>
-              <DidYouKnowWidget />
-              <MiraclesWidget />
-              <PropheciesWidget />
+              <DidYouKnowWidget isRtl={isRtl} />
+              <MiraclesWidget isRtl={isRtl} />
+              <PropheciesWidget isRtl={isRtl} />
             </WidgetCycleProvider>
           </>
         )}
@@ -305,9 +320,9 @@ export function StudentSidebar({
 
       {/* Account + Sign Out — pinned footer, always visible */}
       <div className="flex-shrink-0 border-t border-border">
-        <nav className="px-3 pt-2 pb-1" aria-label="Account">
+        <nav className="px-3 pt-2 pb-1" aria-label={isRtl ? "الحساب" : "Account"}>
           {!collapsed && (
-            <p className="px-2 pt-1 pb-1.5 text-xs font-semibold text-text-muted uppercase tracking-wider">Account</p>
+            <p className="px-2 pt-1 pb-1.5 text-xs font-semibold text-text-muted uppercase tracking-wider">{isRtl ? "الحساب" : "Account"}</p>
           )}
           <div className="space-y-0.5">
             {ACCOUNT_MENU.map((item) => {
@@ -326,7 +341,7 @@ export function StudentSidebar({
                   )}
                 >
                   <Icon className="w-5 h-5 flex-shrink-0" />
-                  {!collapsed && <span className="flex-1">{item.label}</span>}
+                  {!collapsed && <span className="flex-1">{isRtl ? item.labelAr : item.label}</span>}
                 </Link>
               );
             })}
@@ -338,7 +353,7 @@ export function StudentSidebar({
             className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-red-400/70 hover:text-red-400 hover:bg-red-500/8 transition-all"
           >
             <LogOut className="w-5 h-5 flex-shrink-0" />
-            {!collapsed && <span className="flex-1 text-left">Sign Out</span>}
+            {!collapsed && <span className="flex-1 text-start">{isRtl ? "تسجيل الخروج" : "Sign Out"}</span>}
           </button>
         </div>
       </div>
@@ -364,7 +379,7 @@ export function StudentSidebar({
         <button
           onClick={closeDrawer}
           className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-text-muted hover:text-text hover:bg-surface-raised transition-colors"
-          aria-label="Close menu"
+          aria-label={isRtl ? "إغلاق القائمة" : "Close menu"}
         >
           <X className="w-4 h-4" />
         </button>
@@ -382,7 +397,7 @@ export function StudentSidebar({
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-text truncate">{userName}</p>
               <span className="inline-block px-2 py-0.5 rounded text-[10px] font-semibold bg-gold/10 text-gold border border-gold/20 mt-0.5">
-                Complete Access
+                {isRtl ? "وصول كامل" : "Complete Access"}
               </span>
             </div>
           </div>
@@ -392,7 +407,11 @@ export function StudentSidebar({
               <div className="flex items-center gap-1.5 min-w-0">
                 <UserCircle className="w-3.5 h-3.5 text-text-muted flex-shrink-0" />
                 <span className="text-xs text-text-muted truncate">
-                  Learning as <span className="text-text font-medium">{activeProfileName}</span>
+                  {isRtl ? (
+                    <>يتعلّم الآن: <span className="text-text font-medium">{activeProfileName}</span></>
+                  ) : (
+                    <>Learning as <span className="text-text font-medium">{activeProfileName}</span></>
+                  )}
                 </span>
               </div>
               <Link
@@ -400,17 +419,20 @@ export function StudentSidebar({
                 onClick={closeDrawer}
                 className="flex-shrink-0 text-xs font-semibold text-gold/70 hover:text-gold transition-colors whitespace-nowrap"
               >
-                Switch
+                {isRtl ? "تبديل" : "Switch"}
               </Link>
             </div>
           )}
+          <div className="mt-2.5">
+            <LangToggle current={lang} className="w-full justify-center" />
+          </div>
         </div>
 
         {/* Course nav — only when top tabs are NOT visible (i.e. not on /seerah dashboard) */}
         {!isOnDashboard && (
-          <nav className="px-3 py-2 border-b border-border/50" aria-label="Course navigation">
+          <nav className="px-3 py-2 border-b border-border/50" aria-label={isRtl ? "تنقل الدورة" : "Course navigation"}>
             <p className="px-2 pt-1 pb-2 text-[10px] font-semibold text-text-muted uppercase tracking-[0.12em]">
-              Course
+              {isRtl ? "الدورة" : "Course"}
             </p>
             <div className="space-y-0.5">
               {MAIN_MENU.map((item) => {
@@ -429,8 +451,12 @@ export function StudentSidebar({
                     )}
                   >
                     <Icon className="w-4 h-4 flex-shrink-0" />
-                    <span>{item.label}</span>
-                    <ChevronRight className="w-3.5 h-3.5 ml-auto text-text-muted/40" />
+                    <span>{isRtl ? item.labelAr : item.label}</span>
+                    {isRtl ? (
+                      <ChevronLeft className="w-3.5 h-3.5 ms-auto text-text-muted/40" />
+                    ) : (
+                      <ChevronRight className="w-3.5 h-3.5 ms-auto text-text-muted/40" />
+                    )}
                   </Link>
                 );
               })}
@@ -439,9 +465,9 @@ export function StudentSidebar({
         )}
 
         {/* Account actions */}
-        <nav className="px-3 py-2" aria-label="Account">
+        <nav className="px-3 py-2" aria-label={isRtl ? "الحساب" : "Account"}>
           <p className="px-2 pt-1 pb-2 text-[10px] font-semibold text-text-muted uppercase tracking-[0.12em]">
-            Account
+            {isRtl ? "الحساب" : "Account"}
           </p>
           <div className="space-y-0.5">
             {ACCOUNT_MENU.map((item) => {
@@ -460,8 +486,12 @@ export function StudentSidebar({
                   )}
                 >
                   <Icon className="w-4 h-4 flex-shrink-0" />
-                  <span>{item.label}</span>
-                  <ChevronRight className="w-3.5 h-3.5 ml-auto text-text-muted/40" />
+                  <span>{isRtl ? item.labelAr : item.label}</span>
+                  {isRtl ? (
+                    <ChevronLeft className="w-3.5 h-3.5 ms-auto text-text-muted/40" />
+                  ) : (
+                    <ChevronRight className="w-3.5 h-3.5 ms-auto text-text-muted/40" />
+                  )}
                 </Link>
               );
             })}
@@ -471,12 +501,12 @@ export function StudentSidebar({
         {/* Educational enrichment cards — compact on mobile */}
         <div className="px-3 py-2 border-t border-border/40 mt-1">
           <p className="px-2 pt-1 pb-2 text-[10px] font-semibold text-text-muted uppercase tracking-[0.12em]">
-            Explore
+            {isRtl ? "اكتشف" : "Explore"}
           </p>
           <WidgetCycleProvider>
-            <DidYouKnowWidget />
-            <MiraclesWidget />
-            <PropheciesWidget />
+            <DidYouKnowWidget isRtl={isRtl} />
+            <MiraclesWidget isRtl={isRtl} />
+            <PropheciesWidget isRtl={isRtl} />
           </WidgetCycleProvider>
         </div>
       </div>
@@ -489,7 +519,7 @@ export function StudentSidebar({
           className="w-full flex items-center gap-3 px-3 py-2.5 min-h-[44px] rounded-lg text-sm font-medium text-red-400/70 hover:text-red-400 hover:bg-red-500/8 transition-all"
         >
           <LogOut className="w-4 h-4 flex-shrink-0" />
-          <span>Sign Out</span>
+          <span>{isRtl ? "تسجيل الخروج" : "Sign Out"}</span>
         </button>
       </div>
     </>
@@ -502,14 +532,21 @@ export function StudentSidebar({
         <button
           ref={triggerRef}
           onClick={() => setMobileOpen(!mobileOpen)}
-          aria-label={mobileOpen ? "Close menu" : "Open account menu"}
+          aria-label={isRtl ? (mobileOpen ? "إغلاق القائمة" : "فتح قائمة الحساب") : (mobileOpen ? "Close menu" : "Open account menu")}
           aria-expanded={mobileOpen}
           aria-controls="mobile-drawer"
-          // z-[70] keeps the button above the overlay (z-[55]) and drawer (z-[65])
-          className="lg:hidden fixed top-3 right-3 z-[70] flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface border border-border text-text-secondary hover:text-text hover:bg-surface-raised transition-all shadow-sm min-h-[44px]"
+          // z-[70] keeps the button above the overlay (z-[55]) and drawer (z-[65]).
+          // Mirrored to the opposite corner from the drawer in RTL so the two stay
+          // diagonally opposite, matching the LTR layout's relationship.
+          className={clsx(
+            "lg:hidden fixed top-3 z-[70] flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface border border-border text-text-secondary hover:text-text hover:bg-surface-raised transition-all shadow-sm min-h-[44px]",
+            isRtl ? "left-3" : "right-3"
+          )}
         >
           {mobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-          <span className="text-xs font-semibold">{mobileOpen ? "Close" : "Menu"}</span>
+          <span className="text-xs font-semibold">
+            {isRtl ? (mobileOpen ? "إغلاق" : "القائمة") : (mobileOpen ? "Close" : "Menu")}
+          </span>
         </button>
       )}
 
@@ -528,16 +565,22 @@ export function StudentSidebar({
         ref={drawerRef}
         role="dialog"
         aria-modal="true"
-        aria-label="Account menu"
+        aria-label={isRtl ? "قائمة الحساب" : "Account menu"}
+        dir={isRtl ? "rtl" : "ltr"}
         className={clsx(
-          "fixed top-0 left-0 bottom-0 bg-surface border-r border-border flex flex-col",
+          "fixed top-0 bottom-0 bg-surface flex flex-col",
+          // Anchored + bordered on the leading edge — right side in RTL so the
+          // mobile drawer slides in from the same side the reading order starts.
+          isRtl ? "right-0 border-l border-border" : "left-0 border-r border-border",
           // Smooth slide on mobile; no duration on desktop (instant collapse is fine)
           "transition-transform duration-200 ease-out will-change-transform",
           // Desktop: sticky, always visible, collapsible width
           "lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:z-[40]",
           // Mobile: off-canvas drawer — z-[65] sits above overlay (z-[55])
           "z-[65]",
-          mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+          mobileOpen
+            ? "translate-x-0"
+            : clsx(isRtl ? "translate-x-full" : "-translate-x-full", "lg:translate-x-0"),
           // Width: on desktop use collapse state; on mobile use responsive vw cap
           collapsed
             ? "lg:w-16"
@@ -560,10 +603,10 @@ export function StudentSidebar({
             <button
               onClick={() => setCollapsed(false)}
               className="w-8 h-8 rounded-lg bg-surface-raised hover:bg-surface-high flex items-center justify-center text-text-muted hover:text-text transition-all"
-              aria-label="Expand sidebar"
-              title="Expand sidebar"
+              aria-label={isRtl ? "توسيع الشريط الجانبي" : "Expand sidebar"}
+              title={isRtl ? "توسيع الشريط الجانبي" : "Expand sidebar"}
             >
-              <PanelLeftOpen className="w-4 h-4" />
+              {isRtl ? <PanelRightOpen className="w-4 h-4" /> : <PanelLeftOpen className="w-4 h-4" />}
             </button>
           </div>
         )}

@@ -18,17 +18,29 @@ import {
   RefreshCw,
   Users,
   ArrowRight,
+  ArrowLeft,
   ArrowUpCircle,
   AlertTriangle,
 } from "lucide-react";
 import Link from "next/link";
+import { cookies } from "next/headers";
+import { parseLang, COURSE_LANG_COOKIE } from "@/lib/course-lang";
 
 export const metadata = { title: "Billing | Complete Seerah", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
-function formatDate(d: Date) {
+function formatDate(d: Date, ar: boolean) {
+  if (ar) {
+    return new Intl.DateTimeFormat("ar", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      timeZone: "UTC",
+      numberingSystem: "arab",
+    }).format(d);
+  }
   const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   return `${months[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
 }
@@ -106,6 +118,10 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
     new Intl.NumberFormat("en-US", { style: "currency", currency: "usd", minimumFractionDigits: 0 }).format(cents / 100);
 
   const userPlan = "complete" as const;
+  const cookieStore = await cookies();
+  const lang = parseLang(cookieStore.get(COURSE_LANG_COOKIE)?.value);
+  const ar = lang === "ar";
+  const UpgradeIcon = ar ? ArrowLeft : ArrowRight;
 
   const isFamily          = user.planType === "family";
   // Treat past_due/unpaid monthly subs as monthly even after grace expires —
@@ -125,14 +141,72 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
   const sub               = accessInfo.subscription;
   const isPastDue         = sub?.status === "past_due" || sub?.status === "unpaid";
 
+  const planName = isFamilyMonthly && isTrial
+    ? (ar ? "تجربة العائلة" : PLANS.familyTrial.name)
+    : isFamilyMonthly
+    ? (ar ? "عضوية العائلة" : PLANS.familyMonthly.name)
+    : isFamilyLifetime
+    ? (ar ? "وصول العائلة" : PLANS.family.name)
+    : isMonthly && isTrial
+    ? (ar ? "تجربة فردية" : PLANS.individualTrial.name)
+    : isMonthly
+    ? (ar ? "العضوية الفردية" : PLANS.monthly.name)
+    : (ar ? "السيرة النبوية الكاملة" : PLANS.complete.name);
+
+  const planSubtitle = isFamilyMonthly || isFamilyLifetime
+    ? (ar ? "حساب واحد للأسرة مع حتى ٥ ملفات متعلّمين" : PLANS.family.subtitle)
+    : isTrial
+    ? (ar ? "٧ أيام من الوصول الكامل" : PLANS.individualTrial.subtitle)
+    : isMonthly
+    ? (ar ? "وصول كامل طوال فترة الاشتراك" : PLANS.monthly.subtitle)
+    : (ar ? "وصول كامل إلى رحلة السيرة المنظمة في ١٠٠ جزء" : PLANS.complete.subtitle);
+
+  const FEATURES_AR: Record<string, string> = {
+    "All 100 Seerah parts": "جميع أجزاء السيرة الـ ١٠٠",
+    "Video lessons": "دروس الفيديو",
+    "Audio lessons": "الدروس الصوتية",
+    "Summaries and briefings": "الملخصات والموجزات",
+    "Quizzes": "الاختبارات",
+    "Flashcards": "البطاقات التعليمية",
+    "Mind maps": "الخرائط الذهنية",
+    "Visual learning resources": "موارد التعلم المرئية",
+    "Progress tracking": "تتبع التقدم",
+    "Lifetime access to the full course": "وصول مدى الحياة إلى الدورة كاملة",
+    "Start today. Continue at your own pace.": "ابدأ اليوم. وتابع بالوتيرة التي تناسبك.",
+    "Videos, quizzes, flashcards, mind maps": "فيديوهات واختبارات وبطاقات تعليمية وخرائط ذهنية",
+    "Progress dashboard · Mobile friendly": "لوحة تقدّم · مناسب للجوال",
+    "Cancel anytime": "ألغِ في أي وقت",
+    "One household account": "حساب واحد للأسرة",
+    "Up to 5 learner profiles": "حتى ٥ ملفات متعلّمين",
+    "Separate progress for every course asset": "تقدّم منفصل لكل مورد في الدورة",
+    "Video, audio, briefings, slides, infographics": "فيديو وصوت وملخصات وشرائح ورسوم معلوماتية",
+    "Quizzes, flashcards, and mind maps": "اختبارات وبطاقات تعليمية وخرائط ذهنية",
+    "Parent progress dashboard": "لوحة تقدّم للأهل",
+    "Easy profile switching": "تبديل سهل بين الملفات",
+    "Start today. Everyone learns at their own pace.": "ابدأ اليوم. يتعلّم الجميع بوتيرته.",
+    "Up to 5 separate learner profiles": "حتى ٥ ملفات متعلّمين منفصلة",
+    "Each profile tracks progress independently": "كل ملف يتتبع تقدّمه بشكل مستقل",
+  };
+
+  const planFeatures = (isFamilyMonthly
+    ? PLANS.familyMonthly.features
+    : isFamilyLifetime
+    ? PLANS.family.features
+    : isTrial
+    ? PLANS.monthly.features
+    : isMonthly
+    ? PLANS.monthly.features
+    : PLANS.complete.features
+  ).slice(0, 8).map((f) => (ar ? (FEATURES_AR[f] ?? f) : f));
+
   return (
     <StudentLayout userPlan={userPlan} userName={user.fullName} planType={user.planType}>
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 space-y-8">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 space-y-8" dir={ar ? "rtl" : undefined}>
 
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-text">Billing &amp; Plan</h1>
-          <p className="text-text-secondary text-sm mt-1">Your plan details and billing history.</p>
+          <h1 className="text-2xl font-bold text-text">{ar ? "الفواتير والخطة" : "Billing & Plan"}</h1>
+          <p className="text-text-secondary text-sm mt-1">{ar ? "تفاصيل خطتك وسجل الفواتير." : "Your plan details and billing history."}</p>
         </div>
 
         {/* Upgrade success confirmation */}
@@ -142,9 +216,11 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
               <CheckCircle2 className="w-5 h-5 text-emerald-400" />
             </div>
             <div>
-              <p className="font-semibold text-emerald-400">Upgraded to Family Monthly</p>
+              <p className="font-semibold text-emerald-400">{ar ? "تمت الترقية إلى عضوية العائلة الشهرية" : "Upgraded to Family Monthly"}</p>
               <p className="text-sm text-text-secondary mt-1 leading-relaxed">
-                Your plan has been upgraded to Family Monthly — ${(PLANS.familyMonthly.price / 100).toFixed(2)}/mo. Your existing card will be charged at the next billing date with Stripe handling any proration automatically.
+                {ar
+                  ? `تمت ترقية خطتك إلى عضوية العائلة الشهرية — ${(PLANS.familyMonthly.price / 100).toFixed(2)}$/شهر. سيتم تحصيل المبلغ من بطاقتك الحالية في تاريخ الفوترة القادم، وسيتولى Stripe حساب أي فرق تلقائيًا.`
+                  : `Your plan has been upgraded to Family Monthly — $${(PLANS.familyMonthly.price / 100).toFixed(2)}/mo. Your existing card will be charged at the next billing date with Stripe handling any proration automatically.`}
               </p>
             </div>
           </div>
@@ -157,18 +233,22 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
               <AlertTriangle className="w-5 h-5 text-red-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-red-400">Payment failed — please update your card</p>
+              <p className="font-semibold text-red-400">{ar ? "فشل الدفع — يرجى تحديث بطاقتك" : "Payment failed — please update your card"}</p>
               <p className="text-sm text-text-secondary mt-1 leading-relaxed">
-                {accessInfo.hasAccess
-                  ? "Your last monthly payment didn\u2019t go through. We\u2019re retrying automatically — you still have access for now. Update your payment method so you don\u2019t lose access when retries run out."
-                  : "Your last monthly payment didn\u2019t go through and course access is paused. Update your payment method below — once the charge succeeds, access is restored automatically."}
+                {ar
+                  ? (accessInfo.hasAccess
+                    ? "لم ينجح آخر دفع شهري. نحن نعيد المحاولة تلقائياً — لا يزال وصولك متاحاً الآن. حدّث طريقة الدفع حتى لا تفقد الوصول."
+                    : "لم ينجح آخر دفع شهري وتم إيقاف الوصول إلى الدورة. حدّث طريقة الدفع أدناه — بمجرد نجاح الدفع، يُستعاد الوصول تلقائياً.")
+                  : (accessInfo.hasAccess
+                    ? "Your last monthly payment didn\u2019t go through. We\u2019re retrying automatically — you still have access for now. Update your payment method so you don\u2019t lose access when retries run out."
+                    : "Your last monthly payment didn\u2019t go through and course access is paused. Update your payment method below — once the charge succeeds, access is restored automatically.")}
               </p>
               <div className="mt-3 flex flex-wrap gap-3">
                 {!hideStripeBilling && (
-                  <PortalButton label="Update payment method" variant="alert" />
+                  <PortalButton label={ar ? "تحديث طريقة الدفع" : "Update payment method"} variant="alert" lang={lang} />
                 )}
                 <Link href="/help" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-text-secondary hover:text-text text-sm transition-colors">
-                  Contact support
+                  {ar ? "تواصل مع الدعم" : "Contact support"}
                 </Link>
               </div>
             </div>
@@ -185,84 +265,68 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
               <div>
                 <div className="flex items-center gap-2">
                   <p className="font-semibold text-text">
-                    {isFamilyMonthly && isTrial
-                      ? PLANS.familyTrial.name
-                      : isFamilyMonthly
-                      ? PLANS.familyMonthly.name
-                      : isFamilyLifetime
-                      ? PLANS.family.name
-                      : isMonthly && isTrial
-                      ? PLANS.individualTrial.name
-                      : isMonthly
-                      ? PLANS.monthly.name
-                      : PLANS.complete.name}
+                    {planName}
                   </p>
                   {isPastDue ? (
                     <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/30">
-                      Past due
+                      {ar ? "متأخر" : "Past due"}
                     </span>
                   ) : (
                     <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-gold/20 text-gold border border-gold/30">
-                      Active
+                      {ar ? "نشط" : "Active"}
                     </span>
                   )}
                 </div>
                 <p className="text-sm text-text-secondary mt-0.5">
-                  {isFamilyMonthly || isFamilyLifetime
-                    ? PLANS.family.subtitle
-                    : isTrial
-                    ? PLANS.individualTrial.subtitle
-                    : isMonthly
-                    ? PLANS.monthly.subtitle
-                    : PLANS.complete.subtitle}
+                  {planSubtitle}
                 </p>
               </div>
             </div>
-            <div className="text-right">
+            <div className="text-end">
               {isFamilyMonthly && isTrial ? (
                 <>
-                  <p className="text-xs text-text-muted">Free today · then ${(PLANS.familyMonthly.price / 100).toFixed(2)}/mo</p>
+                  <p className="text-xs text-text-muted">{ar ? `مجاني الآن · ثم $${(PLANS.familyMonthly.price / 100).toFixed(2)}/شهر` : `Free today · then $${(PLANS.familyMonthly.price / 100).toFixed(2)}/mo`}</p>
                   {sub && (
                     <p className="text-xs text-text-muted mt-0.5">
-                      Trial ends {formatDate(sub.currentPeriodEnd)}
+                      {ar ? `تنتهي الفترة التجريبية: ${formatDate(sub.currentPeriodEnd, ar)}` : `Trial ends ${formatDate(sub.currentPeriodEnd, ar)}`}
                     </p>
                   )}
                 </>
               ) : isFamilyMonthly ? (
                 <>
-                  <p className="text-xs text-text-muted">${(PLANS.familyMonthly.price / 100).toFixed(2)} / month</p>
+                  <p className="text-xs text-text-muted">${(PLANS.familyMonthly.price / 100).toFixed(2)} / {ar ? "شهر" : "month"}</p>
                   {sub && (
                     <p className="text-xs text-text-muted mt-0.5">
-                      {sub.cancelAtPeriodEnd
-                        ? `Cancels ${formatDate(sub.currentPeriodEnd)}`
-                        : `Renews ${formatDate(sub.currentPeriodEnd)}`}
+                      {ar
+                        ? (sub.cancelAtPeriodEnd ? `ينتهي: ${formatDate(sub.currentPeriodEnd, ar)}` : `يُجدَّد: ${formatDate(sub.currentPeriodEnd, ar)}`)
+                        : (sub.cancelAtPeriodEnd ? `Cancels ${formatDate(sub.currentPeriodEnd, ar)}` : `Renews ${formatDate(sub.currentPeriodEnd, ar)}`)}
                     </p>
                   )}
                 </>
               ) : isMonthly && isTrial ? (
                 <>
-                  <p className="text-xs text-text-muted">Free today · then ${(PLANS.monthly.price / 100).toFixed(2)}/mo</p>
+                  <p className="text-xs text-text-muted">{ar ? `مجاني الآن · ثم $${(PLANS.monthly.price / 100).toFixed(2)}/شهر` : `Free today · then $${(PLANS.monthly.price / 100).toFixed(2)}/mo`}</p>
                   {sub && (
                     <p className="text-xs text-text-muted mt-0.5">
-                      Trial ends {formatDate(sub.currentPeriodEnd)}
+                      {ar ? `تنتهي الفترة التجريبية: ${formatDate(sub.currentPeriodEnd, ar)}` : `Trial ends ${formatDate(sub.currentPeriodEnd, ar)}`}
                     </p>
                   )}
                 </>
               ) : isMonthly ? (
                 <>
-                  <p className="text-xs text-text-muted">${(PLANS.monthly.price / 100).toFixed(2)} / month</p>
+                  <p className="text-xs text-text-muted">${(PLANS.monthly.price / 100).toFixed(2)} / {ar ? "شهر" : "month"}</p>
                   {sub && (
                     <p className="text-xs text-text-muted mt-0.5">
-                      {sub.cancelAtPeriodEnd
-                        ? `Cancels ${formatDate(sub.currentPeriodEnd)}`
-                        : `Renews ${formatDate(sub.currentPeriodEnd)}`}
+                      {ar
+                        ? (sub.cancelAtPeriodEnd ? `ينتهي: ${formatDate(sub.currentPeriodEnd, ar)}` : `يُجدَّد: ${formatDate(sub.currentPeriodEnd, ar)}`)
+                        : (sub.cancelAtPeriodEnd ? `Cancels ${formatDate(sub.currentPeriodEnd, ar)}` : `Renews ${formatDate(sub.currentPeriodEnd, ar)}`)}
                     </p>
                   )}
                 </>
               ) : (
                 <>
-                  <p className="text-xs text-text-muted">One-time payment</p>
-                  <p className="text-sm font-semibold text-text mt-0.5">Lifetime access</p>
+                  <p className="text-xs text-text-muted">{ar ? "دفعة واحدة" : "One-time payment"}</p>
+                  <p className="text-sm font-semibold text-text mt-0.5">{ar ? "وصول مدى الحياة" : "Lifetime access"}</p>
                 </>
               )}
             </div>
@@ -271,9 +335,11 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
           {isMonthly && sub?.cancelAtPeriodEnd && (
             <div className="mt-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 space-y-2">
               <p className="text-amber-400 text-xs">
-                Your subscription is set to cancel on {formatDate(sub.currentPeriodEnd)}. You&apos;ll retain access until then.
+                {ar
+                  ? `اشتراكك مُحدَّد للإلغاء في ${formatDate(sub.currentPeriodEnd, ar)}. ستحتفظ بالوصول حتى ذلك الحين.`
+                  : `Your subscription is set to cancel on ${formatDate(sub.currentPeriodEnd, ar)}. You'll retain access until then.`}
               </p>
-              <ReactivateSubscriptionButton isTrial={isTrial} />
+              <ReactivateSubscriptionButton isTrial={isTrial} lang={lang} />
             </div>
           )}
 
@@ -283,6 +349,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
               <CancelSubscriptionButton
                 cancelDate={sub.currentPeriodEnd.toISOString()}
                 isTrial={isTrial}
+                lang={lang}
               />
             </div>
           )}
@@ -291,32 +358,24 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
           {!hideStripeBilling && isMonthly && (
             <div className="mt-5 pt-5 border-t border-border/60 flex items-center justify-between flex-wrap gap-3">
               <p className="text-xs text-text-muted">
-                Update your card, view invoices, or change billing details.
+                {ar ? "حدّث بطاقتك، اعرض الفواتير، أو غيّر تفاصيل الفوترة." : "Update your card, view invoices, or change billing details."}
               </p>
-              <PortalButton label="Manage billing" variant="default" />
+              <PortalButton label={ar ? "إدارة الفواتير" : "Manage billing"} variant="default" lang={lang} />
             </div>
           )}
 
           {isStorePurchase && isMonthly && (
             <div className="mt-5 pt-5 border-t border-border/60">
               <p className="text-xs text-text-muted">
-                Your subscription is billed through the {accessInfo.purchasePlatform === "apple" ? "App Store" : "Google Play Store"}.
-                Manage or cancel it in your device&apos;s subscription settings.
+                {ar
+                  ? `اشتراكك يُفوتَر عبر ${accessInfo.purchasePlatform === "apple" ? "App Store" : "Google Play Store"}. أدِر أو ألغِ الاشتراك من إعدادات الاشتراكات على جهازك.`
+                  : `Your subscription is billed through the ${accessInfo.purchasePlatform === "apple" ? "App Store" : "Google Play Store"}. Manage or cancel it in your device's subscription settings.`}
               </p>
             </div>
           )}
 
           <div className="mt-5 grid sm:grid-cols-2 gap-y-2 gap-x-4">
-            {(isFamilyMonthly
-              ? PLANS.familyMonthly.features
-              : isFamilyLifetime
-              ? PLANS.family.features
-              : isTrial
-              ? PLANS.monthly.features
-              : isMonthly
-              ? PLANS.monthly.features
-              : PLANS.complete.features
-            ).slice(0, 8).map((f) => (
+            {planFeatures.map((f) => (
               <div key={f} className="flex items-center gap-2 text-sm text-text-secondary">
                 <CheckCircle2 className="w-3.5 h-3.5 text-gold flex-shrink-0" />
                 {f}
@@ -333,20 +392,23 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
                 <Star className="w-5 h-5 text-gold" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-text">Upgrade to Family Lifetime</p>
+                <p className="font-semibold text-text">{ar ? "الترقية إلى وصول العائلة مدى الحياة" : "Upgrade to Family Lifetime"}</p>
                 <p className="text-sm text-text-secondary mt-1 leading-relaxed">
-                  Stop paying monthly. Get permanent Family Access for a one-time payment of $79 —
-                  the same 5 learner profiles, separate progress for every course asset, lifetime access.
+                  {ar
+                    ? "توقّف عن الدفع الشهري. احصل على وصول العائلة الدائم بدفعة واحدة بقيمة $79 — نفس الـ ٥ ملفات المتعلّمين، تقدّم منفصل لكل مورد، وصول مدى الحياة."
+                    : "Stop paying monthly. Get permanent Family Access for a one-time payment of $79 — the same 5 learner profiles, separate progress for every course asset, lifetime access."}
                 </p>
                 <div className="mt-4 flex flex-wrap items-center gap-3">
                   <Link
                     href="/checkout?plan=family&billing=lifetime"
                     className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gold hover:bg-gold-light text-black font-bold text-sm transition-colors shadow-sm"
                   >
-                    Upgrade for $79
-                    <ArrowRight className="w-4 h-4" />
+                    {ar ? "الترقية بـ $79" : "Upgrade for $79"}
+                    <UpgradeIcon className="w-4 h-4" />
                   </Link>
-                  <span className="text-xs text-text-muted">One-time · Monthly subscription cancelled automatically</span>
+                  <span className="text-xs text-text-muted">
+                    {ar ? "دفعة واحدة · يُلغى الاشتراك الشهري تلقائيًا" : "One-time · Monthly subscription cancelled automatically"}
+                  </span>
                 </div>
               </div>
             </div>
@@ -361,28 +423,29 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
                 <Users className="w-5 h-5 text-amber-400" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-text">Upgrade to Family Access</p>
+                <p className="font-semibold text-text">{ar ? "الترقية إلى وصول العائلة" : "Upgrade to Family Access"}</p>
                 <p className="text-sm text-text-secondary mt-1 leading-relaxed">
-                  Family Access gives one household account with up to 5 learner profiles.
-                  Parents log in once, create profiles for each family member, and each learner
-                  gets their own separate progress for all course assets.
+                  {ar
+                    ? "وصول العائلة يمنح حسابًا واحدًا للأسرة مع حتى ٥ ملفات متعلّمين. يسجّل الأهل الدخول مرة واحدة، وينشئون ملفًا لكل فرد، ولكل متعلّم تقدّم منفصل في جميع موارد الدورة."
+                    : "Family Access gives one household account with up to 5 learner profiles. Parents log in once, create profiles for each family member, and each learner gets their own separate progress for all course assets."}
                 </p>
                 <div className="mt-3 flex items-center gap-2 text-xs text-amber-400/80">
                   <ArrowUpCircle className="w-3.5 h-3.5 flex-shrink-0" />
-                  You&apos;ve already paid {fmtCurrency(individualPaidCents)} for Individual Lifetime
-                  — you&apos;re only paying the {fmtCurrency(upgradeCostCents)} difference.
+                  {ar
+                    ? `لقد دفعت بالفعل ${fmtCurrency(individualPaidCents)} للوصول الفردي مدى الحياة — تدفع فقط فرق ${fmtCurrency(upgradeCostCents)}.`
+                    : `You've already paid ${fmtCurrency(individualPaidCents)} for Individual Lifetime — you're only paying the ${fmtCurrency(upgradeCostCents)} difference.`}
                 </div>
                 <div className="mt-4 flex flex-wrap items-center gap-3">
                   <Link
                     href={upgradeUrl}
                     className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm transition-colors shadow-sm"
                   >
-                    Upgrade for {fmtCurrency(upgradeCostCents)}
-                    <ArrowRight className="w-4 h-4" />
+                    {ar ? `الترقية بـ ${fmtCurrency(upgradeCostCents)}` : `Upgrade for ${fmtCurrency(upgradeCostCents)}`}
+                    <UpgradeIcon className="w-4 h-4" />
                   </Link>
                   <span className="text-xs text-text-muted">
-                    <span className="line-through opacity-60 mr-1">{fmtCurrency(familyReferenceCents)}</span>
-                    One-time · Lifetime family access
+                    <span className="line-through opacity-60 me-1">{fmtCurrency(familyReferenceCents)}</span>
+                    {ar ? "دفعة واحدة · وصول عائلي مدى الحياة" : "One-time · Lifetime family access"}
                   </span>
                 </div>
               </div>
@@ -400,20 +463,23 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
                   <Star className="w-5 h-5 text-gold" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-text">Upgrade to Individual Lifetime</p>
+                  <p className="font-semibold text-text">{ar ? "الترقية إلى الوصول الفردي مدى الحياة" : "Upgrade to Individual Lifetime"}</p>
                   <p className="text-sm text-text-secondary mt-1 leading-relaxed">
-                    Stop paying monthly. Get permanent access to all 100 Seerah parts for a one-time
-                    payment of $49 — no more recurring charges, yours forever.
+                    {ar
+                      ? "توقّف عن الدفع الشهري. احصل على وصول دائم لجميع أجزاء السيرة الـ ١٠٠ بدفعة واحدة بقيمة $49 — بلا رسوم متكررة، لك إلى الأبد."
+                      : "Stop paying monthly. Get permanent access to all 100 Seerah parts for a one-time payment of $49 — no more recurring charges, yours forever."}
                   </p>
                   <div className="mt-4 flex flex-wrap items-center gap-3">
                     <Link
                       href="/checkout?plan=individual-lifetime"
                       className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gold hover:bg-gold-light text-black font-bold text-sm transition-colors shadow-sm"
                     >
-                      Lifetime Access — $49
-                      <ArrowRight className="w-4 h-4" />
+                      {ar ? "وصول مدى الحياة — $49" : "Lifetime Access — $49"}
+                      <UpgradeIcon className="w-4 h-4" />
                     </Link>
-                    <span className="text-xs text-text-muted">One-time · Subscription cancelled automatically</span>
+                    <span className="text-xs text-text-muted">
+                      {ar ? "دفعة واحدة · يُلغى الاشتراك تلقائيًا" : "One-time · Subscription cancelled automatically"}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -426,20 +492,21 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
                   <Users className="w-5 h-5 text-amber-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-text">Upgrade to Family Access</p>
+                  <p className="font-semibold text-text">{ar ? "الترقية إلى وصول العائلة" : "Upgrade to Family Access"}</p>
                   <p className="text-sm text-text-secondary mt-1 leading-relaxed">
-                    One household account with up to 5 learner profiles,
-                    separate progress for every learner, and your choice of monthly or lifetime billing.
+                    {ar
+                      ? "حساب واحد للأسرة مع حتى ٥ ملفات متعلّمين، تقدّم منفصل لكل متعلّم، واختيار بين الفوترة الشهرية أو مدى الحياة."
+                      : "One household account with up to 5 learner profiles, separate progress for every learner, and your choice of monthly or lifetime billing."}
                   </p>
                   <div className="mt-4 flex flex-wrap items-center gap-3">
                     <Link
                       href="/checkout?plan=family-lifetime"
                       className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm transition-colors shadow-sm"
                     >
-                      Lifetime — $79
-                      <ArrowRight className="w-4 h-4" />
+                      {ar ? "مدى الحياة — $79" : "Lifetime — $79"}
+                      <UpgradeIcon className="w-4 h-4" />
                     </Link>
-                    <UpgradeToFamilyMonthlyButton />
+                    <UpgradeToFamilyMonthlyButton lang={lang} />
                   </div>
                 </div>
               </div>
@@ -448,14 +515,14 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
         )}
 
         {/* Card manager — Stripe saved cards only (not App Store / Play) */}
-        {!hideStripeBilling && accessInfo.hasLifetime && !isTrial && <CardManager />}
+        {!hideStripeBilling && accessInfo.hasLifetime && !isTrial && <CardManager lang={lang} />}
 
         {/* Purchase history */}
         {purchases.length > 0 && (
           <div>
             <h2 className="text-base font-semibold text-text mb-4 flex items-center gap-2">
               <Receipt className="w-4 h-4 text-text-muted" />
-              Purchase History
+              {ar ? "سجل المشتريات" : "Purchase History"}
             </h2>
             <div className="rounded-xl border border-border overflow-hidden">
               {purchases.map((purchase, i) => (
@@ -469,18 +536,18 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-text">{purchase.planName}</p>
                     <p className="text-xs text-text-muted mt-0.5">
-                      {formatDate(purchase.createdAt)}
+                      {formatDate(purchase.createdAt, ar)}
                       <span className="mx-1.5 opacity-30">·</span>
                       ID: <span className="font-mono">{purchase.stripePaymentIntentId.slice(-8)}</span>
                     </p>
                   </div>
-                  <div className="text-right flex-shrink-0">
+                  <div className="text-end flex-shrink-0">
                     <p className="text-sm font-semibold text-text">
                       {formatAmount(purchase.amount, purchase.currency)}
                     </p>
-                    <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-400 mt-0.5">
+                      <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-400 mt-0.5">
                       <CheckCircle2 className="w-3 h-3" />
-                      Paid
+                      {ar ? "مدفوع" : "Paid"}
                     </span>
                   </div>
                 </div>
@@ -495,13 +562,11 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
             <Lock className="w-4 h-4 text-text-muted" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-text">Questions about billing?</p>
+            <p className="text-sm font-semibold text-text">{ar ? "أسئلة حول الفواتير؟" : "Questions about billing?"}</p>
             <p className="text-xs text-text-secondary mt-1 leading-relaxed">
-              For receipts, refund requests, subscription changes, or billing questions,{" "}
-              <Link href="/help" className="text-gold hover:text-gold-light underline underline-offset-2">
-                contact support
-              </Link>
-              .
+              {ar
+                ? <>للإيصالات وطلبات الاسترداد وتغييرات الاشتراك أو أسئلة الفوترة،{" "}<Link href="/help" className="text-gold hover:text-gold-light underline underline-offset-2">تواصل مع الدعم</Link>.</>
+                : <>For receipts, refund requests, subscription changes, or billing questions,{" "}<Link href="/help" className="text-gold hover:text-gold-light underline underline-offset-2">contact support</Link>.</>}
             </p>
           </div>
         </div>

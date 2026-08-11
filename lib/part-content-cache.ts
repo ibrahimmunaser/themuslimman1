@@ -6,6 +6,9 @@
  * only once per cache TTL, then served instantly from memory.
  *
  * TTL: 90 minutes — safely within the 2-hour signed URL expiry window.
+ *
+ * Cache key: "${partNumber}-${lang}" — EN and AR are cached independently so a
+ * language switch does not evict the other language's warm data.
  */
 
 import {
@@ -28,7 +31,10 @@ import {
   r2GetVideoKey,
   r2GetAudioKey,
   r2GetMindmapKey,
+  r2GetArabicVideoKey,
+  r2GetArabicAudioKey,
 } from "@/lib/r2";
+import type { CourseLang } from "@/lib/course-lang";
 
 const TTL_MS = 90 * 60 * 1000; // 90 minutes
 
@@ -37,8 +43,8 @@ const TTL_MS = 90 * 60 * 1000; // 90 minutes
 // load separate module instances, so module-level Maps are not shared between
 // them. globalThis is a single object per process and survives across imports.
 declare global {
-  var __partCache: Map<number, CachedPartData> | undefined;
-  var __partInflight: Map<number, Promise<CachedPartData>> | undefined;
+  var __partCache: Map<string, CachedPartData> | undefined;
+  var __partInflight: Map<string, Promise<CachedPartData>> | undefined;
 }
 
 interface CachedPartData {
@@ -67,13 +73,13 @@ interface CachedPartData {
   cachedAt: number;
 }
 
-const cache: Map<number, CachedPartData> =
-  (globalThis.__partCache ??= new Map<number, CachedPartData>());
-// Track in-flight fetches so concurrent requests for the same part share one Promise
-const inflight: Map<number, Promise<CachedPartData>> =
-  (globalThis.__partInflight ??= new Map<number, Promise<CachedPartData>>());
+const cache: Map<string, CachedPartData> =
+  (globalThis.__partCache ??= new Map<string, CachedPartData>());
+// Track in-flight fetches so concurrent requests for the same part+lang share one Promise
+const inflight: Map<string, Promise<CachedPartData>> =
+  (globalThis.__partInflight ??= new Map<string, Promise<CachedPartData>>());
 
-async function loadPartData(n: number): Promise<CachedPartData> {
+async function loadPartData(n: number, lang: CourseLang): Promise<CachedPartData> {
   const signImg = (key: string | null, localFolder: string) =>
     key
       ? key.includes("/")
@@ -81,10 +87,68 @@ async function loadPartData(n: number): Promise<CachedPartData> {
         : Promise.resolve(`/seerah-media/Infographics/${localFolder}/${key}`)
       : Promise.resolve(undefined);
 
+  if (lang === "ar") {
+    // Arabic: deterministic video/audio keys, single infographic, no detailed/facts slides.
+    const [
+      briefingText,
+      statementOfFactsText,
+      studyGuideText,
+      quizData,
+      flashcards,
+      slidesPresentedFiles,
+      infArKey,
+      mindmapKey,
+    ] = await Promise.all([
+      readBriefing(n, "ar").catch(() => null),
+      readStatementOfFacts(n, "ar").catch(() => null),
+      readStudyGuide(n, "ar").catch(() => null),
+      readQuiz(n, "ar").catch(() => null),
+      readFlashcards(n, "ar").catch(() => null),
+      getSlideFiles(n, "presented", "ar").catch(() => []),
+      getInfographicFilename(n, "Concise", "ar").catch(() => null),
+      // Mindmaps stay English; still sign so the Mindmap tab works in AR mode
+      r2GetMindmapKey(n).catch(() => null),
+    ]);
+
+    const videoKey = r2GetArabicVideoKey(n);
+    const audioKey = r2GetArabicAudioKey(n);
+
+    const [infSignedConcise, videoUrl, audioUrl, mindmapUrl, thumbnailUrl] = await Promise.all([
+      signImg(infArKey, "Concise"),
+      generateSignedR2Url(videoKey, VIDEO_URL_EXPIRY).catch(() => undefined),
+      generateSignedR2Url(audioKey, VIDEO_URL_EXPIRY).catch(() => undefined),
+      mindmapKey ? generateSignedR2Url(mindmapKey, IMAGE_URL_EXPIRY) : Promise.resolve(undefined),
+      getThumbnailUrl(n, "ar").catch(() => undefined),
+    ]);
+
+    return {
+      briefingText,
+      statementOfFactsText,
+      studyGuideText,
+      reportText: null,
+      quizData,
+      flashcards,
+      slidesPresentedFiles,
+      slidesDetailedFiles: [],
+      slidesFactsFiles: [],
+      infConcise: infArKey,
+      infStandard: null,
+      infBento: null,
+      hasMindmap: !!mindmapKey,
+      infSignedConcise,
+      infSignedStandard: undefined,
+      infSignedBento: undefined,
+      videoUrl,
+      audioUrl,
+      mindmapUrl,
+      thumbnailUrl,
+      cachedAt: Date.now(),
+    };
+  }
+
+  // ── English (existing logic) ──────────────────────────────────────────────────
+
   // Run all independent R2 operations in one flat Promise.all.
-  // Batch A (content reads) and Batch B (media key lookups) were previously
-  // sequential — merging them saves the entire duration of whichever finishes
-  // first (typically 200-600 ms per the stress-test data).
   const [
     briefingText,
     statementOfFactsText,
@@ -161,28 +225,30 @@ async function loadPartData(n: number): Promise<CachedPartData> {
   };
 }
 
-/** Remove a specific part from the cache so the next request re-fetches from R2. */
-export function invalidatePartCache(n: number): void {
-  cache.delete(n);
-  inflight.delete(n);
+/** Remove a specific part+lang from the cache so the next request re-fetches from R2. */
+export function invalidatePartCache(n: number, lang: CourseLang = "en"): void {
+  const key = `${n}-${lang}`;
+  cache.delete(key);
+  inflight.delete(key);
 }
 
-export async function getPartPageData(n: number): Promise<CachedPartData> {
-  const cached = cache.get(n);
+export async function getPartPageData(n: number, lang: CourseLang = "en"): Promise<CachedPartData> {
+  const key = `${n}-${lang}`;
+  const cached = cache.get(key);
   if (cached && Date.now() - cached.cachedAt < TTL_MS) return cached;
 
-  // Deduplicate concurrent requests for the same part
-  if (inflight.has(n)) return inflight.get(n)!;
+  // Deduplicate concurrent requests for the same part+lang
+  if (inflight.has(key)) return inflight.get(key)!;
 
-  const promise = loadPartData(n).then((data) => {
-    cache.set(n, data);
-    inflight.delete(n);
+  const promise = loadPartData(n, lang).then((data) => {
+    cache.set(key, data);
+    inflight.delete(key);
     return data;
   }).catch((err) => {
-    inflight.delete(n);
+    inflight.delete(key);
     throw err;
   });
 
-  inflight.set(n, promise);
+  inflight.set(key, promise);
   return promise;
 }

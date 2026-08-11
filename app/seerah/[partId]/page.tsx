@@ -5,8 +5,8 @@ import { cookies } from "next/headers";
 import { getCachedStudent } from "@/lib/auth-cache";
 import { hasActiveCourseAccess, isFamilyPlan } from "@/lib/access";
 import { getActiveProfileId } from "@/app/actions/profiles";
-import { getPartById, PARTS } from "@/lib/content";
-import { ERA_MAP } from "@/lib/types";
+import { getPartById, PARTS, localizePart, getPartsForLang } from "@/lib/content";
+import { ERA_MAP, eraLabel } from "@/lib/types";
 import type { Part, Quiz } from "@/lib/types";
 
 /** Remove correct_answer from all questions before the quiz crosses the server→client boundary.
@@ -19,9 +19,11 @@ function stripQuizAnswers(quiz: Quiz | null | undefined): Quiz | null | undefine
   };
 }
 import { getPartPageData } from "@/lib/part-content-cache";
+import { parseLang, COURSE_LANG_COOKIE, type CourseLang } from "@/lib/course-lang";
 import { prisma } from "@/lib/db";
 import {
   ArrowLeft,
+  ArrowRight,
   Clock,
 } from "lucide-react";
 import { PartTabs } from "@/components/part/part-tabs";
@@ -39,11 +41,17 @@ interface Props {
 
 export async function generateMetadata(props: Props) {
   const { partId } = await props.params;
-  const part = getPartById(partId);
-  if (!part) return { title: "Part Not Found" };
+  const partEn = getPartById(partId);
+  if (!partEn) return { title: "Part Not Found" };
+
+  const cookieStore = await cookies();
+  const lang = parseLang(cookieStore.get(COURSE_LANG_COOKIE)?.value);
+  const part = localizePart(partEn, lang);
 
   return {
-    title: `Part ${part.partNumber}: ${part.title}`,
+    title: lang === "ar"
+      ? `الجزء ${part.partNumber}: ${part.title}`
+      : `Part ${part.partNumber}: ${part.title}`,
     description: part.description || `Seerah Part ${part.partNumber}`,
   };
 }
@@ -60,9 +68,10 @@ interface PartTabsContentProps {
   initialVideoCompleted: boolean;
   initialQuizBestScore?: number;
   learnerProfileId: string;
+  lang: CourseLang;
 }
 
-async function PartTabsContent({ partNumber, partBase, userPlan, initialVideoPercent, initialVideoCompleted, initialQuizBestScore, learnerProfileId }: PartTabsContentProps) {
+async function PartTabsContent({ partNumber, partBase, userPlan, initialVideoPercent, initialVideoCompleted, initialQuizBestScore, learnerProfileId, lang }: PartTabsContentProps) {
   const {
     briefingText,
     statementOfFactsText,
@@ -80,7 +89,7 @@ async function PartTabsContent({ partNumber, partBase, userPlan, initialVideoPer
     audioUrl,
     mindmapUrl,
     thumbnailUrl,
-  } = await getPartPageData(partNumber);
+  } = await getPartPageData(partNumber, lang);
 
   const part: Part = {
     ...partBase,
@@ -114,6 +123,7 @@ async function PartTabsContent({ partNumber, partBase, userPlan, initialVideoPer
         initialVideoCompleted={initialVideoCompleted}
         initialQuizBestScore={initialQuizBestScore}
         learnerProfileId={learnerProfileId}
+        initialLang={lang}
       />
     </div>
   );
@@ -154,15 +164,19 @@ function PartTabsFallback() {
 
 export default async function SeerahPartPage(props: Props) {
   const { partId } = await props.params;
-  const partBase = getPartById(partId);
-  if (!partBase) notFound();
+  const partBaseEn = getPartById(partId);
+  if (!partBaseEn) notFound();
 
-  const n = partBase.partNumber;
+  const n = partBaseEn.partNumber;
 
-  // ① Kick off the slow R2 fetch immediately — runs in parallel with auth below.
-  //    The inflight dedup Map in part-content-cache ensures PartTabsContent
-  //    joins this same promise rather than starting a new one.
-  getPartPageData(n).catch(() => {});
+  const cookieStore = await cookies();
+  const lang = parseLang(cookieStore.get(COURSE_LANG_COOKIE)?.value);
+  const partBase = localizePart(partBaseEn, lang);
+
+  // Kick off the slow R2 fetch immediately — runs in parallel with auth below.
+  // The inflight dedup Map in part-content-cache ensures PartTabsContent
+  // joins this same promise rather than starting a new one.
+  getPartPageData(n, lang).catch(() => {});
 
   // ② Auth + access check + progress fetch (parallel where possible)
   // getCachedStudent() deduplicates with the seerah/layout.tsx call in the same request.
@@ -216,11 +230,11 @@ export default async function SeerahPartPage(props: Props) {
 
   // ③ Background fire-and-forget tasks (don't block rendering)
   trackPartOpened(n).catch(() => {});
-  // Pre-warm adjacent parts so Next/Prev navigation is instant
-  if (n + 1 <= PARTS.length) getPartPageData(n + 1).catch(() => {});
-  if (n - 1 >= 1)             getPartPageData(n - 1).catch(() => {});
+  // Pre-warm adjacent parts in the same language so Next/Prev navigation is instant
+  if (n + 1 <= PARTS.length) getPartPageData(n + 1, lang).catch(() => {});
+  if (n - 1 >= 1)             getPartPageData(n - 1, lang).catch(() => {});
 
-  const allParts = PARTS;
+  const allParts = getPartsForLang(lang);
   const currentIndex = allParts.findIndex((p) => p.id === partId);
   const prevPart = currentIndex > 0 ? allParts[currentIndex - 1] : null;
   const nextPart = currentIndex < allParts.length - 1 ? allParts[currentIndex + 1] : null;
@@ -242,18 +256,18 @@ export default async function SeerahPartPage(props: Props) {
                 href="/seerah"
                 className="inline-flex items-center gap-1.5 text-text-secondary hover:text-text transition-colors text-sm min-h-[44px]"
               >
-                <ArrowLeft className="w-4 h-4 shrink-0" />
-                <span className="hidden sm:inline">Back to Seerah</span>
-                <span className="sm:hidden">Back</span>
+                {lang === "ar" ? <ArrowRight className="w-4 h-4 shrink-0" /> : <ArrowLeft className="w-4 h-4 shrink-0" />}
+                <span className="hidden sm:inline">{lang === "ar" ? "العودة إلى السيرة" : "Back to Seerah"}</span>
+                <span className="sm:hidden">{lang === "ar" ? "رجوع" : "Back"}</span>
               </Link>
 
-              {/* Right side — part badge + era (+ gap for floating menu on mobile) */}
-              <div className="flex items-center gap-2 mr-10 sm:mr-0">
+              {/* End side — part badge + era (+ gap for floating menu on mobile) */}
+              <div className="flex items-center gap-2 me-10 sm:me-0">
                 <span className="px-2 py-1 text-xs font-semibold rounded-md bg-gold/10 text-gold border border-gold/20">
-                  Part {partBase.partNumber}
+                  {lang === "ar" ? `الجزء ${partBase.partNumber}` : `Part ${partBase.partNumber}`}
                 </span>
                 <span className="text-xs text-text-muted uppercase tracking-wider hidden sm:inline">
-                  {ERA_MAP[partBase.era as keyof typeof ERA_MAP]?.label || partBase.era}
+                  {eraLabel(ERA_MAP[partBase.era as keyof typeof ERA_MAP], lang === "ar") || partBase.era}
                 </span>
               </div>
             </div>
@@ -262,27 +276,29 @@ export default async function SeerahPartPage(props: Props) {
             <h1
               className="text-base sm:text-2xl font-bold text-text mt-1 leading-snug"
               style={{ hyphens: "none", overflowWrap: "normal", wordBreak: "normal" }}
+              dir={lang === "ar" ? "rtl" : undefined}
             >
               {partBase.title}
             </h1>
             {partBase.subtitle && (
-              <p className="hidden sm:block text-xs sm:text-sm text-text-secondary/80 mt-0.5 leading-snug">{partBase.subtitle}</p>
+              <p className="hidden sm:block text-xs sm:text-sm text-text-secondary/80 mt-0.5 leading-snug" dir={lang === "ar" ? "rtl" : undefined}>{partBase.subtitle}</p>
             )}
 
             {/* Lesson metadata — era (mobile only) + estimated time — collapsed on mobile to save header height */}
             <div className="hidden sm:flex items-center gap-2.5 mt-1.5">
               <span className="text-[11px] text-text-muted/60 uppercase tracking-wider">
-                {ERA_MAP[partBase.era as keyof typeof ERA_MAP]?.label || partBase.era}
+                {eraLabel(ERA_MAP[partBase.era as keyof typeof ERA_MAP], lang === "ar") || partBase.era}
               </span>
               <span className="text-text-muted/30 text-[10px]">·</span>
               <span className="flex items-center gap-1 text-[11px] text-text-muted/60">
                 <Clock className="w-3 h-3" />
-                15–20 min
+                {lang === "ar" ? "15–20 دقيقة" : "15–20 min"}
               </span>
             </div>
 
             {/* Per-asset progress indicators — live client component */}
             <PartProgressBadges
+              isRtl={lang === "ar"}
               initial={{
                 videoWatchPercent:  partProgress?.videoWatchPercent  ?? 0,
                 briefingOpened:     partProgress?.briefingOpened     ?? false,
@@ -309,11 +325,12 @@ export default async function SeerahPartPage(props: Props) {
               }
               initialQuizBestScore={partProgress?.quizBestScore ?? undefined}
               learnerProfileId={learnerProfileId}
+              lang={lang}
             />
           </Suspense>
 
           {/* Up Next card */}
-          <UpNextCard completePath={nextPart} />
+          <UpNextCard completePath={nextPart} isRtl={lang === "ar"} />
 
           {/* Navigation row — client component so startTransition keeps current page
               visible during load (no skeleton flash) */}
@@ -322,6 +339,7 @@ export default async function SeerahPartPage(props: Props) {
             nextPart={nextPart ? { id: nextPart.id, partNumber: nextPart.partNumber, title: nextPart.title, subtitle: nextPart.subtitle } : null}
             currentPart={n}
             totalParts={allParts.length}
+            isRtl={lang === "ar"}
           />
         </div>
       </div>

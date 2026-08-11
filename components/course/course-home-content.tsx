@@ -2,13 +2,15 @@
 
 import Link from "next/link";
 import {
-  Play, ArrowRight,
+  Play, ArrowRight, ArrowLeft,
   Video, Headphones, FileText, Map, Layers, Brain, ClipboardCheck,
   Clock, Milestone, HelpCircle, Mail,
   Image as ImageIcon, Info, CheckCircle2,
 } from "lucide-react";
 import { PrefetchPartLink } from "@/components/course/prefetch-part-link";
 import { FadeUp, StaggerChildren, AnimatedCounter, AnimatedProgressBar, AnimatedCard } from "@/components/motion";
+import type { CourseLang } from "@/lib/course-lang";
+import { t, tf } from "@/lib/ui-strings";
 
 export interface StageData {
   label: string;
@@ -33,6 +35,7 @@ interface CourseHomeContentProps {
   currentStageNumber: number;
   /** When false, show Part 1 free copy + upgrade banner (mobile parity). */
   hasAccess?: boolean;
+  lang?: CourseLang;
 }
 
 export function CourseHomeContent({
@@ -47,8 +50,10 @@ export function CourseHomeContent({
   stagesData,
   currentStageNumber,
   hasAccess = true,
+  lang = "en",
 }: CourseHomeContentProps) {
   const isNewUser = completedLessons === 0;
+  const isRtl = lang === "ar";
   const currentStage = stagesData[currentStageNumber - 1];
 
   // Read the active path from localStorage to show the right progress %.
@@ -59,11 +64,11 @@ export function CourseHomeContent({
 
       {/* ── Welcome header ─────────────────────────────────────────────────── */}
       <FadeUp>
-        <p className="text-text-muted text-sm mb-1">Welcome back</p>
+        <p className="text-text-muted text-sm mb-1">{t(lang, "welcomeBack")}</p>
         <h1 className="text-2xl sm:text-3xl font-bold text-text">{userName}</h1>
         {!hasAccess && (
           <p className="text-text-secondary text-sm mt-2">
-            Part 1 is free — begin the Seerah today.
+            {t(lang, "part1Free")}
           </p>
         )}
       </FadeUp>
@@ -79,19 +84,21 @@ export function CourseHomeContent({
             <div className="flex-1 min-w-0">
               <p className="text-xs font-bold uppercase tracking-widest text-gold mb-3">
                 {!hasAccess
-                  ? "Free — Start Here"
+                  ? t(lang, "freeStartHere")
                   : isNewUser
-                    ? "Start here"
-                    : "Continue learning"}
+                    ? t(lang, "startHere")
+                    : t(lang, "continueLearning")}
               </p>
 
               <h2 className="text-xl sm:text-2xl font-bold text-text mb-2 leading-tight">
-                Part {currentPart}: {currentPartTitle}
+                {tf(lang, "partN", { n: currentPart })}: {currentPartTitle}
               </h2>
 
               {isNewUser ? (
                 <p className="text-text-secondary text-sm leading-relaxed mb-4">
-                  Begin with the world the Prophet ﷺ was sent into, then follow the Seerah as one connected story.
+                  {isRtl
+                    ? "ابدأ بفهم العالم الذي بُعث فيه النبي ﷺ، ثم تابع السيرة النبوية كقصة متكاملة."
+                    : "Begin with the world the Prophet ﷺ was sent into, then follow the Seerah as one connected story."}
                 </p>
               ) : (
                 currentPartSubtitle && (
@@ -105,15 +112,15 @@ export function CourseHomeContent({
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-text-muted mb-5">
                 <span className="flex items-center gap-1.5">
                   <Milestone className="w-3.5 h-3.5 text-gold/60" />
-                  Stage {currentStageNumber} of {stagesData.length}
+                  {tf(lang, "stageNofM", { n: currentStageNumber, m: stagesData.length })}
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5 text-gold/60" />
-                  15–20 min
+                  {t(lang, "minRead")}
                 </span>
                 {isNewUser && (
                   <span className="px-2 py-0.5 rounded-full bg-gold/10 border border-gold/20 text-gold text-[11px] font-semibold">
-                    Best starting point
+                    {t(lang, "bestStartingPoint")}
                   </span>
                 )}
               </div>
@@ -122,7 +129,7 @@ export function CourseHomeContent({
               {currentPartVideoProgress > 0 && (
                 <div className="mb-5">
                   <div className="flex items-center justify-between mb-1.5 text-xs text-text-muted">
-                    <span>Lesson progress</span>
+                    <span>{t(lang, "lessonProgress")}</span>
                     <span className="text-gold font-medium">{currentPartVideoProgress}%</span>
                   </div>
                   <AnimatedProgressBar
@@ -141,32 +148,32 @@ export function CourseHomeContent({
                   className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[44px] bg-gold hover:bg-gold-light text-ink font-semibold rounded-xl text-sm transition-colors shadow-lg shadow-gold/20"
                 >
                   <Play className="w-4 h-4" />
-                  {isNewUser ? `Start Part ${currentPart}` : "Continue Lesson"}
+                  {isNewUser ? tf(lang, "startPartN", { n: currentPart }) : t(lang, "continuLesson")}
                 </PrefetchPartLink>
                 <a
                   href="#roadmap"
                   className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[44px] border border-border hover:border-gold/40 hover:text-text text-text-secondary font-medium rounded-xl text-sm transition-colors"
                 >
-                  View Roadmap
-                  <ArrowRight className="w-4 h-4" />
+                  {t(lang, "viewRoadmap")}
+                  {isRtl ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
                 </a>
               </div>
             </div>
 
             {/* How to use each lesson — compact sidebar */}
             <div className="shrink-0 sm:w-52 bg-surface/60 border border-border rounded-xl p-4">
-              <p className="text-xs font-semibold text-text mb-1">How to use each lesson</p>
-              <p className="text-[11px] text-text-muted mb-3">All four formats together for best retention</p>
+              <p className="text-xs font-semibold text-text mb-1">{t(lang, "howToUseLesson")}</p>
+              <p className="text-[11px] text-text-muted mb-3">{t(lang, "allFormatsRetention")}</p>
               <div className="space-y-2">
                 {[
-                  { icon: Video, label: "Watch the video" },
-                  { icon: FileText, label: "Read the briefing" },
-                  { icon: Brain, label: "Review flashcards" },
-                  { icon: ClipboardCheck, label: "Take the quiz" },
-                ].map(({ icon: Icon, label }) => (
-                  <div key={label} className="flex items-center gap-2 text-xs text-text-secondary">
+                  { icon: Video, labelKey: "watchTheVideo" as const },
+                  { icon: FileText, labelKey: "readTheBriefing" as const },
+                  { icon: Brain, labelKey: "reviewFlashcards" as const },
+                  { icon: ClipboardCheck, labelKey: "takeTheQuiz" as const },
+                ].map(({ icon: Icon, labelKey }) => (
+                  <div key={labelKey} className="flex items-center gap-2 text-xs text-text-secondary">
                     <Icon className="w-3.5 h-3.5 text-gold/70 shrink-0" />
-                    {label}
+                    {t(lang, labelKey)}
                   </div>
                 ))}
               </div>
@@ -180,17 +187,17 @@ export function CourseHomeContent({
         <FadeUp delay={0.08}>
           <div className="rounded-2xl border border-gold/25 bg-gradient-to-br from-gold/10 via-gold/5 to-transparent p-6 sm:p-7">
             <h2 className="text-lg font-bold text-text mb-2">
-              Unlock All {totalLessons} Parts
+              {tf(lang, "unlockAllN", { n: totalLessons })}
             </h2>
             <p className="text-sm text-text-secondary leading-relaxed mb-4 max-w-xl">
-              Get lifetime access to the full Seerah course — videos, reading notes, flashcards, and quizzes for every part.
+              {t(lang, "unlockDesc")}
             </p>
             <Link
               href="/pricing"
               className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[44px] bg-gold hover:bg-gold-light text-ink font-semibold rounded-xl text-sm transition-colors"
             >
-              View Plans
-              <ArrowRight className="w-4 h-4" />
+              {t(lang, "viewPlans")}
+              {isRtl ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
             </Link>
           </div>
         </FadeUp>
@@ -200,15 +207,15 @@ export function CourseHomeContent({
       <StaggerChildren className="grid grid-cols-1 sm:grid-cols-3 gap-4" stagger={0.1} as="section">
           {/* Parts completed */}
           <AnimatedCard lift className="p-5 rounded-2xl border border-border bg-surface hover:border-gold/20 transition-colors">
-            <p className="text-xs font-semibold uppercase tracking-widest text-text-muted mb-3">Completed</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-text-muted mb-3">{t(lang, "completedStat")}</p>
             <p className="text-3xl font-bold text-text tabular-nums">
               <AnimatedCounter to={completedLessons} duration={800} />
               <span className="text-text-muted font-normal text-xl"> / {totalLessons}</span>
             </p>
-            <p className="text-xs text-text-muted mt-1">Parts fully completed</p>
+            <p className="text-xs text-text-muted mt-1">{t(lang, "partsFullyCompleted")}</p>
             <p className="flex items-center gap-1 text-xs text-text-muted/70 mt-1.5">
               <Info className="w-3 h-3 shrink-0" />
-              Requires passing the quiz (80%+)
+              {t(lang, "requiresQuiz")}
             </p>
             {completedLessons > 0 && (
               <AnimatedProgressBar
@@ -224,23 +231,24 @@ export function CourseHomeContent({
 
           {/* Current stage */}
           <AnimatedCard lift className="p-5 rounded-2xl border border-border bg-surface hover:border-gold/20 transition-colors">
-            <p className="text-xs font-semibold uppercase tracking-widest text-text-muted mb-3">Current Stage</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-text-muted mb-3">{t(lang, "currentStage")}</p>
             <p className="text-3xl font-bold text-text tabular-nums">
               <AnimatedCounter to={currentStageNumber} duration={600} />
-              <span className="text-text-muted font-normal text-xl"> of {stagesData.length}</span>
+              <span className="text-text-muted font-normal text-xl"> {isRtl ? "من" : "of"} {stagesData.length}</span>
             </p>
-            <p className="text-xs text-text-muted mt-1 truncate">{currentStage?.label ?? "Arabia Before Revelation"}</p>
+            <p className="text-xs text-text-muted mt-1 truncate">{currentStage?.label ?? (isRtl ? "جزيرة العرب قبل الإسلام" : "Arabia Before Revelation")}</p>
           </AnimatedCard>
 
           {/* Next Lesson */}
           <AnimatedCard lift className="p-5 rounded-2xl border border-border bg-surface hover:border-gold/20 transition-colors">
-            <p className="text-xs font-semibold uppercase tracking-widest text-text-muted mb-3">Next Lesson</p>
-            <p className="text-sm font-bold text-text">Part {currentPart}</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-text-muted mb-3">{t(lang, "nextLesson")}</p>
+            <p className="text-sm font-bold text-text">{tf(lang, "partN", { n: currentPart })}</p>
             <p className="text-xs text-text-muted mt-0.5 line-clamp-2 leading-relaxed">{currentPartTitle}</p>
             <PrefetchPartLink
               partNumber={currentPart}
-              label={isNewUser ? "Start now" : "Continue"}
+              label={isNewUser ? t(lang, "startNow") : t(lang, "continue")}
               className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-gold hover:text-gold/80 transition-colors min-h-[44px]"
+              isRtl={isRtl}
             />
           </AnimatedCard>
       </StaggerChildren>
@@ -248,10 +256,9 @@ export function CourseHomeContent({
       {/* ── Course Roadmap ────────────────────────────────────────────────── */}
       <section id="roadmap">
         <FadeUp className="mb-6">
-          <h2 className="text-xl font-bold text-text mb-1.5">Course Roadmap</h2>
+          <h2 className="text-xl font-bold text-text mb-1.5">{t(lang, "courseRoadmap")}</h2>
           <p className="text-sm text-text-secondary">
-            The Seerah in {stagesData.length} stages — from pre-Islamic Arabia to the Prophet&apos;s ﷺ final years.
-            Each part unlocks after you complete the previous lesson&apos;s quiz. Follow the order for the full picture.
+            {tf(lang, "seerahInStages", { n: stagesData.length })}
           </p>
         </FadeUp>
 
@@ -260,15 +267,20 @@ export function CourseHomeContent({
           {/* Background connector line */}
           <div className="absolute top-[13px] left-[8%] right-[8%] h-px bg-border/40" aria-hidden />
 
-          {/* Progress overlay line — gold/green gradient from start to current stage */}
+          {/* Progress overlay line — gold/green gradient from start to current stage.
+              Anchored with insetInlineStart (not left) so it grows from wherever
+              Stage 1 visually sits — the right edge in RTL, since the stage nodes
+              themselves reverse order under the ambient dir="rtl". */}
           {stagesData.length > 1 && currentStageNumber > 1 && (
             <div
               className="absolute top-[13px] h-px"
               aria-hidden
               style={{
-                left: "8%",
+                insetInlineStart: "8%",
                 width: `${((currentStageNumber - 1) / (stagesData.length - 1)) * 84}%`,
-                background: "linear-gradient(to right, rgba(74,222,128,0.5), rgba(200,169,110,0.6))",
+                background: isRtl
+                  ? "linear-gradient(to left, rgba(74,222,128,0.5), rgba(200,169,110,0.6))"
+                  : "linear-gradient(to right, rgba(74,222,128,0.5), rgba(200,169,110,0.6))",
               }}
             />
           )}
@@ -304,7 +316,7 @@ export function CourseHomeContent({
                     <p className={`text-[9px] font-bold uppercase tracking-wider mb-0.5 ${
                       isCurrent ? "text-gold" : isDone ? "text-green-400/70" : "text-text-muted/40"
                     }`}>
-                      {isCurrent ? "▸ Current" : `Stage ${stage.stageNumber}`}
+                      {isCurrent ? t(lang, "currentStageLabel") : tf(lang, "stageN", { n: stage.stageNumber })}
                     </p>
                     <p className={`text-[11px] font-medium leading-tight line-clamp-2 ${
                       isCurrent ? "text-text" : isDone ? "text-text-secondary" : "text-text-muted/60"
@@ -324,10 +336,11 @@ export function CourseHomeContent({
                     />
                     <PrefetchPartLink
                       partNumber={stage.firstPartNumber}
-                      label={isDone ? "Review" : stage.completedCount > 0 ? "Continue" : "Start"}
+                      label={isDone ? t(lang, "review") : stage.completedCount > 0 ? t(lang, "continue") : t(lang, "start")}
                       className={`mt-2 inline-flex items-center gap-1 text-[10px] font-medium transition-colors min-h-[44px] ${
                         isCurrent ? "text-gold hover:text-gold/80" : "text-text-muted/50 hover:text-gold/70"
                       }`}
+                      isRtl={isRtl}
                     />
                   </div>
                 </div>
@@ -356,14 +369,14 @@ export function CourseHomeContent({
               >
                 <div className="flex items-center gap-2 mb-1">
                   <span className={`text-[10px] font-bold uppercase tracking-wider ${isCurrent ? "text-gold" : isDone ? "text-green-400" : "text-text-muted"}`}>
-                    Stage {stage.stageNumber}
+                    {tf(lang, "stageN", { n: stage.stageNumber })}
                   </span>
                   {isCurrent && (
                     <span className="px-1 py-0.5 bg-gold/15 border border-gold/30 text-gold text-[9px] font-bold rounded uppercase">
-                      Now
+                      {isRtl ? "الآن" : "Now"}
                     </span>
                   )}
-                  {isDone && <CheckCircle2 className="w-3 h-3 text-green-400 ml-auto" />}
+                  {isDone && <CheckCircle2 className="w-3 h-3 text-green-400 ms-auto" />}
                 </div>
                 <h3 className="font-semibold text-text text-xs leading-snug line-clamp-2 mb-2">{stage.label}</h3>
                 <AnimatedProgressBar
@@ -377,8 +390,9 @@ export function CourseHomeContent({
                   <span className="text-[10px] text-text-muted tabular-nums">{stage.completedCount}/{stage.totalCount}</span>
                   <PrefetchPartLink
                     partNumber={stage.firstPartNumber}
-                    label={isDone ? "Review" : stage.completedCount > 0 ? "Continue" : "Start"}
+                    label={isDone ? t(lang, "review") : stage.completedCount > 0 ? t(lang, "continue") : t(lang, "start")}
                     className="text-[10px] font-medium text-gold/70 hover:text-gold transition-colors min-h-[44px] flex items-center"
+                    isRtl={isRtl}
                   />
                 </div>
               </div>
@@ -391,24 +405,24 @@ export function CourseHomeContent({
       {/* ── Quick Access Resources ────────────────────────────────────────── */}
       <section>
         <FadeUp className="mb-5">
-          <h2 className="text-xl font-bold text-text mb-1.5">Quick Access to Course Tools</h2>
+          <h2 className="text-xl font-bold text-text mb-1.5">{t(lang, "quickAccessTools")}</h2>
           <p className="text-sm text-text-secondary">
-            Every part includes all of these formats. Use them in any order.
+            {t(lang, "everyPartIncludes")}
           </p>
         </FadeUp>
 
         <StaggerChildren className="grid grid-cols-2 sm:grid-cols-4 gap-3" stagger={0.06}>
-          {[
-            { icon: Video, label: "Watch Lessons", href: "/seerah" },
-            { icon: FileText, label: "Read Briefings", href: "/seerah/resources" },
-            { icon: Headphones, label: "Listen on the Go", href: "/seerah/resources" },
-            { icon: Layers, label: "Slides", href: "/seerah/resources" },
-            { icon: ImageIcon, label: "Infographics", href: "/seerah/resources" },
-            { icon: Map, label: "Mind Maps", href: "/seerah/resources" },
-            { icon: Brain, label: "Flashcards", href: "/seerah/resources" },
-            { icon: ClipboardCheck, label: "Quizzes", href: "/seerah/resources" },
-          ].map(({ icon: Icon, label, href }) => (
-            <AnimatedCard key={label} lift className="group">
+          {([
+            { icon: Video,          labelKey: "watchLessons",   href: "/seerah"           },
+            { icon: FileText,       labelKey: "readBriefings",  href: "/seerah/resources" },
+            { icon: Headphones,     labelKey: "listenOnTheGo",  href: "/seerah/resources" },
+            { icon: Layers,         labelKey: "slides",         href: "/seerah/resources" },
+            { icon: ImageIcon,      labelKey: "infographics",   href: "/seerah/resources" },
+            ...(isRtl ? [] : [{ icon: Map, labelKey: "mindMaps", href: "/seerah/resources" }]),
+            { icon: Brain,          labelKey: "flashcards",     href: "/seerah/resources" },
+            { icon: ClipboardCheck, labelKey: "quizzes",        href: "/seerah/resources" },
+          ] as { icon: React.ComponentType<{ className?: string }>; labelKey: import("@/lib/ui-strings").UiStringKey; href: string }[]).map(({ icon: Icon, labelKey, href }) => (
+            <AnimatedCard key={labelKey} lift className="group">
               <Link
                 href={href}
                 className="flex flex-col items-center gap-2 p-4 rounded-xl border border-border bg-surface hover:border-gold/30 hover:bg-gold/5 transition-all text-center"
@@ -417,7 +431,7 @@ export function CourseHomeContent({
                   <Icon className="w-[18px] h-[18px] text-text-secondary group-hover:text-gold transition-colors" />
                 </div>
                 <span className="text-xs font-medium text-text-secondary group-hover:text-text transition-colors leading-tight">
-                  {label}
+                  {t(lang, labelKey)}
                 </span>
               </Link>
             </AnimatedCard>
@@ -433,19 +447,19 @@ export function CourseHomeContent({
               <HelpCircle className="w-5 h-5 text-gold" />
             </div>
             <div>
-              <h3 className="font-semibold text-text text-sm mb-1">Need help getting started?</h3>
+              <h3 className="font-semibold text-text text-sm mb-1">{t(lang, "needHelp")}</h3>
               <p className="text-xs text-text-secondary leading-relaxed">
-                If something does not load, or you are unsure where to begin, contact support.
+                {t(lang, "helpDesc")}
               </p>
             </div>
           </div>
-          <div className="flex gap-3 shrink-0 pl-14 sm:pl-0">
+          <div className="flex gap-3 shrink-0 ps-14 sm:ps-0">
             <Link
               href="/help"
               className="inline-flex items-center gap-2 px-4 py-2 border border-border hover:border-gold/40 text-text-secondary hover:text-text rounded-lg text-sm font-medium transition-colors"
             >
               <Mail className="w-3.5 h-3.5" />
-              Contact Support
+              {t(lang, "contactSupport")}
             </Link>
           </div>
         </div>

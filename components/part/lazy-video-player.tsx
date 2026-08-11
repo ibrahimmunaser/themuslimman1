@@ -12,11 +12,14 @@ interface LazyVideoPlayerProps {
   previewMode?: boolean;
   /** Pre-fetched signed URL — skips the /api/part/N/assets call when provided */
   videoUrl?: string;
+  /** Optional synced soundtrack (Arabic MP3) when video audio is unreliable */
+  companionAudioSrc?: string;
   /** Server-fetched watch percent forwarded to VideoPlayer for seek clamping */
   initialVideoPercent?: number;
+  isRtl?: boolean;
 }
 
-export function LazyVideoPlayer({ partNumber, title, poster, previewMode, videoUrl: videoUrlProp, initialVideoPercent }: LazyVideoPlayerProps) {
+export function LazyVideoPlayer({ partNumber, title, poster, previewMode, videoUrl: videoUrlProp, companionAudioSrc, initialVideoPercent, isRtl }: LazyVideoPlayerProps) {
   const [videoUrl, setVideoUrl] = useState<string | undefined>(videoUrlProp);
   const [loading, setLoading] = useState(!videoUrlProp);
   const [error, setError] = useState(false);
@@ -39,7 +42,7 @@ export function LazyVideoPlayer({ partNumber, title, poster, previewMode, videoU
     return (
       <div className="aspect-video rounded-2xl bg-surface border border-border flex flex-col items-center justify-center gap-3">
         <div className="w-12 h-12 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
-        <p className="text-text-muted text-sm">Loading video...</p>
+        <p className="text-text-muted text-sm">{isRtl ? "جارٍ تحميل الفيديو..." : "Loading video..."}</p>
       </div>
     );
   }
@@ -51,8 +54,8 @@ export function LazyVideoPlayer({ partNumber, title, poster, previewMode, videoU
           <Play className="w-7 h-7 text-gold/60 ml-1" />
         </div>
         <div className="text-center">
-          <p className="text-text-secondary text-sm font-medium">Video unavailable</p>
-          <p className="text-text-muted text-xs mt-1">Please try again later</p>
+          <p className="text-text-secondary text-sm font-medium">{isRtl ? "الفيديو غير متاح" : "Video unavailable"}</p>
+          <p className="text-text-muted text-xs mt-1">{isRtl ? "يرجى المحاولة مرة أخرى لاحقًا" : "Please try again later"}</p>
         </div>
       </div>
     );
@@ -66,6 +69,8 @@ export function LazyVideoPlayer({ partNumber, title, poster, previewMode, videoU
       partNumber={partNumber}
       previewMode={previewMode}
       initialVideoPercent={initialVideoPercent}
+      companionAudioSrc={companionAudioSrc}
+      isRtl={isRtl}
     />
   );
 }

@@ -14,6 +14,7 @@ class VideoTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final assetsAsync = ref.watch(partAssetsProvider(partNumber));
+    final lang = ref.watch(courseLangProvider);
 
     return assetsAsync.when(
       loading: () => const Center(
@@ -35,7 +36,15 @@ class VideoTab extends ConsumerWidget {
             onRetry: () => ref.invalidate(partAssetsProvider(partNumber)),
           );
         }
-        return _VideoPlayer(url: url, partNumber: partNumber);
+        // Arabic masters are 5K H.264 L6 — many devices drop the in-file audio.
+        // Play the matching MP3 in sync instead (skip Part 1 — re-encoded to 1440p).
+        final companionAudio =
+            lang == 'ar' && partNumber != 1 ? assets.audioUrl : null;
+        return _VideoPlayer(
+          url: url,
+          companionAudioUrl: companionAudio,
+          partNumber: partNumber,
+        );
       },
     );
   }
@@ -45,8 +54,13 @@ class VideoTab extends ConsumerWidget {
 
 class _VideoPlayer extends ConsumerStatefulWidget {
   final String url;
+  final String? companionAudioUrl;
   final int partNumber;
-  const _VideoPlayer({required this.url, required this.partNumber});
+  const _VideoPlayer({
+    required this.url,
+    required this.partNumber,
+    this.companionAudioUrl,
+  });
 
   @override
   ConsumerState<_VideoPlayer> createState() => _VideoPlayerState();
@@ -54,6 +68,7 @@ class _VideoPlayer extends ConsumerStatefulWidget {
 
 class _VideoPlayerState extends ConsumerState<_VideoPlayer> with WidgetsBindingObserver {
   VideoPlayerController? _vpCtrl;
+  VideoPlayerController? _audioCtrl;
   ChewieController? _chewieCtrl;
   bool _initializing = true;
   String? _error;
@@ -77,6 +92,7 @@ class _VideoPlayerState extends ConsumerState<_VideoPlayer> with WidgetsBindingO
   // permanently pinned to whatever URL this widget was first built with.
   // See _retryWithFreshUrl().
   late String _currentUrl = widget.url;
+  late String? _currentAudioUrl = widget.companionAudioUrl;
 
   @override
   void initState() {
@@ -97,6 +113,7 @@ class _VideoPlayerState extends ConsumerState<_VideoPlayer> with WidgetsBindingO
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.inactive || state == AppLifecycleState.paused) {
       _vpCtrl?.pause();
+      _audioCtrl?.pause();
     }
   }
 
@@ -107,8 +124,10 @@ class _VideoPlayerState extends ConsumerState<_VideoPlayer> with WidgetsBindingO
     // "open a tab" action pushes a brand-new route/State), but guard against
     // it anyway so a future in-place "next part" affordance can't leave the
     // old ChewieController/VideoPlayerController running indefinitely.
-    if (oldWidget.url != widget.url) {
+    if (oldWidget.url != widget.url ||
+        oldWidget.companionAudioUrl != widget.companionAudioUrl) {
       _currentUrl = widget.url;
+      _currentAudioUrl = widget.companionAudioUrl;
       _disposeControllers();
       setState(() { _initializing = true; _error = null; });
       _init();
@@ -120,11 +139,40 @@ class _VideoPlayerState extends ConsumerState<_VideoPlayer> with WidgetsBindingO
     _vpCtrl?.removeListener(_onTick);
     _chewieCtrl?.dispose();
     _vpCtrl?.dispose();
+    _audioCtrl?.dispose();
     _chewieCtrl = null;
     _vpCtrl = null;
+    _audioCtrl = null;
     _lastTrackedPercentBucket = -1;
     _maxCreditedMs = 0;
     _lastTickMs = 0;
+  }
+
+  void _syncCompanionAudio() {
+    final video = _vpCtrl;
+    final audio = _audioCtrl;
+    if (video == null || audio == null) return;
+    if (!video.value.isInitialized || !audio.value.isInitialized) return;
+
+    // Picture stays silent; companion MP3 carries the soundtrack.
+    if (video.value.volume != 0) {
+      video.setVolume(0);
+    }
+
+    final driftMs = (audio.value.position - video.value.position).inMilliseconds.abs();
+    if (driftMs > 350) {
+      audio.seekTo(video.value.position);
+    }
+
+    if (video.value.isPlaying && !audio.value.isPlaying) {
+      audio.play();
+    } else if (!video.value.isPlaying && audio.value.isPlaying) {
+      audio.pause();
+    }
+
+    if (audio.value.playbackSpeed != video.value.playbackSpeed) {
+      audio.setPlaybackSpeed(video.value.playbackSpeed);
+    }
   }
 
   void _onTick() {
@@ -136,6 +184,7 @@ class _VideoPlayerState extends ConsumerState<_VideoPlayer> with WidgetsBindingO
     if (!mounted) return;
     final value = _vpCtrl?.value;
     if (value == null) return;
+    _syncCompanionAudio();
     // Chewie's own errorBuilder (wired below) surfaces value.errorDescription
     // verbatim once hasError flips true — on Android that's ExoPlayer's raw
     // PlaybackException.toString() (e.g. "Video player had error
@@ -191,6 +240,7 @@ class _VideoPlayerState extends ConsumerState<_VideoPlayer> with WidgetsBindingO
     // attempt's listener/ChewieController onto a completely different
     // attempt's controller instance.
     VideoPlayerController? vpCtrl;
+    VideoPlayerController? audioCtrl;
     try {
       vpCtrl = VideoPlayerController.networkUrl(Uri.parse(_currentUrl));
       await vpCtrl.initialize();
@@ -201,7 +251,28 @@ class _VideoPlayerState extends ConsumerState<_VideoPlayer> with WidgetsBindingO
         await vpCtrl.dispose();
         return;
       }
+
+      final audioUrl = _currentAudioUrl;
+      if (audioUrl != null && audioUrl.isNotEmpty) {
+        try {
+          audioCtrl = VideoPlayerController.networkUrl(Uri.parse(audioUrl));
+          await audioCtrl.initialize();
+          if (!mounted || gen != _initGen) {
+            await vpCtrl.dispose();
+            await audioCtrl.dispose();
+            return;
+          }
+          await vpCtrl.setVolume(0);
+          await audioCtrl.setVolume(1);
+        } catch (_) {
+          // Companion audio is best-effort — fall back to in-file soundtrack.
+          try { await audioCtrl?.dispose(); } catch (_) {}
+          audioCtrl = null;
+        }
+      }
+
       _vpCtrl = vpCtrl;
+      _audioCtrl = audioCtrl;
       _vpCtrl!.addListener(_onTick);
       ref.read(progressProvider.notifier).trackAssetOpened(widget.partNumber, 'video');
       _chewieCtrl = ChewieController(
@@ -256,6 +327,7 @@ class _VideoPlayerState extends ConsumerState<_VideoPlayer> with WidgetsBindingO
         // Stale attempt failed after being superseded — clean up only what
         // WE created locally; the shared fields belong to a newer call now.
         try { await vpCtrl?.dispose(); } catch (_) {}
+        try { await audioCtrl?.dispose(); } catch (_) {}
         return;
       }
       // initialize() can throw after partially constructing the platform
@@ -292,6 +364,8 @@ class _VideoPlayerState extends ConsumerState<_VideoPlayer> with WidgetsBindingO
         return;
       }
       _currentUrl = freshUrl;
+      final lang = ref.read(courseLangProvider);
+      _currentAudioUrl = lang == 'ar' ? assets.audioUrl : null;
     } catch (_) {
       // Couldn't refresh (offline/API error) — fall back to retrying the
       // URL we already have rather than leaving Retry with nothing to do.

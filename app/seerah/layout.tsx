@@ -12,6 +12,8 @@
 import { getCachedStudent } from "@/lib/auth-cache";
 import { StudentLayout } from "@/components/student/student-layout";
 import { SharePopup } from "@/components/student/share-popup";
+import { cookies } from "next/headers";
+import { parseLang, COURSE_LANG_COOKIE } from "@/lib/course-lang";
 
 export default async function SeerahLayout({
   children,
@@ -19,6 +21,8 @@ export default async function SeerahLayout({
   children: React.ReactNode;
 }) {
   const user = await getCachedStudent();
+  const cookieStore = await cookies();
+  const lang = parseLang(cookieStore.get(COURSE_LANG_COOKIE)?.value);
 
   return (
     <StudentLayout
@@ -28,7 +32,7 @@ export default async function SeerahLayout({
       planType={user.planType}
     >
       {children}
-      <SharePopup />
+      <SharePopup lang={lang} />
     </StudentLayout>
   );
 }

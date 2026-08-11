@@ -1,9 +1,11 @@
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { requireStudent } from "@/lib/auth";
 import { getProfilesWithProgress } from "@/app/actions/profiles";
 import { isFamilyPlan, getProfileLimit, getUserAccessInfo, hasActiveCourseAccess } from "@/lib/access";
 import { StudentLayout } from "@/components/student/student-layout";
 import { ProfilesClient } from "./profiles-client";
+import { parseLang, COURSE_LANG_COOKIE } from "@/lib/course-lang";
 
 export const metadata = { title: "Learner Profiles | Complete Seerah" };
 export const dynamic = "force-dynamic";
@@ -23,6 +25,8 @@ export default async function ProfilesPage() {
 
   const isFamily     = isFamilyPlan(user.planType);
   const profileLimit = getProfileLimit(user.planType);
+  const cookieStore = await cookies();
+  const lang = parseLang(cookieStore.get(COURSE_LANG_COOKIE)?.value);
 
   return (
     <StudentLayout
@@ -38,6 +42,7 @@ export default async function ProfilesPage() {
         hasLifetime={accessInfo.hasLifetime}
         currentUserId={user.id}
         activeProfileId={user.activeProfileId}
+        isRtl={lang === "ar"}
       />
     </StudentLayout>
   );

@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { PARTS } from "@/lib/content";
+import { useState, useEffect, useMemo } from "react";
+import { getPartsForLang } from "@/lib/content";
 import { ERA_MAP } from "@/lib/types";
+import type { CourseLang } from "@/lib/course-lang";
 import { getPartBriefingHtml, getPartStatementOfFactsText } from "@/app/actions/part-text-content";
 import { eraGradient } from "./era-gradient";
 import { ResourcePageClient } from "./resource-page-client";
 import { FileText, CheckCircle2, BookOpen, GraduationCap, BarChart2, Clock, X, Lock } from "lucide-react";
+import { t } from "@/lib/ui-strings";
 import { trackAssetOpened } from "@/app/actions/progress";
 
 // Apply semantic inline formatting to a single fact line
@@ -35,6 +37,7 @@ interface TextResourceContentProps {
   completedCount: number;
   thumbnails?: Record<number, string>;
   lockedPartNumbers?: number[];
+  lang?: CourseLang;
 }
 
 export function TextResourceContent({
@@ -45,13 +48,21 @@ export function TextResourceContent({
   completedCount,
   thumbnails = {},
   lockedPartNumbers = [],
+  lang = "en",
 }: TextResourceContentProps) {
   const lockedSet = new Set(lockedPartNumbers);
+  const PARTS = useMemo(() => getPartsForLang(lang), [lang]);
   const [selectedPart, setSelectedPart] = useState<{ partNumber: number; title: string; subtitle?: string } | null>(null);
   const [localProgressMap, setLocalProgressMap] = useState(progressMap);
   const [localReadCount, setLocalReadCount] = useState(completedCount);
-  // Content cache: loaded lazily on first open to avoid importing part-content-data in the client bundle
-  const [contentCache, setContentCache] = useState<Record<number, { html: string | null; factsText: string | null; loaded: boolean }>>({});
+  // Content cache keyed by lang+part so language switches don't serve stale EN text
+  const [contentCache, setContentCache] = useState<Record<string, { html: string | null; factsText: string | null; loaded: boolean }>>({});
+  const cacheKey = (partNumber: number) => `${lang}-${partNumber}`;
+
+  // Drop cached bodies when language changes
+  useEffect(() => {
+    setContentCache({});
+  }, [lang]);
 
   // Lock body scroll when modal is open
   useEffect(() => {
@@ -64,6 +75,13 @@ export function TextResourceContent({
 
   const totalResources = PARTS.length;
   const unreadCount = totalResources - localReadCount;
+  const isRtl = lang === "ar";
+  const localTitle = isRtl
+    ? ({ briefing: "الملخصات", "statement-of-facts": "المعلومات", report: "التقارير", "study-guide": "أدلة الدراسة" } as Record<string, string>)[resourceType] ?? title
+    : title;
+  const localDescription = isRtl
+    ? ({ briefing: "اقرأ ملخص كل جزء", "statement-of-facts": "معلومات مرجعية سريعة لكل جزء", report: "تقارير شاملة لكل درس", "study-guide": "أدلة دراسة تفصيلية" } as Record<string, string>)[resourceType] ?? description
+    : description;
 
   const filterByStatus = (part: (typeof PARTS)[0], status: string) => {
     const isRead = localProgressMap[part.partNumber] || false;
@@ -89,19 +107,20 @@ export function TextResourceContent({
   const handleOpenContent = (part: (typeof PARTS)[0]) => {
     setSelectedPart({ partNumber: part.partNumber, title: part.title, subtitle: part.subtitle });
 
-    // Lazily fetch content if not already cached
-    if (!contentCache[part.partNumber]?.loaded) {
+    const key = cacheKey(part.partNumber);
+    // Lazily fetch content if not already cached for this language
+    if (!contentCache[key]?.loaded) {
       if (resourceType === "briefing") {
-        getPartBriefingHtml(part.partNumber).then((html) => {
-          setContentCache((prev) => ({ ...prev, [part.partNumber]: { ...prev[part.partNumber], html, factsText: null, loaded: true } }));
+        getPartBriefingHtml(part.partNumber, lang).then((html) => {
+          setContentCache((prev) => ({ ...prev, [key]: { html, factsText: null, loaded: true } }));
         }).catch(() => {
-          setContentCache((prev) => ({ ...prev, [part.partNumber]: { html: null, factsText: null, loaded: true } }));
+          setContentCache((prev) => ({ ...prev, [key]: { html: null, factsText: null, loaded: true } }));
         });
       } else if (resourceType === "statement-of-facts") {
-        getPartStatementOfFactsText(part.partNumber).then((factsText) => {
-          setContentCache((prev) => ({ ...prev, [part.partNumber]: { ...prev[part.partNumber], html: null, factsText, loaded: true } }));
+        getPartStatementOfFactsText(part.partNumber, lang).then((factsText) => {
+          setContentCache((prev) => ({ ...prev, [key]: { html: null, factsText, loaded: true } }));
         }).catch(() => {
-          setContentCache((prev) => ({ ...prev, [part.partNumber]: { html: null, factsText: null, loaded: true } }));
+          setContentCache((prev) => ({ ...prev, [key]: { html: null, factsText: null, loaded: true } }));
         });
       }
     }
@@ -120,15 +139,15 @@ export function TextResourceContent({
   const handleClose = () => setSelectedPart(null);
 
   const getCachedHtml = (partNumber: number): string | null => {
-    return contentCache[partNumber]?.html ?? null;
+    return contentCache[cacheKey(partNumber)]?.html ?? null;
   };
 
   const getCachedFactsText = (partNumber: number): string | null => {
-    return contentCache[partNumber]?.factsText ?? null;
+    return contentCache[cacheKey(partNumber)]?.factsText ?? null;
   };
 
   const isContentLoaded = (partNumber: number): boolean => {
-    return contentCache[partNumber]?.loaded === true;
+    return contentCache[cacheKey(partNumber)]?.loaded === true;
   };
 
   return (
@@ -141,23 +160,23 @@ export function TextResourceContent({
               <IconComponent className="w-7 h-7 text-amber-500" />
             </div>
             <div>
-              <h1 className="text-4xl font-bold text-white">{title}</h1>
-              <p className="text-zinc-400 mt-1">{description}</p>
+              <h1 className="text-4xl font-bold text-white">{localTitle}</h1>
+              <p className="text-zinc-400 mt-1">{localDescription}</p>
             </div>
           </div>
 
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
-              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">Total</p>
+              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">{t(lang, "statTotal")}</p>
               <p className="text-3xl font-bold text-white">{totalResources}</p>
             </div>
             <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
-              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">Read</p>
+              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">{isRtl ? "مقروء" : "Read"}</p>
               <p className={`text-3xl font-bold ${localReadCount > 0 ? "text-green-400" : "text-zinc-400"}`}>{localReadCount}</p>
             </div>
             <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
-              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">Unread</p>
+              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">{isRtl ? "غير مقروء" : "Unread"}</p>
               <p className="text-3xl font-bold text-zinc-400">{unreadCount}</p>
             </div>
           </div>
@@ -181,7 +200,7 @@ export function TextResourceContent({
             <div className="flex items-center justify-between px-6 py-4 border-b border-border flex-shrink-0">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-widest text-gold mb-1">
-                  Part {selectedPart.partNumber}
+                  {isRtl ? `الجزء ${selectedPart.partNumber}` : `Part ${selectedPart.partNumber}`}
                 </p>
                 <h2 className="text-lg font-bold text-text">{selectedPart.title}</h2>
                 {selectedPart.subtitle && (
@@ -205,16 +224,16 @@ export function TextResourceContent({
                 </div>
               ) : resourceType === "statement-of-facts" ? (
                 /* ── Facts — same rendering as FactsViewer in lessons ── */
-                <div className="p-6">
+                <div className="p-6" dir={isRtl ? "rtl" : undefined}>
                   {(() => {
                     const text = getCachedFactsText(selectedPart.partNumber);
-                    if (!text) return <p className="text-text-muted text-sm">No facts available.</p>;
+                    if (!text) return <p className="text-text-muted text-sm">{isRtl ? "لا توجد معلومات متاحة." : "No facts available."}</p>;
                     const facts = text.split("\n").map(l => l.trim()).filter(Boolean);
                     return (
                       <ol className="space-y-3">
                         {facts.map((fact, i) => (
                           <li key={i} className="flex gap-4 items-baseline">
-                            <span className="flex-shrink-0 w-7 text-right text-xs font-semibold text-gold/50 tabular-nums mt-[2px]">
+                            <span className="flex-shrink-0 w-7 text-end text-xs font-semibold text-gold/50 tabular-nums mt-[2px]">
                               {i + 1}
                             </span>
                             <span
@@ -229,12 +248,12 @@ export function TextResourceContent({
                 </div>
               ) : (
                 /* ── Briefing — same article-shell rendering as TextViewer in lessons ── */
-                <div className="article-shell p-6">
+                <div className="article-shell p-6" dir={isRtl ? "rtl" : undefined}>
                   <div className="article-container">
                     <div
                       className="formatted-text"
                       dangerouslySetInnerHTML={{
-                        __html: getCachedHtml(selectedPart.partNumber) ?? "<p class='seerah-p text-text-muted'>Content not available.</p>",
+                        __html: getCachedHtml(selectedPart.partNumber) ?? `<p class='seerah-p text-text-muted'>${isRtl ? "المحتوى غير متاح." : "Content not available."}</p>`,
                       }}
                     />
                   </div>
@@ -248,7 +267,7 @@ export function TextResourceContent({
                 onClick={handleClose}
                 className="px-5 py-2 rounded-lg bg-gold text-ink hover:bg-gold-light text-sm font-semibold transition-colors"
               >
-                Close
+                {isRtl ? "إغلاق" : "Close"}
               </button>
             </div>
           </div>
@@ -256,7 +275,7 @@ export function TextResourceContent({
       )}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <ResourcePageClient showStatusFilter filterByStatus={filterByStatus}>
+        <ResourcePageClient showStatusFilter filterByStatus={filterByStatus} lang={lang}>
           {(parts) => (
             <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
               {parts.map((part) => {
@@ -300,7 +319,7 @@ export function TextResourceContent({
                         {ERA_MAP[part.era as keyof typeof ERA_MAP]?.label ?? part.era}
                       </span>
                       {isRead && (
-                        <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-green-500/30 border border-green-500/50 flex items-center justify-center">
+                        <div className="absolute top-2 end-2 w-6 h-6 rounded-full bg-green-500/30 border border-green-500/50 flex items-center justify-center">
                           <CheckCircle2 className="w-4 h-4 text-green-400" />
                         </div>
                       )}
@@ -310,10 +329,10 @@ export function TextResourceContent({
                     </div>
                     <div className="p-4">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs font-medium text-amber-500">Part {part.partNumber}</span>
+                        <span className="text-xs font-medium text-amber-500">{isRtl ? `الجزء ${part.partNumber}` : `Part ${part.partNumber}`}</span>
                         {isRead && (
                           <span className="px-2 py-0.5 bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium rounded">
-                            Read
+                            {isRtl ? "مقروء" : "Read"}
                           </span>
                         )}
                       </div>
@@ -326,7 +345,7 @@ export function TextResourceContent({
                       {part.duration && (
                         <div className="flex items-center gap-1 text-xs text-zinc-500">
                           <Clock className="w-3 h-3" />
-                          ~{part.duration} read
+                          {isRtl ? `~${part.duration} قراءة` : `~${part.duration} read`}
                         </div>
                       )}
                     </div>

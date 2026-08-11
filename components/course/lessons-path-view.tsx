@@ -3,6 +3,7 @@
 import Link from "next/link";
 import {
   ChevronRight,
+  ChevronLeft,
   ChevronDown,
   Play,
   CheckCircle2,
@@ -11,6 +12,8 @@ import {
 } from "lucide-react";
 import type { Part } from "@/lib/types";
 import { ERA_MAP } from "@/lib/types";
+import type { CourseLang } from "@/lib/course-lang";
+import { t, tf, ERA_DESCRIPTIONS_AR } from "@/lib/ui-strings";
 
 interface PartProgressData {
   status: string;
@@ -29,6 +32,7 @@ interface LessonsPathViewProps {
   currentPart: number;
   /** Parts locked for unpaid users (Part 1 free). Locked cards link to /pricing. */
   lockedPartNumbers?: number[];
+  lang?: CourseLang;
 }
 
 const ERA_DESCRIPTIONS: Record<string, string> = {
@@ -47,7 +51,9 @@ export function LessonsPathView({
   progressData,
   currentPart,
   lockedPartNumbers = [],
+  lang = "en",
 }: LessonsPathViewProps) {
+  const isRtl = lang === "ar";
   const filteredParts = parts;
 
   const pathLockedSet = new Set(lockedPartNumbers);
@@ -55,21 +61,24 @@ export function LessonsPathView({
   const partsByEra = filteredParts.reduce(
     (acc, part) => {
       const eraInfo = ERA_MAP[part.era];
-      const eraLabel = eraInfo?.label ?? part.era;
-      if (!acc[eraLabel]) {
-        acc[eraLabel] = {
-          label: eraLabel,
-          description: ERA_DESCRIPTIONS[eraLabel] ?? "",
+      const englishLabel = eraInfo?.label ?? part.era;
+      const displayLabel = isRtl ? (eraInfo?.labelAr ?? englishLabel) : englishLabel;
+      if (!acc[displayLabel]) {
+        acc[displayLabel] = {
+          label: displayLabel,
+          description: isRtl
+            ? (ERA_DESCRIPTIONS_AR[englishLabel] ?? "")
+            : (ERA_DESCRIPTIONS[englishLabel] ?? ""),
           color: eraInfo?.color ?? "#8B6F45",
           parts: [],
           completedCount: 0,
           totalCount: 0,
         };
       }
-      acc[eraLabel].parts.push(part);
-      acc[eraLabel].totalCount++;
+      acc[displayLabel].parts.push(part);
+      acc[displayLabel].totalCount++;
       if (progressData[part.partNumber]?.quizPassed) {
-        acc[eraLabel].completedCount++;
+        acc[displayLabel].completedCount++;
       }
       return acc;
     },
@@ -101,25 +110,32 @@ export function LessonsPathView({
     if (!prog) return null;
     const opened = prog.openedAssets;
     const vp = prog.videoWatchPercent;
+    const videoLabel = t(lang, "assetVideo");
+    const briefingLabel = t(lang, "assetBriefing");
+    const slidesLabel = t(lang, "assetSlides");
+    const audioLabel = t(lang, "assetAudio");
+    const mindmapLabel = t(lang, "assetMindmap");
+    const flashcardsLabel = t(lang, "assetFlashcards");
+    const quizLabel = t(lang, "assetQuiz");
     const assets = [
       {
         key: "video",
-        label: vp >= 85 ? "✓ Video" : vp > 0 ? `Video ${vp}%` : "Video",
+        label: vp >= 85 ? `✓ ${videoLabel}` : vp > 0 ? `${videoLabel} ${vp}%` : videoLabel,
         done: vp >= 85,
         partial: vp > 0 && vp < 85,
       },
-      { key: "briefing",   label: prog.briefingOpened ? "✓ Briefing" : "Briefing",           done: prog.briefingOpened,         partial: false },
-      { key: "slides",     label: opened.includes("slides") ? "✓ Slides" : "Slides",         done: opened.includes("slides"),   partial: false },
-      { key: "audio",      label: opened.includes("audio") ? "✓ Audio" : "Audio",            done: opened.includes("audio"),    partial: false },
-      { key: "mindmap",    label: opened.includes("mindmap") ? "✓ Mind Map" : "Mind Map",    done: opened.includes("mindmap"),  partial: false },
-      { key: "flashcards", label: prog.flashcardsReviewed ? "✓ Flashcards" : "Flashcards",   done: prog.flashcardsReviewed,     partial: false },
+      { key: "briefing",   label: prog.briefingOpened ? `✓ ${briefingLabel}` : briefingLabel,                  done: prog.briefingOpened,         partial: false },
+      { key: "slides",     label: opened.includes("slides") ? `✓ ${slidesLabel}` : slidesLabel,               done: opened.includes("slides"),   partial: false },
+      { key: "audio",      label: opened.includes("audio") ? `✓ ${audioLabel}` : audioLabel,                  done: opened.includes("audio"),    partial: false },
+      ...(!isRtl ? [{ key: "mindmap", label: opened.includes("mindmap") ? `✓ ${mindmapLabel}` : mindmapLabel, done: opened.includes("mindmap"),  partial: false }] : []),
+      { key: "flashcards", label: prog.flashcardsReviewed ? `✓ ${flashcardsLabel}` : flashcardsLabel,         done: prog.flashcardsReviewed,     partial: false },
       {
         key: "quiz",
         label: prog.quizPassed
-          ? `✓ Quiz ${prog.quizBestScore}%`
+          ? `✓ ${quizLabel} ${prog.quizBestScore}%`
           : prog.quizBestScore
-          ? `Quiz ${prog.quizBestScore}%`
-          : "Quiz",
+          ? `${quizLabel} ${prog.quizBestScore}%`
+          : quizLabel,
         done: prog.quizPassed,
         partial: !!(prog.quizBestScore && !prog.quizPassed),
       },
@@ -132,7 +148,7 @@ export function LessonsPathView({
             className={a.done ? "text-green-400" : a.partial ? "text-amber-400" : "text-zinc-600"}
           >
             {a.label}
-            {i < assets.length - 1 ? <span className="ml-3 text-zinc-700">·</span> : null}
+            {i < assets.length - 1 ? <span className="ms-3 text-zinc-700">·</span> : null}
           </span>
         ))}
       </div>
@@ -144,9 +160,9 @@ export function LessonsPathView({
       {/* Header */}
       <div className="border-b border-zinc-800 bg-zinc-900/50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-white">Lessons</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">{t(lang, "lessonsHeader")}</h1>
           <p className="text-zinc-400 text-sm mt-1">
-            The complete Seerah of the Prophet ﷺ in 100 parts, arranged chronologically.
+            {t(lang, "lessonsSubheader")}
           </p>
         </div>
       </div>
@@ -194,12 +210,12 @@ export function LessonsPathView({
                               {era.label}
                             </h3>
                             {allCompleted && (
-                              <span className="px-2 py-0.5 bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium rounded">Completed</span>
+                              <span className="px-2 py-0.5 bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium rounded">{t(lang, "completedStat")}</span>
                             )}
                             {inProgress && !allCompleted && (
-                              <span className="px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-medium rounded">In Progress</span>
+                              <span className="px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-medium rounded">{t(lang, "inProgress")}</span>
                             )}
-                            <span className="text-xs text-zinc-500">{era.totalCount} {era.totalCount === 1 ? "part" : "parts"}</span>
+                            <span className="text-xs text-zinc-500">{tf(lang, "nParts", { n: era.totalCount, part: era.totalCount === 1 ? "part" : "parts" })}</span>
                           </div>
                           <p className="text-sm text-zinc-400 mb-3">{era.description}</p>
                           <div className="flex items-center gap-3">
@@ -214,7 +230,7 @@ export function LessonsPathView({
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                      <div className="flex items-center gap-2 flex-shrink-0 ms-2">
                         <div className={`text-sm font-bold tabular-nums ${allCompleted ? "text-green-400" : inProgress ? "text-amber-400" : "text-zinc-600"}`}>
                           {eraPercent}%
                         </div>
@@ -225,7 +241,7 @@ export function LessonsPathView({
                 </summary>
 
                 {/* Part cards */}
-                <div className="mt-3 ml-4 pl-4 border-l-2" style={{ borderColor: `${era.color}50` }}>
+                <div className="mt-3 ms-4 ps-4 border-s-2" style={{ borderColor: `${era.color}50` }}>
                   <div className="space-y-2">
                     {era.parts.map((part) => {
                       const status = getPartStatus(part.partNumber);
@@ -253,16 +269,16 @@ export function LessonsPathView({
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1 flex-wrap">
                               <span className={`text-xs font-medium ${isLocked ? "text-zinc-600" : "text-amber-500"}`}>
-                                Part {part.partNumber}
+                                {tf(lang, "partN", { n: part.partNumber })}
                               </span>
                               {isLocked && (
-                                <span className="px-2 py-0.5 bg-zinc-800 border border-zinc-700 text-zinc-600 text-xs font-medium rounded">Locked</span>
+                                <span className="px-2 py-0.5 bg-zinc-800 border border-zinc-700 text-zinc-600 text-xs font-medium rounded">{t(lang, "locked")}</span>
                               )}
                               {!isLocked && isCompleted && (
-                                <span className="px-2 py-0.5 bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium rounded">Completed</span>
+                                <span className="px-2 py-0.5 bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium rounded">{t(lang, "completedStat")}</span>
                               )}
                               {!isLocked && isInProgress && (
-                                <span className="px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-medium rounded">In Progress</span>
+                                <span className="px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-medium rounded">{t(lang, "inProgress")}</span>
                               )}
                             </div>
                             <p className={`font-medium mb-0.5 truncate ${isLocked ? "text-zinc-600" : "text-white group-hover:text-amber-400"}`}>
@@ -276,6 +292,8 @@ export function LessonsPathView({
 
                           {isLocked
                             ? <div className="w-5 h-5 flex-shrink-0" />
+                            : isRtl
+                            ? <ChevronLeft className="w-5 h-5 text-zinc-600 group-hover:text-amber-500 transition-colors flex-shrink-0" />
                             : <ChevronRight className="w-5 h-5 text-zinc-600 group-hover:text-amber-500 transition-colors flex-shrink-0" />
                           }
                         </div>

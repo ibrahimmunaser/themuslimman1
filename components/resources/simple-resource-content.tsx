@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import { PARTS } from "@/lib/content";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { getPartsForLang } from "@/lib/content";
+import type { CourseLang } from "@/lib/course-lang";
 import { eraGradient } from "./era-gradient";
 import { ResourcePageClient } from "./resource-page-client";
 import { Headphones, Layers, Image as ImageIcon, Map, Brain, CheckCircle2, X, Maximize2, Minimize2, Lock } from "lucide-react";
+import { t } from "@/lib/ui-strings";
 import { SlidesViewer } from "@/components/part/slides-viewer";
 import { FlashcardsViewer } from "@/components/part/flashcards-viewer";
 import { trackAssetOpened } from "@/app/actions/progress";
@@ -110,6 +112,7 @@ interface SimpleResourceContentProps {
   statusLabel: string;
   thumbnails?: Record<number, string>;
   lockedPartNumbers?: number[];
+  lang?: CourseLang;
 }
 
 export function SimpleResourceContent({
@@ -122,8 +125,10 @@ export function SimpleResourceContent({
   statusLabel,
   thumbnails: thumbnailsProp = {},
   lockedPartNumbers = [],
+  lang = "en",
 }: SimpleResourceContentProps) {
   const lockedSet = new Set(lockedPartNumbers);
+  const PARTS = useMemo(() => getPartsForLang(lang), [lang]);
   const [mounted, setMounted] = useState(false);
   const [selectedPart, setSelectedPart] = useState<{ partNumber: number; title: string; subtitle?: string; id: string } | null>(null);
   const [slideData, setSlideData] = useState<{ presented: SlideFile[]; detailed: SlideFile[]; facts: SlideFile[] } | null>(null);
@@ -158,7 +163,7 @@ export function SimpleResourceContent({
   // Load slides when slides modal opens - with caching
   useEffect(() => {
     if (selectedPart && resourceType === "slides") {
-      const cacheKey = `slides-${selectedPart.id}`;
+      const cacheKey = `slides-${selectedPart.id}-${lang}`;
       const cached = getCachedResource<{ presented: SlideFile[]; detailed: SlideFile[]; facts: SlideFile[] }>(cacheKey);
       
       if (cached) {
@@ -171,7 +176,7 @@ export function SimpleResourceContent({
       }
 
       setIsLoadingSlides(true);
-      fetch(`/api/slides/${selectedPart.id}`)
+      fetch(`/api/slides/${selectedPart.id}${lang === "ar" ? "?lang=ar" : ""}`)
         .then(res => res.json())
         .then(data => {
           setSlideData(data);
@@ -183,12 +188,12 @@ export function SimpleResourceContent({
         .catch(err => console.error("Failed to load slides:", err))
         .finally(() => setIsLoadingSlides(false));
     }
-  }, [selectedPart, resourceType]);
+  }, [selectedPart, resourceType, lang]);
 
   // Load flashcards when flashcards modal opens - with caching
   useEffect(() => {
     if (selectedPart && resourceType === "flashcard") {
-      const cacheKey = `flashcards-${selectedPart.id}`;
+      const cacheKey = `flashcards-${selectedPart.id}-${lang}`;
       const cached = getCachedResource<FlashcardSet>(cacheKey);
       
       if (cached) {
@@ -198,7 +203,7 @@ export function SimpleResourceContent({
       }
 
       setIsLoadingFlashcards(true);
-      fetch(`/api/flashcards/${selectedPart.id}`)
+      fetch(`/api/flashcards/${selectedPart.id}${lang === "ar" ? "?lang=ar" : ""}`)
         .then(res => res.json())
         .then(data => {
           setFlashcardData(data);
@@ -207,7 +212,7 @@ export function SimpleResourceContent({
         .catch(err => console.error("Failed to load flashcards:", err))
         .finally(() => setIsLoadingFlashcards(false));
     }
-  }, [selectedPart, resourceType]);
+  }, [selectedPart, resourceType, lang]);
 
   // Load image-based resources (mindmap, infographic)
   useEffect(() => {
@@ -226,7 +231,7 @@ export function SimpleResourceContent({
     } else if (selectedPart && resourceType === "infographic") {
       setIsLoadingResource(true);
       const n = selectedPart.partNumber;
-      fetch(`/api/infographics/${n}`)
+      fetch(`/api/infographics/${n}${lang === "ar" ? "?lang=ar" : ""}`)
         .then((res) => res.json())
         .then((data: { bentoGrid: string | null; concise: string | null; standard: string | null }) => {
           const bentoUrl    = data.bentoGrid ?? null;
@@ -257,7 +262,7 @@ export function SimpleResourceContent({
           setIsLoadingResource(false);
         });
     }
-  }, [selectedPart, resourceType]);
+  }, [selectedPart, resourceType, lang]);
 
   // Update resource URL when infographic type changes (lazy load)
   useEffect(() => {
@@ -310,6 +315,24 @@ export function SimpleResourceContent({
 
   const totalResources = PARTS.length;
   const notCompletedCount = totalResources - localCompletedCount;
+  const isRtl = lang === "ar";
+
+  // Derive translated title/description from resourceType when Arabic
+  const localTitle = isRtl
+    ? ({ slides: "الشرائح", infographic: "الرسوم المعلوماتية", mindmap: "الخرائط الذهنية", flashcard: "البطاقات التعليمية", audio: "الصوت" } as Record<string, string>)[resourceType] ?? title
+    : title;
+  const localDescription = isRtl
+    ? ({
+        slides: "٣ أشكال: مقدَّمة، مفصَّلة، معلومات",
+        infographic: "٣ أشكال: شبكية، موجزة، قياسية",
+        mindmap: "خرائط مرئية تربط الأشخاص والأحداث",
+        flashcard: "مجموعات سهلة ومتوسطة وصعبة",
+        audio: "النسخة الصوتية لكل درس",
+      } as Record<string, string>)[resourceType] ?? description
+    : description;
+  const localStatusLabel = isRtl
+    ? ({ View: "تمت المشاهدة", Viewed: "تمت المشاهدة", Study: "تمت الدراسة", Studied: "تمت الدراسة" } as Record<string, string>)[statusLabel] ?? statusLabel
+    : statusLabel;
 
   const filterByStatus = (part: Part, status: string) => {
     const isCompleted = localProgressMap[part.partNumber] || false;
@@ -456,23 +479,23 @@ export function SimpleResourceContent({
               <IconComponent className="w-7 h-7 text-amber-500" />
             </div>
             <div>
-              <h1 className="text-4xl font-bold text-white">{title}</h1>
-              <p className="text-zinc-400 mt-1">{description}</p>
+              <h1 className="text-4xl font-bold text-white">{localTitle}</h1>
+              <p className="text-zinc-400 mt-1">{localDescription}</p>
             </div>
           </div>
 
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
-              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">Total</p>
+              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">{t(lang, "statTotal")}</p>
               <p className="text-3xl font-bold text-white">{totalResources}</p>
             </div>
             <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
-              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">{statusLabel}</p>
+              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">{localStatusLabel}</p>
               <p className={`text-3xl font-bold ${localCompletedCount > 0 ? "text-green-400" : "text-zinc-400"}`}>{localCompletedCount}</p>
             </div>
             <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
-              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">Not {statusLabel}</p>
+              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">{isRtl ? `لم ${localStatusLabel}` : `Not ${statusLabel}`}</p>
               <p className="text-3xl font-bold text-zinc-400">{notCompletedCount}</p>
             </div>
           </div>
@@ -507,7 +530,7 @@ export function SimpleResourceContent({
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <IconComponent className="w-5 h-5 text-amber-500" />
-                    <span className="text-sm font-medium text-amber-500">Part {selectedPart.partNumber}</span>
+                    <span className="text-sm font-medium text-amber-500">{isRtl ? `الجزء ${selectedPart.partNumber}` : `Part ${selectedPart.partNumber}`}</span>
                   </div>
                   <h2 className="text-2xl font-bold text-white">{selectedPart.title}</h2>
                   {selectedPart.subtitle && (
@@ -545,7 +568,7 @@ export function SimpleResourceContent({
                                 : "bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-zinc-300"
                             }`}
                           >
-                            Presented
+                            {isRtl ? "مقدَّمة" : "Presented"}
                           </button>
                         )}
                         {slideData.detailed.length > 0 && (
@@ -557,7 +580,7 @@ export function SimpleResourceContent({
                                 : "bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-zinc-300"
                             }`}
                           >
-                            Detailed
+                            {isRtl ? "مفصَّلة" : "Detailed"}
                           </button>
                         )}
                         {slideData.facts.length > 0 && (
@@ -569,7 +592,7 @@ export function SimpleResourceContent({
                                 : "bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-zinc-300"
                             }`}
                           >
-                            Facts
+                            {isRtl ? "معلومات" : "Facts"}
                           </button>
                         )}
                       </div>
@@ -577,15 +600,18 @@ export function SimpleResourceContent({
                       <div className="flex-1 min-h-0">
                         <SlidesViewer
                           slides={slideData[slideType]}
-                          title={`Part ${selectedPart.partNumber} — ${slideType === "presented" ? "Presented" : slideType === "detailed" ? "Detailed" : "Facts"} Slides`}
+                          title={isRtl
+                            ? `الجزء ${selectedPart.partNumber} — ${slideType === "presented" ? "مقدَّمة" : slideType === "detailed" ? "مفصَّلة" : "معلومات"}`
+                            : `Part ${selectedPart.partNumber} — ${slideType === "presented" ? "Presented" : slideType === "detailed" ? "Detailed" : "Facts"} Slides`}
                           type={slideType === "facts" ? "presented" : slideType}
                           partNumber={selectedPart.partNumber}
+                          isRtl={isRtl}
                         />
                       </div>
                     </div>
                   ) : (
                     <div className="h-full flex items-center justify-center text-zinc-400">
-                      <p>No slides available</p>
+                      <p>{t(lang, "noSlidesAvailable")}</p>
                     </div>
                   );
                 }
@@ -610,7 +636,7 @@ export function SimpleResourceContent({
                                   : "bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-zinc-300"
                               }`}
                             >
-                              Bento Grid
+                              {isRtl ? "شبكية" : "Bento Grid"}
                             </button>
                           )}
                           {infographicUrls.concise && (
@@ -622,7 +648,7 @@ export function SimpleResourceContent({
                                   : "bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-zinc-300"
                               }`}
                             >
-                              Concise
+                              {isRtl ? "موجزة" : "Concise"}
                             </button>
                           )}
                           {infographicUrls.standard && (
@@ -634,7 +660,7 @@ export function SimpleResourceContent({
                                   : "bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-zinc-300"
                               }`}
                             >
-                              Standard
+                              {isRtl ? "قياسية" : "Standard"}
                             </button>
                           )}
                         </div>
@@ -662,7 +688,7 @@ export function SimpleResourceContent({
                             setIsFullscreen(!isFullscreen);
                           }
                         }}
-                        title={isFullscreen ? (zoom > 1 ? "Scroll to zoom, drag to pan" : "Click to exit fullscreen") : "Click to view fullscreen"}
+                        title={isFullscreen ? (zoom > 1 ? t(lang, "scrollToZoomDragToPan") : t(lang, "clickToExitFullscreen")) : t(lang, "clickToViewFullscreen")}
                         style={{
                           transform: isFullscreen ? `scale(${zoom}) translate(${pan.x / zoom}px, ${pan.y / zoom}px)` : 'none',
                           pointerEvents: zoom > 1 ? 'none' : 'auto'
@@ -672,7 +698,7 @@ export function SimpleResourceContent({
                       
                       {/* Zoom controls */}
                       {isFullscreen && (
-                        <div className="absolute bottom-4 left-4 flex flex-col gap-2 z-10">
+                        <div className="absolute bottom-4 start-4 flex flex-col gap-2 z-10">
                           <div className="px-3 py-2 rounded-lg bg-zinc-900/90 border border-zinc-700 text-white text-sm">
                             {Math.round(zoom * 100)}%
                           </div>
@@ -684,7 +710,7 @@ export function SimpleResourceContent({
                               }}
                               className="px-3 py-2 rounded-lg bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-700 text-white text-sm transition-colors"
                             >
-                              Reset Zoom
+                              {t(lang, "resetZoom")}
                             </button>
                           )}
                         </div>
@@ -692,7 +718,7 @@ export function SimpleResourceContent({
                       
                       {/* Fullscreen toggle button */}
                       {isFullscreen && (
-                        <div className="absolute top-4 right-4 flex gap-2 z-10">
+                        <div className="absolute top-4 end-4 flex gap-2 z-10">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -702,7 +728,7 @@ export function SimpleResourceContent({
                             className="px-4 py-2 rounded-lg bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-700 text-white transition-colors flex items-center gap-2"
                           >
                             <Minimize2 className="w-4 h-4" />
-                            <span className="text-sm">Exit Fullscreen</span>
+                            <span className="text-sm">{isRtl ? "إنهاء ملء الشاشة" : "Exit Fullscreen"}</span>
                           </button>
                           <button
                             onClick={(e) => {
@@ -718,7 +744,7 @@ export function SimpleResourceContent({
                       
                       {/* Fullscreen hint (only when not in fullscreen) */}
                       {!isFullscreen && (
-                        <div className="absolute bottom-4 right-4">
+                        <div className="absolute bottom-4 end-4">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -727,7 +753,7 @@ export function SimpleResourceContent({
                             className="px-3 py-2 rounded-lg bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 hover:text-white transition-colors flex items-center gap-2"
                           >
                             <Maximize2 className="w-4 h-4" />
-                            <span className="text-xs">Fullscreen</span>
+                            <span className="text-xs">{isRtl ? "ملء الشاشة" : "Fullscreen"}</span>
                           </button>
                         </div>
                       )}
@@ -735,7 +761,7 @@ export function SimpleResourceContent({
                     </div>
                   ) : (
                     <div className="h-full flex items-center justify-center text-zinc-400">
-                      <p>Resource not available</p>
+                      <p>{t(lang, "resourceNotAvailable")}</p>
                     </div>
                   );
                 }
@@ -748,11 +774,11 @@ export function SimpleResourceContent({
                     </div>
                   ) : flashcardData ? (
                     <div className="h-full overflow-y-auto">
-                      <FlashcardsViewer flashcards={flashcardData} partNumber={selectedPart?.partNumber} />
+                      <FlashcardsViewer flashcards={flashcardData} partNumber={selectedPart?.partNumber} isRtl={isRtl} />
                     </div>
                   ) : (
                     <div className="h-full flex items-center justify-center text-zinc-400">
-                      <p>No flashcards available</p>
+                      <p>{t(lang, "noFlashcardsAvailable")}</p>
                     </div>
                   );
                 }
@@ -775,7 +801,7 @@ export function SimpleResourceContent({
                   onClick={handleClose}
                   className="px-6 py-2 rounded-lg bg-amber-500 text-black hover:bg-amber-400 text-sm font-semibold transition-all hover:scale-105 shadow-lg shadow-amber-500/20"
                 >
-                  Close
+                  {isRtl ? "إغلاق" : "Close"}
                 </button>
               </div>
             )}
@@ -787,6 +813,7 @@ export function SimpleResourceContent({
         <ResourcePageClient
           showStatusFilter
           filterByStatus={filterByStatus}
+          lang={lang}
         >
           {(parts) => (
             <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
@@ -830,7 +857,7 @@ export function SimpleResourceContent({
                       )}
 
                       {isCompleted && (
-                        <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-green-500/30 border border-green-500/50 flex items-center justify-center z-10">
+                        <div className="absolute top-2 end-2 w-6 h-6 rounded-full bg-green-500/30 border border-green-500/50 flex items-center justify-center z-10">
                           <CheckCircle2 className="w-4 h-4 text-green-400" />
                         </div>
                       )}
@@ -843,10 +870,10 @@ export function SimpleResourceContent({
                     {/* Info */}
                     <div className="p-3 sm:p-4">
                       <div className="flex items-center gap-1.5 mb-1.5">
-                        <span className="text-xs font-medium text-amber-500">Part {part.partNumber}</span>
+                        <span className="text-xs font-medium text-amber-500">{isRtl ? `الجزء ${part.partNumber}` : `Part ${part.partNumber}`}</span>
                         {isCompleted && (
                           <span className="px-1.5 py-0.5 bg-green-500/10 border border-green-500/20 text-green-400 text-[10px] font-medium rounded">
-                            {statusLabel}
+                            {localStatusLabel}
                           </span>
                         )}
                       </div>

@@ -202,15 +202,40 @@ export function formatSeerahContent(text: string): string {
       }
       i--; // outer for-loop will i++ at end of iteration
 
-      // Detect source/caution note label on the first line
-      const NOTE_PATTERN =
+      // Detect source/caution note label on the first line.
+      // English labels are a fixed enumerated set. Arabic translators use many
+      // equivalent phrasings of "Note"/"Caution" (ملاحظة/ملاحظات/تنبيه/تنبيهات
+      // + up to a few qualifying words, e.g. "ملاحظة تاريخية", "تنبيه في الثبوت",
+      // "تنبيه تاريخي/ثبوتي") so we match the pattern generically rather than
+      // enumerating every variant. Guarded by a short length cap and excluding
+      // lines starting with a quotation mark so real quoted text is never
+      // mistaken for a label.
+      const NOTE_PATTERN_EN =
         /^(Authenticity Note|Scholarly Caution|Historical Note|Source Note|Study Note|Editor Review Needed):?$/i;
-      const labelMatch = bqLines[0]?.match(NOTE_PATTERN);
+      const NOTE_PATTERN_AR = /^((?:تنبيه(?:ات)?|ملاحظ(?:ة|ات))(?:[\s/]\S+)*):?$/;
+      // Some sources write the label and body on a single line ("ملاحظة المصدر: ...")
+      // rather than splitting the label onto its own line — handle that too.
+      const NOTE_PATTERN_AR_INLINE = /^((?:تنبيه(?:ات)?|ملاحظ(?:ة|ات))(?:[\s/]\S+){0,4}):\s+(.+)$/;
+      const firstBqLine = bqLines[0]?.trim() ?? '';
+      const labelMatch =
+        firstBqLine.match(NOTE_PATTERN_EN) ??
+        (firstBqLine.length <= 45 && !firstBqLine.startsWith('«') && !firstBqLine.startsWith('"')
+          ? firstBqLine.match(NOTE_PATTERN_AR)
+          : null);
+      const inlineLabelMatch = !labelMatch ? firstBqLine.match(NOTE_PATTERN_AR_INLINE) : null;
 
-      if (labelMatch) {
-        const labelText = labelMatch[1];
-        const rest = bqLines.slice(1).filter(l => l.trim());
-        const bodyHtml = rest.map(l => applyInlineFormatting(l)).join(' ');
+      if (labelMatch || inlineLabelMatch) {
+        const labelText = labelMatch ? labelMatch[1] : inlineLabelMatch![1];
+        const rest = labelMatch
+          ? bqLines.slice(1).filter(l => l.trim())
+          : [inlineLabelMatch![2], ...bqLines.slice(1).filter(l => l.trim())];
+        // Body lines are often individual bullet items (source uses "> - point one",
+        // "> - point two"); strip the leading marker so joining them with spaces
+        // reads as flowing prose instead of leaving stray "- " mid-paragraph.
+        const bodyHtml = rest
+          .map(l => l.replace(/^[-*•]\s+/, ''))
+          .map(l => applyInlineFormatting(l))
+          .join(' ');
         formatted.push(
           `<div class="seerah-callout">` +
           `<span class="seerah-callout-label">${escapeHtml(labelText)}</span>` +
@@ -218,7 +243,12 @@ export function formatSeerahContent(text: string): string {
           `</div>`
         );
       } else {
-        const bqHtml = bqLines.map(l => applyInlineFormatting(l)).join(' ');
+        // Same bullet-marker stripping as the labelled-callout body above, so
+        // multi-point plain blockquotes don't show stray "- " mid-paragraph.
+        const bqHtml = bqLines
+          .map(l => l.replace(/^[-*•]\s+/, ''))
+          .map(l => applyInlineFormatting(l))
+          .join(' ');
         formatted.push(`<blockquote>${bqHtml}</blockquote>`);
       }
 
@@ -326,8 +356,17 @@ export function formatSeerahContent(text: string): string {
     firstContentSeen = true;
 
     // ── H2 Headings (plain-text format) ──────────────────────────────────────
+    // ALL-CAPS heuristic is Latin-only: scripts without case (e.g. Arabic)
+    // satisfy line === line.toUpperCase() for every string, which would
+    // incorrectly promote every bullet/paragraph to an H2.
+    const hasLatinLetters = /[A-Za-z]/.test(line);
+    const isAllCapsLatin =
+      hasLatinLetters &&
+      line === line.toUpperCase() &&
+      line.length > 3 &&
+      !line.match(/^\d/);
     if (
-      (line === line.toUpperCase() && line.length > 3 && !line.match(/^\d/)) ||
+      isAllCapsLatin ||
       line.match(/^(Executive Summary|Summary|Introduction|Conclusion|Background|Overview|Key Points|Important Notes?|Context|Analysis):?$/i)
     ) {
       closeList();

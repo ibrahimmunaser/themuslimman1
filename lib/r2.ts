@@ -69,16 +69,23 @@ export async function generateSignedR2Url(
 const thumbnailCache = new Map<string, { url: string; expiresAt: number }>();
 const THUMBNAIL_CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 
-function thumbnailKey(n: number): string {
-  return `thumbnails/part-${String(n).padStart(2, "0")}-thumb.jpg`;
+function thumbnailKey(n: number, lang: "en" | "ar" = "en"): string {
+  const pad = String(n).padStart(2, "0");
+  return lang === "ar"
+    ? `arabic/thumbnails/part-${pad}-thumb.jpg`
+    : `thumbnails/part-${pad}-thumb.jpg`;
 }
 
 /**
  * Get the signed thumbnail URL for a single part number.
  * Reuses the shared thumbnail cache so concurrent callers share one signed URL.
+ * Pass lang="ar" for Arabic slide-deck posters.
  */
-export async function getThumbnailUrl(partNumber: number): Promise<string | undefined> {
-  const key = thumbnailKey(partNumber);
+export async function getThumbnailUrl(
+  partNumber: number,
+  lang: "en" | "ar" = "en"
+): Promise<string | undefined> {
+  const key = thumbnailKey(partNumber, lang);
   const now = Date.now();
   const cached = thumbnailCache.get(key);
   if (cached && cached.expiresAt > now) return cached.url;
@@ -92,17 +99,14 @@ export async function getThumbnailUrl(partNumber: number): Promise<string | unde
 }
 
 export async function getThumbnailUrls(
-  partNumbers: number[]
+  partNumbers: number[],
+  lang: "en" | "ar" = "en"
 ): Promise<Record<number, string>> {
-  function firstSlideKey(n: number): string {
-    return thumbnailKey(n);
-  }
-
   const now = Date.now();
 
   const entries = await Promise.all(
     partNumbers.map(async (n) => {
-      const key = firstSlideKey(n);
+      const key = thumbnailKey(n, lang);
       const cached = thumbnailCache.get(key);
       if (cached && cached.expiresAt > now) {
         return [n, cached.url] as [number, string];
@@ -460,6 +464,73 @@ export async function r2ReadFlashcards(partNum: number) {
 export async function r2ReadQuiz(partNum: number) {
   const pad = partNum < 10 ? `0${partNum}` : `${partNum}`;
   return await r2ReadJsonFile<Quiz>(`quizzes/Part_${pad}.json`);
+}
+
+// ─── Arabic key helpers ────────────────────────────────────────────────────────
+// All Arabic media uses deterministic key patterns, no HEAD check needed.
+
+function pad3(n: number): string {
+  return String(n).padStart(3, "0");
+}
+
+/** Arabic video — e.g. arabic/videos/084_Part 84_with_title.mp4 */
+export function r2GetArabicVideoKey(partNum: number): string {
+  return `arabic/videos/${pad3(partNum)}_Part ${partNum}_with_title.mp4`;
+}
+
+/** Arabic audio — e.g. arabic/audio/084_Part 84_with_title.mp3 */
+export function r2GetArabicAudioKey(partNum: number): string {
+  return `arabic/audio/${pad3(partNum)}_Part ${partNum}_with_title.mp3`;
+}
+
+/** Arabic infographic — prefers WebP (e.g. arabic/infographics/Part 84.webp), falls back to PNG. */
+export async function r2GetArabicInfographicKey(partNum: number): Promise<string> {
+  const webp = `arabic/infographics/Part ${partNum}.webp`;
+  if (await r2FileExists(webp)) return webp;
+  return `arabic/infographics/Part ${partNum}.png`;
+}
+
+/** Arabic slide PNG keys — list prefix, sorted alphabetically */
+export async function r2GetArabicSlideKeys(partNum: number): Promise<string[]> {
+  const prefix = `arabic/slides/Part ${partNum}/`;
+  const files = await r2ListFiles(prefix, 500);
+  return files
+    .filter((f) => f.key.endsWith(".png") && f.key !== prefix)
+    .map((f) => f.key)
+    .sort();
+}
+
+/** Arabic briefing text */
+export async function r2ReadArabicBriefing(partNum: number): Promise<string | null> {
+  const md = await r2ReadTextFile(`arabic/briefing/Part ${partNum} Briefing Document.md`);
+  if (md) return md;
+  return r2ReadTextFile(`arabic/briefing/Part ${partNum} Briefing Document.txt`);
+}
+
+/** Arabic statement of facts */
+export async function r2ReadArabicStatementOfFacts(partNum: number): Promise<string | null> {
+  const md = await r2ReadTextFile(`arabic/statement-of-facts/Part ${partNum} - Statement of Facts.md`);
+  if (md) return md;
+  return r2ReadTextFile(`arabic/statement-of-facts/Part ${partNum} - Statement of Facts.txt`);
+}
+
+/** Arabic study guide */
+export async function r2ReadArabicStudyGuide(partNum: number): Promise<string | null> {
+  const md = await r2ReadTextFile(`arabic/studyguides/Part ${partNum} - Study Guide.md`);
+  if (md) return md;
+  return r2ReadTextFile(`arabic/studyguides/Part ${partNum} - Study Guide.txt`);
+}
+
+/** Arabic flashcards */
+export async function r2ReadArabicFlashcards(partNum: number) {
+  const pad = partNum < 10 ? `0${partNum}` : `${partNum}`;
+  return r2ReadJsonFile<FlashcardSet>(`arabic/flashcards/Part_${pad}.json`);
+}
+
+/** Arabic quiz */
+export async function r2ReadArabicQuiz(partNum: number) {
+  const pad = partNum < 10 ? `0${partNum}` : `${partNum}`;
+  return r2ReadJsonFile<Quiz>(`arabic/quizzes/Part_${pad}.json`);
 }
 
 // ─── Cache Utilities ───────────────────────────────────────────────────────────

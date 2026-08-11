@@ -10,12 +10,13 @@ interface FlashcardsViewerProps {
   flashcards: FlashcardSet;
   partNumber?: number;
   previewMode?: boolean;
+  isRtl?: boolean;
 }
 
-const LEVELS: { id: FlashcardLevel; label: string }[] = [
-  { id: "easy",   label: "Easy" },
-  { id: "medium", label: "Medium" },
-  { id: "full",   label: "Full" },
+const LEVELS: { id: FlashcardLevel; label: string; labelAr: string }[] = [
+  { id: "easy",   label: "Easy",   labelAr: "سهل" },
+  { id: "medium", label: "Medium", labelAr: "متوسط" },
+  { id: "full",   label: "Full",   labelAr: "كامل" },
 ];
 
 function shuffleArray<T>(arr: T[]): T[] {
@@ -32,11 +33,13 @@ function FlipCard({
   index,
   total,
   onEngage,
+  isRtl,
 }: {
   card: Flashcard;
   index: number;
   total: number;
   onEngage?: () => void;
+  isRtl?: boolean;
 }) {
   const [flipped, setFlipped] = useState(false);
 
@@ -50,7 +53,7 @@ function FlipCard({
       {/* Progress indicator */}
       <div className="flex items-center justify-between">
         <span className="text-sm font-semibold text-amber-400">
-          Card {index + 1} of {total}
+          {isRtl ? `البطاقة ${index + 1} من ${total}` : `Card ${index + 1} of ${total}`}
         </span>
         <div className="flex gap-1.5 flex-wrap justify-end max-w-[60%]">
           {Array.from({ length: Math.min(total, 20) }).map((_, i) => (
@@ -65,14 +68,16 @@ function FlipCard({
             />
           ))}
           {total > 20 && (
-            <span className="text-xs text-zinc-500 ml-2">+{total - 20}</span>
+            <span className="text-xs text-zinc-500 ms-2">+{total - 20}</span>
           )}
         </div>
       </div>
 
       {/* Live region announces flip state to screen readers */}
       <div aria-live="polite" aria-atomic="true" className="sr-only">
-        {flipped ? `Answer: ${card.side2}` : `Question: ${card.side1}`}
+        {isRtl
+          ? (flipped ? `الجواب: ${card.side2}` : `السؤال: ${card.side1}`)
+          : (flipped ? `Answer: ${card.side2}` : `Question: ${card.side1}`)}
       </div>
 
       {/* Flip card — using opacity swap for universal mobile compatibility */}
@@ -82,7 +87,11 @@ function FlipCard({
         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } }}
         role="button"
         tabIndex={0}
-        aria-label={flipped ? "Card showing answer — press Enter or tap to flip back to question" : "Card showing question — press Enter or tap to reveal answer"}
+        aria-label={
+          isRtl
+            ? (flipped ? "البطاقة تعرض الجواب — اضغط Enter أو انقر للعودة إلى السؤال" : "البطاقة تعرض السؤال — اضغط Enter أو انقر لإظهار الجواب")
+            : (flipped ? "Card showing answer — press Enter or tap to flip back to question" : "Card showing question — press Enter or tap to reveal answer")
+        }
       >
         {/* Front — question */}
         <div
@@ -93,7 +102,7 @@ function FlipCard({
         >
           <div className="absolute top-4 left-1/2 -translate-x-1/2">
             <span className="inline-block px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-xs font-semibold tracking-wider uppercase text-amber-400">
-              Question
+              {isRtl ? "السؤال" : "Question"}
             </span>
           </div>
           <p className="text-base sm:text-xl font-semibold text-white leading-relaxed text-center max-w-2xl mt-4">
@@ -103,7 +112,7 @@ function FlipCard({
             <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
             </svg>
-            <span>Tap to reveal answer</span>
+            <span>{isRtl ? "انقر لإظهار الجواب" : "Tap to reveal answer"}</span>
           </div>
         </div>
 
@@ -116,13 +125,14 @@ function FlipCard({
         >
           <div className="absolute top-4 left-1/2 -translate-x-1/2">
             <span className="inline-block px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/30 text-xs font-semibold tracking-wider uppercase text-amber-300">
-              Answer
+              {isRtl ? "الجواب" : "Answer"}
             </span>
           </div>
           <p className="text-base sm:text-xl font-semibold text-white leading-relaxed text-center max-w-2xl mt-4 mb-4">
             {card.side2}
           </p>
-          {card.tags.length > 0 && (
+          {/* Tags are English-only topic labels — hide on Arabic to avoid mixed-language chips */}
+          {!isRtl && card.tags.length > 0 && (
             <div className="flex flex-wrap justify-center gap-2">
               {card.tags.map((tag) => (
                 <span
@@ -135,7 +145,7 @@ function FlipCard({
             </div>
           )}
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-zinc-500 text-xs whitespace-nowrap">
-            Tap to flip back
+            {isRtl ? "انقر للعودة" : "Tap to flip back"}
           </div>
         </div>
       </div>
@@ -143,7 +153,7 @@ function FlipCard({
   );
 }
 
-export function FlashcardsViewer({ flashcards, partNumber, previewMode }: FlashcardsViewerProps) {
+export function FlashcardsViewer({ flashcards, partNumber, previewMode, isRtl }: FlashcardsViewerProps) {
   const [level, setLevel] = useState<FlashcardLevel>("easy");
   const [index, setIndex] = useState(0);
   const [deck, setDeck] = useState<Flashcard[]>(flashcards.easy);
@@ -195,7 +205,9 @@ export function FlashcardsViewer({ flashcards, partNumber, previewMode }: Flashc
   if (!card) {
     return (
       <div className="py-16 text-center">
-        <p className="text-zinc-400 text-base">No flashcards available for this level.</p>
+        <p className="text-zinc-400 text-base">
+          {isRtl ? "لا توجد بطاقات تعليمية لهذا المستوى." : "No flashcards available for this level."}
+        </p>
       </div>
     );
   }
@@ -218,7 +230,7 @@ export function FlashcardsViewer({ flashcards, partNumber, previewMode }: Flashc
                     : "bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-zinc-300 hover:border-zinc-700"
                 )}
               >
-                {l.label}
+                {isRtl ? l.labelAr : l.label}
                 <span className={clsx(
                   "text-xs font-bold px-2 py-0.5 rounded-full",
                   level === l.id ? "bg-amber-500/30 text-amber-300" : "bg-zinc-800 text-zinc-500"
@@ -237,7 +249,7 @@ export function FlashcardsViewer({ flashcards, partNumber, previewMode }: Flashc
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-zinc-700 bg-zinc-800/50 text-zinc-300 hover:bg-zinc-800 hover:border-zinc-600 transition-all"
             >
               <RotateCcw className="w-4 h-4" />
-              Reset Order
+              {isRtl ? "إعادة الترتيب" : "Reset Order"}
             </button>
           ) : (
             <button
@@ -245,7 +257,7 @@ export function FlashcardsViewer({ flashcards, partNumber, previewMode }: Flashc
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-zinc-700 bg-zinc-800/50 text-zinc-300 hover:bg-zinc-800 hover:border-zinc-600 transition-all"
             >
               <Shuffle className="w-4 h-4" />
-              Shuffle
+              {isRtl ? "ترتيب عشوائي" : "Shuffle"}
             </button>
           )}
         </div>
@@ -258,6 +270,7 @@ export function FlashcardsViewer({ flashcards, partNumber, previewMode }: Flashc
         index={index}
         total={deck.length}
         onEngage={markReviewed}
+        isRtl={isRtl}
       />
 
       {/* Navigation */}
@@ -272,8 +285,8 @@ export function FlashcardsViewer({ flashcards, partNumber, previewMode }: Flashc
               : "border-zinc-700 bg-zinc-900/50 text-zinc-300 hover:border-zinc-600 hover:bg-zinc-900 hover:text-white"
           )}
         >
-          <ChevronLeft className="w-4 h-4" />
-          Previous
+          {isRtl ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+          {isRtl ? "السابق" : "Previous"}
         </button>
 
         <div className="flex flex-col items-center gap-1">
@@ -298,8 +311,8 @@ export function FlashcardsViewer({ flashcards, partNumber, previewMode }: Flashc
               : "border-amber-500/40 bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 hover:border-amber-500/60 shadow-lg shadow-amber-500/10"
           )}
         >
-          Next
-          <ChevronRight className="w-4 h-4" />
+          {isRtl ? "التالي" : "Next"}
+          {isRtl ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
         </button>
       </div>
     </div>

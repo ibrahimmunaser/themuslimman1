@@ -14,9 +14,21 @@ export interface PartProgressInitial {
 
 interface PartProgressBadgesProps {
   initial: PartProgressInitial;
+  isRtl?: boolean;
 }
 
-export function PartProgressBadges({ initial }: PartProgressBadgesProps) {
+const LABELS_AR: Record<string, string> = {
+  video: "الفيديو",
+  briefing: "الموجز",
+  slides: "الشرائح",
+  audio: "الصوت",
+  mindmap: "الخريطة الذهنية",
+  infographic: "إنفوجرافيك",
+  flashcards: "البطاقات التعليمية",
+  quiz: "الاختبار",
+};
+
+export function PartProgressBadges({ initial, isRtl }: PartProgressBadgesProps) {
   const [state, setState] = useState(initial);
 
   useEffect(() => {
@@ -48,11 +60,12 @@ export function PartProgressBadges({ initial }: PartProgressBadgesProps) {
     { key: "briefing",    label: "Briefing",     done: briefingOpened,                        partial: false },
     { key: "slides",      label: "Slides",       done: openedAssets.includes("slides"),       partial: false },
     { key: "audio",       label: "Audio",        done: openedAssets.includes("audio"),        partial: false },
-    { key: "mindmap",     label: "Mind Map",     done: openedAssets.includes("mindmap"),      partial: false },
+    // Mind maps aren't available in the Arabic course — exclude from AR tracking.
+    ...(isRtl ? [] : [{ key: "mindmap", label: "Mind Map", done: openedAssets.includes("mindmap"), partial: false }]),
     { key: "infographic", label: "Infographic",  done: openedAssets.includes("infographic"),  partial: false },
     { key: "flashcards",  label: "Flashcards",   done: flashcardsReviewed,                    partial: false },
     { key: "quiz",        label: "Quiz",         done: quizPassed,                            partial: !!(quizBestScore && !quizPassed) },
-  ];
+  ].map((r) => ({ ...r, label: isRtl ? LABELS_AR[r.key] : r.label }));
 
   const completedCount = resources.filter((r) => r.done).length;
   const total = resources.length;
@@ -62,17 +75,23 @@ export function PartProgressBadges({ initial }: PartProgressBadgesProps) {
       {/* Mobile: compact summary + dots */}
       <div className="sm:hidden">
         <p className="text-[11px] text-text-muted mb-1.5">
-          Completed:{" "}
+          {isRtl ? "المكتمل: " : "Completed: "}
           <span className={completedCount === total ? "text-green-400 font-semibold" : "text-text-secondary font-semibold"}>
-            {completedCount}/{total} Resources
+            {isRtl ? `${completedCount}/${total} من الموارد` : `${completedCount}/${total} Resources`}
           </span>
         </p>
-        <div className="flex items-center gap-1.5 flex-wrap" role="list" aria-label="Resource progress">
+        <div className="flex items-center gap-1.5 flex-wrap" role="list" aria-label={isRtl ? "تقدّم الموارد" : "Resource progress"}>
           {resources.map((r) => (
             <span
               key={r.key}
               role="listitem"
-              aria-label={`${r.label}: ${r.done ? "completed" : r.partial ? "in progress" : "not started"}`}
+              aria-label={`${r.label}: ${
+                r.done
+                  ? (isRtl ? "مكتمل" : "completed")
+                  : r.partial
+                  ? (isRtl ? "قيد التقدم" : "in progress")
+                  : (isRtl ? "لم يبدأ" : "not started")
+              }`}
               className={
                 r.done
                   ? "w-5 h-5 rounded-full bg-green-500/20 border border-green-500/40 flex items-center justify-center text-green-400"
@@ -99,7 +118,7 @@ export function PartProgressBadges({ initial }: PartProgressBadgesProps) {
             className={a.done ? "text-green-400" : a.partial ? "text-amber-400" : "text-text-muted/50"}
           >
             {a.done ? `✓ ${a.label}` : a.partial ? `~ ${a.label}` : a.label}
-            {i < resources.length - 1 && <span className="ml-3 text-border">·</span>}
+            {i < resources.length - 1 && <span className="ms-3 text-border">·</span>}
           </span>
         ))}
       </div>

@@ -4,6 +4,7 @@ import { getPartPageData } from "@/lib/part-content-cache";
 import { requirePartAccess } from "@/lib/part-access";
 import { normalizeQuizAnswer } from "@/lib/progress";
 import type { Quiz } from "@/lib/types";
+import type { CourseLang } from "@/lib/course-lang";
 
 export interface QuizAnswerResult {
   correct: boolean;
@@ -21,12 +22,16 @@ export interface QuizAnswerResult {
  * Server-side submitQuizAnswers remains authoritative for scores/progress.
  *
  * @param previewMode - When true and partNumber is 1, skip access check (free preview)
+ * @param lang - Course language the quiz was rendered in — must match so the
+ *   returned correctAnswer/explanation (and the correctness check itself) use
+ *   the same-language quiz data the user is actually looking at.
  */
 export async function checkQuizAnswer(
   partNumber: number,
   questionId: string,
   selectedAnswer: string,
   previewMode = false,
+  lang: CourseLang = "en",
 ): Promise<QuizAnswerResult | { error: string }> {
   const skipAccessCheck = previewMode && partNumber === 1;
 
@@ -35,7 +40,7 @@ export async function checkQuizAnswer(
     if (deny) return { error: "Access denied" };
   }
 
-  const partData = await getPartPageData(partNumber);
+  const partData = await getPartPageData(partNumber, lang);
   const quizData = partData.quizData as Quiz | null | undefined;
   if (!quizData) return { error: "Quiz not found" };
 

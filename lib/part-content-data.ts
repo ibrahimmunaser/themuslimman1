@@ -962,7 +962,7 @@ With Badhan’s conversion, Persian rule in Yemen ended.`,
 <li class="seerah-li">Persian assistance ended Abyssinian rule, after which Yemen became a Persian province. This phase concluded when Badhan, the last Persian governor, accepted Islam after receiving a letter from <span class="seerah-prophet">Prophet Muhammad ﷺ</span>, and Yemen entered the emerging Islamic state.</li>
 </ul>
 <div class="h-4"></div>
-<blockquote>Historical Caution: - Timelines, titles, and details for pre-Islamic Yemen draw on inscriptions, archaeology, and later reports. Some specifics (dates, durations, and sequences) are debated among historians. - Descriptions here summarize major patterns; variations existed by tribe, region, and period.</blockquote>
+<blockquote>Historical Caution: Timelines, titles, and details for pre-Islamic Yemen draw on inscriptions, archaeology, and later reports. Some specifics (dates, durations, and sequences) are debated among historians. Descriptions here summarize major patterns; variations existed by tribe, region, and period.</blockquote>
 <div class="h-4"></div>
 <div class="h-4"></div>
 <h2 class="seerah-h2">Forms of Rulership in Pre-Islamic Arabia</h2>
@@ -2849,7 +2849,7 @@ Fighting was suspended during the sacred months.
 During the sacred months, trade and pilgrimage could take place.
 In many situations, women were treated as property to be inherited or disposed of.`,
     briefingHtml: `<div class="h-4"></div>
-<blockquote>Lesson Purpose - Outline key social structures and norms in pre-Islamic Arabia. - Highlight how tribal organization shaped conflict and cooperation. - Survey marriage and lineage practices to understand the context later addressed by Islamic guidance.</blockquote>
+<blockquote>Lesson Purpose Outline key social structures and norms in pre-Islamic Arabia. Highlight how tribal organization shaped conflict and cooperation. Survey marriage and lineage practices to understand the context later addressed by Islamic guidance.</blockquote>
 <div class="h-4"></div>
 <h2 class="seerah-h2">Executive Summary</h2>
 <div class="h-4"></div>
@@ -2859,7 +2859,7 @@ In many situations, women were treated as property to be inherited or disposed o
 <div class="h-4"></div>
 <p class="seerah-p">Despite tensions and raids between tribes, periods of peace were commonly observed during four recognized sacred months, allowing for trade and pilgrimage. The overall condition is often described as one of “ignorance and confusion,” where inherited customs and superstitions influenced behavior, and pursuit of wealth, honor, and vengeance shaped decisions.</p>
 <div class="h-4"></div>
-<div class="seerah-callout"><span class="seerah-callout-label">Historical Note</span><span class="seerah-callout-body">- These descriptions capture broad patterns. Practices varied by tribe, region, and period.</span></div>
+<div class="seerah-callout"><span class="seerah-callout-label">Historical Note</span><span class="seerah-callout-body">These descriptions capture broad patterns. Practices varied by tribe, region, and period.</span></div>
 <div class="h-4"></div>
 <div class="h-4"></div>
 <h2 class="seerah-h2">1. The Structure of Pre-Islamic Arab Society</h2>
@@ -2894,7 +2894,7 @@ In many situations, women were treated as property to be inherited or disposed o
 <div class="h-4"></div>
 <h3 class="seerah-h3"><span class="seerah-h3-bar"></span>2.1 Recognized Forms of Sexual Unions</h3>
 <div class="h-4"></div>
-<div class="seerah-callout"><span class="seerah-callout-label">Authenticity Note</span><span class="seerah-callout-body">- It is reported from Aishah رضي الله عنها that several distinct forms of sexual relationships were recognized in the pre-Islamic period. When Islam was established, all but the first of these forms were abolished.</span></div>
+<div class="seerah-callout"><span class="seerah-callout-label">Authenticity Note</span><span class="seerah-callout-body">It is reported from Aishah رضي الله عنها that several distinct forms of sexual relationships were recognized in the pre-Islamic period. When Islam was established, all but the first of these forms were abolished.</span></div>
 <div class="h-4"></div>
 <table class="seerah-data-table"><thead><tr>
 <th>Type of Union</th>
@@ -6965,7 +6965,7 @@ The Messenger of Allah remained in Makkah with those who had not migrated.`,
 <li class="seerah-li">Discovery of the Truth: Nearing the city, they learned that persecution had not ceased. Some returned to Abyssinia, while others entered Makkah quietly—either secretly or under the formal protection of a Quraysh nobleman.</li>
 </ul>
 <div class="h-4"></div>
-<blockquote>Authenticity/Historical Notes: - Reports differ on who among the Quraysh prostrated and how widely this occurred. - Accounts vary on how many emigrants returned from Abyssinia and how long they remained in Makkah before departing again.</blockquote>
+<blockquote>Authenticity/Historical Notes: Reports differ on who among the Quraysh prostrated and how widely this occurred. Accounts vary on how many emigrants returned from Abyssinia and how long they remained in Makkah before departing again.</blockquote>
 <div class="h-4"></div>
 <h2 class="seerah-h2">5. The Second Migration to Abyssinia</h2>
 <div class="h-4"></div>
@@ -8132,7 +8132,7 @@ Abu Lahab refused and sided with the idolaters.`,
 <li class="seerah-li">As assassination threats escalated, Abu Talib mobilized Banu Hashim and Banu al-Muttalib to pledge collective protection for <span class="seerah-prophet">the Prophet ﷺ</span>. Except for Abu Lahab, the clans formed a defensive barrier that helped deter direct attempts on his life during the Makkan period.</li>
 </ul>
 <div class="h-4"></div>
-<div class="seerah-callout"><span class="seerah-callout-label">Historical note</span><span class="seerah-callout-body">- Reports about this episode (especially ‘Utbah’s exact words and reactions) appear with varying wordings in the Seerah. This summary follows well-known narrations.</span></div>
+<div class="seerah-callout"><span class="seerah-callout-label">Historical note</span><span class="seerah-callout-body">Reports about this episode (especially ‘Utbah’s exact words and reactions) appear with varying wordings in the Seerah. This summary follows well-known narrations.</span></div>
 <div class="h-4"></div>
 <h2 class="seerah-h2">Lesson Purpose</h2>
 <div class="h-4"></div>
@@ -10200,7 +10200,7 @@ Many held that it was before the first pledge, or between the first and second p
 <div class="h-4"></div>
 <p class="seerah-p">The Isra and Miraj occurred during the later Makkan period, a time marked by Islam’s gradual spread alongside persistent, severe persecution of <span class="seerah-prophet">the Prophet ﷺ</span> and his followers.</p>
 <div class="h-4"></div>
-<div class="seerah-callout"><span class="seerah-callout-label">Scholarly Caution</span><span class="seerah-callout-body">- The exact date of the event is not established with certainty. A widely held view places it approximately one to one and a half years before the <span class="seerah-concept">Hijrah</span> (migration) to Madinah. - There is discussion regarding its timing relative to the pledges of Aqabah, with some placing it before the first pledge and others between the first and second pledges.</span></div>
+<div class="seerah-callout"><span class="seerah-callout-label">Scholarly Caution</span><span class="seerah-callout-body">The exact date of the event is not established with certainty. A widely held view places it approximately one to one and a half years before the <span class="seerah-concept">Hijrah</span> (migration) to Madinah. There is discussion regarding its timing relative to the pledges of Aqabah, with some placing it before the first pledge and others between the first and second pledges.</span></div>
 <div class="h-4"></div>
 <h2 class="seerah-h2">II. The Night Journey (Isra): Makkah to Jerusalem</h2>
 <div class="h-4"></div>
@@ -10292,7 +10292,7 @@ Many held that it was before the first pledge, or between the first and second p
 <div class="h-4"></div>
 <h2 class="seerah-h2">VII. Points of Scholarly Discussion</h2>
 <div class="h-4"></div>
-<div class="seerah-callout"><span class="seerah-callout-label">Scholarly Caution</span><span class="seerah-callout-body">- Vision of Allah: There is a difference of opinion among scholars as to whether <span class="seerah-prophet">the Prophet ﷺ</span> saw his Lord with his physical eyes. Some companions, like Ibn Abbas, are reported to have used language indicating vision (ru’yah), while others affirmed that he did not. This matter belongs to the unseen, and one affirms what is authentically reported without denial or excess. - Precise Timeline: The exact year of the event and its placement relative to the pledges of Aqabah remain subjects of scholarly discussion, with no single definitive timeline agreed upon by all.</span></div>
+<div class="seerah-callout"><span class="seerah-callout-label">Scholarly Caution</span><span class="seerah-callout-body">Vision of Allah: There is a difference of opinion among scholars as to whether <span class="seerah-prophet">the Prophet ﷺ</span> saw his Lord with his physical eyes. Some companions, like Ibn Abbas, are reported to have used language indicating vision (ru’yah), while others affirmed that he did not. This matter belongs to the unseen, and one affirms what is authentically reported without denial or excess. Precise Timeline: The exact year of the event and its placement relative to the pledges of Aqabah remain subjects of scholarly discussion, with no single definitive timeline agreed upon by all.</span></div>
 <div class="h-4"></div>
 <div class="h-4"></div>
 <h2 class="seerah-h2">Important Terms</h2>
@@ -10561,7 +10561,7 @@ In the thirteenth year of Prophethood, Musab bin Umair met the Messenger of Alla
 <tr><td>Five unnamed members from the previous year's group of six</td><td>—</td></tr>
 </tbody></table>
 <div class="h-4"></div>
-<div class="seerah-callout"><span class="seerah-callout-label">Historical note</span><span class="seerah-callout-body">- Lists of the participants vary slightly in wording across seerah sources; several names are consistently reported, while some remain unnamed in concise summaries.</span></div>
+<div class="seerah-callout"><span class="seerah-callout-label">Historical note</span><span class="seerah-callout-body">Lists of the participants vary slightly in wording across seerah sources; several names are consistently reported, while some remain unnamed in concise summaries.</span></div>
 <div class="h-4"></div>
 <h3 class="seerah-h3"><span class="seerah-h3-bar"></span>1.2. The Terms of the Pledge</h3>
 <div class="h-4"></div>
@@ -10618,7 +10618,7 @@ In the thirteenth year of Prophethood, Musab bin Umair met the Messenger of Alla
 <div class="h-4"></div>
 <p class="seerah-p">His acceptance became a turning point. He returned to his people and declared that their speech with him was forbidden until they believed in Allah and His Messenger. Reports state that by that evening the men and women of that clan had entered Islam.</p>
 <div class="h-4"></div>
-<div class="seerah-callout"><span class="seerah-callout-label">Historical note</span><span class="seerah-callout-body">- Seerah narrations mention rapid, clan-wide acceptance following Saad’s declaration; details and wordings vary among reports.</span></div>
+<div class="seerah-callout"><span class="seerah-callout-label">Historical note</span><span class="seerah-callout-body">Seerah narrations mention rapid, clan-wide acceptance following Saad’s declaration; details and wordings vary among reports.</span></div>
 <div class="h-4"></div>
 <div class="h-4"></div>
 <h2 class="seerah-h2">4. Outcomes and Legacy of the Mission</h2>
@@ -10833,7 +10833,7 @@ It was known as the Great Aqabah Pledge.`,
 <div class="h-4"></div>
 <p class="seerah-p">This lesson outlines the pivotal event known as the Second Aqabah Pledge (the Great Aqabah Pledge), which took place in the thirteenth year of Prophethood. In a secret covenant between <span class="seerah-prophet">Prophet Muhammad ﷺ</span> and a delegation of more than seventy Muslims from the Aws and Khazraj tribes of Madinah (Yathrib), the Ansar agreed to protect <span class="seerah-prophet">the Prophet ﷺ</span> with full commitment. The terms helped form the practical basis for the Prophet’s subsequent migration (<span class="seerah-concept">Hijrah</span>) and the establishment of a protected community in Madinah. Twelve representatives were appointed to oversee the covenant. News of the pledge soon reached Quraysh, leading to confrontation and the brief capture of Sa’d bin ‘Ubadah.</p>
 <div class="h-4"></div>
-<blockquote>Note on sources: - Seerah reports compile multiple narrations; wording and details of the terms are reported with slight variations across sources. - Numbers of participants and exact phrasing are presented here as commonly cited in early accounts.</blockquote>
+<blockquote>Note on sources: Seerah reports compile multiple narrations; wording and details of the terms are reported with slight variations across sources. Numbers of participants and exact phrasing are presented here as commonly cited in early accounts.</blockquote>
 <div class="h-4"></div>
 <h2 class="seerah-h2">Lesson Purpose</h2>
 <div class="h-4"></div>
@@ -12387,7 +12387,7 @@ Whoever deliberately kills a believer without right is subject to retaliation (q
 <div class="h-4"></div>
 <p class="seerah-p">Concurrently, <span class="seerah-prophet">the Prophet ﷺ</span> cultivated a distinct moral character within the community through <span class="seerah-revelation">revelation</span> and direct teaching. These directives emphasized social welfare, defining the best deeds as providing food and extending peace. Core tenets of the new society included an expansive definition of brotherhood, mutual support, and the principle that a believer’s faith is incomplete until they desire for others what they desire for themselves. Charity in all its forms was promoted as a means of spiritual refinement and salvation. The Companions of <span class="seerah-prophet">the Prophet ﷺ</span> served as the living exemplars of this new ethos. The synthesis of political structure and moral code helped resolve long-standing enmities and forged a resilient community that would, by Allah’s permission, shape subsequent history.</p>
 <div class="h-4"></div>
-<div class="seerah-callout"><span class="seerah-callout-label">Historical Note</span><span class="seerah-callout-body">- Descriptions of pre-Islamic feuds and customs are broad patterns. Practices varied by tribe, region, and period.</span></div>
+<div class="seerah-callout"><span class="seerah-callout-label">Historical Note</span><span class="seerah-callout-body">Descriptions of pre-Islamic feuds and customs are broad patterns. Practices varied by tribe, region, and period.</span></div>
 <div class="h-4"></div>
 <h3 class="seerah-h3"><span class="seerah-h3-bar"></span>Lesson Purpose</h3>
 <ul class="seerah-list">
@@ -12401,7 +12401,7 @@ Whoever deliberately kills a believer without right is subject to retaliation (q
 <div class="h-4"></div>
 <p class="seerah-p">To create a stable and just society, the <span class="seerah-prophet">Prophet Muhammad ﷺ</span> established a written document to regulate relations among the various groups in Madinah. This charter was intended to curb pre-Islamic rancor, restrain tribal feuds, and lay the groundwork for a new political and social order. It established a cohesive community, the ummah, bound by a shared commitment to justice and mutual defense.</p>
 <div class="h-4"></div>
-<blockquote>Historical Notes: - The wording and order of the charter’s clauses vary across early sources; the selections here are representative summaries. - The charter operated alongside Qur’anic <span class="seerah-revelation">revelation</span> and the Prophet’s ﷺ judgments; it did not replace them.</blockquote>
+<blockquote>Historical Notes: The wording and order of the charter’s clauses vary across early sources; the selections here are representative summaries. The charter operated alongside Qur’anic <span class="seerah-revelation">revelation</span> and the Prophet’s ﷺ judgments; it did not replace them.</blockquote>
 <div class="h-4"></div>
 <h3 class="seerah-h3"><span class="seerah-h3-bar"></span>Key Principles of the Charter</h3>
 <div class="h-4"></div>
@@ -12606,7 +12606,7 @@ The Prophet [pbuh] then proceeded to conclude similar understandings and agreeme
 <li class="seerah-li">Recognize the political effects the pact had on Madīnah’s emerging civic order.</li>
 </ul>
 <div class="h-4"></div>
-<div class="seerah-callout"><span class="seerah-callout-label">Historical note</span><span class="seerah-callout-body">- The wording and order of the pact’s clauses are reported in early sīrah accounts, and details are discussed among historians. The summary below follows commonly cited versions and reflects their general sense.</span></div>
+<div class="seerah-callout"><span class="seerah-callout-label">Historical note</span><span class="seerah-callout-body">The wording and order of the pact’s clauses are reported in early sīrah accounts, and details are discussed among historians. The summary below follows commonly cited versions and reflects their general sense.</span></div>
 <div class="h-4"></div>
 <h2 class="seerah-h2">Summary</h2>
 <div class="h-4"></div>
@@ -15207,7 +15207,7 @@ The group returned to Madinah in the night and informed the Messenger of Allah [
 <li class="seerah-li">Covenants: Agreements of security and non-aggression between the Muslim leadership and local groups.</li>
 </ul>
 <div class="h-4"></div>
-<blockquote>Historical and source note: - Details such as exact numbers, wording of statements, and sequencing can vary in early sīrah and hadith reports. This summary presents commonly cited narrations as a study aid and is descriptive, not prescriptive. For legal or theological conclusions, consult qualified scholarship.</blockquote>
+<blockquote>Historical and source note: Details such as exact numbers, wording of statements, and sequencing can vary in early sīrah and hadith reports. This summary presents commonly cited narrations as a study aid and is descriptive, not prescriptive. For legal or theological conclusions, consult qualified scholarship.</blockquote>
 <div class="h-4"></div>
 <h2 class="seerah-h2">Key Takeaways</h2>
 <div class="h-4"></div>
@@ -16837,7 +16837,7 @@ Shaddad bin al-Aswad struck Hanzalah and killed him.`,
 <tr><td>Sawab (freed slave)</td><td>Unspecified</td></tr>
 </tbody></table>
 <div class="h-4"></div>
-<blockquote>Notes: - Quzman was identified as a man who fought for reputation and tribal glory rather than faith. - Attributions of who struck which standard-bearer can vary across reports; the table reflects the provided source.</blockquote>
+<blockquote>Notes: Quzman was identified as a man who fought for reputation and tribal glory rather than faith. Attributions of who struck which standard-bearer can vary across reports; the table reflects the provided source.</blockquote>
 <div class="h-4"></div>
 <h2 class="seerah-h2">The Muslim Offensive and Individual Prowess</h2>
 <div class="h-4"></div>
@@ -19726,7 +19726,7 @@ The expedition occurred soon after the Confederates had withdrawn.`,
 <li class="seerah-li">Rayḥānah bint ‘Amr: A captive from Banu Qurayẓah, she was chosen by <span class="seerah-prophet">the Prophet ﷺ</span> for himself. Reports differ on whether she was freed and married or remained a captive.</li>
 </ul>
 <div class="h-4"></div>
-<div class="seerah-callout"><span class="seerah-callout-label">Authenticity Note</span><span class="seerah-callout-body">- Reports mention the number of executed men ranged between six and seven hundred. - Reports differ on the status of Rayḥānah bint ‘Amr after her capture.</span></div>
+<div class="seerah-callout"><span class="seerah-callout-label">Authenticity Note</span><span class="seerah-callout-body">Reports mention the number of executed men ranged between six and seven hundred. Reports differ on the status of Rayḥānah bint ‘Amr after her capture.</span></div>
 <div class="h-4"></div>
 <h3 class="seerah-h3"><span class="seerah-h3-bar"></span>B) Division of Spoils</h3>
 <div class="h-4"></div>
@@ -21752,7 +21752,7 @@ Shīrūyah was the new Persian ruler.`,
 <li class="seerah-li">Note how the correspondence and subsequent news influenced Yemen’s leadership.</li>
 </ul>
 <div class="h-4"></div>
-<div class="seerah-callout"><span class="seerah-callout-label">Historical note</span><span class="seerah-callout-body">- Names and spellings vary across sources (e.g., Kisrā/Chosroes; Shīrūyah/Kavadh II). - Reports may differ slightly in wording and order of events; the core narrative presented here follows well-known sīrah accounts.</span></div>
+<div class="seerah-callout"><span class="seerah-callout-label">Historical note</span><span class="seerah-callout-body">Names and spellings vary across sources (e.g., Kisrā/Chosroes; Shīrūyah/Kavadh II). Reports may differ slightly in wording and order of events; the core narrative presented here follows well-known sīrah accounts.</span></div>
 <div class="h-4"></div>
 <h2 class="seerah-h2">Important Terms</h2>
 <div class="h-4"></div>
@@ -22091,7 +22091,7 @@ Their families and property were restored to them in full.`,
 <li class="seerah-li">The Hasmā incident, in which the Prophet’s ﷺ envoy was robbed on his return. A punitive expedition was sent, but when it emerged that property and captives belonging to innocent parties and Muslims were among the spoils, <span class="seerah-prophet">the Prophet ﷺ</span> ordered full restoration—an applied case of justice and covenantal protection.</li>
 </ul>
 <div class="h-4"></div>
-<div class="seerah-callout"><span class="seerah-callout-label">Historical note</span><span class="seerah-callout-body">- Core details of the Heraclius narrative are widely cited; accounts differ on his private stance. - Reports of the Hasmā incident vary in wording and numbers; this summary follows a commonly reported version.</span></div>
+<div class="seerah-callout"><span class="seerah-callout-label">Historical note</span><span class="seerah-callout-body">Core details of the Heraclius narrative are widely cited; accounts differ on his private stance. Reports of the Hasmā incident vary in wording and numbers; this summary follows a commonly reported version.</span></div>
 <div class="h-4"></div>
 <h2 class="seerah-h2">Key Takeaways</h2>
 <div class="h-4"></div>
@@ -23325,7 +23325,7 @@ The Muslims recovered the Prophet’s camels.`,
 </ul>
 <div class="h-4"></div>
 <div class="h-4"></div>
-<div class="seerah-callout"><span class="seerah-callout-label">Authenticity Note</span><span class="seerah-callout-body">The details of this event are reported across several primary texts, including: - Sahih al-Bukhari – Kitab al-Maghazi - Sahih Muslim – Kitab al-Jihad wa’s-Siyar - Ibn Hisham, al-Sirah al-Nabawiyyah - Ibn al-Qayyim, Zad al-Maʿad, vol. 2</span></div>
+<div class="seerah-callout"><span class="seerah-callout-label">Authenticity Note</span><span class="seerah-callout-body">The details of this event are reported across several primary texts, including: Sahih al-Bukhari – Kitab al-Maghazi Sahih Muslim – Kitab al-Jihad wa’s-Siyar Ibn Hisham, al-Sirah al-Nabawiyyah Ibn al-Qayyim, Zad al-Maʿad, vol. 2</span></div>
 <div class="h-4"></div>
 <h2 class="seerah-h2">Key Takeaways</h2>
 <div class="h-4"></div>
@@ -24377,7 +24377,7 @@ Reports place the Prophet’s arrival back in Madinah in late Safar or early Rab
 </ul>
 </ul>
 <div class="h-4"></div>
-<div class="seerah-callout"><span class="seerah-callout-label">Historical note</span><span class="seerah-callout-body">- Reports vary on the timing and legal basis of Zaynab’s punishment (whether immediate or later in retribution for Bishr [r]). - Accounts also differ in wording regarding the lasting health effects; <span class="seerah-prophet">the Prophet ﷺ</span> mentioned this near the end of his life.</span></div>
+<div class="seerah-callout"><span class="seerah-callout-label">Historical note</span><span class="seerah-callout-body">Reports vary on the timing and legal basis of Zaynab’s punishment (whether immediate or later in retribution for Bishr [r]). Accounts also differ in wording regarding the lasting health effects; <span class="seerah-prophet">the Prophet ﷺ</span> mentioned this near the end of his life.</span></div>
 <div class="h-4"></div>
 <h2 class="seerah-h2">4) Consolidation of Regional Control</h2>
 <div class="h-4"></div>
@@ -24640,7 +24640,7 @@ The Muslims brought the property back to Madinah.`,
 <div class="h-4"></div>
 <p class="seerah-p">Overall, these efforts helped pacify parts of the Najd region, signaled the strength of the Muslim community in Madinah, and saw some former adversaries later become allies. They played a role in securing Madinah and preparing for later decisive events, including the Conquest of Makkah.</p>
 <div class="h-4"></div>
-<div class="seerah-callout"><span class="seerah-callout-label">Historical Note</span><span class="seerah-callout-body">- “Sporadic Invasions” is a descriptive label used in this briefing for convenience. - References to raiding practices describe broad patterns of the period and did not apply uniformly to every tribe.</span></div>
+<div class="seerah-callout"><span class="seerah-callout-label">Historical Note</span><span class="seerah-callout-body">“Sporadic Invasions” is a descriptive label used in this briefing for convenience. References to raiding practices describe broad patterns of the period and did not apply uniformly to every tribe.</span></div>
 <div class="h-4"></div>
 <div class="h-4"></div>
 <h2 class="seerah-h2">Strategic Context and Objectives</h2>
@@ -24989,7 +24989,7 @@ The Muslims attacked those who had gathered for fighting, killed some who resist
 <li class="seerah-li">Dhāt as-Salāsil and Khadrah illustrate proactive operations that deterred and disrupted threats on the northern frontier.</li>
 </ul>
 <div class="h-4"></div>
-<div class="seerah-callout"><span class="seerah-callout-label">Historical note</span><span class="seerah-callout-body">- Reports vary on the exact size and composition of opposing forces at Muʾtah and on casualty figures. - Accounts also differ on the proportion of Byzantine regulars versus allied Arab troops present.</span></div>
+<div class="seerah-callout"><span class="seerah-callout-label">Historical note</span><span class="seerah-callout-body">Reports vary on the exact size and composition of opposing forces at Muʾtah and on casualty figures. Accounts also differ on the proportion of Byzantine regulars versus allied Arab troops present.</span></div>
 <div class="h-4"></div>
 <div class="h-4"></div>
 <h2 class="seerah-h2">1) The Battle of Muʾtah: First Major Confrontation with Byzantium</h2>
@@ -26556,7 +26556,7 @@ This episode is reported by Ibn Hishām 2/499–500 and by Ṣaḥīḥ al‑Buk
 <li class="seerah-li">This episode illustrates leadership that combined legal distribution with wise consideration of people’s spiritual and political states, supporting new Muslims while reaffirming the honored status of the veteran believers.</li>
 </ul>
 <div class="h-4"></div>
-<div class="seerah-callout"><span class="seerah-callout-label">Source Note</span><span class="seerah-callout-body">- Reported by Ibn Hishām and al-Bukhārī. - Wordings vary across narrations.</span></div>
+<div class="seerah-callout"><span class="seerah-callout-label">Source Note</span><span class="seerah-callout-body">Reported by Ibn Hishām and al-Bukhārī. Wordings vary across narrations.</span></div>
 <div class="h-4"></div>`,
   },
   87: {

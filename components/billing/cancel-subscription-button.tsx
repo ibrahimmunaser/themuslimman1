@@ -2,17 +2,20 @@
 
 import { useState } from "react";
 import { XCircle, Loader2, AlertTriangle } from "lucide-react";
+import type { CourseLang } from "@/lib/course-lang";
+import { t, tf } from "@/lib/ui-strings";
 
 interface Props {
   cancelDate: string; // ISO date string — when access ends if cancelled
   isTrial: boolean;
+  lang?: CourseLang;
 }
 
-export function CancelSubscriptionButton({ cancelDate, isTrial }: Props) {
+export function CancelSubscriptionButton({ cancelDate, isTrial, lang = "en" }: Props) {
   const [step, setStep] = useState<"idle" | "confirm" | "loading" | "done" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
 
-  const formattedDate = new Date(cancelDate).toLocaleDateString("en-US", {
+  const formattedDate = new Date(cancelDate).toLocaleDateString(lang === "ar" ? "ar-EG" : "en-US", {
     month: "long",
     day: "numeric",
     year: "numeric",
@@ -25,7 +28,7 @@ export function CancelSubscriptionButton({ cancelDate, isTrial }: Props) {
       const res = await fetch("/api/stripe/cancel-subscription", { method: "POST" });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "Something went wrong. Please try again.");
+        setError(data.error ?? t(lang, "somethingWentWrong"));
         setStep("error");
         return;
       }
@@ -33,7 +36,7 @@ export function CancelSubscriptionButton({ cancelDate, isTrial }: Props) {
       // Reload to refresh the billing page state.
       setTimeout(() => window.location.reload(), 1500);
     } catch {
-      setError("Could not cancel subscription. Please try again.");
+      setError(t(lang, "couldNotCancel"));
       setStep("error");
     }
   }
@@ -41,7 +44,7 @@ export function CancelSubscriptionButton({ cancelDate, isTrial }: Props) {
   if (step === "done") {
     return (
       <p className="text-sm text-amber-400">
-        Cancelled — you&apos;ll keep access until {formattedDate}.
+        {tf(lang, "cancelledKeepAccess", { date: formattedDate })}
       </p>
     );
   }
@@ -53,12 +56,11 @@ export function CancelSubscriptionButton({ cancelDate, isTrial }: Props) {
           <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
           <div>
             <p className="text-sm font-semibold text-text">
-              Cancel {isTrial ? "trial" : "subscription"}?
+              {isTrial ? t(lang, "cancelTrialQ") : t(lang, "cancelSubscriptionQ")}
             </p>
             <p className="text-xs text-text-secondary mt-1 leading-relaxed">
-              You&apos;ll keep full access until <span className="font-medium text-text">{formattedDate}</span>.
-              After that, your account will lose course access.
-              {isTrial && " You won't be charged the monthly fee."}
+              {tf(lang, "keepAccessUntil", { date: formattedDate })}
+              {isTrial && t(lang, "wontBeChargedTrial")}
             </p>
           </div>
         </div>
@@ -67,13 +69,13 @@ export function CancelSubscriptionButton({ cancelDate, isTrial }: Props) {
             onClick={handleCancel}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-red-400 font-semibold text-sm transition-colors"
           >
-            Yes, cancel
+            {t(lang, "yesCancel")}
           </button>
           <button
             onClick={() => setStep("idle")}
             className="inline-flex items-center px-4 py-2 rounded-lg border border-border text-text-secondary hover:text-text text-sm transition-colors"
           >
-            Keep my plan
+            {t(lang, "keepMyPlan")}
           </button>
         </div>
       </div>
@@ -84,7 +86,7 @@ export function CancelSubscriptionButton({ cancelDate, isTrial }: Props) {
     return (
       <button disabled className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-text-muted text-sm opacity-60 cursor-not-allowed">
         <Loader2 className="w-4 h-4 animate-spin" />
-        Cancelling…
+        {t(lang, "cancelling")}
       </button>
     );
   }
@@ -96,7 +98,7 @@ export function CancelSubscriptionButton({ cancelDate, isTrial }: Props) {
         className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-red-500/20 hover:border-red-500/40 text-red-400/70 hover:text-red-400 text-sm transition-colors"
       >
         <XCircle className="w-4 h-4" />
-        Cancel {isTrial ? "trial" : "plan"}
+        {isTrial ? t(lang, "cancelTrial") : t(lang, "cancelPlan")}
       </button>
       {step === "error" && error && (
         <p className="mt-2 text-xs text-red-400">{error}</p>

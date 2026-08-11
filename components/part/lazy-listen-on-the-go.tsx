@@ -11,9 +11,10 @@ interface LazyListenOnTheGoProps {
   /** Pre-fetched signed URL — skips the /api/part/N/assets call when provided */
   audioUrl?: string;
   videoCompleted?: boolean;
+  isRtl?: boolean;
 }
 
-export function LazyListenOnTheGo({ partNumber, title, previewMode, audioUrl: audioUrlProp, videoCompleted }: LazyListenOnTheGoProps) {
+export function LazyListenOnTheGo({ partNumber, title, previewMode, audioUrl: audioUrlProp, videoCompleted, isRtl }: LazyListenOnTheGoProps) {
   const [audioUrl, setAudioUrl] = useState<string | undefined>(audioUrlProp);
   const [loading, setLoading] = useState(!audioUrlProp);
 
@@ -36,5 +37,5 @@ export function LazyListenOnTheGo({ partNumber, title, previewMode, audioUrl: au
     return null;
   }
 
-  return <ListenOnTheGo audioUrl={audioUrl} title={title} partNumber={partNumber} previewMode={previewMode} videoCompleted={videoCompleted} />;
+  return <ListenOnTheGo audioUrl={audioUrl} title={title} partNumber={partNumber} previewMode={previewMode} videoCompleted={videoCompleted} isRtl={isRtl} />;
 }

@@ -7,6 +7,7 @@ interface FactsViewerProps {
   content: string;
   partNumber?: number;
   previewMode?: boolean;
+  isRtl?: boolean;
 }
 
 // Apply semantic inline formatting to a single line of text
@@ -40,7 +41,7 @@ function formatFactLine(text: string): string {
   return processed;
 }
 
-export function FactsViewer({ content, partNumber, previewMode }: FactsViewerProps) {
+export function FactsViewer({ content, partNumber, previewMode, isRtl }: FactsViewerProps) {
   const facts = content
     .split("\n")
     .map((l) => l.trim())
@@ -57,14 +58,14 @@ export function FactsViewer({ content, partNumber, previewMode }: FactsViewerPro
     <div>
       {/* Header */}
       <div className="mb-5">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-gold/60">Statement of Facts</p>
-        <p className="text-[11px] text-text-muted/50 mt-0.5">{facts.length} key points from this lesson</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-gold/60">{isRtl ? "معلومات الدرس" : "Statement of Facts"}</p>
+        <p className="text-[11px] text-text-muted/50 mt-0.5">{isRtl ? `${facts.length} نقطة رئيسية في هذا الدرس` : `${facts.length} key points from this lesson`}</p>
       </div>
 
       <ol className="space-y-4">
         {facts.map((fact, i) => (
           <li key={i} className="flex gap-3 sm:gap-4">
-            <span className="flex-shrink-0 w-6 text-right text-[11px] font-semibold text-gold/40 tabular-nums pt-[3px] select-none">
+            <span className="flex-shrink-0 w-6 text-end text-[11px] font-semibold text-gold/40 tabular-nums pt-[3px] select-none">
               {i + 1}
             </span>
             <span

@@ -13,6 +13,7 @@
  *   --part=1        Only process a single part number
  *   --type=presented  Only process one slide type (presented|detailed|facts)
  *   --skip-existing  Skip slides that already have a -thumb.webp in R2
+ *   --arabic        Process Arabic slides instead (arabic/slides/Part N/*.png)
  */
 "use strict";
 
@@ -24,6 +25,7 @@ const {
   HeadObjectCommand,
 } = require("@aws-sdk/client-s3");
 const sharp = require("sharp");
+require("dotenv").config({ path: ".env.local" });
 require("dotenv").config({ path: ".env" });
 
 const r2 = new S3Client({
@@ -139,9 +141,16 @@ async function processSlide(key) {
 async function main() {
   console.log("🚀  Slide thumbnail generator\n");
 
-  const prefixes = args.type
-    ? [`slides-${args.type}/`]
-    : PREFIXES;
+  const isArabic = !!args.arabic;
+  // Arabic: one slide type only, keyed as arabic/slides/Part {n}/*.png (1..100 or --part).
+  const arabicParts = args.part
+    ? [parseInt(args.part, 10)]
+    : Array.from({ length: 100 }, (_, i) => i + 1);
+  const prefixes = isArabic
+    ? arabicParts.map((n) => `arabic/slides/Part ${n}/`)
+    : args.type
+      ? [`slides-${args.type}/`]
+      : PREFIXES;
 
   let totalSrcMB = 0;
   let totalOutKB = 0;
@@ -153,8 +162,8 @@ async function main() {
     console.log(`\n📂  ${prefix}`);
     const keys = await listSlides(prefix);
 
-    // Optional: filter to a single part
-    const filtered = args.part
+    // Optional: filter to a single part (English only — Arabic prefixes are already per-part)
+    const filtered = !isArabic && args.part
       ? keys.filter((k) => {
           const partNum = parseInt(args.part, 10);
           const padded = String(partNum).padStart(2, "0");
@@ -189,7 +198,8 @@ async function main() {
   console.log(`✅  Done. Processed ${count} slides (${skipped} skipped, ${errors} errors)`);
   console.log(`   Total source: ${totalSrcMB.toFixed(1)} MB`);
   console.log(
-    `   Total output: ${(totalOutKB / 1024).toFixed(1)} MB (thumb + medium)`
+    // totalOutKB actually accumulates bytes (thumbBuf.length / medBuf.length) — divide twice for MB.
+    `   Total output: ${(totalOutKB / 1024 / 1024).toFixed(1)} MB (thumb + medium)`
   );
 }
 

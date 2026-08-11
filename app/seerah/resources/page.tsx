@@ -12,6 +12,7 @@ import { SimpleResourceContent } from "@/components/resources/simple-resource-co
 import { QuizResourceContent } from "@/components/resources/quiz-resource-content";
 import { PARTS } from "@/lib/content";
 import { getThumbnailUrls } from "@/lib/r2";
+import { parseLang, COURSE_LANG_COOKIE } from "@/lib/course-lang";
 
 export const metadata = { title: "Resource Library | Complete Seerah" };
 export const dynamic = "force-dynamic";
@@ -33,14 +34,17 @@ export default async function SeerahResourcesPage() {
   ]);
   // Entitled unverified users keep access (part-access waive parity).
 
+  const cookieStore = await cookies();
+  const lang = parseLang(cookieStore.get(COURSE_LANG_COOKIE)?.value);
+
   if (isFamilyPlan(user.planType)) {
-    const cookieStore = await cookies();
     if (!cookieStore.get("seerah_profile")?.value) redirect("/profiles");
   }
 
   const _userPlan = "complete" as const;
 
   // Fetch progress and thumbnail URLs in parallel, scoped to active profile.
+  // Thumbnails follow the course language cookie (Arabic slide posters when lang=ar).
   const [progress, thumbnails] = await Promise.all([
     prisma.partProgress.findMany({
       where: { learnerProfileId },
@@ -57,7 +61,7 @@ export default async function SeerahResourcesPage() {
         status: true,
       },
     }),
-    getThumbnailUrls(PARTS.map((p) => p.partNumber)),
+    getThumbnailUrls(PARTS.map((p) => p.partNumber), lang),
   ]);
 
   const progressMap = Object.fromEntries(
@@ -156,6 +160,7 @@ export default async function SeerahResourcesPage() {
             continueWatching={videoContinueWatching}
             thumbnails={thumbnails}
             lockedPartNumbers={lockedPartNumbers}
+            lang={lang}
           />
         }
         audioContent={
@@ -164,6 +169,7 @@ export default async function SeerahResourcesPage() {
             completedCount={audioCompletedCount}
             thumbnails={thumbnails}
             lockedPartNumbers={lockedPartNumbers}
+            lang={lang}
           />
         }
         briefingsContent={
@@ -175,6 +181,7 @@ export default async function SeerahResourcesPage() {
             completedCount={briefingsCompletedCount}
             thumbnails={thumbnails}
             lockedPartNumbers={lockedPartNumbers}
+            lang={lang}
           />
         }
         slidesContent={
@@ -188,6 +195,7 @@ export default async function SeerahResourcesPage() {
             statusLabel="Viewed"
             thumbnails={thumbnails}
             lockedPartNumbers={lockedPartNumbers}
+            lang={lang}
           />
         }
         infographicsContent={
@@ -201,6 +209,7 @@ export default async function SeerahResourcesPage() {
             statusLabel="Viewed"
             thumbnails={thumbnails}
             lockedPartNumbers={lockedPartNumbers}
+            lang={lang}
           />
         }
         mindmapsContent={
@@ -214,6 +223,7 @@ export default async function SeerahResourcesPage() {
             statusLabel="Viewed"
             thumbnails={thumbnails}
             lockedPartNumbers={lockedPartNumbers}
+            lang={lang}
           />
         }
         flashcardsContent={
@@ -227,6 +237,7 @@ export default async function SeerahResourcesPage() {
             statusLabel="Studied"
             thumbnails={thumbnails}
             lockedPartNumbers={lockedPartNumbers}
+            lang={lang}
           />
         }
         quizzesContent={
@@ -238,6 +249,7 @@ export default async function SeerahResourcesPage() {
             totalAttempts={quizTotalAttempts}
             thumbnails={thumbnails}
             lockedPartNumbers={lockedPartNumbers}
+            lang={lang}
           />
         }
         factsContent={
@@ -249,8 +261,10 @@ export default async function SeerahResourcesPage() {
             completedCount={factsCompletedCount}
             thumbnails={thumbnails}
             lockedPartNumbers={lockedPartNumbers}
+            lang={lang}
           />
         }
+        initialLang={lang}
     />
   );
 }

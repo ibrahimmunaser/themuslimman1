@@ -16,6 +16,11 @@ const ALLOWED_PREFIXES = [
   "slides-presented/",
   "slides-detailed/",
   "slides-facts/",
+  // Arabic media
+  "arabic/videos/",
+  "arabic/audio/",
+  "arabic/slides/",
+  "arabic/infographics/",
 ] as const;
 
 const ALLOWED_EXTENSIONS = new Set([".mp4", ".mp3", ".wav", ".png", ".webp"]);

@@ -31,6 +31,13 @@ interface VideoPlayerProps {
   /** Server-fetched watch percent — initialises the max-watched high-water mark
    *  so users can seek within already-watched range on reload */
   initialVideoPercent?: number;
+  /**
+   * Optional external soundtrack (e.g. Arabic MP3). When set, the video element
+   * stays muted and this track is kept in sync — needed for 5K H.264 Level 6
+   * Arabic encodes where browsers often decode picture but drop/fail audio.
+   */
+  companionAudioSrc?: string;
+  isRtl?: boolean;
 }
 
 // Crop the intro: skip the first N seconds of every video.
@@ -40,9 +47,10 @@ function getVideoStartOffset(partNumber?: number): number {
   return 2;
 }
 
-export function VideoPlayer({ src, title, poster, partNumber, previewMode, initialVideoPercent }: VideoPlayerProps) {
+export function VideoPlayer({ src, title, poster, partNumber, previewMode, initialVideoPercent, companionAudioSrc, isRtl }: VideoPlayerProps) {
   const videoRef        = useRef<HTMLVideoElement>(null);
   const overlayAudioRef = useRef<HTMLAudioElement | null>(null);
+  const companionAudioRef = useRef<HTMLAudioElement | null>(null);
   const reportedRef     = useRef<Set<number>>(new Set());
   const startOffset     = getVideoStartOffset(partNumber);
   // High-water mark of *played* time only — seeks that jump ahead more than
@@ -57,6 +65,24 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
   // Track whether the overlay audio has been started for the current segment
   // pass-through, so we don't call .play() on every timeupdate tick.
   const overlayPlayingRef = useRef<boolean>(false);
+  const useCompanionAudio = !!companionAudioSrc;
+
+  // Companion soundtrack (Arabic MP3) — keep muted video + synced audio.
+  useEffect(() => {
+    if (!companionAudioSrc) {
+      companionAudioRef.current?.pause();
+      companionAudioRef.current = null;
+      return;
+    }
+    const audio = new Audio(companionAudioSrc);
+    audio.preload = "auto";
+    audio.volume = 0.5;
+    companionAudioRef.current = audio;
+    return () => {
+      audio.pause();
+      companionAudioRef.current = null;
+    };
+  }, [companionAudioSrc]);
 
   // Pre-create overlay audio elements on mount so they are ready to play
   // instantly (avoids browser autoplay blocking on dynamic Audio construction).
@@ -83,6 +109,7 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
       if (videoRef.current && !videoRef.current.paused) {
         videoRef.current.pause();
       }
+      companionAudioRef.current?.pause();
     };
     window.addEventListener("seerah:audioPlaying", handler);
     return () => window.removeEventListener("seerah:audioPlaying", handler);
@@ -110,6 +137,7 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
   const changePlaybackRate = (rate: number) => {
     if (!videoRef.current) return;
     videoRef.current.playbackRate = rate;
+    if (companionAudioRef.current) companionAudioRef.current.playbackRate = rate;
     setPlaybackRate(rate);
     setShowSpeedMenu(false);
   };
@@ -125,6 +153,16 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
     showControlsTemporarily();
   }, [started, showControlsTemporarily]);
 
+  const syncCompanionToVideo = useCallback((force = false) => {
+    const vid = videoRef.current;
+    const audio = companionAudioRef.current;
+    if (!vid || !audio || !useCompanionAudio) return;
+    const drift = Math.abs(audio.currentTime - vid.currentTime);
+    if (force || drift > 0.35) {
+      audio.currentTime = vid.currentTime;
+    }
+  }, [useCompanionAudio]);
+
   // Must be declared before any early return to satisfy the Rules of Hooks.
   const handleTimeUpdate = useCallback(() => {
     if (!videoRef.current) return;
@@ -134,7 +172,13 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
     // Snap back if video somehow drifts before the intro cutoff.
     if (currentTime < startOffset) {
       videoRef.current.currentTime = startOffset;
+      if (companionAudioRef.current) companionAudioRef.current.currentTime = startOffset;
       return;
+    }
+
+    // Keep companion MP3 locked to the video clock.
+    if (useCompanionAudio && !videoRef.current.paused) {
+      syncCompanionToVideo(false);
     }
 
     // Only credit forward play within a small jump — large leaps are seeks.
@@ -163,7 +207,8 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
 
 
     // ── Auto-mute + overlay audio for defined segments ───────────────────────
-    if (partNumber) {
+    // Skipped when companion audio owns the soundtrack (video stays muted).
+    if (partNumber && !useCompanionAudio) {
       const segments = MUTED_SEGMENTS[partNumber];
       if (segments) {
         const activeSegment = segments.find(
@@ -215,7 +260,7 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
         }
       }
     }
-  }, [partNumber, previewMode]);
+  }, [partNumber, previewMode, useCompanionAudio, syncCompanionToVideo]);
 
   if (!src) {
     return (
@@ -224,8 +269,8 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
           <Play className="w-7 h-7 text-gold/60 ml-1" />
         </div>
         <div className="text-center">
-          <p className="text-text-secondary text-sm font-medium">No video for this part</p>
-          <p className="text-text-muted text-xs mt-1">This content will be available shortly</p>
+          <p className="text-text-secondary text-sm font-medium">{isRtl ? "لا يوجد فيديو لهذا الجزء" : "No video for this part"}</p>
+          <p className="text-text-muted text-xs mt-1">{isRtl ? "سيتوفر هذا المحتوى قريبًا" : "This content will be available shortly"}</p>
         </div>
       </div>
     );
@@ -235,10 +280,21 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
     if (!videoRef.current) return;
     if (playing) {
       videoRef.current.pause();
+      companionAudioRef.current?.pause();
     } else {
       // Guard: never start before the intro cutoff.
       if (videoRef.current.currentTime < startOffset) {
         videoRef.current.currentTime = startOffset;
+      }
+      if (useCompanionAudio) {
+        videoRef.current.muted = true;
+        syncCompanionToVideo(true);
+        const audio = companionAudioRef.current;
+        if (audio) {
+          audio.muted = muted;
+          audio.volume = volume;
+          audio.play().catch(() => {});
+        }
       }
       videoRef.current.play();
       setStarted(true);
@@ -253,6 +309,7 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
     const clickedPct = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
     // Map 0–100% of the seek bar to [startOffset, duration].
     videoRef.current.currentTime = startOffset + clickedPct * (duration - startOffset);
+    syncCompanionToVideo(true);
   };
 
   const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -275,14 +332,26 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
     if (muted) {
       // Unmute: restore volume (or set to 50% if it was 0)
       const newVolume = volume === 0 ? 0.5 : volume;
-      videoRef.current.volume = newVolume;
-      videoRef.current.muted = false;
       setVolume(newVolume);
       setMuted(false);
+      if (useCompanionAudio && companionAudioRef.current) {
+        companionAudioRef.current.volume = newVolume;
+        companionAudioRef.current.muted = false;
+        // Video stays muted — soundtrack is the companion track.
+        videoRef.current.muted = true;
+      } else {
+        videoRef.current.volume = newVolume;
+        videoRef.current.muted = false;
+      }
     } else {
       // Mute
-      videoRef.current.muted = true;
       setMuted(true);
+      if (useCompanionAudio && companionAudioRef.current) {
+        companionAudioRef.current.muted = true;
+        videoRef.current.muted = true;
+      } else {
+        videoRef.current.muted = true;
+      }
     }
   };
 
@@ -290,8 +359,20 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
     if (!videoRef.current) return;
     const clampedVolume = Math.max(0, Math.min(1, newVolume));
     setVolume(clampedVolume);
-    videoRef.current.volume = clampedVolume;
     if (overlayAudioRef.current) overlayAudioRef.current.volume = clampedVolume;
+    if (useCompanionAudio && companionAudioRef.current) {
+      companionAudioRef.current.volume = clampedVolume;
+      videoRef.current.muted = true;
+      if (clampedVolume === 0) {
+        setMuted(true);
+        companionAudioRef.current.muted = true;
+      } else if (muted) {
+        setMuted(false);
+        companionAudioRef.current.muted = false;
+      }
+      return;
+    }
+    videoRef.current.volume = clampedVolume;
     if (clampedVolume === 0) {
       setMuted(true);
       videoRef.current.muted = true;
@@ -308,14 +389,14 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
           <Play className="w-6 h-6 text-red-400/60 ml-0.5" />
         </div>
         <div>
-          <p className="text-text-secondary text-sm font-medium">Video unavailable</p>
-          <p className="text-text-muted text-xs mt-1">Try refreshing the page or check your connection</p>
+          <p className="text-text-secondary text-sm font-medium">{isRtl ? "الفيديو غير متاح" : "Video unavailable"}</p>
+          <p className="text-text-muted text-xs mt-1">{isRtl ? "حاول تحديث الصفحة أو تحقق من اتصالك" : "Try refreshing the page or check your connection"}</p>
         </div>
         <button
           onClick={() => setVideoError(false)}
           className="mt-1 px-4 py-2 rounded-lg bg-surface-raised border border-border text-sm text-text-secondary hover:text-text hover:border-gold/30 transition-colors min-h-[44px]"
         >
-          Retry
+          {isRtl ? "أعد المحاولة" : "Retry"}
         </button>
       </div>
     );
@@ -329,15 +410,25 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
         poster={poster}
         preload="none"
         playsInline
+        muted={useCompanionAudio}
         className="w-full aspect-video"
         onClick={handleVideoTap}
         onTouchEnd={handleVideoTap}
         onLoadedMetadata={() => {
           const vid = videoRef.current;
           if (!vid) return;
-          vid.volume = volume;
+          if (useCompanionAudio) {
+            vid.muted = true;
+            if (companionAudioRef.current) {
+              companionAudioRef.current.volume = volume;
+              companionAudioRef.current.muted = muted;
+            }
+          } else {
+            vid.volume = volume;
+          }
           // Jump past the intro as soon as metadata is available.
           if (vid.currentTime < startOffset) vid.currentTime = startOffset;
+          syncCompanionToVideo(true);
         }}
         onTimeUpdate={handleTimeUpdate}
         onError={() => setVideoError(true)}
@@ -346,12 +437,14 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
         }}
         onPause={() => {
           setPlaying(false);
+          companionAudioRef.current?.pause();
           // Pause overlay audio in sync with the video
           if (overlayAudioRef.current) {
             overlayAudioRef.current.pause();
           }
         }}
         onSeeked={() => {
+          syncCompanionToVideo(true);
           // When the user seeks, stop any overlay audio — handleTimeUpdate will
           // restart it if the new position falls inside a segment.
           if (overlayAudioRef.current) {
@@ -362,6 +455,7 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
         onEnded={() => {
           setPlaying(false);
           setStarted(false);
+          companionAudioRef.current?.pause();
           if (overlayAudioRef.current) {
             overlayAudioRef.current.pause();
           }
@@ -381,7 +475,21 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
             }
           }
         }}
-        onPlay={() => { setPlaying(true); window.dispatchEvent(new CustomEvent("seerah:videoPlaying")); }}
+        onPlay={() => {
+          setPlaying(true);
+          if (useCompanionAudio) {
+            const vid = videoRef.current;
+            const audio = companionAudioRef.current;
+            if (vid) vid.muted = true;
+            if (audio) {
+              audio.muted = muted;
+              audio.volume = volume;
+              syncCompanionToVideo(true);
+              if (audio.paused) audio.play().catch(() => {});
+            }
+          }
+          window.dispatchEvent(new CustomEvent("seerah:videoPlaying"));
+        }}
         title={title}
       />
 
@@ -417,7 +525,7 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
           onClick={handleSeek}
           onTouchStart={handleSeekTouch}
           onTouchMove={handleSeekTouch}
-          aria-label="Video progress"
+          aria-label={isRtl ? "تقدّم الفيديو" : "Video progress"}
         >
           <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-1 bg-white/25 rounded-full">
             <div
@@ -432,7 +540,7 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
           <button
             onClick={togglePlay}
             className="min-w-[44px] min-h-[44px] rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center transition-colors"
-            aria-label={playing ? "Pause" : "Play"}
+            aria-label={isRtl ? (playing ? "إيقاف مؤقت" : "تشغيل") : (playing ? "Pause" : "Play")}
           >
             {playing
               ? <Pause className="w-5 h-5 text-white" />
@@ -442,9 +550,13 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
 
           {/* Rewind 10s — 44px */}
           <button
-            onClick={() => { if (videoRef.current) videoRef.current.currentTime = Math.max(startOffset, videoRef.current.currentTime - 10); }}
+            onClick={() => {
+              if (!videoRef.current) return;
+              videoRef.current.currentTime = Math.max(startOffset, videoRef.current.currentTime - 10);
+              syncCompanionToVideo(true);
+            }}
             className="relative min-w-[44px] min-h-[44px] flex items-center justify-center text-white/70 hover:text-white transition-colors"
-            aria-label="Rewind 10 seconds"
+            aria-label={isRtl ? "أرجع ١٠ ثوانٍ" : "Rewind 10 seconds"}
           >
             <RotateCcw className="w-5 h-5" />
             <span className="absolute text-[7px] font-bold leading-none" aria-hidden>10</span>
@@ -452,9 +564,13 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
 
           {/* Forward 10s */}
           <button
-            onClick={() => { if (videoRef.current) videoRef.current.currentTime = Math.min(videoRef.current.duration, videoRef.current.currentTime + 10); }}
+            onClick={() => {
+              if (!videoRef.current) return;
+              videoRef.current.currentTime = Math.min(videoRef.current.duration, videoRef.current.currentTime + 10);
+              syncCompanionToVideo(true);
+            }}
             className="relative min-w-[44px] min-h-[44px] flex items-center justify-center text-white/70 hover:text-white transition-colors"
-            aria-label="Forward 10 seconds"
+            aria-label={isRtl ? "تقدّم ١٠ ثوانٍ" : "Forward 10 seconds"}
           >
             <RotateCw className="w-5 h-5" />
             <span className="absolute text-[7px] font-bold leading-none" aria-hidden>10</span>
@@ -466,7 +582,7 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
             <button
               onClick={toggleMute}
               className="min-w-[44px] min-h-[44px] flex items-center justify-center text-white/70 hover:text-white transition-colors"
-              aria-label={muted || volume === 0 ? "Unmute" : "Mute"}
+              aria-label={isRtl ? (muted || volume === 0 ? "إلغاء الكتم" : "كتم الصوت") : (muted || volume === 0 ? "Unmute" : "Mute")}
             >
               {muted || volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
             </button>
@@ -484,7 +600,7 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
                 style={{
                   background: `linear-gradient(to right, rgb(212, 175, 55) 0%, rgb(212, 175, 55) ${muted ? 0 : volume * 100}%, rgba(255, 255, 255, 0.25) ${muted ? 0 : volume * 100}%, rgba(255, 255, 255, 0.25) 100%)`
                 }}
-                aria-label="Volume"
+                aria-label={isRtl ? "مستوى الصوت" : "Volume"}
               />
             </div>
           </div>
@@ -496,13 +612,13 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
             <button
               onClick={(e) => { e.stopPropagation(); setShowSpeedMenu(!showSpeedMenu); showControlsTemporarily(); }}
               className="flex items-center gap-1 px-2 min-h-[44px] text-white/70 hover:text-white transition-colors"
-              aria-label={`Playback speed: ${playbackRate}x`}
+              aria-label={isRtl ? `سرعة التشغيل: ${playbackRate}x` : `Playback speed: ${playbackRate}x`}
             >
               <Gauge className="w-3.5 h-3.5" />
               <span className="text-[11px] font-semibold tabular-nums">{playbackRate}x</span>
             </button>
             {showSpeedMenu && (
-              <div className="absolute right-0 bottom-full mb-1 py-1 rounded-lg bg-black/90 border border-white/10 shadow-xl z-20 min-w-[72px]">
+              <div className="absolute end-0 bottom-full mb-1 py-1 rounded-lg bg-black/90 border border-white/10 shadow-xl z-20 min-w-[72px]">
                 {VIDEO_PLAYBACK_SPEEDS.map((speed) => (
                   <button
                     key={speed}
@@ -532,7 +648,7 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
               }
             }}
             className="min-w-[44px] min-h-[44px] flex items-center justify-center text-white/70 hover:text-white transition-colors"
-            aria-label="Fullscreen"
+            aria-label={isRtl ? "ملء الشاشة" : "Fullscreen"}
           >
             <Maximize className="w-4 h-4" />
           </button>

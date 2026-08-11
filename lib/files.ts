@@ -12,12 +12,26 @@ import {
   r2GetSlideKeys,
   r2GetVideoKey,
   r2GetAudioKey,
+  r2GetArabicVideoKey,
+  r2GetArabicAudioKey,
+  r2GetArabicInfographicKey,
+  r2GetArabicSlideKeys,
+  r2ReadArabicBriefing,
+  r2ReadArabicStatementOfFacts,
+  r2ReadArabicStudyGuide,
+  r2ReadArabicFlashcards,
+  r2ReadArabicQuiz,
   generateSignedR2Url,
   getThumbnailUrl,
+  r2FileExists,
   VIDEO_URL_EXPIRY,
   IMAGE_URL_EXPIRY,
 } from "./r2";
+import type { CourseLang } from "./course-lang";
 import { PART_CONTENT } from "./part-content-data";
+import { PART_CONTENT_AR } from "./part-content-data-ar";
+import { PART_QUIZ_AR } from "./part-quiz-data-ar";
+import { PART_FLASHCARDS_AR } from "./part-flashcard-data-ar";
 
 export const SEERAH_ROOT =
   process.env.SEERAH_DATA_DIR ?? path.resolve(/*turbopackIgnore: true*/ process.cwd(), "..", "Seerah-data");
@@ -60,7 +74,16 @@ export function readTextFile(filePath: string): string | null {
 
 // ─── Briefing ─────────────────────────────────────────────────────────────────
 
-export async function readBriefing(partNum: number): Promise<string | null> {
+export async function readBriefing(partNum: number, lang: CourseLang = "en"): Promise<string | null> {
+  if (lang === "ar") {
+    // Hardcoded AR translations take priority (same pattern as English PART_CONTENT).
+    // R2 arabic/briefing was only partially uploaded (e.g. Part 1), so falling back
+    // to R2 alone left Read tabs ghosted on most parts.
+    const hardcoded = PART_CONTENT_AR[partNum]?.briefingText;
+    if (hardcoded != null) return hardcoded;
+    if (!USE_R2) return null;
+    return r2ReadArabicBriefing(partNum);
+  }
   // Return hardcoded content if available (takes priority over R2/filesystem)
   const hardcoded = PART_CONTENT[partNum]?.briefingText;
   if (hardcoded != null) return hardcoded;
@@ -74,7 +97,13 @@ export async function readBriefing(partNum: number): Promise<string | null> {
 
 // ─── Statement of Facts ───────────────────────────────────────────────────────
 
-export async function readStatementOfFacts(partNum: number): Promise<string | null> {
+export async function readStatementOfFacts(partNum: number, lang: CourseLang = "en"): Promise<string | null> {
+  if (lang === "ar") {
+    const hardcoded = PART_CONTENT_AR[partNum]?.statementOfFactsText;
+    if (hardcoded != null) return hardcoded;
+    if (!USE_R2) return null;
+    return r2ReadArabicStatementOfFacts(partNum);
+  }
   // Return hardcoded content if available (takes priority over R2/filesystem)
   const hardcoded = PART_CONTENT[partNum]?.statementOfFactsText;
   if (hardcoded != null) return hardcoded;
@@ -89,7 +118,11 @@ export async function readStatementOfFacts(partNum: number): Promise<string | nu
 // ─── Study Guide ──────────────────────────────────────────────────────────────
 // Part 1 is .docx — skip it (no easy server-side docx reader without a dep)
 
-export async function readStudyGuide(partNum: number): Promise<string | null> {
+export async function readStudyGuide(partNum: number, lang: CourseLang = "en"): Promise<string | null> {
+  if (lang === "ar") {
+    if (!USE_R2) return null;
+    return r2ReadArabicStudyGuide(partNum);
+  }
   if (USE_R2) {
     return await r2ReadStudyGuide(partNum);
   }
@@ -143,8 +176,14 @@ export async function mindmapExists(partNum: number): Promise<boolean> {
  */
 export async function getInfographicFilename(
   partNum: number,
-  style: "Bento Grid" | "Concise" | "Standard"
+  style: "Bento Grid" | "Concise" | "Standard",
+  lang: CourseLang = "en"
 ): Promise<string | null> {
+  if (lang === "ar") {
+    // Arabic has a single infographic per part; return the key for all style queries
+    // so callers can sign and populate whichever slot they prefer.
+    return r2GetArabicInfographicKey(partNum);
+  }
   if (USE_R2) {
     const key = await r2GetInfographicKey(partNum, style);
     return key; // Return full R2 key
@@ -209,8 +248,32 @@ import type { SlideFile } from "./types";
 
 export async function getSlideFiles(
   partNum: number,
-  type: "presented" | "detailed" | "facts"
+  type: "presented" | "detailed" | "facts",
+  lang: CourseLang = "en"
 ): Promise<SlideFile[]> {
+  if (lang === "ar") {
+    // Arabic slides: only one type (presented-style). Prefer the pre-generated
+    // WebP variants (matches English); fall back to the raw PNG per-slide if a
+    // variant hasn't been generated yet for that page.
+    if (type !== "presented") return [];
+    if (!USE_R2) return [];
+    const pngKeys = await r2GetArabicSlideKeys(partNum);
+    return Promise.all(
+      pngKeys.map(async (pngKey) => {
+        const mediumKey = pngKey.replace(/\.png$/i, "-medium.webp");
+        const thumbKey  = pngKey.replace(/\.png$/i, "-thumb.webp");
+        const [mediumExists, thumbExists] = await Promise.all([
+          r2FileExists(mediumKey),
+          r2FileExists(thumbKey),
+        ]);
+        const [medium, thumb] = await Promise.all([
+          generateSignedR2Url(mediumExists ? mediumKey : pngKey, IMAGE_URL_EXPIRY),
+          generateSignedR2Url(thumbExists ? thumbKey : pngKey, IMAGE_URL_EXPIRY),
+        ]);
+        return { medium, thumb };
+      })
+    );
+  }
   if (USE_R2) {
     const pngKeys = await r2GetSlideKeys(partNum, type);
     // Sign the pre-generated WebP variants instead of the raw PNGs.
@@ -253,7 +316,14 @@ export async function getSlideFiles(
 
 // ─── Flashcards ───────────────────────────────────────────────────────────────
 
-export async function readFlashcards(partNum: number): Promise<import("./types").FlashcardSet | null> {
+export async function readFlashcards(partNum: number, lang: CourseLang = "en"): Promise<import("./types").FlashcardSet | null> {
+  if (lang === "ar") {
+    // Hardcoded AR translations take priority — never depend on R2 for Arabic flashcards.
+    const hardcoded = PART_FLASHCARDS_AR[partNum];
+    if (hardcoded != null) return hardcoded;
+    if (!USE_R2) return null;
+    return r2ReadArabicFlashcards(partNum);
+  }
   if (USE_R2) {
     return await r2ReadFlashcards(partNum);
   }
@@ -270,7 +340,14 @@ export async function readFlashcards(partNum: number): Promise<import("./types")
 
 // ─── Quiz ─────────────────────────────────────────────────────────────────────
 
-export async function readQuiz(partNum: number): Promise<import("./types").Quiz | null> {
+export async function readQuiz(partNum: number, lang: CourseLang = "en"): Promise<import("./types").Quiz | null> {
+  if (lang === "ar") {
+    // Hardcoded AR translations take priority — never depend on R2 for Arabic quizzes.
+    const hardcoded = PART_QUIZ_AR[partNum];
+    if (hardcoded != null) return hardcoded;
+    if (!USE_R2) return null;
+    return r2ReadArabicQuiz(partNum);
+  }
   if (USE_R2) {
     return await r2ReadQuiz(partNum);
   }
@@ -308,9 +385,9 @@ export async function audioExists(partNum: number): Promise<boolean> {
 /**
  * Get all asset URLs for a part using R2
  */
-export async function getPartAssetUrls(partNum: number) {
+export async function getPartAssetUrls(partNum: number, lang: CourseLang = "en") {
   if (!USE_R2) {
-    // Local dev without R2: use local proxy routes
+    // Local dev without R2: use local proxy routes (Arabic not available locally)
     return {
       videoUrl: (await videoExists(partNum)) ? `/api/media/video/${partNum}` : undefined,
       audioUrl: (await audioExists(partNum)) ? `/api/media/audio/${partNum}` : undefined,
@@ -319,6 +396,21 @@ export async function getPartAssetUrls(partNum: number) {
         : undefined,
       thumbnailUrl: undefined as string | undefined,
     };
+  }
+
+  if (lang === "ar") {
+    // Arabic keys are deterministic — no existence checks needed.
+    const videoKey = r2GetArabicVideoKey(partNum);
+    const audioKey = r2GetArabicAudioKey(partNum);
+    // Arabic mindmaps don't exist; keep the English mindmap (shown with a note in the UI).
+    const mindmapKey = await r2GetMindmapKey(partNum).catch(() => null);
+    const [videoUrl, audioUrl, mindmapUrl, thumbnailUrl] = await Promise.all([
+      generateSignedR2Url(videoKey, VIDEO_URL_EXPIRY),
+      generateSignedR2Url(audioKey, VIDEO_URL_EXPIRY),
+      mindmapKey ? generateSignedR2Url(mindmapKey, IMAGE_URL_EXPIRY) : Promise.resolve(undefined),
+      getThumbnailUrl(partNum, "ar").catch(() => undefined),
+    ]);
+    return { videoUrl, audioUrl, mindmapUrl, thumbnailUrl };
   }
 
   const [videoKey, audioKey, mindmapKey] = await Promise.all([

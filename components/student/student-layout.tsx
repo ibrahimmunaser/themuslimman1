@@ -1,4 +1,6 @@
+import { cookies } from "next/headers";
 import { StudentSidebar } from "./student-sidebar";
+import { parseLang, COURSE_LANG_COOKIE } from "@/lib/course-lang";
 
 interface StudentLayoutProps {
   children: React.ReactNode;
@@ -8,20 +10,31 @@ interface StudentLayoutProps {
   planType?: string;
 }
 
-export function StudentLayout({
+export async function StudentLayout({
   children,
   userPlan,
   userName,
   activeProfileName,
   planType = "individual",
 }: StudentLayoutProps) {
+  // Read directly here (rather than requiring every call site to pass it down)
+  // so the sidebar is Arabic-aware everywhere StudentLayout is used.
+  const cookieStore = await cookies();
+  const lang = parseLang(cookieStore.get(COURSE_LANG_COOKIE)?.value);
+
   return (
-    <div className="flex min-h-screen bg-background items-start w-full">
+    <div
+      className="flex min-h-screen bg-background items-start w-full"
+      dir={lang === "ar" ? "rtl" : "ltr"}
+      lang={lang}
+    >
       <StudentSidebar
         userPlan={userPlan}
         userName={userName}
         activeProfileName={activeProfileName ?? null}
         planType={planType}
+        lang={lang}
+        isRtl={lang === "ar"}
       />
       
       {/* overflow-x:clip prevents horizontal overflow without creating a scroll

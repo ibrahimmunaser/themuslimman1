@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { X, Heart, Copy, Check } from "lucide-react";
+import type { CourseLang } from "@/lib/course-lang";
 
 const STORAGE_KEY = "seerah_share_popup_last_shown";
 // Show again after 14 days
@@ -13,7 +14,8 @@ const SHARE_URL = "https://themuslimman.com";
 const SHARE_TEXT = "I've been learning the Seerah of the Prophet ﷺ with Complete Seerah — it's been an amazing journey. Check it out!";
 const INSTAGRAM_CAPTION = `I've been learning the Seerah of the Prophet ﷺ with Complete Seerah — it's been an amazing journey. If you want to learn his life story step by step, check it out 👇\n\nthemuslimman.com`;
 
-export function SharePopup() {
+export function SharePopup({ lang = "en" }: { lang?: CourseLang }) {
+  const ar = lang === "ar";
   const [visible, setVisible] = useState(false);
   const [copiedId, setCopiedId] = useState<"link" | "instagram" | null>(null);
 
@@ -61,8 +63,8 @@ export function SharePopup() {
       <div className="relative w-full max-w-sm bg-surface border border-border rounded-2xl p-6 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-300">
         <button
           onClick={dismiss}
-          className="absolute top-4 right-4 p-1.5 rounded-lg text-text-muted hover:text-text hover:bg-white/5 transition-colors"
-          aria-label="Close"
+          className="absolute top-4 end-4 p-1.5 rounded-lg text-text-muted hover:text-text hover:bg-white/5 transition-colors"
+          aria-label={ar ? "إغلاق" : "Close"}
         >
           <X className="w-4 h-4" />
         </button>
@@ -74,11 +76,12 @@ export function SharePopup() {
 
         {/* Heading */}
         <h2 id="share-popup-title" className="text-lg font-bold text-text text-center mb-2">
-          Enjoying the course so far?
+          {ar ? "هل تستمتع بالدورة حتى الآن؟" : "Enjoying the course so far?"}
         </h2>
         <p className="text-sm text-text-secondary text-center mb-5 leading-relaxed">
-          Your recommendation means the world — and helps others discover the Seerah of the Prophet&nbsp;ﷺ.
-          Please share it with friends and family!
+          {ar
+            ? <>توصيتك تعني الكثير — وتساعد الآخرين على اكتشاف سيرة النبي&nbsp;ﷺ. شاركها مع أصدقائك وعائلتك!</>
+            : <>Your recommendation means the world — and helps others discover the Seerah of the Prophet&nbsp;ﷺ. Please share it with friends and family!</>}
         </p>
 
         {/* Share buttons — 2×2 grid */}
@@ -125,7 +128,7 @@ export function SharePopup() {
             className="flex flex-col items-center gap-2 px-3 py-3 rounded-xl bg-[#E1306C]/10 border border-[#E1306C]/20 text-[#E1306C] hover:bg-[#E1306C]/15 transition-colors text-xs font-medium"
           >
             <InstagramIcon />
-            {copiedId === "instagram" ? "Copied!" : "Instagram"}
+            {copiedId === "instagram" ? (ar ? "تم النسخ!" : "Copied!") : "Instagram"}
           </button>
         </div>
 
@@ -135,8 +138,8 @@ export function SharePopup() {
           className="mt-2 flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-xl bg-white/5 border border-border text-text-secondary hover:text-text hover:bg-white/8 transition-colors text-sm font-medium"
         >
           {copiedId === "link"
-            ? <><Check className="w-4 h-4 shrink-0 text-emerald-400" /> Link copied!</>
-            : <><Copy className="w-4 h-4 shrink-0" /> Copy link</>
+            ? <><Check className="w-4 h-4 shrink-0 text-emerald-400" /> {ar ? "تم النسخ!" : "Link copied!"}</>
+            : <><Copy className="w-4 h-4 shrink-0" /> {ar ? "نسخ الرابط" : "Copy link"}</>
           }
         </button>
 
@@ -145,7 +148,7 @@ export function SharePopup() {
           onClick={dismiss}
           className="mt-3 w-full text-xs text-text-muted hover:text-text-secondary transition-colors"
         >
-          Maybe later
+          {ar ? "ربما لاحقاً" : "Maybe later"}
         </button>
       </div>
     </div>

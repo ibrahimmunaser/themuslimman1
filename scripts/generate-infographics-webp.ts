@@ -9,6 +9,8 @@
  * Run all:    npx tsx scripts/generate-infographics-webp.ts
  * One part:   npx tsx scripts/generate-infographics-webp.ts 1
  * Force redo: npx tsx scripts/generate-infographics-webp.ts --force
+ * Arabic:     npx tsx scripts/generate-infographics-webp.ts --ar
+ *   Arabic has one infographic per part: arabic/infographics/Part N.png → ...webp
  */
 
 import { S3Client, GetObjectCommand, PutObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3";
@@ -45,6 +47,12 @@ const ASSET_TYPES: AssetDef[] = [
   { label: "Mind Map",   srcKey: (n) => `mindmaps/Part ${n} - Mindmap.png` },
 ];
 
+// Arabic has a single infographic per part (no Bento/Concise/Standard split) and
+// no separate mindmap (mindmaps stay English in AR mode) — only one asset type.
+const ARABIC_ASSET_TYPES: AssetDef[] = [
+  { label: "AR Infographic", srcKey: (n) => `arabic/infographics/Part ${n}.png` },
+];
+
 function destKey(src: string): string {
   return src.replace(/\.png$/i, ".webp");
 }
@@ -77,11 +85,17 @@ async function processOne(
     return "error";
   }
 
-  // Convert to WebP
-  const webpBuffer = await sharp(sourceBuffer)
-    .resize({ width: MAX_WIDTH, withoutEnlargement: true })
-    .webp({ quality: WEBP_QUALITY, effort: 4 })
-    .toBuffer();
+  // Convert to WebP — a single corrupt/truncated source PNG must not crash the whole batch.
+  let webpBuffer: Buffer;
+  try {
+    webpBuffer = await sharp(sourceBuffer)
+      .resize({ width: MAX_WIDTH, withoutEnlargement: true })
+      .webp({ quality: WEBP_QUALITY, effort: 4 })
+      .toBuffer();
+  } catch (err) {
+    console.error(`  Part ${String(partNum).padStart(3)}  ${assetDef.label.padEnd(12)}  ❌ sharp failed: ${(err as Error).message}`);
+    return "error";
+  }
 
   // Upload
   await r2.send(new PutObjectCommand({
@@ -105,26 +119,34 @@ async function processOne(
 (async () => {
   const argPart  = process.argv.find((a) => /^\d+$/.test(a));
   const force    = process.argv.includes("--force");
+  const arabic   = process.argv.includes("--ar") || process.argv.includes("--arabic");
   const parts    = argPart
     ? [parseInt(argPart, 10)]
     : Array.from({ length: 100 }, (_, i) => i + 1);
+  const assetTypes = arabic ? ARABIC_ASSET_TYPES : ASSET_TYPES;
 
   console.log("=".repeat(65));
-  console.log(` WebP Infographic Generator — ${parts.length} part(s) × ${ASSET_TYPES.length} types`);
+  console.log(` WebP Infographic Generator (${arabic ? "Arabic" : "English"}) — ${parts.length} part(s) × ${assetTypes.length} types`);
   console.log(` Quality: ${WEBP_QUALITY}  Max width: ${MAX_WIDTH}px  ${force ? "(force)" : "(skip existing)"}`);
   console.log("=".repeat(65));
 
   let ok = 0, skipped = 0, errors = 0;
   const startMs = Date.now();
 
-  // Process parts in batches; each part processes its 4 asset types in parallel
+  // Process parts in batches; each part processes its asset types in parallel
   const BATCH = 3;
   for (let i = 0; i < parts.length; i += BATCH) {
     const batch = parts.slice(i, i + BATCH);
     await Promise.all(
       batch.flatMap((n) =>
-        ASSET_TYPES.map(async (type) => {
-          const result = await processOne(n, type, force);
+        assetTypes.map(async (type) => {
+          let result: "ok" | "skip" | "error";
+          try {
+            result = await processOne(n, type, force);
+          } catch (err) {
+            console.error(`  Part ${String(n).padStart(3)}  ${type.label.padEnd(12)}  ❌ ${(err as Error).message}`);
+            result = "error";
+          }
           if (result === "ok")    ok++;
           else if (result === "skip")  skipped++;
           else                         errors++;

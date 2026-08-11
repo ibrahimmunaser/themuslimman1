@@ -1,13 +1,15 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import { PARTS } from "@/lib/content";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { getPartsForLang } from "@/lib/content";
 import type { Part } from "@/lib/types";
+import type { CourseLang } from "@/lib/course-lang";
 import { eraGradient } from "./era-gradient";
 import { ResourcePageClient } from "./resource-page-client";
 import { Video, Play, CheckCircle2, Clock, X, Lock } from "lucide-react";
 import { VideoPlayer } from "@/components/part/video-player";
 import { getCachedResource, setCachedResource, prefetchResource } from "@/lib/resource-cache";
+import { t, tf } from "@/lib/ui-strings";
 
 interface VideoResourceContentProps {
   progressMap: Record<number, { videoWatchPercent: number; videoCompleted: boolean }>;
@@ -16,6 +18,7 @@ interface VideoResourceContentProps {
   continueWatching?: { partNumber: number; videoWatchPercent: number };
   thumbnails?: Record<number, string>;
   lockedPartNumbers?: number[];
+  lang?: CourseLang;
 }
 
 export function VideoResourceContent({
@@ -25,8 +28,10 @@ export function VideoResourceContent({
   continueWatching,
   thumbnails = {},
   lockedPartNumbers = [],
+  lang = "en",
 }: VideoResourceContentProps) {
   const lockedSet = new Set(lockedPartNumbers);
+  const PARTS = useMemo(() => getPartsForLang(lang), [lang]);
   const [mounted, setMounted] = useState(false);
   const [selectedPart, setSelectedPart] = useState<{
     partNumber: number;
@@ -40,6 +45,7 @@ export function VideoResourceContent({
   // Focus management for video modal
   const prevFocusRef = useRef<Element | null>(null);
   const modalRef     = useRef<HTMLDivElement>(null);
+  const closeBtnRef  = useRef<HTMLButtonElement>(null);
 
   const totalVideos    = PARTS.length;
   const notStartedCount = totalVideos - completedCount - inProgressCount;
@@ -75,7 +81,7 @@ export function VideoResourceContent({
 
     setIsLoadingVideo(true);
     try {
-      const res  = await fetch(`/api/part/${part.partNumber}/assets`);
+      const res  = await fetch(`/api/part/${part.partNumber}/assets${lang === "ar" ? "?lang=ar" : ""}`);
       if (!res.ok) throw new Error("Failed to fetch video");
       const data = await res.json();
       setVideoUrl(data.videoUrl || "");
@@ -98,7 +104,7 @@ export function VideoResourceContent({
       prevFocusRef.current = document.activeElement;
       // Move focus to close button after paint so the DOM is ready
       requestAnimationFrame(() => {
-        modalRef.current?.querySelector<HTMLElement>('[aria-label="Close video"]')?.focus();
+        closeBtnRef.current?.focus();
       });
     } else if (prevFocusRef.current instanceof HTMLElement) {
       prevFocusRef.current.focus();
@@ -141,30 +147,10 @@ export function VideoResourceContent({
 
   // Stats config — meaningful stats brighter, reference stats quieter
   const stats = [
-    {
-      label: "Total",
-      value: totalVideos,
-      color: "text-zinc-400",
-      dim: true,
-    },
-    {
-      label: "Completed",
-      value: completedCount,
-      color: completedCount > 0 ? "text-green-400" : "text-zinc-500",
-      dim: false,
-    },
-    {
-      label: "In Progress",
-      value: inProgressCount,
-      color: inProgressCount > 0 ? "text-amber-400" : "text-zinc-500",
-      dim: false,
-    },
-    {
-      label: "Not Started",
-      value: notStartedCount,
-      color: "text-zinc-500",
-      dim: true,
-    },
+    { labelKey: "statTotal"      as const, value: totalVideos,    color: "text-zinc-400",                                         dim: true  },
+    { labelKey: "statCompleted"  as const, value: completedCount,  color: completedCount > 0 ? "text-green-400" : "text-zinc-500", dim: false },
+    { labelKey: "statInProgress" as const, value: inProgressCount, color: inProgressCount > 0 ? "text-amber-400" : "text-zinc-500",dim: false },
+    { labelKey: "statNotStarted" as const, value: notStartedCount, color: "text-zinc-500",                                         dim: true  },
   ];
 
   return (
@@ -180,9 +166,9 @@ export function VideoResourceContent({
               <Video className="w-5 h-5 sm:w-7 sm:h-7 text-amber-500" />
             </div>
             <div className="min-w-0">
-              <h1 className="text-xl sm:text-3xl font-bold text-white leading-tight">Video Lessons</h1>
+              <h1 className="text-xl sm:text-3xl font-bold text-white leading-tight">{t(lang, "videoLessonsH1")}</h1>
               <p className="text-zinc-500 text-xs sm:text-sm mt-0.5 leading-snug">
-                All {totalVideos} guided lessons from the Seerah Masterclass
+                {tf(lang, "allNLessons", { n: totalVideos })}
               </p>
             </div>
           </div>
@@ -190,7 +176,7 @@ export function VideoResourceContent({
           {/* Subtle progress context */}
           {completedCount > 0 && (
             <p className="text-xs text-zinc-600 mb-3">
-              {completedCount} of {totalVideos} video lessons completed · continue building your Seerah timeline
+              {tf(lang, "nOfMCompleted", { n: completedCount, m: totalVideos })}
             </p>
           )}
 
@@ -198,7 +184,7 @@ export function VideoResourceContent({
           <div className="grid grid-cols-4 gap-2 sm:gap-3">
             {stats.map((s) => (
               <div
-                key={s.label}
+                key={s.labelKey}
                 className={`px-2.5 py-3 sm:px-4 sm:py-4 rounded-xl border flex flex-col ${
                   s.dim
                     ? "bg-zinc-900/25 border-zinc-800/40"
@@ -213,7 +199,7 @@ export function VideoResourceContent({
                 }`}
                   style={{ letterSpacing: "0.11em" }}
                 >
-                  {s.label}
+                  {t(lang, s.labelKey)}
                 </p>
                 {/* Number — premium typographic treatment */}
                 <p className={`text-[1.75rem] sm:text-[2.25rem] font-bold leading-none tracking-tight tabular-nums mt-2 ${s.color}`}>
@@ -232,14 +218,14 @@ export function VideoResourceContent({
         {mounted && continueWatchingPart && (
           <div className="mb-5 rounded-2xl bg-gold/6 border border-gold/22 overflow-hidden">
             <div className="px-4 pt-3 pb-1.5">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-gold/80">Continue Watching</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-gold/80">{t(lang, "continueWatching")}</p>
             </div>
             <button
               type="button"
               onClick={() => handleOpenVideo(continueWatchingPart)}
               onMouseEnter={() => handlePrefetch(continueWatchingPart.partNumber)}
-              className="group w-full text-left cursor-pointer px-4 pb-3"
-              aria-label={`Resume Part ${continueWatchingPart.partNumber}: ${continueWatchingPart.title}`}
+              className="group w-full text-start cursor-pointer px-4 pb-3"
+              aria-label={tf(lang, "resumePartAriaLabel", { n: continueWatchingPart.partNumber, title: continueWatchingPart.title })}
             >
               <div className="flex items-center gap-3 sm:gap-5">
                 {/* Thumbnail */}
@@ -276,19 +262,19 @@ export function VideoResourceContent({
                 {/* Info */}
                 <div className="flex-1 min-w-0">
                   <p className="text-[11px] text-gold/80 font-medium mb-0.5">
-                    Part {continueWatchingPart.partNumber}
+                    {tf(lang, "partLabel", { n: continueWatchingPart.partNumber })}
                   </p>
                   <h3 className="text-sm sm:text-base font-semibold text-text group-hover:text-gold transition-colors line-clamp-2 leading-snug">
                     {continueWatchingPart.title}
                   </h3>
                   {continueWatching && (
-                    <p className="text-xs text-zinc-500 mt-1">{continueWatching.videoWatchPercent}% watched</p>
+                    <p className="text-xs text-zinc-500 mt-1">{tf(lang, "nPctWatched", { n: continueWatching.videoWatchPercent })}</p>
                   )}
                 </div>
 
                 {/* Resume — 44px */}
                 <div className="flex-shrink-0 inline-flex items-center justify-center min-h-[44px] px-4 sm:px-5 rounded-xl bg-gold text-ink text-sm font-bold group-hover:bg-gold/90 transition-colors shadow-sm shadow-gold/20">
-                  Resume
+                  {t(lang, "resume")}
                 </div>
               </div>
             </button>
@@ -299,6 +285,7 @@ export function VideoResourceContent({
         <ResourcePageClient
           showStatusFilter
           filterByStatus={filterByStatus}
+          lang={lang}
         >
           {(parts) => (
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
@@ -347,12 +334,12 @@ export function VideoResourceContent({
 
                       {/* Status badge — top-right, doesn't cover title area */}
                       {isCompleted && (
-                        <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-black/50 border border-gold/40 flex items-center justify-center z-10">
+                        <div className="absolute top-1.5 end-1.5 w-5 h-5 rounded-full bg-black/50 border border-gold/40 flex items-center justify-center z-10">
                           <CheckCircle2 className="w-3 h-3 text-gold" />
                         </div>
                       )}
                       {!isCompleted && watchPct > 0 && (
-                        <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded bg-black/70 border border-white/15 text-white text-[10px] font-medium z-10">
+                        <div className="absolute top-1.5 end-1.5 px-1.5 py-0.5 rounded bg-black/70 border border-white/15 text-white text-[10px] font-medium z-10">
                           {watchPct}%
                         </div>
                       )}
@@ -364,8 +351,8 @@ export function VideoResourceContent({
                         </div>
                       </div>
 
-                      {/* Part number — bottom-left, inside gradient safe zone */}
-                      <span className="absolute bottom-1.5 left-2 text-[10px] font-bold text-white/60 z-10">
+                      {/* Part number — bottom-start, inside gradient safe zone */}
+                      <span className="absolute bottom-1.5 start-2 text-[10px] font-bold text-white/60 z-10">
                         {part.partNumber}
                       </span>
 
@@ -382,11 +369,11 @@ export function VideoResourceContent({
                       <div className="flex items-center gap-1.5 mb-1">
                         {isCompleted && (
                           <span className="px-1.5 py-0.5 bg-green-500/10 border border-green-500/15 text-green-400 text-[10px] font-medium rounded">
-                            Done
+                            {t(lang, "done")}
                           </span>
                         )}
                         {!isCompleted && watchPct > 0 && (
-                          <span className="flex items-center gap-0.5 text-[10px] text-zinc-500 ml-auto">
+                          <span className="flex items-center gap-0.5 text-[10px] text-zinc-500 ms-auto">
                             <Clock className="w-2.5 h-2.5" />
                             {part.duration}
                           </span>
@@ -423,19 +410,20 @@ export function VideoResourceContent({
 
             {/* Modal Header */}
             <div className="flex items-center justify-between px-4 py-3 sm:p-5 border-b border-border flex-shrink-0">
-              <div className="min-w-0 flex-1 pr-3">
+              <div className="min-w-0 flex-1 pe-3">
                 <div className="flex items-center gap-1.5 mb-0.5">
                   <Video className="w-3.5 h-3.5 text-gold flex-shrink-0" />
-                  <span className="text-xs font-medium text-gold">Part {selectedPart.partNumber}</span>
+                  <span className="text-xs font-medium text-gold">{tf(lang, "partLabel", { n: selectedPart.partNumber })}</span>
                 </div>
                 <h2 id="video-modal-title" className="text-base sm:text-xl font-bold text-text line-clamp-2 leading-snug">
                   {selectedPart.title}
                 </h2>
               </div>
               <button
+                ref={closeBtnRef}
                 onClick={handleClose}
                 className="min-w-[44px] min-h-[44px] rounded-lg hover:bg-surface-raised flex items-center justify-center transition-colors flex-shrink-0"
-                aria-label="Close video"
+                aria-label={t(lang, "closeVideo")}
               >
                 <X className="w-5 h-5 text-text-muted" />
               </button>

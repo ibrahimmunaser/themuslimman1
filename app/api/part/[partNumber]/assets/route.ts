@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPartPageData } from "@/lib/part-content-cache";
 import { requirePartAccess } from "@/lib/part-access";
+import { parseLang } from "@/lib/course-lang";
 
 export const dynamic = "force-dynamic";
 
@@ -21,9 +22,11 @@ export async function GET(
     const deny = await requirePartAccess(partNum);
     if (deny) return deny;
 
+    const lang = parseLang(req.nextUrl.searchParams.get("lang"));
+
     // Use the shared in-memory part cache so repeated client calls within the
     // 90-minute TTL window are served instantly without fresh R2 round-trips.
-    const { videoUrl, audioUrl, mindmapUrl, thumbnailUrl } = await getPartPageData(partNum);
+    const { videoUrl, audioUrl, mindmapUrl, thumbnailUrl } = await getPartPageData(partNum, lang);
     const assets = { videoUrl, audioUrl, mindmapUrl, thumbnailUrl };
 
     const elapsed = Date.now() - startTime;

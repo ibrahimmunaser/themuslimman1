@@ -43,52 +43,63 @@ type SubTabId =
   | "flashcards" | "quiz"
   | "slides" | "mindmap" | "infographic";
 
-interface SubTab { id: SubTabId; label: string; icon: React.FC<{ className?: string }>; }
+interface SubTab { id: SubTabId; label: string; labelAr: string; icon: React.FC<{ className?: string }>; }
 interface Mode {
   id: ModeId;
   label: string;
+  labelAr: string;
   shortLabel?: string;
+  shortLabelAr?: string;
   subtitle: string;
+  subtitleAr: string;
   hint: string;
   icon: React.FC<{ className?: string }>;
   subTabs: SubTab[];
   primary?: boolean;
 }
 
+/** Pick the Arabic or English label depending on the active course language. */
+function modeLabel(mode: Mode, isRtl?: boolean): string { return isRtl ? mode.labelAr : mode.label; }
+function modeShortLabel(mode: Mode, isRtl?: boolean): string {
+  return isRtl ? (mode.shortLabelAr ?? mode.labelAr) : (mode.shortLabel ?? mode.label);
+}
+function modeSubtitle(mode: Mode, isRtl?: boolean): string { return isRtl ? mode.subtitleAr : mode.subtitle; }
+function subTabLabel(tab: SubTab, isRtl?: boolean): string { return isRtl ? tab.labelAr : tab.label; }
+
 // ─── Mode definitions ─────────────────────────────────────────────────────────
 
 const MODES: Mode[] = [
   {
-    id: "watch",       label: "Watch",       subtitle: "Video Lesson",      hint: "Video lesson",   icon: Video,       primary: true,
-    subTabs: [{ id: "video",       label: "Video",       icon: Video }],
+    id: "watch",       label: "Watch",       labelAr: "مشاهدة",   subtitle: "Video Lesson",      subtitleAr: "فيديو الدرس",      hint: "Video lesson",   icon: Video,       primary: true,
+    subTabs: [{ id: "video",       label: "Video",       labelAr: "الفيديو",              icon: Video }],
   },
   {
-    id: "read",        label: "Read",        subtitle: "Structured Notes",  hint: "Written content", icon: BookOpen,    primary: true,
+    id: "read",        label: "Read",        labelAr: "قراءة",    subtitle: "Structured Notes",  subtitleAr: "ملاحظات منظمة",     hint: "Written content", icon: BookOpen,    primary: true,
     subTabs: [
-      { id: "briefing",    label: "Briefing",    icon: FileText },
-      { id: "study-guide", label: "Study Guide", icon: BookOpen },
-      { id: "facts",       label: "Facts",       icon: BarChart2 },
+      { id: "briefing",    label: "Briefing",    labelAr: "الموجز",       icon: FileText },
+      { id: "study-guide", label: "Study Guide", labelAr: "دليل الدراسة", icon: BookOpen },
+      { id: "facts",       label: "Facts",       labelAr: "الحقائق",      icon: BarChart2 },
     ],
   },
   {
-    id: "slides",      label: "Slides",      subtitle: "Presentation",      hint: "Slide decks",    icon: Layers,      primary: true,
-    subTabs: [{ id: "slides",      label: "Slides",      icon: Layers }],
+    id: "slides",      label: "Slides",      labelAr: "الشرائح",  subtitle: "Presentation",      subtitleAr: "عرض تقديمي",       hint: "Slide decks",    icon: Layers,      primary: true,
+    subTabs: [{ id: "slides",      label: "Slides",      labelAr: "الشرائح",              icon: Layers }],
   },
   {
-    id: "infographic", label: "Infographic", shortLabel: "Visual", subtitle: "Visual Summary",    hint: "Visual summary", icon: ImageIcon,
-    subTabs: [{ id: "infographic", label: "Infographic", icon: ImageIcon }],
+    id: "infographic", label: "Infographic", labelAr: "إنفوجرافيك", shortLabel: "Visual", shortLabelAr: "مرئي", subtitle: "Visual Summary",    subtitleAr: "ملخص مرئي",        hint: "Visual summary", icon: ImageIcon,
+    subTabs: [{ id: "infographic", label: "Infographic", labelAr: "إنفوجرافيك",           icon: ImageIcon }],
   },
   {
-    id: "mindmap",     label: "Mindmap",     shortLabel: "Mindmap", subtitle: "Connected Ideas",   hint: "Visual map",     icon: Map,
-    subTabs: [{ id: "mindmap",     label: "Mindmap",     icon: Map }],
+    id: "mindmap",     label: "Mindmap",     labelAr: "الخريطة الذهنية", shortLabel: "Mindmap", shortLabelAr: "خريطة", subtitle: "Connected Ideas",   subtitleAr: "أفكار مرتبطة",     hint: "Visual map",     icon: Map,
+    subTabs: [{ id: "mindmap",     label: "Mindmap",     labelAr: "الخريطة الذهنية",       icon: Map }],
   },
   {
-    id: "flashcards",  label: "Flashcards",  shortLabel: "Cards",  subtitle: "Memory Review",     hint: "Memory cards",   icon: Layers2,
-    subTabs: [{ id: "flashcards",  label: "Flashcards",  icon: Layers2 }],
+    id: "flashcards",  label: "Flashcards",  labelAr: "البطاقات التعليمية", shortLabel: "Cards", shortLabelAr: "بطاقات", subtitle: "Memory Review",     subtitleAr: "مراجعة الحفظ",     hint: "Memory cards",   icon: Layers2,
+    subTabs: [{ id: "flashcards",  label: "Flashcards",  labelAr: "البطاقات التعليمية",   icon: Layers2 }],
   },
   {
-    id: "quiz",        label: "Quiz",        subtitle: "Test Knowledge",    hint: "Test yourself",  icon: HelpCircle,
-    subTabs: [{ id: "quiz",        label: "Quiz",        icon: HelpCircle }],
+    id: "quiz",        label: "Quiz",        labelAr: "الاختبار", subtitle: "Test Knowledge",    subtitleAr: "اختبار المعرفة",   hint: "Test yourself",  icon: HelpCircle,
+    subTabs: [{ id: "quiz",        label: "Quiz",        labelAr: "الاختبار",             icon: HelpCircle }],
   },
 ];
 
@@ -136,11 +147,15 @@ function getModeSubTabs(mode: Mode, part: Part): SubTab[] {
 
 // ─── Content panels ───────────────────────────────────────────────────────────
 
-function EmptyContent({ label }: { label: string }) {
+function EmptyContent({ label, labelAr, isRtl }: { label: string; labelAr?: string; isRtl?: boolean }) {
   return (
     <div className="py-14 text-center">
-      <p className="text-text-secondary text-sm font-medium">{label} not available for this part</p>
-      <p className="text-xs text-text-muted mt-1">New content is added progressively</p>
+      <p className="text-text-secondary text-sm font-medium">
+        {isRtl ? `${labelAr ?? label} غير متاح لهذا الجزء` : `${label} not available for this part`}
+      </p>
+      <p className="text-xs text-text-muted mt-1">
+        {isRtl ? "يتم إضافة محتوى جديد تدريجيًا" : "New content is added progressively"}
+      </p>
     </div>
   );
 }
@@ -155,7 +170,7 @@ function infographicWebp(url: string, suffix: "-medium" | "-large" | ""): string
     : url.replace(/\.png(\?|$)/i, `${suffix}.webp$1`);
 }
 
-export function InfographicPanel({ part, previewMode }: { part: Part; previewMode?: boolean }) {
+export function InfographicPanel({ part, previewMode, isRtl }: { part: Part; previewMode?: boolean; isRtl?: boolean }) {
   const [style, setStyle] = useState<"concise" | "standard" | "bentoGrid">("standard");
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -163,9 +178,9 @@ export function InfographicPanel({ part, previewMode }: { part: Part; previewMod
   const [hasTrackedView, setHasTrackedView] = useState(false);
   const inf = part.assets.infographics;
   const styles = [
-    { id: "concise"   as const, label: "Concise" },
-    { id: "standard"  as const, label: "Standard" },
-    { id: "bentoGrid" as const, label: "Bento Grid" },
+    { id: "concise"   as const, label: "Concise",    labelAr: "مختصر" },
+    { id: "standard"  as const, label: "Standard",   labelAr: "قياسي" },
+    { id: "bentoGrid" as const, label: "Bento Grid", labelAr: "شبكي" },
   ].filter((s) => inf?.[s.id]);
   const currentSrc = inf?.[style] ?? inf?.[styles[0]?.id];
   const mediumSrc = currentSrc ? infographicWebp(currentSrc, "-medium") : null;
@@ -197,7 +212,7 @@ export function InfographicPanel({ part, previewMode }: { part: Part; previewMod
     <div className="space-y-3">
       {/* Contextual framing header */}
       <div className="mb-1">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-gold/60 leading-none">Infographic</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-gold/60 leading-none">{isRtl ? "إنفوجرافيك" : "Infographic"}</p>
         <p className="text-xs text-text-muted/50 mt-0.5 leading-snug" style={{ hyphens: "none" }}>{part.title}</p>
       </div>
 
@@ -215,7 +230,7 @@ export function InfographicPanel({ part, previewMode }: { part: Part; previewMod
                   : "bg-surface-raised/50 text-text-muted/60 hover:text-text-secondary hover:bg-surface-raised"
               )}
             >
-              {s.label}
+              {isRtl ? s.labelAr : s.label}
             </button>
           ))}
         </div>
@@ -232,7 +247,7 @@ export function InfographicPanel({ part, previewMode }: { part: Part; previewMod
             }}
             onClick={() => setLightboxOpen(true)}
             onTouchEnd={() => setLightboxOpen(true)}
-            title="Tap to view fullscreen"
+            title={isRtl ? "انقر للعرض بملء الشاشة" : "Tap to view fullscreen"}
           >
             {/* Loading spinner */}
             {!loaded && (
@@ -277,10 +292,10 @@ export function InfographicPanel({ part, previewMode }: { part: Part; previewMod
                 "min-h-[44px]"
               )}
               onClick={(e) => { e.stopPropagation(); setLightboxOpen(true); }}
-              aria-label="View infographic fullscreen"
+              aria-label={isRtl ? "عرض الإنفوجرافيك بملء الشاشة" : "View infographic fullscreen"}
             >
               <Maximize2 className="w-3.5 h-3.5" />
-              <span className="text-[10px] font-medium ml-1">Expand</span>
+              <span className="text-[10px] font-medium">{isRtl ? "تكبير" : "Expand"}</span>
             </button>
           </div>
           <ImageLightbox
@@ -291,19 +306,19 @@ export function InfographicPanel({ part, previewMode }: { part: Part; previewMod
           />
         </>
       ) : (
-        <EmptyContent label="Infographic" />
+        <EmptyContent label="Infographic" labelAr="إنفوجرافيك" isRtl={isRtl} />
       )}
     </div>
   );
 }
 
 const SLIDE_TYPES = [
-  { key: "presented" as const, label: "Presented" },
-  { key: "detailed"  as const, label: "Detailed" },
-  { key: "facts"     as const, label: "Facts" },
+  { key: "presented" as const, label: "Presented", labelAr: "المُقدَّمة" },
+  { key: "detailed"  as const, label: "Detailed",  labelAr: "التفصيلية" },
+  { key: "facts"     as const, label: "Facts",     labelAr: "الحقائق" },
 ];
 
-export function SlidesPanel({ part, previewMode }: { part: Part; previewMode?: boolean }) {
+export function SlidesPanel({ part, previewMode, isRtl }: { part: Part; previewMode?: boolean; isRtl?: boolean }) {
   const slides = part.assets.slides;
   const available = SLIDE_TYPES.filter((t) => (slides?.[t.key]?.length ?? 0) > 0);
   const [type, setType] = useState<"presented" | "detailed" | "facts">(available[0]?.key ?? "presented");
@@ -328,29 +343,37 @@ export function SlidesPanel({ part, previewMode }: { part: Part; previewMode?: b
                   ? "bg-gold/12 text-gold border-gold/25"
                   : "bg-surface text-text-muted border-border hover:text-text-secondary"
               )}
-            >{t.label}</button>
+            >{isRtl ? t.labelAr : t.label}</button>
           ))}
         </div>
       )}
       {/* Render each visited slide type once and keep it mounted — switching back is instant */}
-      {[...rendered].map((key) => (
-        <div key={key} className={type === key ? "" : "hidden"}>
-          <SlidesViewer
-            slides={slides?.[key as "presented" | "detailed" | "facts"] ?? []}
-            title={`Part ${part.partNumber} — ${SLIDE_TYPES.find((t) => t.key === key)?.label} Slides`}
-            type={key === "facts" ? "presented" : key as "presented" | "detailed"}
-            partNumber={part.partNumber}
-            previewMode={previewMode}
-          />
-        </div>
-      ))}
+      {[...rendered].map((key) => {
+        const typeInfo = SLIDE_TYPES.find((t) => t.key === key);
+        const title = isRtl
+          ? `الجزء ${part.partNumber} — شرائح ${typeInfo?.labelAr}`
+          : `Part ${part.partNumber} — ${typeInfo?.label} Slides`;
+        return (
+          <div key={key} className={type === key ? "" : "hidden"}>
+            <SlidesViewer
+              slides={slides?.[key as "presented" | "detailed" | "facts"] ?? []}
+              title={title}
+              type={key === "facts" ? "presented" : key as "presented" | "detailed"}
+              partNumber={part.partNumber}
+              previewMode={previewMode}
+              isRtl={isRtl}
+            />
+          </div>
+        );
+      })}
     </div>
   );
 }
 
 import { fetchPartAssets, type PartAssets as PartAssetUrls } from "@/lib/part-asset-cache";
+import type { CourseLang } from "@/lib/course-lang";
 
-function SubTabContent({ id, part, previewMode, assetUrls, onSwitchMode, videoCompleted, initialVideoPercent, initialQuizBestScore, quizDraft, onQuizDraftChange, learnerProfileId }: {
+function SubTabContent({ id, part, previewMode, assetUrls, onSwitchMode, videoCompleted, initialVideoPercent, initialQuizBestScore, quizDraft, onQuizDraftChange, learnerProfileId, isRtl }: {
   id: SubTabId;
   part: Part;
   previewMode?: boolean;
@@ -362,6 +385,7 @@ function SubTabContent({ id, part, previewMode, assetUrls, onSwitchMode, videoCo
   quizDraft?: QuizDraft | null;
   onQuizDraftChange?: (draft: QuizDraft | null) => void;
   learnerProfileId?: string;
+  isRtl?: boolean;
 }) {
   const wrap = (child: React.ReactNode) => (
     <div className="rounded-xl bg-surface/60 p-4 sm:p-6">{child}</div>
@@ -379,7 +403,10 @@ function SubTabContent({ id, part, previewMode, assetUrls, onSwitchMode, videoCo
             poster={assetUrls.thumbnailUrl ?? part.assets.slides?.presented[0]?.medium}
             previewMode={previewMode}
             videoUrl={assetUrls.videoUrl}
+            // Companion MP3 only for still-5K Arabic masters. Part 1 is re-encoded to 1440p.
+            companionAudioSrc={isRtl && part.partNumber !== 1 ? assetUrls.audioUrl : undefined}
             initialVideoPercent={initialVideoPercent}
+            isRtl={isRtl}
           />
           <LazyListenOnTheGo
             partNumber={part.partNumber}
@@ -387,37 +414,40 @@ function SubTabContent({ id, part, previewMode, assetUrls, onSwitchMode, videoCo
             previewMode={previewMode}
             audioUrl={assetUrls.audioUrl}
             videoCompleted={videoCompleted}
+            isRtl={isRtl}
           />
         </div>
       );
     case "briefing":
       return part.assets.briefingText
-        ? <TextViewer
+        ? <div dir={isRtl ? "rtl" : undefined}><TextViewer
             content={part.assets.briefingText}
             partNumber={part.partNumber}
             assetId="briefing"
             previewMode={previewMode}
             hasQuiz={hasQuiz}
             onSwitchToQuiz={onSwitchMode && hasQuiz ? () => onSwitchMode("quiz") : undefined}
-          />
-        : wrap(<EmptyContent label="Briefing" />);
+            isRtl={isRtl}
+          /></div>
+        : wrap(<EmptyContent label="Briefing" labelAr="الموجز" isRtl={isRtl} />);
     case "study-guide":
       return part.assets.studyGuideText
-        ? <TextViewer
+        ? <div dir={isRtl ? "rtl" : undefined}><TextViewer
             content={part.assets.studyGuideText}
             partNumber={part.partNumber}
             assetId="study_guide"
             previewMode={previewMode}
             hasQuiz={hasQuiz}
             onSwitchToQuiz={onSwitchMode && hasQuiz ? () => onSwitchMode("quiz") : undefined}
-          />
-        : wrap(<EmptyContent label="Study Guide" />);
+            isRtl={isRtl}
+          /></div>
+        : wrap(<EmptyContent label="Study Guide" labelAr="دليل الدراسة" isRtl={isRtl} />);
     case "facts":
-      return wrap(part.assets.statementOfFactsText ? <FactsViewer content={part.assets.statementOfFactsText} partNumber={part.partNumber} previewMode={previewMode} /> : <EmptyContent label="Facts" />);
+      return wrap(<div dir={isRtl ? "rtl" : undefined}>{part.assets.statementOfFactsText ? <FactsViewer content={part.assets.statementOfFactsText} partNumber={part.partNumber} previewMode={previewMode} isRtl={isRtl} /> : <EmptyContent label="Facts" labelAr="الحقائق" isRtl={isRtl} />}</div>);
     case "flashcards":
-      return wrap(part.assets.flashcards ? <FlashcardsViewer flashcards={part.assets.flashcards} partNumber={part.partNumber} previewMode={previewMode} /> : <EmptyContent label="Flashcards" />);
+      return wrap(<div dir={isRtl ? "rtl" : undefined}>{part.assets.flashcards ? <FlashcardsViewer flashcards={part.assets.flashcards} partNumber={part.partNumber} previewMode={previewMode} isRtl={isRtl} /> : <EmptyContent label="Flashcards" labelAr="البطاقات التعليمية" isRtl={isRtl} />}</div>);
     case "quiz":
-      return wrap(part.assets.quiz
+      return wrap(<div dir={isRtl ? "rtl" : undefined}>{part.assets.quiz
         ? <QuizViewer
             quiz={part.assets.quiz}
             partNumber={part.partNumber}
@@ -426,11 +456,12 @@ function SubTabContent({ id, part, previewMode, assetUrls, onSwitchMode, videoCo
             draft={quizDraft}
             onDraftChange={onQuizDraftChange}
             learnerProfileId={learnerProfileId}
+            isRtl={isRtl}
           />
-        : <EmptyContent label="Quiz" />);
-    case "slides":      return <SlidesPanel part={part} previewMode={previewMode} />;
+        : <EmptyContent label="Quiz" labelAr="الاختبار" isRtl={isRtl} />}</div>);
+    case "slides":      return <SlidesPanel part={part} previewMode={previewMode} isRtl={isRtl} />;
     case "mindmap":     return <LazyMindmapViewer partNumber={part.partNumber} title={`Part ${part.partNumber} — Mindmap`} previewMode={previewMode} mindmapUrl={assetUrls.mindmapUrl} />;
-    case "infographic": return <InfographicPanel part={part} previewMode={previewMode} />;
+    case "infographic": return <InfographicPanel part={part} previewMode={previewMode} isRtl={isRtl} />;
   }
 }
 
@@ -477,12 +508,14 @@ function ModeButton({
   isAvailable,
   isLocked,
   onClick,
+  isRtl,
 }: {
   mode: Mode;
   isActive: boolean;
   isAvailable: boolean;
   isLocked: boolean;
   onClick: () => void;
+  isRtl?: boolean;
 }) {
   const Icon = mode.icon;
   const isPrimary = !!mode.primary;
@@ -530,10 +563,10 @@ function ModeButton({
       )}>
         {mode.shortLabel ? (
           <>
-            <span className="min-[360px]:hidden">{mode.shortLabel}</span>
-            <span className="hidden min-[360px]:inline">{mode.label}</span>
+            <span className="min-[360px]:hidden">{modeShortLabel(mode, isRtl)}</span>
+            <span className="hidden min-[360px]:inline">{modeLabel(mode, isRtl)}</span>
           </>
-        ) : mode.label}
+        ) : modeLabel(mode, isRtl)}
       </span>
 
       {/* Subtitle — primary on mobile, all on desktop */}
@@ -542,7 +575,7 @@ function ModeButton({
         isPrimary ? "text-[9px] sm:text-[10px]" : "hidden sm:block text-[9px]",
         isActive ? "text-gold/55" : isDisabled ? "opacity-20" : isPrimary ? "text-text-muted/40" : "text-text-muted/55",
       )}>
-        {mode.subtitle}
+        {modeSubtitle(mode, isRtl)}
       </span>
 
       {/* Active underline accent */}
@@ -575,11 +608,15 @@ interface PartTabsProps {
    * contexts without family profiles (e.g. the classroom lesson page).
    */
   learnerProfileId?: string;
+  /** Language the page was rendered in — sets initial state for the EN/AR toggle. */
+  initialLang?: CourseLang;
 }
 
-export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initialAssetUrls, initialVideoCompleted, initialVideoPercent, initialQuizBestScore, forcedInitialMode, hideTabNav = false, learnerProfileId }: PartTabsProps) {
-  const availableModes = MODES.filter((m) => getModeSubTabs(m, part).length > 0);
-  const defaultMode = availableModes[0] ?? MODES[0];
+export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initialAssetUrls, initialVideoCompleted, initialVideoPercent, initialQuizBestScore, forcedInitialMode, hideTabNav = false, learnerProfileId, initialLang = "en" }: PartTabsProps) {
+  // Mind maps aren't produced for the Arabic course — hide the tab entirely in AR.
+  const modes = initialLang === "ar" ? MODES.filter((m) => m.id !== "mindmap") : MODES;
+  const availableModes = modes.filter((m) => getModeSubTabs(m, part).length > 0);
+  const defaultMode = availableModes[0] ?? modes[0];
 
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -592,7 +629,7 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
     : modeParam && availableModes.some((m) => m.id === modeParam) ? modeParam : defaultMode.id;
 
   const [activeMode, setActiveMode] = useState<ModeId>(resolvedInitialMode);
-  const currentMode = MODES.find((m) => m.id === activeMode) ?? defaultMode;
+  const currentMode = modes.find((m) => m.id === activeMode) ?? defaultMode;
   const subTabs = getModeSubTabs(currentMode, part);
 
   const [activeSubTab, setActiveSubTab] = useState<SubTabId>(subTabs[0]?.id ?? "video");
@@ -602,18 +639,25 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
     const incoming = modeParam && availableModes.some((m) => m.id === modeParam) ? modeParam : defaultMode.id;
     if (incoming !== activeMode) {
       setActiveMode(incoming);
-      const newSubTabs = getModeSubTabs(MODES.find((m) => m.id === incoming)!, part);
-      setActiveSubTab(newSubTabs[0]?.id ?? MODES.find((m) => m.id === incoming)!.subTabs[0].id as SubTabId);
+      const newSubTabs = getModeSubTabs(modes.find((m) => m.id === incoming)!, part);
+      setActiveSubTab(newSubTabs[0]?.id ?? modes.find((m) => m.id === incoming)!.subTabs[0].id as SubTabId);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modeParam]);
 
-  // Use server-provided URLs immediately; fall back to client-side fetch only if not provided
+  // Use server-provided URLs immediately; update state whenever the server refreshes
+  // (e.g. after a lang switch via router.refresh()). Fall back to a client-side fetch
+  // only when the server didn't provide any URLs at all.
   const [assetUrls, setAssetUrls] = useState<PartAssetUrls>(initialAssetUrls ?? {});
   useEffect(() => {
-    if (initialAssetUrls?.videoUrl || initialAssetUrls?.audioUrl || initialAssetUrls?.mindmapUrl) return;
-    fetchPartAssets(part.partNumber).then(setAssetUrls);
-  }, [part.partNumber, initialAssetUrls]);
+    if (initialAssetUrls?.videoUrl || initialAssetUrls?.audioUrl || initialAssetUrls?.mindmapUrl) {
+      // Server gave us valid URLs (initial render or after router.refresh()) — adopt them.
+      setAssetUrls(initialAssetUrls);
+      return;
+    }
+    fetchPartAssets(part.partNumber, initialLang).then(setAssetUrls);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [part.partNumber, initialAssetUrls, initialLang]);
 
 
   // Keep the video panel mounted once visited so the player state (seek position,
@@ -627,15 +671,15 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
 
   const handleModeChange = useCallback((modeId: ModeId) => {
     setActiveMode(modeId);
-    const newSubTabs = getModeSubTabs(MODES.find((m) => m.id === modeId)!, part);
-    const newSubTabId = newSubTabs[0]?.id ?? MODES.find((m) => m.id === modeId)!.subTabs[0].id;
+    const newSubTabs = getModeSubTabs(modes.find((m) => m.id === modeId)!, part);
+    const newSubTabId = newSubTabs[0]?.id ?? modes.find((m) => m.id === modeId)!.subTabs[0].id;
     setActiveSubTab(newSubTabId as SubTabId);
     if (modeId === "watch") setVideoMounted(true);
     // Persist in URL without full navigation
     const params = new URLSearchParams(searchParams.toString());
     params.set("mode", modeId);
     router.replace(`?${params.toString()}`, { scroll: false });
-  }, [part, searchParams, router]);
+  }, [part, modes, searchParams, router]);
 
   const handleSubTabChange = (tabId: SubTabId) => {
     setActiveSubTab(tabId);
@@ -659,9 +703,9 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
             <div className="sm:hidden space-y-2">
               {/* LEARN group */}
               <div className="space-y-1">
-                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-text-muted/35 px-0.5">Learn</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-text-muted/35 px-0.5">{initialLang === "ar" ? "تعلّم" : "Learn"}</p>
                 <div className="flex gap-1.5">
-                  {MODES.filter((m) => m.primary).map((mode) => {
+                  {modes.filter((m) => m.primary).map((mode) => {
                     const available = getModeSubTabs(mode, part).length > 0;
                     return (
                       <ModeButton
@@ -671,6 +715,7 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
                         isAvailable={available}
                         isLocked={false}
                         onClick={() => available ? handleModeChange(mode.id) : undefined}
+                        isRtl={initialLang === "ar"}
                       />
                     );
                   })}
@@ -678,9 +723,9 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
               </div>
               {/* REVIEW group */}
               <div className="space-y-1">
-                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-text-muted/35 px-0.5">Review</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-text-muted/35 px-0.5">{initialLang === "ar" ? "مراجعة" : "Review"}</p>
                 <div className="flex gap-1">
-                  {MODES.filter((m) => !m.primary).map((mode) => {
+                  {modes.filter((m) => !m.primary).map((mode) => {
                     const available = getModeSubTabs(mode, part).length > 0;
                     return (
                       <ModeButton
@@ -690,6 +735,7 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
                         isAvailable={available}
                         isLocked={false}
                         onClick={() => available ? handleModeChange(mode.id) : undefined}
+                        isRtl={initialLang === "ar"}
                       />
                     );
                   })}
@@ -698,7 +744,7 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
             </div>
             {/* Desktop: all in one row — lg:justify-center prevents giant buttons at ultrawide */}
             <div className="hidden sm:flex gap-2 lg:justify-center lg:flex-wrap">
-              {MODES.map((mode) => {
+              {modes.map((mode) => {
                 const available = getModeSubTabs(mode, part).length > 0;
                 return (
                   <ModeButton
@@ -708,6 +754,7 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
                     isAvailable={available}
                     isLocked={false}
                     onClick={() => available ? handleModeChange(mode.id) : undefined}
+                    isRtl={initialLang === "ar"}
                   />
                 );
               })}
@@ -735,7 +782,7 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
                     )}
                   >
                     <Icon className={clsx("w-3 h-3 transition-opacity", isActive ? "opacity-100" : "opacity-55")} />
-                    {tab.label}
+                    {subTabLabel(tab, initialLang === "ar")}
                   </button>
                 );
               })}
@@ -748,9 +795,11 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
               - All other panels: rendered only when active. Quiz in-progress state will
                 reset on tab switch (best score from DB is preserved via initialQuizBestScore). */}
           <div className="pt-0.5">
-            {/* Video panel — stays in DOM once visited */}
+            {/* Video panel — stays in DOM once visited.
+                key includes lang so it fully remounts when language switches,
+                clearing the browser's buffered stream and loading the new URL. */}
             {videoMounted && (
-              <div className={isVideoActive ? "animate-in fade-in-0 duration-200" : "hidden"}>
+              <div key={`video-${initialLang}`} className={isVideoActive ? "animate-in fade-in-0 duration-200" : "hidden"}>
                 <SubTabContent
                   id="video"
                   part={part}
@@ -762,6 +811,7 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
                   quizDraft={quizDraft}
                   onQuizDraftChange={setQuizDraft}
                   learnerProfileId={learnerProfileId}
+                  isRtl={initialLang === "ar"}
                 />
               </div>
             )}
@@ -779,6 +829,7 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
                   quizDraft={quizDraft}
                   onQuizDraftChange={setQuizDraft}
                   learnerProfileId={learnerProfileId}
+                  isRtl={initialLang === "ar"}
                 />
               </div>
             )}

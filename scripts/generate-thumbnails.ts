@@ -1,9 +1,12 @@
 /**
  * Generates compressed JPEG thumbnails from the first slide of each part
- * and uploads them to R2 under the `thumbnails/` prefix.
+ * and uploads them to R2 under the `thumbnails/` (English) or
+ * `arabic/thumbnails/` (Arabic) prefix.
  *
- * Run: npx tsx scripts/generate-thumbnails.ts
- * Or for a single part: npx tsx scripts/generate-thumbnails.ts 1
+ * Run English:  npx tsx scripts/generate-thumbnails.ts
+ * Run Arabic:   npx tsx scripts/generate-thumbnails.ts --ar
+ * Single part:  npx tsx scripts/generate-thumbnails.ts 1 --ar
+ * Force regen:  npx tsx scripts/generate-thumbnails.ts --ar --force
  */
 
 import { S3Client, GetObjectCommand, PutObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3";
@@ -33,15 +36,22 @@ const r2 = new S3Client({
 const TOTAL_PARTS = 100;
 const THUMB_WIDTH = 640;   // px — enough for card display, ~4x smaller than typical HD
 const THUMB_QUALITY = 82;  // JPEG quality
+const IS_ARABIC = process.argv.includes("--ar");
 
 function sourceKey(n: number): string {
+  if (IS_ARABIC) {
+    const p3 = String(n).padStart(3, "0");
+    return `arabic/slides/Part ${n}/part_${p3}_page_001.png`;
+  }
   const p = String(n).padStart(2, "0");
   return `slides-presented/Part ${p}/Part_${p}_Slide_001_watermarked.png`;
 }
 
 export function thumbKey(n: number): string {
   const p = String(n).padStart(2, "0");
-  return `thumbnails/part-${p}-thumb.jpg`;
+  return IS_ARABIC
+    ? `arabic/thumbnails/part-${p}-thumb.jpg`
+    : `thumbnails/part-${p}-thumb.jpg`;
 }
 
 async function exists(key: string): Promise<boolean> {
@@ -100,16 +110,17 @@ async function generateOne(n: number, force = false): Promise<"ok" | "skip" | "e
 }
 
 (async () => {
-  const arg = process.argv[2];
+  const arg = process.argv.find((a) => /^\d+$/.test(a));
   const parts: number[] = arg
     ? [parseInt(arg, 10)]
     : Array.from({ length: TOTAL_PARTS }, (_, i) => i + 1);
 
   const force = process.argv.includes("--force");
+  const langLabel = IS_ARABIC ? "Arabic" : "English";
 
   console.log("=".repeat(65));
-  console.log(` Thumbnail Generator  —  ${parts.length} part(s)  ${force ? "(force re-generate)" : "(skip existing)"}`);
-  console.log(" Output: thumbnails/part-XX-thumb.jpg");
+  console.log(` Thumbnail Generator (${langLabel})  —  ${parts.length} part(s)  ${force ? "(force re-generate)" : "(skip existing)"}`);
+  console.log(` Output: ${IS_ARABIC ? "arabic/thumbnails" : "thumbnails"}/part-XX-thumb.jpg`);
   console.log(" Size: 640px wide JPEG @ q82 (mozjpeg)");
   console.log("=".repeat(65));
 

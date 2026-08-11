@@ -12,6 +12,7 @@ interface AudioPlayerProps {
   previewMode?: boolean;
   /** Forward button is hidden until the video for this part has been fully watched */
   videoCompleted?: boolean;
+  isRtl?: boolean;
 }
 
 function formatTime(seconds: number): string {
@@ -23,7 +24,7 @@ function formatTime(seconds: number): string {
 
 const PLAYBACK_SPEEDS = [0.75, 1, 1.25, 1.5, 1.75, 2];
 
-export function AudioPlayer({ src, title, partNumber, compact = false, previewMode = false, videoCompleted = false }: AudioPlayerProps) {
+export function AudioPlayer({ src, title, partNumber, compact = false, previewMode = false, videoCompleted = false, isRtl }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(false);
@@ -85,8 +86,8 @@ export function AudioPlayer({ src, title, partNumber, compact = false, previewMo
           <Headphones className="w-4 h-4 text-gold/50" />
         </div>
         <div>
-          <p className="text-sm font-medium text-text-secondary">No audio for this part</p>
-          <p className="text-xs text-text-muted mt-0.5">Audio version will be available shortly</p>
+          <p className="text-sm font-medium text-text-secondary">{isRtl ? "لا يوجد صوت لهذا الجزء" : "No audio for this part"}</p>
+          <p className="text-xs text-text-muted mt-0.5">{isRtl ? "النسخة الصوتية ستكون متاحة قريباً" : "Audio version will be available shortly"}</p>
         </div>
       </div>
     );
@@ -165,9 +166,9 @@ export function AudioPlayer({ src, title, partNumber, compact = false, previewMo
         </div>
         <div className="min-w-0 flex-1">
           <p className={`font-medium text-text truncate leading-tight ${compact ? "text-xs" : "text-sm"}`}>
-            {title || `Part ${partNumber} — Audio`}
+            {title || (isRtl ? `الجزء ${partNumber} — صوت` : `Part ${partNumber} — Audio`)}
           </p>
-          {!compact && <p className="text-[11px] text-text-muted leading-none mt-0.5">Audio Version</p>}
+          {!compact && <p className="text-[11px] text-text-muted leading-none mt-0.5">{isRtl ? "النسخة الصوتية" : "Audio Version"}</p>}
         </div>
         <div className="flex items-center gap-1.5">
           {/* Playback speed */}
@@ -175,18 +176,18 @@ export function AudioPlayer({ src, title, partNumber, compact = false, previewMo
             <button
               onClick={(e) => { e.stopPropagation(); setShowSpeedMenu(!showSpeedMenu); }}
               className="flex items-center gap-1 px-2 py-1.5 rounded-md bg-surface-raised hover:bg-surface-high transition-colors min-h-[44px]"
-              aria-label={`Playback speed: ${playbackRate}x`}
+              aria-label={isRtl ? `سرعة التشغيل: ${playbackRate}x` : `Playback speed: ${playbackRate}x`}
             >
               <Gauge className="w-3 h-3 text-text-muted/70" />
               <span className="text-[11px] text-text-muted font-medium">{playbackRate}x</span>
             </button>
             {showSpeedMenu && (
-              <div className="absolute right-0 top-full mt-1 py-1 rounded-lg bg-surface border border-border shadow-lg z-10 min-w-[80px]" style={{ maxWidth: "calc(100vw - 1rem)" }}>
+              <div className="absolute end-0 top-full mt-1 py-1 rounded-lg bg-surface border border-border shadow-lg z-10 min-w-[80px]" style={{ maxWidth: "calc(100vw - 1rem)" }}>
                 {PLAYBACK_SPEEDS.map((speed) => (
                   <button
                     key={speed}
                     onClick={() => changePlaybackRate(speed)}
-                    className={`w-full px-3 min-h-[44px] flex items-center text-sm text-left transition-colors ${
+                    className={`w-full px-3 min-h-[44px] flex items-center text-sm text-start transition-colors ${
                       playbackRate === speed ? "bg-gold/10 text-gold font-medium" : "text-text-secondary hover:bg-surface-raised"
                     }`}
                   >
@@ -200,7 +201,7 @@ export function AudioPlayer({ src, title, partNumber, compact = false, previewMo
           <button
             onClick={() => { if (!audioRef.current) return; audioRef.current.muted = !muted; setMuted(!muted); }}
             className="text-text-muted/60 hover:text-text-secondary transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
-            aria-label={muted ? "Unmute" : "Mute"}
+            aria-label={isRtl ? (muted ? "إلغاء الكتم" : "كتم الصوت") : (muted ? "Unmute" : "Mute")}
           >
             {muted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
           </button>
@@ -212,11 +213,15 @@ export function AudioPlayer({ src, title, partNumber, compact = false, previewMo
         className="relative w-full h-6 flex items-center mb-0.5 cursor-pointer"
         onClick={handleSeek}
         role="slider"
-        aria-label="Audio seek"
+        aria-label={isRtl ? "شريط تقدم الصوت" : "Audio seek"}
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={Math.round(progress)}
-        aria-valuetext={`${formatTime(Math.max(0, currentTime - startOffset))} of ${formatTime(Math.max(0, duration - startOffset))}`}
+        aria-valuetext={
+          isRtl
+            ? `${formatTime(Math.max(0, currentTime - startOffset))} من ${formatTime(Math.max(0, duration - startOffset))}`
+            : `${formatTime(Math.max(0, currentTime - startOffset))} of ${formatTime(Math.max(0, duration - startOffset))}`
+        }
         tabIndex={0}
         onKeyDown={(e) => {
           if (!audioRef.current) return;
@@ -242,16 +247,16 @@ export function AudioPlayer({ src, title, partNumber, compact = false, previewMo
         <button
           onClick={() => skip(-10)}
           className="flex flex-col items-center text-text-muted/60 hover:text-text-secondary transition-colors min-h-[44px] min-w-[44px] justify-center"
-          aria-label="Rewind 10 seconds"
+          aria-label={isRtl ? "أرجع ١٠ ثوانٍ" : "Rewind 10 seconds"}
         >
           <SkipBack className="w-4 h-4" />
-          <span className="text-[9px] mt-0.5 leading-none" aria-hidden>−10s</span>
+          <span className="text-[9px] mt-0.5 leading-none" aria-hidden>{isRtl ? "−١٠ث" : "−10s"}</span>
         </button>
 
         <button
           onClick={togglePlay}
           className={`rounded-full bg-gold text-ink hover:bg-gold-light transition-colors flex items-center justify-center shadow-md shadow-gold/15 min-h-[44px] min-w-[44px] ${compact ? "w-11 h-11" : "w-12 h-12"}`}
-          aria-label={playing ? "Pause audio" : "Play audio"}
+          aria-label={isRtl ? (playing ? "إيقاف الصوت مؤقتاً" : "تشغيل الصوت") : (playing ? "Pause audio" : "Play audio")}
         >
           {playing ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
         </button>
@@ -260,10 +265,10 @@ export function AudioPlayer({ src, title, partNumber, compact = false, previewMo
         <button
           onClick={() => skip(10)}
           className="flex flex-col items-center text-text-muted/60 hover:text-text-secondary transition-colors min-h-[44px] min-w-[44px] justify-center"
-          aria-label="Forward 10 seconds"
+          aria-label={isRtl ? "تقدّم ١٠ ثوانٍ" : "Forward 10 seconds"}
         >
           <SkipForward className="w-4 h-4" />
-          <span className="text-[9px] mt-0.5 leading-none" aria-hidden>+10s</span>
+          <span className="text-[9px] mt-0.5 leading-none" aria-hidden>{isRtl ? "+١٠ث" : "+10s"}</span>
         </button>
       </div>
     </div>

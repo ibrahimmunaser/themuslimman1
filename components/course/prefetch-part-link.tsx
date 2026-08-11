@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useRef } from "react";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, ChevronLeft } from "lucide-react";
 
 interface PrefetchPartLinkProps {
   partNumber: number;
@@ -10,6 +10,8 @@ interface PrefetchPartLinkProps {
   label?: string;
   className?: string;
   children?: React.ReactNode;
+  /** Flips the trailing chevron for RTL (Arabic) contexts. */
+  isRtl?: boolean;
 }
 
 /**
@@ -19,7 +21,7 @@ interface PrefetchPartLinkProps {
  * Use `label` for the simple text+chevron style (stage card links).
  * Use `children` for custom content (primary CTA buttons).
  */
-export function PrefetchPartLink({ partNumber, label, className, children }: PrefetchPartLinkProps) {
+export function PrefetchPartLink({ partNumber, label, className, children, isRtl }: PrefetchPartLinkProps) {
   const warmed = useRef(false);
 
   const handleMouseEnter = useCallback(() => {
@@ -29,6 +31,7 @@ export function PrefetchPartLink({ partNumber, label, className, children }: Pre
   }, [partNumber]);
 
   if (label !== undefined) {
+    const Chevron = isRtl ? ChevronLeft : ChevronRight;
     return (
       <Link
         href={`/seerah/part-${partNumber}`}
@@ -36,7 +39,7 @@ export function PrefetchPartLink({ partNumber, label, className, children }: Pre
         onMouseEnter={handleMouseEnter}
       >
         {label}
-        <ChevronRight className="w-3.5 h-3.5" />
+        <Chevron className="w-3.5 h-3.5" />
       </Link>
     );
   }

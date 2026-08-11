@@ -5,25 +5,29 @@ import Link from "next/link";
 import { BookOpen, Clock, Layers, ClipboardCheck } from "lucide-react";
 import { trackBriefingOpened, trackAssetOpened } from "@/app/actions/progress";
 import { formatSeerahContent } from "@/lib/text-formatter";
-import { PARTS } from "@/lib/content";
-import { ERA_MAP } from "@/lib/types";
+import { PARTS, localizePart } from "@/lib/content";
+import { ERA_MAP, eraLabel as eraLabelFor } from "@/lib/types";
 
-const ASSET_META: Record<string, { label: string; subtitle: string }> = {
+const ASSET_META: Record<string, { label: string; labelAr: string; subtitle: string; subtitleAr: string }> = {
   briefing: {
     label: "LESSON BRIEFING",
+    labelAr: "موجز الدرس",
     subtitle: "A structured written summary of this lesson. Best reviewed after watching the video.",
+    subtitleAr: "ملخص كتابي منظم لهذا الدرس. يُفضّل مراجعته بعد مشاهدة الفيديو.",
   },
   study_guide: {
     label: "STUDY GUIDE",
+    labelAr: "دليل الدراسة",
     subtitle: "A deeper review of key concepts, names, and events from this lesson.",
+    subtitleAr: "مراجعة أعمق للمفاهيم والأسماء والأحداث الأساسية في هذا الدرس.",
   },
 };
 
 /** Estimate reading time from raw HTML string. */
-function estimateReadTime(html: string): string {
+function estimateReadTime(html: string, isRtl?: boolean): string {
   const words = html.replace(/<[^>]+>/g, " ").trim().split(/\s+/).length;
   const minutes = Math.max(2, Math.round(words / 220));
-  return `${minutes} min read`;
+  return isRtl ? `${minutes} دقيقة قراءة` : `${minutes} min read`;
 }
 
 interface TextViewerProps {
@@ -38,6 +42,7 @@ interface TextViewerProps {
   hasQuiz?: boolean;
   /** Callback to switch to the quiz mode from the parent tab controller */
   onSwitchToQuiz?: () => void;
+  isRtl?: boolean;
 }
 
 export function TextViewer({
@@ -48,14 +53,16 @@ export function TextViewer({
   previewMode,
   hasQuiz,
   onSwitchToQuiz,
+  isRtl,
 }: TextViewerProps) {
   const html = formatSeerahContent(content);
   const meta = assetId ? ASSET_META[assetId] : undefined;
-  const readTime = estimateReadTime(html);
+  const readTime = estimateReadTime(html, isRtl);
 
-  // Look up part metadata for era label and lesson title
-  const partData = partNumber ? PARTS.find((p) => p.partNumber === partNumber) : undefined;
-  const eraLabel = partData ? (ERA_MAP[partData.era as keyof typeof ERA_MAP]?.label ?? "") : "";
+  // Look up part metadata for era label and lesson title (localized for Arabic)
+  const rawPartData = partNumber ? PARTS.find((p) => p.partNumber === partNumber) : undefined;
+  const partData = rawPartData ? localizePart(rawPartData, isRtl ? "ar" : "en") : undefined;
+  const eraLabel = partData ? eraLabelFor(ERA_MAP[partData.era as keyof typeof ERA_MAP], isRtl) : "";
   const totalParts = PARTS.length;
 
   // Reading progress (0–100)
@@ -117,7 +124,7 @@ export function TextViewer({
         {/* Fade-out overlay */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-surface to-transparent" />
         <p className="absolute bottom-2 left-0 right-0 text-center text-xs text-text-muted/60">
-          Full lesson available after signup
+          {isRtl ? "الدرس الكامل متاح بعد التسجيل" : "Full lesson available after signup"}
         </p>
       </div>
     );
@@ -154,7 +161,7 @@ export function TextViewer({
         {/* Article header */}
         {meta && (
           <div className="article-header">
-            <p className="article-label">{meta.label}</p>
+            <p className="article-label">{isRtl ? meta.labelAr : meta.label}</p>
 
             {/* Lesson title from content data */}
             {partData && (
@@ -175,7 +182,7 @@ export function TextViewer({
                 <>
                   <span className="article-meta-item">
                     <Layers size={11} strokeWidth={2} />
-                    Part {partNumber} of {totalParts}
+                    {isRtl ? `الجزء ${partNumber} من ${totalParts}` : `Part ${partNumber} of ${totalParts}`}
                   </span>
                   <span className="article-meta-sep" aria-hidden>·</span>
                 </>
@@ -193,7 +200,7 @@ export function TextViewer({
             </div>
 
             {/* What this document is */}
-            <p className="article-subtitle">{meta.subtitle}</p>
+            <p className="article-subtitle">{isRtl ? meta.subtitleAr : meta.subtitle}</p>
 
             {/* Reading progress context */}
             <div className="article-progress-context">
@@ -204,7 +211,9 @@ export function TextViewer({
                 />
               </div>
               <span className="article-progress-context-label">
-                {readProgress < 5 ? "Start reading" : readProgress >= 95 ? "Completed" : `${readProgress}% through`}
+                {isRtl
+                  ? (readProgress < 5 ? "ابدأ القراءة" : readProgress >= 95 ? "اكتمل" : `${readProgress}% تمت القراءة`)
+                  : (readProgress < 5 ? "Start reading" : readProgress >= 95 ? "Completed" : `${readProgress}% through`)}
               </span>
             </div>
           </div>
@@ -225,7 +234,9 @@ export function TextViewer({
             <div className="article-end-line" />
             <p className="article-end-label">
               <BookOpen size={11} strokeWidth={2} />
-              End of {meta.label.toLowerCase().replace("lesson ", "")}
+              {isRtl
+                ? `نهاية ${meta.labelAr}`
+                : `End of ${meta.label.toLowerCase().replace("lesson ", "")}`}
             </p>
           </div>
         )}
@@ -240,7 +251,7 @@ export function TextViewer({
                 className="inline-flex items-center gap-2 px-6 py-3 min-h-[44px] bg-gold hover:bg-gold-light text-ink font-semibold rounded-xl text-sm transition-colors shadow-md shadow-gold/20"
               >
                 <ClipboardCheck className="w-4 h-4" />
-                Take the Quiz
+                {isRtl ? "ابدأ الاختبار" : "Take the Quiz"}
               </button>
             ) : hasQuiz !== false && partNumber ? (
               <Link
@@ -248,12 +259,12 @@ export function TextViewer({
                 className="inline-flex items-center gap-2 px-6 py-3 min-h-[44px] bg-gold hover:bg-gold-light text-ink font-semibold rounded-xl text-sm transition-colors shadow-md shadow-gold/20"
               >
                 <ClipboardCheck className="w-4 h-4" />
-                Take the Quiz
+                {isRtl ? "ابدأ الاختبار" : "Take the Quiz"}
               </Link>
             ) : null}
             {(onSwitchToQuiz || (hasQuiz !== false && partNumber)) && (
               <p className="text-[11px] text-text-muted/60">
-                Test your understanding of this lesson
+                {isRtl ? "اختبر فهمك لهذا الدرس" : "Test your understanding of this lesson"}
               </p>
             )}
           </div>

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { r2GetInfographicKey, generateSignedR2Url, IMAGE_URL_EXPIRY } from "@/lib/r2";
+import { r2GetInfographicKey, r2GetArabicInfographicKey, generateSignedR2Url, IMAGE_URL_EXPIRY } from "@/lib/r2";
 import { requirePartAccess } from "@/lib/part-access";
 import { TOTAL_COURSE_PARTS } from "@/lib/access";
+import { parseLang } from "@/lib/course-lang";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +20,16 @@ export async function GET(
   const deny = await requirePartAccess(partNumber);
   if (deny) return deny;
 
+  const lang = parseLang(req.nextUrl.searchParams.get("lang"));
+  const expiresAt = new Date(Date.now() + IMAGE_URL_EXPIRY * 1000).toISOString();
+
+  if (lang === "ar") {
+    // Arabic has a single infographic per part; expose it under "concise"
+    const key = await r2GetArabicInfographicKey(partNumber);
+    const url = await generateSignedR2Url(key, IMAGE_URL_EXPIRY).catch(() => null);
+    return NextResponse.json({ bentoGrid: null, concise: url, standard: null, expiresAt });
+  }
+
   // Resolve the actual R2 keys using smart lookup (handles all naming variants)
   const [bentoKey, conciseKey, standardKey] = await Promise.all([
     r2GetInfographicKey(partNumber, "Bento Grid"),
@@ -32,8 +43,6 @@ export async function GET(
     conciseKey ? generateSignedR2Url(conciseKey, IMAGE_URL_EXPIRY) : null,
     standardKey? generateSignedR2Url(standardKey,IMAGE_URL_EXPIRY) : null,
   ]);
-
-  const expiresAt = new Date(Date.now() + IMAGE_URL_EXPIRY * 1000).toISOString();
 
   return NextResponse.json({
     bentoGrid: bentoUrl,

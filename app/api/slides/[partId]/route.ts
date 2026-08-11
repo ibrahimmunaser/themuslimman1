@@ -1,10 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getPartById } from "@/lib/content";
 import { getSlideFiles } from "@/lib/files";
 import { requirePartAccess } from "@/lib/part-access";
+import { parseLang } from "@/lib/course-lang";
 
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ partId: string }> }
 ) {
   try {
@@ -20,11 +21,13 @@ export async function GET(
     const deny = await requirePartAccess(n);
     if (deny) return deny;
 
-    // Fetch slide files - getSlideFiles already returns public URLs
+    const lang = parseLang(request.nextUrl.searchParams.get("lang"));
+
+    // Fetch slide files — Arabic only has "presented"-style slides, served as PNG directly
     const [presented, detailed, facts] = await Promise.all([
-      getSlideFiles(n, "presented"),
-      getSlideFiles(n, "detailed"),
-      getSlideFiles(n, "facts"),
+      getSlideFiles(n, "presented", lang),
+      lang === "en" ? getSlideFiles(n, "detailed") : Promise.resolve([]),
+      lang === "en" ? getSlideFiles(n, "facts")    : Promise.resolve([]),
     ]);
 
     return NextResponse.json({ presented, detailed, facts });

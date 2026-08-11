@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { CreditCard, Loader2 } from "lucide-react";
+import type { CourseLang } from "@/lib/course-lang";
+import { t } from "@/lib/ui-strings";
 
 interface Props {
   /** Button text. Defaults to "Manage billing". */
@@ -11,9 +13,10 @@ interface Props {
    * "default" = neutral styling for general subscription management.
    */
   variant?: "alert" | "default";
+  lang?: CourseLang;
 }
 
-export function PortalButton({ label = "Manage billing", variant = "default" }: Props) {
+export function PortalButton({ label, variant = "default", lang = "en" }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,11 +29,11 @@ export function PortalButton({ label = "Manage billing", variant = "default" }: 
       if (data.url) {
         window.location.href = data.url;
       } else {
-        setError(data.error ?? "Something went wrong. Please try again.");
+        setError(data.error ?? t(lang, "somethingWentWrong"));
         setLoading(false);
       }
     } catch {
-      setError("Could not open billing portal. Please try again.");
+      setError(t(lang, "couldNotOpenPortal"));
       setLoading(false);
     }
   }
@@ -48,7 +51,7 @@ export function PortalButton({ label = "Manage billing", variant = "default" }: 
         ) : (
           <CreditCard className="w-4 h-4" />
         )}
-        {loading ? "Opening..." : label}
+        {loading ? t(lang, "openingEllipsis") : (label ?? t(lang, "managingBilling"))}
       </button>
       {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
     </div>

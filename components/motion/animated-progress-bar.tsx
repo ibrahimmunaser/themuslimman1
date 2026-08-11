@@ -54,7 +54,7 @@ export function AnimatedProgressBar({
         aria-valuemax={100}
       >
         <motion.div
-          className={`absolute left-0 top-0 h-full rounded-full ${fillClassName}`}
+          className={`absolute start-0 top-0 h-full rounded-full ${fillClassName}`}
           initial={{ width: "0%" }}
           animate={isInView ? { width: `${clampedPct}%` } : { width: "0%" }}
           transition={

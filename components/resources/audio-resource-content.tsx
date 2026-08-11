@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { PARTS } from "@/lib/content";
+import { useState, useEffect, useMemo } from "react";
+import { getPartsForLang } from "@/lib/content";
 import { ERA_MAP, type Part } from "@/lib/types";
+import type { CourseLang } from "@/lib/course-lang";
 import { eraGradient } from "./era-gradient";
 import { ResourcePageClient } from "./resource-page-client";
 import { Headphones, CheckCircle2, Play, Pause, X, Volume2, VolumeX, SkipBack, SkipForward, Lock } from "lucide-react";
@@ -13,6 +14,7 @@ interface AudioResourceContentProps {
   completedCount: number;
   thumbnails?: Record<number, string>;
   lockedPartNumbers?: number[];
+  lang?: CourseLang;
 }
 
 export function AudioResourceContent({
@@ -20,8 +22,10 @@ export function AudioResourceContent({
   completedCount,
   thumbnails = {},
   lockedPartNumbers = [],
+  lang = "en",
 }: AudioResourceContentProps) {
   const lockedSet = new Set(lockedPartNumbers);
+  const PARTS = useMemo(() => getPartsForLang(lang), [lang]);
   const [mounted, setMounted] = useState(false);
   const [currentAudio, setCurrentAudio] = useState<{ partNumber: number; title: string; subtitle?: string } | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -34,6 +38,7 @@ export function AudioResourceContent({
 
   const totalResources = PARTS.length;
   const notCompletedCount = totalResources - localCompletedCount;
+  const isRtl = lang === "ar";
 
   useEffect(() => {
     setMounted(true);
@@ -140,7 +145,7 @@ export function AudioResourceContent({
 
     // Load new audio
     try {
-      const response = await fetch(`/api/part/${partNumber}/assets`);
+      const response = await fetch(`/api/part/${partNumber}/assets${lang === "ar" ? "?lang=ar" : ""}`);
       if (!response.ok) throw new Error("Failed to fetch audio");
       const data = await response.json();
       
@@ -202,23 +207,23 @@ export function AudioResourceContent({
               <Headphones className="w-7 h-7 text-amber-500" />
             </div>
             <div>
-              <h1 className="text-4xl font-bold text-white">Listen on the Go</h1>
-              <p className="text-zinc-400 mt-1">Audio-only versions of every lesson for studying on the go</p>
+              <h1 className="text-4xl font-bold text-white">{isRtl ? "استمع أثناء التنقّل" : "Listen on the Go"}</h1>
+              <p className="text-zinc-400 mt-1">{isRtl ? "النسخة الصوتية لكل درس للمذاكرة أثناء التنقل" : "Audio-only versions of every lesson for studying on the go"}</p>
             </div>
           </div>
 
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
-              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">Total</p>
+              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">{isRtl ? "المجموع" : "Total"}</p>
               <p className="text-3xl font-bold text-white">{totalResources}</p>
             </div>
             <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
-              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">Listened</p>
+              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">{isRtl ? "تمت الاستماعة" : "Listened"}</p>
               <p className={`text-3xl font-bold ${localCompletedCount > 0 ? "text-green-400" : "text-zinc-400"}`}>{localCompletedCount}</p>
             </div>
             <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
-              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">Not Listened</p>
+              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">{isRtl ? "لم تُستمع" : "Not Listened"}</p>
               <p className="text-3xl font-bold text-zinc-400">{notCompletedCount}</p>
             </div>
           </div>
@@ -262,7 +267,7 @@ export function AudioResourceContent({
                     handlePrevious();
                   }}
                   className="w-10 h-10 rounded-full bg-black/20 hover:bg-black/30 flex items-center justify-center transition-colors flex-shrink-0"
-                  title="Previous track"
+                  title={isRtl ? "المقطع السابق" : "Previous track"}
                 >
                   <SkipBack className="w-5 h-5 text-white" />
                 </button>
@@ -297,7 +302,7 @@ export function AudioResourceContent({
                     handleNext();
                   }}
                   className="w-10 h-10 rounded-full bg-black/20 hover:bg-black/30 flex items-center justify-center transition-colors flex-shrink-0"
-                  title="Next track"
+                  title={isRtl ? "المقطع التالي" : "Next track"}
                 >
                   <SkipForward className="w-5 h-5 text-white" />
                 </button>
@@ -307,7 +312,7 @@ export function AudioResourceContent({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5">
                   <Volume2 className="w-4 h-4 text-white/90" />
-                  <span className="text-xs font-medium text-white/90">Part {currentAudio.partNumber}</span>
+                  <span className="text-xs font-medium text-white/90">{isRtl ? `الجزء ${currentAudio.partNumber}` : `Part ${currentAudio.partNumber}`}</span>
                 </div>
                 <h3 className="text-base font-semibold text-white truncate">
                   {currentAudio.title}
@@ -382,9 +387,9 @@ export function AudioResourceContent({
           return (
             <div className="mb-6 p-4 rounded-xl bg-amber-500/5 border border-amber-500/15 flex items-center justify-between gap-4">
               <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-amber-400/80 mb-0.5">Continue Listening</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-amber-400/80 mb-0.5">{isRtl ? "تابع الاستماع" : "Continue Listening"}</p>
                 <p className="text-sm font-semibold text-white truncate">
-                  Part {continuePart.partNumber}: {continuePart.title}
+                  {isRtl ? `الجزء ${continuePart.partNumber}: ${continuePart.title}` : `Part ${continuePart.partNumber}: ${continuePart.title}`}
                 </p>
                 {continuePart.subtitle && (
                   <p className="text-xs text-zinc-400 mt-0.5 truncate">{continuePart.subtitle}</p>
@@ -394,10 +399,12 @@ export function AudioResourceContent({
                 type="button"
                 onClick={() => handlePlayAudio(continuePart.partNumber, continuePart.title, continuePart.subtitle)}
                 className="inline-flex items-center gap-2 px-4 py-2 min-h-[40px] bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-lg text-xs transition-colors flex-shrink-0"
-                aria-label={`${isCurrentlyActive ? "Now playing" : "Listen to"} Part ${continuePart.partNumber}: ${continuePart.title}`}
+                aria-label={isRtl
+                  ? `${isCurrentlyActive ? "يُشغَّل الآن" : "استمع إلى"} الجزء ${continuePart.partNumber}: ${continuePart.title}`
+                  : `${isCurrentlyActive ? "Now playing" : "Listen to"} Part ${continuePart.partNumber}: ${continuePart.title}`}
               >
                 <Headphones className="w-3.5 h-3.5" />
-                {isCurrentlyActive ? "Now Playing" : "Listen"}
+                {isRtl ? (isCurrentlyActive ? "يُشغَّل الآن" : "استمع") : (isCurrentlyActive ? "Now Playing" : "Listen")}
               </button>
             </div>
           );
@@ -406,6 +413,7 @@ export function AudioResourceContent({
         <ResourcePageClient
           showStatusFilter
           filterByStatus={filterByStatus}
+          lang={lang}
         >
           {(parts) => (
             <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
@@ -458,13 +466,13 @@ export function AudioResourceContent({
                       </span>
 
                       {isCompleted && (
-                        <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-green-500/30 border border-green-500/50 flex items-center justify-center">
+                        <div className="absolute top-2 end-2 w-6 h-6 rounded-full bg-green-500/30 border border-green-500/50 flex items-center justify-center">
                           <CheckCircle2 className="w-4 h-4 text-green-400" />
                         </div>
                       )}
                       {isCurrentlyPlaying && (
-                        <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-black/40 border border-white/20 text-white text-xs font-medium">
-                          Playing
+                        <div className="absolute top-2 end-2 px-2 py-0.5 rounded bg-black/40 border border-white/20 text-white text-xs font-medium">
+                          {isRtl ? "يُشغَّل" : "Playing"}
                         </div>
                       )}
 
@@ -484,10 +492,10 @@ export function AudioResourceContent({
                     {/* Info */}
                     <div className="p-4">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs font-medium text-amber-500">Part {part.partNumber}</span>
+                        <span className="text-xs font-medium text-amber-500">{isRtl ? `الجزء ${part.partNumber}` : `Part ${part.partNumber}`}</span>
                         {isCompleted && (
                           <span className="px-2 py-0.5 bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium rounded">
-                            Listened
+                            {isRtl ? "تمت الاستماعة" : "Listened"}
                           </span>
                         )}
                       </div>

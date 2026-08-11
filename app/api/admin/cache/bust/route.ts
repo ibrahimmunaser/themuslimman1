@@ -29,8 +29,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  invalidatePartCache(partNumber);
-  console.log(`[admin] Cache busted for Part ${partNumber}`);
+  invalidatePartCache(partNumber, "en");
+  invalidatePartCache(partNumber, "ar");
+  console.log(`[admin] Cache busted for Part ${partNumber} (en + ar)`);
 
   return NextResponse.json({ ok: true, busted: partNumber });
 }

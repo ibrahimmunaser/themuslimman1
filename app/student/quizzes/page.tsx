@@ -1,12 +1,15 @@
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { requireStudent } from "@/lib/auth";
 import { hasActiveCourseAccess } from "@/lib/access";
 import { StudentLayout } from "@/components/student/student-layout";
 import { prisma } from "@/lib/db";
 import { getActiveProfileId } from "@/app/actions/profiles";
 import { PARTS } from "@/lib/content";
-import { ClipboardCheck, CheckCircle2, XCircle, ChevronRight, Trophy } from "lucide-react";
+import { ClipboardCheck, CheckCircle2, XCircle, ChevronRight, ChevronLeft, Trophy } from "lucide-react";
 import Link from "next/link";
+import { parseLang, COURSE_LANG_COOKIE } from "@/lib/course-lang";
+import { t, tf } from "@/lib/ui-strings";
 
 export const metadata = { title: "Quizzes | Complete Seerah" };
 export const dynamic = "force-dynamic";
@@ -14,6 +17,10 @@ export const dynamic = "force-dynamic";
 export default async function QuizzesPage() {
   const user = await requireStudent();
   if (!user.studentProfileId) redirect("/");
+  const cookieStore = await cookies();
+  const lang = parseLang(cookieStore.get(COURSE_LANG_COOKIE)?.value);
+  const isRtl = lang === "ar";
+  const NextIcon = isRtl ? ChevronLeft : ChevronRight;
 
   const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
   if (!hasAccess) redirect("/pricing");
@@ -58,22 +65,22 @@ export default async function QuizzesPage() {
 
   return (
     <StudentLayout userPlan={userPlan} userName={user.fullName} activeProfileName={user.activeProfileName} planType={user.planType}>
-      <div className="min-h-screen bg-[#0a0a0a]">
+      <div className="min-h-screen bg-[#0a0a0a]" dir={isRtl ? "rtl" : "ltr"}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-text mb-1">Quizzes</h1>
+            <h1 className="text-3xl font-bold text-text mb-1">{t(lang, "quizzes")}</h1>
             <p className="text-text-secondary">
-              {profileName}&apos;s quiz history and performance
+              {tf(lang, "quizzesSubtitle", { name: profileName })}
             </p>
           </div>
 
           {/* Stats */}
           <div className="grid sm:grid-cols-4 gap-4 mb-8">
             {[
-              { icon: ClipboardCheck, label: "Attempted", value: String(totalAttempted), color: "text-gold" },
-              { icon: CheckCircle2, label: "Passed", value: String(passed), color: "text-emerald-400" },
-              { icon: XCircle, label: "Not Yet Passed", value: String(failed), color: "text-red-400" },
-              { icon: Trophy, label: "Avg Best Score", value: totalAttempted > 0 ? `${avgScore}%` : "—", color: "text-amber-400" },
+              { icon: ClipboardCheck, label: t(lang, "statAttempted"), value: String(totalAttempted), color: "text-gold" },
+              { icon: CheckCircle2, label: t(lang, "passed"), value: String(passed), color: "text-emerald-400" },
+              { icon: XCircle, label: t(lang, "statNotYetPassed"), value: String(failed), color: "text-red-400" },
+              { icon: Trophy, label: t(lang, "statAvgBestScore"), value: totalAttempted > 0 ? `${avgScore}%` : "—", color: "text-amber-400" },
             ].map((stat) => {
               const Icon = stat.icon;
               return (
@@ -94,22 +101,22 @@ export default async function QuizzesPage() {
               <div className="w-16 h-16 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center mx-auto mb-4">
                 <ClipboardCheck className="w-8 h-8 text-gold" />
               </div>
-              <h2 className="text-xl font-semibold text-text mb-2">No Quiz History Yet</h2>
+              <h2 className="text-xl font-semibold text-text mb-2">{t(lang, "noQuizHistoryYet")}</h2>
               <p className="text-text-secondary max-w-md mx-auto mb-6">
-                Complete quizzes inside lessons to track your performance here.
+                {t(lang, "completeQuizzesDesc")}
               </p>
               <Link
                 href="/seerah"
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-gold text-ink font-semibold text-sm hover:bg-gold/90 transition-colors"
               >
-                Start Learning
-                <ChevronRight className="w-4 h-4" />
+                {t(lang, "startLearning")}
+                <NextIcon className="w-4 h-4" />
               </Link>
             </div>
           ) : (
             <div className="rounded-xl border border-border bg-surface overflow-hidden">
               <div className="px-6 py-4 border-b border-border">
-                <h2 className="text-base font-semibold text-text">Quiz History</h2>
+                <h2 className="text-base font-semibold text-text">{t(lang, "quizHistoryHeading")}</h2>
               </div>
               <div className="divide-y divide-border">
                 {quizProgress.map((q) => {
@@ -133,11 +140,11 @@ export default async function QuizzesPage() {
                       </div>
                       <div>
                         <p className="text-sm font-medium text-text">
-                          Part {q.partNumber}: {partTitleMap[q.partNumber] ?? `Part ${q.partNumber}`}
+                          {tf(lang, "partN", { n: q.partNumber })}: {partTitleMap[q.partNumber] ?? tf(lang, "partN", { n: q.partNumber })}
                         </p>
                         <p className="text-xs text-text-muted mt-0.5">
-                          {q.quizAttempts} attempt{q.quizAttempts !== 1 ? "s" : ""}
-                          {q.quizBestScore != null && ` · Best: ${q.quizBestScore}%`}
+                          {tf(lang, q.quizAttempts === 1 ? "attempts1" : "attemptsN", { n: q.quizAttempts })}
+                          {q.quizBestScore != null && ` · ${tf(lang, "bestScoreInline", { n: q.quizBestScore })}`}
                         </p>
                       </div>
                     </div>
@@ -162,9 +169,9 @@ export default async function QuizzesPage() {
                             : "bg-amber-500/10 text-amber-400"
                         }`}
                       >
-                        {verifiedPass ? "Passed" : "Retry"}
+                        {verifiedPass ? t(lang, "passed") : t(lang, "retryBadge")}
                       </span>
-                      <ChevronRight className="w-4 h-4 text-text-muted group-hover:text-text transition-colors" />
+                      <NextIcon className="w-4 h-4 text-text-muted group-hover:text-text transition-colors" />
                     </div>
                   </Link>
                   );

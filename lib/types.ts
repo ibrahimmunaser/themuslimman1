@@ -91,8 +91,15 @@ export type Era =
 export interface EraInfo {
   id: Era;
   label: string;
+  labelAr: string;
   description: string;
   color: string;
+}
+
+/** Pick the Arabic or English era label depending on the active course language. */
+export function eraLabel(era: EraInfo | undefined, isRtl?: boolean): string {
+  if (!era) return "";
+  return isRtl ? era.labelAr : era.label;
 }
 
 export type AudiencePath = "children" | "complete";
@@ -114,48 +121,56 @@ export const ERAS: EraInfo[] = [
   {
     id: "pre-islamic",
     label: "Pre-Islamic Arabia",
+    labelAr: "شبه الجزيرة العربية قبل الإسلام",
     description: "The world before the final revelation",
     color: "#D4915A",
   },
   {
     id: "birth-early-life",
     label: "Birth & Early Life",
+    labelAr: "المولد وبداية الحياة",
     description: "The coming of the Prophet ﷺ",
     color: "#A78BDA",
   },
   {
     id: "early-revelation",
     label: "Beginning of Revelation",
+    labelAr: "بداية الوحي",
     description: "The first light of Islam",
     color: "#4DB88A",
   },
   {
     id: "makkah-persecution",
     label: "Makkah — Persecution",
+    labelAr: "مكة — الاضطهاد",
     description: "Years of trial and steadfastness",
     color: "#E06B6B",
   },
   {
     id: "hijrah",
     label: "The Hijrah",
+    labelAr: "الهجرة",
     description: "The great migration that changed history",
     color: "#5B9BD5",
   },
   {
     id: "madinah",
     label: "Madinah Period",
+    labelAr: "العهد المدني",
     description: "Building the first Muslim society",
     color: "#7DC45A",
   },
   {
     id: "campaigns",
     label: "Major Campaigns",
+    labelAr: "الغزوات الكبرى",
     description: "The trials and triumphs of the Ummah",
     color: "#E0A84A",
   },
   {
     id: "final-years",
     label: "Final Years & Legacy",
+    labelAr: "السنوات الأخيرة والأثر الخالد",
     description: "The farewell and eternal impact",
     color: "#F0CC70",
   },

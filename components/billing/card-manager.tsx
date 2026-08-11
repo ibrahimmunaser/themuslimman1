@@ -5,6 +5,8 @@ import { loadStripe } from "@stripe/stripe-js";
 import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { CreditCard, Plus, Trash2, Loader2, X, Check, Star, AlertTriangle } from "lucide-react";
 import { daysUntilCardExpiry, isCardExpiringSoon, type SavedCardLike } from "@/lib/saved-cards";
+import type { CourseLang } from "@/lib/course-lang";
+import { t, tf } from "@/lib/ui-strings";
 
 // Lazily memoized so it reads the env var at first render rather than at module
 // evaluation time — avoids crashes when the key isn't yet compiled into the bundle.
@@ -43,10 +45,12 @@ function AddCardForm({
   clientSecret,
   onSuccess,
   onCancel,
+  lang,
 }: {
   clientSecret: string;
   onSuccess: (paymentMethodId: string | null) => void;
   onCancel: () => void;
+  lang: CourseLang;
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -68,7 +72,7 @@ function AddCardForm({
     });
 
     if (confirmError) {
-      setError(confirmError.message ?? "Card setup failed");
+      setError(confirmError.message ?? t(lang, "cardSetupFailed"));
       setSaving(false);
       return;
     }
@@ -84,7 +88,7 @@ function AddCardForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="flex items-center justify-between pt-4">
-        <p className="text-sm font-semibold text-text">Add a new card</p>
+        <p className="text-sm font-semibold text-text">{t(lang, "addNewCard")}</p>
         <button type="button" onClick={onCancel} className="text-text-muted hover:text-text transition-colors">
           <X className="w-4 h-4" />
         </button>
@@ -117,11 +121,11 @@ function AddCardForm({
           className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-gold hover:bg-gold-light disabled:opacity-60 text-ink text-sm font-semibold transition-all"
         >
           {succeeded ? (
-            <><Check className="w-4 h-4" /> Saved</>
+            <><Check className="w-4 h-4" /> {t(lang, "savedCheckmark")}</>
           ) : saving ? (
-            <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</>
+            <><Loader2 className="w-4 h-4 animate-spin" /> {t(lang, "saving")}</>
           ) : (
-            "Save card"
+            t(lang, "saveCard")
           )}
         </button>
         <button
@@ -129,18 +133,18 @@ function AddCardForm({
           onClick={onCancel}
           className="px-4 py-2 rounded-lg border border-border text-text-secondary hover:text-text text-sm transition-colors"
         >
-          Cancel
+          {t(lang, "cancel")}
         </button>
       </div>
 
       <p className="text-[11px] text-text-muted text-center">
-        Secured by Stripe · Encrypted and never stored on our servers.
+        {t(lang, "securedByStripe")}
       </p>
     </form>
   );
 }
 
-export function CardManager() {
+export function CardManager({ lang = "en" }: { lang?: CourseLang }) {
   const [cards, setCards] = useState<PaymentMethod[]>([]);
   const [defaultId, setDefaultId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -218,7 +222,7 @@ export function CardManager() {
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-base font-semibold text-text flex items-center gap-2">
           <CreditCard className="w-4 h-4 text-text-muted" />
-          Payment Methods
+          {t(lang, "paymentMethods")}
         </h2>
         {!showForm && (
           <button
@@ -226,7 +230,7 @@ export function CardManager() {
             className="inline-flex items-center gap-1.5 text-xs font-medium text-gold hover:text-gold-light transition-colors cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
-            Add card
+            {t(lang, "addCard")}
           </button>
         )}
       </div>
@@ -234,16 +238,16 @@ export function CardManager() {
       <div className="rounded-xl border border-border overflow-hidden">
         {!loading && cards.length === 0 && !showForm && (
           <div className="px-5 py-6 text-sm text-text-muted text-center">
-            No saved cards.{" "}
+            {t(lang, "noSavedCards")}{" "}
             <button onClick={handleAddClick} className="text-gold hover:text-gold-light underline underline-offset-2 cursor-pointer">
-              Add one
+              {t(lang, "addOne")}
             </button>
           </div>
         )}
 
         {loading && (
           <div className="flex items-center gap-2 text-sm text-text-muted px-5 py-4">
-            <Loader2 className="w-4 h-4 animate-spin" /> Loading…
+            <Loader2 className="w-4 h-4 animate-spin" /> {t(lang, "loadingEllipsis")}
           </div>
         )}
 
@@ -269,20 +273,20 @@ export function CardManager() {
                   {isDefault && (
                     <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-gold/15 text-gold border border-gold/30">
                       <Star className="w-2.5 h-2.5 fill-current" />
-                      Default
+                      {t(lang, "defaultBadge")}
                     </span>
                   )}
                 </div>
                 <p className={`text-xs mt-0.5 ${isExpired ? "text-red-400" : isExpiringSoon ? "text-amber-400" : "text-text-muted"}`}>
-                  Expires {String(card.expMonth).padStart(2, "0")}/{card.expYear}
+                  {tf(lang, "expiresOn", { date: `${String(card.expMonth).padStart(2, "0")}/${card.expYear}` })}
                   {isExpired && (
-                    <span className="inline-flex items-center gap-1 ml-2">
-                      <AlertTriangle className="w-3 h-3" /> Expired
+                    <span className="inline-flex items-center gap-1 ms-2">
+                      <AlertTriangle className="w-3 h-3" /> {t(lang, "expiredBadge")}
                     </span>
                   )}
                   {isExpiringSoon && (
-                    <span className="inline-flex items-center gap-1 ml-2">
-                      <AlertTriangle className="w-3 h-3" /> Expires soon
+                    <span className="inline-flex items-center gap-1 ms-2">
+                      <AlertTriangle className="w-3 h-3" /> {t(lang, "expiresSoonBadge")}
                     </span>
                   )}
                 </p>
@@ -293,14 +297,14 @@ export function CardManager() {
                   disabled={settingDefaultId === card.id}
                   className="text-xs font-medium text-text-muted hover:text-gold transition-colors disabled:opacity-50 whitespace-nowrap"
                 >
-                  {settingDefaultId === card.id ? "Setting…" : "Set as default"}
+                  {settingDefaultId === card.id ? t(lang, "settingDefault") : t(lang, "setAsDefault")}
                 </button>
               )}
               <button
                 onClick={() => handleRemove(card.id)}
                 disabled={removingId === card.id}
                 className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-500/10 text-text-muted hover:text-red-400 transition-colors disabled:opacity-50 flex-shrink-0"
-                aria-label="Remove card"
+                aria-label={t(lang, "removeCard")}
               >
                 {removingId === card.id
                   ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -331,6 +335,7 @@ export function CardManager() {
                 clientSecret={setupSecret}
                 onSuccess={handleAddSuccess}
                 onCancel={handleCancel}
+                lang={lang}
               />
             </Elements>
           </div>

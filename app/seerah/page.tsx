@@ -3,9 +3,10 @@ import { cookies } from "next/headers";
 import { getCachedStudent } from "@/lib/auth-cache";
 import { hasActiveCourseAccess, isFamilyPlan } from "@/lib/access";
 import { getActiveProfileId } from "@/app/actions/profiles";
-import { PARTS } from "@/lib/content";
+import { PARTS, getPartsForLang } from "@/lib/content";
 import { getThumbnailUrls } from "@/lib/r2";
 import { getPartPageData } from "@/lib/part-content-cache";
+import { parseLang, COURSE_LANG_COOKIE } from "@/lib/course-lang";
 import { ERA_MAP } from "@/lib/types";
 import { prisma } from "@/lib/db";
 import { CourseDashboardTabs } from "@/components/course/course-dashboard-tabs";
@@ -20,6 +21,9 @@ import { TextResourceContent } from "@/components/resources/text-resource-conten
 import { SimpleResourceContent } from "@/components/resources/simple-resource-content";
 import { QuizResourceContent } from "@/components/resources/quiz-resource-content";
 import { EmailVerificationBanner } from "@/components/auth/email-verification-banner";
+import { WelcomeTour } from "@/components/student/welcome-tour";
+import { ArabicAnnouncementBanner } from "@/components/student/arabic-announcement-banner";
+import { getDashboardOnboardingFlags } from "@/lib/onboarding";
 
 export const metadata = { title: "Complete Seerah" };
 export const dynamic = "force-dynamic";
@@ -64,13 +68,32 @@ export default async function LearnIndexPage({
   // requirePartAccess. Soft verify banner is shown below when needed.
   // Gate 2: Access check — unpaid users stay on the dashboard with parts 2–100
   // locked (mobile parity). Do NOT hard-redirect to /pricing.
-  const [hasAccess, thumbnails, learnerProfileId] = await Promise.all([
+  const cookieStoreForLang = await cookies();
+  const lang = parseLang(cookieStoreForLang.get(COURSE_LANG_COOKIE)?.value);
+
+  const [hasAccess, thumbnails, learnerProfileId, welcomeTourFlag] = await Promise.all([
     hasActiveCourseAccess(user.id, user.hasPaid),
-    getThumbnailUrls(PARTS.map((p) => p.partNumber)),
+    getThumbnailUrls(PARTS.map((p) => p.partNumber), lang),
     user.activeProfileId
       ? Promise.resolve(user.activeProfileId)
       : getActiveProfileId(user.id),
+    prisma.user.findUnique({
+      where: { id: user.id },
+      select: {
+        createdAt: true,
+        hasSeenWelcomeTour: true,
+        hasSeenArabicAnnouncement: true,
+      },
+    }),
   ]);
+  // Existing/returning students (pre-Arabic-launch accounts) get the Arabic
+  // announcement once. Brand-new signups get the welcome tour once and find
+  // Arabic via the sidebar language toggle — never both messages at once.
+  const { showWelcomeTour, showArabicAnnouncement } = getDashboardOnboardingFlags({
+    createdAt: welcomeTourFlag?.createdAt ?? new Date(),
+    hasSeenWelcomeTour: welcomeTourFlag?.hasSeenWelcomeTour === true,
+    hasSeenArabicAnnouncement: welcomeTourFlag?.hasSeenArabicAnnouncement === true,
+  });
 
   // Check if the user's subscription is past_due — they still have access
   // (we include past_due in ACTIVE_SUBSCRIPTION_STATUSES) but we show a
@@ -219,16 +242,19 @@ export default async function LearnIndexPage({
     }])
   );
 
+  // Language-specific parts list for display (titles, subtitles, era names)
+  const partsForDisplay = getPartsForLang(lang);
+
   // Unpaid: lock parts 2–100 (Part 1 free) — mirrors mobile resources/dashboard.
   const lockedPartNumbers: number[] = hasAccess
     ? []
-    : PARTS.filter((p) => p.partNumber > 1).map((p) => p.partNumber);
+    : partsForDisplay.filter((p) => p.partNumber > 1).map((p) => p.partNumber);
 
   // Show all parts (plan-locked parts are shown for upsell purposes)
-  const accessibleParts = PARTS;
+  const accessibleParts = partsForDisplay;
 
   // Get current part details — already in progressMap, no extra DB query needed.
-  const currentPartData = PARTS.find(p => p.partNumber === currentPart);
+  const currentPartData = partsForDisplay.find(p => p.partNumber === currentPart);
   const currentPartProgress = progressMap[currentPart]?.videoWatchPercent ?? 0;
 
   const totalParts = accessibleParts.length;
@@ -262,6 +288,7 @@ export default async function LearnIndexPage({
     if (!acc[era]) {
       acc[era] = {
         label: era,
+        labelAr: eraInfo?.labelAr || era,
         description: getEraDescription(era),
         color: eraInfo?.color ?? "#8B6F45",
         parts: [],
@@ -275,7 +302,7 @@ export default async function LearnIndexPage({
       acc[era].completedCount++;
     }
     return acc;
-  }, {} as Record<string, { label: string; description: string; color: string; parts: typeof PARTS; completedCount: number; totalCount: number }>);
+  }, {} as Record<string, { label: string; labelAr: string; description: string; color: string; parts: typeof PARTS; completedCount: number; totalCount: number }>);
 
   // Get user's first name for header
   // Show the active learner profile's name on the dashboard.
@@ -288,7 +315,7 @@ export default async function LearnIndexPage({
 
   // Build stagesData for home dashboard
   const stagesData = Object.values(partsByEra).map((era, idx) => ({
-    label: era.label,
+    label: lang === "ar" ? era.labelAr : era.label,
     description: era.description,
     stageNumber: idx + 1,
     totalCount: era.totalCount,
@@ -321,16 +348,17 @@ export default async function LearnIndexPage({
     })
     .map(p => p.partNumber);
 
-  // Title map for progress tab activity list
-  const partTitleMap = Object.fromEntries(PARTS.map(p => [p.partNumber, p.title]));
+  // Title map for progress tab activity list (language-aware)
+  const partTitleMap = Object.fromEntries(partsForDisplay.map(p => [p.partNumber, p.title]));
 
   // Lessons content — client component handles path selector and filtering
   const lessonsContent = (
     <LessonsPathView
-      parts={PARTS}
+      parts={partsForDisplay}
       progressData={lessonsProgressData}
       currentPart={currentPart}
       lockedPartNumbers={lockedPartNumbers}
+      lang={lang}
     />
   );
 
@@ -338,22 +366,26 @@ export default async function LearnIndexPage({
   return (
     <>
       {!user.emailVerified && (
-        <EmailVerificationBanner email={user.email} />
+        <EmailVerificationBanner email={user.email} isRtl={lang === "ar"} />
       )}
+      <ArabicAnnouncementBanner show={showArabicAnnouncement} lang={lang} />
       {isPastDue && (
         <div className="bg-red-500/10 border-b border-red-500/20 px-4 py-3 flex items-center justify-between gap-4 flex-wrap">
           <p className="text-sm text-red-400 font-medium">
-            ⚠️ Your last payment failed. Fix your card to keep access — your progress is safe.
+            {lang === "ar"
+              ? "⚠️ فشل آخر دفع. أصلح بطاقتك للحفاظ على وصولك — تقدمك محفوظ."
+              : "⚠️ Your last payment failed. Fix your card to keep access — your progress is safe."}
           </p>
           <a
             href="/billing"
             className="text-xs font-bold text-red-400 border border-red-500/30 px-3 py-1.5 rounded-lg hover:bg-red-500/10 transition-colors whitespace-nowrap"
           >
-            Update payment →
+            {lang === "ar" ? "تحديث الدفع →" : "Update payment →"}
           </a>
         </div>
       )}
     <CourseDashboardTabs
+        lang={lang}
         homeContent={
           <CourseHomeContent 
             userPlan={userPlan} 
@@ -368,10 +400,11 @@ export default async function LearnIndexPage({
             stagesData={stagesData}
             currentStageNumber={currentStageNumber}
             hasAccess={hasAccess}
+            lang={lang}
           />
         }
         lessonsContent={lessonsContent}
-        referenceContent={<CourseReferenceContent />}
+        referenceContent={<CourseReferenceContent lang={lang} />}
         resourcesContent={
           <ResourcesTabs
             videosContent={
@@ -382,6 +415,7 @@ export default async function LearnIndexPage({
                 continueWatching={videoContinueWatching}
                 thumbnails={thumbnails}
                 lockedPartNumbers={lockedPartNumbers}
+              lang={lang}
               />
             }
             audioContent={
@@ -390,6 +424,7 @@ export default async function LearnIndexPage({
                 completedCount={audioCompletedCount}
                 thumbnails={thumbnails}
                 lockedPartNumbers={lockedPartNumbers}
+              lang={lang}
               />
             }
             briefingsContent={
@@ -401,6 +436,7 @@ export default async function LearnIndexPage({
                 completedCount={briefingsCompletedCount}
                 thumbnails={thumbnails}
                 lockedPartNumbers={lockedPartNumbers}
+              lang={lang}
               />
             }
             slidesContent={
@@ -414,6 +450,7 @@ export default async function LearnIndexPage({
                 statusLabel="Viewed"
                 thumbnails={thumbnails}
                 lockedPartNumbers={lockedPartNumbers}
+              lang={lang}
               />
             }
             infographicsContent={
@@ -427,6 +464,7 @@ export default async function LearnIndexPage({
                 statusLabel="Viewed"
                 thumbnails={thumbnails}
                 lockedPartNumbers={lockedPartNumbers}
+              lang={lang}
               />
             }
             mindmapsContent={
@@ -440,6 +478,7 @@ export default async function LearnIndexPage({
                 statusLabel="Viewed"
                 thumbnails={thumbnails}
                 lockedPartNumbers={lockedPartNumbers}
+              lang={lang}
               />
             }
             flashcardsContent={
@@ -453,6 +492,7 @@ export default async function LearnIndexPage({
                 statusLabel="Studied"
                 thumbnails={thumbnails}
                 lockedPartNumbers={lockedPartNumbers}
+              lang={lang}
               />
             }
             quizzesContent={
@@ -464,6 +504,7 @@ export default async function LearnIndexPage({
                 totalAttempts={quizTotalAttempts}
                 thumbnails={thumbnails}
                 lockedPartNumbers={lockedPartNumbers}
+              lang={lang}
               />
             }
             factsContent={
@@ -475,8 +516,10 @@ export default async function LearnIndexPage({
                 completedCount={factsCompletedCount}
                 thumbnails={thumbnails}
                 lockedPartNumbers={lockedPartNumbers}
+              lang={lang}
               />
             }
+            initialLang={lang}
           />
         }
         progressContent={
@@ -491,9 +534,11 @@ export default async function LearnIndexPage({
             quizTotalAttempts={quizTotalAttempts}
             activeParts={activeParts}
             partTitleMap={partTitleMap}
+            lang={lang}
         />
       }
     />
+    <WelcomeTour show={showWelcomeTour} lang={lang} />
     </>
   );
 }

@@ -5,6 +5,7 @@ import { requireStudent } from "@/lib/auth";
 import { getActiveProfileId, resolveLearnerProfileId } from "@/app/actions/profiles";
 import { getPartPageData } from "@/lib/part-content-cache";
 import type { Quiz } from "@/lib/types";
+import type { CourseLang } from "@/lib/course-lang";
 import {
   computeQuizScore,
   VIDEO_COMPLETION_THRESHOLD,
@@ -301,11 +302,12 @@ export async function submitQuizAnswers(
   partNumber: number,
   answers: Record<string, string>,
   explicitProfileId?: string,
+  lang: CourseLang = "en",
 ): Promise<{ score: number; passed: boolean; bestScore: number } | undefined> {
   if (!isValidPartNumber(partNumber)) return;
   const user = await requireStudent();
   if (!user) return;
-  const partData = await getPartPageData(partNumber);
+  const partData = await getPartPageData(partNumber, lang);
   const quizData = partData.quizData as Quiz | null | undefined;
   if (!quizData || quizData.questions.length === 0) {
     devLog(`[PROGRESS] submitQuizAnswers: No quiz data for part ${partNumber}`);

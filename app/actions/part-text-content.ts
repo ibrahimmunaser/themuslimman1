@@ -1,22 +1,14 @@
 "use server";
 
-import { PART_CONTENT } from "@/lib/part-content-data";
 import { getCurrentUser } from "@/lib/auth";
 import { hasActiveCourseAccess, TOTAL_COURSE_PARTS } from "@/lib/access";
+import { PART_CONTENT } from "@/lib/part-content-data";
+import { PART_CONTENT_AR } from "@/lib/part-content-data-ar";
+import { formatSeerahContent } from "@/lib/text-formatter";
+import type { CourseLang } from "@/lib/course-lang";
 
 /**
  * Access gate for text content server actions.
- *
- * Matches lib/part-access.ts:
- *   1. Authenticated user
- *   2. Verified email — waived for anonymous guests and entitled (paid/IAP) users
- *   3. Active course access (lifetime purchase OR active/trialing subscription)
- *
- * Returns false (silently) for any denied case — no error detail is leaked
- * to the caller since these actions return string | null.
- *
- * Part number is validated first (fast, no DB) to reject obviously invalid
- * inputs before hitting auth.
  */
 async function canAccessPartContent(partNumber: number): Promise<boolean> {
   if (!Number.isInteger(partNumber) || partNumber < 1 || partNumber > TOTAL_COURSE_PARTS) {
@@ -25,8 +17,6 @@ async function canAccessPartContent(partNumber: number): Promise<boolean> {
 
   const user = await getCurrentUser();
   if (!user) return false;
-  // Part 1 free; paid content requires access. Email verify waived when entitled
-  // (mirrors lib/part-access.ts).
   if (partNumber === 1) return true;
   if (!user.emailVerified && !user.isAnonymous) {
     const entitled = await hasActiveCourseAccess(user.id, user.hasPaid);
@@ -38,22 +28,41 @@ async function canAccessPartContent(partNumber: number): Promise<boolean> {
 
 /**
  * Returns pre-rendered briefing HTML for a single part.
- *
- * Access: authenticated + verified + active course access only.
- * Returns null for denied access, invalid part number, or missing content.
+ * English: hardcoded PART_CONTENT. Arabic: hardcoded PART_CONTENT_AR
+ * (translated from the English source — not loaded from R2 at runtime).
  */
-export async function getPartBriefingHtml(partNumber: number): Promise<string | null> {
+export async function getPartBriefingHtml(
+  partNumber: number,
+  lang: CourseLang = "en",
+): Promise<string | null> {
   if (!(await canAccessPartContent(partNumber))) return null;
-  return PART_CONTENT[partNumber]?.briefingHtml ?? null;
+
+  if (lang === "ar") {
+    const ar = PART_CONTENT_AR[partNumber];
+    if (ar?.briefingHtml) return ar.briefingHtml;
+    if (ar?.briefingText) return formatSeerahContent(ar.briefingText);
+    return null;
+  }
+
+  const entry = PART_CONTENT[partNumber];
+  if (entry?.briefingHtml) return entry.briefingHtml;
+  if (entry?.briefingText) return formatSeerahContent(entry.briefingText);
+  return null;
 }
 
 /**
  * Returns statement-of-facts raw text for a single part.
- *
- * Access: authenticated + verified + active course access only.
- * Returns null for denied access, invalid part number, or missing content.
+ * English: hardcoded PART_CONTENT. Arabic: hardcoded PART_CONTENT_AR.
  */
-export async function getPartStatementOfFactsText(partNumber: number): Promise<string | null> {
+export async function getPartStatementOfFactsText(
+  partNumber: number,
+  lang: CourseLang = "en",
+): Promise<string | null> {
   if (!(await canAccessPartContent(partNumber))) return null;
+
+  if (lang === "ar") {
+    return PART_CONTENT_AR[partNumber]?.statementOfFactsText ?? null;
+  }
+
   return PART_CONTENT[partNumber]?.statementOfFactsText ?? null;
 }

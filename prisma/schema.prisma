@@ -868,6 +868,15 @@ model User {
   /// must not require registration). Set false the moment the user optionally
   /// upgrades to a real account with email/password (see /api/auth/upgrade-account).
   isAnonymous                                     Boolean                @default(false)
+  /// True once the student has completed or skipped the first-run coachmark
+  /// tour of the course dashboard (/seerah). Shown once per account, never
+  /// again after — regardless of which learner profile is active.
+  hasSeenWelcomeTour                              Boolean                @default(false)
+  /// True once the student has dismissed or acted on the one-time dashboard
+  /// banner announcing Arabic course support. Shown once per account for
+  /// existing/returning students (pre-Arabic-launch accounts); brand-new
+  /// signups are not shown this banner (they use the sidebar language toggle).
+  hasSeenArabicAnnouncement                       Boolean                @default(false)
   activityLogs                                    ActivityLog[]
   emailAutomationEvents                           EmailAutomationEvent[]
   emailOutreachLogs                               EmailOutreachLog[]
