@@ -403,7 +403,10 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
   }
 
   return (
-    <div className="rounded-2xl overflow-hidden border border-border bg-black relative group">
+    // Video controls always render LTR, even on the Arabic course — mirroring the
+    // seek bar / rewind-forward / control order for RTL would be confusing (same
+    // convention as YouTube, Netflix, etc., which never flip player chrome).
+    <div dir="ltr" className="rounded-2xl overflow-hidden border border-border bg-black relative group">
       <video
         ref={videoRef}
         src={src}
