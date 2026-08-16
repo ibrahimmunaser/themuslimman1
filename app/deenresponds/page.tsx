@@ -29,6 +29,7 @@ export default async function DeenRespondsPage() {
       config={getInfluencerConfig("deenresponds")!}
       part1={pageData.part}
       part1AssetUrls={pageData.initialAssetUrls}
+      initialLang={pageData.lang}
       isAuthenticated={!!user}
       userEmail={user?.email ?? ""}
     />

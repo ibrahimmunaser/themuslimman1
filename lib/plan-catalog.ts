@@ -21,7 +21,7 @@ const PLAN_CATALOG: Record<PlanId, PlanAnalyticsFields> = {
     plan_id: "individual-monthly",
     plan_type: "individual",
     billing_interval: "monthly",
-    price: 499,
+    price: 999,
     currency: "usd",
   },
   "family-monthly": {

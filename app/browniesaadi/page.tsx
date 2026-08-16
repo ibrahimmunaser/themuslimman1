@@ -29,6 +29,7 @@ export default async function BrowniesaadiPage() {
       config={getInfluencerConfig("browniesaadi")!}
       part1={pageData.part}
       part1AssetUrls={pageData.initialAssetUrls}
+      initialLang={pageData.lang}
       isAuthenticated={!!user}
       userEmail={user?.email ?? ""}
     />

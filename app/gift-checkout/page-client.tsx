@@ -259,31 +259,10 @@ function GiftCheckoutContent({ purchaserEmail, purchaserName: _purchaserName }: 
       </p>
 
       {/* Plan selector */}
-      <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">Choose gift type</p>
-      <div className="grid grid-cols-2 gap-3 mb-8">
-        {([
-          { id: "complete" as GiftPlanId, icon: User,  label: "Individual", price: PLANS.complete.price, sub: "1 learner · one-time" },
-          { id: "family"   as GiftPlanId, icon: Users, label: "Family",     price: PLANS.family.price,   sub: "Up to 5 learners · one-time" },
-        ] as const).map(({ id, icon: Icon, label, price, sub }) => (
-          <button
-            key={id}
-            type="button"
-            onClick={() => handlePlanChange(id)}
-            className={`flex flex-col p-4 rounded-xl border transition-all text-left ${
-              planChoice === id
-                ? "border-gold/50 bg-gold/8 ring-1 ring-gold/30"
-                : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
-            }`}
-          >
-            <div className="flex items-center gap-2 mb-2">
-              <Icon className={`w-4 h-4 flex-shrink-0 ${planChoice === id ? "text-gold" : "text-zinc-500"}`} />
-              <span className={`font-semibold text-sm ${planChoice === id ? "text-white" : "text-zinc-400"}`}>{label}</span>
-              {planChoice === id && <div className="ml-auto w-2 h-2 rounded-full bg-gold" />}
-            </div>
-            <span className="text-xl font-bold text-white">{formatPrice(price)}</span>
-            <span className="text-xs text-zinc-500 mt-0.5">{sub}</span>
-          </button>
-        ))}
+      <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">Gift type</p>
+      <div className="mb-8 rounded-xl border border-gold/50 bg-gold/8 ring-1 ring-gold/30 p-4">
+        <p className="font-semibold text-white">Individual Lifetime</p>
+        <p className="text-sm text-zinc-400 mt-0.5">1 learner · one-time · ${PLANS.complete.price / 100}</p>
       </div>
 
       {/* Features */}

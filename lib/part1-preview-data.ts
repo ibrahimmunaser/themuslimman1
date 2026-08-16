@@ -1,5 +1,7 @@
-import { getPartById } from "@/lib/content";
+import { cookies } from "next/headers";
+import { getPartById, localizePart } from "@/lib/content";
 import { getPartPageData } from "@/lib/part-content-cache";
+import { parseLang, COURSE_LANG_COOKIE, type CourseLang } from "@/lib/course-lang";
 import type { Part, Quiz } from "@/lib/types";
 
 export interface Part1AssetUrls {
@@ -12,6 +14,7 @@ export interface Part1AssetUrls {
 export interface Part1PreviewData {
   part: Part | null;
   initialAssetUrls: Part1AssetUrls;
+  lang: CourseLang;
 }
 
 function stripQuizAnswers(quiz: Quiz | null | undefined): Quiz | null | undefined {
@@ -23,9 +26,11 @@ function stripQuizAnswers(quiz: Quiz | null | undefined): Quiz | null | undefine
 }
 
 /** Server-side Part 1 preview payload (video, slides, quiz, flashcards, etc.). */
-export async function getPart1PreviewData(): Promise<Part1PreviewData> {
-  const partBase = getPartById("part-1");
-  if (!partBase) return { part: null, initialAssetUrls: {} };
+export async function getPart1PreviewData(lang: CourseLang = "en"): Promise<Part1PreviewData> {
+  const partBaseEn = getPartById("part-1");
+  if (!partBaseEn) return { part: null, initialAssetUrls: {}, lang };
+
+  const partBase = localizePart(partBaseEn, lang);
 
   try {
     const {
@@ -45,7 +50,7 @@ export async function getPart1PreviewData(): Promise<Part1PreviewData> {
       audioUrl,
       mindmapUrl,
       thumbnailUrl,
-    } = await getPartPageData(1);
+    } = await getPartPageData(1, lang);
 
     const part: Part = {
       ...partBase,
@@ -72,8 +77,15 @@ export async function getPart1PreviewData(): Promise<Part1PreviewData> {
     return {
       part,
       initialAssetUrls: { videoUrl, audioUrl, mindmapUrl, thumbnailUrl },
+      lang,
     };
   } catch {
-    return { part: null, initialAssetUrls: {} };
+    return { part: null, initialAssetUrls: {}, lang };
   }
+}
+
+/** Resolve course language from the request cookie (defaults to English). */
+export async function getPreviewLangFromCookies(): Promise<CourseLang> {
+  const cookieStore = await cookies();
+  return parseLang(cookieStore.get(COURSE_LANG_COOKIE)?.value);
 }

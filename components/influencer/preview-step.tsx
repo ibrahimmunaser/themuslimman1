@@ -7,12 +7,14 @@ import { trackEvent } from "@/lib/analytics";
 import type { InfluencerConfig } from "@/lib/influencer-configs";
 import type { Part } from "@/lib/types";
 import type { Part1AssetUrls } from "@/lib/part1-preview-data";
+import type { CourseLang } from "@/lib/course-lang";
 import { Part1PreviewTabs } from "@/components/landing/part1-preview-tabs";
 
 interface PreviewStepProps {
   config: InfluencerConfig;
   part: Part | null;
   initialAssetUrls: Part1AssetUrls;
+  initialLang?: CourseLang;
   onBack: () => void;
   onContinue: () => void;
 }
@@ -22,6 +24,7 @@ export function PreviewStep({
   config,
   part,
   initialAssetUrls,
+  initialLang = "en",
   onBack,
   onContinue,
 }: PreviewStepProps) {
@@ -96,7 +99,11 @@ export function PreviewStep({
         {part ? (
           <div className="rounded-xl border border-zinc-800 overflow-hidden bg-surface shadow-2xl shadow-black/50">
             <div className="px-3 sm:px-5 py-5">
-              <Part1PreviewTabs part={part} initialAssetUrls={initialAssetUrls} />
+              <Part1PreviewTabs
+                part={part}
+                initialAssetUrls={initialAssetUrls}
+                initialLang={initialLang}
+              />
             </div>
           </div>
         ) : (

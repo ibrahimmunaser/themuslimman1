@@ -14,16 +14,16 @@ export default function OrthodoxFunnelClient() {
         creatorName: "The Orthodox Muslim",
         creatorAvatarUrl: "/images/libyano.png",
         heroHeadline: "Learn the life of the Prophet ﷺ in order — start with Part 1 free.",
-        price:        "$4.99/month",
+        price:        "$9.99/month",
         checkoutUrl:  CHECKOUT,
         watchFreeUrl: "/watch-free",
         eventPrefix:  "orthodox_",
-        checkoutButtonLabel: "Continue for $4.99/month",
+        checkoutButtonLabel: "Continue for $9.99/month",
       }}
       part1Preview={
         <Part1FullPreview
           checkoutHref={CHECKOUT}
-          ctaLabel="Continue the Full Course — $4.99/month"
+          ctaLabel="Continue the Full Course — $9.99/month"
         />
       }
       afterPart1Preview={<OrthodoxCheckupEmbed />}

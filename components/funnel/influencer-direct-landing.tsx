@@ -20,7 +20,7 @@ export interface InfluencerDirectConfig {
   creatorAvatarUrl?: string;
   /** Hero headline, e.g. "Learn the life of the Prophet ﷺ in order." */
   heroHeadline: string;
-  /** Price shown in hero, e.g. "$4.99/month" */
+  /** Price shown in hero, e.g. "$9.99/month" */
   price?: string;
   /** Full checkout URL */
   checkoutUrl: string;
@@ -75,7 +75,7 @@ export function InfluencerDirectLanding({ config, part1Preview, afterPart1Previe
   // Enriched checkout URL — updated on mount to include real landing-page UTMs
   const [checkoutUrl, setCheckoutUrl] = useState(config.checkoutUrl);
 
-  const price = config.price ?? "$4.99/month";
+  const price = config.price ?? "$9.99/month";
 
   // Sticky only shown when user has scrolled past hero AND no CTA section is on screen
   const showSticky = scrolledPast && !anyCTAVisible;
@@ -272,7 +272,7 @@ export function InfluencerDirectLanding({ config, part1Preview, afterPart1Previe
           {/* Subheadline */}
           <p className="text-base sm:text-lg text-text-secondary leading-relaxed mb-8 max-w-xl mx-auto">
             A structured 100-part Seerah course with videos, quizzes, flashcards, summaries,
-            mind maps, and progress tracking for you and your family.
+            mind maps, and progress tracking.
           </p>
 
           {/* Primary + Secondary CTAs */}
@@ -351,7 +351,7 @@ export function InfluencerDirectLanding({ config, part1Preview, afterPart1Previe
 
           <PlanPicker
             checkoutBaseUrl={checkoutUrl}
-            recommendedPlan="individual-monthly"
+            recommendedPlan="individual-lifetime"
             onCtaClick={onCheckoutClick}
           />
         </div>

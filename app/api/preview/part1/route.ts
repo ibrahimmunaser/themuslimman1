@@ -1,11 +1,14 @@
-import { NextResponse } from "next/server";
-import { getPartById } from "@/lib/content";
+import { NextRequest, NextResponse } from "next/server";
+import { getPartById, localizePart } from "@/lib/content";
 import { getPartPageData } from "@/lib/part-content-cache";
+import { parseLang } from "@/lib/course-lang";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const partBase = getPartById("part-1");
-    const { videoUrl, thumbnailUrl } = await getPartPageData(1);
+    const lang = parseLang(request.nextUrl.searchParams.get("lang"));
+    const partBaseEn = getPartById("part-1");
+    const partBase = partBaseEn ? localizePart(partBaseEn, lang) : null;
+    const { videoUrl, thumbnailUrl, audioUrl } = await getPartPageData(1, lang);
 
     return NextResponse.json(
       {
@@ -13,11 +16,14 @@ export async function GET() {
         subtitle:     partBase?.subtitle ?? null,
         videoUrl:     videoUrl     ?? null,
         thumbnailUrl: thumbnailUrl ?? null,
+        audioUrl:     audioUrl     ?? null,
+        lang,
       },
       {
         headers: {
-          // Cache for 55 min — signed URLs last 4 hours, so safe to cache at CDN
-          "Cache-Control": "public, max-age=3300, stale-while-revalidate=60",
+          // Don't CDN-cache across languages — signed URLs + lang-specific payloads
+          "Cache-Control": "private, max-age=300, stale-while-revalidate=60",
+          Vary: "Cookie",
         },
       },
     );

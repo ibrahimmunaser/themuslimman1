@@ -2688,7 +2688,7 @@ async function sendAbandonedCheckoutEmail(
   const checkoutUrl = `${appUrl}/checkout?${params.toString()}`;
 
   const greeting = escapeHtml(user.fullName?.trim() || "dear student");
-  const planLabel = isFamilySub ? "Family Membership ($9.99/month)" : "Individual Membership ($4.99/month)";
+  const planLabel = isFamilySub ? "Family Membership ($9.99/month)" : "Individual Membership ($9.99/month)";
 
   await resend.emails.send({
     from:    process.env.EMAIL_FROM ?? "TheMuslimMan <noreply@themuslimman.com>",

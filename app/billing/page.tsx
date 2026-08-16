@@ -8,7 +8,6 @@ import { CardManager } from "@/components/billing/card-manager";
 import { PortalButton } from "@/components/billing/portal-button";
 import { CancelSubscriptionButton } from "@/components/billing/cancel-subscription-button";
 import { ReactivateSubscriptionButton } from "@/components/billing/reactivate-subscription-button";
-import { UpgradeToFamilyMonthlyButton } from "@/components/billing/upgrade-to-family-monthly-button";
 import {
   CreditCard,
   CheckCircle2,
@@ -16,10 +15,8 @@ import {
   Star,
   Lock,
   RefreshCw,
-  Users,
   ArrowRight,
   ArrowLeft,
-  ArrowUpCircle,
   AlertTriangle,
 } from "lucide-react";
 import Link from "next/link";
@@ -101,21 +98,6 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
   // Paid / entitled users may reach billing without emailVerified (Stripe guest
   // checkout, IAP upgrade). Only bounce unpaid unverified users away.
   if (!user.emailVerified && !needsBillingRecovery && !accessInfo.hasAccess) redirect("/seerah");
-
-  // ── Individual → Family upgrade pricing ──────────────────────────────────────
-  // Standard upgrade cost: $30 (full $79 family − full $49 individual). Promo
-  // codes are no longer offered, so every upgrade uses this flat pricing.
-  const individualPurchase = purchases.find((p) => p.planId === "complete");
-  const individualPaidCents = individualPurchase?.amount ?? PLANS.complete.price;
-  const upgradeCostCents: number = PLANS.family.upgradeFromLifetimePrice; // $30
-  // familyReferenceCents = what the user would pay for Family if buying fresh today.
-  // Used as the strikethrough "instead of X" reference in the upgrade card.
-  const familyReferenceCents: number = PLANS.family.price; // $79
-
-  const upgradeUrl = "/checkout?plan=family-lifetime";
-
-  const fmtCurrency = (cents: number) =>
-    new Intl.NumberFormat("en-US", { style: "currency", currency: "usd", minimumFractionDigits: 0 }).format(cents / 100);
 
   const userPlan = "complete" as const;
   const cookieStore = await cookies();
@@ -415,103 +397,35 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
           </div>
         )}
 
-        {/* Individual Lifetime → Family Lifetime upgrade card */}
-        {!hideStripeBilling && accessInfo.hasLifetime && !isFamily && !isMonthly && !isTrial && (
-          <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-6">
+        {/* Individual Monthly/Trial → Individual Lifetime upgrade card */}
+        {!hideStripeBilling && !accessInfo.hasLifetime && !isFamily && isMonthly && !isPastDue && (
+          <div className="rounded-2xl border border-gold/20 bg-gold/5 p-6">
             <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-amber-500/15">
-                <Users className="w-5 h-5 text-amber-400" />
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-gold/15">
+                <Star className="w-5 h-5 text-gold" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-text">{ar ? "الترقية إلى وصول العائلة" : "Upgrade to Family Access"}</p>
+                <p className="font-semibold text-text">{ar ? "الترقية إلى الوصول الفردي مدى الحياة" : "Upgrade to Individual Lifetime"}</p>
                 <p className="text-sm text-text-secondary mt-1 leading-relaxed">
                   {ar
-                    ? "وصول العائلة يمنح حسابًا واحدًا للأسرة مع حتى ٥ ملفات متعلّمين. يسجّل الأهل الدخول مرة واحدة، وينشئون ملفًا لكل فرد، ولكل متعلّم تقدّم منفصل في جميع موارد الدورة."
-                    : "Family Access gives one household account with up to 5 learner profiles. Parents log in once, create profiles for each family member, and each learner gets their own separate progress for all course assets."}
+                    ? "توقّف عن الدفع الشهري. احصل على وصول دائم لجميع أجزاء السيرة الـ ١٠٠ بدفعة واحدة بقيمة $49 — بلا رسوم متكررة، لك إلى الأبد."
+                    : "Stop paying monthly. Get permanent access to all 100 Seerah parts for a one-time payment of $49 — no more recurring charges, yours forever."}
                 </p>
-                <div className="mt-3 flex items-center gap-2 text-xs text-amber-400/80">
-                  <ArrowUpCircle className="w-3.5 h-3.5 flex-shrink-0" />
-                  {ar
-                    ? `لقد دفعت بالفعل ${fmtCurrency(individualPaidCents)} للوصول الفردي مدى الحياة — تدفع فقط فرق ${fmtCurrency(upgradeCostCents)}.`
-                    : `You've already paid ${fmtCurrency(individualPaidCents)} for Individual Lifetime — you're only paying the ${fmtCurrency(upgradeCostCents)} difference.`}
-                </div>
                 <div className="mt-4 flex flex-wrap items-center gap-3">
                   <Link
-                    href={upgradeUrl}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm transition-colors shadow-sm"
+                    href="/checkout?plan=individual-lifetime"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gold hover:bg-gold-light text-black font-bold text-sm transition-colors shadow-sm"
                   >
-                    {ar ? `الترقية بـ ${fmtCurrency(upgradeCostCents)}` : `Upgrade for ${fmtCurrency(upgradeCostCents)}`}
+                    {ar ? "وصول مدى الحياة — $49" : "Lifetime Access — $49"}
                     <UpgradeIcon className="w-4 h-4" />
                   </Link>
                   <span className="text-xs text-text-muted">
-                    <span className="line-through opacity-60 me-1">{fmtCurrency(familyReferenceCents)}</span>
-                    {ar ? "دفعة واحدة · وصول عائلي مدى الحياة" : "One-time · Lifetime family access"}
+                    {ar ? "دفعة واحدة · يُلغى الاشتراك تلقائيًا" : "One-time · Subscription cancelled automatically"}
                   </span>
                 </div>
               </div>
             </div>
           </div>
-        )}
-
-        {/* Individual Monthly/Trial → Lifetime upgrade cards */}
-        {!hideStripeBilling && !accessInfo.hasLifetime && !isFamily && isMonthly && !isPastDue && (
-          <>
-            {/* Upgrade to Individual Lifetime */}
-            <div className="rounded-2xl border border-gold/20 bg-gold/5 p-6">
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-gold/15">
-                  <Star className="w-5 h-5 text-gold" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-text">{ar ? "الترقية إلى الوصول الفردي مدى الحياة" : "Upgrade to Individual Lifetime"}</p>
-                  <p className="text-sm text-text-secondary mt-1 leading-relaxed">
-                    {ar
-                      ? "توقّف عن الدفع الشهري. احصل على وصول دائم لجميع أجزاء السيرة الـ ١٠٠ بدفعة واحدة بقيمة $49 — بلا رسوم متكررة، لك إلى الأبد."
-                      : "Stop paying monthly. Get permanent access to all 100 Seerah parts for a one-time payment of $49 — no more recurring charges, yours forever."}
-                  </p>
-                  <div className="mt-4 flex flex-wrap items-center gap-3">
-                    <Link
-                      href="/checkout?plan=individual-lifetime"
-                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gold hover:bg-gold-light text-black font-bold text-sm transition-colors shadow-sm"
-                    >
-                      {ar ? "وصول مدى الحياة — $49" : "Lifetime Access — $49"}
-                      <UpgradeIcon className="w-4 h-4" />
-                    </Link>
-                    <span className="text-xs text-text-muted">
-                      {ar ? "دفعة واحدة · يُلغى الاشتراك تلقائيًا" : "One-time · Subscription cancelled automatically"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Upgrade to Family Access */}
-            <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-6">
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-amber-500/15">
-                  <Users className="w-5 h-5 text-amber-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-text">{ar ? "الترقية إلى وصول العائلة" : "Upgrade to Family Access"}</p>
-                  <p className="text-sm text-text-secondary mt-1 leading-relaxed">
-                    {ar
-                      ? "حساب واحد للأسرة مع حتى ٥ ملفات متعلّمين، تقدّم منفصل لكل متعلّم، واختيار بين الفوترة الشهرية أو مدى الحياة."
-                      : "One household account with up to 5 learner profiles, separate progress for every learner, and your choice of monthly or lifetime billing."}
-                  </p>
-                  <div className="mt-4 flex flex-wrap items-center gap-3">
-                    <Link
-                      href="/checkout?plan=family-lifetime"
-                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm transition-colors shadow-sm"
-                    >
-                      {ar ? "مدى الحياة — $79" : "Lifetime — $79"}
-                      <UpgradeIcon className="w-4 h-4" />
-                    </Link>
-                    <UpgradeToFamilyMonthlyButton lang={lang} />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </>
         )}
 
         {/* Card manager — Stripe saved cards only (not App Store / Play) */}

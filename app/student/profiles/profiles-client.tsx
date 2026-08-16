@@ -7,7 +7,7 @@ import {
   Plus, Edit2, Trash2, ArrowLeft,
   Video, BookOpen, Brain, ClipboardCheck,
   Image, Map, FileText, Layers, BarChart2,
-  ChevronRight, Check,
+  Check,
 } from "lucide-react";
 import {
   createProfile,
@@ -509,27 +509,6 @@ export function ProfilesClient({
               ? "انقر على ملف لبدء التعلم · مرّر للتعديل أو عرض التقدم"
               : "Click a profile to start learning · hover to edit or view progress"}
           </p>
-        )}
-        {!isFamily && (
-          <div className="mt-4 p-4 bg-amber-500/5 border border-amber-500/15 rounded-xl max-w-sm text-center">
-            <p className="text-sm font-semibold text-amber-400 mb-1">
-              {isRtl ? "هل تريد ملفات لجميع أفراد العائلة؟" : "Want profiles for the whole family?"}
-            </p>
-            <p className="text-xs text-zinc-500 mb-3">
-              {isRtl
-                ? "وصول العائلة يمنحك حتى ٥ ملفات متعلّمين منفصلة مع تتبع تقدّم مستقل."
-                : "Family Access gives up to 5 separate learner profiles with independent progress tracking."}
-            </p>
-            {hasLifetime ? (
-              <Link href="/checkout?plan=family-lifetime" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-black text-sm font-bold transition-colors">
-                {isRtl ? "الترقية للعائلة — $50" : "Upgrade to Family — $50"} <ChevronRight className={`w-3.5 h-3.5 ${isRtl ? "rotate-180" : ""}`} />
-              </Link>
-            ) : (
-              <Link href="/checkout?plan=family-trial" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-black text-sm font-bold transition-colors">
-                {isRtl ? "الترقية لوصول العائلة" : "Upgrade to Family Access"} <ChevronRight className={`w-3.5 h-3.5 ${isRtl ? "rotate-180" : ""}`} />
-              </Link>
-            )}
-          </div>
         )}
       </div>
     </div>

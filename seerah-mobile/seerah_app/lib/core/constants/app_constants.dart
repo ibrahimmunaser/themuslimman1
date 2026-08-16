@@ -44,7 +44,7 @@ class AppConstants {
   ];
 
   // Plans — fallback prices shown while store products load
-  static const String monthlyPrice        = '4.99';
+  static const String monthlyPrice        = '9.99';
   static const String familyMonthlyPrice  = '9.99';
   static const String lifetimePrice       = '49';
   static const String familyLifetimePrice = '79';

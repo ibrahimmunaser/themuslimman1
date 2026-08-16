@@ -102,7 +102,7 @@ describe("canonical click emitters", () => {
       plan_id: "individual-monthly",
       plan_type: "individual",
       billing_interval: "monthly",
-      price: 499,
+      price: 999,
       currency: "usd",
     });
   });
@@ -154,7 +154,7 @@ describe("plan analytics props", () => {
       plan_id: "individual-monthly",
       plan_type: "individual",
       billing_interval: "monthly",
-      price: 499,
+      price: 999,
       currency: "usd",
     });
   });

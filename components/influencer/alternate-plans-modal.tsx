@@ -34,28 +34,12 @@ export function AlternatePlansModal({ config, isOpen, onClose }: AlternatePlansM
 
   const plans: Plan[] = [
     {
-      id:           "family-monthly",
-      label:        "Family Monthly",
-      price:        formatPrice(PLANS.familyMonthly.price),
-      priceSuffix:  "/month",
-      badge:        "Best for Families",
-      description:  "Up to 5 learner profiles · each tracks progress independently · cancel anytime",
-      checkoutPath: buildCheckoutUrl("family-monthly", config),
-    },
-    {
       id:           "individual-lifetime",
       label:        "Individual Lifetime",
       price:        formatPrice(PLANS.complete.price),
+      badge:        "Best Value",
       description:  "One-time payment · full access forever · all 100 parts",
       checkoutPath: buildCheckoutUrl("individual-lifetime", config),
-    },
-    {
-      id:           "family-lifetime",
-      label:        "Family Lifetime",
-      price:        formatPrice(PLANS.family.price),
-      badge:        "Best Value",
-      description:  "One-time payment · up to 5 profiles · lifetime access for the whole household",
-      checkoutPath: buildCheckoutUrl("family-lifetime", config),
     },
   ];
 

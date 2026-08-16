@@ -90,7 +90,7 @@ export default async function WatchFreePage({ searchParams }: Props) {
         >
           <Part1FullPreview
             checkoutHref={checkoutHref}
-            ctaLabel="Continue the Full Course — $4.99/month"
+            ctaLabel="Continue the Full Course — $9.99/month"
           />
         </Suspense>
       </section>
@@ -109,7 +109,7 @@ export default async function WatchFreePage({ searchParams }: Props) {
             href={checkoutHref}
             className="inline-flex items-center gap-2 bg-gold text-ink font-bold px-8 py-4 rounded-xl hover:bg-gold-light active:scale-[0.97] transition-all shadow-lg shadow-gold/20"
           >
-            Continue for $4.99/month
+            Continue for $9.99/month
             <ArrowRight className="w-5 h-5" />
           </Link>
           <p className="mt-3 text-xs text-text-muted">

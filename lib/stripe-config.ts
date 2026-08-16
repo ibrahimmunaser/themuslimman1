@@ -51,7 +51,7 @@ export const PLANS = {
     ],
   },
 
-  // ── Individual monthly subscription ($4.99/month) ─────────────────────────
+  // ── Individual monthly subscription ($9.99/month) ─────────────────────────
   // New price for future customers. Existing customers stay on their original
   // price via their Stripe subscription — changing this constant does not
   // retroactively affect any active subscription.
@@ -59,7 +59,7 @@ export const PLANS = {
     id: "monthly",
     name: "Individual Membership",
     subtitle: "Full access while subscribed",
-    price: 499, // $4.99/month
+    price: 999, // $9.99/month
     interval: "month" as const,
     features: [
       "Start today. Continue at your own pace.",

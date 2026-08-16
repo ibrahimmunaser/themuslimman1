@@ -342,56 +342,6 @@ export default async function CreatorDemoPage({ searchParams }: PageProps) {
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════
-          SECTION 5 — FAMILY / PARENT SECTION
-      ══════════════════════════════════════════════════════════════════ */}
-      <section className="px-5 py-14 max-w-sm mx-auto">
-        <div className="bg-gradient-to-b from-surface-raised to-surface border border-border/50 rounded-3xl overflow-hidden">
-          {/* Top accent */}
-          <div className="h-1 bg-gradient-to-r from-gold/60 via-gold to-gold/60" />
-
-          <div className="px-6 py-8 text-center space-y-5">
-            <div className="w-14 h-14 bg-gold/10 border border-gold/25 rounded-2xl flex items-center justify-center mx-auto">
-              <Users className="w-7 h-7 text-gold" />
-            </div>
-
-            <div>
-              <h2 className="text-2xl font-extrabold text-text leading-tight">
-                Built for Muslim Families Who Want Structure
-              </h2>
-              <p className="text-sm text-text-secondary mt-3 leading-relaxed">
-                Instead of random clips and scattered reminders, families can
-                learn the life of the Prophet ﷺ step by step — in order,
-                together.
-              </p>
-            </div>
-
-            <div className="space-y-3 text-left">
-              {[
-                "Up to 5 learner profiles per family",
-                "Each member tracks their own progress",
-                "Kids, teens, and parents all learning together",
-                "One lifetime payment for the whole family",
-              ].map((item) => (
-                <div key={item} className="flex items-start gap-3">
-                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-text-secondary">{item}</p>
-                </div>
-              ))}
-            </div>
-
-            <Link
-              href="/checkout?plan=family&billing=lifetime"
-              className="flex items-center justify-center gap-2 w-full bg-surface border border-gold/40 text-gold font-bold text-sm px-5 py-3.5 rounded-xl hover:bg-gold/10 transition-colors"
-            >
-              <Users className="w-4 h-4" />
-              See Family Plan
-              <ChevronRight className="w-4 h-4" />
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════════════
           SECTION 6 — PRICING PREVIEW
       ══════════════════════════════════════════════════════════════════ */}
       <section className="px-5 py-14 max-w-sm mx-auto">
@@ -435,25 +385,6 @@ export default async function CreatorDemoPage({ searchParams }: PageProps) {
             >
               Get Lifetime Access — $49
               <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-
-          {/* Family Lifetime */}
-          <div className="bg-surface border border-border/50 rounded-2xl px-5 py-5">
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <p className="text-xs font-bold text-text-muted uppercase tracking-wider">Family</p>
-                <p className="text-xl font-extrabold text-text mt-0.5">$79 <span className="text-sm font-normal text-text-muted">once</span></p>
-              </div>
-              <span className="text-[11px] bg-surface-raised border border-border/50 text-text-muted px-2.5 py-1 rounded-full font-medium">5 Profiles</span>
-            </div>
-            <p className="text-xs text-text-muted leading-relaxed">Up to 5 learner profiles. One payment for the whole family, forever.</p>
-            <Link
-              href="/checkout?plan=family&billing=lifetime"
-              className="flex items-center justify-center gap-2 w-full mt-4 bg-surface-raised border border-border/60 text-text text-sm font-semibold px-5 py-3 rounded-xl hover:border-gold/40 transition-colors"
-            >
-              Get Family Access — $79
-              <ChevronRight className="w-4 h-4 text-text-muted" />
             </Link>
           </div>
         </div>

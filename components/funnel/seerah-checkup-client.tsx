@@ -281,9 +281,6 @@ function getRecommendation(answers: Record<number, number>, urls: SeerahCheckupU
   const watchFreeUrl = urls.watchFree ?? "/watch-free";
   // Q9: what stops you (0=don't know where to start, 1=too long, 2=forget, 3=get busy, 4=quality first)
   const q9  = answers[9]  ?? 3;
-  // Q10: who for (0=myself, 1=family/kids, 2=myself+family, 3=class/group)
-  const q10 = answers[10] ?? 0;
-  const isFamily = q10 === 1 || q10 === 2;
 
   // "I want to see the quality first" → free preview path
   if (q9 === 4) {
@@ -292,12 +289,12 @@ function getRecommendation(answers: Record<number, number>, urls: SeerahCheckupU
       primaryUrl: watchFreeUrl,
       primarySupport: "Full first lesson — video, reading, slides, flashcards, quiz. No payment.",
       showFreePrimary: true,
-      secondaryUrl: isFamily ? urls.familyMonthly : urls.individualMonthly,
-      secondaryLabel: isFamily ? "Unlock Family Access — $9.99/month" : "Unlock Individual Access — $4.99/month",
-      secondaryPreamble: isFamily ? "Want to keep going as a family?" : "Ready to continue after Part 1?",
+      secondaryUrl: urls.individualMonthly,
+      secondaryLabel: "Unlock Individual Access — $9.99/month",
+      secondaryPreamble: "Ready to continue after Part 1?",
       bridgeCopy: "Because you want to see the quality first, start with Part 1 free — full video, flashcards, and quiz included. No payment required.",
-      lifetimeUrl: isFamily ? urls.familyLifetime : urls.individualLifetime,
-      lifetimeLabel: isFamily ? "Or pay once — family lifetime is $79 →" : "Or pay once — lifetime is $49 →",
+      lifetimeUrl: urls.individualLifetime,
+      lifetimeLabel: "Or pay once — lifetime is $49 →",
       trackEvent: `${eventPrefix}watch_free_click`,
     };
   }
@@ -309,32 +306,13 @@ function getRecommendation(answers: Record<number, number>, urls: SeerahCheckupU
       primaryUrl: watchFreeUrl,
       primarySupport: "Part 1 is the very beginning of the full path. No payment, no commitment.",
       showFreePrimary: true,
-      secondaryUrl: isFamily ? urls.familyMonthly : urls.individualMonthly,
-      secondaryLabel: isFamily ? "Unlock Family Access — $9.99/month" : "Unlock Individual Access — $4.99/month",
-      secondaryPreamble: isFamily ? "Want to keep going as a family?" : "Ready to continue after Part 1?",
+      secondaryUrl: urls.individualMonthly,
+      secondaryLabel: "Unlock Individual Access — $9.99/month",
+      secondaryPreamble: "Ready to continue after Part 1?",
       bridgeCopy: "The best move when you don't know where to start is to simply start from Part 1 — free, in order, no commitment.",
-      lifetimeUrl: isFamily ? urls.familyLifetime : urls.individualLifetime,
-      lifetimeLabel: isFamily ? "Or pay once — family lifetime is $79 →" : "Or pay once — lifetime is $49 →",
+      lifetimeUrl: urls.individualLifetime,
+      lifetimeLabel: "Or pay once — lifetime is $49 →",
       trackEvent: `${eventPrefix}watch_free_click`,
-    };
-  }
-
-  if (isFamily) {
-    const bridgeFam =
-      q9 === 1
-        ? "Each lesson is short and focused — easy to fit in as a family. The family plan gives everyone their own profile and progress."
-        : q9 === 2
-          ? "Every lesson ends with a quiz and flashcards — so what you learn actually sticks. The family plan gives each learner their own profile."
-          : "Based on your answers, the best next step is a structured path your whole household can follow together.";
-    return {
-      primaryLabel: "Unlock Family Access — $9.99/month",
-      primaryUrl: urls.familyMonthly,
-      primarySupport: "Up to 5 learner profiles. Cancel anytime.",
-      showFreePrimary: false,
-      lifetimeUrl: urls.familyLifetime,
-      lifetimeLabel: "Prefer one payment? Family lifetime is $79 →",
-      bridgeCopy: bridgeFam,
-      trackEvent: `${eventPrefix}recommended_plan_click`,
     };
   }
 
@@ -348,12 +326,12 @@ function getRecommendation(answers: Record<number, number>, urls: SeerahCheckupU
           : "Based on your answers, the best next step is to start from Part 1 and follow one clear path in order.";
 
   return {
-    primaryLabel: "Unlock Individual Access — $4.99/month",
+    primaryLabel: "Unlock Individual Access — $9.99/month",
     primaryUrl: urls.individualMonthly,
     primarySupport: "Cancel anytime. Instant access.",
     showFreePrimary: false,
     lifetimeUrl: urls.individualLifetime,
-    lifetimeLabel: "Prefer one payment? Lifetime is $49 →",
+    lifetimeLabel: "Or pay once — lifetime is $49 →",
     bridgeCopy,
     trackEvent: `${eventPrefix}recommended_plan_click`,
   };
@@ -366,7 +344,7 @@ const FAQ = [
   { q: "What happens after I buy?", a: "Immediate access. Set your password, create your profile, and start Part 1 — under 60 seconds." },
   { q: "Can I cancel anytime?",     a: "Yes. Cancel in 2 clicks from your dashboard. No call required." },
   { q: "Is there a refund?",        a: "Yes — 7-day clarity guarantee. If the course doesn't feel right, email us for a full refund. No questions asked." },
-  { q: "Can my family use it?",     a: "Yes. The family plan includes up to 5 separate learner profiles, each tracking their own progress." },
+  { q: "Can my family use it?",     a: "The course is an individual plan. You can study together on one account, or each person can get their own access." },
   { q: "Can I use it on mobile?",   a: "Yes. Works on phone, tablet, and desktop. Many students learn during commutes or before bed." },
 ];
 
@@ -922,7 +900,7 @@ export function SeerahCheckupClient({
           ...rec,
           showFreePrimary: false,
           primaryUrl: rec.secondaryUrl ?? urls.individualMonthly,
-          primaryLabel: rec.secondaryLabel ?? "Unlock Individual Access — $4.99/month",
+          primaryLabel: rec.secondaryLabel ?? "Unlock Individual Access — $9.99/month",
           primarySupport: "Cancel anytime. Instant access.",
           secondaryUrl: undefined,
           secondaryLabel: undefined,
@@ -1396,11 +1374,11 @@ export function SeerahCheckupClient({
                 score,
                 result_type:      resultType,
                 recommended_plan: planFromUrl(rec.secondaryUrl ?? urls.individualMonthly),
-                cta_label:        rec.secondaryUrl?.includes("family") ? "Unlock Family Access — $9.99/mo" : "Unlock Individual Access — $4.99/mo",
+                cta_label:        "Unlock Individual Access — $9.99/mo",
                 destination:      rec.secondaryUrl ?? urls.individualMonthly,
               })}
               className="flex w-full items-center justify-center py-3 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-sm transition-colors shadow-lg shadow-gold/20">
-              {rec.secondaryUrl?.includes("family") ? "Unlock Family Access — $9.99/mo" : "Unlock Individual Access — $4.99/mo"}
+              Unlock Individual Access — $9.99/mo
             </Link>
           ) : (
             <Link href={withUserParams(rec.primaryUrl)}
@@ -1408,11 +1386,11 @@ export function SeerahCheckupClient({
                 score,
                 result_type:      resultType,
                 recommended_plan: planFromUrl(rec.primaryUrl),
-                cta_label:        rec.primaryUrl.includes("family") ? "Unlock Family Access — $9.99/mo" : "Unlock Individual Access — $4.99/mo",
+                cta_label:        "Unlock Individual Access — $9.99/mo",
                 destination:      rec.primaryUrl,
               })}
               className="flex w-full items-center justify-center py-3 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-sm transition-colors shadow-lg shadow-gold/20">
-              {rec.primaryUrl.includes("family") ? "Unlock Family Access — $9.99/mo" : "Unlock Individual Access — $4.99/mo"}
+              Unlock Individual Access — $9.99/mo
             </Link>
           )}
         </div>

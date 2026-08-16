@@ -97,7 +97,7 @@ export default async function CheckoutPage({ searchParams }: Props) {
     "family-lifetime":     isLifetimeUpgrade
                              ? PLANS.family.upgradeFromLifetimePrice  // $50 upgrade diff
                              : PLANS.family.price,                    // $79 new purchase
-    "individual-monthly":  PLANS.monthly.price,       // $4.99
+    "individual-monthly":  PLANS.monthly.price,       // $9.99
     "family-monthly":      PLANS.familyMonthly.price, // $9.99
     "individual-trial":    0,
     "family-trial":        0,

@@ -12,7 +12,7 @@ export default function KorraLandingClient() {
         creator:             "korra",
         creatorName:         "Korra",
         heroHeadline:        "You came from Korra.",
-        price:               "$4.99/month",
+        price:               "$9.99/month",
         checkoutUrl:         CHECKOUT,
         watchFreeUrl:        "/watch-free",
         eventPrefix:         "korra_",
@@ -21,7 +21,7 @@ export default function KorraLandingClient() {
       part1Preview={
         <Part1FullPreview
           checkoutHref={CHECKOUT}
-          ctaLabel="Start the Full Course — $4.99/month"
+          ctaLabel="Start the Full Course — $9.99/month"
         />
       }
     />

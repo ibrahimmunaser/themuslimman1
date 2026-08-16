@@ -12,7 +12,7 @@ export default function ItachiLandingClient() {
         creator:             "itachi",
         creatorName:         "Itachi",
         heroHeadline:        "You came from Itachi.",
-        price:               "$4.99/month",
+        price:               "$9.99/month",
         checkoutUrl:         CHECKOUT,
         watchFreeUrl:        "/watch-free",
         eventPrefix:         "itachi_",
@@ -21,7 +21,7 @@ export default function ItachiLandingClient() {
       part1Preview={
         <Part1FullPreview
           checkoutHref={CHECKOUT}
-          ctaLabel="Start the Full Course — $4.99/month"
+          ctaLabel="Start the Full Course — $9.99/month"
         />
       }
     />

@@ -19,7 +19,6 @@ const TRUST_ITEMS = [
   { icon: "📚", text: "100 structured lessons — every major event in order" },
   { icon: "▶",  text: "Video lessons, readings, quizzes, and flashcards" },
   { icon: "📊", text: "Progress tracking dashboard" },
-  { icon: "👨‍👩‍👧", text: "Family profiles on family plans (up to 5 learners)" },
   { icon: "↩",  text: "Cancel anytime — monthly plans, no questions asked" },
   { icon: "🛡",  text: "7-day refund guarantee — not happy? Full refund." },
 ];
@@ -47,7 +46,7 @@ export function PricingSection({
               Choose your plan
             </h2>
             <p className="text-sm text-text-secondary">
-              Start monthly or save with lifetime access. Individual and family options available.
+              Start monthly or save with lifetime access.
             </p>
           </FadeUp>
         )}

@@ -1317,7 +1317,6 @@ function CheckoutPageContent({
 
   const audienceOptions: { id: Audience; Icon: typeof User; label: string }[] = [
     { id: "individual", Icon: User,  label: "Individual" },
-    { id: "family",     Icon: Users, label: "Family" },
   ];
 
   const allBillingOptions: { id: Billing; label: string; price: number; priceSuffix?: string; priceOverride?: string; sub: string; badge?: string }[] = audience === "individual"
@@ -1603,33 +1602,6 @@ function CheckoutPageContent({
               Go to Dashboard <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
-
-          {!isOnFamily && (
-            <div className="p-5 rounded-xl border border-amber-500/20 bg-amber-500/5 space-y-3">
-              <p className="font-semibold text-white text-sm">Upgrade to Family Access</p>
-              <p className="text-xs text-zinc-400 leading-relaxed">
-                One household account · up to 5 learner profiles · separate progress for every learner.
-              </p>
-              {upgradeError && (
-                <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{upgradeError}</p>
-              )}
-              <div className="flex flex-col gap-2">
-                <button
-                  onClick={handleSwitchToFamilyMonthly}
-                  disabled={upgradeLoading}
-                  className="inline-flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm transition-colors disabled:opacity-50"
-                >
-                  {upgradeLoading ? "Upgrading…" : <>Switch to Family Monthly — $9.99/mo <ArrowRight className="w-3.5 h-3.5" /></>}
-                </button>
-                <button
-                  onClick={() => { setTrialAlreadyUsed(false); setAudience("family"); setBilling("lifetime"); }}
-                  className="inline-flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl border border-amber-500/40 hover:border-amber-500/70 text-amber-400 font-semibold text-sm transition-colors"
-                >
-                  Family Lifetime — $79 one-time
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     );
@@ -1647,14 +1619,11 @@ function CheckoutPageContent({
       (userPlanType?.includes("family") ? "family" : "individual");
 
     const isOnFamily     = resolvedPlanType === "family";
-    const isOnIndividual = resolvedPlanType === "individual";
 
     // Family user looking at an individual plan — downgrade attempt.
     const isDowngrade = isOnFamily && audience === "individual";
     // Family user looking at family plan — already have it.
     const familyDuplicate = isOnFamily && audience === "family";
-    // Individual user looking at the same individual plan — show upgrade to family option.
-    const showUpgradeCta = isOnIndividual && audience === "individual";
 
     return (
       <div className="min-h-screen bg-zinc-950 py-10 px-4">
@@ -1669,8 +1638,6 @@ function CheckoutPageContent({
                 ? "Your Family plan already includes everything in the Individual plan — plus up to 5 learner profiles. There's nothing to downgrade to."
                 : familyDuplicate
                   ? "You already have an active Family plan. Head to your dashboard to continue learning."
-                  : showUpgradeCta
-                    ? "You're already on an individual trial. Head to your dashboard or upgrade to a family plan."
                     : "Your account is already active. Head to your dashboard to continue learning."}
             </p>
             <Link
@@ -1679,37 +1646,7 @@ function CheckoutPageContent({
             >
               Go to Dashboard <ArrowRight className="w-4 h-4" />
             </Link>
-            {isDowngrade && (
-              <button
-                onClick={() => { setAudience("family"); }}
-                className="block w-full text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
-              >
-                View Family plan options →
-              </button>
-            )}
           </div>
-          {showUpgradeCta && !familyDuplicate && (
-            <div className="p-5 rounded-xl border border-amber-500/20 bg-amber-500/5 space-y-3">
-              <p className="font-semibold text-white text-sm">Upgrade to Family Access</p>
-              <p className="text-xs text-zinc-400">
-                One household account with up to 5 learner profiles and individual progress tracking.
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => { setAudience("family"); setBilling("monthly"); }}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm transition-colors"
-                >
-                  Switch to Family Monthly — $9.99/mo <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  onClick={() => { setAudience("family"); setBilling("lifetime"); }}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-amber-500/40 hover:border-amber-500/70 text-amber-400 font-semibold text-sm transition-colors"
-                >
-                  Family Lifetime — {formatPrice(PLANS.family.price)} one-time
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     );

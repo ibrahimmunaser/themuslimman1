@@ -22,7 +22,7 @@ export const dynamic = "force-dynamic";
 export const metadata = {
   title: "Complete Seerah | Learn the Life of Prophet Muhammad ﷺ",
   description:
-    "Learn the life of Prophet Muhammad ﷺ in order — 100 structured lessons with video, reading, quizzes, and flashcards. Start for only $4.99/month.",
+    "Learn the life of Prophet Muhammad ﷺ in order — 100 structured lessons with video, reading, quizzes, and flashcards. Start for only $9.99/month.",
   openGraph: {
     title: "Complete Seerah | Learn the Life of Prophet Muhammad ﷺ",
     description:
@@ -77,7 +77,7 @@ export default async function LandingPage() {
               summaries, and progress tracking.
             </p>
             <p className="text-base sm:text-lg font-semibold text-gold mb-6">
-              Start for only $4.99/month.
+              Start for only $9.99/month.
             </p>
           </FadeUp>
 
@@ -89,7 +89,7 @@ export default async function LandingPage() {
                 data-plan="individual-monthly"
                 className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-10 py-4 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-lg transition-colors shadow-xl shadow-gold/25"
               >
-                Start for $4.99/month
+                Start for $9.99/month
               </a>
               <a
                 href="#preview"
@@ -165,22 +165,8 @@ export default async function LandingPage() {
               </div>
             </div>
           }>
-            <Part1FullPreview
-              checkoutHref="/checkout?plan=individual-monthly"
-              ctaLabel="Start for $4.99/month"
-            />
+            <Part1FullPreview hideCta />
           </Suspense>
-
-          <div className="mt-6 text-center">
-            <a
-              href="/checkout?plan=individual-monthly"
-              data-track="homepage_part1_bottom_cta_click"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-base transition-colors shadow-lg shadow-gold/20"
-            >
-              Start for $4.99/month
-            </a>
-            <p className="text-xs text-text-muted mt-2">Cancel anytime · 7-day refund guarantee</p>
-          </div>
         </div>
       </section>
 
@@ -251,10 +237,6 @@ export default async function LandingPage() {
               </div>
             ))}
           </div>
-
-          <p className="text-xs text-text-muted mt-5">
-            Family plan: up to 5 separate learner profiles, each tracking their own progress.
-          </p>
         </div>
       </section>
 
@@ -281,8 +263,8 @@ export default async function LandingPage() {
                 a: "Yes — 7-day guarantee. If the course does not feel right, email us within 7 days for a full refund. No questions asked.",
               },
               {
-                q: "Is this for families?",
-                a: "Yes. The family plan includes up to 5 separate learner profiles, each tracking their own progress independently.",
+                q: "What's the difference between monthly and lifetime?",
+                a: "Monthly is $9.99/month and you can cancel anytime. Lifetime is $49 once — you own access forever with no renewal.",
               },
               {
                 q: "Do I get instant access after buying?",
@@ -324,7 +306,7 @@ export default async function LandingPage() {
           <p className="text-sm sm:text-base text-text-secondary mb-2 max-w-lg mx-auto">
             One structured path. 100 lessons. Video, reading, quiz, flashcards — all in order.
           </p>
-          <p className="text-gold font-semibold text-base mb-7">$4.99/month · Cancel anytime</p>
+          <p className="text-gold font-semibold text-base mb-7">$9.99/month · Cancel anytime</p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
@@ -333,7 +315,7 @@ export default async function LandingPage() {
               data-plan="individual-monthly"
               className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-10 py-4 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-lg transition-colors shadow-xl shadow-gold/20"
             >
-              Start for $4.99/month
+              Start for $9.99/month
             </Link>
             <a
               href="#preview"

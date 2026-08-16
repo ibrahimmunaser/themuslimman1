@@ -226,7 +226,7 @@ export function StartPage({ preview }: { preview?: ReactNode }) {
                 { icon: GitBranch,  label: "Mind maps" },
                 { icon: BookOpen,   label: "Presentations" },
                 { icon: BarChart2,  label: "Progress tracking" },
-                { icon: Users,      label: "Family profiles" },
+                { icon: Users,      label: "Learn at your pace" },
               ].map(({ icon: Icon, label }) => (
                 <div
                   key={label}
@@ -267,10 +267,8 @@ export function StartPage({ preview }: { preview?: ReactNode }) {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
               {[
-                { type: "Monthly",  audience: "Individual", price: "$4.99", period: "/month",    featured: false },
-                { type: "Monthly",  audience: "Family",     price: "$9.99", period: "/month",    featured: false },
+                { type: "Monthly",  audience: "Individual", price: "$9.99", period: "/month",    featured: false },
                 { type: "Lifetime", audience: "Individual", price: "$49",   period: " one time", featured: true  },
-                { type: "Lifetime", audience: "Family",     price: "$79",   period: " one time", featured: true  },
               ].map((plan) => (
                 <div
                   key={plan.audience + plan.type}

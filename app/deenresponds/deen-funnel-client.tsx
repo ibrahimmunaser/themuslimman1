@@ -12,7 +12,7 @@ export default function DeenFunnelClient() {
         creator:     "deenresponds",
         creatorName: "Deen Responds",
         heroHeadline: "You came from Deen Responds.",
-        price:        "$4.99/month",
+        price:        "$9.99/month",
         checkoutUrl:  CHECKOUT,
         watchFreeUrl: "/watch-free",
         eventPrefix:  "deen_",
@@ -21,7 +21,7 @@ export default function DeenFunnelClient() {
       part1Preview={
         <Part1FullPreview
           checkoutHref={CHECKOUT}
-          ctaLabel="Start the Full Course — $4.99/month"
+          ctaLabel="Start the Full Course — $9.99/month"
         />
       }
     />

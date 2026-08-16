@@ -105,7 +105,7 @@ export function isQuickCheckoutEnabled(config?: InfluencerConfig): boolean {
 }
 
 /** Build the checkout URL for an influencer (falls back to /checkout if quick checkout disabled). */
-export function influencerCheckoutUrl(slug: string, plan = "individual-monthly"): string {
+export function influencerCheckoutUrl(slug: string, plan = "individual-lifetime"): string {
   const src = `source=${slug}`;
   const cfg = INFLUENCER_CONFIGS[slug];
   if (!cfg) return `/checkout?plan=${plan}&${src}`;

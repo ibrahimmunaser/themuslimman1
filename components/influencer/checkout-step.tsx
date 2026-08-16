@@ -18,7 +18,7 @@ import {
 // SDK ever changes the event shape.
 type ExpressCheckoutConfirmHandler = ComponentProps<typeof ExpressCheckoutElement>["onConfirm"];
 type ExpressCheckoutConfirmEvent = Parameters<NonNullable<ExpressCheckoutConfirmHandler>>[0];
-import { ArrowLeft, Check, Lock, AlertCircle, Users, Infinity, User } from "lucide-react";
+import { ArrowLeft, Check, Lock, AlertCircle, Infinity, User, ChevronDown } from "lucide-react";
 import { PLANS, formatPrice } from "@/lib/stripe-config";
 import { trackEvent } from "@/lib/analytics";
 import { planAnalyticsProps } from "@/lib/plan-catalog";
@@ -56,66 +56,42 @@ interface PlanDef {
   analyticsPlanId: string;
 }
 
-const PLAN_OPTIONS: PlanDef[] = [
-  {
-    id:          "monthly",
-    label:       "Individual",
-    sublabel:    "Access for one learner · cancel anytime",
-    price:       PLANS.monthly.price,
-    unit:        "/mo",
-    badge:       "Most Popular",
-    icon:        User,
-    inline:      true,
-    stripeMode:  "subscription",
-    apiEndpoint: "/api/stripe/create-subscription-intent",
-    analyticsPlanId: "individual-monthly",
-  },
-  {
-    id:          "familyMonthly",
-    label:       "Family",
-    sublabel:    "Up to 5 profiles with individual progress",
-    price:       PLANS.familyMonthly.price,
-    unit:        "/mo",
-    icon:        Users,
-    inline:      true,
-    stripeMode:  "subscription",
-    apiEndpoint: "/api/stripe/create-family-subscription-intent",
-    analyticsPlanId: "family-monthly",
-  },
-  {
-    id:          "complete",
-    label:       "Individual Lifetime",
-    sublabel:    "Access for one learner · one-time payment",
-    price:       PLANS.complete.price,
-    unit:        "",
-    icon:        Infinity,
-    inline:      true,
-    stripeMode:  "payment",
-    apiEndpoint: "/api/stripe/create-payment-intent",
-    analyticsPlanId: "individual-lifetime",
-  },
-  {
-    id:          "family",
-    label:       "Family Lifetime",
-    sublabel:    "Up to 5 profiles · one-time payment",
-    price:       PLANS.family.price,
-    unit:        "",
-    badge:       PLANS.family.badge, // "Best for Families" — keeps a single universal "Most Popular" badge
-    icon:        Users,
-    inline:      true,
-    stripeMode:  "payment",
-    apiEndpoint: "/api/stripe/create-family-payment-intent",
-    analyticsPlanId: "family-lifetime",
-  },
-];
+const LIFETIME_PLAN: PlanDef = {
+  id:          "complete",
+  label:       "Lifetime Access",
+  sublabel:    "One payment. Keep access forever.",
+  price:       PLANS.complete.price,
+  unit:        "",
+  badge:       "Best Value",
+  icon:        Infinity,
+  inline:      true,
+  stripeMode:  "payment",
+  apiEndpoint: "/api/stripe/create-payment-intent",
+  analyticsPlanId: "individual-lifetime",
+};
+
+const MONTHLY_PLAN: PlanDef = {
+  id:          "monthly",
+  label:       "Monthly",
+  sublabel:    "Full access while subscribed · cancel anytime",
+  price:       PLANS.monthly.price,
+  unit:        "/mo",
+  icon:        User,
+  inline:      true,
+  stripeMode:  "subscription",
+  apiEndpoint: "/api/stripe/create-subscription-intent",
+  analyticsPlanId: "individual-monthly",
+};
+
+const PLAN_OPTIONS: PlanDef[] = [LIFETIME_PLAN, MONTHLY_PLAN];
 
 // ── Button copy ───────────────────────────────────────────────────────────────
 function submitButtonLabel(plan: PlanDef): string {
   switch (plan.id) {
-    case "monthly":       return `Start Individual — ${formatPrice(plan.price)}/month`;
-    case "familyMonthly": return `Start Family — ${formatPrice(plan.price)}/month`;
-    case "complete":      return `Get Individual Lifetime — ${formatPrice(plan.price)}`;
-    case "family":        return `Get Family Lifetime — ${formatPrice(plan.price)}`;
+    case "monthly":       return `Start Monthly — ${formatPrice(plan.price)}/month`;
+    case "familyMonthly": return `Start Monthly — ${formatPrice(plan.price)}/month`;
+    case "complete":      return `Get Lifetime Access — ${formatPrice(plan.price)}`;
+    case "family":        return `Get Lifetime Access — ${formatPrice(plan.price)}`;
   }
 }
 
@@ -517,6 +493,8 @@ interface CheckoutStepProps {
   config: InfluencerConfig;
   isAuthenticated: boolean;
   userEmail?: string;
+  /** Which plan to pre-select. Defaults to lifetime. */
+  initialPlan?: "lifetime" | "monthly";
   onBack: () => void;
   onSuccess: (paymentIntentId: string) => void;
   onRedirecting: () => void;
@@ -539,15 +517,24 @@ export function CheckoutStep({
   config,
   isAuthenticated,
   userEmail = "",
+  initialPlan = "lifetime",
   onBack,
   onSuccess,
   onRedirecting,
 }: CheckoutStepProps) {
-  const [selectedPlanId, setSelectedPlanId] = useState<PlanOption>("monthly");
-  const [fullName, setFullName]             = useState("");
-  const [email, setEmail]                   = useState(userEmail);
+  const [selectedPlanId, setSelectedPlanId] = useState<PlanOption>(
+    initialPlan === "monthly" ? "monthly" : "complete",
+  );
+  const [showMonthly, setShowMonthly] = useState(initialPlan === "monthly");
+  const [fullName, setFullName]       = useState("");
+  const [email, setEmail]             = useState(userEmail);
 
-  const selectedPlan = PLAN_OPTIONS.find(p => p.id === selectedPlanId)!;
+  useEffect(() => {
+    setSelectedPlanId(initialPlan === "monthly" ? "monthly" : "complete");
+    setShowMonthly(initialPlan === "monthly");
+  }, [initialPlan]);
+
+  const selectedPlan = PLAN_OPTIONS.find((p) => p.id === selectedPlanId) ?? LIFETIME_PLAN;
 
   function handlePlanChange(id: PlanOption) {
     setSelectedPlanId(id);
@@ -555,89 +542,95 @@ export function CheckoutStep({
     trackEvent(
       "plan_selected",
       { influencer_slug: config.slug, ...planAnalyticsProps(plan.analyticsPlanId) },
-      { allowDuplicates: true, creator: config.slug }
+      { allowDuplicates: true, creator: config.slug },
     );
   }
 
   return (
-    <div className="h-full overflow-y-auto flex flex-col">
+    <div className="min-h-[100dvh] overflow-y-auto flex flex-col">
       <div className="w-full max-w-lg mx-auto px-5 py-6 flex flex-col gap-6 flex-1">
 
-        {/* Header */}
         <div className="flex items-center gap-4">
           <button
             onClick={onBack}
             className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-zinc-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold rounded min-h-[44px]"
-            aria-label="Go back to the free lesson"
+            aria-label="Go back to the sales page"
           >
             <ArrowLeft className="w-4 h-4" aria-hidden="true" />
             Back
           </button>
         </div>
 
-        {/* Value reminder */}
-        <p className="text-xs text-zinc-400 text-center leading-relaxed -mb-1">
-          Every plan includes all 100 lessons, videos, readings, slides, flashcards, quizzes, mind maps, and progress tracking.
-        </p>
-
-        {/* Plan picker */}
-        <div>
-          <h2 className="text-xs font-bold text-gold uppercase tracking-wider mb-3">Choose your plan</h2>
-          <div className="flex flex-col gap-3">
-            {(
-              [
-                { title: "Monthly",   plans: PLAN_OPTIONS.slice(0, 2) },
-                { title: "Lifetime",  plans: PLAN_OPTIONS.slice(2, 4) },
-              ] as const
-            ).map((section) => (
-              <div key={section.title}>
-                <p className="text-[11px] font-semibold text-gold-light uppercase tracking-widest mb-2 text-center">
-                  {section.title}
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  {section.plans.map((plan) => {
-                    const isActive = selectedPlanId === plan.id;
-                    const Icon = plan.icon;
-                    return (
-                      <button
-                        key={plan.id}
-                        onClick={() => handlePlanChange(plan.id)}
-                        className={[
-                          "relative flex flex-col items-start gap-1 p-3 rounded-xl border text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold",
-                          isActive
-                            ? plan.id === "family"
-                              ? "border-gold bg-gold/15 shadow-lg shadow-gold/20"
-                              : "border-gold/60 bg-gold/10"
-                            : "border-zinc-800 bg-zinc-900/40 hover:border-zinc-600",
-                        ].join(" ")}
-                        aria-pressed={isActive}
-                      >
-                        {plan.badge && (
-                          <span className="absolute -top-2 right-2 text-[10px] font-bold bg-gold text-ink px-2 py-0.5 rounded-full">
-                            {plan.badge}
-                          </span>
-                        )}
-                        <div className="flex items-center gap-1.5 mb-0.5">
-                          <Icon className={`w-3.5 h-3.5 ${isActive ? "text-gold" : "text-zinc-500"}`} aria-hidden="true" />
-                          <span className={`text-xs font-semibold ${isActive ? "text-gold" : "text-zinc-300"}`}>
-                            {plan.label}
-                          </span>
-                        </div>
-                        <p className={`text-lg font-extrabold leading-none ${isActive ? "text-text" : "text-zinc-300"}`}>
-                          {formatPrice(plan.price)}
-                          <span className="text-xs font-normal text-zinc-400 ml-0.5">{plan.unit}</span>
-                        </p>
-                        <p className="text-[10px] text-zinc-400 leading-snug mt-0.5">{plan.sublabel}</p>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
+        <div className="text-center">
+          <h1 className="text-xl font-bold text-text mb-1">Complete your purchase</h1>
+          <p className="text-xs text-zinc-400 leading-relaxed">
+            All 100 lessons · videos · quizzes · flashcards · mind maps · progress tracking
+          </p>
         </div>
 
-        {/* Stripe form — all 4 plans handled inline */}
+        {/* Lifetime — default / primary */}
+        <button
+          type="button"
+          onClick={() => handlePlanChange("complete")}
+          className={[
+            "relative w-full text-left rounded-2xl border-2 p-5 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold",
+            selectedPlanId === "complete"
+              ? "border-gold bg-gold/10 shadow-lg shadow-gold/15"
+              : "border-zinc-800 bg-zinc-900/40 hover:border-zinc-600",
+          ].join(" ")}
+          aria-pressed={selectedPlanId === "complete"}
+        >
+          <span className="absolute -top-2.5 left-4 text-[10px] font-bold bg-gold text-ink px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+            Best Value
+          </span>
+          <div className="flex items-start justify-between gap-3 mt-1">
+            <div>
+              <p className="text-sm font-semibold text-gold mb-1">Lifetime Access</p>
+              <p className="text-3xl font-extrabold text-text leading-none">
+                {formatPrice(LIFETIME_PLAN.price)}
+              </p>
+              <p className="text-xs text-zinc-400 mt-2">One payment. Keep access forever.</p>
+            </div>
+            <Infinity className={`w-5 h-5 flex-shrink-0 ${selectedPlanId === "complete" ? "text-gold" : "text-zinc-600"}`} aria-hidden="true" />
+          </div>
+        </button>
+
+        {/* Monthly — collapsed secondary */}
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 overflow-hidden">
+          <button
+            type="button"
+            onClick={() => {
+              setShowMonthly((v) => !v);
+              if (!showMonthly) handlePlanChange("monthly");
+            }}
+            className="w-full flex items-center justify-between gap-3 px-4 py-3.5 text-left hover:bg-zinc-900/60 transition-colors"
+            aria-expanded={showMonthly}
+          >
+            <span className="text-sm text-zinc-400">Prefer a monthly option?</span>
+            <ChevronDown
+              className={`w-4 h-4 text-zinc-500 transition-transform ${showMonthly ? "rotate-180" : ""}`}
+              aria-hidden="true"
+            />
+          </button>
+          {showMonthly && (
+            <button
+              type="button"
+              onClick={() => handlePlanChange("monthly")}
+              className={[
+                "w-full text-left px-4 pb-4 border-t border-zinc-800/80 pt-4 transition-colors",
+                selectedPlanId === "monthly" ? "bg-gold/5" : "",
+              ].join(" ")}
+              aria-pressed={selectedPlanId === "monthly"}
+            >
+              <p className="text-lg font-bold text-text">
+                {formatPrice(MONTHLY_PLAN.price)}
+                <span className="text-sm font-normal text-zinc-400">/month</span>
+              </p>
+              <p className="text-xs text-zinc-500 mt-1">Cancel anytime. Full course access while subscribed.</p>
+            </button>
+          )}
+        </div>
+
         <Elements
           key={selectedPlanId}
           stripe={getStripePromise()}

@@ -12,7 +12,7 @@ import { PortalButton } from "@/components/billing/portal-button";
 export const metadata = {
   title: "Pricing — Complete Seerah",
   description:
-    "Choose your Seerah plan. Individual and family options, monthly or lifetime. Part 1 is free.",
+    "Choose your Seerah plan. Monthly or lifetime access. Part 1 is free.",
 };
 
 export const dynamic = "force-dynamic";
@@ -45,8 +45,8 @@ const FAQ_ITEMS = [
     a: "Yes. Part 1 is completely free with no account required. You can preview it on the Watch Part 1 Free page before choosing a plan.",
   },
   {
-    q: "What is the difference between individual and family?",
-    a: "Individual is for one learner. Family supports up to 5 separate learner profiles in one household, each with independent progress tracking.",
+    q: "What's the difference between monthly and lifetime?",
+    a: "Monthly is $9.99/month and you can cancel anytime. Lifetime is $49 once — you keep access forever with no renewal.",
   },
   {
     q: "Do I get instant access?",
@@ -175,43 +175,24 @@ export default async function PricingPage({ searchParams }: Props) {
         variant="plans-only"
       />
 
-      {/* 3. Individual vs family comparison */}
+      {/* 3. Monthly vs lifetime comparison */}
       <section className="py-12 border-t border-border bg-surface/30">
         <div className="max-w-3xl mx-auto px-4 sm:px-6">
           <FadeUp>
             <h2 className="text-xl sm:text-2xl font-bold text-text text-center mb-8">
-              Individual vs family
+              Monthly vs lifetime
             </h2>
-            <div className="grid sm:grid-cols-2 gap-4 mb-8">
-              <div className="rounded-xl border border-border bg-surface p-5">
-                <h3 className="font-bold text-text mb-3">Individual</h3>
-                <ul className="space-y-2 text-sm text-text-secondary">
-                  <li>One learner on your account</li>
-                  <li>Full course access and progress tracking</li>
-                  <li>Best if you are studying on your own</li>
-                </ul>
-              </div>
-              <div className="rounded-xl border border-gold/25 bg-surface p-5">
-                <h3 className="font-bold text-text mb-3">Family</h3>
-                <ul className="space-y-2 text-sm text-text-secondary">
-                  <li>Up to 5 learner profiles in one household</li>
-                  <li>Each profile has independent progress</li>
-                  <li>Best for spouses, parents, and kids learning together</li>
-                </ul>
-              </div>
-            </div>
             <div className="grid sm:grid-cols-2 gap-4">
-              <div className="rounded-xl border border-border bg-surface-raised p-5">
+              <div className="rounded-xl border border-border bg-surface p-5">
                 <h3 className="font-bold text-text mb-2">Monthly</h3>
                 <p className="text-sm text-text-secondary leading-relaxed">
-                  Lower upfront cost. Individual $4.99/month, family $9.99/month.
-                  Cancel anytime.
+                  Lower upfront cost. $9.99/month. Cancel anytime.
                 </p>
               </div>
-              <div className="rounded-xl border border-border bg-surface-raised p-5">
+              <div className="rounded-xl border border-gold/25 bg-surface p-5">
                 <h3 className="font-bold text-text mb-2">Lifetime</h3>
                 <p className="text-sm text-text-secondary leading-relaxed">
-                  Pay once, keep access forever. Individual $49, family $79.
+                  Pay once, keep access forever. $49 one-time.
                   Best long-term value if you plan to study for years.
                 </p>
               </div>

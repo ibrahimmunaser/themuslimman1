@@ -12,9 +12,22 @@ interface LangToggleProps {
   /** Narrow layout for a collapsed sidebar. */
   compact?: boolean;
   className?: string;
+  /**
+   * When true, set the cookie and call onChange without router.refresh().
+   * Use for client-fetched previews that reload their own data.
+   */
+  clientManaged?: boolean;
+  onChange?: (lang: CourseLang) => void;
 }
 
-export function LangToggle({ current, partNumber, compact, className }: LangToggleProps) {
+export function LangToggle({
+  current,
+  partNumber,
+  compact,
+  className,
+  clientManaged,
+  onChange,
+}: LangToggleProps) {
   const router = useRouter();
 
   function switchLang(lang: CourseLang) {
@@ -23,6 +36,8 @@ export function LangToggle({ current, partNumber, compact, className }: LangTogg
     document.cookie = `seerah_course_lang=${lang}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
     // Clear the client-side asset cache so the new lang's URLs are fetched fresh
     clearPartAssetsCache(partNumber);
+    onChange?.(lang);
+    if (clientManaged) return;
     // Re-run the server component with the new cookie (no full navigation)
     router.refresh();
   }

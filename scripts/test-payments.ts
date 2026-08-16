@@ -27,7 +27,7 @@
  * WHAT IT TESTS
  * ──────────────────────────────────────────────────────────────────────────────
  *   ✅ Individual Lifetime  ($49)   — PI confirmed, webhook delivered, DB verified
- *   ✅ Individual Monthly   ($4.99) — Subscription created + activated, DB verified
+ *   ✅ Individual Monthly   ($9.99) — Subscription created + activated, DB verified
  *   ✅ Family Monthly       ($9.99) — Subscription, planType=family, DB verified
  *   ✅ Family Lifetime      ($79)   — PI confirmed, planType=family, DB verified
  *   ✅ Declined card               — Stripe rejects, hasPaid=false, no Purchase row
@@ -488,7 +488,7 @@ async function main() {
   await checkServerRunning();
 
   await runTest("Individual Lifetime  ($49 one-time)", testIndividualLifetime);
-  await runTest("Individual Monthly   ($4.99/month)",  testIndividualMonthly);
+  await runTest("Individual Monthly   ($9.99/month)",  testIndividualMonthly);
   await runTest("Family Monthly       ($9.99/month)",  testFamilyMonthly);
   await runTest("Family Lifetime      ($79 one-time)", testFamilyLifetime);
   await runTest("Declined card        (no access)",    testDeclinedCard);
