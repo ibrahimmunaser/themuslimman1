@@ -412,12 +412,15 @@ class _VideoPlayerState extends ConsumerState<_VideoPlayer> with WidgetsBindingO
       return _ErrorState(message: _error ?? 'Video unavailable', onRetry: _retryWithFreshUrl);
     }
 
-    return Container(
-      color: Colors.black,
-      child: Center(
-        child: AspectRatio(
-          aspectRatio: 16 / 9,
-          child: Chewie(controller: _chewieCtrl!),
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: Container(
+        color: Colors.black,
+        child: Center(
+          child: AspectRatio(
+            aspectRatio: 16 / 9,
+            child: Chewie(controller: _chewieCtrl!),
+          ),
         ),
       ),
     );

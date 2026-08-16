@@ -7,7 +7,6 @@ import '../../../core/providers/profiles_provider.dart';
 import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/system_insets.dart';
-import '../../../core/widgets/adaptive_icons.dart';
 import '../../../core/widgets/ui_kit.dart';
 
 // ── Profile picker (Netflix-style) ────────────────────────────────────────────
@@ -130,47 +129,6 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
           ),
         ),
 
-        // Family plan upsell if on individual plan
-        if (!state.canAddMore && state.profileLimit == 1)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-            child: Material(
-              color: AppColors.goldFaded,
-              borderRadius: BorderRadius.circular(12),
-              child: InkWell(
-                // push preserves the back-stack this screen was reached
-                // through (profile_screen/dashboard both use push to get
-                // here) — matches every other paywall entry point in the app.
-                onTap: () => context.push('/pricing'),
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.family_restroom_rounded, color: AppColors.gold, size: 22),
-                    const SizedBox(width: 12),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Upgrade to Family Access',
-                            style: TextStyle(color: AppColors.gold, fontSize: 14, fontWeight: FontWeight.w700)),
-                          Text('Add up to 5 learner profiles',
-                            style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                        ],
-                      ),
-                    ),
-                    const ForwardChevronIcon(color: AppColors.gold, size: 20),
-                  ],
-                ),
-                ),
-              ),
-            ),
-          ),
         SizedBox(height: bottomSystemInset(context)),
       ],
     );

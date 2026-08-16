@@ -64,11 +64,10 @@ class _SubscriptionLegalTextState extends State<SubscriptionLegalText> {
             'cancelled 24h before the period ends. Lifetime plans are '
             'one-time purchases. Manage or cancel in your App Store or '
             'Google Play account settings. '
-        : 'Individual Monthly and Family Monthly are auto-renewing '
-            '1-month subscriptions that renew unless cancelled at least 24 '
-            'hours before the end of the current period. Individual Lifetime '
-            'and Family Lifetime are one-time, non-renewing purchases. Manage '
-            'or cancel a subscription in your App Store or Google Play account '
+        : 'Monthly is an auto-renewing 1-month subscription that renews '
+            'unless cancelled at least 24 hours before the end of the current '
+            'period. Lifetime is a one-time, non-renewing purchase. Manage or '
+            'cancel a subscription in your App Store or Google Play account '
             'settings. Payment will be charged to your store account upon '
             'purchase confirmation. ';
 

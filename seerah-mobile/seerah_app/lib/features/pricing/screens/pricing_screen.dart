@@ -40,40 +40,22 @@ class _Plan {
 
 const _plans = [
   _Plan(
-    id: PlanId.individualMonthly,
-    iapId: AppConstants.iapMonthlyIndividual,
-    name: 'Individual Monthly',
-    description: '1 learner • 1-month term • cancel anytime',
-    fallbackPrice: '\$${AppConstants.monthlyPrice}',
-    period: '/month',
-    badge: 'Recommended',
-    isRecommended: true,
-  ),
-  _Plan(
-    id: PlanId.familyMonthly,
-    iapId: AppConstants.iapMonthlyFamily,
-    name: 'Family Monthly',
-    description: 'Up to 5 profiles • 1-month term • cancel anytime',
-    fallbackPrice: '\$${AppConstants.familyMonthlyPrice}',
-    period: '/month',
-    badge: 'For Families',
-  ),
-  _Plan(
     id: PlanId.individualLifetime,
     iapId: AppConstants.iapLifetimeIndividual,
-    name: 'Individual Lifetime',
+    name: 'Lifetime',
     description: '1 learner • pay once, own forever',
     fallbackPrice: '\$${AppConstants.lifetimePrice}',
     period: 'one-time',
+    badge: 'Most Popular',
+    isRecommended: true,
   ),
   _Plan(
-    id: PlanId.familyLifetime,
-    iapId: AppConstants.iapLifetimeFamily,
-    name: 'Family Lifetime',
-    description: 'Up to 5 profiles • pay once, own forever',
-    fallbackPrice: '\$${AppConstants.familyLifetimePrice}',
-    period: 'one-time',
-    badge: 'Best Value',
+    id: PlanId.individualMonthly,
+    iapId: AppConstants.iapMonthlyIndividual,
+    name: 'Monthly',
+    description: '1 learner • cancel anytime',
+    fallbackPrice: '\$${AppConstants.monthlyPrice}',
+    period: '/month',
   ),
 ];
 
@@ -95,8 +77,8 @@ final _faqItems = [
     a: 'Yes. Part 1 is completely free with no account required. Watch it before choosing a plan.',
   ),
   (
-    q: 'Individual vs family?',
-    a: 'Individual is for one learner. Family supports up to 5 separate learner profiles with independent progress tracking.',
+    q: "What's the difference between monthly and lifetime?",
+    a: 'Monthly is \$${AppConstants.monthlyPrice}/month and you can cancel anytime. Lifetime is \$${AppConstants.lifetimePrice} once — you keep access forever with no renewal.',
   ),
 ];
 
@@ -468,9 +450,9 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
 
           const SizedBox(height: 28),
 
-          // ── Individual vs family ─────────────────────────────────
+          // ── Monthly vs lifetime ──────────────────────────────────
           const Text(
-            'Individual vs family',
+            'Monthly vs lifetime',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: AppColors.textPrimary,
@@ -480,20 +462,20 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
           ),
           const SizedBox(height: 12),
           const _ComparisonCard(
-            title: 'Individual',
+            title: 'Monthly',
             bullets: [
-              'One learner on your account',
-              'Full course access and progress tracking',
-              'Best if you are studying on your own',
+              'Lower upfront cost',
+              '\$${AppConstants.monthlyPrice}/month',
+              'Cancel anytime from your store account',
             ],
           ),
           const SizedBox(height: 10),
           const _ComparisonCard(
-            title: 'Family',
+            title: 'Lifetime',
             bullets: [
-              'Up to 5 learner profiles in one household',
-              'Each profile has independent progress',
-              'Best for spouses, parents, and kids learning together',
+              'Pay once, keep access forever',
+              '\$${AppConstants.lifetimePrice} one-time',
+              'Best long-term value if you plan to study for years',
             ],
             highlighted: true,
           ),

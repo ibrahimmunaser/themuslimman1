@@ -140,10 +140,11 @@ class IAPState {
     return null;
   }
 
-  /// Number of the 4 plans that resolved to a real store product, counting
-  /// either the current or legacy ID as a match.
-  int get loadedPlanCount => AppConstants.iapProductIdCandidates.values
-      .where((candidates) => candidates.any((id) => productFor(id) != null))
+  /// Number of public paywall plans that resolved to a real store product,
+  /// counting either the current or legacy ID as a match. Family SKUs are
+  /// still queried for restore but do not count toward "plans loaded".
+  int get loadedPlanCount => AppConstants.iapPublicPlanIds
+      .where((id) => productForPlan(id) != null)
       .length;
 
   bool get hasPendingLink => pendingLinkPurchases.isNotEmpty;

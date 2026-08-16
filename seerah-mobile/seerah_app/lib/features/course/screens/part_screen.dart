@@ -224,8 +224,11 @@ class _PartScreenState extends ConsumerState<PartScreen> {
     }
 
     final currentLang = ref.watch(courseLangProvider);
+    final isRtl = currentLang == 'ar';
 
-    return Scaffold(
+    return Directionality(
+      textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+      child: Scaffold(
       backgroundColor: AppColors.background,
       body: CustomScrollView(
         slivers: [
@@ -502,6 +505,7 @@ class _PartScreenState extends ConsumerState<PartScreen> {
         ],
       ),
       bottomNavigationBar: _PartNavBar(partNumber: partNumber, hasAccess: hasAccess),
+    ),
     );
   }
 
