@@ -40,9 +40,10 @@ interface VideoPlayerProps {
   isRtl?: boolean;
 }
 
-// Crop the intro: skip the first N seconds of every video.
-// Part 7 has a longer intro; all others use the default.
-function getVideoStartOffset(partNumber?: number): number {
+// Crop the English intro bumper. Arabic masters start speaking immediately,
+// so skipping here cuts off the first line of the lesson.
+function getVideoStartOffset(partNumber?: number, isRtl?: boolean): number {
+  if (isRtl) return 0;
   if (partNumber === 7) return 6;
   return 2;
 }
@@ -52,7 +53,7 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
   const overlayAudioRef = useRef<HTMLAudioElement | null>(null);
   const companionAudioRef = useRef<HTMLAudioElement | null>(null);
   const reportedRef     = useRef<Set<number>>(new Set());
-  const startOffset     = getVideoStartOffset(partNumber);
+  const startOffset     = getVideoStartOffset(partNumber, isRtl);
   // High-water mark of *played* time only — seeks that jump ahead more than
   // MAX_PLAY_JUMP_SEC are ignored so scrubbing to 85%/end can't mark complete
   // (same clamp as mobile video_tab.dart).

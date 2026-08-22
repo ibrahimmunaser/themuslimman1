@@ -35,9 +35,8 @@ export function AudioPlayer({ src, title, partNumber, compact = false, previewMo
   const [showSpeedMenu, setShowSpeedMenu] = useState(false);
   const [hasTrackedPlay, setHasTrackedPlay] = useState(false);
 
-  // Crop the intro: skip the first N seconds of every audio track.
-  // Part 7 has a longer intro (9.5s); all others are 4s.
-  const startOffset = partNumber === 7 ? 9.5 : 2.5;
+  // Crop the English intro bumper. Arabic tracks start immediately — don't skip.
+  const startOffset = isRtl ? 0 : (partNumber === 7 ? 9.5 : 2.5);
 
   useEffect(() => {
     const audio = audioRef.current;

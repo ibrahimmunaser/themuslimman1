@@ -11,6 +11,11 @@ interface LangToggleProps {
   partNumber?: number;
   /** Narrow layout for a collapsed sidebar. */
   compact?: boolean;
+  /**
+   * Larger, labeled control for marketing previews so visitors notice Arabic.
+   * Keeps the compact sidebar style unchanged.
+   */
+  prominent?: boolean;
   className?: string;
   /**
    * When true, set the cookie and call onChange without router.refresh().
@@ -24,6 +29,7 @@ export function LangToggle({
   current,
   partNumber,
   compact,
+  prominent,
   className,
   clientManaged,
   onChange,
@@ -40,6 +46,52 @@ export function LangToggle({
     if (clientManaged) return;
     // Re-run the server component with the new cookie (no full navigation)
     router.refresh();
+  }
+
+  if (prominent) {
+    return (
+      <div
+        className={clsx(
+          "flex flex-col items-center gap-1.5",
+          className,
+        )}
+      >
+        <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-gold">
+          {current === "ar" ? "اللغة" : "Language"}
+        </span>
+        <div
+          className="flex items-center gap-1 rounded-xl p-1 bg-ink/40 border border-gold/35 shadow-sm shadow-gold/10"
+          role="group"
+          aria-label={current === "ar" ? "لغة الدورة" : "Course language"}
+        >
+          <button
+            type="button"
+            onClick={() => switchLang("en")}
+            className={clsx(
+              "min-h-[40px] min-w-[52px] px-3.5 rounded-lg text-sm font-bold transition-all duration-150",
+              current === "en"
+                ? "bg-gold text-ink shadow-md shadow-gold/25"
+                : "text-text-secondary hover:text-text hover:bg-surface-raised/80",
+            )}
+          >
+            EN
+          </button>
+          <button
+            type="button"
+            onClick={() => switchLang("ar")}
+            className={clsx(
+              "min-h-[40px] min-w-[64px] px-3.5 rounded-lg text-sm font-bold transition-all duration-150",
+              current === "ar"
+                ? "bg-gold text-ink shadow-md shadow-gold/25"
+                : "text-text-secondary hover:text-text hover:bg-surface-raised/80",
+            )}
+            dir="rtl"
+          >
+            عربي
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (

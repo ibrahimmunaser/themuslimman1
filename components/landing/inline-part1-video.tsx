@@ -112,10 +112,11 @@ export function InlinePart1Video({ checkoutUrl, checkoutLabel, hideCta = false, 
             <p className="text-sm text-text-secondary mt-0.5 leading-snug">{data.subtitle}</p>
           )}
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-3 flex-shrink-0">
           <LangToggle
             current={lang}
             partNumber={1}
+            prominent
             clientManaged
             onChange={setLang}
           />

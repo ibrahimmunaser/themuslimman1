@@ -43,8 +43,8 @@ export async function Part1FullPreview({
               <p className="text-sm text-text-secondary mt-1">{part.subtitle}</p>
             )}
           </div>
-          <div className="flex items-center gap-2 self-start sm:self-auto flex-shrink-0">
-            <LangToggle current={lang} partNumber={1} />
+          <div className="flex items-center gap-3 self-start sm:self-auto flex-shrink-0">
+            <LangToggle current={lang} partNumber={1} prominent />
             <Badge variant="gold" size="sm">
               {isRtl ? "مجاني ١٠٠٪" : "100% Free"}
             </Badge>

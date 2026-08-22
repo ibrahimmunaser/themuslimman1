@@ -45,11 +45,8 @@ export function Part1PreviewTabs({
   return (
     <div>
       {!hideLangToggle && (
-        <div className="flex items-center justify-between gap-3 mb-4">
-          <p className="text-xs text-text-muted">
-            {initialLang === "ar" ? "لغة المعاينة" : "Preview language"}
-          </p>
-          <LangToggle current={initialLang} partNumber={1} />
+        <div className="flex items-center justify-end gap-3 mb-4">
+          <LangToggle current={initialLang} partNumber={1} prominent />
         </div>
       )}
       <div dir={initialLang === "ar" ? "rtl" : undefined} key={initialLang}>
