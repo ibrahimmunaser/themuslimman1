@@ -235,6 +235,7 @@ class _PartScreenState extends ConsumerState<PartScreen> {
           // ── Hero header ──────────────────────────────────────────────────
           SliverAppBar(
             expandedHeight: 190,
+            toolbarHeight: 68,
             pinned: true,
             backgroundColor: AppColors.background,
             leading: IconButton(
@@ -573,20 +574,42 @@ class _LangToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(2),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceRaised,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _LangBtn(label: 'EN', active: current == 'en', onTap: () => onSwitch('en')),
-          _LangBtn(label: 'عربي', active: current == 'ar', onTap: () => onSwitch('ar')),
-        ],
-      ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          current == 'ar' ? 'اللغة' : 'LANGUAGE',
+          style: TextStyle(
+            fontSize: current == 'ar' ? 12 : 9,
+            fontWeight: FontWeight.w800,
+            letterSpacing: current == 'ar' ? 0 : 1.2,
+            color: AppColors.gold,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Container(
+          padding: const EdgeInsets.all(3),
+          decoration: BoxDecoration(
+            color: AppColors.background.withValues(alpha: 0.55),
+            borderRadius: BorderRadius.circular(11),
+            border: Border.all(color: AppColors.gold.withValues(alpha: 0.45), width: 1.2),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.gold.withValues(alpha: 0.15),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _LangBtn(label: 'EN', active: current == 'en', onTap: () => onSwitch('en')),
+              _LangBtn(label: 'عربي', active: current == 'ar', onTap: () => onSwitch('ar')),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -604,17 +627,28 @@ class _LangBtn extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        constraints: const BoxConstraints(minWidth: 38, minHeight: 30),
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-          color: active ? AppColors.gold.withValues(alpha: 0.15) : Colors.transparent,
-          borderRadius: BorderRadius.circular(6),
+          color: active ? AppColors.gold : Colors.transparent,
+          borderRadius: BorderRadius.circular(9),
+          boxShadow: active
+              ? [
+                  BoxShadow(
+                    color: AppColors.gold.withValues(alpha: 0.35),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
         ),
         child: Text(
           label,
           style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            color: active ? AppColors.gold : AppColors.textMuted,
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: active ? Colors.black : AppColors.textSecondary,
           ),
         ),
       ),

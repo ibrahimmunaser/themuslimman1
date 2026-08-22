@@ -56,7 +56,14 @@ export function LangToggle({
           className,
         )}
       >
-        <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-gold">
+        <span
+          className={clsx(
+            "font-bold text-gold",
+            current === "ar"
+              ? "text-lg tracking-normal"
+              : "text-[11px] uppercase tracking-[0.16em]",
+          )}
+        >
           {current === "ar" ? "اللغة" : "Language"}
         </span>
         <div
@@ -80,7 +87,7 @@ export function LangToggle({
             type="button"
             onClick={() => switchLang("ar")}
             className={clsx(
-              "min-h-[40px] min-w-[64px] px-3.5 rounded-lg text-sm font-bold transition-all duration-150",
+              "min-h-[40px] min-w-[72px] px-3.5 rounded-lg text-base font-bold transition-all duration-150",
               current === "ar"
                 ? "bg-gold text-ink shadow-md shadow-gold/25"
                 : "text-text-secondary hover:text-text hover:bg-surface-raised/80",
