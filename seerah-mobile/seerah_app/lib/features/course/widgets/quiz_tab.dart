@@ -5,6 +5,7 @@ import '../../../core/models/part_model.dart';
 import '../../../core/providers/part_provider.dart';
 import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../l10n/app_strings.dart';
 
 class QuizTab extends ConsumerStatefulWidget {
   final int partNumber;
@@ -101,6 +102,7 @@ class _QuizTabState extends ConsumerState<QuizTab> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(courseLangProvider);
     final quizAsync = ref.watch(quizProvider(widget.partNumber));
 
     return quizAsync.when(
@@ -115,24 +117,24 @@ class _QuizTabState extends ConsumerState<QuizTab> {
           children: [
             const Icon(Icons.quiz_outlined, size: 48, color: AppColors.textMuted),
             const SizedBox(height: 12),
-            const Text('Quiz unavailable', style: TextStyle(color: AppColors.textSecondary)),
+            Text(t(lang, 'quizUnavailable'), style: const TextStyle(color: AppColors.textSecondary)),
             const SizedBox(height: 16),
             OutlinedButton(
               onPressed: () => ref.invalidate(quizProvider(widget.partNumber)),
-              child: const Text('Retry'),
+              child: Text(t(lang, 'retry')),
             ),
           ],
         ),
       ),
       data: (questions) {
         if (questions.isEmpty) {
-          return const Center(
+          return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.quiz_outlined, size: 48, color: AppColors.textMuted),
-                SizedBox(height: 12),
-                Text('No quiz for this part yet', style: TextStyle(color: AppColors.textSecondary)),
+                const Icon(Icons.quiz_outlined, size: 48, color: AppColors.textMuted),
+                const SizedBox(height: 12),
+                Text(t(lang, 'noQuizForPartYet'), style: const TextStyle(color: AppColors.textSecondary)),
               ],
             ),
           );
@@ -143,6 +145,7 @@ class _QuizTabState extends ConsumerState<QuizTab> {
           score: _score,
           total: questions.length,
           onRestart: _restart,
+          lang: lang,
         );
         }
 
@@ -155,12 +158,12 @@ class _QuizTabState extends ConsumerState<QuizTab> {
               child: Row(
                 children: [
                   Text(
-                    'Question ${_currentQ + 1} of ${questions.length}',
+                    tv(lang, 'questionXofY', {'x': _currentQ + 1, 'y': questions.length}),
                     style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
                   ),
                   const Spacer(),
                   Text(
-                    'Score: $_score',
+                    tv(lang, 'scoreLabel', {'n': _score}),
                     style: const TextStyle(color: AppColors.gold, fontSize: 13, fontWeight: FontWeight.w600),
                   ),
                 ],
@@ -322,11 +325,11 @@ class _QuizTabState extends ConsumerState<QuizTab> {
                 child: _submitted
                     ? ElevatedButton(
                         onPressed: () => _next(questions),
-                        child: Text(_currentQ < questions.length - 1 ? 'Next Question' : 'See Results'),
+                        child: Text(_currentQ < questions.length - 1 ? t(lang, 'nextQuestion') : t(lang, 'seeResults')),
                       )
                     : ElevatedButton(
                         onPressed: _selected != null ? () => _submit(questions) : null,
-                        child: const Text('Submit Answer'),
+                        child: Text(t(lang, 'submitAnswer')),
                       ),
               ),
             ),
@@ -341,8 +344,9 @@ class _ResultsScreen extends StatelessWidget {
   final int score;
   final int total;
   final VoidCallback onRestart;
+  final String lang;
 
-  const _ResultsScreen({required this.score, required this.total, required this.onRestart});
+  const _ResultsScreen({required this.score, required this.total, required this.onRestart, required this.lang});
 
   @override
   Widget build(BuildContext context) {
@@ -376,17 +380,17 @@ class _ResultsScreen extends StatelessWidget {
 
             const SizedBox(height: 24),
             Text(
-              passed ? 'Well done!' : 'Keep going!',
+              passed ? t(lang, 'wellDone') : t(lang, 'keepGoing'),
               style: const TextStyle(color: AppColors.textPrimary, fontSize: 24, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 8),
             Text(
-              '$score out of $total correct',
+              tv(lang, 'scoreOutOfCorrect', {'score': score, 'total': total}),
               style: const TextStyle(color: AppColors.textSecondary, fontSize: 16),
             ),
             const SizedBox(height: 8),
             Text(
-              passed ? 'You passed with $pct%' : 'Need 80% to pass — try again!',
+              passed ? tv(lang, 'passedWithPct', {'pct': pct}) : t(lang, 'need80ToPass'),
               style: TextStyle(
                 color: passed ? AppColors.success : AppColors.textMuted,
                 fontSize: 13,
@@ -399,7 +403,7 @@ class _ResultsScreen extends StatelessWidget {
               child: ElevatedButton.icon(
                 onPressed: onRestart,
                 icon: const Icon(Icons.refresh, size: 18),
-                label: const Text('Try Again'),
+                label: Text(t(lang, 'tryAgain')),
               ),
             ),
           ],

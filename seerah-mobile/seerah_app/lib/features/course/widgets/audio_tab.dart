@@ -4,6 +4,7 @@ import 'package:video_player/video_player.dart';
 import '../../../core/providers/part_provider.dart';
 import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../l10n/app_strings.dart';
 
 /// Full audio player for a part — uses VideoPlayerController in audio mode.
 class AudioTab extends ConsumerStatefulWidget {
@@ -113,7 +114,7 @@ class _AudioTabState extends ConsumerState<AudioTab> with WidgetsBindingObserver
       // player — without disposing here, that controller is orphaned since
       // nothing else references it once this function returns.
       _disposeController();
-      setState(() { _loading = false; _error = 'Could not load audio.'; });
+      setState(() { _loading = false; _error = t(ref.read(courseLangProvider), 'couldNotLoadAudio'); });
     }
   }
 
@@ -133,7 +134,7 @@ class _AudioTabState extends ConsumerState<AudioTab> with WidgetsBindingObserver
         _disposeController();
         setState(() {
           _loading = false;
-          _error = 'Audio playback error. Please check your connection and try again.';
+          _error = t(ref.read(courseLangProvider), 'audioPlaybackError');
         });
       });
       return;
@@ -163,7 +164,7 @@ class _AudioTabState extends ConsumerState<AudioTab> with WidgetsBindingObserver
       if (freshUrl == null || freshUrl.isEmpty) {
         setState(() {
           _loading = false;
-          _error = 'Audio not available for this part yet.';
+          _error = t(ref.read(courseLangProvider), 'audioNotAvailableYet');
         });
         return;
       }
@@ -196,6 +197,7 @@ class _AudioTabState extends ConsumerState<AudioTab> with WidgetsBindingObserver
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(courseLangProvider);
     if (_loading) {
       return const Center(
         child: CircularProgressIndicator.adaptive(
@@ -212,14 +214,14 @@ class _AudioTabState extends ConsumerState<AudioTab> with WidgetsBindingObserver
             children: [
               const Icon(Icons.headphones, size: 64, color: AppColors.textMuted),
               const SizedBox(height: 16),
-              Text(_error ?? 'Audio unavailable',
+              Text(_error ?? t(lang, 'audioUnavailable'),
                 style: const TextStyle(color: AppColors.textSecondary),
                 textAlign: TextAlign.center),
               const SizedBox(height: 24),
               OutlinedButton.icon(
                 onPressed: _retryWithFreshUrl,
                 icon: const Icon(Icons.refresh, size: 18),
-                label: const Text('Retry'),
+                label: Text(t(lang, 'retry')),
               ),
             ],
           ),
@@ -263,15 +265,15 @@ class _AudioTabState extends ConsumerState<AudioTab> with WidgetsBindingObserver
 
             // Title
             Text(
-              widget.partTitle ?? 'Audio Lesson',
+              widget.partTitle ?? t(lang, 'audioLessonTitle'),
               style: const TextStyle(color: AppColors.textPrimary, fontSize: 20, fontWeight: FontWeight.w700),
               textAlign: TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 4),
-            const Text('Audio Lesson  •  Listen on the go',
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+            Text(t(lang, 'audioLessonListenGo'),
+              style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
 
             const SizedBox(height: 32),
 
@@ -317,7 +319,7 @@ class _AudioTabState extends ConsumerState<AudioTab> with WidgetsBindingObserver
                 IconButton(
                   onPressed: () => ctrl.seekTo(pos - const Duration(seconds: 15)),
                   icon: const Icon(Icons.replay_rounded, size: 32, color: AppColors.textSecondary),
-                  tooltip: 'Rewind 15 seconds',
+                  tooltip: t(lang, 'rewind15'),
                 ),
                 const SizedBox(width: 16),
                 // Play/Pause
@@ -340,7 +342,7 @@ class _AudioTabState extends ConsumerState<AudioTab> with WidgetsBindingObserver
                       customBorder: const CircleBorder(),
                       child: Semantics(
                         button: true,
-                        label: isPlaying ? 'Pause' : 'Play',
+                        label: isPlaying ? t(lang, 'pause') : t(lang, 'play'),
                         child: SizedBox(
                           width: 64,
                           height: 64,
@@ -359,7 +361,7 @@ class _AudioTabState extends ConsumerState<AudioTab> with WidgetsBindingObserver
                 IconButton(
                   onPressed: () => ctrl.seekTo(pos + const Duration(seconds: 15)),
                   icon: const Icon(Icons.fast_forward_rounded, size: 32, color: AppColors.textSecondary),
-                  tooltip: 'Forward 15 seconds',
+                  tooltip: t(lang, 'forward15'),
                 ),
               ],
             ),

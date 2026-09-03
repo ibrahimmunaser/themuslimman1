@@ -11,7 +11,9 @@ import '../../../core/widgets/legal_web_screen.dart';
 import '../../../core/widgets/subscription_legal_text.dart';
 import '../../../core/utils/refund_copy.dart';
 import '../../../core/utils/system_insets.dart';
+import '../../../core/providers/part_provider.dart';
 import '../../../core/widgets/ui_kit.dart' show VerifyingPurchaseBanner, PriceLoadingPlaceholder, PendingPurchaseRecoveryBanner;
+import '../../../l10n/app_strings.dart';
 import '../../home/screens/landing_screen.dart' show PlanId;
 
 // ── Plan model (mirrors landing_screen) ──────────────────────────────────────
@@ -19,21 +21,21 @@ import '../../home/screens/landing_screen.dart' show PlanId;
 class _Plan {
   final PlanId id;
   final String iapId;
-  final String name;
-  final String description;
+  final String nameKey;
+  final String descriptionKey;
   final String fallbackPrice;
-  final String period;
-  final String? badge;
+  final String periodKey;
+  final String? badgeKey;
   final bool isRecommended;
 
   const _Plan({
     required this.id,
     required this.iapId,
-    required this.name,
-    required this.description,
+    required this.nameKey,
+    required this.descriptionKey,
     required this.fallbackPrice,
-    required this.period,
-    this.badge,
+    required this.periodKey,
+    this.badgeKey,
     this.isRecommended = false,
   });
 }
@@ -42,43 +44,43 @@ const _plans = [
   _Plan(
     id: PlanId.individualLifetime,
     iapId: AppConstants.iapLifetimeIndividual,
-    name: 'Lifetime',
-    description: '1 learner • pay once, own forever',
+    nameKey: 'planLifetime',
+    descriptionKey: 'oneLearnerPayOnce',
     fallbackPrice: '\$${AppConstants.lifetimePrice}',
-    period: 'one-time',
-    badge: 'Most Popular',
+    periodKey: 'oneTime',
+    badgeKey: 'mostPopular',
     isRecommended: true,
   ),
   _Plan(
     id: PlanId.individualMonthly,
     iapId: AppConstants.iapMonthlyIndividual,
-    name: 'Monthly',
-    description: '1 learner • cancel anytime',
+    nameKey: 'planMonthly',
+    descriptionKey: 'oneLearnerCancelAnytime',
     fallbackPrice: '\$${AppConstants.monthlyPrice}',
-    period: '/month',
+    periodKey: 'perMonth',
   ),
 ];
 
-final _faqItems = [
+List<({String q, String a})> _faqItems(String lang) => [
   (
-    q: 'What is included?',
-    a: 'Every plan includes the full 100-part Seerah course with video lessons, readings, quizzes, flashcards, summaries, mind maps, and progress tracking.',
+    q: t(lang, 'faqWhatIncludedQ'),
+    a: t(lang, 'faqWhatIncludedA'),
   ),
   (
-    q: 'Can I cancel anytime?',
-    a: 'Yes. Monthly plans can be canceled anytime from your App Store or Google Play subscription settings.',
+    q: t(lang, 'faqCancelAnytimeQ'),
+    a: t(lang, 'faqCancelAnytimeA'),
   ),
   (
-    q: 'Is there a refund guarantee?',
-    a: refundGuaranteeAnswer(),
+    q: t(lang, 'faqRefundGuaranteeQ'),
+    a: refundGuaranteeAnswer(lang),
   ),
   (
-    q: 'Is Part 1 free?',
-    a: 'Yes. Part 1 is completely free with no account required. Watch it before choosing a plan.',
+    q: t(lang, 'faqPart1FreeQ'),
+    a: t(lang, 'faqPart1FreeA'),
   ),
   (
-    q: "What's the difference between monthly and lifetime?",
-    a: 'Monthly is \$${AppConstants.monthlyPrice}/month and you can cancel anytime. Lifetime is \$${AppConstants.lifetimePrice} once — you keep access forever with no renewal.',
+    q: t(lang, 'faqMonthlyVsLifetimeQ'),
+    a: tv(lang, 'faqMonthlyVsLifetimeA', {'m': AppConstants.monthlyPrice, 'l': AppConstants.lifetimePrice}),
   ),
 ];
 
@@ -115,6 +117,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
   }
 
   Future<void> _buyPlan(IAPState iap, _Plan plan) async {
+    final lang = ref.read(courseLangProvider);
     if (_buyTapInFlight ||
         iap.status == IAPStatus.purchasing ||
         iap.status == IAPStatus.verifying ||
@@ -122,7 +125,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
       return;
     }
     if (!iap.isAvailable) {
-      _snack(ref.read(iapProvider).unavailableProductMessage());
+      _snack(ref.read(iapProvider).unavailableProductMessage(lang));
       return;
     }
 
@@ -135,7 +138,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
           .resolveProductForPlan(plan.iapId);
       if (product == null) {
         if (mounted) setState(() => _purchasingPlanId = null);
-        _snack(ref.read(iapProvider).unavailableProductMessage());
+        _snack(ref.read(iapProvider).unavailableProductMessage(lang));
         return;
       }
 
@@ -144,14 +147,14 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
       if (!ready || !ref.read(authProvider).isLoggedIn) {
         if (mounted) setState(() => _purchasingPlanId = null);
         _snack(ref.read(authProvider).error ??
-            'Could not start checkout. Please try again.');
+            t(lang, 'couldNotStartCheckout'));
         return;
       }
 
       final started = await ref.read(iapProvider.notifier).buy(product);
       if (!started && mounted) {
         setState(() => _purchasingPlanId = null);
-        _snack('A purchase is already being processed. Please wait for it to finish.');
+        _snack(t(lang, 'purchaseAlreadyProcessing'));
       }
     } finally {
       _buyTapInFlight = false;
@@ -166,6 +169,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
   }
 
   void _onIAP(IAPState? prev, IAPState next) {
+    final lang = ref.read(courseLangProvider);
     if (next.status == IAPStatus.success && prev?.status != IAPStatus.success) {
       if (mounted) setState(() => _purchasingPlanId = null);
       _showSuccessSheet();
@@ -181,18 +185,19 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
     if (next.status == IAPStatus.cancelled &&
         prev?.status == IAPStatus.purchasing) {
       if (mounted) setState(() => _purchasingPlanId = null);
-      _snack('Purchase cancelled.');
+      _snack(t(lang, 'purchaseCancelled'));
     }
     if (next.status == IAPStatus.restoreEmpty &&
         prev?.status != IAPStatus.restoreEmpty) {
       if (mounted) setState(() => _purchasingPlanId = null);
-      _snack('No previous purchases found to restore.');
+      _snack(t(lang, 'noPurchasesToRestore'));
       ref.read(iapProvider.notifier).clearError();
     }
   }
 
   void _showSuccessSheet() {
     if (!mounted) return;
+    final lang = ref.read(courseLangProvider);
 
     // Guests must create an account after purchase so access syncs across
     // Android, iOS, and web. Skip is intentionally not offered.
@@ -231,19 +236,19 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    const Text(
-                      'JazakAllahu Khayran!',
-                      style: TextStyle(
+                    Text(
+                      t(lang, 'jazakAllahKhayran'),
+                      style: const TextStyle(
                         color: AppColors.textPrimary,
                         fontSize: 22,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
                     const SizedBox(height: 10),
-                    const Text(
-                      'Your purchase was successful. Full access has been unlocked. May Allah bless your learning.',
+                    Text(
+                      t(lang, 'purchaseSuccessBody'),
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: AppColors.textSecondary,
                         fontSize: 15,
                         height: 1.5,
@@ -263,9 +268,9 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
                           borderRadius: BorderRadius.circular(14),
                         ),
                       ),
-                      child: const Text(
-                        'Start Learning',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                      child: Text(
+                        t(lang, 'startLearning'),
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                       ),
                     ),
                   ],
@@ -282,6 +287,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
     final auth = ref.watch(authProvider);
     final iap = ref.watch(iapProvider);
     final hasAccess = auth.hasAccess;
+    final lang = ref.watch(courseLangProvider);
 
     final busy =
         _buyTapInFlight ||
@@ -300,7 +306,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.background,
-        title: const Text('Choose Your Plan'),
+        title: Text(t(lang, 'chooseYourPlan')),
         centerTitle: true,
       ),
       body: ListView(
@@ -316,7 +322,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
             _StatusBanner(
               icon: Icons.verified_rounded,
               iconColor: const Color(0xFF4CAF50),
-              text: 'You have full access to the course',
+              text: t(lang, 'youHaveFullAccess'),
               bgColor: const Color(0xFF4CAF50).withValues(alpha: 0.08),
               borderColor: const Color(0xFF4CAF50).withValues(alpha: 0.3),
               textColor: const Color(0xFF4CAF50),
@@ -340,7 +346,8 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
           // ── Retry when products failed to load ───────────────────
           if (showRetry) ...[
             _RetryBanner(
-              status: iap.storeStatusLabel,
+              status: iap.storeStatusLabel(lang),
+              lang: lang,
               onRetry: () => ref.read(iapProvider.notifier).reloadProducts(),
             ),
             const SizedBox(height: 12),
@@ -363,12 +370,13 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
               onTap: () => _buyPlan(iap, plan),
               bottomMargin: i < _plans.length - 1 ? 10 : 0,
               isRecommended: plan.isRecommended,
+              lang: lang,
             );
           }),
 
           const SizedBox(height: 12),
           Text(
-            '${refundBadgeText()}  ·  Instant access  ·  Cancel anytime',
+            tv(lang, 'refundInstantCancel', {'refund': refundBadgeText(lang)}),
             textAlign: TextAlign.center,
             style: const TextStyle(color: AppColors.textMuted, fontSize: 11.5),
           ),
@@ -390,9 +398,9 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
           const SizedBox(height: 28),
 
           // ── What's included ──────────────────────────────────────
-          const Text(
-            'What\'s included',
-            style: TextStyle(
+          Text(
+            t(lang, 'whatsIncluded'),
+            style: const TextStyle(
               color: AppColors.textPrimary,
               fontSize: 17,
               fontWeight: FontWeight.w700,
@@ -411,18 +419,18 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
                 ...[
                   (
                     Icons.play_circle_outline_rounded,
-                    '100 structured video lessons',
+                    t(lang, 'included100Videos'),
                   ),
-                  (Icons.article_outlined, 'Reading notes & briefings'),
-                  (Icons.quiz_outlined, 'Quizzes & flashcards'),
+                  (Icons.article_outlined, t(lang, 'includedReadingNotes')),
+                  (Icons.quiz_outlined, t(lang, 'includedQuizzesFlashcards')),
                   (
                     Icons.insights_rounded,
-                    'Progress tracking across all 8 eras',
+                    t(lang, 'includedProgress8Eras'),
                   ),
-                  (Icons.map_outlined, 'Slides, mindmaps, and infographics'),
+                  (Icons.map_outlined, t(lang, 'includedSlidesMindmaps')),
                   (
                     Icons.all_inclusive_rounded,
-                    'Lifetime access option available',
+                    t(lang, 'includedLifetimeOption'),
                   ),
                 ].map(
                   (item) => Padding(
@@ -451,31 +459,31 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
           const SizedBox(height: 28),
 
           // ── Monthly vs lifetime ──────────────────────────────────
-          const Text(
-            'Monthly vs lifetime',
+          Text(
+            t(lang, 'monthlyVsLifetime'),
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: const TextStyle(
               color: AppColors.textPrimary,
               fontSize: 17,
               fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 12),
-          const _ComparisonCard(
-            title: 'Monthly',
+          _ComparisonCard(
+            title: t(lang, 'planMonthly'),
             bullets: [
-              'Lower upfront cost',
-              '\$${AppConstants.monthlyPrice}/month',
-              'Cancel anytime from your store account',
+              t(lang, 'lowerUpfrontCost'),
+              '\$${AppConstants.monthlyPrice}${t(lang, 'perMonth')}',
+              t(lang, 'cancelFromStoreAccount'),
             ],
           ),
           const SizedBox(height: 10),
-          const _ComparisonCard(
-            title: 'Lifetime',
+          _ComparisonCard(
+            title: t(lang, 'planLifetime'),
             bullets: [
-              'Pay once, keep access forever',
-              '\$${AppConstants.lifetimePrice} one-time',
-              'Best long-term value if you plan to study for years',
+              t(lang, 'payOnceKeepForever'),
+              '\$${AppConstants.lifetimePrice} ${t(lang, 'oneTime')}',
+              t(lang, 'bestLongTermValue'),
             ],
             highlighted: true,
           ),
@@ -483,10 +491,10 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
           const SizedBox(height: 28),
 
           // ── Free Part 1 ──────────────────────────────────────────
-          const Text(
-            'Want to preview first?',
+          Text(
+            t(lang, 'wantToPreviewFirst'),
             textAlign: TextAlign.center,
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+            style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
           ),
           const SizedBox(height: 10),
           InkWell(
@@ -518,22 +526,22 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
                     ),
                   ),
                   const SizedBox(width: 14),
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Part 1 is Always Free',
-                          style: TextStyle(
+                          t(lang, 'part1AlwaysFree'),
+                          style: const TextStyle(
                             color: AppColors.textPrimary,
                             fontWeight: FontWeight.w600,
                             fontSize: 14,
                           ),
                         ),
-                        SizedBox(height: 2),
+                        const SizedBox(height: 2),
                         Text(
-                          'Watch Part 1 free — no purchase needed',
-                          style: TextStyle(
+                          t(lang, 'watchPart1FreeNoPurchase'),
+                          style: const TextStyle(
                             color: AppColors.textSecondary,
                             fontSize: 12.5,
                           ),
@@ -553,24 +561,24 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
           const SizedBox(height: 28),
 
           // ── FAQ ──────────────────────────────────────────────────
-          const Text(
-            'Pricing questions',
+          Text(
+            t(lang, 'pricingQuestions'),
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: const TextStyle(
               color: AppColors.textPrimary,
               fontSize: 17,
               fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 12),
-          ..._faqItems.map(
+          ..._faqItems(lang).map(
             (item) => _FaqTile(question: item.q, answer: item.a),
           ),
 
           const SizedBox(height: 16),
 
           // ── Guarantee + disclaimer ───────────────────────────────
-          const _GuaranteeRow(),
+          _GuaranteeRow(lang: lang),
 
           const SizedBox(height: 16),
 
@@ -585,7 +593,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
                               .ensureSession();
                           if (!ready || !ref.read(authProvider).isLoggedIn) {
                             _snack(ref.read(authProvider).error ??
-                                'Could not restore. Please try again.');
+                                t(lang, 'couldNotRestore'));
                             return;
                           }
                           await ref
@@ -597,9 +605,9 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
                 size: 17,
                 color: AppColors.textMuted,
               ),
-              label: const Text(
-                'Restore Purchases',
-                style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+              label: Text(
+                t(lang, 'restorePurchases'),
+                style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
               ),
             ),
           ),
@@ -633,6 +641,7 @@ class _PlanTile extends StatelessWidget {
   final bool isRecommended;
   final VoidCallback onTap;
   final double bottomMargin;
+  final String lang;
 
   const _PlanTile({
     required this.plan,
@@ -642,6 +651,7 @@ class _PlanTile extends StatelessWidget {
     required this.onTap,
     this.isRecommended = false,
     this.bottomMargin = 0,
+    required this.lang,
   });
 
   @override
@@ -684,7 +694,7 @@ class _PlanTile extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (plan.badge != null)
+                      if (plan.badgeKey != null)
                         Padding(
                           padding: const EdgeInsets.only(bottom: 5),
                           child: Container(
@@ -700,7 +710,7 @@ class _PlanTile extends StatelessWidget {
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
-                              plan.badge!,
+                              t(lang, plan.badgeKey!),
                               style: TextStyle(
                                 color:
                                     isRecommended
@@ -713,7 +723,7 @@ class _PlanTile extends StatelessWidget {
                           ),
                         ),
                       Text(
-                        plan.name,
+                        t(lang, plan.nameKey),
                         style: const TextStyle(
                           color: AppColors.textPrimary,
                           fontSize: 15,
@@ -722,7 +732,7 @@ class _PlanTile extends StatelessWidget {
                       ),
                       const SizedBox(height: 3),
                       Text(
-                        plan.description,
+                        t(lang, plan.descriptionKey),
                         style: const TextStyle(
                           color: AppColors.textMuted,
                           fontSize: 12.5,
@@ -763,7 +773,7 @@ class _PlanTile extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          plan.period,
+                          t(lang, plan.periodKey),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -845,7 +855,8 @@ class _StatusBanner extends StatelessWidget {
 class _RetryBanner extends StatelessWidget {
   final String status;
   final VoidCallback onRetry;
-  const _RetryBanner({required this.status, required this.onRetry});
+  final String lang;
+  const _RetryBanner({required this.status, required this.onRetry, required this.lang});
 
   @override
   Widget build(BuildContext context) {
@@ -882,9 +893,9 @@ class _RetryBanner extends StatelessWidget {
                   padding: EdgeInsets.zero,
                   minimumSize: const Size(44, 36),
                 ),
-                child: const Text(
-                  'Retry',
-                  style: TextStyle(color: AppColors.gold, fontSize: 13),
+                child: Text(
+                  t(lang, 'retry'),
+                  style: const TextStyle(color: AppColors.gold, fontSize: 13),
                 ),
               ),
             ],
@@ -893,10 +904,9 @@ class _RetryBanner extends StatelessWidget {
           // See matching comment in landing_screen.dart's _ProductRetryBanner
           // — this used to show internal QA install instructions to real
           // customers hitting an ordinary transient load failure.
-          const Text(
-            'Check your internet connection, then tap Retry. If this keeps happening, '
-            'contact support@themuslimman.com.',
-            style: TextStyle(
+          Text(
+            t(lang, 'checkConnectionRetrySupport'),
+            style: const TextStyle(
               color: AppColors.textMuted,
               fontSize: 11.5,
               height: 1.4,
@@ -909,7 +919,8 @@ class _RetryBanner extends StatelessWidget {
 }
 
 class _GuaranteeRow extends StatelessWidget {
-  const _GuaranteeRow();
+  final String lang;
+  const _GuaranteeRow({required this.lang});
 
   @override
   Widget build(BuildContext context) {
@@ -925,7 +936,7 @@ class _GuaranteeRow extends StatelessWidget {
         // shrink, producing the classic yellow/black overflow stripes.
         Flexible(
           child: Text(
-            refundBadgeText(),
+            refundBadgeText(lang),
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,

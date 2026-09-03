@@ -1,52 +1,56 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/providers/part_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/system_insets.dart';
 import '../../../core/widgets/ui_kit.dart';
+import '../../../l10n/app_strings.dart';
 import '../data/reference_data.dart';
 
-class ReferenceDetailScreen extends StatelessWidget {
+class ReferenceDetailScreen extends ConsumerWidget {
   final String sectionId;
   const ReferenceDetailScreen({super.key, required this.sectionId});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(courseLangProvider);
     final section = kReferenceSections.firstWhere(
       (s) => s.id == sectionId,
-      orElse: () => const ReferenceSection(id: '', title: 'Not Found', description: ''),
+      orElse: () => const ReferenceSection(id: '', title: 'Not Found', titleAr: 'غير موجود', description: '', descriptionAr: ''),
     );
 
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        title: Text(section.title),
+        title: Text(section.localizedTitle(lang)),
       ),
       body: AppGradientBackground(
         child: SafeArea(
           bottom: false,
           child: Padding(
             padding: EdgeInsets.only(bottom: bottomSystemInset(context)),
-            child: _buildContent(context),
+            child: _buildContent(context, lang),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildContent(BuildContext context) {
+  Widget _buildContent(BuildContext context, String lang) {
     switch (sectionId) {
-      case 'family-household':  return _FamilyHouseholdContent();
-      case 'timeline':          return _TimelineContent();
-      case 'key-people':        return _KeyPeopleContent();
-      case 'battles':           return _BattlesContent();
-      case 'miracles':          return _MiraclesContent();
-      case 'important-terms':   return _TermsContent();
-      case 'places-maps':       return _PlacesContent();
-      case 'tribes-lineage':    return _TribesContent();
+      case 'family-household':  return _FamilyHouseholdContent(lang: lang);
+      case 'timeline':          return _TimelineContent(lang: lang);
+      case 'key-people':        return _KeyPeopleContent(lang: lang);
+      case 'battles':           return _BattlesContent(lang: lang);
+      case 'miracles':          return _MiraclesContent(lang: lang);
+      case 'important-terms':   return _TermsContent(lang: lang);
+      case 'places-maps':       return _PlacesContent(lang: lang);
+      case 'tribes-lineage':    return _TribesContent(lang: lang);
       default:
-        return const Center(
-          child: Text('Section not yet available.', style: TextStyle(color: AppColors.textSecondary)));
+        return Center(
+          child: Text(t(lang, 'sectionNotYetAvailable'), style: const TextStyle(color: AppColors.textSecondary)));
     }
   }
 }
@@ -101,40 +105,43 @@ class _SubTitle extends StatelessWidget {
 // ── Family & Household ────────────────────────────────────────────────────────
 
 class _FamilyHouseholdContent extends StatelessWidget {
+  final String lang;
+  const _FamilyHouseholdContent({required this.lang});
+
   @override
   Widget build(BuildContext context) {
     return ListView(
       padding: const EdgeInsets.only(bottom: 32),
       children: [
         _SectionHeader(
-          title: 'Family & Household',
-          subtitle: 'Wives, children, and household of the Prophet ﷺ',
+          title: t(lang, 'familyHousehold'),
+          subtitle: t(lang, 'wivesChildrenHousehold'),
         ).animate().fadeIn(duration: 400.ms),
 
-        _SubTitle('Wives of the Prophet ﷺ (Mothers of the Believers)'),
+        _SubTitle(t(lang, 'wivesOfProphet')),
         ...kWives.asMap().entries.map((e) {
           final w = e.value;
           return _InfoCard(
-            title: w.name,
-            subtitle: w.hasChildren ? 'Had children with the Prophet ﷺ' : null,
-            body: w.notes,
+            title: w.localizedName(lang),
+            subtitle: w.hasChildren ? t(lang, 'hadChildrenWithProphet') : null,
+            body: w.localizedNotes(lang),
             accentColor: w.hasChildren ? AppColors.success : AppColors.textMuted,
           ).animate(delay: (e.key * 40).ms).fadeIn(duration: 300.ms);
         }),
 
-        _SubTitle('Children of the Prophet ﷺ'),
+        _SubTitle(t(lang, 'childrenOfProphet')),
         ...kChildren.asMap().entries.map((e) {
           final c = e.value;
           return _InfoCard(
-            title: c.name,
-            subtitle: 'Mother: ${c.mother}',
-            body: c.notes,
+            title: c.localizedName(lang),
+            subtitle: tv(lang, 'motherLabel', {'name': c.localizedMother(lang)}),
+            body: c.localizedNotes(lang),
           ).animate(delay: (e.key * 40).ms).fadeIn(duration: 300.ms);
         }),
 
-        const _NoteCard(
-          'Historical Note',
-          'Some scholars counted Rayhana bint Zayd among the wives of the Prophet ﷺ while others considered her differently. Her status is noted here as a matter of historical difference of opinion.',
+        _NoteCard(
+          t(lang, 'historicalNote'),
+          t(lang, 'rayhanaNote'),
         ),
       ],
     );
@@ -144,14 +151,17 @@ class _FamilyHouseholdContent extends StatelessWidget {
 // ── Timeline ──────────────────────────────────────────────────────────────────
 
 class _TimelineContent extends StatelessWidget {
+  final String lang;
+  const _TimelineContent({required this.lang});
+
   @override
   Widget build(BuildContext context) {
     return ListView(
       padding: const EdgeInsets.only(bottom: 32),
       children: [
         _SectionHeader(
-          title: 'Timeline of the Seerah',
-          subtitle: 'Dates before the Hijrah are approximate in the Gregorian calendar.',
+          title: t(lang, 'timelineOfSeerah'),
+          subtitle: t(lang, 'datesApproximate'),
         ).animate().fadeIn(duration: 400.ms),
 
         Padding(
@@ -160,7 +170,7 @@ class _TimelineContent extends StatelessWidget {
             children: kTimeline.asMap().entries.map((entry) {
               final i = entry.key;
               final event = entry.value;
-              return _TimelineItem(event: event, isLast: i == kTimeline.length - 1)
+              return _TimelineItem(event: event, isLast: i == kTimeline.length - 1, lang: lang)
                   .animate(delay: (i * 40).ms).fadeIn(duration: 300.ms);
             }).toList(),
           ),
@@ -173,7 +183,8 @@ class _TimelineContent extends StatelessWidget {
 class _TimelineItem extends StatelessWidget {
   final TimelineEvent event;
   final bool isLast;
-  const _TimelineItem({required this.event, required this.isLast});
+  final String lang;
+  const _TimelineItem({required this.event, required this.isLast, required this.lang});
 
   @override
   Widget build(BuildContext context) {
@@ -229,10 +240,10 @@ class _TimelineItem extends StatelessWidget {
                     Text(event.date,
                       style: const TextStyle(color: AppColors.gold, fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
                     const SizedBox(height: 3),
-                    Text(event.title,
+                    Text(event.localizedTitle(lang),
                       style: const TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w700)),
                     const SizedBox(height: 4),
-                    Text(event.description,
+                    Text(event.localizedDescription(lang),
                       style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4)),
                   ],
                 ),
@@ -248,18 +259,22 @@ class _TimelineItem extends StatelessWidget {
 // ── Key People ────────────────────────────────────────────────────────────────
 
 class _KeyPeopleContent extends StatefulWidget {
+  final String lang;
+  const _KeyPeopleContent({required this.lang});
+
   @override
   State<_KeyPeopleContent> createState() => _KeyPeopleContentState();
 }
 
 class _KeyPeopleContentState extends State<_KeyPeopleContent> {
   String _search = '';
-  String _filter = 'All';
+  String? _filter;
+
   final _ctrl = TextEditingController();
 
-  List<String> get _categories {
+  List<String?> get _categories {
     final cats = kKeyPeople.map((p) => p.category).toSet().toList()..sort();
-    return ['All', ...cats];
+    return [null, ...cats];
   }
 
   List<PersonEntry> get _filtered {
@@ -267,8 +282,11 @@ class _KeyPeopleContentState extends State<_KeyPeopleContent> {
       final matchSearch = _search.isEmpty ||
           p.name.toLowerCase().contains(_search) ||
           p.role.toLowerCase().contains(_search) ||
-          p.description.toLowerCase().contains(_search);
-      final matchFilter = _filter == 'All' || p.category == _filter;
+          p.description.toLowerCase().contains(_search) ||
+          p.nameAr.contains(_search) ||
+          p.roleAr.contains(_search) ||
+          p.descriptionAr.contains(_search);
+      final matchFilter = _filter == null || p.category == _filter;
       return matchSearch && matchFilter;
     }).toList();
   }
@@ -278,6 +296,7 @@ class _KeyPeopleContentState extends State<_KeyPeopleContent> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = widget.lang;
     final people = _filtered;
     return Column(
       children: [
@@ -288,12 +307,12 @@ class _KeyPeopleContentState extends State<_KeyPeopleContent> {
             controller: _ctrl,
             onChanged: (v) => setState(() => _search = v.toLowerCase()),
             decoration: InputDecoration(
-              hintText: 'Search people…',
+              hintText: t(lang, 'searchPeopleEllipsis'),
               prefixIcon: const Icon(Icons.search, size: 20, color: AppColors.textMuted),
               suffixIcon: _search.isNotEmpty
                   ? IconButton(
                       icon: const Icon(Icons.close, size: 18, color: AppColors.textMuted),
-                      tooltip: 'Clear search',
+                      tooltip: t(lang, 'clearSearch'),
                       onPressed: () { _ctrl.clear(); setState(() => _search = ''); })
                   : null,
               contentPadding: const EdgeInsets.symmetric(vertical: 10),
@@ -306,38 +325,45 @@ class _KeyPeopleContentState extends State<_KeyPeopleContent> {
           child: ListView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            children: _categories.map((cat) => Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: FilterChip(
-                label: Text(cat, style: TextStyle(
-                  fontSize: 12,
-                  color: _filter == cat ? AppColors.background : AppColors.textSecondary,
-                )),
-                selected: _filter == cat,
-                onSelected: (_) => setState(() => _filter = cat),
-                backgroundColor: AppColors.card,
-                selectedColor: AppColors.gold,
-                side: BorderSide(color: _filter == cat ? AppColors.gold : AppColors.border),
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-              ),
-            )).toList(),
+            children: _categories.map((cat) {
+              final label = cat == null
+                  ? t(lang, 'all')
+                  : (lang == 'ar'
+                      ? kKeyPeople.firstWhere((p) => p.category == cat).categoryAr
+                      : cat);
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: FilterChip(
+                  label: Text(label, style: TextStyle(
+                    fontSize: 12,
+                    color: _filter == cat ? AppColors.background : AppColors.textSecondary,
+                  )),
+                  selected: _filter == cat,
+                  onSelected: (_) => setState(() => _filter = cat),
+                  backgroundColor: AppColors.card,
+                  selectedColor: AppColors.gold,
+                  side: BorderSide(color: _filter == cat ? AppColors.gold : AppColors.border),
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                ),
+              );
+            }).toList(),
           ),
         ),
         const SizedBox(height: 8),
         // Results
         Expanded(
           child: people.isEmpty
-              ? const Center(child: Text('No results found', style: TextStyle(color: AppColors.textSecondary)))
+              ? Center(child: Text(t(lang, 'noResultsFound'), style: const TextStyle(color: AppColors.textSecondary)))
               : ListView.builder(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
                   itemCount: people.length,
                   itemBuilder: (ctx, i) {
                     final p = people[i];
                     return _InfoCard(
-                      title: p.name,
-                      subtitle: p.role,
-                      body: p.description,
-                      tag: p.category,
+                      title: p.localizedName(lang),
+                      subtitle: p.localizedRole(lang),
+                      body: p.localizedDescription(lang),
+                      tag: p.localizedCategory(lang),
                     );
                   },
                 ),
@@ -350,14 +376,17 @@ class _KeyPeopleContentState extends State<_KeyPeopleContent> {
 // ── Battles ───────────────────────────────────────────────────────────────────
 
 class _BattlesContent extends StatelessWidget {
+  final String lang;
+  const _BattlesContent({required this.lang});
+
   @override
   Widget build(BuildContext context) {
     return ListView(
       padding: const EdgeInsets.only(bottom: 32),
       children: [
         _SectionHeader(
-          title: 'Battles and Expeditions',
-          subtitle: 'Major military events in the life of the Prophet ﷺ',
+          title: t(lang, 'battlesExpeditions'),
+          subtitle: t(lang, 'majorMilitaryEvents'),
         ).animate().fadeIn(duration: 400.ms),
         ...kBattles.asMap().entries.map((e) {
           final b = e.value;
@@ -376,7 +405,7 @@ class _BattlesContent extends StatelessWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: Text(b.name,
+                        child: Text(b.localizedName(lang),
                           style: const TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.w700)),
                       ),
                       Container(
@@ -386,7 +415,7 @@ class _BattlesContent extends StatelessWidget {
                           borderRadius: BorderRadius.circular(6),
                           border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
                         ),
-                        child: Text(b.type,
+                        child: Text(b.localizedType(lang),
                           style: const TextStyle(color: AppColors.gold, fontSize: 10, fontWeight: FontWeight.w600)),
                       ),
                     ],
@@ -401,7 +430,7 @@ class _BattlesContent extends StatelessWidget {
                       const Icon(Icons.flag_outlined, size: 12, color: AppColors.textMuted),
                       const SizedBox(width: 4),
                       Expanded(
-                        child: Text(b.outcome,
+                        child: Text(b.localizedOutcome(lang),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
@@ -409,7 +438,7 @@ class _BattlesContent extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Text(b.significance,
+                  Text(b.localizedSignificance(lang),
                     style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4)),
                 ],
               ),
@@ -424,19 +453,22 @@ class _BattlesContent extends StatelessWidget {
 // ── Miracles ──────────────────────────────────────────────────────────────────
 
 class _MiraclesContent extends StatelessWidget {
+  final String lang;
+  const _MiraclesContent({required this.lang});
+
   @override
   Widget build(BuildContext context) {
     return ListView(
       padding: const EdgeInsets.only(bottom: 32),
       children: [
         _SectionHeader(
-          title: 'Miracles and Signs',
-          subtitle: 'Verified narrations from the Qur\'an, Sahih al-Bukhari, and Sahih Muslim only.',
+          title: t(lang, 'miraclesAndSigns'),
+          subtitle: t(lang, 'verifiedNarrations'),
         ).animate().fadeIn(duration: 400.ms),
 
-        const _NoteCard(
-          'Source Verification',
-          'Only miracles with clear evidence from the Qur\'an or Sahih al-Bukhari/Muslim are listed here. Popular stories without verified chains have been excluded.',
+        _NoteCard(
+          t(lang, 'sourceVerification'),
+          t(lang, 'sourceVerificationBody'),
         ),
 
         ...kMiracles.asMap().entries.map((e) {
@@ -457,7 +489,7 @@ class _MiraclesContent extends StatelessWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: Text(m.title,
+                        child: Text(m.localizedTitle(lang),
                           style: const TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w700)),
                       ),
                       Flexible(
@@ -468,7 +500,7 @@ class _MiraclesContent extends StatelessWidget {
                             borderRadius: BorderRadius.circular(6),
                             border: Border.all(color: isQuran ? AppColors.gold.withValues(alpha: 0.4) : AppColors.success.withValues(alpha: 0.4)),
                           ),
-                          child: Text(m.source,
+                          child: Text(m.localizedSource(lang),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
@@ -481,7 +513,7 @@ class _MiraclesContent extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 6),
-                  Text(m.description,
+                  Text(m.localizedDescription(lang),
                     style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4)),
                 ],
               ),
@@ -496,27 +528,31 @@ class _MiraclesContent extends StatelessWidget {
 // ── Terms ─────────────────────────────────────────────────────────────────────
 
 class _TermsContent extends StatefulWidget {
+  final String lang;
+  const _TermsContent({required this.lang});
+
   @override
   State<_TermsContent> createState() => _TermsContentState();
 }
 
 class _TermsContentState extends State<_TermsContent> {
   String _search = '';
-  String _filter = 'All';
+  String? _filter;
   final _ctrl = TextEditingController();
 
-  List<String> get _categories {
+  List<String?> get _categories {
     final cats = kTerms.map((t) => t.category).toSet().toList()..sort();
-    return ['All', ...cats];
+    return [null, ...cats];
   }
 
   List<TermEntry> get _filtered {
-    return kTerms.where((t) {
+    return kTerms.where((term) {
       final matchSearch = _search.isEmpty ||
-          t.arabic.contains(_search) ||
-          t.transliteration.toLowerCase().contains(_search) ||
-          t.definition.toLowerCase().contains(_search);
-      final matchFilter = _filter == 'All' || t.category == _filter;
+          term.arabic.contains(_search) ||
+          term.transliteration.toLowerCase().contains(_search) ||
+          term.definition.toLowerCase().contains(_search) ||
+          term.definitionAr.contains(_search);
+      final matchFilter = _filter == null || term.category == _filter;
       return matchSearch && matchFilter;
     }).toList();
   }
@@ -526,6 +562,7 @@ class _TermsContentState extends State<_TermsContent> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = widget.lang;
     final terms = _filtered;
     return Column(
       children: [
@@ -535,12 +572,12 @@ class _TermsContentState extends State<_TermsContent> {
             controller: _ctrl,
             onChanged: (v) => setState(() => _search = v.toLowerCase()),
             decoration: InputDecoration(
-              hintText: 'Search terms…',
+              hintText: t(lang, 'searchTermsEllipsis'),
               prefixIcon: const Icon(Icons.search, size: 20, color: AppColors.textMuted),
               suffixIcon: _search.isNotEmpty
                   ? IconButton(
                       icon: const Icon(Icons.close, size: 18),
-                      tooltip: 'Clear search',
+                      tooltip: t(lang, 'clearSearch'),
                       onPressed: () { _ctrl.clear(); setState(() => _search = ''); })
                   : null,
               contentPadding: const EdgeInsets.symmetric(vertical: 10),
@@ -552,32 +589,39 @@ class _TermsContentState extends State<_TermsContent> {
           child: ListView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            children: _categories.map((cat) => Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: FilterChip(
-                label: Text(cat, style: TextStyle(
-                  fontSize: 12,
-                  color: _filter == cat ? AppColors.background : AppColors.textSecondary,
-                )),
-                selected: _filter == cat,
-                onSelected: (_) => setState(() => _filter = cat),
-                backgroundColor: AppColors.card,
-                selectedColor: AppColors.gold,
-                side: BorderSide(color: _filter == cat ? AppColors.gold : AppColors.border),
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-              ),
-            )).toList(),
+            children: _categories.map((cat) {
+              final label = cat == null
+                  ? t(lang, 'all')
+                  : (lang == 'ar'
+                      ? kTerms.firstWhere((term) => term.category == cat).categoryAr
+                      : cat);
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: FilterChip(
+                  label: Text(label, style: TextStyle(
+                    fontSize: 12,
+                    color: _filter == cat ? AppColors.background : AppColors.textSecondary,
+                  )),
+                  selected: _filter == cat,
+                  onSelected: (_) => setState(() => _filter = cat),
+                  backgroundColor: AppColors.card,
+                  selectedColor: AppColors.gold,
+                  side: BorderSide(color: _filter == cat ? AppColors.gold : AppColors.border),
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                ),
+              );
+            }).toList(),
           ),
         ),
         const SizedBox(height: 8),
         Expanded(
           child: terms.isEmpty
-              ? const Center(child: Text('No results found', style: TextStyle(color: AppColors.textSecondary)))
+              ? Center(child: Text(t(lang, 'noResultsFound'), style: const TextStyle(color: AppColors.textSecondary)))
               : ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
             itemCount: terms.length,
             itemBuilder: (ctx, i) {
-              final t = terms[i];
+              final term = terms[i];
               return Container(
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.all(14),
@@ -596,7 +640,7 @@ class _TermsContentState extends State<_TermsContent> {
                         children: [
                           FittedBox(
                             fit: BoxFit.scaleDown,
-                            child: Text(t.arabic,
+                            child: Text(term.arabic,
                               textAlign: TextAlign.right,
                               style: const TextStyle(color: AppColors.gold, fontSize: 18, fontWeight: FontWeight.w600)),
                           ),
@@ -611,7 +655,7 @@ class _TermsContentState extends State<_TermsContent> {
                           Row(
                             children: [
                               Expanded(
-                                child: Text(t.transliteration,
+                                child: Text(term.transliteration,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w700)),
@@ -623,13 +667,13 @@ class _TermsContentState extends State<_TermsContent> {
                                   color: AppColors.border,
                                   borderRadius: BorderRadius.circular(4),
                                 ),
-                                child: Text(t.category,
+                                child: Text(term.localizedCategory(lang),
                                   style: const TextStyle(color: AppColors.textMuted, fontSize: 10)),
                               ),
                             ],
                           ),
                           const SizedBox(height: 4),
-                          Text(t.definition,
+                          Text(term.localizedDefinition(lang),
                             style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4)),
                         ],
                       ),
@@ -648,6 +692,9 @@ class _TermsContentState extends State<_TermsContent> {
 // ── Places ────────────────────────────────────────────────────────────────────
 
 class _PlacesContent extends StatelessWidget {
+  final String lang;
+  const _PlacesContent({required this.lang});
+
   @override
   Widget build(BuildContext context) {
     final cats = kPlaces.map((p) => p.category).toSet().toList();
@@ -655,19 +702,20 @@ class _PlacesContent extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 32),
       children: [
         _SectionHeader(
-          title: 'Places and Maps',
-          subtitle: 'Key cities, routes, and locations in the Seerah',
+          title: t(lang, 'placesAndMaps'),
+          subtitle: t(lang, 'keyCitiesRoutes'),
         ).animate().fadeIn(duration: 400.ms),
 
         ...cats.map((cat) {
           final places = kPlaces.where((p) => p.category == cat).toList();
+          final catLabel = lang == 'ar' ? places.first.categoryAr : cat;
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _SubTitle(cat),
+              _SubTitle(catLabel),
               ...places.map((p) => _InfoCard(
-                title: p.name,
-                body: p.significance,
+                title: p.localizedName(lang),
+                body: p.localizedSignificance(lang),
               )),
             ],
           );
@@ -680,54 +728,85 @@ class _PlacesContent extends StatelessWidget {
 // ── Tribes & Lineage ──────────────────────────────────────────────────────────
 
 class _TribesContent extends StatelessWidget {
+  final String lang;
+  const _TribesContent({required this.lang});
+
   @override
   Widget build(BuildContext context) {
+    final isAr = lang == 'ar';
     return ListView(
       padding: const EdgeInsets.only(bottom: 32),
       children: [
         _SectionHeader(
-          title: 'Tribes and Lineage',
-          subtitle: 'The Prophet\'s ﷺ lineage and major Arab tribes',
+          title: t(lang, 'tribesAndLineage'),
+          subtitle: t(lang, 'prophetLineageAndTribes'),
         ).animate().fadeIn(duration: 400.ms),
 
-        const _SubTitle('The Prophet\'s ﷺ Lineage (Summary)'),
-        _LineageCard().animate(delay: 100.ms).fadeIn(),
+        _SubTitle(t(lang, 'prophetLineageSummary')),
+        _LineageCard(lang: lang).animate(delay: 100.ms).fadeIn(),
 
-        const _SubTitle('Quraysh Clans of Makkah'),
+        _SubTitle(t(lang, 'qurayshClansMakkah')),
         ...[
-          ['Banu Hashim',     'The Prophet\'s clan. Custodians of Zamzam. Known for nobility and generosity.'],
-          ['Banu Umayya',     'Powerful Qurayshi clan. Abu Sufyan was from this clan. Later became the Umayyad caliphs.'],
-          ['Banu Makhzum',    'Warrior clan of Quraysh. Khalid ibn al-Walid was from Banu Makhzum.'],
-          ['Banu Asad',       'Another Qurayshi clan connected to several prominent companions.'],
-          ['Banu Zuhrah',     'Clan of Aminah, the Prophet\'s ﷺ mother. Abd al-Rahman ibn Awf ؓ was from here.'],
-          ['Banu Taym',       'Clan of Abu Bakr al-Siddiq ؓ.'],
-          ['Banu Adi',        'Clan of Umar ibn al-Khattab ؓ.'],
+          ['Banu Hashim',     'The Prophet\'s clan. Custodians of Zamzam. Known for nobility and generosity.',
+           'بنو هاشم',        'عشيرة النبي ﷺ. حُماة بئر زمزم. عُرفوا بالنُّبل والكرم.'],
+          ['Banu Umayya',     'Powerful Qurayshi clan. Abu Sufyan was from this clan. Later became the Umayyad caliphs.',
+           'بنو أمية',        'عشيرة قرشية قوية. كان أبو سفيان منها. أصبحوا فيما بعد الخلفاء الأمويين.'],
+          ['Banu Makhzum',    'Warrior clan of Quraysh. Khalid ibn al-Walid was from Banu Makhzum.',
+           'بنو مخزوم',       'عشيرة محاربة من قريش. كان خالد بن الوليد منها.'],
+          ['Banu Asad',       'Another Qurayshi clan connected to several prominent companions.',
+           'بنو أسد',         'عشيرة قرشية أخرى ارتبطت بعدد من الصحابة البارزين.'],
+          ['Banu Zuhrah',     'Clan of Aminah, the Prophet\'s ﷺ mother. Abd al-Rahman ibn Awf ؓ was from here.',
+           'بنو زهرة',        'عشيرة آمنة، والدة النبي ﷺ. كان عبد الرحمن بن عوف ؓ منها.'],
+          ['Banu Taym',       'Clan of Abu Bakr al-Siddiq ؓ.',
+           'بنو تيم',         'عشيرة أبي بكر الصديق ؓ.'],
+          ['Banu Adi',        'Clan of Umar ibn al-Khattab ؓ.',
+           'بنو عدي',         'عشيرة عمر بن الخطاب ؓ.'],
         ].asMap().entries.map((e) => _InfoCard(
-          title: e.value[0],
-          body: e.value[1],
+          title: isAr ? e.value[2] : e.value[0],
+          body: isAr ? e.value[3] : e.value[1],
         ).animate(delay: (e.key * 40).ms).fadeIn()),
 
-        const _SubTitle('Major Tribes of Madinah (Ansar)'),
+        _SubTitle(t(lang, 'majorTribesMadinahAnsar')),
         ...[
-          ['Banu Aws',        'One of the two main tribes of Madinah. They were among the Ansar who welcomed the Prophet ﷺ.'],
-          ['Banu Khazraj',    'The larger of the two main Madinan tribes. Many leading Ansar companions were from here.'],
-        ].map((d) => _InfoCard(title: d[0], body: d[1])),
+          ['Banu Aws',        'One of the two main tribes of Madinah. They were among the Ansar who welcomed the Prophet ﷺ.',
+           'بنو الأوس',       'إحدى القبيلتين الرئيسيتين في المدينة. كانوا من الأنصار الذين رحّبوا بالنبي ﷺ.'],
+          ['Banu Khazraj',    'The larger of the two main Madinan tribes. Many leading Ansar companions were from here.',
+           'بنو الخزرج',      'الأكبر من القبيلتين الرئيسيتين في المدينة. كان كثير من كبار الصحابة الأنصار منها.'],
+        ].map((d) => _InfoCard(title: isAr ? d[2] : d[0], body: isAr ? d[3] : d[1])),
 
-        const _SubTitle('Jewish Tribes of Madinah'),
+        _SubTitle(t(lang, 'jewishTribesMadinah')),
         ...[
-          ["Banu Qaynuqa'",   'Exiled from Madinah after breaking the treaty following Badr.'],
-          ['Banu Nadir',      'Exiled from Madinah in 4 AH for plotting against the Prophet ﷺ.'],
-          ['Banu Qurayza',    'Broke their covenant during the Battle of the Trench.'],
-        ].map((d) => _InfoCard(title: d[0], body: d[1])),
+          ["Banu Qaynuqa'",   'Exiled from Madinah after breaking the treaty following Badr.',
+           'بنو قينقاع',      'أُجلوا عن المدينة بعد نقض العهد إثر غزوة بدر.'],
+          ['Banu Nadir',      'Exiled from Madinah in 4 AH for plotting against the Prophet ﷺ.',
+           'بنو النضير',      'أُجلوا عن المدينة في السنة الرابعة للهجرة لتدبيرهم مؤامرة ضد النبي ﷺ.'],
+          ['Banu Qurayza',    'Broke their covenant during the Battle of the Trench.',
+           'بنو قريظة',       'نقضوا عهدهم خلال غزوة الخندق.'],
+        ].map((d) => _InfoCard(title: isAr ? d[2] : d[0], body: isAr ? d[3] : d[1])),
       ],
     );
   }
 }
 
 class _LineageCard extends StatelessWidget {
+  final String lang;
+  const _LineageCard({required this.lang});
+
   @override
   Widget build(BuildContext context) {
-    final chain = [
+    final chain = lang == 'ar'
+        ? [
+            'محمد ﷺ',
+            'عبد الله (الأب)',
+            'عبد المطلب (الجد)',
+            'هاشم (الجد الأكبر)',
+            'عبد مناف',
+            'قصي',
+            'كلاب ← مرة ← كعب ← لؤي ← غالب ← فهر (قريش)',
+            '... ← كنانة ← خزيمة ← مدركة ← إلياس ← مضر ← نزار ← معد ← عدنان',
+            '... ← إبراهيم ؑ',
+          ]
+        : [
       'Muhammad ﷺ',
       'Abdullah (father)',
       'Abd al-Muttalib (grandfather)',

@@ -6,9 +6,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/iap_provider.dart';
+import '../../../core/providers/part_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/system_insets.dart';
 import '../../../core/widgets/ui_kit.dart';
+import '../../../l10n/app_strings.dart';
 
 class WelcomeScreen extends ConsumerStatefulWidget {
   const WelcomeScreen({super.key});
@@ -33,7 +35,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       if (ref.read(authProvider).isAnonymous) {
         context.go('/signup');
       } else {
-        _snack('Purchase restored! Full access unlocked.');
+        _snack(t(ref.read(courseLangProvider), 'welcomeRestoreSuccess'));
         context.go('/dashboard');
       }
       return;
@@ -49,7 +51,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     if (next.status == IAPStatus.restoreEmpty &&
         prev?.status != IAPStatus.restoreEmpty) {
       if (mounted) setState(() => _restoring = false);
-      _snack('No previous purchases found.');
+      _snack(t(ref.read(courseLangProvider), 'welcomeRestoreNone'));
       return;
     }
     if (next.status == IAPStatus.idle && prev?.status == IAPStatus.verifying) {
@@ -74,7 +76,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     if (!ready || !ref.read(authProvider).isLoggedIn) {
       setState(() => _restoring = false);
       _snack(ref.read(authProvider).error ??
-          'Could not restore purchases. Please try again.');
+          t(ref.read(courseLangProvider), 'welcomeRestoreError'));
       return;
     }
     await ref.read(iapProvider.notifier).restorePurchases();
@@ -84,6 +86,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
   Widget build(BuildContext context) {
     ref.listen<IAPState>(iapProvider, _onIAP);
     final iap = ref.watch(iapProvider);
+    final lang = ref.watch(courseLangProvider);
     final busy = _restoring ||
         iap.status == IAPStatus.purchasing ||
         iap.status == IAPStatus.verifying;
@@ -101,11 +104,11 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                 padding: const EdgeInsets.fromLTRB(20, 4, 8, 0),
                 child: Row(
                   children: [
-                    const Flexible(
+                    Flexible(
                       child: Text(
-                        'Complete Seerah',
+                        t(lang, 'welcomeTitleLine1'),
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: AppColors.textMuted,
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
@@ -121,9 +124,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                         HapticFeedback.selectionClick();
                         context.push('/login');
                       },
-                      child: const Text(
-                        'Returning?',
-                        style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+                      child: Text(
+                        t(lang, 'welcomeReturning'),
+                        style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
                       ),
                     ),
                   ],
@@ -147,9 +150,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(color: AppColors.gold.withValues(alpha: 0.4)),
                           ),
-                          child: const Text(
-                            '100-Part Seerah Course',
-                            style: TextStyle(
+                          child: Text(
+                            t(lang, 'welcomeCourseHeadline'),
+                            style: const TextStyle(
                               color: AppColors.gold,
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
@@ -161,10 +164,10 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
 
                       const SizedBox(height: 18),
 
-                      const Text(
-                        'Learn the life of the\nProphet Muhammad ﷺ\nin 100 structured parts',
+                      Text(
+                        t(lang, 'welcomeTagline'),
                         textAlign: TextAlign.center,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: AppColors.textPrimary,
                           fontSize: 26,
                           fontWeight: FontWeight.w800,
@@ -175,10 +178,10 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
 
                       const SizedBox(height: 12),
 
-                      const Text(
-                        'Video lessons, quizzes, flashcards, and progress tracking — built to help you learn step by step.',
+                      Text(
+                        t(lang, 'welcomeSubtext'),
                         textAlign: TextAlign.center,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 14,
                           height: 1.55,
@@ -189,26 +192,26 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
 
                       // ── Feature highlights ────────────────────────────────
                       Column(
-                        children: const [
+                        children: [
                           _FeatureRow(
                             icon: Icons.play_circle_outline_rounded,
-                            color: Color(0xFF5A90B0),
-                            label: 'Watch, listen, or read',
-                            detail: 'Video · Audio · Reading',
+                            color: const Color(0xFF5A90B0),
+                            label: t(lang, 'featureWatchListenRead'),
+                            detail: t(lang, 'featureWatchListenReadDetail'),
                           ),
-                          SizedBox(height: 10),
+                          const SizedBox(height: 10),
                           _FeatureRow(
                             icon: Icons.style_outlined,
-                            color: Color(0xFF6AAE50),
-                            label: 'Practice and review',
-                            detail: 'Flashcards · Quizzes · Slides',
+                            color: const Color(0xFF6AAE50),
+                            label: t(lang, 'featurePracticeReview'),
+                            detail: t(lang, 'featurePracticeReviewDetail'),
                           ),
-                          SizedBox(height: 10),
+                          const SizedBox(height: 10),
                           _FeatureRow(
                             icon: Icons.insights_outlined,
-                            color: Color(0xFFB08040),
-                            label: 'Track your progress',
-                            detail: 'Pick up where you left off',
+                            color: const Color(0xFFB08040),
+                            label: t(lang, 'featureTrackProgress'),
+                            detail: t(lang, 'featureTrackProgressDetail'),
                           ),
                         ],
                       ).animate(delay: 180.ms).fadeIn(duration: 500.ms),
@@ -231,9 +234,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                           elevation: 0,
                           shadowColor: Colors.transparent,
                         ),
-                        child: const Text(
-                          'Start Part 1 Free',
-                          style: TextStyle(
+                        child: Text(
+                          t(lang, 'welcomeStartFree'),
+                          style: const TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.w700,
                             letterSpacing: 0.1,
@@ -256,9 +259,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                             borderRadius: BorderRadius.circular(14),
                           ),
                         ),
-                        child: const Text(
-                          'Start Full Course',
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                        child: Text(
+                          t(lang, 'welcomeStartFull'),
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                         ),
                       ).animate(delay: 260.ms).fadeIn(duration: 400.ms),
 
@@ -274,20 +277,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                             minimumSize: const Size(48, 44),
                             padding: const EdgeInsets.symmetric(horizontal: 8),
                           ),
-                          child: RichText(
-                            text: const TextSpan(
-                              style: TextStyle(fontSize: 13, color: AppColors.textMuted),
-                              children: [
-                                TextSpan(text: 'Already have access? '),
-                                TextSpan(
-                                  text: 'Sign in',
-                                  style: TextStyle(
-                                    color: AppColors.gold,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
+                          child: Text(
+                            t(lang, 'welcomeAlreadyAccess'),
+                            style: const TextStyle(fontSize: 13, color: AppColors.textMuted),
                           ),
                         ),
                       ).animate(delay: 280.ms).fadeIn(duration: 400.ms),
@@ -314,9 +306,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                     onPressed: _restore,
                                     style: TextButton.styleFrom(
                                         foregroundColor: AppColors.textMuted),
-                                    child: const Text(
-                                      'Restore purchase',
-                                      style: TextStyle(fontSize: 12),
+                                    child: Text(
+                                      t(lang, 'welcomeRestore'),
+                                      style: const TextStyle(fontSize: 12),
                                     ),
                                   ),
                       ).animate(delay: 320.ms).fadeIn(duration: 400.ms),

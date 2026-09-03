@@ -5,9 +5,11 @@ import 'package:go_router/go_router.dart';
 import '../../../core/data/parts_data.dart';
 import '../../../core/models/part_model.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../core/providers/part_provider.dart';
 import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/ui_kit.dart';
+import '../../../l10n/app_strings.dart';
 import '../widgets/part_card.dart';
 
 class CourseScreen extends ConsumerStatefulWidget {
@@ -29,6 +31,7 @@ class _CourseScreenState extends ConsumerState<CourseScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(courseLangProvider);
     final hasAccess = ref.watch(authProvider).hasAccess;
     final progress = ref.watch(progressProvider).valueOrNull;
 
@@ -36,7 +39,7 @@ class _CourseScreenState extends ConsumerState<CourseScreen> {
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        title: const Text('Lessons'),
+        title: Text(t(lang, 'lessons')),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(72),
           child: Padding(
@@ -47,7 +50,7 @@ class _CourseScreenState extends ConsumerState<CourseScreen> {
               onClear: _search.isNotEmpty
                   ? () { _searchCtrl.clear(); setState(() => _search = ''); }
                   : null,
-              hint: 'Search parts…',
+              hint: t(lang, 'searchPartsEllipsis'),
             ),
           ),
         ),
@@ -55,14 +58,14 @@ class _CourseScreenState extends ConsumerState<CourseScreen> {
       body: AppGradientBackground(
         child: SafeArea(
           child: _search.isNotEmpty
-              ? _buildSearchResults(hasAccess, progress)
-              : _buildEraList(hasAccess, progress),
+              ? _buildSearchResults(hasAccess, progress, lang)
+              : _buildEraList(hasAccess, progress, lang),
         ),
       ),
     );
   }
 
-  Widget _buildEraList(bool hasAccess, ProgressState? progress) {
+  Widget _buildEraList(bool hasAccess, ProgressState? progress, String lang) {
     final groups = getEraGroups();
     return ListView.builder(
       padding: const EdgeInsets.only(bottom: 24),
@@ -71,7 +74,7 @@ class _CourseScreenState extends ConsumerState<CourseScreen> {
         final group = groups[i];
         final era = group['era'] as EraModel;
         final parts = group['parts'] as List<PartModel>;
-        return _EraSection(era: era, parts: parts, hasAccess: hasAccess, progress: progress)
+        return _EraSection(era: era, parts: parts, hasAccess: hasAccess, progress: progress, lang: lang)
             .animate(delay: (i * 50).ms)
             .fadeIn(duration: 400.ms)
             .slideY(begin: 0.05, end: 0);
@@ -79,19 +82,21 @@ class _CourseScreenState extends ConsumerState<CourseScreen> {
     );
   }
 
-  Widget _buildSearchResults(bool hasAccess, ProgressState? progress) {
+  Widget _buildSearchResults(bool hasAccess, ProgressState? progress, String lang) {
     final results = PARTS.where((p) =>
       p.title.toLowerCase().contains(_search) ||
       p.subtitle.toLowerCase().contains(_search) ||
+      (p.titleAr?.contains(_search) ?? false) ||
+      (p.subtitleAr?.contains(_search) ?? false) ||
       p.description.toLowerCase().contains(_search) ||
       'part ${p.partNumber}'.contains(_search)
     ).toList();
 
     if (results.isEmpty) {
-      return const EmptyState(
+      return EmptyState(
         icon: Icons.search_off_rounded,
-        title: 'No parts found',
-        subtitle: 'Try a different search term or browse by era.',
+        title: t(lang, 'noPartsFound'),
+        subtitle: t(lang, 'tryDifferentSearch'),
       );
     }
 
@@ -124,7 +129,8 @@ class _EraSection extends StatefulWidget {
   final List<PartModel> parts;
   final bool hasAccess;
   final ProgressState? progress;
-  const _EraSection({required this.era, required this.parts, required this.hasAccess, this.progress});
+  final String lang;
+  const _EraSection({required this.era, required this.parts, required this.hasAccess, this.progress, required this.lang});
 
   @override
   State<_EraSection> createState() => _EraSectionState();
@@ -163,7 +169,7 @@ class _EraSectionState extends State<_EraSection> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(widget.era.name,
+                      Text(widget.era.localizedName(widget.lang),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -173,7 +179,7 @@ class _EraSectionState extends State<_EraSection> {
                         ),
                       ),
                       const SizedBox(height: 2),
-                      Text('${widget.parts.length} parts',
+                      Text(tv(widget.lang, 'nPartsSuffix', {'n': widget.parts.length}),
                         style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w500),
                       ),
                     ],

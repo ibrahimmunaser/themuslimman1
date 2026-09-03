@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
+import '../../l10n/app_strings.dart';
 
 /// Refund copy shared by every purchase surface (landing + pricing).
 ///
@@ -19,25 +20,15 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 
 /// Short tagline used near the buy buttons (e.g. "Refundable via App Store
 /// · Instant access · Cancel anytime").
-String refundBadgeText() {
-  if (!kIsWeb && Platform.isIOS) return 'Refundable via App Store';
-  if (!kIsWeb && Platform.isAndroid) return 'Refundable via Google Play';
-  return '7-day refund guarantee';
+String refundBadgeText(String lang) {
+  if (!kIsWeb && Platform.isIOS) return t(lang, 'refundableAppStore');
+  if (!kIsWeb && Platform.isAndroid) return t(lang, 'refundableGooglePlay');
+  return t(lang, 'refund7DayGuarantee');
 }
 
 /// Full FAQ-length answer to "Is there a refund guarantee?".
-String refundGuaranteeAnswer() {
-  if (!kIsWeb && Platform.isIOS) {
-    return 'Yes. Purchases are refunded through Apple — request one at '
-        'reportaproblem.apple.com or via Settings > [your name] > '
-        'Subscriptions on your device, generally within 90 days of purchase. '
-        "We're also happy to help if you have any issues — just reach out.";
-  }
-  if (!kIsWeb && Platform.isAndroid) {
-    return 'Yes. Purchases are refunded through Google Play — request one '
-        'from the Google Play app under Menu > Payments & subscriptions '
-        'within 48 hours, or contact Google Play support after that. '
-        "We're also happy to help if you have any issues — just reach out.";
-  }
-  return 'Yes. If the course is not what you expected, contact us within 7 days for a full refund.';
+String refundGuaranteeAnswer(String lang) {
+  if (!kIsWeb && Platform.isIOS) return t(lang, 'refundAnswerIos');
+  if (!kIsWeb && Platform.isAndroid) return t(lang, 'refundAnswerAndroid');
+  return t(lang, 'refundAnswerDefault');
 }

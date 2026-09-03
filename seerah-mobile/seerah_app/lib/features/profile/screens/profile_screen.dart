@@ -15,8 +15,10 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/system_insets.dart';
 import '../../../core/utils/webview_nav_policy.dart';
 import '../../../core/widgets/adaptive_icons.dart';
+import '../../../core/providers/part_provider.dart';
 import '../../../core/widgets/ui_kit.dart';
 import '../../../core/widgets/webview_error_overlay.dart';
+import '../../../l10n/app_strings.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -27,9 +29,10 @@ class ProfileScreen extends ConsumerWidget {
     final user = auth.user;
     final profilesState = ref.watch(profilesProvider).valueOrNull;
     final activeProfile = profilesState?.activeProfile;
+    final lang = ref.watch(courseLangProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
+      appBar: AppBar(title: Text(t(lang, 'myProfile'))),
       body: AppGradientBackground(
         child: ListView(
           padding: EdgeInsets.fromLTRB(20, 0, 20, 40 + bottomSystemInset(context)),
@@ -37,16 +40,24 @@ class ProfileScreen extends ConsumerWidget {
             const SizedBox(height: 28),
 
             // ── Avatar & identity ──────────────────────────────────────────
-            _AvatarSection(user: user, hasAccess: auth.hasAccess, isAnonymous: auth.isAnonymous)
+            _AvatarSection(user: user, hasAccess: auth.hasAccess, isAnonymous: auth.isAnonymous, lang: lang)
                 .animate()
                 .fadeIn(duration: 450.ms)
                 .slideY(begin: -0.08, end: 0),
 
             const SizedBox(height: 24),
 
+            // ── App language ────────────────────────────────────────────────
+            const ClipRRect(
+              borderRadius: BorderRadius.all(Radius.circular(14)),
+              child: AppLangSwitcherRow(),
+            ).animate(delay: 10.ms).fadeIn(duration: 350.ms),
+
+            const SizedBox(height: 20),
+
             // ── Guest upgrade nudge — fully optional, never required ───────
             if (auth.isAnonymous)
-              _GuestUpgradeCard(onTap: () => context.push('/signup'))
+              _GuestUpgradeCard(onTap: () => context.push('/signup'), lang: lang)
                   .animate(delay: 20.ms)
                   .fadeIn(duration: 350.ms),
 
@@ -64,21 +75,21 @@ class ProfileScreen extends ConsumerWidget {
             // applies when access existed at upgrade time), which is why
             // this banner should rarely be seen by anyone who's actually paid.
             if (!auth.isAnonymous && user != null && !user.emailVerified)
-              const Padding(
-                padding: EdgeInsets.only(top: 12),
-                child: _VerifyEmailBanner(),
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: _VerifyEmailBanner(lang: lang),
               ).animate(delay: 20.ms).fadeIn(duration: 350.ms),
 
             const SizedBox(height: 24),
 
             // ── Learner profiles ───────────────────────────────────────────
-            const _GroupLabel('Learner Profile'),
+            _GroupLabel(t(lang, 'learnerProfile')),
             _SettingsGroup(items: [
               _SettingsDatum(
                 icon: Icons.person_outline_rounded,
-                label: activeProfile?.displayName ?? 'My Profile',
+                label: activeProfile?.displayName ?? t(lang, 'myProfile'),
                 subtitle: activeProfile != null && (profilesState?.hasMultipleProfiles ?? false)
-                    ? 'Tap to switch learner'
+                    ? t(lang, 'tapToSwitchLearner')
                     : null,
                 color: const Color(0xFF9A7AB8),
                 onTap: () => context.push('/profiles'),
@@ -86,7 +97,7 @@ class ProfileScreen extends ConsumerWidget {
               if (profilesState != null && (profilesState.canAddMore || profilesState.hasMultipleProfiles))
                 _SettingsDatum(
                   icon: Icons.group_outlined,
-                  label: 'Manage Profiles',
+                  label: t(lang, 'manageProfiles'),
                   color: AppColors.gold,
                   onTap: () => context.push('/profiles'),
                 ),
@@ -95,58 +106,58 @@ class ProfileScreen extends ConsumerWidget {
             const SizedBox(height: 20),
 
             // ── Account ────────────────────────────────────────────────────
-            const _GroupLabel('Account'),
+            _GroupLabel(t(lang, 'account')),
             _SettingsGroup(items: [
               if (!auth.isAnonymous)
                 _SettingsDatum(
                   icon: Icons.lock_outline_rounded,
-                  label: 'Change Password',
+                  label: t(lang, 'changePassword'),
                   color: const Color(0xFF5A90B0),
-                  onTap: () => _launch('${AppConstants.baseUrl}/change-password', context),
+                  onTap: () => _launch('${AppConstants.baseUrl}/change-password', context, lang),
                 ),
               _SettingsDatum(
                 icon: Icons.receipt_long_outlined,
-                label: 'Billing & Subscription',
+                label: t(lang, 'billingSubscription'),
                 color: AppColors.gold,
-                onTap: () => _openBilling(context, auth),
+                onTap: () => _openBilling(context, auth, lang),
               ),
             ]).animate(delay: 70.ms).fadeIn(duration: 350.ms),
 
             const SizedBox(height: 20),
 
             // ── Support ────────────────────────────────────────────────────
-            const _GroupLabel('Support'),
+            _GroupLabel(t(lang, 'support')),
             _SettingsGroup(items: [
               _SettingsDatum(
                 icon: Icons.help_outline_rounded,
-                label: 'Help & FAQ',
+                label: t(lang, 'helpAndFaq'),
                 color: const Color(0xFF4AA87E),
-                onTap: () => _launch('${AppConstants.baseUrl}/help', context),
+                onTap: () => _launch('${AppConstants.baseUrl}/help', context, lang),
               ),
               _SettingsDatum(
                 icon: Icons.chat_bubble_outline_rounded,
-                label: 'Contact Us',
+                label: t(lang, 'contactUs'),
                 color: const Color(0xFF8A7AB0),
-                onTap: () => _launch('${AppConstants.baseUrl}/contact', context),
+                onTap: () => _launch('${AppConstants.baseUrl}/contact', context, lang),
               ),
             ]).animate(delay: 120.ms).fadeIn(duration: 350.ms),
 
             const SizedBox(height: 20),
 
             // ── Legal ──────────────────────────────────────────────────────
-            const _GroupLabel('Legal'),
+            _GroupLabel(t(lang, 'legal')),
             _SettingsGroup(items: [
               _SettingsDatum(
                 icon: Icons.shield_outlined,
-                label: 'Privacy Policy',
+                label: t(lang, 'privacyPolicyTitle'),
                 color: AppColors.textMuted,
-                onTap: () => _launch('${AppConstants.baseUrl}/privacy', context),
+                onTap: () => _launch('${AppConstants.baseUrl}/privacy', context, lang),
               ),
               _SettingsDatum(
                 icon: Icons.gavel_outlined,
-                label: 'Terms of Use (EULA)',
+                label: t(lang, 'termsOfUseTitle'),
                 color: AppColors.textMuted,
-                onTap: () => _launch('${AppConstants.baseUrl}/terms', context),
+                onTap: () => _launch('${AppConstants.baseUrl}/terms', context, lang),
               ),
             ]).animate(delay: 170.ms).fadeIn(duration: 350.ms),
 
@@ -166,13 +177,13 @@ class ProfileScreen extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(color: AppColors.error.withValues(alpha: 0.35)),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.logout_rounded, color: AppColors.error, size: 18),
-                      SizedBox(width: 8),
-                      Text('Sign Out',
-                          style: TextStyle(
+                      const Icon(Icons.logout_rounded, color: AppColors.error, size: 18),
+                      const SizedBox(width: 8),
+                      Text(t(lang, 'signOut'),
+                          style: const TextStyle(
                               color: AppColors.error,
                               fontSize: 15,
                               fontWeight: FontWeight.w600)),
@@ -189,14 +200,14 @@ class ProfileScreen extends ConsumerWidget {
               child: TextButton(
                 onPressed: () => _confirmDelete(context, ref, auth.isAnonymous),
                 style: TextButton.styleFrom(foregroundColor: AppColors.textMuted),
-                child: const Text('Delete Account',
-                    style: TextStyle(fontSize: 13, decoration: TextDecoration.underline)),
+                child: Text(t(lang, 'deleteAccount'),
+                    style: const TextStyle(fontSize: 13, decoration: TextDecoration.underline)),
               ),
             ).animate(delay: 250.ms).fadeIn(duration: 350.ms),
 
             const SizedBox(height: 24),
             Center(
-              child: Text('Version ${AppConstants.appVersion}',
+              child: Text(tv(lang, 'versionLabel', {'v': AppConstants.appVersion}),
                   style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
             ),
           ],
@@ -212,7 +223,7 @@ class ProfileScreen extends ConsumerWidget {
   // billing portal (which has no record of their purchase at all); and an
   // Apple subscriber must be told to use Settings, per Guideline 3.1.1 —
   // even if, say, they're now signed in on Android after buying on iOS.
-  void _openBilling(BuildContext context, AuthState auth) {
+  void _openBilling(BuildContext context, AuthState auth, String lang) {
     if (!context.mounted) return;
     final platform = auth.user?.purchasePlatform;
 
@@ -221,16 +232,12 @@ class ProfileScreen extends ConsumerWidget {
         context: context,
         builder: (ctx) => AlertDialog(
           backgroundColor: AppColors.surface,
-          title: const Text('Manage Subscription'),
-          content: const Text(
-            'Subscriptions purchased through the App Store are managed through '
-            'your Apple ID.\n\n'
-            'On your device: Settings → [Your Name] → Subscriptions.',
-          ),
+          title: Text(t(lang, 'manageSubscription')),
+          content: Text(t(lang, 'appleSubscriptionBody')),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('OK'),
+              child: Text(t(lang, 'ok')),
             ),
           ],
         ),
@@ -239,7 +246,7 @@ class ProfileScreen extends ConsumerWidget {
     }
 
     if (platform == 'google') {
-      _openPlayStoreSubscriptions(context);
+      _openPlayStoreSubscriptions(context, lang);
       return;
     }
 
@@ -253,10 +260,10 @@ class ProfileScreen extends ConsumerWidget {
     // Guideline 3.1.1 is about even when shown on iOS: the purchase itself
     // already happened outside Apple's IAP, so there's nothing for Apple to
     // manage in the first place.
-    _launch('${AppConstants.baseUrl}/billing?app=1', context);
+    _launch('${AppConstants.baseUrl}/billing?app=1', context, lang);
   }
 
-  Future<void> _openPlayStoreSubscriptions(BuildContext context) async {
+  Future<void> _openPlayStoreSubscriptions(BuildContext context, String lang) async {
     final uri = Uri.parse(
       'https://play.google.com/store/account/subscriptions?package=com.themuslimman.seerah',
     );
@@ -266,54 +273,52 @@ class ProfileScreen extends ConsumerWidget {
     } catch (_) {}
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Could not open the Play Store. Open the Play Store app and check '
-            'Menu → Payments & subscriptions → Subscriptions instead.'),
+      SnackBar(
+        content: Text(t(lang, 'couldNotOpenPlayStore')),
         behavior: SnackBarBehavior.floating,
       ),
     );
   }
 
-  void _launch(String url, BuildContext context) {
+  void _launch(String url, BuildContext context, String lang) {
     if (!context.mounted) return;
-    final title = _titleFor(url);
+    final title = _titleFor(url, lang);
     Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => _InAppWebScreen(url: url, title: title),
+      builder: (_) => _InAppWebScreen(url: url, title: title, lang: lang),
     ));
   }
 
-  String _titleFor(String url) {
-    if (url.contains('change-password')) return 'Change Password';
-    if (url.contains('billing')) return 'Billing & Subscription';
-    if (url.contains('help')) return 'Help & FAQ';
-    if (url.contains('contact')) return 'Contact Us';
-    if (url.contains('privacy')) return 'Privacy Policy';
-    if (url.contains('terms')) return 'Terms of Use (EULA)';
+  String _titleFor(String url, String lang) {
+    if (url.contains('change-password')) return t(lang, 'changePassword');
+    if (url.contains('billing')) return t(lang, 'billingSubscription');
+    if (url.contains('help')) return t(lang, 'helpAndFaq');
+    if (url.contains('contact')) return t(lang, 'contactUs');
+    if (url.contains('privacy')) return t(lang, 'privacyPolicyTitle');
+    if (url.contains('terms')) return t(lang, 'termsOfUseTitle');
     return 'themuslimman.com';
   }
 
   Future<void> _confirmLogout(BuildContext context, WidgetRef ref) async {
     final isAnonymous = ref.read(authProvider).isAnonymous;
+    final lang = ref.read(courseLangProvider);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surface,
-        title: const Text('Sign Out?'),
+        title: Text(t(lang, 'signOutQuestion')),
         content: Text(
           isAnonymous
-              ? "You're using a guest account with no email or password. "
-                  'Signing out will permanently lose access on this device unless '
-                  'you create an account first. Continue?'
-              : 'You will need to sign in again.',
+              ? t(lang, 'signOutGuestWarning')
+              : t(lang, 'needToSignInAgain'),
         ),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel')),
+              child: Text(t(lang, 'cancel'))),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Sign Out',
-                style: TextStyle(color: AppColors.error)),
+            child: Text(t(lang, 'signOut'),
+                style: const TextStyle(color: AppColors.error)),
           ),
         ],
       ),
@@ -325,19 +330,19 @@ class ProfileScreen extends ConsumerWidget {
 
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref, bool isAnonymous) async {
     String? password;
+    final lang = ref.read(courseLangProvider);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
           backgroundColor: AppColors.surface,
-          title: const Text('Delete Account?'),
+          title: Text(t(lang, 'deleteAccountQuestion')),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'This permanently deletes your account, progress, and any active '
-                'subscription. This cannot be undone.'
+                t(lang, 'deleteAccountWarning') +
                 // Apple provides no server-side subscription cancellation API
                 // (only the account/subscriber owns that, via Settings) — so
                 // unlike Stripe/Google Play, deleting here can't touch an
@@ -345,15 +350,13 @@ class ProfileScreen extends ConsumerWidget {
                 // subscriber who deletes their account would keep being
                 // billed by Apple indefinitely with no record left anywhere
                 // in the app to even show them what's still charging them.
-                '${Platform.isIOS ? '\n\nIf you subscribed through the App Store, this does '
-                    'NOT cancel Apple billing — please also cancel it in Settings > '
-                    '[your name] > Subscriptions on this device.' : ''}',
+                (Platform.isIOS ? t(lang, 'appStoreCancelNote') : ''),
               ),
               if (!isAnonymous) ...[
                 const SizedBox(height: 16),
                 TextField(
                   obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Confirm your password'),
+                  decoration: InputDecoration(labelText: t(lang, 'confirmYourPassword')),
                   onChanged: (v) => setDialogState(() => password = v),
                 ),
               ],
@@ -362,11 +365,11 @@ class ProfileScreen extends ConsumerWidget {
           actions: [
             TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Cancel')),
+                child: Text(t(lang, 'cancel'))),
             TextButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Delete',
-                  style: TextStyle(color: AppColors.error)),
+              child: Text(t(lang, 'deleteAccount'),
+                  style: const TextStyle(color: AppColors.error)),
             ),
           ],
         ),
@@ -392,7 +395,8 @@ class _AvatarSection extends StatelessWidget {
   final dynamic user;
   final bool hasAccess;
   final bool isAnonymous;
-  const _AvatarSection({required this.user, required this.hasAccess, this.isAnonymous = false});
+  final String lang;
+  const _AvatarSection({required this.user, required this.hasAccess, this.isAnonymous = false, required this.lang});
 
   String _initials() {
     if (isAnonymous) return 'G';
@@ -454,8 +458,8 @@ class _AvatarSection extends StatelessWidget {
           const SizedBox(height: 16),
 
           if (isAnonymous)
-            const Text('Guest',
-                style: TextStyle(
+            Text(t(lang, 'guest'),
+                style: const TextStyle(
                   color: AppColors.textPrimary,
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
@@ -473,7 +477,7 @@ class _AvatarSection extends StatelessWidget {
                 )),
 
           const SizedBox(height: 4),
-          Text(isAnonymous ? 'No account yet' : (user?.email ?? 'Student'),
+          Text(isAnonymous ? t(lang, 'noAccountYet') : (user?.email ?? t(lang, 'student')),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(color: AppColors.textSecondary, fontSize: 14)),
@@ -503,7 +507,7 @@ class _AvatarSection extends StatelessWidget {
                 ),
                 const SizedBox(width: 5),
                 Text(
-                  hasAccess ? 'Full Access' : 'Free Plan',
+                  hasAccess ? t(lang, 'fullAccess') : t(lang, 'freePlan'),
                   style: TextStyle(
                     color: hasAccess ? AppColors.success : AppColors.gold,
                     fontSize: 12,
@@ -526,7 +530,8 @@ class _AvatarSection extends StatelessWidget {
 /// optional and available "at any time", not forced.
 class _GuestUpgradeCard extends StatelessWidget {
   final VoidCallback onTap;
-  const _GuestUpgradeCard({required this.onTap});
+  final String lang;
+  const _GuestUpgradeCard({required this.onTap, required this.lang});
 
   @override
   Widget build(BuildContext context) {
@@ -547,23 +552,22 @@ class _GuestUpgradeCard extends StatelessWidget {
             children: [
               const Icon(Icons.sync_rounded, color: AppColors.gold, size: 22),
               const SizedBox(width: 14),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Create an account (optional)',
-                      style: TextStyle(
+                      t(lang, 'createAccountOptional'),
+                      style: const TextStyle(
                         color: AppColors.textPrimary,
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    SizedBox(height: 2),
+                    const SizedBox(height: 2),
                     Text(
-                      'Access your course from other devices. Your purchase '
-                      'already works on this device without this.',
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4),
+                      t(lang, 'createAccountOptionalBody'),
+                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4),
                     ),
                   ],
                 ),
@@ -580,7 +584,8 @@ class _GuestUpgradeCard extends StatelessWidget {
 // ── Verify email nudge ───────────────────────────────────────────────────────────
 
 class _VerifyEmailBanner extends ConsumerStatefulWidget {
-  const _VerifyEmailBanner();
+  final String lang;
+  const _VerifyEmailBanner({required this.lang});
 
   @override
   ConsumerState<_VerifyEmailBanner> createState() => _VerifyEmailBannerState();
@@ -606,6 +611,7 @@ class _VerifyEmailBannerState extends ConsumerState<_VerifyEmailBanner> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = widget.lang;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -622,9 +628,9 @@ class _VerifyEmailBannerState extends ConsumerState<_VerifyEmailBanner> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Verify your email',
-                  style: TextStyle(
+                Text(
+                  t(lang, 'verifyYourEmail'),
+                  style: const TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
@@ -633,8 +639,8 @@ class _VerifyEmailBannerState extends ConsumerState<_VerifyEmailBanner> {
                 const SizedBox(height: 2),
                 Text(
                   _sent
-                      ? 'Verification email sent — check your inbox.'
-                      : 'Needed to unlock course content, reset your password, and sign in on other devices.',
+                      ? t(lang, 'verificationEmailSent')
+                      : t(lang, 'verifyEmailNeededBody'),
                   style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4),
                 ),
                 if (!_sent) ...[
@@ -655,7 +661,7 @@ class _VerifyEmailBannerState extends ConsumerState<_VerifyEmailBanner> {
                               height: 14,
                               child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.gold),
                             )
-                          : const Text('Resend Email', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                          : Text(t(lang, 'resendEmail'), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
                     ),
                   ),
                 ],
@@ -784,7 +790,8 @@ class _SettingsGroup extends StatelessWidget {
 class _InAppWebScreen extends StatefulWidget {
   final String url;
   final String title;
-  const _InAppWebScreen({required this.url, required this.title});
+  final String lang;
+  const _InAppWebScreen({required this.url, required this.title, required this.lang});
 
   @override
   State<_InAppWebScreen> createState() => _InAppWebScreenState();
@@ -904,7 +911,7 @@ class _InAppWebScreenState extends State<_InAppWebScreen> {
         backgroundColor: AppColors.surface,
         leading: IconButton(
           icon: const BackIcon(size: 20),
-          tooltip: 'Back',
+          tooltip: t(widget.lang, 'back'),
           onPressed: () => _handleBack(context),
         ),
         title: Text(widget.title,

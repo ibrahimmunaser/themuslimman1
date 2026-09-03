@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import '../providers/part_provider.dart';
 import '../theme/app_colors.dart';
 import '../utils/webview_nav_policy.dart';
+import '../../l10n/app_strings.dart';
 import 'adaptive_icons.dart';
 import 'webview_error_overlay.dart';
 
@@ -18,15 +21,15 @@ const _kWebViewLoadTimeout = Duration(seconds: 20);
 /// Used anywhere the app needs a functional link to these pages, per Apple
 /// Guideline 3.1.2(c) (subscriptions must link Privacy Policy + Terms of Use
 /// (EULA) directly in the purchase flow).
-class LegalWebScreen extends StatefulWidget {
+class LegalWebScreen extends ConsumerStatefulWidget {
   final String url;
   const LegalWebScreen({super.key, required this.url});
 
   @override
-  State<LegalWebScreen> createState() => _LegalWebScreenState();
+  ConsumerState<LegalWebScreen> createState() => _LegalWebScreenState();
 }
 
-class _LegalWebScreenState extends State<LegalWebScreen> {
+class _LegalWebScreenState extends ConsumerState<LegalWebScreen> {
   late final WebViewController _ctrl;
   bool _loading = true;
   bool _hasError = false;
@@ -39,9 +42,9 @@ class _LegalWebScreenState extends State<LegalWebScreen> {
     });
   }
 
-  String get _title {
-    if (widget.url.contains('privacy')) return 'Privacy Policy';
-    if (widget.url.contains('terms')) return 'Terms of Use (EULA)';
+  String _title(String lang) {
+    if (widget.url.contains('privacy')) return t(lang, 'privacyPolicyTitle');
+    if (widget.url.contains('terms')) return t(lang, 'termsOfUseTitle');
     return 'themuslimman.com';
   }
 
@@ -109,6 +112,7 @@ class _LegalWebScreenState extends State<LegalWebScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(courseLangProvider);
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) async {
@@ -121,10 +125,10 @@ class _LegalWebScreenState extends State<LegalWebScreen> {
           backgroundColor: AppColors.surface,
           leading: IconButton(
             icon: const BackIcon(size: 20),
-            tooltip: 'Back',
+            tooltip: t(lang, 'back'),
             onPressed: () => _handleBack(context),
           ),
-          title: Text(_title,
+          title: Text(_title(lang),
               style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(1),

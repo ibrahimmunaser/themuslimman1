@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/part_model.dart';
+import '../../../core/providers/part_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/adaptive_icons.dart';
 
-class PartCard extends StatelessWidget {
+class PartCard extends ConsumerWidget {
   final PartModel part;
   final VoidCallback onTap;
   final bool isLocked;
@@ -30,7 +32,8 @@ class PartCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(courseLangProvider);
     final color = AppColors.forEra(part.era);
 
     final row = Material(
@@ -77,7 +80,7 @@ class PartCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        part.title,
+                        part.localizedTitle(lang),
                         style: TextStyle(
                           color: isLocked
                               ? AppColors.textSecondary
@@ -91,7 +94,7 @@ class PartCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        part.subtitle,
+                        part.localizedSubtitle(lang),
                         style: const TextStyle(
                             color: AppColors.textMuted, fontSize: 12),
                         maxLines: 1,

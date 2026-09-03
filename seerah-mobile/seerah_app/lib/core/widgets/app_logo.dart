@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/part_provider.dart';
+import '../../l10n/app_strings.dart';
 
 /// Brand logos copied from the web/desktop app (`public/images/`).
 class AppAssets {
@@ -7,7 +10,7 @@ class AppAssets {
 }
 
 /// Square dashboard icon — used in the desktop sidebar and login form.
-class AppLogo extends StatelessWidget {
+class AppLogo extends ConsumerWidget {
   final double size;
   final double borderRadius;
 
@@ -18,7 +21,8 @@ class AppLogo extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(courseLangProvider);
     return ClipRRect(
       borderRadius: BorderRadius.circular(borderRadius),
       child: Image.asset(
@@ -26,25 +30,26 @@ class AppLogo extends StatelessWidget {
         width: size,
         height: size,
         fit: BoxFit.cover,
-        semanticLabel: 'Complete Seerah',
+        semanticLabel: t(lang, 'completeSeerahOfProphet'),
       ),
     );
   }
 }
 
 /// Full wordmark — used in the desktop auth header.
-class AppWordmark extends StatelessWidget {
+class AppWordmark extends ConsumerWidget {
   final double height;
 
   const AppWordmark({super.key, this.height = 44});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(courseLangProvider);
     return Image.asset(
       AppAssets.wordmarkLogo,
       height: height,
       fit: BoxFit.contain,
-      semanticLabel: 'The Muslim Man',
+      semanticLabel: t(lang, 'theMuslimMan'),
     );
   }
 }

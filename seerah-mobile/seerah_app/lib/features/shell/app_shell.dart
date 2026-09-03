@@ -2,11 +2,14 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/providers/part_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/system_insets.dart';
+import '../../l10n/app_strings.dart';
 
-class AppShell extends StatelessWidget {
+class AppShell extends ConsumerWidget {
   final Widget child;
   const AppShell({super.key, required this.child});
 
@@ -25,7 +28,8 @@ class AppShell extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(courseLangProvider);
     final idx = _currentIndex(context);
     final width = MediaQuery.sizeOf(context).width;
     final compact = width < 380;
@@ -96,36 +100,36 @@ class AppShell extends StatelessWidget {
                     labelBehavior: compact
                         ? NavigationDestinationLabelBehavior.alwaysHide
                         : NavigationDestinationLabelBehavior.alwaysShow,
-                    destinations: const [
+                    destinations: [
                       NavigationDestination(
-                        icon: Icon(Icons.home_outlined),
-                        selectedIcon: Icon(Icons.home_rounded, color: AppColors.gold),
-                        label: 'Home',
-                        tooltip: 'Home',
+                        icon: const Icon(Icons.home_outlined),
+                        selectedIcon: const Icon(Icons.home_rounded, color: AppColors.gold),
+                        label: t(lang, 'navHome'),
+                        tooltip: t(lang, 'navHome'),
                       ),
                       NavigationDestination(
-                        icon: Icon(Icons.menu_book_outlined),
-                        selectedIcon: Icon(Icons.menu_book_rounded, color: AppColors.gold),
-                        label: 'Lessons',
-                        tooltip: 'Lessons',
+                        icon: const Icon(Icons.menu_book_outlined),
+                        selectedIcon: const Icon(Icons.menu_book_rounded, color: AppColors.gold),
+                        label: t(lang, 'navLessons'),
+                        tooltip: t(lang, 'navLessons'),
                       ),
                       NavigationDestination(
-                        icon: Icon(Icons.folder_outlined),
-                        selectedIcon: Icon(Icons.folder_rounded, color: AppColors.gold),
-                        label: 'Resources',
-                        tooltip: 'Resources',
+                        icon: const Icon(Icons.folder_outlined),
+                        selectedIcon: const Icon(Icons.folder_rounded, color: AppColors.gold),
+                        label: t(lang, 'navResources'),
+                        tooltip: t(lang, 'navResources'),
                       ),
                       NavigationDestination(
-                        icon: Icon(Icons.library_books_outlined),
-                        selectedIcon: Icon(Icons.library_books_rounded, color: AppColors.gold),
-                        label: 'Reference',
-                        tooltip: 'Reference',
+                        icon: const Icon(Icons.library_books_outlined),
+                        selectedIcon: const Icon(Icons.library_books_rounded, color: AppColors.gold),
+                        label: t(lang, 'navReference'),
+                        tooltip: t(lang, 'navReference'),
                       ),
                       NavigationDestination(
-                        icon: Icon(Icons.insights_outlined),
-                        selectedIcon: Icon(Icons.insights_rounded, color: AppColors.gold),
-                        label: 'Progress',
-                        tooltip: 'Progress',
+                        icon: const Icon(Icons.insights_outlined),
+                        selectedIcon: const Icon(Icons.insights_rounded, color: AppColors.gold),
+                        label: t(lang, 'navProgress'),
+                        tooltip: t(lang, 'navProgress'),
                       ),
                     ],
                   ),

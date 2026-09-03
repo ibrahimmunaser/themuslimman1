@@ -1,21 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/providers/part_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/adaptive_icons.dart';
 import '../../../core/widgets/ui_kit.dart';
+import '../../../l10n/app_strings.dart';
 import '../data/reference_data.dart';
 
-class ReferenceScreen extends StatelessWidget {
+class ReferenceScreen extends ConsumerWidget {
   const ReferenceScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(courseLangProvider);
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        title: const Text('Reference'),
+        title: Text(t(lang, 'reference')),
       ),
       body: AppGradientBackground(
         child: SafeArea(
@@ -23,11 +27,11 @@ class ReferenceScreen extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
             children: [
               // Compact header
-              const Padding(
-                padding: EdgeInsets.only(bottom: 14),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 14),
                 child: Text(
-                  'Deepen your understanding of the Seerah',
-                  style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+                  t(lang, 'deepenUnderstanding'),
+                  style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
                 ),
               ),
 
@@ -65,7 +69,7 @@ class ReferenceScreen extends StatelessWidget {
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text(section.title,
+                                        Text(section.localizedTitle(lang),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                           style: const TextStyle(
@@ -73,7 +77,7 @@ class ReferenceScreen extends StatelessWidget {
                                             fontSize: 15,
                                             fontWeight: FontWeight.w600,
                                           )),
-                                        Text(section.description,
+                                        Text(section.localizedDescription(lang),
                                           style: const TextStyle(
                                             color: AppColors.textMuted,
                                             fontSize: 12,

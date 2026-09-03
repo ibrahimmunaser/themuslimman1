@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/part_provider.dart';
 import '../theme/app_colors.dart';
+import '../../l10n/app_strings.dart';
 
 /// Shared visual tokens and reusable UI building blocks.
 class AppDecorations {
@@ -344,28 +347,29 @@ class EmptyState extends StatelessWidget {
   }
 }
 
-class AppSearchField extends StatelessWidget {
+class AppSearchField extends ConsumerWidget {
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
   final VoidCallback? onClear;
-  final String hint;
+  final String? hint;
 
   const AppSearchField({
     super.key,
     required this.controller,
     required this.onChanged,
     this.onClear,
-    this.hint = 'Search…',
+    this.hint,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(courseLangProvider);
     return TextField(
       controller: controller,
       onChanged: onChanged,
       style: const TextStyle(color: AppColors.textPrimary, fontSize: 15),
       decoration: InputDecoration(
-        hintText: hint,
+        hintText: hint ?? t(lang, 'searchEllipsis'),
         prefixIcon: const Icon(
           Icons.search_rounded,
           size: 22,
@@ -378,7 +382,7 @@ class AppSearchField extends StatelessWidget {
                   size: 18,
                   color: AppColors.textMuted,
                 ),
-                tooltip: 'Clear',
+                tooltip: t(lang, 'clearSearch'),
                 onPressed: onClear,
               )
             : null,
@@ -481,11 +485,12 @@ class PriceLoadingPlaceholder extends StatelessWidget {
 /// backing out, a user could reasonably assume the app froze and force-quit
 /// mid-verification — which on iOS would still leave the purchase sitting
 /// completed in the StoreKit queue, only recoverable via Restore Purchases.
-class VerifyingPurchaseBanner extends StatelessWidget {
+class VerifyingPurchaseBanner extends ConsumerWidget {
   const VerifyingPurchaseBanner({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(courseLangProvider);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
@@ -504,11 +509,10 @@ class VerifyingPurchaseBanner extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 10),
-          const Expanded(
+          Expanded(
             child: Text(
-              'Verifying your purchase — this can take up to a minute. '
-              "Please don't close the app.",
-              style: TextStyle(
+              t(lang, 'verifyingPurchaseBody'),
+              style: const TextStyle(
                 color: AppColors.textSecondary,
                 fontSize: 12,
                 height: 1.3,
@@ -529,7 +533,7 @@ class VerifyingPurchaseBanner extends StatelessWidget {
 /// viewing pricing_screen.dart (the post-login upsell/upgrade screen)
 /// instead — which had no way at all to surface or claim it. Promoted here
 /// so both pricing surfaces show the identical banner.
-class PendingPurchaseRecoveryBanner extends StatelessWidget {
+class PendingPurchaseRecoveryBanner extends ConsumerWidget {
   final VoidCallback onClaim;
   /// pendingLinkPurchases is a list — more than one unclaimed purchase can
   /// genuinely queue up — so the copy needs to reflect that instead of
@@ -538,10 +542,11 @@ class PendingPurchaseRecoveryBanner extends StatelessWidget {
   const PendingPurchaseRecoveryBanner({super.key, required this.onClaim, required this.count});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(courseLangProvider);
     final label = count > 1
-        ? 'You have $count pending purchases — tap Claim to unlock access. No account required.'
-        : 'You have a pending purchase — tap Claim to unlock access. No account required.';
+        ? tv(lang, 'pendingPurchasesPlural', {'n': count})
+        : t(lang, 'pendingPurchaseSingular');
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
@@ -568,8 +573,8 @@ class PendingPurchaseRecoveryBanner extends StatelessWidget {
               minimumSize: const Size(48, 44),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
-            child: const Text('Claim',
-                style: TextStyle(
+            child: Text(t(lang, 'claim'),
+                style: const TextStyle(
                     color: AppColors.gold,
                     fontSize: 13,
                     fontWeight: FontWeight.w700)),
@@ -580,11 +585,12 @@ class PendingPurchaseRecoveryBanner extends StatelessWidget {
   }
 }
 
-class OfflineBanner extends StatelessWidget {
+class OfflineBanner extends ConsumerWidget {
   const OfflineBanner({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(courseLangProvider);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
@@ -600,10 +606,10 @@ class OfflineBanner extends StatelessWidget {
             color: AppColors.textMuted,
           ),
           const SizedBox(width: 10),
-          const Expanded(
+          Expanded(
             child: Text(
-              "Couldn't reach the server — showing your last saved progress. Pull down to retry.",
-              style: TextStyle(
+              t(lang, 'offlineBannerBody'),
+              style: const TextStyle(
                 color: AppColors.textSecondary,
                 fontSize: 12,
                 height: 1.3,
@@ -611,6 +617,105 @@ class OfflineBanner extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Self-contained app-wide language switch (English / Arabic). Reads and
+/// writes [courseLangProvider] directly so it can be dropped into any
+/// screen — e.g. the Profile screen's Settings group — without threading
+/// state through the caller.
+class AppLangSwitcherRow extends ConsumerWidget {
+  const AppLangSwitcherRow({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(courseLangProvider);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: AppColors.gold.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(9),
+            ),
+            child: const Icon(Icons.language_rounded, color: AppColors.gold, size: 17),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Text(
+              t(lang, 'language'),
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              color: AppColors.background.withValues(alpha: 0.55),
+              borderRadius: BorderRadius.circular(11),
+              border: Border.all(color: AppColors.gold.withValues(alpha: 0.45), width: 1.2),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _AppLangBtn(
+                  label: 'EN',
+                  active: lang == 'en',
+                  onTap: () => ref.read(courseLangProvider.notifier).setLang('en'),
+                ),
+                _AppLangBtn(
+                  label: 'عربي',
+                  active: lang == 'ar',
+                  onTap: () => ref.read(courseLangProvider.notifier).setLang('ar'),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AppLangBtn extends StatelessWidget {
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
+  const _AppLangBtn({required this.label, required this.active, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        constraints: const BoxConstraints(minWidth: 36, minHeight: 28),
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+        decoration: BoxDecoration(
+          color: active ? AppColors.gold : Colors.transparent,
+          borderRadius: BorderRadius.circular(9),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: active ? Colors.black : AppColors.textSecondary,
+          ),
+        ),
       ),
     );
   }

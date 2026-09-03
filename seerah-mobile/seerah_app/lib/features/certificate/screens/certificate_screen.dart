@@ -7,11 +7,13 @@ import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../core/data/parts_data.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../core/providers/part_provider.dart';
 import '../../../core/providers/profiles_provider.dart';
 import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/system_insets.dart';
 import '../../../core/widgets/adaptive_icons.dart';
+import '../../../l10n/app_strings.dart';
 
 // Derived from PARTS.length (not hardcoded) so this can never silently
 // drift out of sync if a part is ever added/removed.
@@ -60,20 +62,22 @@ class _CertificateScreenState extends ConsumerState<CertificateScreen> {
       final file = File('${dir.path}/seerah_certificate.png');
       await file.writeAsBytes(bytes, flush: true);
 
+      final lang = ref.read(courseLangProvider);
       await SharePlus.instance.share(
         ShareParams(
           files: [XFile(file.path)],
-          text: 'I completed The Complete Seerah of the Prophet ﷺ course! 🎓',
-          subject: 'My Seerah Certificate of Completion',
+          text: t(lang, 'completedCourseShareText'),
+          subject: t(lang, 'myCertificateSubject'),
           sharePositionOrigin: _shareButtonRect(),
         ),
       );
     } catch (e) {
       debugPrint('[Certificate] share failed: $e');
       if (mounted) {
+        final lang = ref.read(courseLangProvider);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Could not share certificate. Please try again.'),
+          SnackBar(
+            content: Text(t(lang, 'couldNotShareCertificate')),
           ),
         );
       }
@@ -86,6 +90,7 @@ class _CertificateScreenState extends ConsumerState<CertificateScreen> {
   Widget build(BuildContext context) {
     final auth = ref.watch(authProvider);
     final progressAsync = ref.watch(progressProvider);
+    final lang = ref.watch(courseLangProvider);
     // On a family plan, progress/quiz completion is tracked per learner
     // profile — the certificate must bear the name of whichever family
     // member actually earned it, not the account holder who pays for the
@@ -98,10 +103,10 @@ class _CertificateScreenState extends ConsumerState<CertificateScreen> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.surface,
-        title: const Text('Certificate'),
+        title: Text(t(lang, 'certificateTitle')),
         leading: IconButton(
           icon: const BackIcon(size: 20),
-          tooltip: 'Back',
+          tooltip: t(lang, 'back'),
           onPressed: () => context.pop(),
         ),
         bottom: PreferredSize(
@@ -115,10 +120,10 @@ class _CertificateScreenState extends ConsumerState<CertificateScreen> {
             valueColor: AlwaysStoppedAnimation(AppColors.gold),
           ),
         ),
-        error: (_, __) => const Center(
+        error: (_, __) => Center(
           child: Text(
-            'Failed to load progress',
-            style: TextStyle(color: AppColors.textSecondary),
+            t(lang, 'failedToLoadProgress'),
+            style: const TextStyle(color: AppColors.textSecondary),
           ),
         ),
         data: (progress) {
@@ -201,8 +206,8 @@ class _CertificateScreenState extends ConsumerState<CertificateScreen> {
                       const SizedBox(height: 20),
                       Text(
                         isEarned
-                            ? 'Certificate of Completion'
-                            : 'Certificate Locked',
+                            ? t(lang, 'certOfCompletion')
+                            : t(lang, 'certLocked'),
                         style: TextStyle(
                           color: isEarned
                               ? AppColors.gold
@@ -215,7 +220,7 @@ class _CertificateScreenState extends ConsumerState<CertificateScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'The Complete Seerah of the Prophet ﷺ',
+                        t(lang, 'completeSeerahOfProphet'),
                         style: const TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 14,
@@ -228,7 +233,7 @@ class _CertificateScreenState extends ConsumerState<CertificateScreen> {
                         const Divider(color: AppColors.border),
                         const SizedBox(height: 16),
                         Text(
-                          activeProfile?.displayName ?? auth.user?.name ?? 'Student',
+                          activeProfile?.displayName ?? auth.user?.name ?? t(lang, 'student'),
                           style: const TextStyle(
                             color: AppColors.textPrimary,
                             fontSize: 22,
@@ -238,7 +243,7 @@ class _CertificateScreenState extends ConsumerState<CertificateScreen> {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          'has successfully completed all ${PARTS.length} parts\nof the Seerah of the Prophet Muhammad ﷺ',
+                          tv(lang, 'hasSuccessfullyCompleted', {'n': PARTS.length}),
                           style: const TextStyle(
                             color: AppColors.textSecondary,
                             fontSize: 13,
@@ -268,7 +273,7 @@ class _CertificateScreenState extends ConsumerState<CertificateScreen> {
                             ),
                           )
                         : const AdaptiveShareIcon(size: 18),
-                    label: Text(_sharing ? 'Preparing…' : 'Share Certificate'),
+                    label: Text(_sharing ? t(lang, 'preparingEllipsis') : t(lang, 'shareCertificate')),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.gold,
                       side: const BorderSide(color: AppColors.gold),
@@ -284,9 +289,9 @@ class _CertificateScreenState extends ConsumerState<CertificateScreen> {
               const SizedBox(height: 28),
 
               // Requirements
-              const Text(
-                'Requirements',
-                style: TextStyle(
+              Text(
+                t(lang, 'requirements'),
+                style: const TextStyle(
                   color: AppColors.textPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -296,7 +301,7 @@ class _CertificateScreenState extends ConsumerState<CertificateScreen> {
 
               _RequirementRow(
                 icon: Icons.play_lesson_rounded,
-                label: 'Study all ${PARTS.length} parts',
+                label: tv(lang, 'studyAllParts', {'n': PARTS.length}),
                 current: studied,
                 required: _kRequiredParts,
                 met: meetsStudied,
@@ -309,8 +314,7 @@ class _CertificateScreenState extends ConsumerState<CertificateScreen> {
                 // requirement is coverage-based (pass 70+ of the quizzes),
                 // so the wording says exactly that to avoid contradicting
                 // the 80% pass bar shown when actually taking a quiz.
-                label:
-                    'Pass the quiz (80%+) for $_kRequiredQuizPct+ of the ${PARTS.length} parts',
+                label: tv(lang, 'passQuizForNParts', {'req': _kRequiredQuizPct, 'n': PARTS.length}),
                 current: quizzesPassed,
                 required: (_kRequiredParts * _kRequiredQuizPct / 100).ceil(),
                 met: meetsQuiz,
@@ -334,10 +338,10 @@ class _CertificateScreenState extends ConsumerState<CertificateScreen> {
                         size: 20,
                       ),
                       const SizedBox(width: 12),
-                      const Expanded(
+                      Expanded(
                         child: Text(
-                          'Keep studying and passing quizzes. Your certificate will unlock automatically when you meet all requirements.',
-                          style: TextStyle(
+                          t(lang, 'keepStudyingBody'),
+                          style: const TextStyle(
                             color: AppColors.textSecondary,
                             fontSize: 13,
                             height: 1.4,
@@ -361,9 +365,9 @@ class _CertificateScreenState extends ConsumerState<CertificateScreen> {
                       ),
                       elevation: 0,
                     ),
-                    child: const Text(
-                      'Continue Learning',
-                      style: TextStyle(
+                    child: Text(
+                      t(lang, 'continueLearning'),
+                      style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
                       ),

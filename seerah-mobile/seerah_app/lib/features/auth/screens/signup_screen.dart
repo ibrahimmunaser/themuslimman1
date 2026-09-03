@@ -7,12 +7,14 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/iap_provider.dart';
+import '../../../core/providers/part_provider.dart';
 import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/system_insets.dart';
 import '../../../core/widgets/app_logo.dart';
 import '../../../core/widgets/legal_web_screen.dart';
 import '../../../core/widgets/ui_kit.dart';
+import '../../../l10n/app_strings.dart';
 import '../widgets/auth_field.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
@@ -57,6 +59,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         _passCtrl.text,
       );
     if (!mounted) return;
+    final lang = ref.read(courseLangProvider);
     if (result.success) {
       // Merge any progress made on this device before the account existed —
       // best-effort, never blocks navigation.
@@ -83,24 +86,21 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
           context: context,
           builder: (ctx) => AlertDialog(
             title: Text(result.verificationEmailFailed
-                ? "Couldn't send verification email"
-                : 'Check your email'),
+                ? t(lang, 'couldntSendVerification')
+                : t(lang, 'checkYourEmail')),
             content: Text(
-              result.verificationEmailFailed
-                  ? "Your account was created, but we couldn't send a verification "
-                      "email to ${_emailCtrl.text.trim()} right now. Part 1 is free to "
-                      "explore right away, and if you purchase a plan we'll verify your "
-                      "email automatically — otherwise, use \"Resend Email\" from your "
-                      "profile once you're signed in."
-                  : "We've sent a verification link to ${_emailCtrl.text.trim()}. "
-                      "Part 1 is free to explore right away. If you purchase a plan "
-                      "before verifying, we'll verify your email for you automatically — "
-                      'otherwise, click the link so you can also sign in from other devices.',
+              tv(
+                lang,
+                result.verificationEmailFailed
+                    ? 'verifyEmailFailedBody'
+                    : 'verifyEmailSentBody',
+                {'email': _emailCtrl.text.trim()},
+              ),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('Got it'),
+                child: Text(t(lang, 'gotIt')),
               ),
             ],
           ),
@@ -121,6 +121,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authProvider);
+    final lang = ref.watch(courseLangProvider);
     final hasAccess = auth.hasAccess;
     final isFamily = auth.isFamily;
     return Scaffold(
@@ -148,7 +149,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   alignment: Alignment.topLeft,
                   child: IconButton(
                     icon: const Icon(Icons.close_rounded, size: 22),
-                    tooltip: 'Close',
+                    tooltip: t(lang, 'close'),
                     onPressed: _loading
                         ? null
                         : () => context.canPop() ? context.pop() : context.go('/dashboard'),
@@ -160,7 +161,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     const AppLogo(size: 48),
                     const SizedBox(height: 20),
                     Text(
-                      hasAccess ? 'Create Your Account' : 'Save Your Progress',
+                      hasAccess ? t(lang, 'createYourAccount') : t(lang, 'saveYourProgress'),
                       style: Theme.of(context).textTheme.displayMedium,
                       textAlign: TextAlign.center,
                     ),
@@ -168,9 +169,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     Text(
                       hasAccess
                           ? (isFamily
-                              ? 'Your Family plan is confirmed. Create an account — anyone in your household can sign in with it and add their own learner profile (up to 5).'
-                              : 'Your purchase is confirmed. Create an account so you can sign in on Android, iOS, and the website.')
-                          : 'Create an account to access your course from any device.',
+                              ? t(lang, 'familyPlanConfirmedBody')
+                              : t(lang, 'purchaseConfirmedCreateAccount'))
+                          : t(lang, 'createAccountAnyDevice'),
                       style: Theme.of(context).textTheme.bodyMedium,
                       textAlign: TextAlign.center,
                     ),
@@ -180,26 +181,26 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 const SizedBox(height: 48),
 
                 AuthField(
-                  label: 'Full Name',
+                  label: t(lang, 'fullName'),
                   controller: _nameCtrl,
                   keyboardType: TextInputType.name,
-                  validator: (v) => (v == null || v.trim().isEmpty) ? 'Enter your name' : null,
+                  validator: (v) => (v == null || v.trim().isEmpty) ? t(lang, 'enterYourName') : null,
                 ),
                 const SizedBox(height: 16),
                 AuthField(
-                  label: 'Email',
+                  label: t(lang, 'email'),
                   controller: _emailCtrl,
                   keyboardType: TextInputType.emailAddress,
-                  validator: (v) => (v == null || !v.contains('@')) ? 'Enter a valid email' : null,
+                  validator: (v) => (v == null || !v.contains('@')) ? t(lang, 'enterValidEmail') : null,
                 ),
                 const SizedBox(height: 16),
                 AuthField(
-                  label: 'Password',
+                  label: t(lang, 'password'),
                   controller: _passCtrl,
                   obscure: true,
                   textInputAction: TextInputAction.done,
                   onFieldSubmitted: (_) => _submit(),
-                  validator: (v) => (v == null || v.length < 8) ? 'Password must be at least 8 characters' : null,
+                  validator: (v) => (v == null || v.length < 8) ? t(lang, 'passwordMinChars') : null,
                 ),
 
                 if (_error != null) ...[
@@ -227,7 +228,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                               side: const BorderSide(color: AppColors.gold),
                               minimumSize: const Size(48, 44),
                             ),
-                            child: const Text('Sign In Instead'),
+                            child: Text(t(lang, 'signInInstead')),
                           ),
                         ],
                       ],
@@ -241,7 +242,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   onPressed: _loading ? null : _submit,
                   child: _loading
                       ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator.adaptive(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.black)))
-                      : const Text('Create Account'),
+                      : Text(t(lang, 'createAccount')),
                 ),
 
                 const SizedBox(height: 12),
@@ -249,7 +250,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   Center(
                     child: TextButton(
                       onPressed: _loading ? null : () => context.go('/dashboard'),
-                      child: const Text('Skip for now'),
+                      child: Text(t(lang, 'skipForNow')),
                     ),
                   ),
 
@@ -261,12 +262,12 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Flexible(
-                      child: Text('Already have an account?',
+                      child: Text(t(lang, 'alreadyHaveAccount'),
                           style: Theme.of(context).textTheme.bodyMedium),
                     ),
                     TextButton(
                       onPressed: () => context.go('/login'),
-                      child: const Text('Sign in'),
+                      child: Text(t(lang, 'signInLower')),
                     ),
                   ],
                 ),
@@ -280,15 +281,15 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   }
 }
 
-class _LegalText extends StatefulWidget {
+class _LegalText extends ConsumerStatefulWidget {
   final void Function(String url) onOpenUrl;
   const _LegalText({required this.onOpenUrl});
 
   @override
-  State<_LegalText> createState() => _LegalTextState();
+  ConsumerState<_LegalText> createState() => _LegalTextState();
 }
 
-class _LegalTextState extends State<_LegalText> {
+class _LegalTextState extends ConsumerState<_LegalText> {
   static const _baseUrl = AppConstants.baseUrl;
   late final TapGestureRecognizer _termsRecognizer;
   late final TapGestureRecognizer _privacyRecognizer;
@@ -311,6 +312,7 @@ class _LegalTextState extends State<_LegalText> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(courseLangProvider);
     final style = Theme.of(context).textTheme.bodySmall ?? const TextStyle(fontSize: 12);
     final linkStyle = style.copyWith(
       decoration: TextDecoration.underline,
@@ -320,15 +322,15 @@ class _LegalTextState extends State<_LegalText> {
     return RichText(
       textAlign: TextAlign.center,
       text: TextSpan(style: style, children: [
-        const TextSpan(text: 'By continuing you agree to our '),
+        TextSpan(text: t(lang, 'byContinuingYouAgreeToOur')),
         TextSpan(
-          text: 'Terms of Use (EULA)',
+          text: t(lang, 'termsOfUse'),
           style: linkStyle,
           recognizer: _termsRecognizer,
         ),
-        const TextSpan(text: ' and '),
+        TextSpan(text: t(lang, 'andConnector')),
         TextSpan(
-          text: 'Privacy Policy',
+          text: t(lang, 'privacyPolicy'),
           style: linkStyle,
           recognizer: _privacyRecognizer,
         ),

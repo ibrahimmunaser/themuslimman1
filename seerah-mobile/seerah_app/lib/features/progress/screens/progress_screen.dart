@@ -6,9 +6,11 @@ import 'package:percent_indicator/circular_percent_indicator.dart';
 import '../../../core/data/parts_data.dart';
 import '../../../core/models/part_model.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../core/providers/part_provider.dart';
 import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/ui_kit.dart';
+import '../../../l10n/app_strings.dart';
 
 class ProgressScreen extends ConsumerWidget {
   const ProgressScreen({super.key});
@@ -18,12 +20,13 @@ class ProgressScreen extends ConsumerWidget {
     final auth = ref.watch(authProvider);
     final hasAccess = auth.hasAccess;
     final progressAsync = ref.watch(progressProvider);
+    final lang = ref.watch(courseLangProvider);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        title: const Text('My Progress'),
+        title: Text(t(lang, 'myProgressTitle')),
       ),
       body: AppGradientBackground(
         child: SafeArea(
@@ -48,40 +51,42 @@ class ProgressScreen extends ConsumerWidget {
                   child: _OverviewStats(
                     hasAccess: hasAccess,
                     progressAsync: progressAsync,
+                    lang: lang,
                   ).animate(delay: 100.ms).fadeIn(duration: 400.ms),
                 ),
 
-                const SectionHeader(title: 'Course Map'),
+                SectionHeader(title: t(lang, 'courseMap')),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: _CourseMap(
                     hasAccess: hasAccess,
                     progressAsync: progressAsync,
+                    lang: lang,
                   ).animate(delay: 150.ms).fadeIn(duration: 400.ms),
                 ),
 
                 if (!hasAccess) ...[
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: _UpgradeCta()
+                    child: _UpgradeCta(lang: lang)
                         .animate(delay: 200.ms)
                         .fadeIn(duration: 400.ms),
                   ),
                   const SizedBox(height: 12),
                 ],
 
-                const SectionHeader(title: 'Quick Links'),
+                SectionHeader(title: t(lang, 'quickLinks')),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: _QuickLinks()
+                  child: _QuickLinks(lang: lang)
                       .animate(delay: 200.ms)
                       .fadeIn(duration: 400.ms),
                 ),
 
-                const SectionHeader(title: 'Learning Tips'),
+                SectionHeader(title: t(lang, 'learningTips')),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: _LearningTips()
+                  child: _LearningTips(lang: lang)
                       .animate(delay: 250.ms)
                       .fadeIn(duration: 400.ms),
                 ),
@@ -101,7 +106,8 @@ class ProgressScreen extends ConsumerWidget {
 class _OverviewStats extends StatelessWidget {
   final bool hasAccess;
   final AsyncValue<ProgressState> progressAsync;
-  const _OverviewStats({required this.hasAccess, required this.progressAsync});
+  final String lang;
+  const _OverviewStats({required this.hasAccess, required this.progressAsync, required this.lang});
 
   @override
   Widget build(BuildContext context) {
@@ -127,7 +133,7 @@ class _OverviewStats extends StatelessWidget {
           child: Row(
             children: [
               Semantics(
-                label: '$viewed of $totalUnlocked parts studied',
+                label: tv(lang, 'partsStudiedOfTotal', {'viewed': viewed, 'total': totalUnlocked}),
                 value: '${(studiedPercent * 100).round()}%',
                 // The CircularPercentIndicator package is a custom-painted
                 // widget (unlike Flutter's built-in progress indicators) and
@@ -179,9 +185,9 @@ class _OverviewStats extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Parts Studied',
-                      style: TextStyle(
+                    Text(
+                      t(lang, 'partsStudied'),
+                      style: const TextStyle(
                         color: AppColors.textSecondary,
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
@@ -189,7 +195,7 @@ class _OverviewStats extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${(studiedPercent * 100).round()}% complete',
+                      tv(lang, 'percentComplete', {'n': (studiedPercent * 100).round()}),
                       style: const TextStyle(
                         color: AppColors.gold,
                         fontSize: 17,
@@ -202,13 +208,13 @@ class _OverviewStats extends StatelessWidget {
                       children: [
                         _MiniStat(
                           value: '$completed',
-                          label: 'Quizzes',
+                          label: t(lang, 'quizzesLabel'),
                           color: AppColors.success,
                         ),
                         const SizedBox(width: 20),
                         _MiniStat(
                           value: '${ERAS.length}',
-                          label: 'Eras',
+                          label: t(lang, 'eras'),
                           color: const Color(0xFF5A90B0),
                         ),
                       ],
@@ -235,9 +241,9 @@ class _OverviewStats extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Parts Studied',
-                    style: TextStyle(
+                  Text(
+                    t(lang, 'partsStudied'),
+                    style: const TextStyle(
                       color: AppColors.textPrimary,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -272,9 +278,9 @@ class _OverviewStats extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'Quizzes Passed',
-                      style: TextStyle(
+                    Text(
+                      t(lang, 'quizzesPassed'),
+                      style: const TextStyle(
                         color: AppColors.textPrimary,
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -356,7 +362,8 @@ class _MiniStat extends StatelessWidget {
 class _CourseMap extends StatelessWidget {
   final bool hasAccess;
   final AsyncValue<ProgressState> progressAsync;
-  const _CourseMap({required this.hasAccess, required this.progressAsync});
+  final String lang;
+  const _CourseMap({required this.hasAccess, required this.progressAsync, required this.lang});
 
   @override
   Widget build(BuildContext context) {
@@ -408,7 +415,7 @@ class _CourseMap extends StatelessWidget {
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            era.name as String,
+                            era.localizedName(lang) as String,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
@@ -431,7 +438,7 @@ class _CourseMap extends StatelessWidget {
                         Text(
                           isUnlocked
                               ? '$viewedCount/${parts.length}'
-                              : 'Locked',
+                              : t(lang, 'locked'),
                           style: TextStyle(
                             color: isUnlocked ? color : AppColors.textMuted,
                             fontSize: 13,
@@ -474,6 +481,9 @@ class _CourseMap extends StatelessWidget {
 // ── Upgrade CTA ───────────────────────────────────────────────────────────────
 
 class _UpgradeCta extends StatelessWidget {
+  final String lang;
+  const _UpgradeCta({required this.lang});
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -491,14 +501,14 @@ class _UpgradeCta extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.lock_open_outlined, color: AppColors.gold, size: 20),
-              SizedBox(width: 8),
+              const Icon(Icons.lock_open_outlined, color: AppColors.gold, size: 20),
+              const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Unlock Full Progress',
-                  style: TextStyle(
+                  t(lang, 'unlockFullProgress'),
+                  style: const TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -509,7 +519,7 @@ class _UpgradeCta extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Get access to all ${PARTS.length} parts across ${ERAS.length} eras. Videos, reading, flashcards, and quizzes for every lesson.',
+            tv(lang, 'unlockFullProgressBody', {'parts': PARTS.length, 'eras': ERAS.length}),
             style: const TextStyle(
               color: AppColors.textSecondary,
               fontSize: 13,
@@ -531,9 +541,9 @@ class _UpgradeCta extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              child: const Text(
-                'View Plans',
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+              child: Text(
+                t(lang, 'viewPlans'),
+                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
               ),
             ),
           ),
@@ -546,21 +556,24 @@ class _UpgradeCta extends StatelessWidget {
 // ── Quick Links ───────────────────────────────────────────────────────────────
 
 class _QuickLinks extends StatelessWidget {
+  final String lang;
+  const _QuickLinks({required this.lang});
+
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
         _QuickLinkCard(
           icon: Icons.quiz_rounded,
-          label: 'Quiz History',
-          subtitle: 'See all scores',
+          label: t(lang, 'quizHistory'),
+          subtitle: t(lang, 'seeAllScores'),
           onTap: () => context.push('/quiz-history'),
         ),
         const SizedBox(width: 10),
         _QuickLinkCard(
           icon: Icons.workspace_premium_rounded,
-          label: 'Certificate',
-          subtitle: 'View requirements',
+          label: t(lang, 'certificate'),
+          subtitle: t(lang, 'viewRequirements'),
           onTap: () => context.push('/certificate'),
         ),
       ],
@@ -641,41 +654,20 @@ class _QuickLinkCard extends StatelessWidget {
 // ── Learning Tips ─────────────────────────────────────────────────────────────
 
 class _LearningTips extends StatelessWidget {
+  final String lang;
+  const _LearningTips({required this.lang});
+
   @override
   Widget build(BuildContext context) {
-    const tips = [
-      [
-        'Watch first',
-        'Start each part by watching the video. It gives you the full context and narrative.',
-      ],
-      [
-        'Listen on the go',
-        'Use the audio version while commuting or doing other tasks to reinforce what you learned.',
-      ],
-      [
-        'Read the briefing',
-        'Go through the briefing notes and key facts to solidify the main points.',
-      ],
-      [
-        'Study the slides',
-        'Review the slide decks and infographics for a visual summary of each lesson.',
-      ],
-      [
-        'Check the mindmap',
-        'Use the mindmap to see how concepts in a lesson connect to each other.',
-      ],
-      [
-        'Review with flashcards',
-        'Go through the flashcards to lock in the most important facts.',
-      ],
-      [
-        'Test yourself',
-        'Take the quiz to see what you\'ve truly retained. Aim for 80%+.',
-      ],
-      [
-        'Go in order',
-        'The Seerah is a connected story. Each era builds on the one before.',
-      ],
+    final tips = [
+      [t(lang, 'tipWatchFirstTitle'), t(lang, 'tipWatchFirstBody')],
+      [t(lang, 'tipListenGoTitle'), t(lang, 'tipListenGoBody')],
+      [t(lang, 'tipReadBriefingTitle'), t(lang, 'tipReadBriefingBody')],
+      [t(lang, 'tipStudySlidesTitle'), t(lang, 'tipStudySlidesBody')],
+      [t(lang, 'tipCheckMindmapTitle'), t(lang, 'tipCheckMindmapBody')],
+      [t(lang, 'tipReviewFlashcardsTitle'), t(lang, 'tipReviewFlashcardsBody')],
+      [t(lang, 'tipTestYourselfTitle'), t(lang, 'tipTestYourselfBody')],
+      [t(lang, 'tipGoInOrderTitle'), t(lang, 'tipGoInOrderBody')],
     ];
 
     return Column(

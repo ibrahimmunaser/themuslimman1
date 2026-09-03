@@ -4,6 +4,8 @@ class PartModel {
   final String subtitle;
   final String era;
   final String description;
+  final String? titleAr;
+  final String? subtitleAr;
 
   const PartModel({
     required this.partNumber,
@@ -11,9 +13,16 @@ class PartModel {
     required this.subtitle,
     required this.era,
     required this.description,
+    this.titleAr,
+    this.subtitleAr,
   });
 
   String get id => 'part-$partNumber';
+
+  /// English title/subtitle stay the source of truth for [description] and
+  /// any other field with no Arabic translation available yet.
+  String localizedTitle(String lang) => lang == 'ar' ? (titleAr ?? title) : title;
+  String localizedSubtitle(String lang) => lang == 'ar' ? (subtitleAr ?? subtitle) : subtitle;
 }
 
 class EraModel {
@@ -22,6 +31,7 @@ class EraModel {
   final String mood;
   final String atmosphere;
   final List<String> themeWords;
+  final String? nameAr;
 
   const EraModel({
     required this.id,
@@ -29,7 +39,10 @@ class EraModel {
     required this.mood,
     required this.atmosphere,
     required this.themeWords,
+    this.nameAr,
   });
+
+  String localizedName(String lang) => lang == 'ar' ? (nameAr ?? name) : name;
 }
 
 class PartContent {

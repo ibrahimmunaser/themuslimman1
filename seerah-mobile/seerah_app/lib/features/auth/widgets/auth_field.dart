@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/providers/part_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../l10n/app_strings.dart';
 
-class AuthField extends StatefulWidget {
+class AuthField extends ConsumerStatefulWidget {
   final String label;
   final String? hint;
   final TextEditingController controller;
@@ -24,14 +27,15 @@ class AuthField extends StatefulWidget {
   });
 
   @override
-  State<AuthField> createState() => _AuthFieldState();
+  ConsumerState<AuthField> createState() => _AuthFieldState();
 }
 
-class _AuthFieldState extends State<AuthField> {
+class _AuthFieldState extends ConsumerState<AuthField> {
   bool _hidden = true;
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(courseLangProvider);
     return TextFormField(
       controller: widget.controller,
       obscureText: widget.obscure && _hidden,
@@ -50,7 +54,7 @@ class _AuthFieldState extends State<AuthField> {
                   color: AppColors.textMuted,
                   size: 20,
                 ),
-                tooltip: _hidden ? 'Show password' : 'Hide password',
+                tooltip: _hidden ? t(lang, 'showPassword') : t(lang, 'hidePassword'),
                 onPressed: () => setState(() => _hidden = !_hidden),
               )
             : null,

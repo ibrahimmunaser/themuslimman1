@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/app_constants.dart';
 import '../models/profile_model.dart';
 import '../network/api_client.dart';
+import '../../l10n/app_strings.dart';
+import 'part_provider.dart';
 import 'progress_provider.dart';
 
 class ProfilesNotifier extends AsyncNotifier<ProfilesState> {
@@ -14,6 +16,8 @@ class ProfilesNotifier extends AsyncNotifier<ProfilesState> {
   bool _creating = false;
   bool _deleting = false;
   bool _renaming = false;
+
+  String get _lang => ref.read(courseLangProvider);
 
   @override
   Future<ProfilesState> build() async {
@@ -52,7 +56,7 @@ class ProfilesNotifier extends AsyncNotifier<ProfilesState> {
 
   /// Switches the active learner profile. Returns error message or null.
   Future<String?> switchProfile(String profileId) async {
-    if (_switching) return 'Please wait — still switching profiles.';
+    if (_switching) return t(_lang, 'stillSwitchingProfiles');
     _switching = true;
     try {
       await ApiClient.instance.dio.post(
@@ -75,7 +79,7 @@ class ProfilesNotifier extends AsyncNotifier<ProfilesState> {
       return null;
     } catch (e) {
       debugPrint('[Profiles] switch error: $e');
-      return 'Could not switch profile. Please try again.';
+      return t(_lang, 'couldNotSwitchProfile');
     } finally {
       _switching = false;
     }
@@ -89,7 +93,7 @@ class ProfilesNotifier extends AsyncNotifier<ProfilesState> {
   /// that's the real enforcement boundary, so a race here can't create more
   /// profiles than the plan allows.
   Future<String?> createProfile(String displayName, {String? avatar}) async {
-    if (_creating) return 'Please wait — still adding a profile.';
+    if (_creating) return t(_lang, 'stillAddingProfile');
     _creating = true;
     try {
       final response = await ApiClient.instance.dio.post(
@@ -101,11 +105,11 @@ class ProfilesNotifier extends AsyncNotifier<ProfilesState> {
         await refresh();
         return null;
       }
-      return data['error'] as String? ?? 'Could not create profile.';
+      return data['error'] as String? ?? t(_lang, 'couldNotCreateProfile');
     } catch (e) {
       debugPrint('[Profiles] create error: $e');
       final dioMsg = e is Exception ? _dioErrorMessage(e) : null;
-      return dioMsg ?? 'Could not create profile. Please try again.';
+      return dioMsg ?? t(_lang, 'couldNotCreateProfileRetry');
     } finally {
       _creating = false;
     }
@@ -121,7 +125,7 @@ class ProfilesNotifier extends AsyncNotifier<ProfilesState> {
 
   /// Deletes a profile. Returns error message or null.
   Future<String?> deleteProfile(String profileId) async {
-    if (_deleting) return 'Please wait — still deleting a profile.';
+    if (_deleting) return t(_lang, 'stillDeletingProfile');
     _deleting = true;
     try {
       final wasActive = state.valueOrNull?.activeProfileId == profileId;
@@ -148,10 +152,10 @@ class ProfilesNotifier extends AsyncNotifier<ProfilesState> {
         await refresh();
         return null;
       }
-      return data['error'] as String? ?? 'Could not delete profile.';
+      return data['error'] as String? ?? t(_lang, 'couldNotDeleteProfile');
     } catch (e) {
       debugPrint('[Profiles] delete error: $e');
-      return 'Could not delete profile. Please try again.';
+      return t(_lang, 'couldNotDeleteProfileRetry');
     } finally {
       _deleting = false;
     }
@@ -159,7 +163,7 @@ class ProfilesNotifier extends AsyncNotifier<ProfilesState> {
 
   /// Renames a profile. Returns error message or null.
   Future<String?> renameProfile(String profileId, String newName) async {
-    if (_renaming) return 'Please wait — still renaming a profile.';
+    if (_renaming) return t(_lang, 'stillRenamingProfile');
     _renaming = true;
     try {
       final response = await ApiClient.instance.dio.patch(
@@ -180,10 +184,10 @@ class ProfilesNotifier extends AsyncNotifier<ProfilesState> {
         state = AsyncData(updated);
         return null;
       }
-      return data['error'] as String? ?? 'Could not rename profile.';
+      return data['error'] as String? ?? t(_lang, 'couldNotRenameProfile');
     } catch (e) {
       debugPrint('[Profiles] rename error: $e');
-      return 'Could not rename profile. Please try again.';
+      return t(_lang, 'couldNotRenameProfileRetry');
     } finally {
       _renaming = false;
     }

@@ -12,7 +12,9 @@ import 'package:in_app_purchase_android/in_app_purchase_android.dart';
 import '../constants/app_constants.dart';
 import '../network/api_client.dart';
 import '../network/cookie_helper.dart' as cookies;
+import '../../l10n/app_strings.dart';
 import 'auth_provider.dart';
+import 'part_provider.dart';
 import 'profiles_provider.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -164,37 +166,34 @@ class IAPState {
   // unprofessional debug output. The actual diagnostic detail is still
   // logged via debugPrint for us to see in device logs / TestFlight
   // crash-adjacent logging, just no longer surfaced in the UI.
-  String unavailableProductMessage() {
+  String unavailableProductMessage(String lang) {
     if (!isAvailable) {
       debugPrint(
         '[IAP] unavailableProductMessage: billing unavailable on this install '
         '(sideloaded/debug build, or store billing API unreachable)',
       );
-      return 'Store billing is unavailable on this device right now. Please try again, '
-          'or contact support@themuslimman.com if this continues.';
+      return t(lang, 'iapStoreUnavailableDevice');
     }
     if (products.isEmpty) {
       debugPrint(
         '[IAP] unavailableProductMessage: 0 of ${AppConstants.iapPlanCount} plans loaded from the store',
       );
-      return 'We could not load plans from the store. Please check your connection and tap Retry, '
-          'or contact support@themuslimman.com if this continues.';
+      return t(lang, 'iapCouldNotLoadPlans');
     }
     if (notFoundIds.isNotEmpty) {
       debugPrint(
         '[IAP] unavailableProductMessage: only $loadedPlanCount of ${AppConstants.iapPlanCount} '
         'plans loaded; missing productIds=$notFoundIds',
       );
-      return 'This plan is temporarily unavailable. Please tap Retry, '
-          'or contact support@themuslimman.com if this continues.';
+      return t(lang, 'iapPlanTempUnavailable');
     }
-    return 'This plan could not be loaded from the store. Tap Retry.';
+    return t(lang, 'iapPlanCouldNotLoad');
   }
 
-  String get storeStatusLabel {
-    if (status == IAPStatus.loading) return 'Loading plans from the store…';
-    if (!isAvailable) return 'Store billing unavailable';
-    return '$loadedPlanCount of ${AppConstants.iapPlanCount} plans loaded from the store';
+  String storeStatusLabel(String lang) {
+    if (status == IAPStatus.loading) return t(lang, 'iapLoadingPlans');
+    if (!isAvailable) return t(lang, 'iapStoreUnavailable');
+    return tv(lang, 'iapPlansLoadedCount', {'loaded': loadedPlanCount, 'total': AppConstants.iapPlanCount});
   }
 }
 
@@ -213,6 +212,8 @@ String _purchaseKey(PurchaseDetails p) =>
 
 class IAPNotifier extends StateNotifier<IAPState> {
   final Ref _ref;
+
+  String get _lang => _ref.read(courseLangProvider);
   final InAppPurchase _iap = InAppPurchase.instance;
   StreamSubscription<List<PurchaseDetails>>? _purchaseSub;
 
@@ -289,7 +290,7 @@ class IAPNotifier extends StateNotifier<IAPState> {
       state = IAPState(
         status: IAPStatus.idle,
         isAvailable: false,
-        errorMessage: 'In-app purchases are not available on this device.',
+        errorMessage: t(_lang, 'iapNotAvailableDevice'),
       );
       return;
     }
@@ -320,7 +321,7 @@ class IAPNotifier extends StateNotifier<IAPState> {
       state = state.copyWith(
         status: IAPStatus.idle,
         isAvailable: true,
-        errorMessage: 'Failed to load products from the store.',
+        errorMessage: t(_lang, 'iapFailedLoadProducts'),
       );
     }
   }
@@ -399,7 +400,7 @@ class IAPNotifier extends StateNotifier<IAPState> {
       state = state.copyWith(
         status: IAPStatus.error,
         errorMessage: _ref.read(authProvider).error ??
-            'Could not claim purchase. Please try again.',
+            t(_lang, 'iapCouldNotClaimPurchase'),
       );
       return;
     }
@@ -450,7 +451,7 @@ class IAPNotifier extends StateNotifier<IAPState> {
         debugPrint('[IAP] buy() refused — no session cookie');
         state = state.copyWith(
           status: IAPStatus.error,
-          errorMessage: 'Could not start checkout. Please try again.',
+          errorMessage: t(_lang, 'couldNotStartCheckout'),
         );
         return false;
       }
@@ -512,7 +513,7 @@ class IAPNotifier extends StateNotifier<IAPState> {
       _purchaseTimer?.cancel();
       state = state.copyWith(
         status: IAPStatus.error,
-        errorMessage: 'Could not start the purchase. Please try again.',
+        errorMessage: t(_lang, 'iapCouldNotStartPurchase'),
       );
       return false;
     }
@@ -538,7 +539,7 @@ class IAPNotifier extends StateNotifier<IAPState> {
     if (!_ref.read(authProvider).isLoggedIn || !cookies.hasSessionCookie()) {
       state = state.copyWith(
         status: IAPStatus.error,
-        errorMessage: 'Could not restore purchases. Please try again.',
+        errorMessage: t(_lang, 'iapCouldNotRestore'),
       );
       return;
     }
@@ -584,7 +585,7 @@ class IAPNotifier extends StateNotifier<IAPState> {
       _restoreTimer?.cancel();
       state = state.copyWith(
         status: IAPStatus.error,
-        errorMessage: 'Could not restore purchases. Please try again.',
+        errorMessage: t(_lang, 'iapCouldNotRestore'),
       );
       return;
     }
@@ -675,7 +676,7 @@ class IAPNotifier extends StateNotifier<IAPState> {
           if (affectsUiState) {
             state = state.copyWith(
               status: IAPStatus.error,
-              errorMessage: purchase.error?.message ?? 'Purchase failed. Please try again.',
+              errorMessage: purchase.error?.message ?? t(_lang, 'iapPurchaseFailedRetry'),
             );
           }
           await _finalize(purchase);
@@ -772,9 +773,8 @@ class IAPNotifier extends StateNotifier<IAPState> {
             // the ONLY way back is Restore Purchases, so every iOS fallback
             // message must say so explicitly.
             fallback: isIOS
-                ? 'Purchase verification failed. Tap Restore Purchases to try '
-                    'again, or contact support@themuslimman.com.'
-                : 'Purchase verification failed. Please try again or contact support@themuslimman.com',
+                ? t(_lang, 'iapVerifyFailedRestoreIos')
+                : t(_lang, 'iapVerifyFailedRetry'),
           ),
         );
       }
@@ -840,9 +840,8 @@ class IAPNotifier extends StateNotifier<IAPState> {
         errorMessage: _verificationErrorMessage(
           e,
           fallback: isIOS
-              ? 'Could not verify your purchase. Tap Restore Purchases to try '
-                  'again, or contact support@themuslimman.com'
-              : 'Could not verify your purchase. Please contact support@themuslimman.com',
+              ? t(_lang, 'iapCouldNotVerifyRestoreIos')
+              : t(_lang, 'iapCouldNotVerifyContact'),
         ),
       );
       if (isIOS) {
@@ -854,9 +853,9 @@ class IAPNotifier extends StateNotifier<IAPState> {
   /// Prefer the backend's `error` field over Dio's verbose exception dump.
   String _verificationErrorMessage(
     Object e, {
-    String fallback =
-        'Purchase verification failed. Please try again or contact support@themuslimman.com',
+    String? fallback,
   }) {
+    fallback ??= t(_lang, 'iapVerifyFailedRetry');
     if (e is DioException) {
       final data = e.response?.data;
       if (data is Map) {
@@ -865,15 +864,13 @@ class IAPNotifier extends StateNotifier<IAPState> {
       }
       final code = e.response?.statusCode;
       if (code == 401) {
-        return 'Your session expired. Please close and reopen the app, then try Restore Purchases.';
+        return t(_lang, 'iapSessionExpiredRestore');
       }
       if (code == 409) {
-        return 'This purchase is already linked to an account. If you previously created an '
-            'account (email/password), please Sign In to restore it — otherwise contact '
-            'support@themuslimman.com if you need help.';
+        return t(_lang, 'iapAlreadyLinkedAccount');
       }
       if (code == 422 || code == 502) {
-        return 'We could not verify this purchase with the store. Please try Restore Purchases, or contact support@themuslimman.com.';
+        return t(_lang, 'iapCouldNotVerifyStore');
       }
       return fallback;
     }
@@ -924,15 +921,12 @@ class IAPNotifier extends StateNotifier<IAPState> {
         final data = response.data as Map<String, dynamic>;
 
         if (data['success'] != true) {
-          throw Exception(data['error'] ?? 'Verification failed');
+          throw Exception(data['error'] ?? t(_lang, 'iapVerificationFailedGeneric'));
         }
 
         final hasAccess = data['hasAccess'] as bool? ?? false;
         if (!hasAccess) {
-          throw Exception(
-            'Purchase was recorded but access could not be confirmed. '
-            'Please contact support@themuslimman.com',
-          );
+          throw Exception(t(_lang, 'iapAccessNotConfirmed'));
         }
 
         // Apply hasAccess/isFamily directly from THIS response — don't rely

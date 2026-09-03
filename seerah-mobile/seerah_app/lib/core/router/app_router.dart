@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
+import '../providers/part_provider.dart';
+import '../../l10n/app_strings.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/signup_screen.dart';
 import '../../features/shell/app_shell.dart';
@@ -204,11 +206,12 @@ class _SplashScreen extends StatelessWidget {
 /// Shown for both unmatched routes (GoRouter's errorBuilder) and
 /// well-formed-but-invalid path parameters (e.g. an out-of-range part
 /// number), so both cases give the user the same clear, actionable signal.
-class _NotFoundScreen extends StatelessWidget {
+class _NotFoundScreen extends ConsumerWidget {
   const _NotFoundScreen();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(courseLangProvider);
     return Scaffold(
       body: Center(
         child: Column(
@@ -216,11 +219,11 @@ class _NotFoundScreen extends StatelessWidget {
           children: [
             const Icon(Icons.error_outline, size: 48, color: Colors.grey),
             const SizedBox(height: 16),
-            Text('Page not found', style: Theme.of(context).textTheme.titleLarge),
+            Text(t(lang, 'pageNotFound'), style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
             TextButton(
               onPressed: () => context.go('/dashboard'),
-              child: const Text('Go Home'),
+              child: Text(t(lang, 'goHome')),
             ),
           ],
         ),

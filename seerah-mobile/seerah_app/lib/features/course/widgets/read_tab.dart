@@ -5,6 +5,7 @@ import 'package:shimmer/shimmer.dart';
 import '../../../core/providers/part_provider.dart';
 import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../l10n/app_strings.dart';
 
 class ReadTab extends ConsumerStatefulWidget {
   final int partNumber;
@@ -18,7 +19,7 @@ class ReadTab extends ConsumerStatefulWidget {
 
 class _ReadTabState extends ConsumerState<ReadTab> {
   late int _activeSection = widget.initialSection.clamp(0, 2);
-  final List<String> _sections = ['Briefing', 'Study Guide', 'Key Facts'];
+  static const _sectionKeys = ['briefing', 'studyGuide', 'keyFacts'];
   static const _assetIds = ['briefing', 'study_guide', 'statement-of-facts'];
 
   final ScrollController _scrollController = ScrollController();
@@ -164,6 +165,8 @@ class _ReadTabState extends ConsumerState<ReadTab> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(courseLangProvider);
+    final sections = _sectionKeys.map((k) => t(lang, k)).toList();
     final contentAsync = ref.watch(partContentProvider(widget.partNumber));
 
     return Column(
@@ -177,7 +180,7 @@ class _ReadTabState extends ConsumerState<ReadTab> {
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
-              children: _sections.asMap().entries.map((e) {
+              children: sections.asMap().entries.map((e) {
                 final selected = e.key == _activeSection;
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
@@ -227,6 +230,7 @@ class _ReadTabState extends ConsumerState<ReadTab> {
             loading: () => _LoadingSkeleton(),
             error: (e, _) => _ErrorView(
               onRetry: () => ref.invalidate(partContentProvider(widget.partNumber)),
+              lang: lang,
             ),
             data: (content) {
               final text = _activeSection == 0
@@ -236,7 +240,7 @@ class _ReadTabState extends ConsumerState<ReadTab> {
                       : content.statementOfFactsText;
 
               if (text == null || text.isEmpty) {
-                return _EmptySection(section: _sections[_activeSection]);
+                return _EmptySection(section: sections[_activeSection], lang: lang);
               }
 
               // Key Facts: plain newline-separated sentences → individual fact cards
@@ -295,7 +299,8 @@ class _LoadingSkeleton extends StatelessWidget {
 
 class _ErrorView extends StatelessWidget {
   final VoidCallback onRetry;
-  const _ErrorView({required this.onRetry});
+  final String lang;
+  const _ErrorView({required this.onRetry, required this.lang});
 
   @override
   Widget build(BuildContext context) {
@@ -305,10 +310,10 @@ class _ErrorView extends StatelessWidget {
         children: [
           const Icon(Icons.error_outline, size: 48, color: AppColors.textMuted),
           const SizedBox(height: 12),
-          const Text('Failed to load content',
-            style: TextStyle(color: AppColors.textSecondary)),
+          Text(t(lang, 'failedToLoadContent'),
+            style: const TextStyle(color: AppColors.textSecondary)),
           const SizedBox(height: 16),
-          OutlinedButton(onPressed: onRetry, child: const Text('Retry')),
+          OutlinedButton(onPressed: onRetry, child: Text(t(lang, 'retry'))),
         ],
       ),
     );
@@ -396,7 +401,8 @@ class _KeyFactsList extends StatelessWidget {
 
 class _EmptySection extends StatelessWidget {
   final String section;
-  const _EmptySection({required this.section});
+  final String lang;
+  const _EmptySection({required this.section, required this.lang});
 
   @override
   Widget build(BuildContext context) {
@@ -406,7 +412,7 @@ class _EmptySection extends StatelessWidget {
         children: [
           const Icon(Icons.article_outlined, size: 48, color: AppColors.textMuted),
           const SizedBox(height: 12),
-          Text('$section not available for this part',
+          Text(tv(lang, 'sectionNotAvailable', {'section': section}),
             style: const TextStyle(color: AppColors.textSecondary)),
         ],
       ),

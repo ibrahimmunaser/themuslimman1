@@ -5,6 +5,7 @@ import '../../../core/models/part_model.dart';
 import '../../../core/providers/part_provider.dart';
 import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../l10n/app_strings.dart';
 import 'package:shimmer/shimmer.dart';
 
 class FlashcardsTab extends ConsumerStatefulWidget {
@@ -54,6 +55,7 @@ class _FlashcardsTabState extends ConsumerState<FlashcardsTab> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(courseLangProvider);
     final setAsync = ref.watch(flashcardSetProvider(widget.partNumber));
     final cardsAsync = setAsync.whenData((s) => s.forLevel(_level));
 
@@ -65,24 +67,24 @@ class _FlashcardsTabState extends ConsumerState<FlashcardsTab> {
           children: [
             const Icon(Icons.style_outlined, size: 48, color: AppColors.textMuted),
             const SizedBox(height: 12),
-            const Text('Flashcards unavailable', style: TextStyle(color: AppColors.textSecondary)),
+            Text(t(lang, 'flashcardsUnavailable'), style: const TextStyle(color: AppColors.textSecondary)),
             const SizedBox(height: 16),
             OutlinedButton(
               onPressed: () => ref.invalidate(flashcardSetProvider(widget.partNumber)),
-              child: const Text('Retry'),
+              child: Text(t(lang, 'retry')),
             ),
           ],
         ),
       ),
       data: (cards) {
         if (cards.isEmpty) {
-          return const Center(
+          return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.style_outlined, size: 48, color: AppColors.textMuted),
-                SizedBox(height: 12),
-                Text('No flashcards for this part', style: TextStyle(color: AppColors.textSecondary)),
+                const Icon(Icons.style_outlined, size: 48, color: AppColors.textMuted),
+                const SizedBox(height: 12),
+                Text(t(lang, 'noFlashcardsForPart'), style: const TextStyle(color: AppColors.textSecondary)),
               ],
             ),
           );
@@ -100,12 +102,12 @@ class _FlashcardsTabState extends ConsumerState<FlashcardsTab> {
               ),
               child: Row(
                 children: [
-                  const Text('Level:', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                  Text(t(lang, 'levelLabel'), style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
                   const SizedBox(width: 10),
                   ...[
-                    (FlashcardLevel.easy, 'Easy'),
-                    (FlashcardLevel.medium, 'Medium'),
-                    (FlashcardLevel.hard, 'Hard'),
+                    (FlashcardLevel.easy, t(lang, 'easy')),
+                    (FlashcardLevel.medium, t(lang, 'medium')),
+                    (FlashcardLevel.hard, t(lang, 'hard')),
                   ].map((pair) {
                     final selected = _level == pair.$1;
                     return Padding(
@@ -139,7 +141,7 @@ class _FlashcardsTabState extends ConsumerState<FlashcardsTab> {
                   Flexible(
                     child: setAsync.whenOrNull(data: (s) {
                       final count = s.forLevel(_level).length;
-                      return Text('$count cards',
+                      return Text(tv(lang, 'countCards', {'n': count}),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(color: AppColors.textMuted, fontSize: 11));
@@ -174,7 +176,7 @@ class _FlashcardsTabState extends ConsumerState<FlashcardsTab> {
                   IconButton(
                     onPressed: _reset,
                     icon: const Icon(Icons.refresh, size: 18, color: AppColors.textMuted),
-                    tooltip: 'Restart',
+                    tooltip: t(lang, 'restart'),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
                   ),
@@ -200,9 +202,9 @@ class _FlashcardsTabState extends ConsumerState<FlashcardsTab> {
                     // announcement when the tap actually flipped the card.
                     child: Semantics(
                       button: true,
-                      label: _showingAnswer ? 'Flashcard answer' : 'Flashcard question',
+                      label: _showingAnswer ? t(lang, 'flashcardAnswer') : t(lang, 'flashcardQuestion'),
                       value: _showingAnswer ? cards[_currentIndex].answer : cards[_currentIndex].question,
-                      hint: _showingAnswer ? 'Double tap to show question' : 'Double tap to reveal answer',
+                      hint: _showingAnswer ? t(lang, 'doubleTapShowQuestion') : t(lang, 'doubleTapRevealAnswer'),
                       liveRegion: true,
                       // The label/value above already fully describe this
                       // card, so the raw question/answer Text nodes inside
@@ -220,6 +222,7 @@ class _FlashcardsTabState extends ConsumerState<FlashcardsTab> {
                           question: cards[_currentIndex].question,
                           answer: cards[_currentIndex].answer,
                           showAnswer: _showingAnswer,
+                          lang: lang,
                         ),
                       ),
                     ),
@@ -236,13 +239,13 @@ class _FlashcardsTabState extends ConsumerState<FlashcardsTab> {
                 children: [
                   _NavButton(
                     icon: Icons.arrow_back,
-                    label: 'Prev',
+                    label: t(lang, 'prev'),
                     onPressed: _currentIndex > 0 ? () => _prev(cards) : null,
                   ),
-                  _FlipButton(onTap: _flip, showing: _showingAnswer),
+                  _FlipButton(onTap: _flip, showing: _showingAnswer, lang: lang),
                   _NavButton(
                     icon: Icons.arrow_forward,
-                    label: isLast ? 'Done' : 'Next',
+                    label: isLast ? t(lang, 'done') : t(lang, 'next'),
                     onPressed: () => isLast ? _reset() : _next(cards),
                     primary: isLast,
                   ),
@@ -260,8 +263,9 @@ class _FlipCard extends StatefulWidget {
   final String question;
   final String answer;
   final bool showAnswer;
+  final String lang;
 
-  const _FlipCard({super.key, required this.question, required this.answer, required this.showAnswer});
+  const _FlipCard({super.key, required this.question, required this.answer, required this.showAnswer, required this.lang});
 
   @override
   State<_FlipCard> createState() => _FlipCardState();
@@ -310,11 +314,11 @@ class _FlipCardState extends State<_FlipCard> with SingleTickerProviderStateMixi
               ..rotateY(angle),
             alignment: Alignment.center,
             child: showFront
-                ? _CardFace(text: widget.question, isQuestion: true)
+                ? _CardFace(text: widget.question, isQuestion: true, lang: widget.lang)
                 : Transform(
                     transform: Matrix4.identity()..rotateY(math.pi),
                     alignment: Alignment.center,
-                    child: _CardFace(text: widget.answer, isQuestion: false),
+                    child: _CardFace(text: widget.answer, isQuestion: false, lang: widget.lang),
                   ),
           ),
         );
@@ -326,7 +330,8 @@ class _FlipCardState extends State<_FlipCard> with SingleTickerProviderStateMixi
 class _CardFace extends StatelessWidget {
   final String text;
   final bool isQuestion;
-  const _CardFace({required this.text, required this.isQuestion});
+  final String lang;
+  const _CardFace({required this.text, required this.isQuestion, required this.lang});
 
   @override
   Widget build(BuildContext context) {
@@ -350,7 +355,7 @@ class _CardFace extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  isQuestion ? 'QUESTION' : 'ANSWER',
+                  isQuestion ? t(lang, 'question') : t(lang, 'answer'),
                   style: TextStyle(
                     color: isQuestion ? AppColors.textMuted : AppColors.gold,
                     fontSize: 11,
@@ -371,7 +376,7 @@ class _CardFace extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  isQuestion ? 'Tap to reveal answer' : '',
+                  isQuestion ? t(lang, 'tapToRevealAnswer') : '',
                   style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
                 ),
               ],
@@ -432,12 +437,13 @@ class _NavButton extends StatelessWidget {
 class _FlipButton extends StatelessWidget {
   final VoidCallback onTap;
   final bool showing;
-  const _FlipButton({required this.onTap, required this.showing});
+  final String lang;
+  const _FlipButton({required this.onTap, required this.showing, required this.lang});
 
   @override
   Widget build(BuildContext context) {
     return Tooltip(
-      message: showing ? 'Show question' : 'Flip card',
+      message: showing ? t(lang, 'showQuestion') : t(lang, 'flipCard'),
       child: Material(
         color: AppColors.goldFaded,
         shape: const CircleBorder(),

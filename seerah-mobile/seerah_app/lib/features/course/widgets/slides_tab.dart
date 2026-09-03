@@ -5,6 +5,7 @@ import '../../../core/providers/part_provider.dart';
 import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/adaptive_icons.dart';
+import '../../../l10n/app_strings.dart';
 
 class SlidesTab extends ConsumerStatefulWidget {
   final int partNumber;
@@ -37,6 +38,7 @@ class _SlidesTabState extends ConsumerState<SlidesTab> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(courseLangProvider);
     final slidesAsync = ref.watch(slidesProvider(widget.partNumber));
 
     return slidesAsync.when(
@@ -51,21 +53,21 @@ class _SlidesTabState extends ConsumerState<SlidesTab> {
           children: [
             const Icon(Icons.slideshow_outlined, size: 48, color: AppColors.textMuted),
             const SizedBox(height: 12),
-            const Text('Slides unavailable', style: TextStyle(color: AppColors.textSecondary)),
+            Text(t(lang, 'slidesUnavailable'), style: const TextStyle(color: AppColors.textSecondary)),
             const SizedBox(height: 16),
             OutlinedButton.icon(
               onPressed: () => ref.invalidate(slidesProvider(widget.partNumber)),
               icon: const Icon(Icons.refresh, size: 18),
-              label: const Text('Retry'),
+              label: Text(t(lang, 'retry')),
             ),
           ],
         ),
       ),
       data: (slides) {
         final decks = [
-          ('Presented', slides.presented),
-          ('Detailed', slides.detailed),
-          ('Key Facts', slides.facts),
+          (t(lang, 'presented'), slides.presented),
+          (t(lang, 'detailed'), slides.detailed),
+          (t(lang, 'keyFacts'), slides.facts),
         ];
 
         final activeDeck = decks[_deckIndex].$2;
@@ -78,13 +80,13 @@ class _SlidesTabState extends ConsumerState<SlidesTab> {
               if (mounted) setState(() { _deckIndex = nonEmpty; _slideIndex = 0; });
             });
           }
-          return const Center(
+          return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.slideshow_outlined, size: 48, color: AppColors.textMuted),
-                SizedBox(height: 12),
-                Text('No slides for this deck', style: TextStyle(color: AppColors.textSecondary)),
+                const Icon(Icons.slideshow_outlined, size: 48, color: AppColors.textMuted),
+                const SizedBox(height: 12),
+                Text(t(lang, 'noSlidesForDeck'), style: const TextStyle(color: AppColors.textSecondary)),
               ],
             ),
           );
@@ -239,7 +241,7 @@ class _SlidesTabState extends ConsumerState<SlidesTab> {
               child: Row(
                 children: [
                   _NavBtn(
-                    label: 'Prev',
+                    label: t(lang, 'prev'),
                     enabled: canPrev,
                     onTap: canPrev
                         ? () => _pageCtrl.previousPage(
@@ -250,13 +252,13 @@ class _SlidesTabState extends ConsumerState<SlidesTab> {
                   Expanded(
                     child: Center(
                       child: Text(
-                        'Swipe to navigate',
+                        t(lang, 'swipeToNavigate'),
                         style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
                       ),
                     ),
                   ),
                   _NavBtn(
-                    label: 'Next',
+                    label: t(lang, 'next'),
                     enabled: canNext,
                     trailingIcon: true,
                     onTap: canNext

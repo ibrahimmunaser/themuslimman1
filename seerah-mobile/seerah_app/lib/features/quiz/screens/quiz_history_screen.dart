@@ -4,9 +4,11 @@ import 'package:go_router/go_router.dart';
 import '../../../core/data/parts_data.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/progress_provider.dart';
+import '../../../core/providers/part_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/system_insets.dart';
 import '../../../core/widgets/adaptive_icons.dart';
+import '../../../l10n/app_strings.dart';
 
 class QuizHistoryScreen extends ConsumerWidget {
   const QuizHistoryScreen({super.key});
@@ -14,6 +16,7 @@ class QuizHistoryScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final progressAsync = ref.watch(progressProvider);
+    final lang = ref.watch(courseLangProvider);
     // A part quizzed while subscribed stays in this history forever, even
     // after the subscription lapses — gate the row tap the same way every
     // other part-entry-point in the app does (resources_screen, dashboard),
@@ -25,10 +28,10 @@ class QuizHistoryScreen extends ConsumerWidget {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.surface,
-        title: const Text('Quiz History'),
+        title: Text(t(lang, 'quizHistoryTitle')),
         leading: IconButton(
           icon: const BackIcon(size: 20),
-          tooltip: 'Back',
+          tooltip: t(lang, 'back'),
           onPressed: () => context.pop(),
         ),
         bottom: PreferredSize(
@@ -43,7 +46,7 @@ class QuizHistoryScreen extends ConsumerWidget {
           ),
         ),
         error: (e, _) => Center(
-          child: Text('Failed to load progress', style: const TextStyle(color: AppColors.textSecondary)),
+          child: Text(t(lang, 'failedToLoadProgress'), style: const TextStyle(color: AppColors.textSecondary)),
         ),
         data: (progress) {
           // Pre-index parts so each row does an O(1) lookup instead of firstWhere.
@@ -61,17 +64,17 @@ class QuizHistoryScreen extends ConsumerWidget {
             ..sort((a, b) => a.key.compareTo(b.key));
 
           if (sortedEntries.isEmpty) {
-            return const Center(
+            return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.quiz_outlined, size: 56, color: AppColors.textMuted),
-                  SizedBox(height: 16),
-                  Text('No quizzes taken yet',
-                    style: TextStyle(color: AppColors.textPrimary, fontSize: 17, fontWeight: FontWeight.w600)),
-                  SizedBox(height: 8),
-                  Text('Complete a part quiz to see your scores here.',
-                    style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                  const Icon(Icons.quiz_outlined, size: 56, color: AppColors.textMuted),
+                  const SizedBox(height: 16),
+                  Text(t(lang, 'noQuizzesTakenYet'),
+                    style: const TextStyle(color: AppColors.textPrimary, fontSize: 17, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 8),
+                  Text(t(lang, 'completePartQuizToSee'),
+                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
                     textAlign: TextAlign.center),
                 ],
               ),
@@ -98,11 +101,11 @@ class QuizHistoryScreen extends ConsumerWidget {
                   padding: const EdgeInsets.only(bottom: 20),
                   child: Row(
                     children: [
-                      _StatCard(value: '$total', label: 'Attempted'),
+                      _StatCard(value: '$total', label: t(lang, 'attempted')),
                       const SizedBox(width: 10),
-                      _StatCard(value: '$passed', label: 'Passed', color: AppColors.success),
+                      _StatCard(value: '$passed', label: t(lang, 'passed'), color: AppColors.success),
                       const SizedBox(width: 10),
-                      _StatCard(value: '$avgScore%', label: 'Avg Score', color: AppColors.gold),
+                      _StatCard(value: '$avgScore%', label: t(lang, 'avgScore'), color: AppColors.gold),
                     ],
                   ),
                 );
@@ -154,14 +157,14 @@ class QuizHistoryScreen extends ConsumerWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(part.title,
+                                Text(part.localizedTitle(lang),
                                   style: const TextStyle(
                                     color: AppColors.textPrimary,
                                     fontSize: 14, fontWeight: FontWeight.w600),
                                   maxLines: 1, overflow: TextOverflow.ellipsis,
                                 ),
                                 const SizedBox(height: 2),
-                                Text(part.subtitle,
+                                Text(part.localizedSubtitle(lang),
                                   style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
                                   maxLines: 1, overflow: TextOverflow.ellipsis,
                                 ),
@@ -186,7 +189,7 @@ class QuizHistoryScreen extends ConsumerWidget {
                                     ),
                                   ),
                                   const SizedBox(height: 2),
-                                  Text(rowPassed ? 'Passed' : 'Try again',
+                                  Text(rowPassed ? t(lang, 'passed') : t(lang, 'tryAgain'),
                                     style: TextStyle(
                                       color: rowPassed
                                           ? AppColors.success.withValues(alpha: 0.7)

@@ -5,12 +5,14 @@ import 'package:go_router/go_router.dart';
 import '../../../core/data/parts_data.dart';
 import '../../../core/models/part_model.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../core/providers/part_provider.dart';
 import '../../../core/providers/profiles_provider.dart';
 import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/adaptive_icons.dart';
 import '../../../core/widgets/app_logo.dart';
 import '../../../core/widgets/ui_kit.dart';
+import '../../../l10n/app_strings.dart';
 import '../../resources/screens/resources_screen.dart' show kResourceTypeCount;
 
 class DashboardScreen extends ConsumerWidget {
@@ -18,6 +20,7 @@ class DashboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(courseLangProvider);
     final auth = ref.watch(authProvider);
     final user = auth.user;
     final hasAccess = auth.hasAccess;
@@ -34,7 +37,7 @@ class DashboardScreen extends ConsumerWidget {
     // ensureFamilyProfilesForUser and app/actions/profiles.ts's
     // createDefaultProfileForUser), so it's a safe, always-correct source for
     // BOTH individual and family plans.
-    final firstName = _firstName(activeProfile?.displayName ?? user?.name);
+    final firstName = _firstName(activeProfile?.displayName ?? user?.name, lang);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -47,9 +50,9 @@ class DashboardScreen extends ConsumerWidget {
           children: [
             const AppLogo(size: 28, borderRadius: 8),
             const SizedBox(width: 10),
-            const Flexible(
+            Flexible(
               child: Text(
-                'Complete Seerah',
+                t(lang, 'welcomeTitleLine1'),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -62,7 +65,7 @@ class DashboardScreen extends ConsumerWidget {
             padding: const EdgeInsets.only(right: 10),
             child: Semantics(
               button: true,
-              label: 'Profile',
+              label: t(lang, 'profile'),
               child: InkResponse(
                 onTap: () {
                   if (profilesState != null &&
@@ -146,26 +149,26 @@ class DashboardScreen extends ConsumerWidget {
                         children: [
                           _InlineStat(
                             value: '${PARTS.length}',
-                            label: 'Parts',
+                            label: t(lang, 'partsLabel'),
                             color: AppColors.gold,
                           ),
                           _StatDivider(),
                           _InlineStat(
                             value: '${ERAS.length}',
-                            label: 'Eras',
+                            label: t(lang, 'eras'),
                             color: AppColors.success,
                           ),
                           _StatDivider(),
                           _InlineStat(
                             value: '$kResourceTypeCount',
-                            label: 'Resources',
+                            label: t(lang, 'resources'),
                             color: const Color(0xFF5A90B0),
                           ),
                           _StatDivider(),
-                          const _InlineStat(
+                          _InlineStat(
                             value: '∞',
-                            label: 'Reference',
-                            color: Color(0xFF4AA87E),
+                            label: t(lang, 'reference'),
+                            color: const Color(0xFF4AA87E),
                           ),
                         ],
                       ),
@@ -173,26 +176,26 @@ class DashboardScreen extends ConsumerWidget {
                         children: [
                           _InlineStat(
                             value: '${PARTS.length}',
-                            label: 'Parts',
+                            label: t(lang, 'partsLabel'),
                             color: AppColors.gold,
                           ),
                           _StatDivider(),
                           _InlineStat(
                             value: '${ERAS.length}',
-                            label: 'Eras',
+                            label: t(lang, 'eras'),
                             color: AppColors.success,
                           ),
                           _StatDivider(),
                           _InlineStat(
                             value: '$kResourceTypeCount',
-                            label: 'Resources',
+                            label: t(lang, 'resources'),
                             color: const Color(0xFF5A90B0),
                           ),
                           _StatDivider(),
-                          const _InlineStat(
+                          _InlineStat(
                             value: '∞',
-                            label: 'Reference',
-                            color: Color(0xFF4AA87E),
+                            label: t(lang, 'reference'),
+                            color: const Color(0xFF4AA87E),
                           ),
                         ],
                       ),
@@ -200,26 +203,26 @@ class DashboardScreen extends ConsumerWidget {
                         children: [
                           _InlineStat(
                             value: '${progress.totalViewed}',
-                            label: 'Studied',
+                            label: t(lang, 'studied'),
                             color: AppColors.gold,
                           ),
                           _StatDivider(),
                           _InlineStat(
                             value: '${progress.totalCompleted}',
-                            label: 'Completed',
+                            label: t(lang, 'completed'),
                             color: AppColors.success,
                           ),
                           _StatDivider(),
                           _InlineStat(
                             value: '$kResourceTypeCount',
-                            label: 'Resources',
+                            label: t(lang, 'resources'),
                             color: const Color(0xFF5A90B0),
                           ),
                           _StatDivider(),
-                          const _InlineStat(
+                          _InlineStat(
                             value: '∞',
-                            label: 'Reference',
-                            color: Color(0xFF4AA87E),
+                            label: t(lang, 'reference'),
+                            color: const Color(0xFF4AA87E),
                           ),
                         ],
                       ),
@@ -228,23 +231,24 @@ class DashboardScreen extends ConsumerWidget {
                 ),
 
                 // ── Continue learning ──────────────────────────────────────────
-                const SectionHeader(
-                  title: 'Continue Learning',
-                  subtitle: 'Pick up where you left off',
+                SectionHeader(
+                  title: t(lang, 'continueLearningTitle'),
+                  subtitle: t(lang, 'pickUpWhereLeftOff'),
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: _ContinueLearningCard(
                     hasAccess: hasAccess,
                     progressAsync: progressAsync,
+                    lang: lang,
                   ).animate(delay: 120.ms).fadeIn(duration: 400.ms),
                 ),
 
                 // ── Quick access ───────────────────────────────────────────────
-                const SectionHeader(title: 'Quick Access'),
+                SectionHeader(title: t(lang, 'quickAccess')),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: _QuickAccessGrid()
+                  child: _QuickAccessGrid(lang: lang)
                       .animate(delay: 160.ms)
                       .fadeIn(duration: 400.ms),
                 ),
@@ -254,7 +258,7 @@ class DashboardScreen extends ConsumerWidget {
                   const SizedBox(height: 16),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: _UpgradeBanner()
+                    child: _UpgradeBanner(lang: lang)
                         .animate(delay: 200.ms)
                         .fadeIn(duration: 400.ms),
                   ),
@@ -262,11 +266,12 @@ class DashboardScreen extends ConsumerWidget {
 
                 // ── Era overview ───────────────────────────────────────────────
                 SectionHeader(
-                  title: 'Course Overview',
-                  subtitle: 'All ${ERAS.length} eras of the Seerah',
+                  title: t(lang, 'courseOverview'),
+                  subtitle: tv(lang, 'allErasOfSeerah', {'n': ERAS.length}),
                 ),
                 _EraOverviewList(
                   hasAccess: hasAccess,
+                  lang: lang,
                 ).animate(delay: 240.ms).fadeIn(duration: 400.ms),
               ],
             ),
@@ -276,21 +281,22 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
-  String _firstName(String? name) {
-    if (name == null || name.isEmpty) return 'Student';
+  String _firstName(String? name, String lang) {
+    if (name == null || name.isEmpty) return t(lang, 'student');
     return name.trim().split(' ').first;
   }
 }
 
 // ── Welcome hero card ─────────────────────────────────────────────────────────
 
-class _WelcomeCard extends StatelessWidget {
+class _WelcomeCard extends ConsumerWidget {
   final String firstName;
   final bool hasAccess;
   const _WelcomeCard({required this.firstName, required this.hasAccess});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(courseLangProvider);
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: AppDecorations.goldHero(),
@@ -299,7 +305,7 @@ class _WelcomeCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const GoldBadge('Complete Seerah'),
+              GoldBadge(t(lang, 'welcomeTitleLine1')),
               const Spacer(),
               Text(
                 '✦',
@@ -312,7 +318,7 @@ class _WelcomeCard extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'As-salamu alaykum,',
+            t(lang, 'assalamAlaykum'),
             style: const TextStyle(
               color: AppColors.textSecondary,
               fontSize: 13,
@@ -339,8 +345,8 @@ class _WelcomeCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   hasAccess
-                      ? 'Continue your journey through the life of the Prophet ﷺ.'
-                      : 'Part 1 is free — begin the Seerah today.',
+                      ? t(lang, 'dashboardIntro')
+                      : t(lang, 'dashboardFreeIntro'),
                   style: const TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 13,
@@ -363,21 +369,21 @@ class _WelcomeCard extends StatelessWidget {
                         color: AppColors.success.withValues(alpha: 0.3),
                       ),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.check_circle_rounded,
                           color: AppColors.success,
                           size: 11,
                         ),
-                        SizedBox(width: 3),
+                        const SizedBox(width: 3),
                         Flexible(
                           child: Text(
-                            'Full Access',
+                            t(lang, 'fullAccess'),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: AppColors.success,
                               fontSize: 10,
                               fontWeight: FontWeight.w700,
@@ -402,9 +408,11 @@ class _WelcomeCard extends StatelessWidget {
 class _ContinueLearningCard extends StatelessWidget {
   final bool hasAccess;
   final AsyncValue<ProgressState> progressAsync;
+  final String lang;
   const _ContinueLearningCard({
     required this.hasAccess,
     required this.progressAsync,
+    required this.lang,
   });
 
   @override
@@ -435,10 +443,10 @@ class _ContinueLearningCard extends StatelessWidget {
     final locked = !hasAccess && nextPartNum > 1;
 
     final label = isFirstVisit
-        ? (hasAccess ? 'Start here' : 'Free — Start Here')
+        ? (hasAccess ? t(lang, 'startHere') : t(lang, 'freeStartHere'))
         : locked
-        ? 'Resume — Unlock to Continue'
-        : (nextPartNum == partNum ? 'Continue' : 'Up next');
+        ? t(lang, 'resumeUnlockContinue')
+        : (nextPartNum == partNum ? t(lang, 'continueLabel') : t(lang, 'upNext'));
 
     return Material(
       color: Colors.transparent,
@@ -477,7 +485,7 @@ class _ContinueLearningCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '$label — ${nextPart.era}',
+                      '$label — ${_eraName(nextPart.era, lang)}',
                       style: const TextStyle(
                         color: AppColors.gold,
                         fontSize: 11,
@@ -488,7 +496,7 @@ class _ContinueLearningCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      nextPart.title,
+                      nextPart.localizedTitle(lang),
                       style: const TextStyle(
                         color: AppColors.textPrimary,
                         fontSize: 15,
@@ -499,7 +507,7 @@ class _ContinueLearningCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      nextPart.subtitle,
+                      nextPart.localizedSubtitle(lang),
                       style: const TextStyle(
                         color: AppColors.textSecondary,
                         fontSize: 12,
@@ -536,28 +544,41 @@ class _ContinueLearningCard extends StatelessWidget {
   }
 }
 
+/// Looks up an era's localized display name from its id (as stored on
+/// [PartModel.era]) — falls back to the raw id if a new era is ever added
+/// to PARTS without a matching ERAS entry.
+String _eraName(String eraId, String lang) {
+  for (final era in ERAS) {
+    if (era.id == eraId) return era.localizedName(lang);
+  }
+  return eraId;
+}
+
 // ── Quick access grid ─────────────────────────────────────────────────────────
 
 class _QuickAccessGrid extends StatelessWidget {
+  final String lang;
+  const _QuickAccessGrid({required this.lang});
+
   @override
   Widget build(BuildContext context) {
     final items = [
-      (Icons.menu_book_rounded, 'Lessons', '/course', AppColors.gold),
+      (Icons.menu_book_rounded, t(lang, 'lessons'), '/course', AppColors.gold),
       (
         Icons.folder_rounded,
-        'Resources',
+        t(lang, 'resources'),
         '/resources',
         const Color(0xFF5A90B0),
       ),
       (
         Icons.library_books_rounded,
-        'Reference',
+        t(lang, 'reference'),
         '/reference',
         const Color(0xFF4AA87E),
       ),
       (
         Icons.insights_rounded,
-        'My Progress',
+        t(lang, 'myProgress'),
         '/progress',
         const Color(0xFFB08040),
       ),
@@ -673,6 +694,9 @@ class _StatDivider extends StatelessWidget {
 // ── Upgrade banner ────────────────────────────────────────────────────────────
 
 class _UpgradeBanner extends StatelessWidget {
+  final String lang;
+  const _UpgradeBanner({required this.lang});
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -698,7 +722,7 @@ class _UpgradeBanner extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'Unlock All ${PARTS.length} Parts',
+                  tv(lang, 'unlockAllParts', {'n': PARTS.length}),
                   style: const TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 16,
@@ -709,9 +733,9 @@ class _UpgradeBanner extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          const Text(
-            'Get lifetime access to the full Seerah course — videos, reading notes, flashcards, and quizzes for every part.',
-            style: TextStyle(
+          Text(
+            t(lang, 'unlockAllPartsBody'),
+            style: const TextStyle(
               color: AppColors.textSecondary,
               fontSize: 13,
               height: 1.4,
@@ -724,7 +748,7 @@ class _UpgradeBanner extends StatelessWidget {
               // push, not go — consistent with every other "View Plans" /
               // paywall entry point in the app.
               onPressed: () => context.push('/pricing'),
-              child: const Text('View Plans'),
+              child: Text(t(lang, 'viewPlans')),
             ),
           ),
         ],
@@ -737,7 +761,8 @@ class _UpgradeBanner extends StatelessWidget {
 
 class _EraOverviewList extends StatelessWidget {
   final bool hasAccess;
-  const _EraOverviewList({required this.hasAccess});
+  final String lang;
+  const _EraOverviewList({required this.hasAccess, required this.lang});
 
   @override
   Widget build(BuildContext context) {
@@ -791,7 +816,7 @@ class _EraOverviewList extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  era.name,
+                                  era.localizedName(lang),
                                   style: const TextStyle(
                                     color: AppColors.textPrimary,
                                     fontSize: 14,
@@ -801,7 +826,7 @@ class _EraOverviewList extends StatelessWidget {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                                 Text(
-                                  '${parts.length} parts',
+                                  tv(lang, 'nPartsSuffix', {'n': parts.length}),
                                   style: TextStyle(
                                     color: color,
                                     fontSize: 12,

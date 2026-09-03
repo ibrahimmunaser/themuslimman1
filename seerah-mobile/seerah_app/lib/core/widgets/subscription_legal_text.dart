@@ -1,7 +1,10 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../constants/app_constants.dart';
+import '../providers/part_provider.dart';
 import '../theme/app_colors.dart';
+import '../../l10n/app_strings.dart';
 
 /// Auto-renewal / subscription-terms disclosure required by Apple Guideline
 /// 3.1.2(c) — shared by every purchase surface (landing + pricing) so a
@@ -12,7 +15,7 @@ import '../theme/app_colors.dart';
 /// plan tiles (in the viewport a reviewer/user sees *before* scrolling past
 /// the Buy buttons) and the full version further down the page for anyone
 /// who wants the complete text.
-class SubscriptionLegalText extends StatefulWidget {
+class SubscriptionLegalText extends ConsumerStatefulWidget {
   final void Function(String url) onOpenUrl;
   final bool compact;
   const SubscriptionLegalText({
@@ -22,10 +25,10 @@ class SubscriptionLegalText extends StatefulWidget {
   });
 
   @override
-  State<SubscriptionLegalText> createState() => _SubscriptionLegalTextState();
+  ConsumerState<SubscriptionLegalText> createState() => _SubscriptionLegalTextState();
 }
 
-class _SubscriptionLegalTextState extends State<SubscriptionLegalText> {
+class _SubscriptionLegalTextState extends ConsumerState<SubscriptionLegalText> {
   static const _baseUrl = AppConstants.baseUrl;
   late final TapGestureRecognizer _privacyRecognizer;
   late final TapGestureRecognizer _termsRecognizer;
@@ -48,6 +51,7 @@ class _SubscriptionLegalTextState extends State<SubscriptionLegalText> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(courseLangProvider);
     final style = TextStyle(
       color: AppColors.textMuted,
       fontSize: widget.compact ? 10.5 : 11,
@@ -59,17 +63,7 @@ class _SubscriptionLegalTextState extends State<SubscriptionLegalText> {
       decorationColor: AppColors.textSecondary,
     );
 
-    final bodyText = widget.compact
-        ? 'Monthly plans are auto-renewing subscriptions that renew unless '
-            'cancelled 24h before the period ends. Lifetime plans are '
-            'one-time purchases. Manage or cancel in your App Store or '
-            'Google Play account settings. '
-        : 'Monthly is an auto-renewing 1-month subscription that renews '
-            'unless cancelled at least 24 hours before the end of the current '
-            'period. Lifetime is a one-time, non-renewing purchase. Manage or '
-            'cancel a subscription in your App Store or Google Play account '
-            'settings. Payment will be charged to your store account upon '
-            'purchase confirmation. ';
+    final bodyText = t(lang, widget.compact ? 'subLegalCompact' : 'subLegalFull');
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -80,13 +74,13 @@ class _SubscriptionLegalTextState extends State<SubscriptionLegalText> {
           children: [
             TextSpan(text: bodyText),
             TextSpan(
-              text: 'Privacy Policy',
+              text: t(lang, 'privacyPolicyTitle'),
               style: linkStyle,
               recognizer: _privacyRecognizer,
             ),
             const TextSpan(text: '  ·  '),
             TextSpan(
-              text: 'Terms of Use (EULA)',
+              text: t(lang, 'termsOfUseTitle'),
               style: linkStyle,
               recognizer: _termsRecognizer,
             ),

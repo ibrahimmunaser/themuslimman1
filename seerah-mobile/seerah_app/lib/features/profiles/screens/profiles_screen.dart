@@ -3,11 +3,13 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/models/profile_model.dart';
+import '../../../core/providers/part_provider.dart';
 import '../../../core/providers/profiles_provider.dart';
 import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/system_insets.dart';
 import '../../../core/widgets/ui_kit.dart';
+import '../../../l10n/app_strings.dart';
 
 // ── Profile picker (Netflix-style) ────────────────────────────────────────────
 
@@ -25,17 +27,18 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
   @override
   Widget build(BuildContext context) {
     final profilesAsync = ref.watch(profilesProvider);
+    final lang = ref.watch(courseLangProvider);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        title: Text(_managing ? 'Manage Profiles' : 'Who\'s Learning?'),
+        title: Text(_managing ? t(lang, 'manageProfiles') : t(lang, 'whosLearning')),
         actions: [
           TextButton(
             onPressed: () => setState(() => _managing = !_managing),
             child: Text(
-              _managing ? 'Done' : 'Edit',
+              _managing ? t(lang, 'done') : t(lang, 'edit'),
               style: const TextStyle(
                 color: AppColors.gold,
                 fontWeight: FontWeight.w600,
@@ -53,7 +56,7 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
         child: SafeArea(
           bottom: false,
           child: profilesAsync.when(
-            data: (state) => _buildGrid(state),
+            data: (state) => _buildGrid(state, lang),
             loading: () => const Center(child: CircularProgressIndicator.adaptive()),
             error: (e, _) => Center(
               child: Column(
@@ -61,12 +64,12 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
                 children: [
                   const Icon(Icons.error_outline, color: AppColors.textMuted, size: 40),
                   const SizedBox(height: 12),
-                  const Text('Could not load profiles',
-                      style: TextStyle(color: AppColors.textSecondary)),
+                  Text(t(lang, 'couldNotLoadProfiles'),
+                      style: const TextStyle(color: AppColors.textSecondary)),
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () => ref.invalidate(profilesProvider),
-                    child: const Text('Retry'),
+                    child: Text(t(lang, 'retry')),
                   ),
                 ],
               ),
@@ -77,7 +80,7 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
     );
   }
 
-  Widget _buildGrid(ProfilesState state) {
+  Widget _buildGrid(ProfilesState state, String lang) {
     final profiles = state.profiles;
     final items = [
       ...profiles,
@@ -87,11 +90,11 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
     return Column(
       children: [
         if (_managing)
-          const Padding(
-            padding: EdgeInsets.fromLTRB(24, 4, 24, 0),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 4, 24, 0),
             child: Text(
-              'Tap a profile to rename or remove it.',
-              style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+              t(lang, 'tapProfileToRenameRemove'),
+              style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
               textAlign: TextAlign.center,
             ),
           ),
@@ -110,20 +113,22 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
               final profile = items[i];
               if (profile == null) {
                 return _AddProfileTile(
-                  onTap: () => _showAddDialog(context, ref),
+                  lang: lang,
+                  onTap: () => _showAddDialog(context, ref, lang),
                 ).animate().fadeIn(duration: 300.ms, delay: (i * 60).ms);
               }
               return _ProfileTile(
                 profile: profile,
                 managing: _managing,
+                lang: lang,
                 onTap: () {
                   if (_managing) {
-                    _showEditSheet(context, ref, profile, state);
+                    _showEditSheet(context, ref, profile, state, lang);
                   } else {
                     _selectProfile(context, ref, profile);
                   }
                 },
-                onLongPress: () => _showEditSheet(context, ref, profile, state),
+                onLongPress: () => _showEditSheet(context, ref, profile, state, lang),
               ).animate().fadeIn(duration: 300.ms, delay: (i * 60).ms);
             },
           ),
@@ -160,17 +165,17 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
     else context.go('/dashboard');
   }
 
-  Future<void> _showAddDialog(BuildContext context, WidgetRef ref) async {
+  Future<void> _showAddDialog(BuildContext context, WidgetRef ref, String lang) async {
     final controller = TextEditingController();
     try {
-      await _showAddDialogInner(context, ref, controller);
+      await _showAddDialogInner(context, ref, controller, lang);
     } finally {
       controller.dispose();
     }
   }
 
   Future<void> _showAddDialogInner(
-      BuildContext context, WidgetRef ref, TextEditingController controller) async {
+      BuildContext context, WidgetRef ref, TextEditingController controller, String lang) async {
     String? selectedAvatar = '📖';
 
     final confirmed = await showDialog<bool>(
@@ -178,8 +183,8 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setState) => AlertDialog(
           backgroundColor: AppColors.card,
-          title: const Text('New Learner Profile',
-            style: TextStyle(color: AppColors.textPrimary, fontSize: 17, fontWeight: FontWeight.w700)),
+          title: Text(t(lang, 'newLearnerProfile'),
+            style: const TextStyle(color: AppColors.textPrimary, fontSize: 17, fontWeight: FontWeight.w700)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -187,12 +192,12 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
               Wrap(
                 spacing: 8, runSpacing: 8,
                 children: [
-                  ('📖', 'Book'), ('🌙', 'Moon'), ('⭐', 'Star'), ('🌸', 'Flower'),
-                  ('🕌', 'Mosque'), ('🦁', 'Lion'), ('🌿', 'Leaf'), ('🎯', 'Target'),
-                  ('🏆', 'Trophy'), ('💫', 'Sparkle'),
+                  ('📖', 'avatarBook'), ('🌙', 'avatarMoon'), ('⭐', 'avatarStar'), ('🌸', 'avatarFlower'),
+                  ('🕌', 'avatarMosque'), ('🦁', 'avatarLion'), ('🌿', 'avatarLeaf'), ('🎯', 'avatarTarget'),
+                  ('🏆', 'avatarTrophy'), ('💫', 'avatarSparkle'),
                 ].map((e) {
                   final emoji = e.$1;
-                  final label = e.$2;
+                  final labelKey = e.$2;
                   final selected = selectedAvatar == emoji;
                   // A bare GestureDetector+emoji gives VoiceOver/TalkBack no
                   // indication this is a tappable, selectable option — just
@@ -202,7 +207,7 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
                   return Semantics(
                     button: true,
                     selected: selected,
-                    label: '$label avatar',
+                    label: tv(lang, 'avatarLabelSuffix', {'label': t(lang, labelKey)}),
                     child: GestureDetector(
                       onTap: () => setState(() => selectedAvatar = emoji),
                       child: Container(
@@ -234,7 +239,7 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
                 maxLength: 50,
                 style: const TextStyle(color: AppColors.textPrimary),
                 decoration: InputDecoration(
-                  hintText: 'Learner name',
+                  hintText: t(lang, 'learnerName'),
                   hintStyle: const TextStyle(color: AppColors.textMuted),
                   filled: true,
                   fillColor: AppColors.border.withValues(alpha: 0.3),
@@ -250,11 +255,11 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+              child: Text(t(lang, 'cancel'), style: const TextStyle(color: AppColors.textSecondary)),
             ),
             TextButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Add', style: TextStyle(color: AppColors.gold, fontWeight: FontWeight.w700)),
+              child: Text(t(lang, 'add'), style: const TextStyle(color: AppColors.gold, fontWeight: FontWeight.w700)),
             ),
           ],
         ),
@@ -272,13 +277,13 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
     }
   }
 
-  void _showEditSheet(BuildContext context, WidgetRef ref, ProfileModel profile, ProfilesState state) {
+  void _showEditSheet(BuildContext context, WidgetRef ref, ProfileModel profile, ProfilesState state, String lang) {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.card,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (ctx) => _ProfileEditSheet(profile: profile, state: state),
+      builder: (ctx) => _ProfileEditSheet(profile: profile, state: state, lang: lang),
     );
   }
 }
@@ -288,12 +293,14 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
 class _ProfileTile extends StatelessWidget {
   final ProfileModel profile;
   final bool managing;
+  final String lang;
   final VoidCallback onTap;
   final VoidCallback onLongPress;
 
   const _ProfileTile({
     required this.profile,
     required this.managing,
+    required this.lang,
     required this.onTap,
     required this.onLongPress,
   });
@@ -375,7 +382,7 @@ class _ProfileTile extends StatelessWidget {
           ),
           if (profile.partsStudied > 0)
             Text(
-              '${profile.partsStudied} parts',
+              tv(lang, 'nPartsSuffix', {'n': profile.partsStudied}),
               style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
             ),
         ],
@@ -387,7 +394,8 @@ class _ProfileTile extends StatelessWidget {
 
 class _AddProfileTile extends StatelessWidget {
   final VoidCallback onTap;
-  const _AddProfileTile({required this.onTap});
+  final String lang;
+  const _AddProfileTile({required this.onTap, required this.lang});
 
   @override
   Widget build(BuildContext context) {
@@ -414,8 +422,8 @@ class _AddProfileTile extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            const Text('Add Profile',
-              style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+            Text(t(lang, 'addProfile'),
+              style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
               textAlign: TextAlign.center,
             ),
           ],
@@ -430,7 +438,8 @@ class _AddProfileTile extends StatelessWidget {
 class _ProfileEditSheet extends ConsumerStatefulWidget {
   final ProfileModel profile;
   final ProfilesState state;
-  const _ProfileEditSheet({required this.profile, required this.state});
+  final String lang;
+  const _ProfileEditSheet({required this.profile, required this.state, required this.lang});
 
   @override
   ConsumerState<_ProfileEditSheet> createState() => _ProfileEditSheetState();
@@ -454,6 +463,7 @@ class _ProfileEditSheetState extends ConsumerState<_ProfileEditSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = widget.lang;
     final canDelete = !widget.profile.isDefault && widget.state.profiles.length > 1;
     return Padding(
       // Audit H10 fix: MediaQuery.paddingOf(context).bottom alone can report
@@ -475,7 +485,7 @@ class _ProfileEditSheetState extends ConsumerState<_ProfileEditSheet> {
               decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2))),
           ),
           const SizedBox(height: 18),
-          Text('Edit Profile',
+          Text(t(lang, 'editProfile'),
             style: const TextStyle(color: AppColors.textPrimary, fontSize: 17, fontWeight: FontWeight.w700)),
           const SizedBox(height: 16),
           TextField(
@@ -483,7 +493,7 @@ class _ProfileEditSheetState extends ConsumerState<_ProfileEditSheet> {
             maxLength: 50,
             style: const TextStyle(color: AppColors.textPrimary),
             decoration: InputDecoration(
-              labelText: 'Name',
+              labelText: t(lang, 'name'),
               labelStyle: const TextStyle(color: AppColors.textMuted),
               filled: true,
               fillColor: AppColors.border.withValues(alpha: 0.2),
@@ -510,7 +520,7 @@ class _ProfileEditSheetState extends ConsumerState<_ProfileEditSheet> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
                 onPressed: _save,
-                child: const Text('Save', style: TextStyle(fontWeight: FontWeight.w700)),
+                child: Text(t(lang, 'save'), style: const TextStyle(fontWeight: FontWeight.w700)),
               ),
             ),
             if (canDelete) ...[
@@ -524,7 +534,7 @@ class _ProfileEditSheetState extends ConsumerState<_ProfileEditSheet> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                   onPressed: _confirmDelete,
-                  child: const Text('Delete Profile'),
+                  child: Text(t(lang, 'deleteProfile')),
                 ),
               ),
             ],
@@ -551,23 +561,24 @@ class _ProfileEditSheetState extends ConsumerState<_ProfileEditSheet> {
   }
 
   Future<void> _confirmDelete() async {
+    final lang = widget.lang;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.card,
-        title: const Text('Delete Profile?',
-          style: TextStyle(color: AppColors.textPrimary)),
+        title: Text(t(lang, 'deleteProfileQuestion'),
+          style: const TextStyle(color: AppColors.textPrimary)),
         content: Text(
-          'This will permanently delete "${widget.profile.displayName}" and all their progress.',
+          tv(lang, 'deleteProfileWarning', {'name': widget.profile.displayName}),
           style: const TextStyle(color: AppColors.textSecondary)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+            child: Text(t(lang, 'cancel'), style: const TextStyle(color: AppColors.textSecondary)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.red, fontWeight: FontWeight.w700)),
+            child: Text(t(lang, 'deleteProfile'), style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w700)),
           ),
         ],
       ),

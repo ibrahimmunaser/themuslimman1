@@ -3,12 +3,14 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:in_app_purchase_storekit/in_app_purchase_storekit.dart';
 import 'core/network/api_client.dart';
 import 'core/providers/auth_provider.dart';
 import 'core/providers/iap_provider.dart';
+import 'core/providers/part_provider.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_colors.dart';
 import 'core/theme/app_theme.dart';
@@ -120,12 +122,27 @@ class _SeerahAppState extends ConsumerState<SeerahApp>
       }
     });
 
+    // Drives app-wide RTL layout and locale (date/number formatting,
+    // Cupertino/Material widget text direction) — courseLangProvider is the
+    // single source of truth for language, already used by every
+    // content-fetching provider (see part_provider.dart), so the UI chrome
+    // now follows the exact same switch instead of staying English-only.
+    final lang = ref.watch(courseLangProvider);
+    final locale = Locale(lang);
+
     return MaterialApp.router(
       title: 'The Muslim Man',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.dark,
       scaffoldMessengerKey: _scaffoldMessengerKey,
       routerConfig: router,
+      locale: locale,
+      supportedLocales: const [Locale('en'), Locale('ar')],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       // Cap text scale to prevent accessibility font sizes from breaking
       // fixed-height layouts. 1.15x was so tight it effectively defeated
       // Dynamic Type (barely above default); 1.3x gives users who bumped
@@ -140,7 +157,16 @@ class _SeerahAppState extends ConsumerState<SeerahApp>
               maxScaleFactor: 1.3,
             ),
           ),
-          child: child!,
+          // Directionality wraps the whole router/navigator tree so every
+          // screen — not just ones that individually opted into `dir:`
+          // handling — mirrors into RTL for Arabic (nav bar order, AppBar
+          // back-button side, Row/Padding start/end resolution, etc.),
+          // matching how the web app already flips wholesale via `dir` on
+          // <html> in app/layout.tsx.
+          child: Directionality(
+            textDirection: lang == 'ar' ? TextDirection.rtl : TextDirection.ltr,
+            child: child!,
+          ),
         );
       },
     );

@@ -7,6 +7,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/iap_provider.dart';
+import '../../../core/providers/part_provider.dart';
 import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/system_insets.dart';
@@ -15,6 +16,7 @@ import '../../../core/widgets/adaptive_icons.dart';
 import '../../../core/widgets/app_logo.dart';
 import '../../../core/widgets/ui_kit.dart';
 import '../../../core/widgets/webview_error_overlay.dart';
+import '../../../l10n/app_strings.dart';
 import '../widgets/auth_field.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -60,24 +62,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final prior = ref.read(authProvider);
     if (prior.isAnonymous && prior.hasAccess) {
       if (!mounted) return;
+      final lang = ref.read(courseLangProvider);
       final choice = await showDialog<String>(
         context: context,
         builder: (ctx) => AlertDialog(
           backgroundColor: AppColors.surface,
-          title: const Text('Purchase on this device'),
-          content: const Text(
-            'This guest session already has course access. Signing into a '
-            'different account will leave that purchase on the guest.\n\n'
-            'Create an account instead to keep your purchase, or cancel.',
-          ),
+          title: Text(t(lang, 'purchaseOnThisDevice')),
+          content: Text(t(lang, 'guestHasAccessWarning')),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, 'cancel'),
-              child: const Text('Cancel'),
+              child: Text(t(lang, 'cancel')),
             ),
             TextButton(
               onPressed: () => Navigator.pop(ctx, 'signup'),
-              child: const Text('Create Account'),
+              child: Text(t(lang, 'createAccount')),
             ),
           ],
         ),
@@ -126,6 +125,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(courseLangProvider);
     return Scaffold(
       body: AppGradientBackground(
         child: SafeArea(
@@ -147,7 +147,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     alignment: Alignment.topLeft,
                     child: IconButton(
                       icon: const BackIcon(size: 20),
-                      tooltip: 'Back',
+                      tooltip: t(lang, 'back'),
                       onPressed: () => context.canPop()
                           ? context.pop()
                           : context.go('/landing'),
@@ -160,13 +160,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       const AppLogo(size: 48),
                       const SizedBox(height: 20),
                       Text(
-                        'Sign in to Seerah',
+                        t(lang, 'signInToSeerah'),
                         style: Theme.of(context).textTheme.displayMedium,
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        'Sign in only if you already have access on another device. Purchasing does not require an account.',
+                        t(lang, 'signInOnlyIfAccess'),
                         style: Theme.of(context).textTheme.bodyMedium,
                         textAlign: TextAlign.center,
                       ),
@@ -177,22 +177,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                   // Fields
                   AuthField(
-                    label: 'Email',
+                    label: t(lang, 'email'),
                     controller: _emailCtrl,
                     keyboardType: TextInputType.emailAddress,
                     validator: (v) => (v == null || !v.contains('@'))
-                        ? 'Enter a valid email'
+                        ? t(lang, 'enterValidEmail')
                         : null,
                   ),
                   const SizedBox(height: 16),
                   AuthField(
-                    label: 'Password',
+                    label: t(lang, 'password'),
                     controller: _passCtrl,
                     obscure: true,
                     textInputAction: TextInputAction.done,
                     onFieldSubmitted: (_) => _submit(),
                     validator: (v) => (v == null || v.length < 8)
-                        ? 'Password must be at least 8 characters'
+                        ? t(lang, 'passwordMinChars')
                         : null,
                   ),
 
@@ -201,7 +201,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: () => _openForgotPassword(context),
-                      child: const Text('Forgot password?'),
+                      child: Text(t(lang, 'forgotPassword')),
                     ),
                   ),
 
@@ -241,7 +241,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ),
                             ),
                           )
-                        : const Text('Sign In'),
+                        : Text(t(lang, 'signIn')),
                   ),
 
                   const SizedBox(height: 24),
@@ -253,8 +253,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   // times left no way back to wherever the user started.
                   TextButton(
                     onPressed: () => context.push('/landing'),
-                    child: const Text(
-                      'Want to purchase? No account needed — view plans',
+                    child: Text(
+                      t(lang, 'wantToPurchaseNoAccount'),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -268,12 +268,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 }
 
-class _ForgotPasswordScreen extends StatefulWidget {
+class _ForgotPasswordScreen extends ConsumerStatefulWidget {
   @override
-  State<_ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
+  ConsumerState<_ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
-class _ForgotPasswordScreenState extends State<_ForgotPasswordScreen> {
+class _ForgotPasswordScreenState extends ConsumerState<_ForgotPasswordScreen> {
   late final WebViewController _ctrl;
   bool _loading = true;
   bool _hasError = false;
@@ -373,6 +373,7 @@ class _ForgotPasswordScreenState extends State<_ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(courseLangProvider);
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) async {
@@ -385,12 +386,12 @@ class _ForgotPasswordScreenState extends State<_ForgotPasswordScreen> {
           backgroundColor: AppColors.surface,
           leading: IconButton(
             icon: const BackIcon(size: 20),
-            tooltip: 'Back',
+            tooltip: t(lang, 'back'),
             onPressed: () => _handleBack(context),
           ),
-          title: const Text(
-            'Forgot Password',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+          title: Text(
+            t(lang, 'forgotPasswordTitle'),
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
           ),
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(1),

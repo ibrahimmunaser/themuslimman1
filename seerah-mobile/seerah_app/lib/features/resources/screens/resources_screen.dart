@@ -10,33 +10,37 @@ import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/adaptive_icons.dart';
 import '../../../core/widgets/ui_kit.dart';
+import '../../../l10n/app_strings.dart';
 
 // ── Resource type definitions ─────────────────────────────────────────────────
 
 class _ResourceType {
   final String id;
-  final String title;
-  final String description;
+  final String titleKey;
+  final String descKey;
   final IconData icon;
   final Color color;
   final bool requiresAccess;
   final bool showThumbnails;
   const _ResourceType({
     required this.id,
-    required this.title,
-    required this.description,
+    required this.titleKey,
+    required this.descKey,
     required this.icon,
     required this.color,
     this.requiresAccess = true,
     this.showThumbnails = false,
   });
+
+  String title(String lang) => t(lang, titleKey);
+  String description(String lang) => t(lang, descKey);
 }
 
 const _resourceTypes = [
   _ResourceType(
     id: 'video',
-    title: 'Videos',
-    description: 'Watch each part as a full video lesson',
+    titleKey: 'videos',
+    descKey: 'watchFullVideoLesson',
     icon: Icons.play_circle_outline,
     color: Color(0xFF5A90B0),
     requiresAccess: false,
@@ -44,57 +48,57 @@ const _resourceTypes = [
   ),
   _ResourceType(
     id: 'audio',
-    title: 'Audio',
-    description: 'Listen to every lesson on the go',
+    titleKey: 'audio',
+    descKey: 'listenEveryLessonGo',
     icon: Icons.headphones_outlined,
     color: Color(0xFF9A7AB8),
   ),
   _ResourceType(
     id: 'briefing',
-    title: 'Briefings',
-    description: 'In-depth study notes for every part',
+    titleKey: 'briefings',
+    descKey: 'inDepthStudyNotes',
     icon: Icons.article_outlined,
     color: Color(0xFF4AA87E),
   ),
   _ResourceType(
     id: 'facts',
-    title: 'Key Facts',
-    description: 'Essential facts from each lesson, numbered',
+    titleKey: 'keyFacts',
+    descKey: 'essentialFactsNumbered',
     icon: Icons.format_list_numbered_rounded,
     color: Color(0xFF6AAE50),
   ),
   _ResourceType(
     id: 'slides',
-    title: 'Slides',
-    description: 'Detailed slide decks for every lesson',
+    titleKey: 'slides',
+    descKey: 'detailedSlideDecks',
     icon: Icons.view_carousel_outlined,
     color: Color(0xFFD4A017),
   ),
   _ResourceType(
     id: 'infographics',
-    title: 'Infographics',
-    description: 'Visual summary for each part',
+    titleKey: 'infographics',
+    descKey: 'visualSummaryEachPart',
     icon: Icons.auto_awesome_mosaic_outlined,
     color: Color(0xFFB08040),
   ),
   _ResourceType(
     id: 'mindmap',
-    title: 'Mindmaps',
-    description: 'Visual overviews connecting key concepts',
+    titleKey: 'mindmaps',
+    descKey: 'visualOverviewsConnecting',
     icon: Icons.account_tree_outlined,
     color: Color(0xFFC06060),
   ),
   _ResourceType(
     id: 'flashcards',
-    title: 'Flashcards',
-    description: 'Spaced-repetition flip cards for every lesson',
+    titleKey: 'flashcards',
+    descKey: 'spacedRepFlipCards',
     icon: Icons.style_outlined,
     color: Color(0xFF4AA87E),
   ),
   _ResourceType(
     id: 'quiz',
-    title: 'Quizzes',
-    description: 'Test your knowledge after each lesson',
+    titleKey: 'quizzes',
+    descKey: 'testKnowledgeAfterLesson',
     icon: Icons.quiz_outlined,
     color: Color(0xFFE8C040),
   ),
@@ -121,18 +125,19 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
   Widget build(BuildContext context) {
     final hasAccess = ref.watch(authProvider).hasAccess;
     final progress = ref.watch(progressProvider).valueOrNull;
+    final lang = ref.watch(courseLangProvider);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         title: _activeType == null
-            ? const Text('Resources')
-            : Text(_labelForType(_activeType!)),
+            ? Text(t(lang, 'resources'))
+            : Text(_labelForType(_activeType!, lang)),
         leading: _activeType != null
             ? IconButton(
                 icon: const BackIcon(),
-                tooltip: 'Back',
+                tooltip: t(lang, 'back'),
                 onPressed: () => setState(() => _activeType = null),
               )
             : null,
@@ -140,8 +145,8 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
       body: AppGradientBackground(
         child: SafeArea(
           child: _activeType == null
-              ? _buildIndex(hasAccess, progress)
-              : _buildPartsList(_activeType!, hasAccess, progress),
+              ? _buildIndex(hasAccess, progress, lang)
+              : _buildPartsList(_activeType!, hasAccess, progress, lang),
         ),
       ),
     );
@@ -149,20 +154,20 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
 
   // ── Index ─────────────────────────────────────────────────────────────────
 
-  Widget _buildIndex(bool hasAccess, ProgressState? progress) {
+  Widget _buildIndex(bool hasAccess, ProgressState? progress, String lang) {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
       children: [
         // Stats strip
         if (progress != null && progress.totalViewed > 0) ...[
-          _StatsStrip(progress: progress),
+          _StatsStrip(progress: progress, lang: lang),
           const SizedBox(height: 14),
         ],
 
         Padding(
           padding: const EdgeInsets.only(bottom: 14),
           child: Text(
-            '${_resourceTypes.length} resource types • ${PARTS.length} parts each',
+            tv(lang, 'resourceTypesStat', {'n': _resourceTypes.length, 'parts': PARTS.length}),
             style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
           ),
         ),
@@ -177,7 +182,7 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
               final locked = rt.requiresAccess && !hasAccess;
 
               // Count completion for this resource type
-              final badge = _badgeForType(rt.id, progress);
+              final badge = _badgeForType(rt.id, progress, lang);
 
               return Column(
                 children: [
@@ -211,7 +216,7 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(rt.title,
+                                  Text(rt.title(lang),
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
@@ -219,7 +224,7 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
                                       fontSize: 15,
                                       fontWeight: FontWeight.w600,
                                     )),
-                                  Text(rt.description,
+                                  Text(rt.description(lang),
                                     style: const TextStyle(
                                       color: AppColors.textMuted, fontSize: 12, height: 1.3),
                                     maxLines: 1, overflow: TextOverflow.ellipsis,
@@ -263,7 +268,7 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
 
   // ── Parts list ────────────────────────────────────────────────────────────
 
-  Widget _buildPartsList(String typeId, bool hasAccess, ProgressState? progress) {
+  Widget _buildPartsList(String typeId, bool hasAccess, ProgressState? progress, String lang) {
     final rt = _resourceTypes.firstWhere((r) => r.id == typeId);
 
     // Continue watching / last accessed for videos
@@ -283,7 +288,7 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: Text(
-              '${PARTS.length} parts  •  Tap any part to open ${rt.title.toLowerCase()}',
+              tv(lang, 'nPartsTapToOpen', {'n': PARTS.length, 'type': rt.title(lang).toLowerCase()}),
               style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
             ),
           );
@@ -296,6 +301,7 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
             padding: const EdgeInsets.only(bottom: 16),
             child: _ContinueWatchingCard(
               part: contPart,
+              lang: lang,
               onTap: () => context.push('/part/${contPart.partNumber}?tab=video'),
             ),
           );
@@ -353,13 +359,13 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(part.title,
+                              Text(part.localizedTitle(lang),
                                 style: TextStyle(
                                   color: locked ? AppColors.textSecondary : AppColors.textPrimary,
                                   fontSize: 14, fontWeight: FontWeight.w600),
                                 maxLines: 1, overflow: TextOverflow.ellipsis,
                               ),
-                              Text(part.subtitle,
+                              Text(part.localizedSubtitle(lang),
                                 style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
                                 maxLines: 1, overflow: TextOverflow.ellipsis,
                               ),
@@ -405,27 +411,28 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
     return progress.viewedParts.reduce((a, b) => a > b ? a : b);
   }
 
-  String? _badgeForType(String typeId, ProgressState? progress) {
+  String? _badgeForType(String typeId, ProgressState? progress, String lang) {
     if (progress == null) return null;
     final viewed = progress.totalViewed;
     if (viewed == 0) return null;
     if (typeId == 'quiz') {
       final passed = progress.totalCompleted;
       if (passed == 0) return null;
-      return '$passed passed';
+      return tv(lang, 'nPassed', {'n': passed});
     }
-    return '$viewed studied';
+    return tv(lang, 'nViewedStudied', {'n': viewed});
   }
 
-  String _labelForType(String id) =>
-      _resourceTypes.firstWhere((r) => r.id == id).title;
+  String _labelForType(String id, String lang) =>
+      _resourceTypes.firstWhere((r) => r.id == id).title(lang);
 }
 
 // ── Stats strip ───────────────────────────────────────────────────────────────
 
 class _StatsStrip extends StatelessWidget {
   final ProgressState progress;
-  const _StatsStrip({required this.progress});
+  final String lang;
+  const _StatsStrip({required this.progress, required this.lang});
 
   @override
   Widget build(BuildContext context) {
@@ -439,11 +446,11 @@ class _StatsStrip extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          Expanded(child: _Stat('${progress.totalViewed}', 'Studied')),
+          Expanded(child: _Stat('${progress.totalViewed}', t(lang, 'studied'))),
           _StatDivider(),
-          Expanded(child: _Stat('${progress.totalCompleted}', 'Completed')),
+          Expanded(child: _Stat('${progress.totalCompleted}', t(lang, 'completed'))),
           _StatDivider(),
-          Expanded(child: _Stat('${progress.quizScores.length}', 'Quizzes')),
+          Expanded(child: _Stat('${progress.quizScores.length}', t(lang, 'quizzesLabel'))),
         ],
       ),
     );
@@ -480,7 +487,8 @@ class _StatDivider extends StatelessWidget {
 class _ContinueWatchingCard extends StatelessWidget {
   final dynamic part;
   final VoidCallback onTap;
-  const _ContinueWatchingCard({required this.part, required this.onTap});
+  final String lang;
+  const _ContinueWatchingCard({required this.part, required this.onTap, required this.lang});
 
   @override
   Widget build(BuildContext context) {
@@ -518,15 +526,15 @@ class _ContinueWatchingCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Continue Watching',
-                      style: TextStyle(color: AppColors.textMuted, fontSize: 11, letterSpacing: 0.4)),
+                    Text(t(lang, 'continueWatching'),
+                      style: const TextStyle(color: AppColors.textMuted, fontSize: 11, letterSpacing: 0.4)),
                     const SizedBox(height: 2),
-                    Text(part.title as String,
+                    Text(part.localizedTitle(lang) as String,
                       style: const TextStyle(
                         color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w600),
                       maxLines: 1, overflow: TextOverflow.ellipsis,
                     ),
-                    Text('Part ${part.partNumber}  •  ${part.subtitle}',
+                    Text('${tv(lang, "partN", {"n": part.partNumber})}  •  ${part.localizedSubtitle(lang)}',
                       style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
                       maxLines: 1, overflow: TextOverflow.ellipsis,
                     ),

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers/part_provider.dart';
 import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../l10n/app_strings.dart';
 
 /// Full-screen pinch-to-zoom mindmap viewer.
 class MindmapTab extends ConsumerStatefulWidget {
@@ -37,6 +38,7 @@ class _MindmapTabState extends ConsumerState<MindmapTab> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(courseLangProvider);
     final assetsAsync = ref.watch(partAssetsProvider(widget.partNumber));
     final url = assetsAsync.valueOrNull?.mindmapUrl ?? widget.mindmapUrl;
 
@@ -50,13 +52,13 @@ class _MindmapTabState extends ConsumerState<MindmapTab> {
             decoration: const BoxDecoration(
               border: Border(bottom: BorderSide(color: AppColors.border)),
             ),
-            child: const Row(
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.pinch_rounded, color: AppColors.textMuted, size: 16),
-                SizedBox(width: 6),
-                Text('Pinch to zoom',
-                  style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                const Icon(Icons.pinch_rounded, color: AppColors.textMuted, size: 16),
+                const SizedBox(width: 6),
+                Text(t(lang, 'pinchToZoom'),
+                  style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
               ],
             ),
           ),
@@ -96,13 +98,13 @@ class _MindmapTabState extends ConsumerState<MindmapTab> {
                         const Icon(Icons.image_not_supported_outlined,
                             size: 48, color: AppColors.textMuted),
                         const SizedBox(height: 12),
-                        const Text('Mindmap unavailable',
-                          style: TextStyle(color: AppColors.textSecondary)),
+                        Text(t(lang, 'mindmapUnavailable'),
+                          style: const TextStyle(color: AppColors.textSecondary)),
                         const SizedBox(height: 16),
                         OutlinedButton.icon(
                           onPressed: _retry,
                           icon: const Icon(Icons.refresh, size: 18),
-                          label: const Text('Retry'),
+                          label: Text(t(lang, 'retry')),
                         ),
                       ],
                     ),

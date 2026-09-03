@@ -16,6 +16,7 @@ import '../widgets/slides_tab.dart';
 import '../widgets/audio_tab.dart';
 import '../widgets/mindmap_tab.dart';
 import '../widgets/infographics_tab.dart';
+import '../../../l10n/app_strings.dart';
 
 // ── Part overview screen ──────────────────────────────────────────────────────
 
@@ -69,34 +70,35 @@ class _PartScreenState extends ConsumerState<PartScreen> {
     // so the deep-link can retry via the authProvider listener.
     if (_isLocked) return;
     _autoOpenDone = true;
+    final lang = ref.read(courseLangProvider);
     final tab = widget.initialTab;
     switch (tab) {
       case 'video':
-        _open(context, title: 'Watch — Part $partNumber', child: VideoTab(partNumber: partNumber));
+        _open(context, title: tv(lang, 'watchPartN', {'n': partNumber}), child: VideoTab(partNumber: partNumber));
       case 'briefing':
-        _open(context, title: 'Briefing — Part $partNumber', child: ReadTab(partNumber: partNumber, initialSection: 0));
+        _open(context, title: tv(lang, 'briefingPartN', {'n': partNumber}), child: ReadTab(partNumber: partNumber, initialSection: 0));
       case 'facts':
-        _open(context, title: 'Key Facts — Part $partNumber', child: ReadTab(partNumber: partNumber, initialSection: 2));
+        _open(context, title: tv(lang, 'keyFactsPartN', {'n': partNumber}), child: ReadTab(partNumber: partNumber, initialSection: 2));
       case 'read':
-        _open(context, title: 'Read — Part $partNumber', child: ReadTab(partNumber: partNumber));
+        _open(context, title: tv(lang, 'readPartN', {'n': partNumber}), child: ReadTab(partNumber: partNumber));
       case 'flashcards':
-        _open(context, title: 'Flashcards — Part $partNumber', child: FlashcardsTab(partNumber: partNumber));
+        _open(context, title: tv(lang, 'flashcardsPartN', {'n': partNumber}), child: FlashcardsTab(partNumber: partNumber));
       case 'quiz':
-        _open(context, title: 'Quiz — Part $partNumber', child: QuizTab(partNumber: partNumber));
+        _open(context, title: tv(lang, 'quizPartN', {'n': partNumber}), child: QuizTab(partNumber: partNumber));
       case 'slides':
-        _open(context, title: 'Slides — Part $partNumber', child: SlidesTab(partNumber: partNumber, initialDeck: 1));
+        _open(context, title: tv(lang, 'slidesPartN', {'n': partNumber}), child: SlidesTab(partNumber: partNumber, initialDeck: 1));
       case 'infographics':
-        _open(context, title: 'Infographics — Part $partNumber', child: InfographicsTab(partNumber: partNumber));
+        _open(context, title: tv(lang, 'infographicsPartN', {'n': partNumber}), child: InfographicsTab(partNumber: partNumber));
       case 'audio':
         _openAssetWhenReady(
           urlGetter: (a) => a.audioUrl,
-          title: 'Audio — Part $partNumber',
-          builder: (url) => AudioTab(audioUrl: url, partNumber: partNumber, partTitle: PARTS.firstWhere((p) => p.partNumber == partNumber, orElse: () => PARTS.first).title),
+          title: tv(lang, 'audioPartN', {'n': partNumber}),
+          builder: (url) => AudioTab(audioUrl: url, partNumber: partNumber, partTitle: PARTS.firstWhere((p) => p.partNumber == partNumber, orElse: () => PARTS.first).localizedTitle(lang)),
         );
       case 'mindmap':
         _openAssetWhenReady(
           urlGetter: (a) => a.mindmapUrl,
-          title: 'Mindmap — Part $partNumber',
+          title: tv(lang, 'mindmapPartN', {'n': partNumber}),
           builder: (url) => MindmapTab(partNumber: partNumber, mindmapUrl: url),
         );
     }
@@ -154,16 +156,18 @@ class _PartScreenState extends ConsumerState<PartScreen> {
 
   void _notifyAssetUnavailable(String title) {
     if (!mounted) return;
+    final lang = ref.read(courseLangProvider);
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(
-        content: Text('$title isn\'t available right now. Please try again.'),
+        content: Text(tv(lang, 'assetNotAvailableGeneric', {'title': title})),
         backgroundColor: Colors.red.shade700,
       ));
   }
 
   @override
   Widget build(BuildContext context) {
+    final currentLang = ref.watch(courseLangProvider);
     final part = PARTS.firstWhere(
       (p) => p.partNumber == partNumber,
       orElse: () => PARTS.first,
@@ -204,7 +208,8 @@ class _PartScreenState extends ConsumerState<PartScreen> {
       return _PaywallScreen(
         partNumber: partNumber,
         eraColor: eraColor,
-        partTitle: part.title,
+        partTitle: part.localizedTitle(currentLang),
+        lang: currentLang,
       );
     }
 
@@ -223,7 +228,6 @@ class _PartScreenState extends ConsumerState<PartScreen> {
       return infographicsAsync.whenOrNull(data: (s) => s.hasAny) ?? isFreePart;
     }
 
-    final currentLang = ref.watch(courseLangProvider);
     final isRtl = currentLang == 'ar';
 
     return Directionality(
@@ -240,7 +244,7 @@ class _PartScreenState extends ConsumerState<PartScreen> {
             backgroundColor: AppColors.background,
             leading: IconButton(
               icon: const BackIcon(size: 20),
-              tooltip: 'Back',
+              tooltip: t(currentLang, 'back'),
               onPressed: () => context.pop(),
             ),
             actions: [
@@ -274,14 +278,14 @@ class _PartScreenState extends ConsumerState<PartScreen> {
                       children: [
                         Flexible(
                           child: _Pill(
-                            label: 'Part $partNumber',
+                            label: tv(currentLang, 'partN', {'n': partNumber}),
                             color: eraColor,
                           ),
                         ),
                         const SizedBox(width: 8),
                         Flexible(
                           child: _Pill(
-                            label: _eraName(part.era),
+                            label: _eraName(part.era, currentLang),
                             color: eraColor,
                             faint: true,
                           ),
@@ -290,7 +294,7 @@ class _PartScreenState extends ConsumerState<PartScreen> {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      part.title,
+                      part.localizedTitle(currentLang),
                       style: const TextStyle(
                         color: AppColors.textPrimary,
                         fontSize: 22,
@@ -302,7 +306,7 @@ class _PartScreenState extends ConsumerState<PartScreen> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      part.subtitle,
+                      part.localizedSubtitle(currentLang),
                       style: const TextStyle(
                         color: AppColors.textSecondary,
                         fontSize: 13,
@@ -322,21 +326,21 @@ class _PartScreenState extends ConsumerState<PartScreen> {
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 // Section label
-                _SectionLabel(text: 'Study Materials', color: eraColor),
+                _SectionLabel(text: t(currentLang, 'studyMaterials'), color: eraColor),
                 const SizedBox(height: 12),
 
                 // ── Video — full-width hero ──────────────────────────────
                 _AssetHero(
                   icon: Icons.play_circle_fill_rounded,
                   iconColor: const Color(0xFF5A90B0),
-                  title: 'Watch',
-                  subtitle: 'Full video lecture',
-                  description: 'Watch the complete lesson with visuals',
+                  title: t(currentLang, 'watch'),
+                  subtitle: t(currentLang, 'fullVideoLecture'),
+                  description: t(currentLang, 'watchCompleteLesson'),
                   accentColor: const Color(0xFF5A90B0),
                   available: assetAvailable((a) => a.videoUrl != null),
                   onTap: () => _open(
                     context,
-                    title: 'Watch — Part $partNumber',
+                    title: tv(currentLang, 'watchPartN', {'n': partNumber}),
                     child: VideoTab(partNumber: partNumber),
                   ),
                 ),
@@ -350,22 +354,23 @@ class _PartScreenState extends ConsumerState<PartScreen> {
                       child: _AssetCard(
                         icon: Icons.headphones_rounded,
                         iconColor: const Color(0xFF9A7AB8),
-                        title: 'Listen',
-                        subtitle: 'Audio lesson',
+                        title: t(currentLang, 'listen'),
+                        subtitle: t(currentLang, 'audioLesson'),
+                        notAvailableLabel: t(currentLang, 'notAvailable'),
                         available: assetAvailable((a) => a.audioUrl != null),
                         onTap: () {
                           final assets = assetsAsync.valueOrNull;
                           if (assets?.audioUrl != null) {
                             _open(
                               context,
-                              title: 'Listen — Part $partNumber',
-                              child: AudioTab(audioUrl: assets!.audioUrl!, partNumber: partNumber, partTitle: part.title),
+                              title: tv(currentLang, 'listenPartN', {'n': partNumber}),
+                              child: AudioTab(audioUrl: assets!.audioUrl!, partNumber: partNumber, partTitle: part.localizedTitle(currentLang)),
                             );
                           } else if (isFreePart) {
                             _openAssetWhenReady(
                               urlGetter: (a) => a.audioUrl,
-                              title: 'Listen — Part $partNumber',
-                              builder: (url) => AudioTab(audioUrl: url, partNumber: partNumber, partTitle: part.title),
+                              title: tv(currentLang, 'listenPartN', {'n': partNumber}),
+                              builder: (url) => AudioTab(audioUrl: url, partNumber: partNumber, partTitle: part.localizedTitle(currentLang)),
                             );
                           }
                         },
@@ -376,12 +381,13 @@ class _PartScreenState extends ConsumerState<PartScreen> {
                       child: _AssetCard(
                         icon: Icons.menu_book_rounded,
                         iconColor: const Color(0xFF4AA87E),
-                        title: 'Read',
-                        subtitle: 'Study notes',
+                        title: t(currentLang, 'read'),
+                        subtitle: t(currentLang, 'studyNotes'),
+                        notAvailableLabel: t(currentLang, 'notAvailable'),
                         available: true,
                         onTap: () => _open(
                           context,
-                          title: 'Read — Part $partNumber',
+                          title: tv(currentLang, 'readPartN', {'n': partNumber}),
                           child: ReadTab(partNumber: partNumber),
                         ),
                       ),
@@ -398,12 +404,13 @@ class _PartScreenState extends ConsumerState<PartScreen> {
                       child: _AssetCard(
                         icon: Icons.view_carousel_rounded,
                         iconColor: const Color(0xFFD4A017),
-                        title: 'Slides',
-                        subtitle: 'Visual presentation',
+                        title: t(currentLang, 'slides'),
+                        subtitle: t(currentLang, 'visualPresentation'),
+                        notAvailableLabel: t(currentLang, 'notAvailable'),
                         available: true,
                         onTap: () => _open(
                           context,
-                          title: 'Slides — Part $partNumber',
+                          title: tv(currentLang, 'slidesPartN', {'n': partNumber}),
                           child: SlidesTab(partNumber: partNumber),
                         ),
                       ),
@@ -413,12 +420,13 @@ class _PartScreenState extends ConsumerState<PartScreen> {
                       child: _AssetCard(
                         icon: Icons.auto_awesome_mosaic_outlined,
                         iconColor: const Color(0xFFB08040),
-                        title: 'Infographics',
-                        subtitle: 'Visual summary',
+                        title: t(currentLang, 'infographics'),
+                        subtitle: t(currentLang, 'visualSummary'),
+                        notAvailableLabel: t(currentLang, 'notAvailable'),
                         available: infographicAvailable(),
                         onTap: () => _open(
                           context,
-                          title: 'Infographics — Part $partNumber',
+                          title: tv(currentLang, 'infographicsPartN', {'n': partNumber}),
                           child: InfographicsTab(partNumber: partNumber),
                         ),
                       ),
@@ -431,21 +439,22 @@ class _PartScreenState extends ConsumerState<PartScreen> {
                 _AssetCard(
                   icon: Icons.account_tree_rounded,
                   iconColor: const Color(0xFFC06060),
-                  title: 'Mindmap',
-                  subtitle: 'Visual overview of key concepts',
+                  title: t(currentLang, 'mindmap'),
+                  subtitle: t(currentLang, 'visualOverviewConcepts'),
+                  notAvailableLabel: t(currentLang, 'notAvailable'),
                   available: assetAvailable((a) => a.mindmapUrl != null),
                   onTap: () {
                     final assets = assetsAsync.valueOrNull;
                     if (assets?.mindmapUrl != null) {
                       _open(
                         context,
-                        title: 'Mindmap — Part $partNumber',
+                        title: tv(currentLang, 'mindmapPartN', {'n': partNumber}),
                         child: MindmapTab(partNumber: partNumber, mindmapUrl: assets!.mindmapUrl!),
                       );
                     } else if (isFreePart) {
                       _openAssetWhenReady(
                         urlGetter: (a) => a.mindmapUrl,
-                        title: 'Mindmap — Part $partNumber',
+                        title: tv(currentLang, 'mindmapPartN', {'n': partNumber}),
                         builder: (url) => MindmapTab(partNumber: partNumber, mindmapUrl: url),
                       );
                     }
@@ -453,21 +462,21 @@ class _PartScreenState extends ConsumerState<PartScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                _SectionLabel(text: 'Practice & Review', color: eraColor),
+                _SectionLabel(text: t(currentLang, 'practiceReview'), color: eraColor),
                 const SizedBox(height: 12),
 
                 // ── Flashcards — full width ──────────────────────────────
                 _AssetHero(
                   icon: Icons.style_rounded,
                   iconColor: const Color(0xFF6AAE50),
-                  title: 'Flashcards',
-                  subtitle: 'Spaced-repetition cards',
-                  description: 'Review key facts with flip cards',
+                  title: t(currentLang, 'flashcards'),
+                  subtitle: t(currentLang, 'spacedRepetitionCards'),
+                  description: t(currentLang, 'reviewFlipCards'),
                   accentColor: const Color(0xFF6AAE50),
                   available: true,
                   onTap: () => _open(
                     context,
-                    title: 'Flashcards — Part $partNumber',
+                    title: tv(currentLang, 'flashcardsPartN', {'n': partNumber}),
                     child: FlashcardsTab(partNumber: partNumber),
                   ),
                 ),
@@ -477,14 +486,14 @@ class _PartScreenState extends ConsumerState<PartScreen> {
                 _AssetHero(
                   icon: Icons.quiz_rounded,
                   iconColor: const Color(0xFFE8C040),
-                  title: 'Quiz',
-                  subtitle: 'Test your knowledge',
-                  description: 'Multiple-choice questions with instant feedback',
+                  title: t(currentLang, 'quiz'),
+                  subtitle: t(currentLang, 'testYourKnowledge'),
+                  description: t(currentLang, 'mcqInstantFeedback'),
                   accentColor: const Color(0xFFE8C040),
                   available: true,
                   onTap: () => _open(
                     context,
-                    title: 'Quiz — Part $partNumber',
+                    title: tv(currentLang, 'quizPartN', {'n': partNumber}),
                     child: QuizTab(partNumber: partNumber),
                   ),
                 ),
@@ -492,20 +501,20 @@ class _PartScreenState extends ConsumerState<PartScreen> {
                 // ── Continue CTA (Part 1 only, no access) ───────────────
                 if (isFreePart && !hasAccess) ...[
                   const SizedBox(height: 28),
-                  _ContinueCTA(isLoggedIn: authState.isLoggedIn),
+                  _ContinueCTA(isLoggedIn: authState.isLoggedIn, lang: currentLang),
                 ],
 
                 // ── Up Next card ─────────────────────────────────────────
                 if (partNumber < PARTS.length && hasAccess) ...[
                   const SizedBox(height: 24),
-                  _UpNextCard(partNumber: partNumber),
+                  _UpNextCard(partNumber: partNumber, lang: currentLang),
                 ],
               ]),
             ),
           ),
         ],
       ),
-      bottomNavigationBar: _PartNavBar(partNumber: partNumber, hasAccess: hasAccess),
+      bottomNavigationBar: _PartNavBar(partNumber: partNumber, hasAccess: hasAccess, lang: currentLang),
     ),
     );
   }
@@ -518,29 +527,30 @@ class _PartScreenState extends ConsumerState<PartScreen> {
     );
   }
 
-  String _eraName(String era) {
+  String _eraName(String era, String lang) {
     final found = ERAS.where((e) => e.id == era).toList();
-    return found.isNotEmpty ? found.first.name : era;
+    return found.isNotEmpty ? found.first.localizedName(lang) : era;
   }
 }
 
 // ── Asset viewer screen ───────────────────────────────────────────────────────
 
-class _AssetViewerScreen extends StatelessWidget {
+class _AssetViewerScreen extends ConsumerWidget {
   final String title;
   final Widget child;
 
   const _AssetViewerScreen({required this.title, required this.child});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(courseLangProvider);
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.surface,
         leading: IconButton(
           icon: const BackIcon(size: 20),
-          tooltip: 'Back',
+          tooltip: t(lang, 'back'),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(title,
@@ -578,7 +588,7 @@ class _LangToggle extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          current == 'ar' ? 'اللغة' : 'LANGUAGE',
+          current == 'ar' ? t(current, 'language') : t(current, 'language').toUpperCase(),
           style: TextStyle(
             fontSize: current == 'ar' ? 12 : 9,
             fontWeight: FontWeight.w800,
@@ -847,8 +857,10 @@ class _AssetCard extends StatelessWidget {
   final String subtitle;
   final bool available;
   final VoidCallback onTap;
+  final String notAvailableLabel;
 
   const _AssetCard({
+    required this.notAvailableLabel,
     required this.icon,
     required this.iconColor,
     required this.title,
@@ -918,8 +930,8 @@ class _AssetCard extends StatelessWidget {
                     color: AppColors.textMuted.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: const Text('Not available',
-                    style: TextStyle(
+                  child: Text(notAvailableLabel,
+                    style: const TextStyle(
                       color: AppColors.textMuted,
                       fontSize: 10,
                     )),
@@ -940,11 +952,13 @@ class _PaywallScreen extends StatelessWidget {
   final int partNumber;
   final Color eraColor;
   final String partTitle;
+  final String lang;
 
   const _PaywallScreen({
     required this.partNumber,
     required this.eraColor,
     required this.partTitle,
+    required this.lang,
   });
 
   @override
@@ -953,10 +967,10 @@ class _PaywallScreen extends StatelessWidget {
       appBar: AppBar(
         leading: IconButton(
           icon: const BackIcon(size: 20),
-          tooltip: 'Back',
+          tooltip: t(lang, 'back'),
           onPressed: () => context.pop(),
         ),
-        title: Text('Part $partNumber'),
+        title: Text(tv(lang, 'partN', {'n': partNumber})),
       ),
       body: SafeArea(
         bottom: false,
@@ -988,7 +1002,7 @@ class _PaywallScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                'This part requires a full-access subscription.\nUnlock all ${PARTS.length} parts of the Seerah course.',
+                tv(lang, 'requiresFullAccessBody', {'n': PARTS.length}),
                 style: const TextStyle(
                   color: AppColors.textSecondary,
                   fontSize: 14,
@@ -1016,9 +1030,9 @@ class _PaywallScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text(
-                        'View Plans',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                      child: Text(
+                        t(lang, 'viewPlans'),
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                       ),
                     ),
                   );
@@ -1027,9 +1041,9 @@ class _PaywallScreen extends StatelessWidget {
               const SizedBox(height: 12),
               TextButton(
                 onPressed: () => context.pop(),
-                child: const Text(
-                  'Go Back',
-                  style: TextStyle(color: AppColors.textSecondary),
+                child: Text(
+                  t(lang, 'goBack'),
+                  style: const TextStyle(color: AppColors.textSecondary),
                 ),
               ),
               ],
@@ -1045,7 +1059,8 @@ class _PaywallScreen extends StatelessWidget {
 
 class _ContinueCTA extends StatelessWidget {
   final bool isLoggedIn;
-  const _ContinueCTA({required this.isLoggedIn});
+  final String lang;
+  const _ContinueCTA({required this.isLoggedIn, required this.lang});
 
   @override
   Widget build(BuildContext context) {
@@ -1061,7 +1076,7 @@ class _ContinueCTA extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Continue the full ${PARTS.length}-part course',
+            tv(lang, 'continueFullCourse', {'n': PARTS.length}),
             style: const TextStyle(
               color: AppColors.textPrimary,
               fontSize: 17,
@@ -1071,9 +1086,9 @@ class _ContinueCTA extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 10),
-          const Text(
-            'You started the path. Unlock the full course from \$9.99/month to continue the Seerah step by step.',
-            style: TextStyle(
+          Text(
+            t(lang, 'unlockFullAccessBody'),
+            style: const TextStyle(
               color: AppColors.textSecondary,
               fontSize: 13,
               height: 1.55,
@@ -1096,9 +1111,9 @@ class _ContinueCTA extends StatelessWidget {
               ),
               elevation: 0,
             ),
-            child: const Text(
-              'Unlock full access',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+            child: Text(
+              t(lang, 'unlockFullAccess'),
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
             ),
           ),
         ],
@@ -1111,7 +1126,8 @@ class _ContinueCTA extends StatelessWidget {
 
 class _UpNextCard extends StatelessWidget {
   final int partNumber;
-  const _UpNextCard({required this.partNumber});
+  final String lang;
+  const _UpNextCard({required this.partNumber, required this.lang});
 
   @override
   Widget build(BuildContext context) {
@@ -1154,14 +1170,14 @@ class _UpNextCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Up Next', style: TextStyle(color: AppColors.textMuted, fontSize: 11, letterSpacing: 0.5)),
+                  Text(t(lang, 'upNext'), style: const TextStyle(color: AppColors.textMuted, fontSize: 11, letterSpacing: 0.5)),
                   const SizedBox(height: 2),
-                  Text(next.title,
+                  Text(next.localizedTitle(lang),
                     style: const TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w600),
                     maxLines: 1, overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 2),
-                  Text(next.subtitle,
+                  Text(next.localizedSubtitle(lang),
                     style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
                     maxLines: 1, overflow: TextOverflow.ellipsis,
                   ),
@@ -1183,7 +1199,8 @@ class _UpNextCard extends StatelessWidget {
 class _PartNavBar extends StatelessWidget {
   final int partNumber;
   final bool hasAccess;
-  const _PartNavBar({required this.partNumber, required this.hasAccess});
+  final String lang;
+  const _PartNavBar({required this.partNumber, required this.hasAccess, required this.lang});
 
   @override
   Widget build(BuildContext context) {
@@ -1204,7 +1221,7 @@ class _PartNavBar extends StatelessWidget {
               child: OutlinedButton.icon(
                 onPressed: () => context.pushReplacement('/part/${partNumber - 1}'),
                 icon: const BackIcon(size: 14),
-                label: Text('Part ${partNumber - 1}'),
+                label: Text(tv(lang, 'partN', {'n': partNumber - 1})),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.textSecondary,
                   side: const BorderSide(color: AppColors.border),
@@ -1244,7 +1261,7 @@ class _PartNavBar extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('Part ${partNumber + 1}',
+                    Text(tv(lang, 'partN', {'n': partNumber + 1}),
                         style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: Colors.black)),
                     const SizedBox(width: 6),
                     const ForwardChevronIcon(size: 14, color: Colors.black),

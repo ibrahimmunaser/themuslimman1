@@ -6,6 +6,7 @@ import 'package:video_player/video_player.dart';
 import '../../../core/providers/part_provider.dart';
 import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../l10n/app_strings.dart';
 
 class VideoTab extends ConsumerWidget {
   final int partNumber;
@@ -24,16 +25,18 @@ class VideoTab extends ConsumerWidget {
       ),
       error: (e, _) => _ErrorState(
         message: partNumber == 1
-            ? 'Unable to load video.\nPlease check your connection and try again.'
-            : 'Unable to load video.\nMake sure you\'re signed in with an active subscription.',
+            ? t(lang, 'unableToLoadVideoConnection')
+            : t(lang, 'unableToLoadVideoSub'),
         onRetry: () => ref.invalidate(partAssetsProvider(partNumber)),
+        retryLabel: t(lang, 'retry'),
       ),
       data: (assets) {
         final url = assets.videoUrl;
         if (url == null || url.isEmpty) {
           return _ErrorState(
-            message: 'Video not available for this part yet.',
+            message: t(lang, 'videoNotAvailableYet'),
             onRetry: () => ref.invalidate(partAssetsProvider(partNumber)),
+            retryLabel: t(lang, 'retry'),
           );
         }
         // Arabic masters are 5K H.264 L6 — many devices drop the in-file audio.
@@ -44,6 +47,7 @@ class VideoTab extends ConsumerWidget {
           url: url,
           companionAudioUrl: companionAudio,
           partNumber: partNumber,
+          lang: lang,
         );
       },
     );
@@ -56,9 +60,11 @@ class _VideoPlayer extends ConsumerStatefulWidget {
   final String url;
   final String? companionAudioUrl;
   final int partNumber;
+  final String lang;
   const _VideoPlayer({
     required this.url,
     required this.partNumber,
+    required this.lang,
     this.companionAudioUrl,
   });
 
@@ -206,7 +212,7 @@ class _VideoPlayerState extends ConsumerState<_VideoPlayer> with WidgetsBindingO
         _disposeControllers();
         setState(() {
           _initializing = false;
-          _error = 'Video playback error. Please check your connection and try again.';
+          _error = t(widget.lang, 'videoPlaybackError');
         });
       });
       return;
@@ -313,10 +319,10 @@ class _VideoPlayerState extends ConsumerState<_VideoPlayer> with WidgetsBindingO
         // verbatim — on Android that's ExoPlayer's raw PlaybackException
         // text, e.g. "...HttpDataSource$InvalidResponseCodeException:
         // Response code: 403").
-        errorBuilder: (ctx, msg) => const Center(
+        errorBuilder: (ctx, msg) => Center(
           child: Text(
-            'Video playback error. Please check your connection and try again.',
-            style: TextStyle(color: Colors.white),
+            t(widget.lang, 'videoPlaybackError'),
+            style: const TextStyle(color: Colors.white),
             textAlign: TextAlign.center,
           ),
         ),
@@ -337,7 +343,7 @@ class _VideoPlayerState extends ConsumerState<_VideoPlayer> with WidgetsBindingO
       _disposeControllers();
       setState(() {
         _initializing = false;
-        _error = 'Could not initialize video player.';
+        _error = t(widget.lang, 'couldNotInitVideo');
       });
     }
   }
@@ -359,7 +365,7 @@ class _VideoPlayerState extends ConsumerState<_VideoPlayer> with WidgetsBindingO
       if (freshUrl == null || freshUrl.isEmpty) {
         setState(() {
           _initializing = false;
-          _error = 'Video not available for this part yet.';
+          _error = t(widget.lang, 'videoNotAvailableYet');
         });
         return;
       }
@@ -409,7 +415,7 @@ class _VideoPlayerState extends ConsumerState<_VideoPlayer> with WidgetsBindingO
       );
     }
     if (_error != null || _chewieCtrl == null) {
-      return _ErrorState(message: _error ?? 'Video unavailable', onRetry: _retryWithFreshUrl);
+      return _ErrorState(message: _error ?? t(widget.lang, 'videoUnavailable'), onRetry: _retryWithFreshUrl, retryLabel: t(widget.lang, 'retry'));
     }
 
     return Directionality(
@@ -432,7 +438,8 @@ class _VideoPlayerState extends ConsumerState<_VideoPlayer> with WidgetsBindingO
 class _ErrorState extends StatelessWidget {
   final String message;
   final VoidCallback onRetry;
-  const _ErrorState({required this.message, required this.onRetry});
+  final String retryLabel;
+  const _ErrorState({required this.message, required this.onRetry, required this.retryLabel});
 
   @override
   Widget build(BuildContext context) {
@@ -453,7 +460,7 @@ class _ErrorState extends StatelessWidget {
             OutlinedButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh, size: 18),
-              label: const Text('Retry'),
+              label: Text(retryLabel),
             ),
           ],
         ),

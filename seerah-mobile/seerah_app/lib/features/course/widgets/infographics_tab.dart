@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers/part_provider.dart';
 import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../l10n/app_strings.dart';
 
 /// Infographic viewer — concise, standard, and bento grid styles per part.
 class InfographicsTab extends ConsumerStatefulWidget {
@@ -49,6 +50,7 @@ class _InfographicsTabState extends ConsumerState<InfographicsTab> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(courseLangProvider);
     final infographicsAsync = ref.watch(infographicsProvider(widget.partNumber));
 
     return infographicsAsync.when(
@@ -59,16 +61,17 @@ class _InfographicsTabState extends ConsumerState<InfographicsTab> {
       ),
       error: (_, __) => _Unavailable(
         onRetry: () => ref.invalidate(infographicsProvider(widget.partNumber)),
+        lang: lang,
       ),
       data: (set) {
         if (!set.hasAny) {
-          return const _Unavailable();
+          return _Unavailable(lang: lang);
         }
 
         final styles = <({String id, String label, String? url})>[
-          if (set.standard?.isNotEmpty == true) (id: 'standard', label: 'Standard', url: set.standard),
-          if (set.concise?.isNotEmpty == true) (id: 'concise', label: 'Concise', url: set.concise),
-          if (set.bentoGrid?.isNotEmpty == true) (id: 'bentoGrid', label: 'Bento Grid', url: set.bentoGrid),
+          if (set.standard?.isNotEmpty == true) (id: 'standard', label: t(lang, 'standard'), url: set.standard),
+          if (set.concise?.isNotEmpty == true) (id: 'concise', label: t(lang, 'concise'), url: set.concise),
+          if (set.bentoGrid?.isNotEmpty == true) (id: 'bentoGrid', label: t(lang, 'bentoGrid'), url: set.bentoGrid),
         ];
 
         // Default to first available style if current selection is missing.
@@ -84,7 +87,7 @@ class _InfographicsTabState extends ConsumerState<InfographicsTab> {
 
         final imageUrl = active.url;
         if (imageUrl == null || imageUrl.isEmpty) {
-          return const _Unavailable();
+          return _Unavailable(lang: lang);
         }
 
         return Column(
@@ -137,13 +140,13 @@ class _InfographicsTabState extends ConsumerState<InfographicsTab> {
               ),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.pinch_rounded, color: AppColors.textMuted, size: 16),
-                  SizedBox(width: 6),
-                  Text('Pinch to zoom',
-                      style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                  const Icon(Icons.pinch_rounded, color: AppColors.textMuted, size: 16),
+                  const SizedBox(width: 6),
+                  Text(t(lang, 'pinchToZoom'),
+                      style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
                 ],
               ),
             ),
@@ -180,13 +183,13 @@ class _InfographicsTabState extends ConsumerState<InfographicsTab> {
                           const Icon(Icons.image_not_supported_outlined,
                               size: 48, color: AppColors.textMuted),
                           const SizedBox(height: 12),
-                          const Text('Infographic unavailable',
-                              style: TextStyle(color: AppColors.textSecondary)),
+                          Text(t(lang, 'infographicsUnavailable'),
+                              style: const TextStyle(color: AppColors.textSecondary)),
                           const SizedBox(height: 16),
                           OutlinedButton.icon(
                             onPressed: _retryImage,
                             icon: const Icon(Icons.refresh, size: 18),
-                            label: const Text('Retry'),
+                            label: Text(t(lang, 'retry')),
                           ),
                         ],
                       ),
@@ -204,7 +207,8 @@ class _InfographicsTabState extends ConsumerState<InfographicsTab> {
 
 class _Unavailable extends StatelessWidget {
   final VoidCallback? onRetry;
-  const _Unavailable({this.onRetry});
+  final String lang;
+  const _Unavailable({this.onRetry, required this.lang});
 
   @override
   Widget build(BuildContext context) {
@@ -215,14 +219,14 @@ class _Unavailable extends StatelessWidget {
           const Icon(Icons.auto_awesome_mosaic_outlined,
               size: 48, color: AppColors.textMuted),
           const SizedBox(height: 12),
-          const Text('Infographics unavailable',
-              style: TextStyle(color: AppColors.textSecondary)),
+          Text(t(lang, 'infographicsUnavailable'),
+              style: const TextStyle(color: AppColors.textSecondary)),
           if (onRetry != null) ...[
             const SizedBox(height: 16),
             OutlinedButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh, size: 18),
-              label: const Text('Retry'),
+              label: Text(t(lang, 'retry')),
             ),
           ],
         ],

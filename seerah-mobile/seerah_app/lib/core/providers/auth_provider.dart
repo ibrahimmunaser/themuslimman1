@@ -8,6 +8,7 @@ import '../constants/app_constants.dart';
 import '../models/user_model.dart';
 import '../network/api_client.dart';
 import '../network/cookie_helper.dart' as cookies;
+import '../../l10n/app_strings.dart';
 import 'part_provider.dart';
 import 'profiles_provider.dart';
 import 'progress_provider.dart';
@@ -89,6 +90,8 @@ class UpgradeAccountResult {
 
 class AuthNotifier extends StateNotifier<AuthState> {
   final Ref _ref;
+
+  String get _lang => _ref.read(courseLangProvider);
 
   // Guards against a slow/stale response from one auth-mutating call
   // clobbering `state` after a NEWER one has already completed. This can
@@ -331,10 +334,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await prefs.remove(key);
     }
     await _ref.read(progressProvider.notifier).clearAll();
-    state = const AuthState(
+    state = AuthState(
       isLoggedIn: false,
       isLoading: false,
-      sessionExpiredNotice: 'Your session expired. Please sign in again.',
+      sessionExpiredNotice: t(_lang, 'sessionExpiredNotice'),
     );
     _invalidatePartScopedProviders();
   }
@@ -400,11 +403,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
             // an earlier unrelated write — if seerah_session is in the jar,
             // the session is usable for this process.
             if (!cookies.hasSessionCookie()) {
+              final msg = t(_lang, 'signInFailedSaveSession');
               state = state.copyWith(
                 isLoading: false,
-                error: 'Sign-in failed to save session. Please try again.',
+                error: msg,
               );
-              return 'Sign-in failed to save session. Please try again.';
+              return msg;
             }
             // Wipe the platform WebView jar so a prior guest/other account's
             // injected billing cookie can't survive an in-place login switch.
@@ -425,15 +429,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
           // flight (e.g. a concurrent session-expiry `_beginOp`) — the cookie
           // was discarded and we must NOT report success. Returning null here
           // previously left the UI believing login worked with no session.
-          return 'Sign-in was interrupted. Please try again.';
+          return t(_lang, 'signInInterrupted');
         }
         if (_isCurrentOp(gen)) {
           state = state.copyWith(
             isLoading: false,
-            error: 'Login failed. Check your credentials.',
+            error: t(_lang, 'loginFailedCredentials'),
           );
         }
-        return 'Login failed. Check your credentials.';
+        return t(_lang, 'loginFailedCredentials');
       } catch (e) {
         final msg = _parseError(e);
         if (_isCurrentOp(gen)) {
@@ -540,7 +544,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
           if (!cookies.hasSessionCookie()) {
             state = state.copyWith(
               isLoading: false,
-              error: 'Could not start checkout. Please try again.',
+              error: t(_lang, 'couldNotStartCheckout'),
             );
             return false;
           }
@@ -561,7 +565,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       if (_isCurrentOp(gen)) {
         state = state.copyWith(
           isLoading: false,
-          error: 'Could not start checkout. Please try again.',
+          error: t(_lang, 'couldNotStartCheckout'),
         );
       }
       return false;
@@ -627,13 +631,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
           );
           if (_isCurrentOp(gen)) {
             if (!cookies.hasSessionCookie()) {
+              final msg = t(_lang, 'accountCreatedSessionFail');
               state = state.copyWith(
                 isLoading: false,
-                error: 'Account created but session failed to save. Please sign in.',
+                error: msg,
               );
               return UpgradeAccountResult(
                 success: false,
-                error: 'Account created but session failed to save. Please sign in.',
+                error: msg,
               );
             }
             await ApiClient.instance.clearWebViewCookies();
@@ -648,10 +653,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
           // Gen discarded (cookie may have been too) — do not report success.
           return UpgradeAccountResult(
             success: false,
-            error: 'Account upgrade was interrupted. Please try again.',
+            error: t(_lang, 'accountUpgradeInterrupted'),
           );
         }
-        final msg = data['error'] as String? ?? 'Could not create account.';
+        final msg = data['error'] as String? ?? t(_lang, 'couldNotCreateAccount');
         if (_isCurrentOp(gen)) {
           state = state.copyWith(isLoading: false, error: msg);
         }
@@ -702,7 +707,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         _invalidatePartScopedProviders();
         return null;
       }
-      return data['error'] as String? ?? 'Could not delete account.';
+      return data['error'] as String? ?? t(_lang, 'couldNotDeleteAccountGeneric');
     } catch (e) {
       return _parseError(e);
     }
@@ -783,7 +788,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
       final data = response.data as Map<String, dynamic>;
       if (data['success'] == true) return null;
-      return data['error'] as String? ?? 'Could not send verification email.';
+      return data['error'] as String? ?? t(_lang, 'couldNotSendVerificationEmail');
     } on DioException catch (e) {
       final data = e.response?.data;
       final serverMsg = data is Map ? data['error'] as String? : null;
@@ -808,9 +813,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final data = (e as dynamic).response?.data;
       if (data is Map)
-        return data['error'] as String? ?? 'Something went wrong.';
+        return data['error'] as String? ?? t(_lang, 'somethingWentWrong');
     } catch (_) {}
-    return 'Something went wrong. Please try again.';
+    return t(_lang, 'somethingWentWrongRetry');
   }
 }
 

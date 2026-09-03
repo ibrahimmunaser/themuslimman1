@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/iap_provider.dart';
+import '../../../core/providers/part_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/adaptive_icons.dart';
 import '../../../core/widgets/legal_web_screen.dart';
@@ -13,6 +14,7 @@ import '../../../core/widgets/subscription_legal_text.dart';
 import '../../../core/widgets/ui_kit.dart';
 import '../../../core/utils/refund_copy.dart';
 import '../../../core/utils/system_insets.dart';
+import '../../../l10n/app_strings.dart';
 
 // ── Plan model ────────────────────────────────────────────────────────────────
 
@@ -26,21 +28,21 @@ enum PlanId {
 class _Plan {
   final PlanId id;
   final String iapId;
-  final String name;
-  final String description;
+  final String nameKey;
+  final String descriptionKey;
   final String fallbackPrice;
-  final String period;
-  final String? badge;
+  final String periodKey;
+  final String? badgeKey;
   final bool isRecommended;
 
   const _Plan({
     required this.id,
     required this.iapId,
-    required this.name,
-    required this.description,
+    required this.nameKey,
+    required this.descriptionKey,
     required this.fallbackPrice,
-    required this.period,
-    this.badge,
+    required this.periodKey,
+    this.badgeKey,
     this.isRecommended = false,
   });
 }
@@ -49,20 +51,20 @@ const _plans = [
   _Plan(
     id: PlanId.individualLifetime,
     iapId: AppConstants.iapLifetimeIndividual,
-    name: 'Lifetime',
-    description: '1 learner • pay once, own forever',
+    nameKey: 'planLifetime',
+    descriptionKey: 'oneLearnerPayOnce',
     fallbackPrice: '\$${AppConstants.lifetimePrice}',
-    period: 'one-time',
-    badge: 'Most Popular',
+    periodKey: 'payOnce',
+    badgeKey: 'mostPopular',
     isRecommended: true,
   ),
   _Plan(
     id: PlanId.individualMonthly,
     iapId: AppConstants.iapMonthlyIndividual,
-    name: 'Monthly',
-    description: '1 learner • cancel anytime',
+    nameKey: 'planMonthly',
+    descriptionKey: 'oneLearnerCancelAnytime',
     fallbackPrice: '\$${AppConstants.monthlyPrice}',
-    period: '/month',
+    periodKey: 'perMonth',
   ),
 ];
 
@@ -110,6 +112,7 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
   }
 
   Future<void> _buyPlan(IAPState iap, _Plan plan) async {
+    final lang = ref.read(courseLangProvider);
     if (_buyTapInFlight ||
         iap.status == IAPStatus.purchasing ||
         iap.status == IAPStatus.verifying ||
@@ -117,7 +120,7 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
       return;
     }
     if (!iap.isAvailable) {
-      _snack(ref.read(iapProvider).unavailableProductMessage());
+      _snack(ref.read(iapProvider).unavailableProductMessage(lang));
       return;
     }
 
@@ -132,7 +135,7 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
           .resolveProductForPlan(plan.iapId);
       if (product == null) {
         if (mounted) setState(() => _purchasingPlanId = null);
-        _snack(ref.read(iapProvider).unavailableProductMessage());
+        _snack(ref.read(iapProvider).unavailableProductMessage(lang));
         return;
       }
 
@@ -148,7 +151,7 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
         ref.read(iapProvider.notifier).clearPurchaseIntent();
         if (mounted) setState(() => _purchasingPlanId = null);
         _snack(ref.read(authProvider).error ??
-            'Could not start checkout. Please try again.');
+            t(ref.read(courseLangProvider), 'couldNotStartCheckout'));
         return;
       }
 
@@ -157,7 +160,7 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
       final started = await ref.read(iapProvider.notifier).buy(product);
       if (!started) {
         if (mounted) setState(() => _purchasingPlanId = null);
-        _snack('A purchase is already being processed. Please wait for it to finish.');
+        _snack(t(ref.read(courseLangProvider), 'purchaseAlreadyProcessing'));
       }
     } finally {
       _buyTapInFlight = false;
@@ -187,12 +190,12 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
     if (next.status == IAPStatus.cancelled &&
         prev?.status == IAPStatus.purchasing) {
       if (mounted) setState(() => _purchasingPlanId = null);
-      _snack('Purchase cancelled.');
+      _snack(t(ref.read(courseLangProvider), 'purchaseCancelled'));
     }
     if (next.status == IAPStatus.restoreEmpty &&
         prev?.status != IAPStatus.restoreEmpty) {
       if (mounted) setState(() => _purchasingPlanId = null);
-      _snack('No previous purchases found to restore.');
+      _snack(t(ref.read(courseLangProvider), 'noPurchasesToRestore'));
       ref.read(iapProvider.notifier).clearError();
     }
   }
@@ -206,6 +209,8 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
       context.go('/signup');
       return;
     }
+
+    final lang = ref.read(courseLangProvider);
 
     showModalBottomSheet<void>(
       context: context,
@@ -233,18 +238,18 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                       color: Color(0xFF4CAF50), size: 32),
                 ),
                 const SizedBox(height: 20),
-                const Text(
-                  'JazakAllahu Khayran!',
-                  style: TextStyle(
+                Text(
+                  t(lang, 'jazakAllahKhayran'),
+                  style: const TextStyle(
                       color: AppColors.textPrimary,
                       fontSize: 22,
                       fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 10),
-                const Text(
-                  'Your purchase was successful. Full access has been unlocked. May Allah bless your learning.',
+                Text(
+                  t(lang, 'purchaseSuccessBody'),
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                       color: AppColors.textSecondary, fontSize: 15, height: 1.5),
                 ),
                 const SizedBox(height: 28),
@@ -261,8 +266,8 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),
-                  child: const Text('Start Learning',
-                      style: TextStyle(
+                  child: Text(t(lang, 'startLearning'),
+                      style: const TextStyle(
                           fontSize: 16, fontWeight: FontWeight.w700)),
                 ),
               ],
@@ -277,6 +282,7 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
   Widget build(BuildContext context) {
     ref.listen<IAPState>(iapProvider, _onIAP);
     final iap = ref.watch(iapProvider);
+    final lang = ref.watch(courseLangProvider);
     final busy = _buyTapInFlight ||
         iap.status == IAPStatus.purchasing ||
         iap.status == IAPStatus.verifying ||
@@ -313,16 +319,16 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                       padding: const EdgeInsets.only(right: 4),
                       child: IconButton(
                         icon: const BackIcon(size: 20),
-                        tooltip: 'Back',
+                        tooltip: t(lang, 'back'),
                         onPressed: () => context.pop(),
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
                       ),
                     ),
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'Choose your plan',
-                      style: TextStyle(
+                      t(lang, 'choosePlan'),
+                      style: const TextStyle(
                         color: AppColors.textPrimary,
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
@@ -356,7 +362,8 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
 
                     if (showRetry) ...[
                       _ProductRetryBanner(
-                        status: iap.storeStatusLabel,
+                        status: iap.storeStatusLabel(lang),
+                        lang: lang,
                         onRetry: () =>
                             ref.read(iapProvider.notifier).reloadProducts(),
                       ),
@@ -374,6 +381,7 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                       final plan = _plans[i];
                       return _PlanTile(
                         plan: plan,
+                        lang: lang,
                         price: _price(iap, plan),
                         isLoading: _purchasingPlanId == plan.id && busy,
                         enabled: !busy && !hasAccess,
@@ -387,7 +395,7 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
 
                     // ── Guarantee strip ───────────────────────────────────
                     Text(
-                      '${refundBadgeText()}  ·  Instant access  ·  Cancel anytime',
+                      '${refundBadgeText(lang)}  ·  ${t(lang, 'instantAccess')}  ·  ${t(lang, 'cancelAnytime')}',
                       textAlign: TextAlign.center,
                       style: const TextStyle(color: AppColors.textMuted, fontSize: 11.5),
                     ),
@@ -419,19 +427,19 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('What\'s included',
-                              style: TextStyle(
+                          Text(t(lang, 'whatsIncluded'),
+                              style: const TextStyle(
                                 color: AppColors.textPrimary,
                                 fontSize: 14,
                                 fontWeight: FontWeight.w700,
                               )),
                           const SizedBox(height: 10),
                           ...[
-                            (Icons.play_circle_outline_rounded, '100 structured video lessons'),
-                            (Icons.article_outlined, 'Reading notes & briefings'),
-                            (Icons.quiz_outlined, 'Quizzes & flashcards'),
-                            (Icons.insights_rounded, 'Progress tracking'),
-                            (Icons.all_inclusive_rounded, 'Lifetime access option available'),
+                            (Icons.play_circle_outline_rounded, t(lang, 'includedVideos')),
+                            (Icons.article_outlined, t(lang, 'includedNotes')),
+                            (Icons.quiz_outlined, t(lang, 'includedQuizzes')),
+                            (Icons.insights_rounded, t(lang, 'includedProgress')),
+                            (Icons.all_inclusive_rounded, t(lang, 'includedLifetime')),
                           ].map((item) => Padding(
                             padding: const EdgeInsets.only(bottom: 8),
                             child: Row(
@@ -456,6 +464,7 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
 
                     // ── Part 1 preview ────────────────────────────────────
                     _Part1PreviewSection(
+                      lang: lang,
                       // pushReplacement (not push) — this and Part 1's
                       // "Unlock full access" CTA form a two-screen loop; a
                       // plain push here would grow the back stack forever if
@@ -466,10 +475,10 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                     const SizedBox(height: 20),
 
                     // ── Bottom actions ────────────────────────────────────
-                    const Text(
-                      'No account required to purchase. Tap a plan to buy.',
+                    Text(
+                      t(lang, 'noAccountRequired'),
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: AppColors.textMuted,
                         fontSize: 12.5,
                         height: 1.4,
@@ -495,8 +504,8 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                               },
                         style: TextButton.styleFrom(
                             foregroundColor: AppColors.gold),
-                        child: const Text('Restore Purchases',
-                            style: TextStyle(
+                        child: Text(t(lang, 'restorePurchases'),
+                            style: const TextStyle(
                                 fontSize: 13, fontWeight: FontWeight.w600)),
                       ),
                     ),
@@ -505,22 +514,10 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                         onPressed: () => context.push('/login'),
                         style: TextButton.styleFrom(
                             foregroundColor: AppColors.textMuted),
-                        child: RichText(
-                          text: const TextSpan(
-                            style: TextStyle(
-                                fontSize: 12, color: AppColors.textMuted),
-                            children: [
-                              TextSpan(
-                                  text:
-                                      'Already learning on another device? '),
-                              TextSpan(
-                                text: 'Sign in',
-                                style: TextStyle(
-                                    color: AppColors.gold,
-                                    fontWeight: FontWeight.w600),
-                              ),
-                            ],
-                          ),
+                        child: Text(
+                          t(lang, 'alreadyLearningSignIn'),
+                          style: const TextStyle(
+                              fontSize: 12, color: AppColors.textMuted),
                         ),
                       ),
                     ),
@@ -549,6 +546,7 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
 
 class _PlanTile extends StatelessWidget {
   final _Plan plan;
+  final String lang;
   /// Null while the real store price is still loading — see [_price] doc
   /// comment (audit M-fallback-price). Renders a neutral placeholder
   /// instead of a stale hardcoded price in that window.
@@ -561,6 +559,7 @@ class _PlanTile extends StatelessWidget {
 
   const _PlanTile({
     required this.plan,
+    required this.lang,
     required this.price,
     required this.isLoading,
     required this.enabled,
@@ -625,7 +624,7 @@ class _PlanTile extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (plan.badge != null)
+                      if (plan.badgeKey != null)
                         Padding(
                           padding: const EdgeInsets.only(bottom: 6),
                           child: Container(
@@ -638,7 +637,7 @@ class _PlanTile extends StatelessWidget {
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
-                              plan.badge!,
+                              t(lang, plan.badgeKey!),
                               style: TextStyle(
                                 color: isRecommended
                                     ? Colors.black
@@ -651,7 +650,7 @@ class _PlanTile extends StatelessWidget {
                           ),
                         ),
                       Text(
-                        plan.name,
+                        t(lang, plan.nameKey),
                         style: const TextStyle(
                           color: AppColors.textPrimary,
                           fontSize: 15,
@@ -660,7 +659,7 @@ class _PlanTile extends StatelessWidget {
                       ),
                       const SizedBox(height: 3),
                       Text(
-                        plan.description,
+                        t(lang, plan.descriptionKey),
                         style: TextStyle(
                           color: isRecommended
                               ? AppColors.textSecondary
@@ -708,7 +707,7 @@ class _PlanTile extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          plan.period,
+                          t(lang, plan.periodKey),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -743,9 +742,10 @@ class _PlanTile extends StatelessWidget {
 // ── Part 1 preview section ────────────────────────────────────────────────────
 
 class _Part1PreviewSection extends StatelessWidget {
+  final String lang;
   final VoidCallback onWatch;
 
-  const _Part1PreviewSection({required this.onWatch});
+  const _Part1PreviewSection({required this.lang, required this.onWatch});
 
   @override
   Widget build(BuildContext context) {
@@ -779,22 +779,22 @@ class _Part1PreviewSection extends StatelessWidget {
                     color: AppColors.gold, size: 26),
               ),
               const SizedBox(width: 14),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Part 1 — Always Free',
-                      style: TextStyle(
+                      t(lang, 'part1AlwaysFree'),
+                      style: const TextStyle(
                         color: AppColors.textPrimary,
                         fontWeight: FontWeight.w700,
                         fontSize: 15,
                       ),
                     ),
-                    SizedBox(height: 3),
+                    const SizedBox(height: 3),
                     Text(
-                      'The Pre-Islamic Arabian Context · No account needed',
-                      style: TextStyle(
+                      t(lang, 'part1NoAccountNeeded'),
+                      style: const TextStyle(
                         color: AppColors.textSecondary,
                         fontSize: 12.5,
                         height: 1.4,
@@ -816,8 +816,9 @@ class _Part1PreviewSection extends StatelessWidget {
 
 class _ProductRetryBanner extends StatelessWidget {
   final String status;
+  final String lang;
   final VoidCallback onRetry;
-  const _ProductRetryBanner({required this.status, required this.onRetry});
+  const _ProductRetryBanner({required this.status, required this.lang, required this.onRetry});
 
   @override
   Widget build(BuildContext context) {
@@ -846,8 +847,8 @@ class _ProductRetryBanner extends StatelessWidget {
                 style: TextButton.styleFrom(
                     padding: EdgeInsets.zero,
                     minimumSize: const Size(48, 44)),
-                child: const Text('Retry',
-                    style: TextStyle(color: AppColors.gold, fontSize: 13)),
+                child: Text(t(lang, 'retry'),
+                    style: const TextStyle(color: AppColors.gold, fontSize: 13)),
               ),
             ],
           ),
@@ -859,10 +860,9 @@ class _ProductRetryBanner extends StatelessWidget {
           // unprofessional-looking) to a real App Store/Play Store customer
           // hitting a genuine transient network issue, and actively wrong
           // advice since they can't act on it from a real store install.
-          const Text(
-            'Check your internet connection, then tap Retry. If this keeps happening, '
-            'contact support@themuslimman.com.',
-            style: TextStyle(color: AppColors.textMuted, fontSize: 11.5, height: 1.4),
+          Text(
+            t(lang, 'checkConnectionRetry'),
+            style: const TextStyle(color: AppColors.textMuted, fontSize: 11.5, height: 1.4),
           ),
         ],
       ),
