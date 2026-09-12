@@ -33,6 +33,7 @@ import {
   r2GetMindmapKey,
   r2GetArabicVideoKey,
   r2GetArabicAudioKey,
+  r2GetFrenchVideoKey,
 } from "@/lib/r2";
 import type { CourseLang } from "@/lib/course-lang";
 
@@ -132,6 +133,66 @@ async function loadPartData(n: number, lang: CourseLang): Promise<CachedPartData
       slidesDetailedFiles: [],
       slidesFactsFiles: [],
       infConcise: infArKey,
+      infStandard: null,
+      infBento: null,
+      hasMindmap: !!mindmapKey,
+      infSignedConcise,
+      infSignedStandard: undefined,
+      infSignedBento: undefined,
+      videoUrl,
+      audioUrl,
+      mindmapUrl,
+      thumbnailUrl,
+      cachedAt: Date.now(),
+    };
+  }
+
+  if (lang === "fr") {
+    // French: deterministic video, single infographic, presented slides only.
+    // Audio falls back to English (no french/audio on R2). Mindmaps stay English.
+    const [
+      briefingText,
+      statementOfFactsText,
+      studyGuideText,
+      quizData,
+      flashcards,
+      slidesPresentedFiles,
+      infFrKey,
+      mindmapKey,
+      audioKey,
+    ] = await Promise.all([
+      readBriefing(n, "fr").catch(() => null),
+      readStatementOfFacts(n, "fr").catch(() => null),
+      readStudyGuide(n, "fr").catch(() => null),
+      readQuiz(n, "fr").catch(() => null),
+      readFlashcards(n, "fr").catch(() => null),
+      getSlideFiles(n, "presented", "fr").catch(() => []),
+      getInfographicFilename(n, "Concise", "fr").catch(() => null),
+      r2GetMindmapKey(n).catch(() => null),
+      r2GetAudioKey(n).catch(() => null),
+    ]);
+
+    const videoKey = r2GetFrenchVideoKey(n);
+
+    const [infSignedConcise, videoUrl, audioUrl, mindmapUrl, thumbnailUrl] = await Promise.all([
+      signImg(infFrKey, "Concise"),
+      generateSignedR2Url(videoKey, VIDEO_URL_EXPIRY).catch(() => undefined),
+      audioKey ? generateSignedR2Url(audioKey, VIDEO_URL_EXPIRY).catch(() => undefined) : Promise.resolve(undefined),
+      mindmapKey ? generateSignedR2Url(mindmapKey, IMAGE_URL_EXPIRY) : Promise.resolve(undefined),
+      getThumbnailUrl(n, "fr").catch(() => undefined),
+    ]);
+
+    return {
+      briefingText,
+      statementOfFactsText,
+      studyGuideText,
+      reportText: null,
+      quizData,
+      flashcards,
+      slidesPresentedFiles,
+      slidesDetailedFiles: [],
+      slidesFactsFiles: [],
+      infConcise: infFrKey,
       infStandard: null,
       infBento: null,
       hasMindmap: !!mindmapKey,

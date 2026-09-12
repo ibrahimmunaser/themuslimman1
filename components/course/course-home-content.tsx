@@ -10,6 +10,7 @@ import {
 import { PrefetchPartLink } from "@/components/course/prefetch-part-link";
 import { FadeUp, StaggerChildren, AnimatedCounter, AnimatedProgressBar, AnimatedCard } from "@/components/motion";
 import type { CourseLang } from "@/lib/course-lang";
+import { loc } from "@/lib/loc";
 import { t, tf } from "@/lib/ui-strings";
 
 export interface StageData {
@@ -96,9 +97,12 @@ export function CourseHomeContent({
 
               {isNewUser ? (
                 <p className="text-text-secondary text-sm leading-relaxed mb-4">
-                  {isRtl
-                    ? "ابدأ بفهم العالم الذي بُعث فيه النبي ﷺ، ثم تابع السيرة النبوية كقصة متكاملة."
-                    : "Begin with the world the Prophet ﷺ was sent into, then follow the Seerah as one connected story."}
+                  {loc(
+                    lang,
+                    "Begin with the world the Prophet ﷺ was sent into, then follow the Seerah as one connected story.",
+                    "ابدأ بفهم العالم الذي بُعث فيه النبي ﷺ، ثم تابع السيرة النبوية كقصة متكاملة.",
+                    "Commencez par comprendre le monde dans lequel le Prophète ﷺ a été envoyé, puis suivez la Sîra comme une histoire liée.",
+                  )}
                 </p>
               ) : (
                 currentPartSubtitle && (
@@ -234,9 +238,9 @@ export function CourseHomeContent({
             <p className="text-xs font-semibold uppercase tracking-widest text-text-muted mb-3">{t(lang, "currentStage")}</p>
             <p className="text-3xl font-bold text-text tabular-nums">
               <AnimatedCounter to={currentStageNumber} duration={600} />
-              <span className="text-text-muted font-normal text-xl"> {isRtl ? "من" : "of"} {stagesData.length}</span>
+              <span className="text-text-muted font-normal text-xl"> {loc(lang, "of", "من", "sur")} {stagesData.length}</span>
             </p>
-            <p className="text-xs text-text-muted mt-1 truncate">{currentStage?.label ?? (isRtl ? "جزيرة العرب قبل الإسلام" : "Arabia Before Revelation")}</p>
+            <p className="text-xs text-text-muted mt-1 truncate">{currentStage?.label ?? loc(lang, "Arabia Before Revelation", "جزيرة العرب قبل الإسلام", "Arabie avant la Révélation")}</p>
           </AnimatedCard>
 
           {/* Next Lesson */}
@@ -373,7 +377,7 @@ export function CourseHomeContent({
                   </span>
                   {isCurrent && (
                     <span className="px-1 py-0.5 bg-gold/15 border border-gold/30 text-gold text-[9px] font-bold rounded uppercase">
-                      {isRtl ? "الآن" : "Now"}
+                      {loc(lang, "Now", "الآن", "Maintenant")}
                     </span>
                   )}
                   {isDone && <CheckCircle2 className="w-3 h-3 text-green-400 ms-auto" />}

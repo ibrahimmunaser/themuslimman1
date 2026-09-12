@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Play } from "lucide-react";
 import { LangToggle } from "@/components/part/lang-toggle";
 import type { CourseLang } from "@/lib/course-lang";
+import { isRtlLang } from "@/lib/course-lang";
+import { loc } from "@/lib/loc";
 
 interface Part1PreviewData {
   title: string;
@@ -16,8 +18,9 @@ interface Part1PreviewData {
 
 function readLangCookie(): CourseLang {
   if (typeof document === "undefined") return "en";
-  const match = document.cookie.match(/(?:^|; )seerah_course_lang=(ar|en)/);
-  return match?.[1] === "ar" ? "ar" : "en";
+  const match = document.cookie.match(/(?:^|; )seerah_course_lang=(ar|en|fr)/);
+  if (match?.[1] === "ar" || match?.[1] === "fr") return match[1];
+  return "en";
 }
 
 export interface InlinePart1VideoProps {
@@ -67,7 +70,7 @@ export function InlinePart1Video({ checkoutUrl, checkoutLabel, hideCta = false, 
     }
   }
 
-  const isRtl = lang === "ar";
+  const isRtl = isRtlLang(lang);
 
   if (loading) {
     return (
@@ -88,10 +91,10 @@ export function InlinePart1Video({ checkoutUrl, checkoutLabel, hideCta = false, 
     return (
       <div className="rounded-2xl border border-border bg-surface p-6 text-center">
         <p className="text-sm text-text-secondary mb-3">
-          {isRtl ? "المعاينة غير متاحة مؤقتًا." : "Preview temporarily unavailable."}
+          {loc(lang, "Preview temporarily unavailable.", "المعاينة غير متاحة مؤقتًا.", "Aperçu temporairement indisponible.")}
         </p>
         <Link href="/watch-free" className="text-gold text-sm underline underline-offset-2 hover:text-gold/80">
-          {isRtl ? "افتح الجزء ١ في صفحة مستقلة ←" : "Open Part 1 on its own page →"}
+          {loc(lang, "Open Part 1 on its own page →", "افتح الجزء ١ في صفحة مستقلة ←", "Ouvrir la partie 1 sur sa propre page →")}
         </Link>
       </div>
     );
@@ -103,10 +106,10 @@ export function InlinePart1Video({ checkoutUrl, checkoutLabel, hideCta = false, 
       <div className="px-5 py-4 bg-surface-raised border-b border-border flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-bold text-gold uppercase tracking-widest mb-0.5">
-            {isRtl ? "معاينة كاملة — بدون تسجيل" : "Complete Preview — No Signup Required"}
+            {loc(lang, "Complete Preview — No Signup Required", "معاينة كاملة — بدون تسجيل", "Aperçu complet — sans inscription")}
           </p>
           <h3 className="text-base sm:text-lg font-bold text-text leading-snug">
-            {isRtl ? `الجزء ١: ${data.title}` : `Part 1: ${data.title}`}
+            {loc(lang, `Part 1: ${data.title}`, `الجزء ١: ${data.title}`, `Partie 1 : ${data.title}`)}
           </h3>
           {data.subtitle && (
             <p className="text-sm text-text-secondary mt-0.5 leading-snug">{data.subtitle}</p>
@@ -121,7 +124,7 @@ export function InlinePart1Video({ checkoutUrl, checkoutLabel, hideCta = false, 
             onChange={setLang}
           />
           <span className="text-xs font-bold bg-gold/15 border border-gold/30 text-gold px-2.5 py-1 rounded-full">
-            {isRtl ? "مجاني ١٠٠٪" : "100% Free"}
+            {loc(lang, "100% Free", "مجاني ١٠٠٪", "100 % gratuit")}
           </span>
         </div>
       </div>
@@ -131,7 +134,7 @@ export function InlinePart1Video({ checkoutUrl, checkoutLabel, hideCta = false, 
           <button
             onClick={() => { videoRef.current?.play(); }}
             className="absolute inset-0 z-10 flex items-center justify-center group"
-            aria-label={isRtl ? "تشغيل الجزء ١" : "Play Part 1"}
+            aria-label={loc(lang, "Play Part 1", "تشغيل الجزء ١", "Lire la partie 1")}
           >
             <img
               src={data.thumbnailUrl}
@@ -160,35 +163,28 @@ export function InlinePart1Video({ checkoutUrl, checkoutLabel, hideCta = false, 
 
       <div className="px-5 py-3 border-b border-border/40 bg-surface-raised/40 text-center">
         <p className="text-sm font-semibold text-text">
-          {isRtl ? (
-            <>كل درس يتبع مسارًا واحدًا: <span className="text-gold">شاهد ← ادرس ← راجع</span></>
-          ) : (
-            <>Every lesson follows one path: <span className="text-gold">Watch → Study → Review</span></>
-          )}
+          {loc(lang, "Every lesson follows one path:", "كل درس يتبع مسارًا واحدًا:", "Chaque leçon suit un parcours :")}{" "}
+          <span className="text-gold">{loc(lang, "Watch → Study → Review", "شاهد ← ادرس ← راجع", "Regarder → Étudier → Réviser")}</span>
         </p>
       </div>
 
       {!hideCta && (
         <div className="px-5 py-7 bg-surface text-center">
           <p className="text-base font-semibold text-text mb-1">
-            {isRtl ? "أعجبك الأسلوب؟ تابع المسار الكامل." : "Like this format? Continue the full 100-part path."}
+            {loc(lang, "Like this format? Continue the full 100-part path.", "أعجبك الأسلوب؟ تابع المسار الكامل.", "Vous aimez ce format ? Continuez le parcours complet en 100 parties.")}
           </p>
           <p className="text-sm text-text-secondary mb-5">
-            {isRtl
-              ? "كل درس بنفس البنية — فيديو وقراءة وبطاقات واختبار."
-              : "Every lesson follows the same structure — video, reading, flashcards, quiz."}
+            {loc(lang, "Every lesson follows the same structure — video, reading, flashcards, quiz.", "كل درس بنفس البنية — فيديو وقراءة وبطاقات واختبار.", "Chaque leçon suit la même structure — vidéo, lecture, flashcards, quiz.")}
           </p>
           <Link
             href={checkoutUrl}
             onClick={onUnlockClick}
             className="flex items-center justify-center w-full py-5 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-lg transition-colors shadow-lg shadow-gold/25 mb-2"
           >
-            {checkoutLabel ?? (isRtl ? "افتح الوصول الفردي — ٩٫٩٩$/شهر" : "Unlock Individual Access — $9.99/month")}
+            {checkoutLabel ?? loc(lang, "Unlock Individual Access — $9.99/month", "افتح الوصول الفردي — ٩٫٩٩$/شهر", "Débloquer l'accès individuel — 9,99 $/mois")}
           </Link>
           <p className="text-xs text-text-muted/70">
-            {isRtl
-              ? "دفع آمن · وصول فوري · ألغِ في أي وقت · ضمان ٧ أيام"
-              : "Secure checkout · Instant access · Cancel anytime · 7-day refund guarantee"}
+            {loc(lang, "Secure checkout · Instant access · Cancel anytime · 7-day refund guarantee", "دفع آمن · وصول فوري · ألغِ في أي وقت · ضمان ٧ أيام", "Paiement sécurisé · Accès immédiat · Annulez à tout moment · Garantie de 7 jours")}
           </p>
         </div>
       )}

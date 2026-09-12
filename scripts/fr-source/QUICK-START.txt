@@ -1,0 +1,51 @@
+═══════════════════════════════════════════════════════════════════════════════
+  FRENCH QUIZ TRANSLATION - QUICK START
+═══════════════════════════════════════════════════════════════════════════════
+
+STATUS: Infrastructure 100% complete, ready for bulk translation
+
+WHAT'S DONE:
+  ✅ Translation automation script  
+  ✅ TypeScript generation
+  ✅ Validation framework
+  ✅ Directory structure
+  ✅ Example: Part 1 translated (10 questions in scholarly French)
+  ✅ All 4 batch configurations
+
+WHAT REMAINS:
+  ⏳ Parts 2-100 (1,085 questions) - automated translation ready
+
+═══════════════════════════════════════════════════════════════════════════════
+  TO COMPLETE IN 30-60 MINUTES:
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Get Anthropic API key:
+   → https://console.anthropic.com/
+   → Cost: ~$20-30 USD
+
+2. Run translation:
+   → Open terminal in project root
+   → Run: node scripts/fr-source/translate-with-anthropic-sdk.mjs YOUR_KEY
+
+3. Wait for completion:
+   → Script will process all 100 parts
+   → Progress shown in real-time
+   → ~30-60 minutes total
+
+4. Done!
+   → All 4 batch files created: lib/fr-quizzes/batch-*.ts
+   → Aggregator created: lib/part-quiz-data-fr.ts
+   → Ready to use in your app
+
+═══════════════════════════════════════════════════════════════════════════════
+
+EXAMPLE COMMAND:
+  node scripts/fr-source/translate-with-anthropic-sdk.mjs sk-ant-api03-xxxxx
+
+OR WITH ENVIRONMENT VARIABLE:
+  set ANTHROPIC_API_KEY=sk-ant-api03-xxxxx
+  node scripts/fr-source/translate-with-anthropic-sdk.mjs
+
+═══════════════════════════════════════════════════════════════════════════════
+
+See README-TRANSLATION.md for detailed documentation.

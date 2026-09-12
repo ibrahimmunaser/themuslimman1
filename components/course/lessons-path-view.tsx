@@ -13,7 +13,19 @@ import {
 import type { Part } from "@/lib/types";
 import { ERA_MAP } from "@/lib/types";
 import type { CourseLang } from "@/lib/course-lang";
-import { t, tf, ERA_DESCRIPTIONS_AR } from "@/lib/ui-strings";
+import { loc } from "@/lib/loc";
+import { t, tf, ERA_DESCRIPTIONS_AR, ERA_DESCRIPTIONS_FR } from "@/lib/ui-strings";
+
+const ERA_LABELS_FR: Record<string, string> = {
+  "Pre-Islamic Arabia": "Arabie préislamique",
+  "Birth & Early Life": "Naissance et jeunesse",
+  "Beginning of Revelation": "Début de la Révélation",
+  "Makkah — Persecution": "La Mecque — Persécution",
+  "The Hijrah": "L'Hégire",
+  "Madinah Period": "Période médinoise",
+  "Major Campaigns": "Grandes campagnes",
+  "Final Years & Legacy": "Dernières années et héritage",
+};
 
 interface PartProgressData {
   status: string;
@@ -62,13 +74,21 @@ export function LessonsPathView({
     (acc, part) => {
       const eraInfo = ERA_MAP[part.era];
       const englishLabel = eraInfo?.label ?? part.era;
-      const displayLabel = isRtl ? (eraInfo?.labelAr ?? englishLabel) : englishLabel;
+      const displayLabel = loc(
+        lang,
+        englishLabel,
+        eraInfo?.labelAr ?? englishLabel,
+        ERA_LABELS_FR[englishLabel] ?? englishLabel,
+      );
       if (!acc[displayLabel]) {
         acc[displayLabel] = {
           label: displayLabel,
-          description: isRtl
-            ? (ERA_DESCRIPTIONS_AR[englishLabel] ?? "")
-            : (ERA_DESCRIPTIONS[englishLabel] ?? ""),
+          description: loc(
+            lang,
+            ERA_DESCRIPTIONS[englishLabel] ?? "",
+            ERA_DESCRIPTIONS_AR[englishLabel] ?? "",
+            ERA_DESCRIPTIONS_FR[englishLabel] ?? "",
+          ),
           color: eraInfo?.color ?? "#8B6F45",
           parts: [],
           completedCount: 0,
@@ -215,7 +235,7 @@ export function LessonsPathView({
                             {inProgress && !allCompleted && (
                               <span className="px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-medium rounded">{t(lang, "inProgress")}</span>
                             )}
-                            <span className="text-xs text-zinc-500">{tf(lang, "nParts", { n: era.totalCount, part: era.totalCount === 1 ? "part" : "parts" })}</span>
+                            <span className="text-xs text-zinc-500">{tf(lang, "nParts", { n: era.totalCount, part: loc(lang, era.totalCount === 1 ? "part" : "parts", "جزء", era.totalCount === 1 ? "partie" : "parties") })}</span>
                           </div>
                           <p className="text-sm text-zinc-400 mb-3">{era.description}</p>
                           <div className="flex items-center gap-3">

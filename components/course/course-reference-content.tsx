@@ -3,7 +3,7 @@
 import { useSearchParams, useRouter } from "next/navigation";
 import { BookOpen, ChevronRight, ChevronLeft, ArrowLeft, ArrowRight } from "lucide-react";
 import type { CourseLang } from "@/lib/course-lang";
-import { t } from "@/lib/ui-strings";
+import { t, tf } from "@/lib/ui-strings";
 import { FamilyHouseholdContent } from "@/components/reference/family-household-content";
 import { KeyPeopleContent } from "@/components/reference/key-people-content";
 import { TribesLineageContent } from "@/components/reference/tribes-lineage-content";
@@ -78,7 +78,7 @@ function ReferenceIndex({ onSelectSection, lang }: { onSelectSection: (slug: str
               </div>
 
               <div className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-gold group-hover:text-gold-light transition-colors">
-                {lang === "ar" ? `عرض ${cardTitle}` : `View ${cardTitle}`}
+                {tf(lang, "viewCard", { title: cardTitle })}
                 {lang === "ar" ? <ChevronLeft className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
               </div>
             </button>

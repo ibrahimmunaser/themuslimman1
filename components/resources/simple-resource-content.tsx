@@ -3,10 +3,11 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { getPartsForLang } from "@/lib/content";
 import type { CourseLang } from "@/lib/course-lang";
+import { loc } from "@/lib/loc";
 import { eraGradient } from "./era-gradient";
 import { ResourcePageClient } from "./resource-page-client";
 import { Headphones, Layers, Image as ImageIcon, Map, Brain, CheckCircle2, X, Maximize2, Minimize2, Lock } from "lucide-react";
-import { t } from "@/lib/ui-strings";
+import { t, tf } from "@/lib/ui-strings";
 import { SlidesViewer } from "@/components/part/slides-viewer";
 import { FlashcardsViewer } from "@/components/part/flashcards-viewer";
 import { trackAssetOpened } from "@/app/actions/progress";
@@ -176,7 +177,7 @@ export function SimpleResourceContent({
       }
 
       setIsLoadingSlides(true);
-      fetch(`/api/slides/${selectedPart.id}${lang === "ar" ? "?lang=ar" : ""}`)
+      fetch(`/api/slides/${selectedPart.id}${lang !== "en" ? `?lang=${lang}` : ""}`)
         .then(res => res.json())
         .then(data => {
           setSlideData(data);
@@ -203,7 +204,7 @@ export function SimpleResourceContent({
       }
 
       setIsLoadingFlashcards(true);
-      fetch(`/api/flashcards/${selectedPart.id}${lang === "ar" ? "?lang=ar" : ""}`)
+      fetch(`/api/flashcards/${selectedPart.id}${lang !== "en" ? `?lang=${lang}` : ""}`)
         .then(res => res.json())
         .then(data => {
           setFlashcardData(data);
@@ -231,7 +232,7 @@ export function SimpleResourceContent({
     } else if (selectedPart && resourceType === "infographic") {
       setIsLoadingResource(true);
       const n = selectedPart.partNumber;
-      fetch(`/api/infographics/${n}${lang === "ar" ? "?lang=ar" : ""}`)
+      fetch(`/api/infographics/${n}${lang !== "en" ? `?lang=${lang}` : ""}`)
         .then((res) => res.json())
         .then((data: { bentoGrid: string | null; concise: string | null; standard: string | null }) => {
           const bentoUrl    = data.bentoGrid ?? null;
@@ -317,22 +318,27 @@ export function SimpleResourceContent({
   const notCompletedCount = totalResources - localCompletedCount;
   const isRtl = lang === "ar";
 
-  // Derive translated title/description from resourceType when Arabic
-  const localTitle = isRtl
-    ? ({ slides: "الشرائح", infographic: "الرسوم المعلوماتية", mindmap: "الخرائط الذهنية", flashcard: "البطاقات التعليمية", audio: "الصوت" } as Record<string, string>)[resourceType] ?? title
-    : title;
-  const localDescription = isRtl
-    ? ({
-        slides: "٣ أشكال: مقدَّمة، مفصَّلة، معلومات",
-        infographic: "٣ أشكال: شبكية، موجزة، قياسية",
-        mindmap: "خرائط مرئية تربط الأشخاص والأحداث",
-        flashcard: "مجموعات سهلة ومتوسطة وصعبة",
-        audio: "النسخة الصوتية لكل درس",
-      } as Record<string, string>)[resourceType] ?? description
-    : description;
-  const localStatusLabel = isRtl
-    ? ({ View: "تمت المشاهدة", Viewed: "تمت المشاهدة", Study: "تمت الدراسة", Studied: "تمت الدراسة" } as Record<string, string>)[statusLabel] ?? statusLabel
-    : statusLabel;
+  const TITLE_AR: Record<string, string> = { slides: "الشرائح", infographic: "الرسوم المعلوماتية", mindmap: "الخرائط الذهنية", flashcard: "البطاقات التعليمية", audio: "الصوت" };
+  const TITLE_FR: Record<string, string> = { slides: "Diapositives", infographic: "Infographies", mindmap: "Cartes mentales", flashcard: "Flashcards", audio: "Audio" };
+  const DESC_AR: Record<string, string> = {
+    slides: "٣ أشكال: مقدَّمة، مفصَّلة، معلومات",
+    infographic: "٣ أشكال: شبكية، موجزة، قياسية",
+    mindmap: "خرائط مرئية تربط الأشخاص والأحداث",
+    flashcard: "مجموعات سهلة ومتوسطة وصعبة",
+    audio: "النسخة الصوتية لكل درس",
+  };
+  const DESC_FR: Record<string, string> = {
+    slides: "3 formats : Présenté, Détaillé, Faits",
+    infographic: "3 formats : Grille Bento, Concis, Standard",
+    mindmap: "Cartes visuelles reliant personnes et événements",
+    flashcard: "Jeux Facile, Moyen et Difficile",
+    audio: "Version audio de chaque leçon",
+  };
+  const STATUS_AR: Record<string, string> = { View: "تمت المشاهدة", Viewed: "تمت المشاهدة", Study: "تمت الدراسة", Studied: "تمت الدراسة" };
+  const STATUS_FR: Record<string, string> = { View: "Consulté", Viewed: "Consulté", Study: "Étudié", Studied: "Étudié" };
+  const localTitle = loc(lang, title, TITLE_AR[resourceType] ?? title, TITLE_FR[resourceType] ?? title);
+  const localDescription = loc(lang, description, DESC_AR[resourceType] ?? description, DESC_FR[resourceType] ?? description);
+  const localStatusLabel = loc(lang, statusLabel, STATUS_AR[statusLabel] ?? statusLabel, STATUS_FR[statusLabel] ?? statusLabel);
 
   const filterByStatus = (part: Part, status: string) => {
     const isCompleted = localProgressMap[part.partNumber] || false;
@@ -495,7 +501,7 @@ export function SimpleResourceContent({
               <p className={`text-3xl font-bold ${localCompletedCount > 0 ? "text-green-400" : "text-zinc-400"}`}>{localCompletedCount}</p>
             </div>
             <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
-              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">{isRtl ? `لم ${localStatusLabel}` : `Not ${statusLabel}`}</p>
+              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">{loc(lang, `Not ${statusLabel}`, `لم ${localStatusLabel}`, `Non ${statusLabel.toLowerCase()}`)}</p>
               <p className="text-3xl font-bold text-zinc-400">{notCompletedCount}</p>
             </div>
           </div>
@@ -530,7 +536,7 @@ export function SimpleResourceContent({
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <IconComponent className="w-5 h-5 text-amber-500" />
-                    <span className="text-sm font-medium text-amber-500">{isRtl ? `الجزء ${selectedPart.partNumber}` : `Part ${selectedPart.partNumber}`}</span>
+                    <span className="text-sm font-medium text-amber-500">{tf(lang, "partLabel", { n: selectedPart.partNumber })}</span>
                   </div>
                   <h2 className="text-2xl font-bold text-white">{selectedPart.title}</h2>
                   {selectedPart.subtitle && (
@@ -568,7 +574,7 @@ export function SimpleResourceContent({
                                 : "bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-zinc-300"
                             }`}
                           >
-                            {isRtl ? "مقدَّمة" : "Presented"}
+                            {loc(lang, "Presented", "مقدَّمة", "Présenté")}
                           </button>
                         )}
                         {slideData.detailed.length > 0 && (
@@ -580,7 +586,7 @@ export function SimpleResourceContent({
                                 : "bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-zinc-300"
                             }`}
                           >
-                            {isRtl ? "مفصَّلة" : "Detailed"}
+                            {loc(lang, "Detailed", "مفصَّلة", "Détaillé")}
                           </button>
                         )}
                         {slideData.facts.length > 0 && (
@@ -592,7 +598,7 @@ export function SimpleResourceContent({
                                 : "bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-zinc-300"
                             }`}
                           >
-                            {isRtl ? "معلومات" : "Facts"}
+                            {t(lang, "facts")}
                           </button>
                         )}
                       </div>
@@ -600,12 +606,16 @@ export function SimpleResourceContent({
                       <div className="flex-1 min-h-0">
                         <SlidesViewer
                           slides={slideData[slideType]}
-                          title={isRtl
-                            ? `الجزء ${selectedPart.partNumber} — ${slideType === "presented" ? "مقدَّمة" : slideType === "detailed" ? "مفصَّلة" : "معلومات"}`
-                            : `Part ${selectedPart.partNumber} — ${slideType === "presented" ? "Presented" : slideType === "detailed" ? "Detailed" : "Facts"} Slides`}
+                          title={loc(
+                            lang,
+                            `Part ${selectedPart.partNumber} — ${slideType === "presented" ? "Presented" : slideType === "detailed" ? "Detailed" : "Facts"} Slides`,
+                            `الجزء ${selectedPart.partNumber} — ${slideType === "presented" ? "مقدَّمة" : slideType === "detailed" ? "مفصَّلة" : "معلومات"}`,
+                            `Partie ${selectedPart.partNumber} — Diapositives ${slideType === "presented" ? "présentées" : slideType === "detailed" ? "détaillées" : "faits"}`,
+                          )}
                           type={slideType === "facts" ? "presented" : slideType}
                           partNumber={selectedPart.partNumber}
                           isRtl={isRtl}
+                          lang={lang}
                         />
                       </div>
                     </div>
@@ -636,7 +646,7 @@ export function SimpleResourceContent({
                                   : "bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-zinc-300"
                               }`}
                             >
-                              {isRtl ? "شبكية" : "Bento Grid"}
+                              {loc(lang, "Bento Grid", "شبكية", "Grille Bento")}
                             </button>
                           )}
                           {infographicUrls.concise && (
@@ -648,7 +658,7 @@ export function SimpleResourceContent({
                                   : "bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-zinc-300"
                               }`}
                             >
-                              {isRtl ? "موجزة" : "Concise"}
+                              {loc(lang, "Concise", "موجزة", "Concis")}
                             </button>
                           )}
                           {infographicUrls.standard && (
@@ -660,7 +670,7 @@ export function SimpleResourceContent({
                                   : "bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-zinc-300"
                               }`}
                             >
-                              {isRtl ? "قياسية" : "Standard"}
+                              {loc(lang, "Standard", "قياسية", "Standard")}
                             </button>
                           )}
                         </div>
@@ -728,7 +738,7 @@ export function SimpleResourceContent({
                             className="px-4 py-2 rounded-lg bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-700 text-white transition-colors flex items-center gap-2"
                           >
                             <Minimize2 className="w-4 h-4" />
-                            <span className="text-sm">{isRtl ? "إنهاء ملء الشاشة" : "Exit Fullscreen"}</span>
+                            <span className="text-sm">{loc(lang, "Exit Fullscreen", "إنهاء ملء الشاشة", "Quitter le plein écran")}</span>
                           </button>
                           <button
                             onClick={(e) => {
@@ -753,7 +763,7 @@ export function SimpleResourceContent({
                             className="px-3 py-2 rounded-lg bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 hover:text-white transition-colors flex items-center gap-2"
                           >
                             <Maximize2 className="w-4 h-4" />
-                            <span className="text-xs">{isRtl ? "ملء الشاشة" : "Fullscreen"}</span>
+                            <span className="text-xs">{loc(lang, "Fullscreen", "ملء الشاشة", "Plein écran")}</span>
                           </button>
                         </div>
                       )}
@@ -774,7 +784,7 @@ export function SimpleResourceContent({
                     </div>
                   ) : flashcardData ? (
                     <div className="h-full overflow-y-auto">
-                      <FlashcardsViewer flashcards={flashcardData} partNumber={selectedPart?.partNumber} isRtl={isRtl} />
+                      <FlashcardsViewer flashcards={flashcardData} partNumber={selectedPart?.partNumber} isRtl={isRtl} lang={lang} />
                     </div>
                   ) : (
                     <div className="h-full flex items-center justify-center text-zinc-400">
@@ -801,7 +811,7 @@ export function SimpleResourceContent({
                   onClick={handleClose}
                   className="px-6 py-2 rounded-lg bg-amber-500 text-black hover:bg-amber-400 text-sm font-semibold transition-all hover:scale-105 shadow-lg shadow-amber-500/20"
                 >
-                  {isRtl ? "إغلاق" : "Close"}
+                  {t(lang, "closeModal")}
                 </button>
               </div>
             )}
@@ -870,7 +880,7 @@ export function SimpleResourceContent({
                     {/* Info */}
                     <div className="p-3 sm:p-4">
                       <div className="flex items-center gap-1.5 mb-1.5">
-                        <span className="text-xs font-medium text-amber-500">{isRtl ? `الجزء ${part.partNumber}` : `Part ${part.partNumber}`}</span>
+                        <span className="text-xs font-medium text-amber-500">{tf(lang, "partLabel", { n: part.partNumber })}</span>
                         {isCompleted && (
                           <span className="px-1.5 py-0.5 bg-green-500/10 border border-green-500/20 text-green-400 text-[10px] font-medium rounded">
                             {localStatusLabel}

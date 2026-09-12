@@ -1,5 +1,10 @@
-/** Shorten verbose English references, then optionally localize for Arabic UI. */
-export function formatHadithRef(ref: string | undefined, isRtl?: boolean): string {
+import type { CourseLang } from "./course-lang";
+
+/** Shorten verbose English references, then optionally localize for AR/FR UI. */
+export function formatHadithRef(
+  ref: string | undefined,
+  langOrRtl?: CourseLang | boolean,
+): string {
   if (!ref) return "";
 
   let short = ref
@@ -11,7 +16,28 @@ export function formatHadithRef(ref: string | undefined, isRtl?: boolean): strin
     .replace(/Sunan Abi Dawud/g, "Abu Dawud")
     .replace(/\s*\(report of [^)]+\)/g, "");
 
-  if (!isRtl) return short.trim();
+  const lang: CourseLang | "en" =
+    langOrRtl === true || langOrRtl === "ar"
+      ? "ar"
+      : langOrRtl === "fr"
+        ? "fr"
+        : "en";
+
+  if (lang === "en") return short.trim();
+
+  if (lang === "fr") {
+    return short
+      .replace(/Qur'an/g, "Coran")
+      .replace(/Bukhari & Muslim/g, "Boukhari & Mouslim")
+      .replace(/Bukhari/g, "Boukhari")
+      .replace(/Muslim/g, "Mouslim")
+      .replace(/Abu Dawud/g, "Abou Dawoud")
+      .replace(/Tirmidhi/g, "Tirmidhi")
+      .replace(/Ibn Majah/g, "Ibn Majah")
+      .replace(/Ahmad/g, "Ahmad")
+      .replace(/Tabarani/g, "Tabarani")
+      .trim();
+  }
 
   return short
     .replace(/Qur'an/g, "القرآن")

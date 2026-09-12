@@ -50,8 +50,15 @@ export async function Part1FullPreview({
             </Badge>
           </div>
         </div>
+        <p className="text-xs sm:text-sm text-gold/90 mt-3 leading-relaxed">
+          {isRtl
+            ? "الدورة متاحة بالإنجليزية والعربية والفرنسية — ونخطط لإضافة المزيد من اللغات."
+            : lang === "fr"
+              ? "Le cours est disponible en anglais, arabe et français — et nous prévoyons d'ajouter d'autres langues."
+              : "The course is available in English, Arabic, and French — and we plan to add more languages."}
+        </p>
         {part.description && (
-          <p className="text-sm text-text-secondary mt-3 leading-relaxed">
+          <p className="text-sm text-text-secondary mt-2 leading-relaxed">
             {part.description}
           </p>
         )}

@@ -12,7 +12,7 @@ interface LangToggleProps {
   /** Narrow layout for a collapsed sidebar. */
   compact?: boolean;
   /**
-   * Larger, labeled control for marketing previews so visitors notice Arabic.
+   * Larger, labeled control for marketing previews so visitors notice language options.
    * Keeps the compact sidebar style unchanged.
    */
   prominent?: boolean;
@@ -23,6 +23,18 @@ interface LangToggleProps {
    */
   clientManaged?: boolean;
   onChange?: (lang: CourseLang) => void;
+}
+
+function languageLabel(lang: CourseLang): string {
+  if (lang === "ar") return "اللغة";
+  if (lang === "fr") return "Langue";
+  return "Language";
+}
+
+function groupAriaLabel(lang: CourseLang): string {
+  if (lang === "ar") return "لغة الدورة";
+  if (lang === "fr") return "Langue du cours";
+  return "Course language";
 }
 
 export function LangToggle({
@@ -64,12 +76,12 @@ export function LangToggle({
               : "text-[11px] uppercase tracking-[0.16em]",
           )}
         >
-          {current === "ar" ? "اللغة" : "Language"}
+          {languageLabel(current)}
         </span>
         <div
           className="flex items-center gap-1 rounded-xl p-1 bg-ink/40 border border-gold/35 shadow-sm shadow-gold/10"
           role="group"
-          aria-label={current === "ar" ? "لغة الدورة" : "Course language"}
+          aria-label={groupAriaLabel(current)}
         >
           <button
             type="button"
@@ -96,6 +108,18 @@ export function LangToggle({
           >
             عربي
           </button>
+          <button
+            type="button"
+            onClick={() => switchLang("fr")}
+            className={clsx(
+              "min-h-[40px] min-w-[52px] px-3.5 rounded-lg text-sm font-bold transition-all duration-150",
+              current === "fr"
+                ? "bg-gold text-ink shadow-md shadow-gold/25"
+                : "text-text-secondary hover:text-text hover:bg-surface-raised/80",
+            )}
+          >
+            FR
+          </button>
         </div>
       </div>
     );
@@ -109,7 +133,7 @@ export function LangToggle({
         className
       )}
       role="group"
-      aria-label={current === "ar" ? "لغة الدورة" : "Course language"}
+      aria-label={groupAriaLabel(current)}
     >
       <button
         type="button"
@@ -137,6 +161,19 @@ export function LangToggle({
         dir="rtl"
       >
         {compact ? "ع" : "عربي"}
+      </button>
+      <button
+        type="button"
+        onClick={() => switchLang("fr")}
+        className={clsx(
+          "rounded-md text-xs font-semibold transition-all duration-150",
+          compact ? "px-1.5 py-1" : "px-2.5 py-1",
+          current === "fr"
+            ? "bg-gold/15 text-gold shadow-sm"
+            : "text-text-muted/70 hover:text-text-secondary"
+        )}
+      >
+        FR
       </button>
     </div>
   );

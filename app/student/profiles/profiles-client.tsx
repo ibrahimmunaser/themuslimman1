@@ -15,6 +15,8 @@ import {
   deleteProfile,
   switchProfile,
 } from "@/app/actions/profiles";
+import type { CourseLang } from "@/lib/course-lang";
+import { loc } from "@/lib/loc";
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -50,7 +52,7 @@ interface ProfilesClientProps {
   hasLifetime: boolean;
   currentUserId: string;
   activeProfileId: string | null;
-  isRtl?: boolean;
+  lang?: CourseLang;
 }
 
 // Avatar options
@@ -77,8 +79,9 @@ export function ProfilesClient({
   profileLimit,
   hasLifetime,
   activeProfileId,
-  isRtl,
+  lang = "en",
 }: ProfilesClientProps) {
+  const isRtl = lang === "ar";
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [selectedProfile, setSelectedProfile] = useState<ProfileData | null>(null);
@@ -119,17 +122,17 @@ export function ProfilesClient({
 
   async function handleCreate() {
     if (!formName.trim()) {
-      setFormError(isRtl ? "يرجى إدخال اسم." : "Please enter a name.");
+      setFormError(loc(lang, "Please enter a name.", "يرجى إدخال اسم.", "Veuillez saisir un nom."));
       return;
     }
     startTransition(async () => {
       const result = await createProfile(formName.trim(), formAvatar ?? undefined);
       if (result.success) {
         setMode("list");
-        showMessage(isRtl ? "تم إنشاء الملف الشخصي." : "Profile created.");
+        showMessage(loc(lang, "Profile created.", "تم إنشاء الملف الشخصي.", "Profil créé."));
         router.refresh();
       } else {
-        setFormError(result.error ?? (isRtl ? "فشل إنشاء الملف الشخصي." : "Failed to create profile."));
+        setFormError(result.error ?? (loc(lang, "Failed to create profile.", "فشل إنشاء الملف الشخصي.", "Échec de la création du profil.")));
       }
     });
   }
@@ -137,17 +140,17 @@ export function ProfilesClient({
   async function handleUpdate() {
     if (!selectedProfile) return;
     if (!formName.trim()) {
-      setFormError(isRtl ? "يرجى إدخال اسم." : "Please enter a name.");
+      setFormError(loc(lang, "Please enter a name.", "يرجى إدخال اسم.", "Veuillez saisir un nom."));
       return;
     }
     startTransition(async () => {
       const result = await updateProfile(selectedProfile.id, { displayName: formName.trim(), avatar: formAvatar });
       if (result.success) {
         setMode("list");
-        showMessage(isRtl ? "تم تحديث الملف الشخصي." : "Profile updated.");
+        showMessage(loc(lang, "Profile updated.", "تم تحديث الملف الشخصي.", "Profil mis à jour."));
         router.refresh();
       } else {
-        setFormError(result.error ?? (isRtl ? "فشل تحديث الملف الشخصي." : "Failed to update profile."));
+        setFormError(result.error ?? (loc(lang, "Failed to update profile.", "فشل تحديث الملف الشخصي.", "Échec de la mise à jour du profil.")));
       }
     });
   }
@@ -158,10 +161,10 @@ export function ProfilesClient({
       if (result.success) {
         setConfirmDelete(null);
         setMode("list");
-        showMessage(isRtl ? "تم حذف الملف الشخصي." : "Profile deleted.");
+        showMessage(loc(lang, "Profile deleted.", "تم حذف الملف الشخصي.", "Profil supprimé."));
         router.refresh();
       } else {
-        showMessage(result.error ?? (isRtl ? "فشل حذف الملف الشخصي." : "Failed to delete profile."));
+        showMessage(result.error ?? (loc(lang, "Failed to delete profile.", "فشل حذف الملف الشخصي.", "Échec de la suppression du profil.")));
       }
     });
   }
@@ -180,22 +183,22 @@ export function ProfilesClient({
   if (mode === "detail" && selectedProfile) {
     const s = selectedProfile.stats;
     const assetStats = [
-      { label: isRtl ? "الفيديوهات" : "Videos", value: s.videosCompleted, icon: Video, color: "text-blue-400" },
-      { label: isRtl ? "الملخصات" : "Briefings", value: s.briefingsOpened, icon: BookOpen, color: "text-green-400" },
-      { label: isRtl ? "الشرائح" : "Slides", value: s.slidesViewed, icon: Layers, color: "text-purple-400" },
-      { label: isRtl ? "الرسوم المعلوماتية" : "Infographics", value: s.infographicsViewed, icon: Image, color: "text-pink-400" },
-      ...(isRtl ? [] : [{ label: "Mind Maps", value: s.mindmapsViewed, icon: Map, color: "text-teal-400" }]),
-      { label: isRtl ? "الصوت" : "Audio", value: s.audioCompleted, icon: FileText, color: "text-orange-400" },
-      { label: isRtl ? "البطاقات التعليمية" : "Flashcards", value: s.flashcardsStudied, icon: Brain, color: "text-amber-400" },
-      { label: isRtl ? "الاختبارات" : "Quizzes", value: s.quizzesPassed, icon: ClipboardCheck, color: "text-red-400" },
-      { label: isRtl ? "المعلومات" : "Facts", value: s.factsViewed, icon: FileText, color: "text-indigo-400" },
+      { label: loc(lang, "Videos", "الفيديوهات", "Vidéos"), value: s.videosCompleted, icon: Video, color: "text-blue-400" },
+      { label: loc(lang, "Briefings", "الملخصات", "Briefings"), value: s.briefingsOpened, icon: BookOpen, color: "text-green-400" },
+      { label: loc(lang, "Slides", "الشرائح", "Diapositives"), value: s.slidesViewed, icon: Layers, color: "text-purple-400" },
+      { label: loc(lang, "Infographics", "الرسوم المعلوماتية", "Infographies"), value: s.infographicsViewed, icon: Image, color: "text-pink-400" },
+      ...[{ label: loc(lang, "Mind Maps", "الخرائط الذهنية", "Cartes mentales"), value: s.mindmapsViewed, icon: Map, color: "text-teal-400" }],
+      { label: loc(lang, "Audio", "الصوت", "Audio"), value: s.audioCompleted, icon: FileText, color: "text-orange-400" },
+      { label: loc(lang, "Flashcards", "البطاقات التعليمية", "Flashcards"), value: s.flashcardsStudied, icon: Brain, color: "text-amber-400" },
+      { label: loc(lang, "Quizzes", "الاختبارات", "Quiz"), value: s.quizzesPassed, icon: ClipboardCheck, color: "text-red-400" },
+      { label: loc(lang, "Facts", "المعلومات", "Faits"), value: s.factsViewed, icon: FileText, color: "text-indigo-400" },
     ];
 
     return (
       <div className="min-h-screen bg-zinc-950 px-4 py-8 max-w-2xl mx-auto" dir={isRtl ? "rtl" : undefined}>
         <button onClick={() => setMode("list")} className="flex items-center gap-2 text-zinc-400 hover:text-white mb-6 transition-colors text-sm">
           <ArrowLeft className={`w-4 h-4 ${isRtl ? "rotate-180" : ""}`} />
-          {isRtl ? "العودة إلى الملفات" : "Back to profiles"}
+          {loc(lang, "Back to profiles", "العودة إلى الملفات", "Retour aux profils")}
         </button>
 
         <div className="flex items-center gap-4 mb-8">
@@ -210,20 +213,20 @@ export function ProfilesClient({
             <h1 className="text-xl font-bold text-white">{selectedProfile.displayName}</h1>
             <p className="text-xs text-zinc-500 mt-0.5">
               {selectedProfile.isDefault
-                ? (isRtl ? "الملف الرئيسي" : "Primary profile")
-                : (isRtl ? "ملف متعلّم" : "Learner profile")}
+                ? (loc(lang, "Primary profile", "الملف الرئيسي", "Profil principal"))
+                : (loc(lang, "Learner profile", "ملف متعلّم", "Profil d'apprenant"))}
             </p>
           </div>
         </div>
 
         <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-5 mb-4">
           <h2 className="text-xs font-semibold text-zinc-500 mb-3 uppercase tracking-wider">
-            {isRtl ? "التقدم العام" : "Overall Progress"}
+            {loc(lang, "Overall Progress", "التقدم العام", "Progression globale")}
           </h2>
           <div className="flex items-end gap-3 mb-3">
             <span className="text-4xl font-bold text-amber-400">{s.completionPercent}%</span>
             <span className="text-zinc-500 text-sm pb-1">
-              {isRtl ? `${s.completedParts}/${s.totalParts} درس` : `${s.completedParts}/${s.totalParts} lessons`}
+              {loc(lang, `${s.completedParts}/${s.totalParts} lessons`, `${s.completedParts}/${s.totalParts} درس`, `${s.completedParts}/${s.totalParts} leçons`)}
             </span>
           </div>
           <div className="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
@@ -231,8 +234,8 @@ export function ProfilesClient({
           </div>
           {s.lastActivity && (
             <p className="text-xs text-zinc-600 mt-3">
-              {isRtl ? "آخر نشاط: " : "Last active: "}
-              {new Date(s.lastActivity).toLocaleDateString(isRtl ? "ar" : "en")}
+              {loc(lang, "Last active: ", "آخر نشاط: ", "Dernière activité : ")}
+              {new Date(s.lastActivity).toLocaleDateString(lang === "ar" ? "ar" : lang === "fr" ? "fr-FR" : "en")}
             </p>
           )}
         </div>
@@ -254,10 +257,10 @@ export function ProfilesClient({
         <div className="mt-6 flex gap-3">
           <button onClick={() => openEditForm(selectedProfile)} className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white text-sm font-medium transition-colors">
             <Edit2 className="w-4 h-4" />
-            {isRtl ? "تعديل الملف" : "Edit Profile"}
+            {loc(lang, "Edit Profile", "تعديل الملف", "Modifier le profil")}
           </button>
           <button onClick={() => handleSwitch(selectedProfile.id)} disabled={isPending} className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black text-sm font-bold transition-colors disabled:opacity-50">
-            {isRtl ? `تعلّم كـ ${selectedProfile.displayName}` : `Learn as ${selectedProfile.displayName}`}
+            {loc(lang, `Learn as ${selectedProfile.displayName}`, `تعلّم كـ ${selectedProfile.displayName}`, `Apprendre en tant que ${selectedProfile.displayName}`)}
           </button>
         </div>
       </div>
@@ -272,24 +275,24 @@ export function ProfilesClient({
       <div className="min-h-screen bg-zinc-950 px-4 py-8 max-w-lg mx-auto" dir={isRtl ? "rtl" : undefined}>
         <button onClick={() => setMode("list")} className="flex items-center gap-2 text-zinc-400 hover:text-white mb-6 transition-colors text-sm">
           <ArrowLeft className={`w-4 h-4 ${isRtl ? "rotate-180" : ""}`} />
-          {isRtl ? "رجوع" : "Back"}
+          {loc(lang, "Back", "رجوع", "Retour")}
         </button>
 
         <h1 className="text-xl font-bold text-white mb-6">
           {isEdit
-            ? (isRtl ? "تعديل الملف الشخصي" : "Edit Profile")
-            : (isRtl ? "إنشاء ملف شخصي جديد" : "Create New Profile")}
+            ? (loc(lang, "Edit Profile", "تعديل الملف الشخصي", "Modifier le profil"))
+            : (loc(lang, "Create New Profile", "إنشاء ملف شخصي جديد", "Créer un nouveau profil"))}
         </h1>
 
         <div className="mb-5">
           <label className="block text-sm font-medium text-zinc-300 mb-1.5">
-            {isRtl ? "الاسم" : "Name"} <span className="text-red-400">*</span>
+            {loc(lang, "Name", "الاسم", "Nom")} <span className="text-red-400">*</span>
           </label>
           <input
             type="text"
             value={formName}
             onChange={(e) => setFormName(e.target.value)}
-            placeholder={isRtl ? "مثال: أحمد، مريم، أبي…" : "e.g. Ahmad, Maryam, Dad…"}
+            placeholder={loc(lang, "e.g. Ahmad, Maryam, Dad…", "مثال: أحمد، مريم، أبي…", "ex. Ahmad, Maryam, Papa…")}
             maxLength={50}
             className="w-full px-4 py-2.5 bg-zinc-900 border border-zinc-700 focus:border-amber-500 rounded-lg text-white placeholder:text-zinc-600 outline-none transition-colors"
           />
@@ -297,7 +300,7 @@ export function ProfilesClient({
 
         <div className="mb-5">
           <label className="block text-sm font-medium text-zinc-300 mb-1.5">
-            {isRtl ? "الصورة الرمزية (اختياري)" : "Avatar (optional)"}
+            {loc(lang, "Avatar (optional)", "الصورة الرمزية (اختياري)", "Avatar (facultatif)")}
           </label>
           <div className="grid grid-cols-9 gap-2">
             {AVATARS.map((emoji) => (
@@ -317,7 +320,7 @@ export function ProfilesClient({
           </div>
           {formAvatar && (
             <button type="button" onClick={() => setFormAvatar(null)} className="mt-2 text-xs text-zinc-500 hover:text-zinc-300 transition-colors">
-              {isRtl ? "مسح الصورة الرمزية" : "Clear avatar"}
+              {loc(lang, "Clear avatar", "مسح الصورة الرمزية", "Effacer l'avatar")}
             </button>
           )}
         </div>
@@ -328,14 +331,14 @@ export function ProfilesClient({
 
         <div className="flex gap-3">
           <button type="button" onClick={() => setMode("list")} className="flex-1 px-4 py-2.5 rounded-lg border border-zinc-700 text-zinc-300 hover:text-white hover:border-zinc-500 text-sm font-medium transition-colors">
-            {isRtl ? "إلغاء" : "Cancel"}
+            {loc(lang, "Cancel", "إلغاء", "Annuler")}
           </button>
           <button type="button" onClick={isEdit ? handleUpdate : handleCreate} disabled={isPending || !formName.trim()} className="flex-1 px-4 py-2.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm transition-colors disabled:opacity-50">
             {isPending
-              ? (isRtl ? "جارٍ الحفظ…" : "Saving…")
+              ? (loc(lang, "Saving…", "جارٍ الحفظ…", "Enregistrement…"))
               : isEdit
-                ? (isRtl ? "حفظ التغييرات" : "Save Changes")
-                : (isRtl ? "إنشاء الملف" : "Create Profile")}
+                ? (loc(lang, "Save Changes", "حفظ التغييرات", "Enregistrer les modifications"))
+                : (loc(lang, "Create Profile", "إنشاء الملف", "Créer le profil"))}
           </button>
         </div>
 
@@ -344,25 +347,23 @@ export function ProfilesClient({
             {confirmDelete === selectedProfile.id ? (
               <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
                 <p className="text-sm text-red-400 mb-3">
-                  {isRtl
-                    ? `حذف «${selectedProfile.displayName}»؟ ستُحذف بيانات تقدّمه نهائيًا.`
-                    : `Delete "${selectedProfile.displayName}"? Their progress data will be permanently removed.`}
+                  {loc(lang, `Delete "${selectedProfile.displayName}"? Their progress data will be permanently removed.`, `حذف «${selectedProfile.displayName}»؟ ستُحذف بيانات تقدّمه نهائيًا.`, `Supprimer « ${selectedProfile.displayName} » ? Ses données de progression seront définitivement effacées.`)}
                 </p>
                 <div className="flex gap-3">
                   <button onClick={() => setConfirmDelete(null)} className="flex-1 px-3 py-2 rounded-lg border border-zinc-700 text-zinc-400 text-sm hover:text-white transition-colors">
-                    {isRtl ? "إلغاء" : "Cancel"}
+                    {loc(lang, "Cancel", "إلغاء", "Annuler")}
                   </button>
                   <button onClick={() => handleDelete(selectedProfile.id)} disabled={isPending} className="flex-1 px-3 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-white text-sm font-medium transition-colors disabled:opacity-50">
                     {isPending
-                      ? (isRtl ? "جارٍ الحذف…" : "Deleting…")
-                      : (isRtl ? "حذف الملف" : "Delete Profile")}
+                      ? (loc(lang, "Deleting…", "جارٍ الحذف…", "Suppression…"))
+                      : (loc(lang, "Delete Profile", "حذف الملف", "Supprimer le profil"))}
                   </button>
                 </div>
               </div>
             ) : (
               <button onClick={() => setConfirmDelete(selectedProfile.id)} className="flex items-center gap-2 text-sm text-red-400/70 hover:text-red-400 transition-colors">
                 <Trash2 className="w-4 h-4" />
-                {isRtl ? "حذف هذا الملف" : "Delete this profile"}
+                {loc(lang, "Delete this profile", "حذف هذا الملف", "Supprimer ce profil")}
               </button>
             )}
           </div>
@@ -379,13 +380,11 @@ export function ProfilesClient({
       {/* Header */}
       <div className="text-center mb-10">
         <h1 className="text-3xl font-bold text-white tracking-tight">
-          {isRtl ? "من يتعلّم؟" : "Who's learning?"}
+          {loc(lang, "Who's learning?", "من يتعلّم؟", "Qui apprend ?")}
         </h1>
         {isFamily && (
           <p className="text-zinc-500 text-sm mt-2">
-            {isRtl
-              ? `وصول العائلة · حتى ${profileLimit} ملفات متعلّمين`
-              : `Family Access · up to ${profileLimit} learner profiles`}
+            {loc(lang, `Family Access · up to ${profileLimit} learner profiles`, `وصول العائلة · حتى ${profileLimit} ملفات متعلّمين`, `Accès Famille · jusqu'à ${profileLimit} profils d'apprenants`)}
           </p>
         )}
       </div>
@@ -422,7 +421,7 @@ export function ProfilesClient({
                     }
                     disabled:cursor-wait
                   `}
-                  title={isRtl ? `تعلّم كـ ${profile.displayName}` : `Learn as ${profile.displayName}`}
+                  title={loc(lang, `Learn as ${profile.displayName}`, `تعلّم كـ ${profile.displayName}`, `Apprendre en tant que ${profile.displayName}`)}
                 >
                   {isSwitching ? (
                     <div className="w-7 h-7 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -445,14 +444,14 @@ export function ProfilesClient({
                   <button
                     onClick={(e) => { e.stopPropagation(); openEditForm(profile); }}
                     className="w-7 h-7 rounded-full bg-zinc-900 border border-zinc-700 hover:border-zinc-500 flex items-center justify-center text-zinc-400 hover:text-white transition-colors shadow-md"
-                    title={isRtl ? "تعديل الملف" : "Edit profile"}
+                    title={loc(lang, "Edit profile", "تعديل الملف", "Modifier le profil")}
                   >
                     <Edit2 className="w-3 h-3" />
                   </button>
                   <button
                     onClick={(e) => { e.stopPropagation(); openDetail(profile); }}
                     className="w-7 h-7 rounded-full bg-zinc-900 border border-zinc-700 hover:border-zinc-500 flex items-center justify-center text-zinc-400 hover:text-white transition-colors shadow-md"
-                    title={isRtl ? "عرض التقدم" : "View progress"}
+                    title={loc(lang, "View progress", "عرض التقدم", "Voir la progression")}
                   >
                     <BarChart2 className="w-3 h-3" />
                   </button>
@@ -472,12 +471,12 @@ export function ProfilesClient({
                 </div>
                 {isActive && (
                   <span className="inline-block mt-1 text-[10px] font-semibold text-amber-500 uppercase tracking-wider">
-                    {isRtl ? "نشط" : "Active"}
+                    {loc(lang, "Active", "نشط", "Actif")}
                   </span>
                 )}
                 {profile.isDefault && !isActive && (
                   <span className="inline-block mt-1 text-[10px] text-zinc-600 uppercase tracking-wider">
-                    {isRtl ? "رئيسي" : "Primary"}
+                    {loc(lang, "Primary", "رئيسي", "Principal")}
                   </span>
                 )}
               </div>
@@ -495,7 +494,7 @@ export function ProfilesClient({
               <Plus className="w-8 h-8 text-zinc-600 group-hover:text-amber-500 transition-colors" />
             </button>
             <p className="text-sm text-zinc-600 group-hover:text-zinc-400 transition-colors">
-              {isRtl ? "إضافة ملف" : "Add Profile"}
+              {loc(lang, "Add Profile", "إضافة ملف", "Ajouter un profil")}
             </p>
           </div>
         )}
@@ -505,9 +504,7 @@ export function ProfilesClient({
       <div className="mt-12 flex flex-col items-center gap-3">
         {isFamily && (
           <p className="text-xs text-zinc-600">
-            {isRtl
-              ? "انقر على ملف لبدء التعلم · مرّر للتعديل أو عرض التقدم"
-              : "Click a profile to start learning · hover to edit or view progress"}
+            {loc(lang, "Click a profile to start learning · hover to edit or view progress", "انقر على ملف لبدء التعلم · مرّر للتعديل أو عرض التقدم", "Cliquez sur un profil pour commencer · survolez pour modifier ou voir la progression")}
           </p>
         )}
       </div>

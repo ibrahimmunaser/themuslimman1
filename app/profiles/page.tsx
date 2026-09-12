@@ -16,7 +16,7 @@ export async function generateMetadata() {
   const cookieStore = await cookies();
   const lang = parseLang(cookieStore.get(COURSE_LANG_COOKIE)?.value);
   return {
-    title: lang === "ar" ? "من يتعلّم اليوم؟ | Complete Seerah" : "Who is learning today? | Complete Seerah",
+    title: lang === "ar" ? "من يتعلّم اليوم؟ | Complete Seerah" : lang === "fr" ? "Qui apprend aujourd'hui ? | Complete Seerah" : "Who is learning today? | Complete Seerah",
     robots: { index: false, follow: false },
   };
 }
@@ -67,7 +67,7 @@ export default async function ProfilePickerPage({ searchParams }: Props) {
       profileLimit={profileLimit}
       isFamily={isFamily}
       activeProfileId={user.activeProfileId}
-      isRtl={lang === "ar"}
+      lang={lang}
     />
   );
 }

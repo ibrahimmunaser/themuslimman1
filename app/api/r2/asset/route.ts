@@ -21,6 +21,10 @@ const ALLOWED_PREFIXES = [
   "arabic/audio/",
   "arabic/slides/",
   "arabic/infographics/",
+  // French media
+  "french/videos/",
+  "french/slides/",
+  "french/infographics/",
 ] as const;
 
 const ALLOWED_EXTENSIONS = new Set([

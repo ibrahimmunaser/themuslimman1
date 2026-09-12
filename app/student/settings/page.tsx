@@ -6,6 +6,7 @@ import { User, Mail, Shield } from "lucide-react";
 import { ChangePasswordForm } from "@/components/student/change-password-form";
 import { cookies } from "next/headers";
 import { parseLang, COURSE_LANG_COOKIE } from "@/lib/course-lang";
+import { loc } from "@/lib/loc";
 
 export const metadata = { title: "Settings | Complete Seerah" };
 export const dynamic = "force-dynamic";
@@ -16,7 +17,6 @@ export default async function SettingsPage() {
 
   const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
   if (!hasAccess) redirect("/pricing");
-  // Entitled unverified keep access (part-access / Apple 5.1.1(v) parity).
 
   const userPlan = "complete" as const;
   const cookieStore = await cookies();
@@ -28,22 +28,30 @@ export default async function SettingsPage() {
       <div className="min-h-screen bg-[#0a0a0a]" dir={ar ? "rtl" : undefined}>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="mb-8">
-            <h1 className="text-xl sm:text-3xl font-bold text-text mb-2">{ar ? "الملف الشخصي والإعدادات" : "Profile & Settings"}</h1>
+            <h1 className="text-xl sm:text-3xl font-bold text-text mb-2">
+              {loc(lang, "Profile & Settings", "الملف الشخصي والإعدادات", "Profil et paramètres")}
+            </h1>
             <p className="text-text-secondary">
-              {ar ? "إدارة تفضيلات الحساب والإعدادات" : "Manage your account preferences and settings"}
+              {loc(
+                lang,
+                "Manage your account preferences and settings",
+                "إدارة تفضيلات الحساب والإعدادات",
+                "Gérez les préférences et les paramètres de votre compte",
+              )}
             </p>
           </div>
 
-          {/* Profile Information */}
           <div className="p-6 rounded-xl border border-border bg-surface mb-6">
             <div className="flex items-center gap-3 mb-6">
               <User className="w-5 h-5 text-gold" />
-              <h2 className="text-lg font-semibold text-text">{ar ? "معلومات الملف الشخصي" : "Profile Information"}</h2>
+              <h2 className="text-lg font-semibold text-text">
+                {loc(lang, "Profile Information", "معلومات الملف الشخصي", "Informations du profil")}
+              </h2>
             </div>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-2">
-                  {ar ? "الاسم الكامل" : "Full Name"}
+                  {loc(lang, "Full Name", "الاسم الكامل", "Nom complet")}
                 </label>
                 <input
                   type="text"
@@ -54,7 +62,7 @@ export default async function SettingsPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-2">
-                  {ar ? "عنوان البريد الإلكتروني" : "Email Address"}
+                  {loc(lang, "Email Address", "عنوان البريد الإلكتروني", "Adresse e-mail")}
                 </label>
                 <input
                   type="email"
@@ -64,40 +72,56 @@ export default async function SettingsPage() {
                 />
               </div>
               <p className="text-xs text-text-muted">
-                {ar ? "لتحديث معلومات ملفك الشخصي، يرجى التواصل مع الدعم." : "To update your profile information, please contact support."}
+                {loc(
+                  lang,
+                  "To update your profile information, please contact support.",
+                  "لتحديث معلومات ملفك الشخصي، يرجى التواصل مع الدعم.",
+                  "Pour mettre à jour les informations de votre profil, veuillez contacter le support.",
+                )}
               </p>
             </div>
           </div>
 
-          {/* Security */}
           <div className="p-6 rounded-xl border border-border bg-surface mb-6">
             <div className="flex items-center gap-3 mb-6">
               <Shield className="w-5 h-5 text-gold" />
-              <h2 className="text-lg font-semibold text-text">{ar ? "الأمان" : "Security"}</h2>
+              <h2 className="text-lg font-semibold text-text">
+                {loc(lang, "Security", "الأمان", "Sécurité")}
+              </h2>
             </div>
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-2">
-                {ar ? "كلمة المرور" : "Password"}
+                {loc(lang, "Password", "كلمة المرور", "Mot de passe")}
               </label>
               <ChangePasswordForm lang={lang} />
             </div>
           </div>
 
-
-          {/* Account Plan */}
           <div className="mt-6"></div>
           <div className="p-6 rounded-xl border border-border bg-surface">
             <div className="flex items-center gap-3 mb-6">
               <Mail className="w-5 h-5 text-gold" />
-              <h2 className="text-lg font-semibold text-text">{ar ? "خطتك الحالية" : "Current Plan"}</h2>
+              <h2 className="text-lg font-semibold text-text">
+                {loc(lang, "Current Plan", "خطتك الحالية", "Plan actuel")}
+              </h2>
             </div>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-text font-semibold capitalize mb-1">
-                  {ar ? "وصول كامل إلى السيرة النبوية" : "Complete Seerah Early Access"}
+                  {loc(
+                    lang,
+                    "Complete Seerah Early Access",
+                    "وصول كامل إلى السيرة النبوية",
+                    "Accès anticipé Complete Seerah",
+                  )}
                 </p>
                 <p className="text-text-secondary text-sm">
-                  {ar ? "وصول كامل إلى جميع الـ ١٠٠ جزء ونظام الإتقان الشامل" : "Full access to all 100 parts and the complete mastery system"}
+                  {loc(
+                    lang,
+                    "Full access to all 100 parts and the complete mastery system",
+                    "وصول كامل إلى جميع الـ ١٠٠ جزء ونظام الإتقان الشامل",
+                    "Accès complet aux 100 parties et au système de maîtrise complet",
+                  )}
                 </p>
               </div>
             </div>

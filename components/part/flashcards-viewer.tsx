@@ -1,4 +1,7 @@
 "use client";
+import type { CourseLang } from "@/lib/course-lang";
+import { isRtlLang } from "@/lib/course-lang";
+import { loc } from "@/lib/loc";
 
 import { useState, useCallback, useRef } from "react";
 import { clsx } from "clsx";
@@ -11,12 +14,13 @@ interface FlashcardsViewerProps {
   partNumber?: number;
   previewMode?: boolean;
   isRtl?: boolean;
+  lang?: CourseLang;
 }
 
-const LEVELS: { id: FlashcardLevel; label: string; labelAr: string }[] = [
-  { id: "easy",   label: "Easy",   labelAr: "سهل" },
-  { id: "medium", label: "Medium", labelAr: "متوسط" },
-  { id: "full",   label: "Full",   labelAr: "كامل" },
+const LEVELS: { id: FlashcardLevel; label: string; labelAr: string; labelFr: string }[] = [
+  { id: "easy",   label: "Easy",   labelAr: "سهل",   labelFr: "Facile" },
+  { id: "medium", label: "Medium", labelAr: "متوسط", labelFr: "Moyen" },
+  { id: "full",   label: "Full",   labelAr: "كامل",  labelFr: "Complet" },
 ];
 
 function shuffleArray<T>(arr: T[]): T[] {
@@ -34,13 +38,16 @@ function FlipCard({
   total,
   onEngage,
   isRtl,
+  lang,
 }: {
   card: Flashcard;
   index: number;
   total: number;
   onEngage?: () => void;
   isRtl?: boolean;
+  lang?: CourseLang;
 }) {
+  const resolvedLang: CourseLang = lang ?? (isRtl ? "ar" : "en");
   const [flipped, setFlipped] = useState(false);
 
   const toggle = () => {
@@ -53,7 +60,7 @@ function FlipCard({
       {/* Progress indicator */}
       <div className="flex items-center justify-between">
         <span className="text-sm font-semibold text-amber-400">
-          {isRtl ? `البطاقة ${index + 1} من ${total}` : `Card ${index + 1} of ${total}`}
+          {loc(resolvedLang, `Card ${index + 1} of ${total}`, `البطاقة ${index + 1} من ${total}`, `Carte ${index + 1} sur ${total}`)}
         </span>
         <div className="flex gap-1.5 flex-wrap justify-end max-w-[60%]">
           {Array.from({ length: Math.min(total, 20) }).map((_, i) => (
@@ -75,9 +82,7 @@ function FlipCard({
 
       {/* Live region announces flip state to screen readers */}
       <div aria-live="polite" aria-atomic="true" className="sr-only">
-        {isRtl
-          ? (flipped ? `الجواب: ${card.side2}` : `السؤال: ${card.side1}`)
-          : (flipped ? `Answer: ${card.side2}` : `Question: ${card.side1}`)}
+        {loc(resolvedLang, flipped ? `Answer: ${card.side2}` : `Question: ${card.side1}`, flipped ? `الجواب: ${card.side2}` : `السؤال: ${card.side1}`, flipped ? `Réponse : ${card.side2}` : `Question : ${card.side1}`)}
       </div>
 
       {/* Flip card — using opacity swap for universal mobile compatibility */}
@@ -102,7 +107,7 @@ function FlipCard({
         >
           <div className="absolute top-4 left-1/2 -translate-x-1/2">
             <span className="inline-block px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-xs font-semibold tracking-wider uppercase text-amber-400">
-              {isRtl ? "السؤال" : "Question"}
+              {loc(resolvedLang, "Question", "السؤال", "Question")}
             </span>
           </div>
           <p className="text-base sm:text-xl font-semibold text-white leading-relaxed text-center max-w-2xl mt-4">
@@ -112,7 +117,7 @@ function FlipCard({
             <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
             </svg>
-            <span>{isRtl ? "انقر لإظهار الجواب" : "Tap to reveal answer"}</span>
+            <span>{loc(resolvedLang, "Tap to reveal answer", "انقر لإظهار الجواب", "Appuyez pour révéler la réponse")}</span>
           </div>
         </div>
 
@@ -125,7 +130,7 @@ function FlipCard({
         >
           <div className="absolute top-4 left-1/2 -translate-x-1/2">
             <span className="inline-block px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/30 text-xs font-semibold tracking-wider uppercase text-amber-300">
-              {isRtl ? "الجواب" : "Answer"}
+              {loc(resolvedLang, "Answer", "الجواب", "Réponse")}
             </span>
           </div>
           <p className="text-base sm:text-xl font-semibold text-white leading-relaxed text-center max-w-2xl mt-4 mb-4">
@@ -145,7 +150,7 @@ function FlipCard({
             </div>
           )}
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-zinc-500 text-xs whitespace-nowrap">
-            {isRtl ? "انقر للعودة" : "Tap to flip back"}
+            {loc(resolvedLang, "Tap to flip back", "انقر للعودة", "Appuyez pour retourner")}
           </div>
         </div>
       </div>
@@ -153,7 +158,9 @@ function FlipCard({
   );
 }
 
-export function FlashcardsViewer({ flashcards, partNumber, previewMode, isRtl }: FlashcardsViewerProps) {
+export function FlashcardsViewer({ flashcards, partNumber, previewMode, isRtl, lang: langProp }: FlashcardsViewerProps) {
+  const lang: CourseLang = langProp ?? (isRtl ? "ar" : "en");
+  const rtl = isRtlLang(lang);
   const [level, setLevel] = useState<FlashcardLevel>("easy");
   const [index, setIndex] = useState(0);
   const [deck, setDeck] = useState<Flashcard[]>(flashcards.easy);
@@ -206,7 +213,7 @@ export function FlashcardsViewer({ flashcards, partNumber, previewMode, isRtl }:
     return (
       <div className="py-16 text-center">
         <p className="text-zinc-400 text-base">
-          {isRtl ? "لا توجد بطاقات تعليمية لهذا المستوى." : "No flashcards available for this level."}
+          {loc(lang, "No flashcards available for this level.", "لا توجد بطاقات تعليمية لهذا المستوى.", "Aucune flashcard disponible pour ce niveau.")}
         </p>
       </div>
     );
@@ -230,7 +237,7 @@ export function FlashcardsViewer({ flashcards, partNumber, previewMode, isRtl }:
                     : "bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-zinc-300 hover:border-zinc-700"
                 )}
               >
-                {isRtl ? l.labelAr : l.label}
+                {loc(lang, l.label, l.labelAr, l.labelFr)}
                 <span className={clsx(
                   "text-xs font-bold px-2 py-0.5 rounded-full",
                   level === l.id ? "bg-amber-500/30 text-amber-300" : "bg-zinc-800 text-zinc-500"
@@ -249,7 +256,7 @@ export function FlashcardsViewer({ flashcards, partNumber, previewMode, isRtl }:
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-zinc-700 bg-zinc-800/50 text-zinc-300 hover:bg-zinc-800 hover:border-zinc-600 transition-all"
             >
               <RotateCcw className="w-4 h-4" />
-              {isRtl ? "إعادة الترتيب" : "Reset Order"}
+              {loc(lang, "Reset Order", "إعادة الترتيب", "Réinitialiser l'ordre")}
             </button>
           ) : (
             <button
@@ -257,7 +264,7 @@ export function FlashcardsViewer({ flashcards, partNumber, previewMode, isRtl }:
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-zinc-700 bg-zinc-800/50 text-zinc-300 hover:bg-zinc-800 hover:border-zinc-600 transition-all"
             >
               <Shuffle className="w-4 h-4" />
-              {isRtl ? "ترتيب عشوائي" : "Shuffle"}
+              {loc(lang, "Shuffle", "ترتيب عشوائي", "Mélanger")}
             </button>
           )}
         </div>
@@ -270,7 +277,8 @@ export function FlashcardsViewer({ flashcards, partNumber, previewMode, isRtl }:
         index={index}
         total={deck.length}
         onEngage={markReviewed}
-        isRtl={isRtl}
+        isRtl={rtl}
+      lang={lang}
       />
 
       {/* Navigation */}
@@ -285,8 +293,8 @@ export function FlashcardsViewer({ flashcards, partNumber, previewMode, isRtl }:
               : "border-zinc-700 bg-zinc-900/50 text-zinc-300 hover:border-zinc-600 hover:bg-zinc-900 hover:text-white"
           )}
         >
-          {isRtl ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-          {isRtl ? "السابق" : "Previous"}
+          {rtl ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+          {loc(lang, "Previous", "السابق", "Précédent")}
         </button>
 
         <div className="flex flex-col items-center gap-1">
@@ -311,8 +319,8 @@ export function FlashcardsViewer({ flashcards, partNumber, previewMode, isRtl }:
               : "border-amber-500/40 bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 hover:border-amber-500/60 shadow-lg shadow-amber-500/10"
           )}
         >
-          {isRtl ? "التالي" : "Next"}
-          {isRtl ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+          {loc(lang, "Next", "التالي", "Suivant")}
+          {rtl ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
         </button>
       </div>
     </div>

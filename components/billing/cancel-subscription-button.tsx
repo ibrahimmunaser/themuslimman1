@@ -15,12 +15,14 @@ export function CancelSubscriptionButton({ cancelDate, isTrial, lang = "en" }: P
   const [step, setStep] = useState<"idle" | "confirm" | "loading" | "done" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
 
-  const formattedDate = new Date(cancelDate).toLocaleDateString(lang === "ar" ? "ar-EG" : "en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
-
+  const formattedDate = new Date(cancelDate).toLocaleDateString(
+    lang === "ar" ? "ar-EG" : lang === "fr" ? "fr-FR" : "en-US",
+    {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    },
+  );
   async function handleCancel() {
     setStep("loading");
     setError(null);

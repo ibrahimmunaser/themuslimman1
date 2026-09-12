@@ -13,7 +13,7 @@ interface Part1PreviewTabsProps {
     mindmapUrl?: string;
     thumbnailUrl?: string;
   };
-  /** Language the preview was rendered in — drives EN/AR UI + asset selection. */
+  /** Language the preview was rendered in — drives EN/AR/FR UI + asset selection. */
   initialLang?: CourseLang;
   /** Hide the language toggle (e.g. when the parent already shows one). */
   hideLangToggle?: boolean;

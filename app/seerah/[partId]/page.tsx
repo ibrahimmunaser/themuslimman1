@@ -340,6 +340,7 @@ export default async function SeerahPartPage(props: Props) {
             currentPart={n}
             totalParts={allParts.length}
             isRtl={lang === "ar"}
+            lang={lang}
           />
         </div>
       </div>

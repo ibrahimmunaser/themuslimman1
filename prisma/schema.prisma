@@ -877,6 +877,11 @@ model User {
   /// existing/returning students (pre-Arabic-launch accounts); brand-new
   /// signups are not shown this banner (they use the sidebar language toggle).
   hasSeenArabicAnnouncement                       Boolean                @default(false)
+  /// True once the student has dismissed the one-time celebration announcing
+  /// that Complete Seerah is available in English, Arabic, and French (with
+  /// more languages planned). Shown once per account for every student —
+  /// including new signups and returning sign-ins.
+  hasSeenLanguagesAnnouncement                    Boolean                @default(false)
   activityLogs                                    ActivityLog[]
   emailAutomationEvents                           EmailAutomationEvent[]
   emailOutreachLogs                               EmailOutreachLog[]

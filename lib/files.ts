@@ -21,6 +21,9 @@ import {
   r2ReadArabicStudyGuide,
   r2ReadArabicFlashcards,
   r2ReadArabicQuiz,
+  r2GetFrenchVideoKey,
+  r2GetFrenchInfographicKey,
+  r2GetFrenchSlideKeys,
   generateSignedR2Url,
   getThumbnailUrl,
   r2FileExists,
@@ -30,8 +33,11 @@ import {
 import type { CourseLang } from "./course-lang";
 import { PART_CONTENT } from "./part-content-data";
 import { PART_CONTENT_AR } from "./part-content-data-ar";
+import { PART_CONTENT_FR } from "./part-content-data-fr";
 import { PART_QUIZ_AR } from "./part-quiz-data-ar";
 import { PART_FLASHCARDS_AR } from "./part-flashcard-data-ar";
+import { PART_QUIZ_FR } from "./part-quiz-data-fr";
+import { PART_FLASHCARDS_FR } from "./part-flashcard-data-fr";
 
 export const SEERAH_ROOT =
   process.env.SEERAH_DATA_DIR ?? path.resolve(/*turbopackIgnore: true*/ process.cwd(), "..", "Seerah-data");
@@ -84,6 +90,11 @@ export async function readBriefing(partNum: number, lang: CourseLang = "en"): Pr
     if (!USE_R2) return null;
     return r2ReadArabicBriefing(partNum);
   }
+  if (lang === "fr") {
+    const hardcoded = PART_CONTENT_FR[partNum]?.briefingText;
+    if (hardcoded != null) return hardcoded;
+    return null;
+  }
   // Return hardcoded content if available (takes priority over R2/filesystem)
   const hardcoded = PART_CONTENT[partNum]?.briefingText;
   if (hardcoded != null) return hardcoded;
@@ -103,6 +114,11 @@ export async function readStatementOfFacts(partNum: number, lang: CourseLang = "
     if (hardcoded != null) return hardcoded;
     if (!USE_R2) return null;
     return r2ReadArabicStatementOfFacts(partNum);
+  }
+  if (lang === "fr") {
+    const hardcoded = PART_CONTENT_FR[partNum]?.statementOfFactsText;
+    if (hardcoded != null) return hardcoded;
+    return null;
   }
   // Return hardcoded content if available (takes priority over R2/filesystem)
   const hardcoded = PART_CONTENT[partNum]?.statementOfFactsText;
@@ -183,6 +199,9 @@ export async function getInfographicFilename(
     // Arabic has a single infographic per part; return the key for all style queries
     // so callers can sign and populate whichever slot they prefer.
     return r2GetArabicInfographicKey(partNum);
+  }
+  if (lang === "fr") {
+    return r2GetFrenchInfographicKey(partNum);
   }
   if (USE_R2) {
     const key = await r2GetInfographicKey(partNum, style);
@@ -274,6 +293,19 @@ export async function getSlideFiles(
       })
     );
   }
+  if (lang === "fr") {
+    // French slides: single presented-style set under french/slides/Part N/.
+    // No WebP variants uploaded yet — sign the watermarked PNGs directly.
+    if (type !== "presented") return [];
+    if (!USE_R2) return [];
+    const pngKeys = await r2GetFrenchSlideKeys(partNum);
+    return Promise.all(
+      pngKeys.map(async (pngKey) => {
+        const url = await generateSignedR2Url(pngKey, IMAGE_URL_EXPIRY);
+        return { medium: url, thumb: url };
+      })
+    );
+  }
   if (USE_R2) {
     const pngKeys = await r2GetSlideKeys(partNum, type);
     // Sign the pre-generated WebP variants instead of the raw PNGs.
@@ -324,6 +356,11 @@ export async function readFlashcards(partNum: number, lang: CourseLang = "en"): 
     if (!USE_R2) return null;
     return r2ReadArabicFlashcards(partNum);
   }
+  if (lang === "fr") {
+    const hardcoded = PART_FLASHCARDS_FR[partNum];
+    if (hardcoded != null) return hardcoded;
+    return null;
+  }
   if (USE_R2) {
     return await r2ReadFlashcards(partNum);
   }
@@ -347,6 +384,11 @@ export async function readQuiz(partNum: number, lang: CourseLang = "en"): Promis
     if (hardcoded != null) return hardcoded;
     if (!USE_R2) return null;
     return r2ReadArabicQuiz(partNum);
+  }
+  if (lang === "fr") {
+    const hardcoded = PART_QUIZ_FR[partNum];
+    if (hardcoded != null) return hardcoded;
+    return null;
   }
   if (USE_R2) {
     return await r2ReadQuiz(partNum);
@@ -409,6 +451,23 @@ export async function getPartAssetUrls(partNum: number, lang: CourseLang = "en")
       generateSignedR2Url(audioKey, VIDEO_URL_EXPIRY),
       mindmapKey ? generateSignedR2Url(mindmapKey, IMAGE_URL_EXPIRY) : Promise.resolve(undefined),
       getThumbnailUrl(partNum, "ar").catch(() => undefined),
+    ]);
+    return { videoUrl, audioUrl, mindmapUrl, thumbnailUrl };
+  }
+
+  if (lang === "fr") {
+    // French: deterministic video + infographic/slides elsewhere; no french/audio —
+    // fall back to English audio so Listen-on-the-Go still works.
+    const videoKey = r2GetFrenchVideoKey(partNum);
+    const [audioKey, mindmapKey] = await Promise.all([
+      r2GetAudioKey(partNum),
+      r2GetMindmapKey(partNum).catch(() => null),
+    ]);
+    const [videoUrl, audioUrl, mindmapUrl, thumbnailUrl] = await Promise.all([
+      generateSignedR2Url(videoKey, VIDEO_URL_EXPIRY),
+      audioKey ? generateSignedR2Url(audioKey, VIDEO_URL_EXPIRY) : Promise.resolve(undefined),
+      mindmapKey ? generateSignedR2Url(mindmapKey, IMAGE_URL_EXPIRY) : Promise.resolve(undefined),
+      getThumbnailUrl(partNum, "fr").catch(() => undefined),
     ]);
     return { videoUrl, audioUrl, mindmapUrl, thumbnailUrl };
   }

@@ -31,6 +31,9 @@ import dynamic from "next/dynamic";
 import { WidgetCycleProvider } from "./widget-cycle-context";
 import { LangToggle } from "@/components/part/lang-toggle";
 import type { CourseLang } from "@/lib/course-lang";
+import { isRtlLang } from "@/lib/course-lang";
+import { loc } from "@/lib/loc";
+import { t } from "@/lib/ui-strings";
 
 // Lazy-load widget components so their bundled JSON data (facts, miracles, prophecies)
 // does not block the initial sidebar render. ssr:false avoids hydration mismatch
@@ -61,10 +64,15 @@ interface MenuItem {
   id: string;
   label: string;
   labelAr: string;
+  labelFr: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   badge?: string;
   tabId?: string;
+}
+
+function menuLabel(item: MenuItem, lang: CourseLang): string {
+  return loc(lang, item.label, item.labelAr, item.labelFr);
 }
 
 // ACCOUNT_MENU is built dynamically inside the component so the Profiles link
@@ -76,9 +84,10 @@ export function StudentSidebar({
   activeProfileName,
   planType = "individual",
   lang = "en",
-  isRtl,
+  isRtl: isRtlProp,
 }: StudentSidebarProps) {
   const pathname = usePathname();
+  const isRtl = isRtlProp ?? isRtlLang(lang);
 
   const [collapsed,   setCollapsed]   = useState(false);
   const [mobileOpen,  setMobileOpen]  = useState(false);
@@ -156,21 +165,21 @@ export function StudentSidebar({
   const isOnDashboard = pathname === "/seerah";
 
   const MAIN_MENU: MenuItem[] = [
-    { id: "dashboard",  label: "Dashboard",  labelAr: "الرئيسية",   href: "/seerah",               icon: LayoutDashboard, tabId: "home"      },
-    { id: "lessons",    label: "Lessons",    labelAr: "الدروس",     href: "/seerah?tab=lessons",   icon: BookOpen,        tabId: "lessons"   },
-    { id: "resources",  label: "Resources",  labelAr: "الموارد",    href: "/seerah?tab=resources", icon: FolderOpen,      tabId: "resources" },
-    { id: "reference",  label: "Reference",  labelAr: "المرجع",     href: "/seerah?tab=reference", icon: Library,         tabId: "reference" },
-    { id: "progress",   label: "Progress",   labelAr: "التقدّم",    href: "/seerah?tab=progress",  icon: TrendingUp,      tabId: "progress"  },
+    { id: "dashboard",  label: "Dashboard",  labelAr: "الرئيسية", labelFr: "Tableau de bord", href: "/seerah",               icon: LayoutDashboard, tabId: "home"      },
+    { id: "lessons",    label: "Lessons",    labelAr: "الدروس",   labelFr: "Leçons",          href: "/seerah?tab=lessons",   icon: BookOpen,        tabId: "lessons"   },
+    { id: "resources",  label: "Resources",  labelAr: "الموارد",  labelFr: "Ressources",      href: "/seerah?tab=resources", icon: FolderOpen,      tabId: "resources" },
+    { id: "reference",  label: "Reference",  labelAr: "المرجع",   labelFr: "Référence",       href: "/seerah?tab=reference", icon: Library,         tabId: "reference" },
+    { id: "progress",   label: "Progress",   labelAr: "التقدّم",  labelFr: "Progression",     href: "/seerah?tab=progress",  icon: TrendingUp,      tabId: "progress"  },
   ];
 
   const isFamily = planType === "family";
   const ACCOUNT_MENU: MenuItem[] = [
-    { id: "help",    label: "Help",    labelAr: "المساعدة", href: "/help",    icon: HelpCircle },
+    { id: "help",    label: "Help",    labelAr: "المساعدة", labelFr: "Aide", href: "/help",    icon: HelpCircle },
     // For family plans, "Profiles" goes to the Netflix-style picker (/profiles).
     // For individual plans, it goes to the profile management page.
-    { id: "settings", label: "Settings", labelAr: "الإعدادات", href: "/student/settings", icon: User },
-    { id: "profiles", label: "Profiles", labelAr: "الملفات الشخصية", href: isFamily ? "/profiles" : "/student/profiles", icon: Users },
-    { id: "billing", label: "Billing",  labelAr: "الفواتير",  href: "/billing",  icon: CreditCard },
+    { id: "settings", label: "Settings", labelAr: "الإعدادات", labelFr: "Paramètres", href: "/student/settings", icon: User },
+    { id: "profiles", label: "Profiles", labelAr: "الملفات الشخصية", labelFr: "Profils", href: isFamily ? "/profiles" : "/student/profiles", icon: Users },
+    { id: "billing", label: "Billing",  labelAr: "الفواتير",  labelFr: "Facturation", href: "/billing",  icon: CreditCard },
   ];
 
   const isActive = (item: MenuItem) => {
@@ -221,8 +230,8 @@ export function StudentSidebar({
           <button
             onClick={() => setCollapsed(true)}
             className="hidden lg:flex w-7 h-7 rounded-md items-center justify-center text-text-muted hover:text-text hover:bg-surface-raised transition-all flex-shrink-0"
-            aria-label={isRtl ? "طيّ الشريط الجانبي" : "Collapse sidebar"}
-            title={isRtl ? "طيّ الشريط الجانبي" : "Collapse sidebar"}
+            aria-label={loc(lang, "Collapse sidebar", "طيّ الشريط الجانبي", "Réduire la barre latérale")}
+            title={loc(lang, "Collapse sidebar", "طيّ الشريط الجانبي", "Réduire la barre latérale")}
           >
             {isRtl ? <PanelRightClose className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
           </button>
@@ -239,7 +248,7 @@ export function StudentSidebar({
             <div className="flex-1 min-w-0">
               <p className="text-xs font-semibold text-text truncate">{userName}</p>
               <span className="inline-block px-2 py-0.5 rounded text-[10px] font-semibold bg-gold/10 text-gold border border-gold/20 mt-1">
-                {isRtl ? "وصول كامل" : "Complete Access"}
+                {loc(lang, "Complete Access", "وصول كامل", "Accès complet")}
               </span>
             </div>
           )}
@@ -257,7 +266,7 @@ export function StudentSidebar({
                 href="/profiles"
                 className="flex-shrink-0 text-[10px] font-semibold text-gold/70 hover:text-gold transition-colors whitespace-nowrap"
               >
-                {isRtl ? "تبديل" : "Switch"}
+                {loc(lang, "Switch", "تبديل", "Changer")}
               </Link>
             </div>
           </div>
@@ -273,7 +282,7 @@ export function StudentSidebar({
       <div className="flex-1 overflow-y-auto py-3 min-h-0">
         <nav className="px-3">
           {!collapsed && (
-            <p className="px-2 text-xs font-semibold text-text-muted mb-2 uppercase tracking-wider">{isRtl ? "الدورة" : "Course"}</p>
+            <p className="px-2 text-xs font-semibold text-text-muted mb-2 uppercase tracking-wider">{t(lang, "course")}</p>
           )}
           <div className="space-y-1">
             {MAIN_MENU.map((item) => {
@@ -290,14 +299,14 @@ export function StudentSidebar({
                 return (
                   <button key={item.id} onClick={() => handleTabSwitch(item.tabId!)} className={cls}>
                     <Icon className="w-5 h-5 flex-shrink-0" />
-                    {!collapsed && <span className="flex-1">{isRtl ? item.labelAr : item.label}</span>}
+                    {!collapsed && <span className="flex-1">{menuLabel(item, lang)}</span>}
                   </button>
                 );
               }
               return (
                 <Link key={item.id} href={item.href} onClick={() => setPendingHref(item.href)} className={cls}>
                   <Icon className="w-5 h-5 flex-shrink-0" />
-                  {!collapsed && <span className="flex-1">{isRtl ? item.labelAr : item.label}</span>}
+                  {!collapsed && <span className="flex-1">{menuLabel(item, lang)}</span>}
                 </Link>
               );
             })}
@@ -307,12 +316,12 @@ export function StudentSidebar({
         {!collapsed && (
           <>
             <div className="px-4 pt-3 pb-1">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted/50">{isRtl ? "اكتشف" : "Explore"}</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted/50">{loc(lang, "Explore", "اكتشف", "Explorer")}</p>
             </div>
             <WidgetCycleProvider>
-              <DidYouKnowWidget isRtl={isRtl} />
-              <MiraclesWidget isRtl={isRtl} />
-              <PropheciesWidget isRtl={isRtl} />
+              <DidYouKnowWidget lang={lang} />
+              <MiraclesWidget lang={lang} />
+              <PropheciesWidget lang={lang} />
             </WidgetCycleProvider>
           </>
         )}
@@ -320,9 +329,9 @@ export function StudentSidebar({
 
       {/* Account + Sign Out — pinned footer, always visible */}
       <div className="flex-shrink-0 border-t border-border">
-        <nav className="px-3 pt-2 pb-1" aria-label={isRtl ? "الحساب" : "Account"}>
+        <nav className="px-3 pt-2 pb-1" aria-label={loc(lang, "Account", "الحساب", "Compte")}>
           {!collapsed && (
-            <p className="px-2 pt-1 pb-1.5 text-xs font-semibold text-text-muted uppercase tracking-wider">{isRtl ? "الحساب" : "Account"}</p>
+            <p className="px-2 pt-1 pb-1.5 text-xs font-semibold text-text-muted uppercase tracking-wider">{loc(lang, "Account", "الحساب", "Compte")}</p>
           )}
           <div className="space-y-0.5">
             {ACCOUNT_MENU.map((item) => {
@@ -341,7 +350,7 @@ export function StudentSidebar({
                   )}
                 >
                   <Icon className="w-5 h-5 flex-shrink-0" />
-                  {!collapsed && <span className="flex-1">{isRtl ? item.labelAr : item.label}</span>}
+                  {!collapsed && <span className="flex-1">{menuLabel(item, lang)}</span>}
                 </Link>
               );
             })}
@@ -353,7 +362,7 @@ export function StudentSidebar({
             className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-red-400/70 hover:text-red-400 hover:bg-red-500/8 transition-all"
           >
             <LogOut className="w-5 h-5 flex-shrink-0" />
-            {!collapsed && <span className="flex-1 text-start">{isRtl ? "تسجيل الخروج" : "Sign Out"}</span>}
+            {!collapsed && <span className="flex-1 text-start">{loc(lang, "Sign Out", "تسجيل الخروج", "Se déconnecter")}</span>}
           </button>
         </div>
       </div>
@@ -379,7 +388,7 @@ export function StudentSidebar({
         <button
           onClick={closeDrawer}
           className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-text-muted hover:text-text hover:bg-surface-raised transition-colors"
-          aria-label={isRtl ? "إغلاق القائمة" : "Close menu"}
+          aria-label={loc(lang, "Close menu", "إغلاق القائمة", "Fermer le menu")}
         >
           <X className="w-4 h-4" />
         </button>
@@ -397,7 +406,7 @@ export function StudentSidebar({
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-text truncate">{userName}</p>
               <span className="inline-block px-2 py-0.5 rounded text-[10px] font-semibold bg-gold/10 text-gold border border-gold/20 mt-0.5">
-                {isRtl ? "وصول كامل" : "Complete Access"}
+                {loc(lang, "Complete Access", "وصول كامل", "Accès complet")}
               </span>
             </div>
           </div>
@@ -407,11 +416,8 @@ export function StudentSidebar({
               <div className="flex items-center gap-1.5 min-w-0">
                 <UserCircle className="w-3.5 h-3.5 text-text-muted flex-shrink-0" />
                 <span className="text-xs text-text-muted truncate">
-                  {isRtl ? (
-                    <>يتعلّم الآن: <span className="text-text font-medium">{activeProfileName}</span></>
-                  ) : (
-                    <>Learning as <span className="text-text font-medium">{activeProfileName}</span></>
-                  )}
+                  {loc(lang, "Learning as", "يتعلّم الآن:", "Apprend en tant que")}{" "}
+                  <span className="text-text font-medium">{activeProfileName}</span>
                 </span>
               </div>
               <Link
@@ -419,7 +425,7 @@ export function StudentSidebar({
                 onClick={closeDrawer}
                 className="flex-shrink-0 text-xs font-semibold text-gold/70 hover:text-gold transition-colors whitespace-nowrap"
               >
-                {isRtl ? "تبديل" : "Switch"}
+                {loc(lang, "Switch", "تبديل", "Changer")}
               </Link>
             </div>
           )}
@@ -430,9 +436,9 @@ export function StudentSidebar({
 
         {/* Course nav — only when top tabs are NOT visible (i.e. not on /seerah dashboard) */}
         {!isOnDashboard && (
-          <nav className="px-3 py-2 border-b border-border/50" aria-label={isRtl ? "تنقل الدورة" : "Course navigation"}>
+          <nav className="px-3 py-2 border-b border-border/50" aria-label={loc(lang, "Course navigation", "تنقل الدورة", "Navigation du cours")}>
             <p className="px-2 pt-1 pb-2 text-[10px] font-semibold text-text-muted uppercase tracking-[0.12em]">
-              {isRtl ? "الدورة" : "Course"}
+              {t(lang, "course")}
             </p>
             <div className="space-y-0.5">
               {MAIN_MENU.map((item) => {
@@ -451,7 +457,7 @@ export function StudentSidebar({
                     )}
                   >
                     <Icon className="w-4 h-4 flex-shrink-0" />
-                    <span>{isRtl ? item.labelAr : item.label}</span>
+                    <span>{menuLabel(item, lang)}</span>
                     {isRtl ? (
                       <ChevronLeft className="w-3.5 h-3.5 ms-auto text-text-muted/40" />
                     ) : (
@@ -465,9 +471,9 @@ export function StudentSidebar({
         )}
 
         {/* Account actions */}
-        <nav className="px-3 py-2" aria-label={isRtl ? "الحساب" : "Account"}>
+        <nav className="px-3 py-2" aria-label={loc(lang, "Account", "الحساب", "Compte")}>
           <p className="px-2 pt-1 pb-2 text-[10px] font-semibold text-text-muted uppercase tracking-[0.12em]">
-            {isRtl ? "الحساب" : "Account"}
+            {loc(lang, "Account", "الحساب", "Compte")}
           </p>
           <div className="space-y-0.5">
             {ACCOUNT_MENU.map((item) => {
@@ -486,7 +492,7 @@ export function StudentSidebar({
                   )}
                 >
                   <Icon className="w-4 h-4 flex-shrink-0" />
-                  <span>{isRtl ? item.labelAr : item.label}</span>
+                  <span>{menuLabel(item, lang)}</span>
                   {isRtl ? (
                     <ChevronLeft className="w-3.5 h-3.5 ms-auto text-text-muted/40" />
                   ) : (
@@ -501,12 +507,12 @@ export function StudentSidebar({
         {/* Educational enrichment cards — compact on mobile */}
         <div className="px-3 py-2 border-t border-border/40 mt-1">
           <p className="px-2 pt-1 pb-2 text-[10px] font-semibold text-text-muted uppercase tracking-[0.12em]">
-            {isRtl ? "اكتشف" : "Explore"}
+            {loc(lang, "Explore", "اكتشف", "Explorer")}
           </p>
           <WidgetCycleProvider>
-            <DidYouKnowWidget isRtl={isRtl} />
-            <MiraclesWidget isRtl={isRtl} />
-            <PropheciesWidget isRtl={isRtl} />
+            <DidYouKnowWidget lang={lang} />
+            <MiraclesWidget lang={lang} />
+            <PropheciesWidget lang={lang} />
           </WidgetCycleProvider>
         </div>
       </div>
@@ -519,7 +525,7 @@ export function StudentSidebar({
           className="w-full flex items-center gap-3 px-3 py-2.5 min-h-[44px] rounded-lg text-sm font-medium text-red-400/70 hover:text-red-400 hover:bg-red-500/8 transition-all"
         >
           <LogOut className="w-4 h-4 flex-shrink-0" />
-          <span>{isRtl ? "تسجيل الخروج" : "Sign Out"}</span>
+          <span>{loc(lang, "Sign Out", "تسجيل الخروج", "Se déconnecter")}</span>
         </button>
       </div>
     </>
@@ -532,7 +538,7 @@ export function StudentSidebar({
         <button
           ref={triggerRef}
           onClick={() => setMobileOpen(!mobileOpen)}
-          aria-label={isRtl ? (mobileOpen ? "إغلاق القائمة" : "فتح قائمة الحساب") : (mobileOpen ? "Close menu" : "Open account menu")}
+          aria-label={mobileOpen ? loc(lang, "Close menu", "إغلاق القائمة", "Fermer le menu") : t(lang, "openAccountMenu")}
           aria-expanded={mobileOpen}
           aria-controls="mobile-drawer"
           // z-[70] keeps the button above the overlay (z-[55]) and drawer (z-[65]).
@@ -545,7 +551,7 @@ export function StudentSidebar({
         >
           {mobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
           <span className="text-xs font-semibold">
-            {isRtl ? (mobileOpen ? "إغلاق" : "القائمة") : (mobileOpen ? "Close" : "Menu")}
+            {mobileOpen ? loc(lang, "Close", "إغلاق", "Fermer") : loc(lang, "Menu", "القائمة", "Menu")}
           </span>
         </button>
       )}
@@ -565,7 +571,7 @@ export function StudentSidebar({
         ref={drawerRef}
         role="dialog"
         aria-modal="true"
-        aria-label={isRtl ? "قائمة الحساب" : "Account menu"}
+        aria-label={loc(lang, "Account menu", "قائمة الحساب", "Menu du compte")}
         dir={isRtl ? "rtl" : "ltr"}
         className={clsx(
           "fixed top-0 bottom-0 bg-surface flex flex-col",
@@ -603,8 +609,8 @@ export function StudentSidebar({
             <button
               onClick={() => setCollapsed(false)}
               className="w-8 h-8 rounded-lg bg-surface-raised hover:bg-surface-high flex items-center justify-center text-text-muted hover:text-text transition-all"
-              aria-label={isRtl ? "توسيع الشريط الجانبي" : "Expand sidebar"}
-              title={isRtl ? "توسيع الشريط الجانبي" : "Expand sidebar"}
+              aria-label={loc(lang, "Expand sidebar", "توسيع الشريط الجانبي", "Développer la barre latérale")}
+              title={loc(lang, "Expand sidebar", "توسيع الشريط الجانبي", "Développer la barre latérale")}
             >
               {isRtl ? <PanelRightOpen className="w-4 h-4" /> : <PanelLeftOpen className="w-4 h-4" />}
             </button>

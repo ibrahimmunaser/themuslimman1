@@ -71,7 +71,7 @@ export default async function LearnIndexPage({
   const cookieStoreForLang = await cookies();
   const lang = parseLang(cookieStoreForLang.get(COURSE_LANG_COOKIE)?.value);
 
-  const [hasAccess, thumbnails, learnerProfileId, welcomeTourFlag] = await Promise.all([
+  const [hasAccess, thumbnails, learnerProfileId, welcomeTourFlag, languagesFlag] = await Promise.all([
     hasActiveCourseAccess(user.id, user.hasPaid),
     getThumbnailUrls(PARTS.map((p) => p.partNumber), lang),
     user.activeProfileId
@@ -85,14 +85,20 @@ export default async function LearnIndexPage({
         hasSeenArabicAnnouncement: true,
       },
     }),
+    prisma.$queryRaw<Array<{ seen: boolean }>>`
+      SELECT "hasSeenLanguagesAnnouncement" AS seen
+      FROM "User"
+      WHERE id = ${user.id}
+      LIMIT 1
+    `,
   ]);
-  // Existing/returning students (pre-Arabic-launch accounts) get the Arabic
-  // announcement once. Brand-new signups get the welcome tour once and find
-  // Arabic via the sidebar language toggle — never both messages at once.
+  // Languages celebration shows once to everyone. Welcome tour / Arabic banner
+  // wait until that celebration has been seen so messages don't stack.
   const { showWelcomeTour, showArabicAnnouncement } = getDashboardOnboardingFlags({
     createdAt: welcomeTourFlag?.createdAt ?? new Date(),
     hasSeenWelcomeTour: welcomeTourFlag?.hasSeenWelcomeTour === true,
     hasSeenArabicAnnouncement: welcomeTourFlag?.hasSeenArabicAnnouncement === true,
+    hasSeenLanguagesAnnouncement: languagesFlag?.[0]?.seen === true,
   });
 
   // Check if the user's subscription is past_due — they still have access

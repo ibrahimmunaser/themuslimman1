@@ -3,6 +3,7 @@ import { ERAS } from "./types";
 import { isPartInEssentials } from "./essentials-sequence";
 import type { CourseLang } from "./course-lang";
 import { PART_TITLES_AR, ERA_LABELS_AR } from "./part-titles-ar";
+import { PART_TITLES_FR, ERA_LABELS_FR } from "./part-titles-fr";
 
 function makePart(
   num: number,
@@ -163,30 +164,33 @@ export function getPartById(id: string): Part | undefined {
   return PARTS.find((p) => p.id === id);
 }
 
-/** Return PARTS with Arabic titles/subtitles when lang is "ar". */
+/** Return PARTS with localized titles/subtitles when lang is "ar" or "fr". */
 export function getPartsForLang(lang: CourseLang = "en"): Part[] {
-  if (lang !== "ar") return PARTS;
+  if (lang !== "ar" && lang !== "fr") return PARTS;
+  const titles = lang === "ar" ? PART_TITLES_AR : PART_TITLES_FR;
   return PARTS.map((p) => {
-    const ar = PART_TITLES_AR[p.partNumber];
-    if (!ar) return p;
-    return { ...p, title: ar.title, subtitle: ar.subtitle };
+    const loc = titles[p.partNumber];
+    if (!loc) return p;
+    return { ...p, title: loc.title, subtitle: loc.subtitle };
   });
 }
 
 /** Localize a single part's title/subtitle. */
 export function localizePart(part: Part, lang: CourseLang = "en"): Part {
-  if (lang !== "ar") return part;
-  const ar = PART_TITLES_AR[part.partNumber];
-  if (!ar) return part;
-  return { ...part, title: ar.title, subtitle: ar.subtitle };
+  if (lang !== "ar" && lang !== "fr") return part;
+  const titles = lang === "ar" ? PART_TITLES_AR : PART_TITLES_FR;
+  const loc = titles[part.partNumber];
+  if (!loc) return part;
+  return { ...part, title: loc.title, subtitle: loc.subtitle };
 }
 
-/** Era list with Arabic labels when lang is "ar". */
+/** Era list with localized labels when lang is "ar" or "fr". */
 export function getErasForLang(lang: CourseLang = "en"): EraInfo[] {
-  if (lang !== "ar") return ERAS;
+  if (lang !== "ar" && lang !== "fr") return ERAS;
+  const labels = lang === "ar" ? ERA_LABELS_AR : ERA_LABELS_FR;
   return ERAS.map((e) => {
-    const ar = ERA_LABELS_AR[e.id];
-    return ar ? { ...e, label: ar.label, description: ar.description } : e;
+    const loc = labels[e.id];
+    return loc ? { ...e, label: loc.label, description: loc.description } : e;
   });
 }
 

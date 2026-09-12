@@ -8,6 +8,7 @@ import { PricingSection } from "@/components/pricing/pricing-section";
 import { FadeUp } from "@/components/motion";
 import { FunnelTracker } from "@/components/analytics/funnel-tracker";
 import { PortalButton } from "@/components/billing/portal-button";
+import { LanguagesLaunchGate } from "@/components/student/languages-launch-gate";
 
 export const metadata = {
   title: "Pricing — Complete Seerah",
@@ -31,6 +32,10 @@ const FAQ_ITEMS = [
   {
     q: "What is included?",
     a: "Every plan includes the full 100-part Seerah course with video lessons, readings, quizzes, flashcards, summaries, mind maps, and progress tracking. All future content is included automatically.",
+  },
+  {
+    q: "What languages is the course available in?",
+    a: "English, Arabic, and French — including lessons, quizzes, flashcards, and reference guides. More languages are planned.",
   },
   {
     q: "Can I cancel anytime?",
@@ -244,6 +249,7 @@ export default async function PricingPage({ searchParams }: Props) {
       </section>
 
       <Footer />
+      {user && <LanguagesLaunchGate userId={user.id} />}
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { getPartsForLang, getErasForLang } from "@/lib/content";
 import type { Era, Part } from "@/lib/types";
 import type { CourseLang } from "@/lib/course-lang";
+import { loc } from "@/lib/loc";
 import { ResourceFilterBar } from "./resource-filter-bar";
 
 interface ResourcePageClientProps {
@@ -70,9 +71,9 @@ export function ResourcePageClient({
 
       {filteredParts.length === 0 ? (
         <div className="text-center py-16">
-          <p className="text-zinc-400">{lang === "ar" ? "لا نتائج" : "No results found"}</p>
+          <p className="text-zinc-400">{loc(lang, "No results found", "لا نتائج", "Aucun résultat")}</p>
           <p className="text-zinc-500 text-sm mt-1">
-            {lang === "ar" ? "جرّب تعديل عوامل التصفية" : "Try adjusting your filters"}
+            {loc(lang, "Try adjusting your filters", "جرّب تعديل عوامل التصفية", "Essayez de modifier vos filtres")}
           </p>
         </div>
       ) : selectedEra === "all" ? (
@@ -84,7 +85,7 @@ export function ResourcePageClient({
               <div key={era.id}>
                 <div className="mb-4">
                   <h2 className="text-base sm:text-xl font-bold text-white">
-                    {lang === "ar" ? (era.labelAr ?? era.label) : era.label}
+                    {era.label}
                   </h2>
                   <p className="text-zinc-500 text-xs sm:text-sm mt-0.5">{era.description}</p>
                 </div>

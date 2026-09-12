@@ -1,4 +1,8 @@
 "use client";
+import type { CourseLang } from "@/lib/course-lang";
+import { isRtlLang } from "@/lib/course-lang";
+import { loc } from "@/lib/loc";
+import { t } from "@/lib/ui-strings";
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Play, Pause, Volume2, VolumeX, Maximize, RotateCcw, RotateCw, Gauge } from "lucide-react";
@@ -38,6 +42,7 @@ interface VideoPlayerProps {
    */
   companionAudioSrc?: string;
   isRtl?: boolean;
+  lang?: CourseLang;
 }
 
 // Crop the English intro bumper. Arabic masters start speaking immediately,
@@ -48,7 +53,9 @@ function getVideoStartOffset(partNumber?: number, isRtl?: boolean): number {
   return 2;
 }
 
-export function VideoPlayer({ src, title, poster, partNumber, previewMode, initialVideoPercent, companionAudioSrc, isRtl }: VideoPlayerProps) {
+export function VideoPlayer({ src, title, poster, partNumber, previewMode, initialVideoPercent, companionAudioSrc, isRtl, lang: langProp }: VideoPlayerProps) {
+  const lang: CourseLang = langProp ?? (isRtl ? "ar" : "en");
+  const rtl = isRtlLang(lang);
   const videoRef        = useRef<HTMLVideoElement>(null);
   const overlayAudioRef = useRef<HTMLAudioElement | null>(null);
   const companionAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -270,8 +277,8 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
           <Play className="w-7 h-7 text-gold/60 ml-1" />
         </div>
         <div className="text-center">
-          <p className="text-text-secondary text-sm font-medium">{isRtl ? "لا يوجد فيديو لهذا الجزء" : "No video for this part"}</p>
-          <p className="text-text-muted text-xs mt-1">{isRtl ? "سيتوفر هذا المحتوى قريبًا" : "This content will be available shortly"}</p>
+          <p className="text-text-secondary text-sm font-medium">{loc(lang, "No video for this part", "لا يوجد فيديو لهذا الجزء", "Aucune vidéo pour cette partie")}</p>
+          <p className="text-text-muted text-xs mt-1">{loc(lang, "This content will be available shortly", "سيتوفر هذا المحتوى قريبًا", "Ce contenu sera bientôt disponible")}</p>
         </div>
       </div>
     );
@@ -390,14 +397,14 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
           <Play className="w-6 h-6 text-red-400/60 ml-0.5" />
         </div>
         <div>
-          <p className="text-text-secondary text-sm font-medium">{isRtl ? "الفيديو غير متاح" : "Video unavailable"}</p>
-          <p className="text-text-muted text-xs mt-1">{isRtl ? "حاول تحديث الصفحة أو تحقق من اتصالك" : "Try refreshing the page or check your connection"}</p>
+          <p className="text-text-secondary text-sm font-medium">{loc(lang, "Video unavailable", "الفيديو غير متاح", "Vidéo indisponible")}</p>
+          <p className="text-text-muted text-xs mt-1">{loc(lang, "Try refreshing the page or check your connection", "حاول تحديث الصفحة أو تحقق من اتصالك", "Actualisez la page ou vérifiez votre connexion")}</p>
         </div>
         <button
           onClick={() => setVideoError(false)}
           className="mt-1 px-4 py-2 rounded-lg bg-surface-raised border border-border text-sm text-text-secondary hover:text-text hover:border-gold/30 transition-colors min-h-[44px]"
         >
-          {isRtl ? "أعد المحاولة" : "Retry"}
+          {loc(lang, "Retry", "أعد المحاولة", "Réessayer")}
         </button>
       </div>
     );
@@ -529,7 +536,7 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
           onClick={handleSeek}
           onTouchStart={handleSeekTouch}
           onTouchMove={handleSeekTouch}
-          aria-label={isRtl ? "تقدّم الفيديو" : "Video progress"}
+          aria-label={loc(lang, "Video progress", "تقدّم الفيديو", "Progression de la vidéo")}
         >
           <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-1 bg-white/25 rounded-full">
             <div
@@ -544,7 +551,7 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
           <button
             onClick={togglePlay}
             className="min-w-[44px] min-h-[44px] rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center transition-colors"
-            aria-label={isRtl ? (playing ? "إيقاف مؤقت" : "تشغيل") : (playing ? "Pause" : "Play")}
+            aria-label={playing ? loc(lang, "Pause", "إيقاف مؤقت", "Pause") : loc(lang, "Play", "تشغيل", "Lecture")}
           >
             {playing
               ? <Pause className="w-5 h-5 text-white" />
@@ -560,7 +567,7 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
               syncCompanionToVideo(true);
             }}
             className="relative min-w-[44px] min-h-[44px] flex items-center justify-center text-white/70 hover:text-white transition-colors"
-            aria-label={isRtl ? "أرجع ١٠ ثوانٍ" : "Rewind 10 seconds"}
+            aria-label={loc(lang, "Rewind 10 seconds", "أرجع ١٠ ثوانٍ", "Reculer de 10 secondes")}
           >
             <RotateCcw className="w-5 h-5" />
             <span className="absolute text-[7px] font-bold leading-none" aria-hidden>10</span>
@@ -574,7 +581,7 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
               syncCompanionToVideo(true);
             }}
             className="relative min-w-[44px] min-h-[44px] flex items-center justify-center text-white/70 hover:text-white transition-colors"
-            aria-label={isRtl ? "تقدّم ١٠ ثوانٍ" : "Forward 10 seconds"}
+            aria-label={loc(lang, "Forward 10 seconds", "تقدّم ١٠ ثوانٍ", "Avancer de 10 secondes")}
           >
             <RotateCw className="w-5 h-5" />
             <span className="absolute text-[7px] font-bold leading-none" aria-hidden>10</span>
@@ -586,7 +593,7 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
             <button
               onClick={toggleMute}
               className="min-w-[44px] min-h-[44px] flex items-center justify-center text-white/70 hover:text-white transition-colors"
-              aria-label={isRtl ? (muted || volume === 0 ? "إلغاء الكتم" : "كتم الصوت") : (muted || volume === 0 ? "Unmute" : "Mute")}
+              aria-label={muted || volume === 0 ? t(lang, "unmute") : t(lang, "mute")}
             >
               {muted || volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
             </button>
@@ -604,7 +611,7 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
                 style={{
                   background: `linear-gradient(to right, rgb(212, 175, 55) 0%, rgb(212, 175, 55) ${muted ? 0 : volume * 100}%, rgba(255, 255, 255, 0.25) ${muted ? 0 : volume * 100}%, rgba(255, 255, 255, 0.25) 100%)`
                 }}
-                aria-label={isRtl ? "مستوى الصوت" : "Volume"}
+                aria-label={loc(lang, "Volume", "مستوى الصوت", "Volume")}
               />
             </div>
           </div>
@@ -616,7 +623,7 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
             <button
               onClick={(e) => { e.stopPropagation(); setShowSpeedMenu(!showSpeedMenu); showControlsTemporarily(); }}
               className="flex items-center gap-1 px-2 min-h-[44px] text-white/70 hover:text-white transition-colors"
-              aria-label={isRtl ? `سرعة التشغيل: ${playbackRate}x` : `Playback speed: ${playbackRate}x`}
+              aria-label={loc(lang, `Playback speed: ${playbackRate}x`, `سرعة التشغيل: ${playbackRate}x`, `Vitesse de lecture : ${playbackRate}x`)}
             >
               <Gauge className="w-3.5 h-3.5" />
               <span className="text-[11px] font-semibold tabular-nums">{playbackRate}x</span>
@@ -652,7 +659,7 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
               }
             }}
             className="min-w-[44px] min-h-[44px] flex items-center justify-center text-white/70 hover:text-white transition-colors"
-            aria-label={isRtl ? "ملء الشاشة" : "Fullscreen"}
+            aria-label={loc(lang, "Fullscreen", "ملء الشاشة", "Plein écran")}
           >
             <Maximize className="w-4 h-4" />
           </button>

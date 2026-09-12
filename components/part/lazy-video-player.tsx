@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { VideoPlayer } from "./video-player";
 import { Play } from "lucide-react";
 import { fetchPartAssets } from "@/lib/part-asset-cache";
+import type { CourseLang } from "@/lib/course-lang";
+import { loc } from "@/lib/loc";
 
 interface LazyVideoPlayerProps {
   partNumber: number;
@@ -17,9 +19,11 @@ interface LazyVideoPlayerProps {
   /** Server-fetched watch percent forwarded to VideoPlayer for seek clamping */
   initialVideoPercent?: number;
   isRtl?: boolean;
+  lang?: CourseLang;
 }
 
-export function LazyVideoPlayer({ partNumber, title, poster, previewMode, videoUrl: videoUrlProp, companionAudioSrc, initialVideoPercent, isRtl }: LazyVideoPlayerProps) {
+export function LazyVideoPlayer({ partNumber, title, poster, previewMode, videoUrl: videoUrlProp, companionAudioSrc, initialVideoPercent, isRtl, lang: langProp }: LazyVideoPlayerProps) {
+  const lang: CourseLang = langProp ?? (isRtl ? "ar" : "en");
   const [videoUrl, setVideoUrl] = useState<string | undefined>(videoUrlProp);
   const [loading, setLoading] = useState(!videoUrlProp);
   const [error, setError] = useState(false);
@@ -42,7 +46,7 @@ export function LazyVideoPlayer({ partNumber, title, poster, previewMode, videoU
     return (
       <div className="aspect-video rounded-2xl bg-surface border border-border flex flex-col items-center justify-center gap-3">
         <div className="w-12 h-12 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
-        <p className="text-text-muted text-sm">{isRtl ? "جارٍ تحميل الفيديو..." : "Loading video..."}</p>
+        <p className="text-text-muted text-sm">{loc(lang, "Loading video...", "جارٍ تحميل الفيديو...", "Chargement de la vidéo...")}</p>
       </div>
     );
   }
@@ -54,8 +58,8 @@ export function LazyVideoPlayer({ partNumber, title, poster, previewMode, videoU
           <Play className="w-7 h-7 text-gold/60 ml-1" />
         </div>
         <div className="text-center">
-          <p className="text-text-secondary text-sm font-medium">{isRtl ? "الفيديو غير متاح" : "Video unavailable"}</p>
-          <p className="text-text-muted text-xs mt-1">{isRtl ? "يرجى المحاولة مرة أخرى لاحقًا" : "Please try again later"}</p>
+          <p className="text-text-secondary text-sm font-medium">{loc(lang, "Video unavailable", "الفيديو غير متاح", "Vidéo indisponible")}</p>
+          <p className="text-text-muted text-xs mt-1">{loc(lang, "Please try again later", "يرجى المحاولة مرة أخرى لاحقًا", "Veuillez réessayer plus tard")}</p>
         </div>
       </div>
     );
@@ -71,6 +75,7 @@ export function LazyVideoPlayer({ partNumber, title, poster, previewMode, videoU
       initialVideoPercent={initialVideoPercent}
       companionAudioSrc={companionAudioSrc}
       isRtl={isRtl}
+      lang={lang}
     />
   );
 }

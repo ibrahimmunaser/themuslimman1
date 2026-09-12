@@ -266,7 +266,7 @@ export function CourseProgressContent({
                 <CheckCircle2 className="w-3.5 h-3.5 text-green-400/70 shrink-0" />
                 <p className="text-xs text-text-secondary flex-1">
                   <span className="text-green-400 font-semibold">{completedLessons}</span>{" "}
-                  {lang === "ar" ? "جزء مكتمل" : `part${completedLessons !== 1 ? "s" : ""} completed`}
+                  {tf(lang, "nPartsCompleted", { n: completedLessons, s: completedLessons !== 1 ? "s" : "" })}
                 </p>
                 <Link
                   href="/seerah?tab=lessons"

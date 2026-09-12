@@ -34,3 +34,19 @@ export async function markArabicAnnouncementSeen(): Promise<{ success: boolean }
 
   return { success: true };
 }
+
+/**
+ * Marks the one-time English/Arabic/French launch celebration as seen.
+ * Idempotent — safe to call on dismiss or WhatsApp share.
+ */
+export async function markLanguagesAnnouncementSeen(): Promise<{ success: boolean }> {
+  const user = await requireStudent();
+
+  await prisma.$executeRaw`
+    UPDATE "User"
+    SET "hasSeenLanguagesAnnouncement" = true, "updatedAt" = NOW()
+    WHERE id = ${user.id}
+  `;
+
+  return { success: true };
+}

@@ -1,4 +1,7 @@
 "use client";
+import type { CourseLang } from "@/lib/course-lang";
+import { isRtlLang } from "@/lib/course-lang";
+import { loc } from "@/lib/loc";
 
 import { useEffect } from "react";
 import { trackAssetOpened } from "@/app/actions/progress";
@@ -8,6 +11,7 @@ interface FactsViewerProps {
   partNumber?: number;
   previewMode?: boolean;
   isRtl?: boolean;
+  lang?: CourseLang;
 }
 
 // Apply semantic inline formatting to a single line of text
@@ -41,7 +45,8 @@ function formatFactLine(text: string): string {
   return processed;
 }
 
-export function FactsViewer({ content, partNumber, previewMode, isRtl }: FactsViewerProps) {
+export function FactsViewer({ content, partNumber, previewMode, isRtl, lang: langProp }: FactsViewerProps) {
+  const lang: CourseLang = langProp ?? (isRtl ? "ar" : "en");
   const facts = content
     .split("\n")
     .map((l) => l.trim())
@@ -58,8 +63,8 @@ export function FactsViewer({ content, partNumber, previewMode, isRtl }: FactsVi
     <div>
       {/* Header */}
       <div className="mb-5">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-gold/60">{isRtl ? "معلومات الدرس" : "Statement of Facts"}</p>
-        <p className="text-[11px] text-text-muted/50 mt-0.5">{isRtl ? `${facts.length} نقطة رئيسية في هذا الدرس` : `${facts.length} key points from this lesson`}</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-gold/60">{loc(lang, "Statement of Facts", "معلومات الدرس", "Énoncé des faits")}</p>
+        <p className="text-[11px] text-text-muted/50 mt-0.5">{loc(lang, `${facts.length} key points from this lesson`, `${facts.length} نقطة رئيسية في هذا الدرس`, `${facts.length} points clés de cette leçon`)}</p>
       </div>
 
       <ol className="space-y-4">

@@ -3,7 +3,11 @@
 import { useState, useEffect, useMemo } from "react";
 import rawMiracles from "@/lib/prophet-miracles.json";
 import rawMiraclesAr from "@/lib/prophet-miracles-ar.json";
+import rawMiraclesFr from "@/lib/prophet-miracles-fr.json";
 import { formatHadithRef } from "@/lib/localize-hadith-ref";
+import type { CourseLang } from "@/lib/course-lang";
+import { isRtlLang } from "@/lib/course-lang";
+import { loc } from "@/lib/loc";
 import { useWidgetCycle, WIDGET_FADE_MS } from "./widget-cycle-context";
 
 interface Miracle {
@@ -15,6 +19,7 @@ interface Miracle {
 
 const MIRACLES_EN: Miracle[] = rawMiracles as Miracle[];
 const MIRACLES_AR: Miracle[] = rawMiraclesAr as Miracle[];
+const MIRACLES_FR: Miracle[] = rawMiraclesFr as Miracle[];
 
 function pickRandom(list: Miracle[], exclude?: number): Miracle {
   let m: Miracle;
@@ -24,9 +29,23 @@ function pickRandom(list: Miracle[], exclude?: number): Miracle {
   return m;
 }
 
-export function MiraclesWidget({ isRtl }: { isRtl?: boolean }) {
+function miraclesForLang(lang: CourseLang): Miracle[] {
+  if (lang === "ar") return MIRACLES_AR;
+  if (lang === "fr") return MIRACLES_FR;
+  return MIRACLES_EN;
+}
+
+export function MiraclesWidget({
+  lang = "en",
+  isRtl: isRtlProp,
+}: {
+  lang?: CourseLang;
+  /** @deprecated Prefer `lang`. Kept for older call sites. */
+  isRtl?: boolean;
+}) {
+  const isRtl = isRtlProp ?? isRtlLang(lang);
   const { visible } = useWidgetCycle();
-  const miracles = useMemo(() => (isRtl ? MIRACLES_AR : MIRACLES_EN), [isRtl]);
+  const miracles = useMemo(() => miraclesForLang(lang), [lang]);
   const [miracle, setMiracle] = useState<Miracle>(miracles[0]);
 
   useEffect(() => {
@@ -42,17 +61,19 @@ export function MiraclesWidget({ isRtl }: { isRtl?: boolean }) {
     }
   }, [visible, miracles]);
 
-  const displayRef = formatHadithRef(miracle.reference, isRtl);
+  const displayRef = formatHadithRef(miracle.reference, lang);
+  const title = loc(lang, "Miracles of the Prophet ﷺ", "معجزات النبي ﷺ", "Miracles du Prophète ﷺ");
+  const aria = loc(lang, "Miracles of the Prophet", "معجزات النبي ﷺ", "Miracles du Prophète");
 
   return (
-    <div className="mx-3 mb-3" role="region" aria-label={isRtl ? "معجزات النبي ﷺ" : "Miracles of the Prophet"}>
+    <div className="mx-3 mb-3" role="region" aria-label={aria}>
       <div className="rounded-xl border border-sky-500/25 bg-[#0A1520] p-4 overflow-hidden relative">
         <div className="absolute start-0 top-4 bottom-4 w-[2px] rounded-full bg-sky-400/50" />
 
         <div className="ps-3.5">
           <div className="flex items-center gap-2 mb-2.5">
             <span className="text-sky-300 text-sm leading-none">✦</span>
-            <span className="text-[11px] font-bold text-sky-300 uppercase tracking-widest">{isRtl ? "معجزات النبي ﷺ" : "Miracles of the Prophet ﷺ"}</span>
+            <span className="text-[11px] font-bold text-sky-300 uppercase tracking-widest">{title}</span>
           </div>
 
           <div style={{ opacity: visible ? 1 : 0, transition: `opacity ${WIDGET_FADE_MS}ms ease-in-out` }}>

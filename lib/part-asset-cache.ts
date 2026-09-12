@@ -16,13 +16,13 @@ export interface PartAssets {
 
 const cache = new Map<string, Promise<PartAssets>>();
 
-export function fetchPartAssets(partNumber: number, lang: "en" | "ar" = "en"): Promise<PartAssets> {
+export function fetchPartAssets(partNumber: number, lang: "en" | "ar" | "fr" = "en"): Promise<PartAssets> {
   const key = `${partNumber}-${lang}`;
   if (cache.has(key)) return cache.get(key)!;
 
-  const url = lang === "ar"
-    ? `/api/part/${partNumber}/assets?lang=ar`
-    : `/api/part/${partNumber}/assets`;
+  const url = lang === "en"
+    ? `/api/part/${partNumber}/assets`
+    : `/api/part/${partNumber}/assets?lang=${lang}`;
 
   const promise = fetch(url)
     .then((r) => (r.ok ? r.json() : {}))

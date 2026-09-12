@@ -29,6 +29,8 @@ import { SlidesViewer } from "./slides-viewer";
 import { QuizViewer, type QuizDraft } from "./quiz-viewer";
 import { FlashcardsViewer } from "./flashcards-viewer";
 import type { Part } from "@/lib/types";
+import type { CourseLang } from "@/lib/course-lang";
+import { loc } from "@/lib/loc";
 import { trackAssetOpened } from "@/app/actions/progress";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -43,63 +45,94 @@ type SubTabId =
   | "flashcards" | "quiz"
   | "slides" | "mindmap" | "infographic";
 
-interface SubTab { id: SubTabId; label: string; labelAr: string; icon: React.FC<{ className?: string }>; }
+interface SubTab { id: SubTabId; label: string; labelAr: string; labelFr: string; icon: React.FC<{ className?: string }>; }
 interface Mode {
   id: ModeId;
   label: string;
   labelAr: string;
+  labelFr: string;
   shortLabel?: string;
   shortLabelAr?: string;
+  shortLabelFr?: string;
   subtitle: string;
   subtitleAr: string;
+  subtitleFr: string;
   hint: string;
   icon: React.FC<{ className?: string }>;
   subTabs: SubTab[];
   primary?: boolean;
 }
 
-/** Pick the Arabic or English label depending on the active course language. */
-function modeLabel(mode: Mode, isRtl?: boolean): string { return isRtl ? mode.labelAr : mode.label; }
-function modeShortLabel(mode: Mode, isRtl?: boolean): string {
-  return isRtl ? (mode.shortLabelAr ?? mode.labelAr) : (mode.shortLabel ?? mode.label);
+/** Pick EN / AR / FR label depending on the active course language. */
+function modeLabel(mode: Mode, lang: CourseLang): string {
+  return loc(lang, mode.label, mode.labelAr, mode.labelFr);
 }
-function modeSubtitle(mode: Mode, isRtl?: boolean): string { return isRtl ? mode.subtitleAr : mode.subtitle; }
-function subTabLabel(tab: SubTab, isRtl?: boolean): string { return isRtl ? tab.labelAr : tab.label; }
+function modeShortLabel(mode: Mode, lang: CourseLang): string {
+  return loc(
+    lang,
+    mode.shortLabel ?? mode.label,
+    mode.shortLabelAr ?? mode.labelAr,
+    mode.shortLabelFr ?? mode.labelFr,
+  );
+}
+function modeSubtitle(mode: Mode, lang: CourseLang): string {
+  return loc(lang, mode.subtitle, mode.subtitleAr, mode.subtitleFr);
+}
+function subTabLabel(tab: SubTab, lang: CourseLang): string {
+  return loc(lang, tab.label, tab.labelAr, tab.labelFr);
+}
 
 // ─── Mode definitions ─────────────────────────────────────────────────────────
 
 const MODES: Mode[] = [
   {
-    id: "watch",       label: "Watch",       labelAr: "مشاهدة",   subtitle: "Video Lesson",      subtitleAr: "فيديو الدرس",      hint: "Video lesson",   icon: Video,       primary: true,
-    subTabs: [{ id: "video",       label: "Video",       labelAr: "الفيديو",              icon: Video }],
+    id: "watch", label: "Watch", labelAr: "مشاهدة", labelFr: "Regarder",
+    subtitle: "Video Lesson", subtitleAr: "فيديو الدرس", subtitleFr: "Leçon vidéo",
+    hint: "Video lesson", icon: Video, primary: true,
+    subTabs: [{ id: "video", label: "Video", labelAr: "الفيديو", labelFr: "Vidéo", icon: Video }],
   },
   {
-    id: "read",        label: "Read",        labelAr: "قراءة",    subtitle: "Structured Notes",  subtitleAr: "ملاحظات منظمة",     hint: "Written content", icon: BookOpen,    primary: true,
+    id: "read", label: "Read", labelAr: "قراءة", labelFr: "Lire",
+    subtitle: "Structured Notes", subtitleAr: "ملاحظات منظمة", subtitleFr: "Notes structurées",
+    hint: "Written content", icon: BookOpen, primary: true,
     subTabs: [
-      { id: "briefing",    label: "Briefing",    labelAr: "الموجز",       icon: FileText },
-      { id: "study-guide", label: "Study Guide", labelAr: "دليل الدراسة", icon: BookOpen },
-      { id: "facts",       label: "Facts",       labelAr: "الحقائق",      icon: BarChart2 },
+      { id: "briefing", label: "Briefing", labelAr: "الموجز", labelFr: "Briefing", icon: FileText },
+      { id: "study-guide", label: "Study Guide", labelAr: "دليل الدراسة", labelFr: "Guide d'étude", icon: BookOpen },
+      { id: "facts", label: "Facts", labelAr: "الحقائق", labelFr: "Faits", icon: BarChart2 },
     ],
   },
   {
-    id: "slides",      label: "Slides",      labelAr: "الشرائح",  subtitle: "Presentation",      subtitleAr: "عرض تقديمي",       hint: "Slide decks",    icon: Layers,      primary: true,
-    subTabs: [{ id: "slides",      label: "Slides",      labelAr: "الشرائح",              icon: Layers }],
+    id: "slides", label: "Slides", labelAr: "الشرائح", labelFr: "Diapositives",
+    subtitle: "Presentation", subtitleAr: "عرض تقديمي", subtitleFr: "Présentation",
+    hint: "Slide decks", icon: Layers, primary: true,
+    subTabs: [{ id: "slides", label: "Slides", labelAr: "الشرائح", labelFr: "Diapositives", icon: Layers }],
   },
   {
-    id: "infographic", label: "Infographic", labelAr: "إنفوجرافيك", shortLabel: "Visual", shortLabelAr: "مرئي", subtitle: "Visual Summary",    subtitleAr: "ملخص مرئي",        hint: "Visual summary", icon: ImageIcon,
-    subTabs: [{ id: "infographic", label: "Infographic", labelAr: "إنفوجرافيك",           icon: ImageIcon }],
+    id: "infographic", label: "Infographic", labelAr: "إنفوجرافيك", labelFr: "Infographie",
+    shortLabel: "Visual", shortLabelAr: "مرئي", shortLabelFr: "Visuel",
+    subtitle: "Visual Summary", subtitleAr: "ملخص مرئي", subtitleFr: "Résumé visuel",
+    hint: "Visual summary", icon: ImageIcon,
+    subTabs: [{ id: "infographic", label: "Infographic", labelAr: "إنفوجرافيك", labelFr: "Infographie", icon: ImageIcon }],
   },
   {
-    id: "mindmap",     label: "Mindmap",     labelAr: "الخريطة الذهنية", shortLabel: "Mindmap", shortLabelAr: "خريطة", subtitle: "Connected Ideas",   subtitleAr: "أفكار مرتبطة",     hint: "Visual map",     icon: Map,
-    subTabs: [{ id: "mindmap",     label: "Mindmap",     labelAr: "الخريطة الذهنية",       icon: Map }],
+    id: "mindmap", label: "Mindmap", labelAr: "الخريطة الذهنية", labelFr: "Carte mentale",
+    shortLabel: "Mindmap", shortLabelAr: "خريطة", shortLabelFr: "Carte",
+    subtitle: "Connected Ideas", subtitleAr: "أفكار مرتبطة", subtitleFr: "Idées liées",
+    hint: "Visual map", icon: Map,
+    subTabs: [{ id: "mindmap", label: "Mindmap", labelAr: "الخريطة الذهنية", labelFr: "Carte mentale", icon: Map }],
   },
   {
-    id: "flashcards",  label: "Flashcards",  labelAr: "البطاقات التعليمية", shortLabel: "Cards", shortLabelAr: "بطاقات", subtitle: "Memory Review",     subtitleAr: "مراجعة الحفظ",     hint: "Memory cards",   icon: Layers2,
-    subTabs: [{ id: "flashcards",  label: "Flashcards",  labelAr: "البطاقات التعليمية",   icon: Layers2 }],
+    id: "flashcards", label: "Flashcards", labelAr: "البطاقات التعليمية", labelFr: "Cartes",
+    shortLabel: "Cards", shortLabelAr: "بطاقات", shortLabelFr: "Cartes",
+    subtitle: "Memory Review", subtitleAr: "مراجعة الحفظ", subtitleFr: "Révision mémoire",
+    hint: "Memory cards", icon: Layers2,
+    subTabs: [{ id: "flashcards", label: "Flashcards", labelAr: "البطاقات التعليمية", labelFr: "Cartes", icon: Layers2 }],
   },
   {
-    id: "quiz",        label: "Quiz",        labelAr: "الاختبار", subtitle: "Test Knowledge",    subtitleAr: "اختبار المعرفة",   hint: "Test yourself",  icon: HelpCircle,
-    subTabs: [{ id: "quiz",        label: "Quiz",        labelAr: "الاختبار",             icon: HelpCircle }],
+    id: "quiz", label: "Quiz", labelAr: "الاختبار", labelFr: "Quiz",
+    subtitle: "Test Knowledge", subtitleAr: "اختبار المعرفة", subtitleFr: "Tester ses connaissances",
+    hint: "Test yourself", icon: HelpCircle,
+    subTabs: [{ id: "quiz", label: "Quiz", labelAr: "الاختبار", labelFr: "Quiz", icon: HelpCircle }],
   },
 ];
 
@@ -147,14 +180,35 @@ function getModeSubTabs(mode: Mode, part: Part): SubTab[] {
 
 // ─── Content panels ───────────────────────────────────────────────────────────
 
-function EmptyContent({ label, labelAr, isRtl }: { label: string; labelAr?: string; isRtl?: boolean }) {
+function EmptyContent({
+  label,
+  labelAr,
+  labelFr,
+  lang = "en",
+}: {
+  label: string;
+  labelAr?: string;
+  labelFr?: string;
+  lang?: CourseLang;
+}) {
+  const name = loc(lang, label, labelAr ?? label, labelFr ?? label);
   return (
     <div className="py-14 text-center">
       <p className="text-text-secondary text-sm font-medium">
-        {isRtl ? `${labelAr ?? label} غير متاح لهذا الجزء` : `${label} not available for this part`}
+        {loc(
+          lang,
+          `${name} not available for this part`,
+          `${name} غير متاح لهذا الجزء`,
+          `${name} non disponible pour cette partie`,
+        )}
       </p>
       <p className="text-xs text-text-muted mt-1">
-        {isRtl ? "يتم إضافة محتوى جديد تدريجيًا" : "New content is added progressively"}
+        {loc(
+          lang,
+          "New content is added progressively",
+          "يتم إضافة محتوى جديد تدريجيًا",
+          "Le nouveau contenu est ajouté progressivement",
+        )}
       </p>
     </div>
   );
@@ -170,7 +224,7 @@ function infographicWebp(url: string, suffix: "-medium" | "-large" | ""): string
     : url.replace(/\.png(\?|$)/i, `${suffix}.webp$1`);
 }
 
-export function InfographicPanel({ part, previewMode, isRtl }: { part: Part; previewMode?: boolean; isRtl?: boolean }) {
+export function InfographicPanel({ part, previewMode, lang = "en" }: { part: Part; previewMode?: boolean; lang?: CourseLang }) {
   const [style, setStyle] = useState<"concise" | "standard" | "bentoGrid">("standard");
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -178,9 +232,9 @@ export function InfographicPanel({ part, previewMode, isRtl }: { part: Part; pre
   const [hasTrackedView, setHasTrackedView] = useState(false);
   const inf = part.assets.infographics;
   const styles = [
-    { id: "concise"   as const, label: "Concise",    labelAr: "مختصر" },
-    { id: "standard"  as const, label: "Standard",   labelAr: "قياسي" },
-    { id: "bentoGrid" as const, label: "Bento Grid", labelAr: "شبكي" },
+    { id: "concise"   as const, label: "Concise",    labelAr: "مختصر", labelFr: "Concis" },
+    { id: "standard"  as const, label: "Standard",   labelAr: "قياسي", labelFr: "Standard" },
+    { id: "bentoGrid" as const, label: "Bento Grid", labelAr: "شبكي",  labelFr: "Grille Bento" },
   ].filter((s) => inf?.[s.id]);
   const currentSrc = inf?.[style] ?? inf?.[styles[0]?.id];
   const mediumSrc = currentSrc ? infographicWebp(currentSrc, "-medium") : null;
@@ -212,7 +266,7 @@ export function InfographicPanel({ part, previewMode, isRtl }: { part: Part; pre
     <div className="space-y-3">
       {/* Contextual framing header */}
       <div className="mb-1">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-gold/60 leading-none">{isRtl ? "إنفوجرافيك" : "Infographic"}</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-gold/60 leading-none">{loc(lang, "Infographic", "إنفوجرافيك", "Infographie")}</p>
         <p className="text-xs text-text-muted/50 mt-0.5 leading-snug" style={{ hyphens: "none" }}>{part.title}</p>
       </div>
 
@@ -230,7 +284,7 @@ export function InfographicPanel({ part, previewMode, isRtl }: { part: Part; pre
                   : "bg-surface-raised/50 text-text-muted/60 hover:text-text-secondary hover:bg-surface-raised"
               )}
             >
-              {isRtl ? s.labelAr : s.label}
+              {loc(lang, s.label, s.labelAr, s.labelFr)}
             </button>
           ))}
         </div>
@@ -247,7 +301,7 @@ export function InfographicPanel({ part, previewMode, isRtl }: { part: Part; pre
             }}
             onClick={() => setLightboxOpen(true)}
             onTouchEnd={() => setLightboxOpen(true)}
-            title={isRtl ? "انقر للعرض بملء الشاشة" : "Tap to view fullscreen"}
+            title={loc(lang, "Tap to view fullscreen", "انقر للعرض بملء الشاشة", "Appuyez pour plein écran")}
           >
             {/* Loading spinner */}
             {!loaded && (
@@ -292,10 +346,10 @@ export function InfographicPanel({ part, previewMode, isRtl }: { part: Part; pre
                 "min-h-[44px]"
               )}
               onClick={(e) => { e.stopPropagation(); setLightboxOpen(true); }}
-              aria-label={isRtl ? "عرض الإنفوجرافيك بملء الشاشة" : "View infographic fullscreen"}
+              aria-label={loc(lang, "View infographic fullscreen", "عرض الإنفوجرافيك بملء الشاشة", "Voir l'infographie en plein écran")}
             >
               <Maximize2 className="w-3.5 h-3.5" />
-              <span className="text-[10px] font-medium">{isRtl ? "تكبير" : "Expand"}</span>
+              <span className="text-[10px] font-medium">{loc(lang, "Expand", "تكبير", "Agrandir")}</span>
             </button>
           </div>
           <ImageLightbox
@@ -306,19 +360,19 @@ export function InfographicPanel({ part, previewMode, isRtl }: { part: Part; pre
           />
         </>
       ) : (
-        <EmptyContent label="Infographic" labelAr="إنفوجرافيك" isRtl={isRtl} />
+        <EmptyContent label="Infographic" labelAr="إنفوجرافيك" labelFr="Infographie" lang={lang} />
       )}
     </div>
   );
 }
 
 const SLIDE_TYPES = [
-  { key: "presented" as const, label: "Presented", labelAr: "المُقدَّمة" },
-  { key: "detailed"  as const, label: "Detailed",  labelAr: "التفصيلية" },
-  { key: "facts"     as const, label: "Facts",     labelAr: "الحقائق" },
+  { key: "presented" as const, label: "Presented", labelAr: "المُقدَّمة", labelFr: "Présentées" },
+  { key: "detailed"  as const, label: "Detailed",  labelAr: "التفصيلية", labelFr: "Détaillées" },
+  { key: "facts"     as const, label: "Facts",     labelAr: "الحقائق",   labelFr: "Faits" },
 ];
 
-export function SlidesPanel({ part, previewMode, isRtl }: { part: Part; previewMode?: boolean; isRtl?: boolean }) {
+export function SlidesPanel({ part, previewMode, lang = "en", isRtl }: { part: Part; previewMode?: boolean; lang?: CourseLang; isRtl?: boolean }) {
   const slides = part.assets.slides;
   const available = SLIDE_TYPES.filter((t) => (slides?.[t.key]?.length ?? 0) > 0);
   const [type, setType] = useState<"presented" | "detailed" | "facts">(available[0]?.key ?? "presented");
@@ -343,16 +397,22 @@ export function SlidesPanel({ part, previewMode, isRtl }: { part: Part; previewM
                   ? "bg-gold/12 text-gold border-gold/25"
                   : "bg-surface text-text-muted border-border hover:text-text-secondary"
               )}
-            >{isRtl ? t.labelAr : t.label}</button>
+            >{loc(lang, t.label, t.labelAr, t.labelFr)}</button>
           ))}
         </div>
       )}
       {/* Render each visited slide type once and keep it mounted — switching back is instant */}
       {[...rendered].map((key) => {
         const typeInfo = SLIDE_TYPES.find((t) => t.key === key);
-        const title = isRtl
-          ? `الجزء ${part.partNumber} — شرائح ${typeInfo?.labelAr}`
-          : `Part ${part.partNumber} — ${typeInfo?.label} Slides`;
+        const typeLabel = typeInfo
+          ? loc(lang, typeInfo.label, typeInfo.labelAr, typeInfo.labelFr)
+          : "";
+        const title = loc(
+          lang,
+          `Part ${part.partNumber} — ${typeLabel} Slides`,
+          `الجزء ${part.partNumber} — شرائح ${typeLabel}`,
+          `Partie ${part.partNumber} — Diapositives ${typeLabel}`,
+        );
         return (
           <div key={key} className={type === key ? "" : "hidden"}>
             <SlidesViewer
@@ -362,6 +422,7 @@ export function SlidesPanel({ part, previewMode, isRtl }: { part: Part; previewM
               partNumber={part.partNumber}
               previewMode={previewMode}
               isRtl={isRtl}
+              lang={lang}
             />
           </div>
         );
@@ -371,9 +432,8 @@ export function SlidesPanel({ part, previewMode, isRtl }: { part: Part; previewM
 }
 
 import { fetchPartAssets, type PartAssets as PartAssetUrls } from "@/lib/part-asset-cache";
-import type { CourseLang } from "@/lib/course-lang";
 
-function SubTabContent({ id, part, previewMode, assetUrls, onSwitchMode, videoCompleted, initialVideoPercent, initialQuizBestScore, quizDraft, onQuizDraftChange, learnerProfileId, isRtl }: {
+function SubTabContent({ id, part, previewMode, assetUrls, onSwitchMode, videoCompleted, initialVideoPercent, initialQuizBestScore, quizDraft, onQuizDraftChange, learnerProfileId, lang = "en", isRtl }: {
   id: SubTabId;
   part: Part;
   previewMode?: boolean;
@@ -385,6 +445,7 @@ function SubTabContent({ id, part, previewMode, assetUrls, onSwitchMode, videoCo
   quizDraft?: QuizDraft | null;
   onQuizDraftChange?: (draft: QuizDraft | null) => void;
   learnerProfileId?: string;
+  lang?: CourseLang;
   isRtl?: boolean;
 }) {
   const wrap = (child: React.ReactNode) => (
@@ -407,6 +468,7 @@ function SubTabContent({ id, part, previewMode, assetUrls, onSwitchMode, videoCo
             companionAudioSrc={isRtl && part.partNumber !== 1 ? assetUrls.audioUrl : undefined}
             initialVideoPercent={initialVideoPercent}
             isRtl={isRtl}
+            lang={lang}
           />
           <LazyListenOnTheGo
             partNumber={part.partNumber}
@@ -415,6 +477,7 @@ function SubTabContent({ id, part, previewMode, assetUrls, onSwitchMode, videoCo
             audioUrl={assetUrls.audioUrl}
             videoCompleted={videoCompleted}
             isRtl={isRtl}
+            lang={lang}
           />
         </div>
       );
@@ -428,8 +491,9 @@ function SubTabContent({ id, part, previewMode, assetUrls, onSwitchMode, videoCo
             hasQuiz={hasQuiz}
             onSwitchToQuiz={onSwitchMode && hasQuiz ? () => onSwitchMode("quiz") : undefined}
             isRtl={isRtl}
+            lang={lang}
           /></div>
-        : wrap(<EmptyContent label="Briefing" labelAr="الموجز" isRtl={isRtl} />);
+        : wrap(<EmptyContent label="Briefing" labelAr="الموجز" labelFr="Briefing" lang={lang} />);
     case "study-guide":
       return part.assets.studyGuideText
         ? <div dir={isRtl ? "rtl" : undefined}><TextViewer
@@ -440,12 +504,13 @@ function SubTabContent({ id, part, previewMode, assetUrls, onSwitchMode, videoCo
             hasQuiz={hasQuiz}
             onSwitchToQuiz={onSwitchMode && hasQuiz ? () => onSwitchMode("quiz") : undefined}
             isRtl={isRtl}
+            lang={lang}
           /></div>
-        : wrap(<EmptyContent label="Study Guide" labelAr="دليل الدراسة" isRtl={isRtl} />);
+        : wrap(<EmptyContent label="Study Guide" labelAr="دليل الدراسة" labelFr="Guide d'étude" lang={lang} />);
     case "facts":
-      return wrap(<div dir={isRtl ? "rtl" : undefined}>{part.assets.statementOfFactsText ? <FactsViewer content={part.assets.statementOfFactsText} partNumber={part.partNumber} previewMode={previewMode} isRtl={isRtl} /> : <EmptyContent label="Facts" labelAr="الحقائق" isRtl={isRtl} />}</div>);
+      return wrap(<div dir={isRtl ? "rtl" : undefined}>{part.assets.statementOfFactsText ? <FactsViewer content={part.assets.statementOfFactsText} partNumber={part.partNumber} previewMode={previewMode} isRtl={isRtl} lang={lang} /> : <EmptyContent label="Facts" labelAr="الحقائق" labelFr="Faits" lang={lang} />}</div>);
     case "flashcards":
-      return wrap(<div dir={isRtl ? "rtl" : undefined}>{part.assets.flashcards ? <FlashcardsViewer flashcards={part.assets.flashcards} partNumber={part.partNumber} previewMode={previewMode} isRtl={isRtl} /> : <EmptyContent label="Flashcards" labelAr="البطاقات التعليمية" isRtl={isRtl} />}</div>);
+      return wrap(<div dir={isRtl ? "rtl" : undefined}>{part.assets.flashcards ? <FlashcardsViewer flashcards={part.assets.flashcards} partNumber={part.partNumber} previewMode={previewMode} isRtl={isRtl} lang={lang} /> : <EmptyContent label="Flashcards" labelAr="البطاقات التعليمية" labelFr="Cartes" lang={lang} />}</div>);
     case "quiz":
       return wrap(<div dir={isRtl ? "rtl" : undefined}>{part.assets.quiz
         ? <QuizViewer
@@ -457,11 +522,12 @@ function SubTabContent({ id, part, previewMode, assetUrls, onSwitchMode, videoCo
             onDraftChange={onQuizDraftChange}
             learnerProfileId={learnerProfileId}
             isRtl={isRtl}
+            lang={lang}
           />
-        : <EmptyContent label="Quiz" labelAr="الاختبار" isRtl={isRtl} />}</div>);
-    case "slides":      return <SlidesPanel part={part} previewMode={previewMode} isRtl={isRtl} />;
-    case "mindmap":     return <LazyMindmapViewer partNumber={part.partNumber} title={`Part ${part.partNumber} — Mindmap`} previewMode={previewMode} mindmapUrl={assetUrls.mindmapUrl} />;
-    case "infographic": return <InfographicPanel part={part} previewMode={previewMode} isRtl={isRtl} />;
+        : <EmptyContent label="Quiz" labelAr="الاختبار" labelFr="Quiz" lang={lang} />}</div>);
+    case "slides":      return <SlidesPanel part={part} previewMode={previewMode} lang={lang} isRtl={isRtl} />;
+    case "mindmap":     return <LazyMindmapViewer partNumber={part.partNumber} title={loc(lang, `Part ${part.partNumber} — Mindmap`, `الجزء ${part.partNumber} — الخريطة الذهنية`, `Partie ${part.partNumber} — Carte mentale`)} previewMode={previewMode} mindmapUrl={assetUrls.mindmapUrl} />;
+    case "infographic": return <InfographicPanel part={part} previewMode={previewMode} lang={lang} />;
   }
 }
 
@@ -508,14 +574,14 @@ function ModeButton({
   isAvailable,
   isLocked,
   onClick,
-  isRtl,
+  lang = "en",
 }: {
   mode: Mode;
   isActive: boolean;
   isAvailable: boolean;
   isLocked: boolean;
   onClick: () => void;
-  isRtl?: boolean;
+  lang?: CourseLang;
 }) {
   const Icon = mode.icon;
   const isPrimary = !!mode.primary;
@@ -563,10 +629,10 @@ function ModeButton({
       )}>
         {mode.shortLabel ? (
           <>
-            <span className="min-[360px]:hidden">{modeShortLabel(mode, isRtl)}</span>
-            <span className="hidden min-[360px]:inline">{modeLabel(mode, isRtl)}</span>
+            <span className="min-[360px]:hidden">{modeShortLabel(mode, lang)}</span>
+            <span className="hidden min-[360px]:inline">{modeLabel(mode, lang)}</span>
           </>
-        ) : modeLabel(mode, isRtl)}
+        ) : modeLabel(mode, lang)}
       </span>
 
       {/* Subtitle — primary on mobile, all on desktop */}
@@ -575,7 +641,7 @@ function ModeButton({
         isPrimary ? "text-[9px] sm:text-[10px]" : "hidden sm:block text-[9px]",
         isActive ? "text-gold/55" : isDisabled ? "opacity-20" : isPrimary ? "text-text-muted/40" : "text-text-muted/55",
       )}>
-        {modeSubtitle(mode, isRtl)}
+        {modeSubtitle(mode, lang)}
       </span>
 
       {/* Active underline accent */}
@@ -608,7 +674,7 @@ interface PartTabsProps {
    * contexts without family profiles (e.g. the classroom lesson page).
    */
   learnerProfileId?: string;
-  /** Language the page was rendered in — sets initial state for the EN/AR toggle. */
+  /** Language the page was rendered in — drives EN/AR/FR chrome labels. */
   initialLang?: CourseLang;
 }
 
@@ -703,7 +769,7 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
             <div className="sm:hidden space-y-2">
               {/* LEARN group */}
               <div className="space-y-1">
-                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-text-muted/35 px-0.5">{initialLang === "ar" ? "تعلّم" : "Learn"}</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-text-muted/35 px-0.5">{loc(initialLang, "Learn", "تعلّم", "Apprendre")}</p>
                 <div className="flex gap-1.5">
                   {modes.filter((m) => m.primary).map((mode) => {
                     const available = getModeSubTabs(mode, part).length > 0;
@@ -715,7 +781,7 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
                         isAvailable={available}
                         isLocked={false}
                         onClick={() => available ? handleModeChange(mode.id) : undefined}
-                        isRtl={initialLang === "ar"}
+                        lang={initialLang}
                       />
                     );
                   })}
@@ -723,7 +789,7 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
               </div>
               {/* REVIEW group */}
               <div className="space-y-1">
-                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-text-muted/35 px-0.5">{initialLang === "ar" ? "مراجعة" : "Review"}</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-text-muted/35 px-0.5">{loc(initialLang, "Review", "مراجعة", "Réviser")}</p>
                 <div className="flex gap-1">
                   {modes.filter((m) => !m.primary).map((mode) => {
                     const available = getModeSubTabs(mode, part).length > 0;
@@ -735,7 +801,7 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
                         isAvailable={available}
                         isLocked={false}
                         onClick={() => available ? handleModeChange(mode.id) : undefined}
-                        isRtl={initialLang === "ar"}
+                        lang={initialLang}
                       />
                     );
                   })}
@@ -754,7 +820,7 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
                     isAvailable={available}
                     isLocked={false}
                     onClick={() => available ? handleModeChange(mode.id) : undefined}
-                    isRtl={initialLang === "ar"}
+                    lang={initialLang}
                   />
                 );
               })}
@@ -782,7 +848,7 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
                     )}
                   >
                     <Icon className={clsx("w-3 h-3 transition-opacity", isActive ? "opacity-100" : "opacity-55")} />
-                    {subTabLabel(tab, initialLang === "ar")}
+                    {subTabLabel(tab, initialLang)}
                   </button>
                 );
               })}
@@ -811,6 +877,7 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
                   quizDraft={quizDraft}
                   onQuizDraftChange={setQuizDraft}
                   learnerProfileId={learnerProfileId}
+                  lang={initialLang}
                   isRtl={initialLang === "ar"}
                 />
               </div>
@@ -829,6 +896,7 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
                   quizDraft={quizDraft}
                   onQuizDraftChange={setQuizDraft}
                   learnerProfileId={learnerProfileId}
+                  lang={initialLang}
                   isRtl={initialLang === "ar"}
                 />
               </div>

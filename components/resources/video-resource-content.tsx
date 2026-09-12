@@ -81,7 +81,7 @@ export function VideoResourceContent({
 
     setIsLoadingVideo(true);
     try {
-      const res  = await fetch(`/api/part/${part.partNumber}/assets${lang === "ar" ? "?lang=ar" : ""}`);
+      const res  = await fetch(`/api/part/${part.partNumber}/assets${lang !== "en" ? `?lang=${lang}` : ""}`);
       if (!res.ok) throw new Error("Failed to fetch video");
       const data = await res.json();
       setVideoUrl(data.videoUrl || "");

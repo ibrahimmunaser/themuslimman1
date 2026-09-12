@@ -8,6 +8,9 @@ import type { Quiz, QuizQuestion } from "@/lib/types";
 import { submitQuizAnswers } from "@/app/actions/progress";
 import { checkQuizAnswer } from "@/app/actions/quiz";
 import { AnimatedProgressBar } from "@/components/motion";
+import type { CourseLang } from "@/lib/course-lang";
+import { isRtlLang } from "@/lib/course-lang";
+import { loc } from "@/lib/loc";
 
 /** QuizQuestion without correct_answer — used client-side only */
 type SafeQuizQuestion = Omit<QuizQuestion, "correct_answer">;
@@ -39,6 +42,7 @@ interface QuizViewerProps {
   /** The learner profile this page was rendered for — see PartTabsProps.learnerProfileId. */
   learnerProfileId?: string;
   isRtl?: boolean;
+  lang?: CourseLang;
 }
 
 type AnswerState = "unanswered" | "correct" | "wrong";
@@ -59,6 +63,7 @@ function QuestionCard({
   feedback,
   busy = false,
   isRtl,
+  lang,
 }: {
   question: SafeQuizQuestion;
   index: number;
@@ -67,7 +72,10 @@ function QuestionCard({
   feedback: { correctAnswer: string; explanation: string; correct: boolean; chosen: string } | null;
   busy?: boolean;
   isRtl?: boolean;
+  lang?: CourseLang;
 }) {
+  const resolvedLang: CourseLang = lang ?? (isRtl ? "ar" : "en");
+  const rtl = isRtlLang(resolvedLang);
   const answered = feedback !== null;
   const chosen = feedback?.chosen ?? null;
 
@@ -83,7 +91,7 @@ function QuestionCard({
       {/* Progress */}
       <div className="flex items-center justify-between">
         <span className="text-sm font-semibold text-amber-400">
-          {isRtl ? `السؤال ${index + 1} من ${total}` : `Question ${index + 1} of ${total}`}
+          {loc(resolvedLang, `Question ${index + 1} of ${total}`, `السؤال ${index + 1} من ${total}`, `Question ${index + 1} sur ${total}`)}
         </span>
         <div className="flex gap-1.5">
           {Array.from({ length: total }).map((_, i) => (
@@ -108,7 +116,7 @@ function QuestionCard({
       </div>
 
       {/* Options */}
-      <div className="flex flex-col gap-3" role="radiogroup" aria-label={isRtl ? "خيارات الإجابة" : "Answer options"}>
+      <div className="flex flex-col gap-3" role="radiogroup" aria-label={loc(resolvedLang, "Answer options", "خيارات الإجابة", "Options de réponse")}>
         {question.options.map((option, i) => {
           const state = getOptionState(option);
           return (
@@ -122,7 +130,7 @@ function QuestionCard({
                 "group relative overflow-hidden flex items-center gap-4 w-full text-start px-5 py-4 rounded-xl border transition-all text-base font-medium",
                 !answered && clsx(
                   "hover:border-amber-500/40 hover:bg-amber-500/5 cursor-pointer",
-                  isRtl ? "hover:-translate-x-1" : "hover:translate-x-1"
+                  rtl ? "hover:-translate-x-1" : "hover:translate-x-1"
                 ),
                 answered && "cursor-default",
                 state === "unanswered" && "border-zinc-800 bg-zinc-900/50 text-zinc-300",
@@ -159,13 +167,16 @@ function QuestionCard({
             : "border-red-500/30 bg-gradient-to-br from-red-500/10 to-red-500/5 text-red-200"
         )}>
           <p className="font-semibold mb-2 text-lg">
-            {isRtl
-              ? (feedback.correct ? "✓ صحيح!" : `✗ الإجابة الصحيحة: ${feedback.correctAnswer}`)
-              : (feedback.correct ? "✓ Correct!" : `✗ Correct answer: ${feedback.correctAnswer}`)}
+            {loc(
+              resolvedLang,
+              feedback.correct ? "✓ Correct!" : `✗ Correct answer: ${feedback.correctAnswer}`,
+              feedback.correct ? "✓ صحيح!" : `✗ الإجابة الصحيحة: ${feedback.correctAnswer}`,
+              feedback.correct ? "✓ Correct !" : `✗ Bonne réponse : ${feedback.correctAnswer}`,
+            )}
           </p>
           <p className="text-zinc-300">{feedback.explanation}</p>
           {/* Tags are English-only topic labels — hide on Arabic to avoid mixed-language chips */}
-          {!isRtl && question.tags.length > 0 && (
+          {resolvedLang !== "ar" && question.tags.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-4">
               {question.tags.map((tag) => (
                 <span key={tag} className="text-xs px-3 py-1 rounded-lg bg-zinc-800/50 border border-zinc-700 text-zinc-400">
@@ -189,6 +200,7 @@ function ScoreScreen({
   initialBestScore,
   learnerProfileId,
   isRtl,
+  lang,
 }: {
   results: QuestionResult[];
   total: number;
@@ -198,7 +210,9 @@ function ScoreScreen({
   initialBestScore?: number;
   learnerProfileId?: string;
   isRtl?: boolean;
+  lang?: CourseLang;
 }) {
+  const resolvedLang: CourseLang = lang ?? (isRtl ? "ar" : "en");
   const prefersReduced = useReducedMotion();
   const score = results.filter((r) => r.correct).length;
   const pct   = Math.round((score / total) * 100);
@@ -210,7 +224,7 @@ function ScoreScreen({
       // computed server-side rather than trusting the client-supplied value.
       const answersMap: Record<string, string> = {};
       for (const r of results) answersMap[r.question.id] = r.chosen;
-      submitQuizAnswers(partNumber, answersMap, learnerProfileId, isRtl ? "ar" : "en").catch(() => {});
+      submitQuizAnswers(partNumber, answersMap, learnerProfileId, resolvedLang).catch(() => {});
 
       const bestScore = Math.max(pct, initialBestScore ?? 0);
       window.dispatchEvent(
@@ -223,11 +237,11 @@ function ScoreScreen({
   }, []);
 
   const grade =
-    pct === 100 ? { label: "Perfect Score!", labelAr: "الدرجة الكاملة!", color: "text-amber-400", bg: "from-amber-500/20 to-amber-600/10" } :
-    pct >= 80   ? { label: "Excellent!", labelAr: "ممتاز!", color: "text-emerald-400", bg: "from-emerald-500/20 to-emerald-600/10" } :
-    pct >= 60   ? { label: "Good Job!", labelAr: "عمل جيد!", color: "text-blue-400", bg: "from-blue-500/20 to-blue-600/10" } :
-    pct >= 40   ? { label: "Keep Practicing", labelAr: "تابع التدريب", color: "text-amber-400", bg: "from-amber-500/20 to-amber-600/10" } :
-                  { label: "Study More", labelAr: "زد من المراجعة", color: "text-red-400", bg: "from-red-500/20 to-red-600/10" };
+    pct === 100 ? { label: "Perfect Score!", labelAr: "الدرجة الكاملة!", labelFr: "Score parfait !", color: "text-amber-400", bg: "from-amber-500/20 to-amber-600/10" } :
+    pct >= 80   ? { label: "Excellent!", labelAr: "ممتاز!", labelFr: "Excellent !", color: "text-emerald-400", bg: "from-emerald-500/20 to-emerald-600/10" } :
+    pct >= 60   ? { label: "Good Job!", labelAr: "عمل جيد!", labelFr: "Bien joué !", color: "text-blue-400", bg: "from-blue-500/20 to-blue-600/10" } :
+    pct >= 40   ? { label: "Keep Practicing", labelAr: "تابع التدريب", labelFr: "Continuez à vous entraîner", color: "text-amber-400", bg: "from-amber-500/20 to-amber-600/10" } :
+                  { label: "Study More", labelAr: "زد من المراجعة", labelFr: "Révisez davantage", color: "text-red-400", bg: "from-red-500/20 to-red-600/10" };
 
   return (
     <div className="flex flex-col items-center gap-8 py-6">
@@ -241,14 +255,10 @@ function ScoreScreen({
           <CheckCircle2 className="w-5 h-5 text-gold flex-shrink-0" />
           <div className="min-w-0">
             <p className="text-sm font-semibold text-gold leading-snug">
-              {isRtl
-                ? (pct === 100 ? "الدرجة الكاملة!" : "تم اجتياز الاختبار")
-                : (pct === 100 ? "Perfect score!" : "Quiz passed")}
+              {loc(resolvedLang, pct === 100 ? "Perfect score!" : "Quiz passed", pct === 100 ? "الدرجة الكاملة!" : "تم اجتياز الاختبار", pct === 100 ? "Score parfait !" : "Quiz réussi")}
             </p>
             <p className="text-xs text-zinc-400 mt-0.5">
-              {isRtl
-                ? "تم تأكيد فهمك لهذا الدرس. واصل التقدّم."
-                : "Your understanding of this lesson has been confirmed. Keep going."}
+              {loc(resolvedLang, "Your understanding of this lesson has been confirmed. Keep going.", "تم تأكيد فهمك لهذا الدرس. واصل التقدّم.", "Votre compréhension de cette leçon a été confirmée. Continuez.")}
             </p>
           </div>
         </motion.div>
@@ -276,9 +286,9 @@ function ScoreScreen({
             className="text-center"
           >
             <p className={clsx("text-5xl font-bold tabular-nums mb-2", grade.color)}>{pct}%</p>
-            <p className={clsx("text-lg font-semibold mb-1", grade.color)}>{isRtl ? grade.labelAr : grade.label}</p>
+            <p className={clsx("text-lg font-semibold mb-1", grade.color)}>{loc(resolvedLang, grade.label, grade.labelAr, grade.labelFr)}</p>
             <p className="text-base text-zinc-400">
-              {isRtl ? `${score} من ${total} إجابة صحيحة` : `${score} out of ${total} correct`}
+              {loc(resolvedLang, `${score} out of ${total} correct`, `${score} من ${total} إجابة صحيحة`, `${score} sur ${total} correctes`)}
             </p>
           </motion.div>
           <AnimatedProgressBar
@@ -294,7 +304,7 @@ function ScoreScreen({
 
       <div className="w-full flex flex-col gap-3">
         <h3 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">
-          {isRtl ? "مراجعة الأسئلة" : "Question Review"}
+          {loc(resolvedLang, "Question Review", "مراجعة الأسئلة", "Revue des questions")}
         </h3>
         {results.map((r, i) => (
           <motion.div
@@ -322,10 +332,10 @@ function ScoreScreen({
               {!r.correct && (
                 <div className="flex flex-col gap-1 text-sm">
                   <p className="text-red-300">
-                    {isRtl ? "إجابتك: " : "Your answer: "}<span className="font-semibold">{r.chosen}</span>
+                    {loc(resolvedLang, "Your answer: ", "إجابتك: ", "Votre réponse : ")}<span className="font-semibold">{r.chosen}</span>
                   </p>
                   <p className="text-emerald-300">
-                    {isRtl ? "الإجابة الصحيحة: " : "Correct answer: "}<span className="font-semibold">{r.correctAnswer}</span>
+                    {loc(resolvedLang, "Correct answer: ", "الإجابة الصحيحة: ", "Bonne réponse : ")}<span className="font-semibold">{r.correctAnswer}</span>
                   </p>
                   {r.explanation && (
                     <p className="text-zinc-400 mt-1 italic">{r.explanation}</p>
@@ -347,7 +357,7 @@ function ScoreScreen({
         className="flex items-center gap-2 px-6 py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 border border-amber-400/30 text-black text-base font-bold hover:from-amber-400 hover:to-amber-500 transition-all shadow-lg shadow-amber-500/20"
       >
         <RotateCcw className="w-5 h-5" />
-        {isRtl ? "أعد الاختبار" : "Retake Quiz"}
+        {loc(resolvedLang, "Retake Quiz", "أعد الاختبار", "Repasser le quiz")}
       </motion.button>
     </div>
   );
@@ -355,7 +365,9 @@ function ScoreScreen({
 
 type CurrentFeedback = { correctAnswer: string; explanation: string; correct: boolean; chosen: string };
 
-export function QuizViewer({ quiz, partNumber, previewMode, initialBestScore, draft, onDraftChange, learnerProfileId, isRtl }: QuizViewerProps) {
+export function QuizViewer({ quiz, partNumber, previewMode, initialBestScore, draft, onDraftChange, learnerProfileId, isRtl, lang: langProp }: QuizViewerProps) {
+  const lang: CourseLang = langProp ?? (isRtl ? "ar" : "en");
+  const rtl = isRtlLang(lang);
   // Strip correct_answer — it must never be used from the RSC payload.
   // Per-question feedback goes through checkQuizAnswer (no bulk answer map leak).
   const safeQuestions: SafeQuizQuestion[] = quiz.questions.map(
@@ -380,7 +392,7 @@ export function QuizViewer({ quiz, partNumber, previewMode, initialBestScore, dr
     const question = safeQuestions[current];
     setChecking(true);
     try {
-      const result = await checkQuizAnswer(effectivePartNumber, question.id, chosen, !!previewMode, isRtl ? "ar" : "en");
+      const result = await checkQuizAnswer(effectivePartNumber, question.id, chosen, !!previewMode, lang);
       if ("error" in result) {
         console.error("[QuizViewer] checkQuizAnswer error:", result.error);
         return;
@@ -441,7 +453,8 @@ export function QuizViewer({ quiz, partNumber, previewMode, initialBestScore, dr
         previewMode={previewMode}
         initialBestScore={initialBestScore}
         learnerProfileId={learnerProfileId}
-        isRtl={isRtl}
+        isRtl={rtl}
+        lang={lang}
       />
     );
   }
@@ -463,7 +476,8 @@ export function QuizViewer({ quiz, partNumber, previewMode, initialBestScore, dr
             onAnswer={handleAnswer}
             feedback={currentFeedback}
             busy={checking}
-            isRtl={isRtl}
+            isRtl={rtl}
+            lang={lang}
           />
         </motion.div>
       </AnimatePresence>
@@ -483,10 +497,13 @@ export function QuizViewer({ quiz, partNumber, previewMode, initialBestScore, dr
               whileTap={{ scale: 0.97 }}
               className="flex items-center gap-2 px-6 py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 border border-amber-400/30 text-black text-base font-bold hover:from-amber-400 hover:to-amber-500 transition-all shadow-lg shadow-amber-500/20"
             >
-              {isRtl
-                ? (current + 1 >= safeQuestions.length ? "عرض النتائج" : "السؤال التالي")
-                : (current + 1 >= safeQuestions.length ? "See Results" : "Next Question")}
-              {isRtl ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+              {loc(
+                lang,
+                current + 1 >= safeQuestions.length ? "See Results" : "Next Question",
+                current + 1 >= safeQuestions.length ? "عرض النتائج" : "السؤال التالي",
+                current + 1 >= safeQuestions.length ? "Voir les résultats" : "Question suivante",
+              )}
+              {rtl ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
             </motion.button>
           </motion.div>
         )}

@@ -42,7 +42,7 @@ export default async function ProfilesPage() {
         hasLifetime={accessInfo.hasLifetime}
         currentUserId={user.id}
         activeProfileId={user.activeProfileId}
-        isRtl={lang === "ar"}
+        lang={lang}
       />
     </StudentLayout>
   );

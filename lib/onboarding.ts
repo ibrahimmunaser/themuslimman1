@@ -13,18 +13,40 @@ export function isExistingStudentForArabicAnnouncement(createdAt: Date): boolean
 }
 
 /**
- * Dashboard onboarding flags for /seerah. Existing students get the Arabic
- * banner once; brand-new signups get the welcome tour once. Never both.
+ * Dashboard onboarding flags for authenticated student shells.
+ * Languages celebration takes priority (shown to everyone once).
+ * Welcome tour / Arabic banner wait until languages has been seen.
  */
 export function getDashboardOnboardingFlags(opts: {
   createdAt: Date;
   hasSeenWelcomeTour: boolean;
   hasSeenArabicAnnouncement: boolean;
-}): { showWelcomeTour: boolean; showArabicAnnouncement: boolean } {
+  hasSeenLanguagesAnnouncement?: boolean;
+}): {
+  showWelcomeTour: boolean;
+  showArabicAnnouncement: boolean;
+  showLanguagesAnnouncement: boolean;
+} {
+  const showLanguagesAnnouncement = opts.hasSeenLanguagesAnnouncement === false;
   const isExisting = isExistingStudentForArabicAnnouncement(opts.createdAt);
+
+  // Don't stack celebration + tour / Arabic banner in the same visit.
+  if (showLanguagesAnnouncement) {
+    return {
+      showLanguagesAnnouncement: true,
+      showWelcomeTour: false,
+      showArabicAnnouncement: false,
+    };
+  }
+
   const showArabicAnnouncement =
     isExisting && opts.hasSeenArabicAnnouncement === false;
   const showWelcomeTour =
     !isExisting && opts.hasSeenWelcomeTour === false;
-  return { showWelcomeTour, showArabicAnnouncement };
+
+  return {
+    showLanguagesAnnouncement: false,
+    showWelcomeTour,
+    showArabicAnnouncement,
+  };
 }

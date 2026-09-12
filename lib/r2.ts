@@ -69,11 +69,11 @@ export async function generateSignedR2Url(
 const thumbnailCache = new Map<string, { url: string; expiresAt: number }>();
 const THUMBNAIL_CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 
-function thumbnailKey(n: number, lang: "en" | "ar" = "en"): string {
+function thumbnailKey(n: number, lang: "en" | "ar" | "fr" = "en"): string {
   const pad = String(n).padStart(2, "0");
-  return lang === "ar"
-    ? `arabic/thumbnails/part-${pad}-thumb.jpg`
-    : `thumbnails/part-${pad}-thumb.jpg`;
+  if (lang === "ar") return `arabic/thumbnails/part-${pad}-thumb.jpg`;
+  // French has no dedicated thumbnails yet — use English posters.
+  return `thumbnails/part-${pad}-thumb.jpg`;
 }
 
 /**
@@ -83,7 +83,7 @@ function thumbnailKey(n: number, lang: "en" | "ar" = "en"): string {
  */
 export async function getThumbnailUrl(
   partNumber: number,
-  lang: "en" | "ar" = "en"
+  lang: "en" | "ar" | "fr" = "en"
 ): Promise<string | undefined> {
   const key = thumbnailKey(partNumber, lang);
   const now = Date.now();
@@ -100,7 +100,7 @@ export async function getThumbnailUrl(
 
 export async function getThumbnailUrls(
   partNumbers: number[],
-  lang: "en" | "ar" = "en"
+  lang: "en" | "ar" | "fr" = "en"
 ): Promise<Record<number, string>> {
   const now = Date.now();
 
@@ -531,6 +531,30 @@ export async function r2ReadArabicFlashcards(partNum: number) {
 export async function r2ReadArabicQuiz(partNum: number) {
   const pad = partNum < 10 ? `0${partNum}` : `${partNum}`;
   return r2ReadJsonFile<Quiz>(`arabic/quizzes/Part_${pad}.json`);
+}
+
+// ─── French key helpers ────────────────────────────────────────────────────────
+// French media lives under french/ on R2 (videos, slides, infographics).
+// No french/audio — callers fall back to English audio when needed.
+
+/** French video — e.g. french/videos/Final_Part_84_Full.mp4 */
+export function r2GetFrenchVideoKey(partNum: number): string {
+  return `french/videos/Final_Part_${partNum}_Full.mp4`;
+}
+
+/** French infographic — e.g. french/infographics/Part 84_watermarked.png */
+export function r2GetFrenchInfographicKey(partNum: number): string {
+  return `french/infographics/Part ${partNum}_watermarked.png`;
+}
+
+/** French slide PNG keys — list prefix, sorted alphabetically */
+export async function r2GetFrenchSlideKeys(partNum: number): Promise<string[]> {
+  const prefix = `french/slides/Part ${partNum}/`;
+  const files = await r2ListFiles(prefix, 500);
+  return files
+    .filter((f) => f.key.endsWith(".png") && f.key !== prefix)
+    .map((f) => f.key)
+    .sort();
 }
 
 // ─── Cache Utilities ───────────────────────────────────────────────────────────

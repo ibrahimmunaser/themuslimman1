@@ -22,7 +22,7 @@ export const dynamic = "force-dynamic";
 export const metadata = {
   title: "Complete Seerah | Learn the Life of Prophet Muhammad ﷺ",
   description:
-    "Learn the life of Prophet Muhammad ﷺ in order — 100 structured lessons with video, reading, quizzes, and flashcards. Start for only $9.99/month.",
+    "Learn the life of Prophet Muhammad ﷺ in order — 100 structured lessons with video, reading, quizzes, and flashcards. Lifetime access for $49.",
   openGraph: {
     title: "Complete Seerah | Learn the Life of Prophet Muhammad ﷺ",
     description:
@@ -76,20 +76,26 @@ export default async function LandingPage() {
               A structured 100-part course with videos, readings, quizzes, flashcards,
               summaries, and progress tracking.
             </p>
+            <p className="text-sm sm:text-base text-text-secondary max-w-xl mx-auto mb-2">
+              Available in <span className="text-text font-semibold">English</span>,{" "}
+              <span className="text-text font-semibold">Arabic</span>, and{" "}
+              <span className="text-text font-semibold">French</span>
+              {" "}— with more languages planned.
+            </p>
             <p className="text-base sm:text-lg font-semibold text-gold mb-6">
-              Start for only $9.99/month.
+              Lifetime access for $49.
             </p>
           </FadeUp>
 
           <FadeUp delay={0.2}>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <a
-                href="/checkout?plan=individual-monthly"
+                href="/checkout?plan=individual-lifetime"
                 data-track="hero_cta_checkout_click"
-                data-plan="individual-monthly"
+                data-plan="individual-lifetime"
                 className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-10 py-4 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-lg transition-colors shadow-xl shadow-gold/25"
               >
-                Start for $9.99/month
+                Get Lifetime Access
               </a>
               <a
                 href="#preview"
@@ -101,7 +107,7 @@ export default async function LandingPage() {
               </a>
             </div>
             <p className="text-xs sm:text-sm text-text-muted text-center mt-3">
-              Cancel anytime · 7-day refund · Part 1 is free — no signup required
+              One-time payment · 7-day refund · Part 1 is free — no signup required
             </p>
           </FadeUp>
         </div>
@@ -136,6 +142,7 @@ export default async function LandingPage() {
         hasLifetime={!!(user?.hasPaid)}
         hasMonthly={false}
         hasFamily={user?.planType === "family"}
+        variant="lifetime-only"
       />
 
       {/* ============================================================
@@ -145,14 +152,15 @@ export default async function LandingPage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <FadeUp className="text-center mb-8">
             <p className="text-gold text-xs font-bold uppercase tracking-widest mb-2">
-              Free · No Account Required
+              Free · No Account Required · EN · عربي · FR
             </p>
             <h2 className="text-2xl sm:text-3xl font-bold mb-2">
               Not ready yet? Watch Part 1 free first.
             </h2>
             <p className="text-text-secondary max-w-xl mx-auto text-sm sm:text-base">
               See the full quality of the course before you start — video, reading, slides,
-              quiz, and flashcards. This is exactly what every lesson looks like.
+              quiz, and flashcards. Try it in English, Arabic, or French with the language
+              toggle — we plan to add more languages next.
             </p>
           </FadeUp>
 
@@ -255,16 +263,16 @@ export default async function LandingPage() {
                 open: true,
               },
               {
-                q: "Can I cancel anytime?",
-                a: "Yes. Cancel in 2 clicks from your dashboard. No call required. Monthly billing stops immediately.",
+                q: "What languages is the course available in?",
+                a: "Complete Seerah is available in English, Arabic, and French — including lessons, quizzes, flashcards, and reference guides. More languages are planned.",
               },
               {
                 q: "Is there a refund guarantee?",
                 a: "Yes — 7-day guarantee. If the course does not feel right, email us within 7 days for a full refund. No questions asked.",
               },
               {
-                q: "What's the difference between monthly and lifetime?",
-                a: "Monthly is $9.99/month and you can cancel anytime. Lifetime is $49 once — you own access forever with no renewal.",
+                q: "Is this a subscription?",
+                a: "No. Complete Seerah is $49 one-time for lifetime access — no subscription and no recurring charges.",
               },
               {
                 q: "Do I get instant access after buying?",
@@ -306,16 +314,16 @@ export default async function LandingPage() {
           <p className="text-sm sm:text-base text-text-secondary mb-2 max-w-lg mx-auto">
             One structured path. 100 lessons. Video, reading, quiz, flashcards — all in order.
           </p>
-          <p className="text-gold font-semibold text-base mb-7">$9.99/month · Cancel anytime</p>
+          <p className="text-gold font-semibold text-base mb-7">$49 one-time · Lifetime access</p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
-              href="/checkout?plan=individual-monthly"
+              href="/checkout?plan=individual-lifetime"
               data-track="final_checkout_clicked"
-              data-plan="individual-monthly"
+              data-plan="individual-lifetime"
               className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-10 py-4 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-lg transition-colors shadow-xl shadow-gold/20"
             >
-              Start for $9.99/month
+              Get Lifetime Access
             </Link>
             <a
               href="#preview"

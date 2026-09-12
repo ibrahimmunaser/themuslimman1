@@ -2,8 +2,20 @@
 
 import { useState } from "react";
 import { Mail, MessageCircle, Send } from "lucide-react";
+import type { CourseLang } from "@/lib/course-lang";
+import { loc } from "@/lib/loc";
 
-export function ContactSupportForm({ isRtl }: { isRtl?: boolean }) {
+export function ContactSupportForm({
+  lang = "en",
+  /** @deprecated use lang */
+  isRtl,
+}: {
+  lang?: CourseLang;
+  isRtl?: boolean;
+}) {
+  const resolvedLang: CourseLang = lang ?? (isRtl ? "ar" : "en");
+  const rtl = resolvedLang === "ar";
+
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
@@ -13,7 +25,9 @@ export function ContactSupportForm({ isRtl }: { isRtl?: boolean }) {
     e.preventDefault();
 
     if (!subject.trim() || !message.trim()) {
-      setErrorMessage(isRtl ? "يرجى ملء جميع الحقول" : "Please fill in all fields");
+      setErrorMessage(
+        loc(resolvedLang, "Please fill in all fields", "يرجى ملء جميع الحقول", "Veuillez remplir tous les champs"),
+      );
       setStatus("error");
       return;
     }
@@ -31,14 +45,16 @@ export function ContactSupportForm({ isRtl }: { isRtl?: boolean }) {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || (isRtl ? "فشل إرسال الرسالة" : "Failed to send message"));
+        throw new Error(
+          data.error ||
+            loc(resolvedLang, "Failed to send message", "فشل إرسال الرسالة", "Échec de l'envoi du message"),
+        );
       }
 
       setStatus("success");
       setSubject("");
       setMessage("");
 
-      // Reset success message after 5 seconds
       setTimeout(() => {
         setStatus("idle");
       }, 5000);
@@ -48,9 +64,12 @@ export function ContactSupportForm({ isRtl }: { isRtl?: boolean }) {
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : isRtl
-            ? "فشل إرسال الرسالة. يرجى المحاولة مرة أخرى."
-            : "Failed to send message. Please try again."
+          : loc(
+              resolvedLang,
+              "Failed to send message. Please try again.",
+              "فشل إرسال الرسالة. يرجى المحاولة مرة أخرى.",
+              "Échec de l'envoi du message. Veuillez réessayer.",
+            ),
       );
     }
   };
@@ -61,7 +80,7 @@ export function ContactSupportForm({ isRtl }: { isRtl?: boolean }) {
         className="p-6 rounded-xl bg-gradient-to-b from-green-500/15 to-green-500/5 border border-green-500/30"
         role="alert"
         aria-live="polite"
-        dir={isRtl ? "rtl" : undefined}
+        dir={rtl ? "rtl" : undefined}
       >
         <div className="flex items-start gap-4">
           <div className="w-12 h-12 rounded-lg bg-green-500/20 border border-green-500/30 flex items-center justify-center flex-shrink-0">
@@ -69,12 +88,15 @@ export function ContactSupportForm({ isRtl }: { isRtl?: boolean }) {
           </div>
           <div>
             <h3 className="text-lg font-semibold text-text mb-2">
-              {isRtl ? "تم إرسال الرسالة!" : "Message Sent!"}
+              {loc(resolvedLang, "Message Sent!", "تم إرسال الرسالة!", "Message envoyé !")}
             </h3>
             <p className="text-text-secondary">
-              {isRtl
-                ? "استلمنا رسالتك وسنرد عليك في أقرب وقت ممكن."
-                : "We've received your message and will get back to you as soon as possible."}
+              {loc(
+                resolvedLang,
+                "We've received your message and will get back to you as soon as possible.",
+                "استلمنا رسالتك وسنرد عليك في أقرب وقت ممكن.",
+                "Nous avons reçu votre message et vous répondrons dès que possible.",
+              )}
             </p>
           </div>
         </div>
@@ -85,7 +107,7 @@ export function ContactSupportForm({ isRtl }: { isRtl?: boolean }) {
   return (
     <div
       className="p-6 rounded-xl bg-gradient-to-b from-gold/15 to-gold/5 border border-gold/30"
-      dir={isRtl ? "rtl" : undefined}
+      dir={rtl ? "rtl" : undefined}
     >
       <div className="flex items-start gap-4 mb-6">
         <div className="w-12 h-12 rounded-lg bg-gold/20 border border-gold/30 flex items-center justify-center flex-shrink-0">
@@ -93,12 +115,15 @@ export function ContactSupportForm({ isRtl }: { isRtl?: boolean }) {
         </div>
         <div>
           <h3 className="text-lg font-semibold text-text mb-2">
-            {isRtl ? "هل تحتاج مساعدة إضافية؟" : "Need More Help?"}
+            {loc(resolvedLang, "Need More Help?", "هل تحتاج مساعدة إضافية؟", "Besoin d'aide supplémentaire ?")}
           </h3>
           <p className="text-text-secondary">
-            {isRtl
-              ? "لم تجد ما تبحث عنه؟ فريق الدعم هنا لمساعدتك."
-              : "Can't find what you're looking for? Our support team is here to help."}
+            {loc(
+              resolvedLang,
+              "Can't find what you're looking for? Our support team is here to help.",
+              "لم تجد ما تبحث عنه؟ فريق الدعم هنا لمساعدتك.",
+              "Vous ne trouvez pas ce que vous cherchez ? Notre équipe de support est là pour vous aider.",
+            )}
           </p>
         </div>
       </div>
@@ -106,14 +131,19 @@ export function ContactSupportForm({ isRtl }: { isRtl?: boolean }) {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="subject" className="block text-sm font-medium text-text mb-2">
-            {isRtl ? "الموضوع" : "Subject"}
+            {loc(resolvedLang, "Subject", "الموضوع", "Objet")}
           </label>
           <input
             type="text"
             id="subject"
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
-            placeholder={isRtl ? "بماذا تحتاج المساعدة؟" : "What do you need help with?"}
+            placeholder={loc(
+              resolvedLang,
+              "What do you need help with?",
+              "بماذا تحتاج المساعدة؟",
+              "En quoi avons-nous besoin de vous aider ?",
+            )}
             className="w-full px-4 py-2.5 rounded-lg bg-surface border border-border text-text placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold"
             disabled={status === "sending"}
           />
@@ -121,13 +151,18 @@ export function ContactSupportForm({ isRtl }: { isRtl?: boolean }) {
 
         <div>
           <label htmlFor="message" className="block text-sm font-medium text-text mb-2">
-            {isRtl ? "الرسالة" : "Message"}
+            {loc(resolvedLang, "Message", "الرسالة", "Message")}
           </label>
           <textarea
             id="message"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            placeholder={isRtl ? "صف مشكلتك أو سؤالك..." : "Describe your issue or question..."}
+            placeholder={loc(
+              resolvedLang,
+              "Describe your issue or question...",
+              "صف مشكلتك أو سؤالك...",
+              "Décrivez votre problème ou votre question…",
+            )}
             rows={5}
             className="w-full px-4 py-2.5 rounded-lg bg-surface border border-border text-text placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold resize-none"
             disabled={status === "sending"}
@@ -152,12 +187,12 @@ export function ContactSupportForm({ isRtl }: { isRtl?: boolean }) {
           {status === "sending" ? (
             <>
               <div className="w-4 h-4 border-2 border-ink/30 border-t-ink rounded-full animate-spin" />
-              {isRtl ? "جارٍ الإرسال..." : "Sending..."}
+              {loc(resolvedLang, "Sending...", "جارٍ الإرسال...", "Envoi…")}
             </>
           ) : (
             <>
               <Send className="w-4 h-4" />
-              {isRtl ? "إرسال الرسالة" : "Send Message"}
+              {loc(resolvedLang, "Send Message", "إرسال الرسالة", "Envoyer le message")}
             </>
           )}
         </button>

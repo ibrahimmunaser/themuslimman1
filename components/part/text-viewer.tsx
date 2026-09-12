@@ -1,4 +1,6 @@
 "use client";
+import type { CourseLang } from "@/lib/course-lang";
+import { loc } from "@/lib/loc";
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
@@ -8,26 +10,30 @@ import { formatSeerahContent } from "@/lib/text-formatter";
 import { PARTS, localizePart } from "@/lib/content";
 import { ERA_MAP, eraLabel as eraLabelFor } from "@/lib/types";
 
-const ASSET_META: Record<string, { label: string; labelAr: string; subtitle: string; subtitleAr: string }> = {
+const ASSET_META: Record<string, { label: string; labelAr: string; labelFr: string; subtitle: string; subtitleAr: string; subtitleFr: string }> = {
   briefing: {
     label: "LESSON BRIEFING",
     labelAr: "موجز الدرس",
+    labelFr: "BRIEFING DE LA LEÇON",
     subtitle: "A structured written summary of this lesson. Best reviewed after watching the video.",
     subtitleAr: "ملخص كتابي منظم لهذا الدرس. يُفضّل مراجعته بعد مشاهدة الفيديو.",
+    subtitleFr: "Un résumé écrit structuré de cette leçon. À revoir de préférence après la vidéo.",
   },
   study_guide: {
     label: "STUDY GUIDE",
     labelAr: "دليل الدراسة",
+    labelFr: "GUIDE D'ÉTUDE",
     subtitle: "A deeper review of key concepts, names, and events from this lesson.",
     subtitleAr: "مراجعة أعمق للمفاهيم والأسماء والأحداث الأساسية في هذا الدرس.",
+    subtitleFr: "Une revue plus approfondie des concepts, noms et événements clés de cette leçon.",
   },
 };
 
 /** Estimate reading time from raw HTML string. */
-function estimateReadTime(html: string, isRtl?: boolean): string {
+function estimateReadTime(html: string, lang: CourseLang = "en"): string {
   const words = html.replace(/<[^>]+>/g, " ").trim().split(/\s+/).length;
   const minutes = Math.max(2, Math.round(words / 220));
-  return isRtl ? `${minutes} دقيقة قراءة` : `${minutes} min read`;
+  return loc(lang, `${minutes} min read`, `${minutes} دقيقة قراءة`, `${minutes} min de lecture`);
 }
 
 interface TextViewerProps {
@@ -43,6 +49,7 @@ interface TextViewerProps {
   /** Callback to switch to the quiz mode from the parent tab controller */
   onSwitchToQuiz?: () => void;
   isRtl?: boolean;
+  lang?: CourseLang;
 }
 
 export function TextViewer({
@@ -54,15 +61,17 @@ export function TextViewer({
   hasQuiz,
   onSwitchToQuiz,
   isRtl,
+  lang: langProp,
 }: TextViewerProps) {
+  const lang: CourseLang = langProp ?? (isRtl ? "ar" : "en");
   const html = formatSeerahContent(content);
   const meta = assetId ? ASSET_META[assetId] : undefined;
-  const readTime = estimateReadTime(html, isRtl);
+  const readTime = estimateReadTime(html, lang);
 
-  // Look up part metadata for era label and lesson title (localized for Arabic)
+  // Look up part metadata for era label and lesson title
   const rawPartData = partNumber ? PARTS.find((p) => p.partNumber === partNumber) : undefined;
-  const partData = rawPartData ? localizePart(rawPartData, isRtl ? "ar" : "en") : undefined;
-  const eraLabel = partData ? eraLabelFor(ERA_MAP[partData.era as keyof typeof ERA_MAP], isRtl) : "";
+  const partData = rawPartData ? localizePart(rawPartData, lang) : undefined;
+  const eraLabel = partData ? eraLabelFor(ERA_MAP[partData.era as keyof typeof ERA_MAP], lang === "ar") : "";
   const totalParts = PARTS.length;
 
   // Reading progress (0–100)
@@ -124,7 +133,7 @@ export function TextViewer({
         {/* Fade-out overlay */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-surface to-transparent" />
         <p className="absolute bottom-2 left-0 right-0 text-center text-xs text-text-muted/60">
-          {isRtl ? "الدرس الكامل متاح بعد التسجيل" : "Full lesson available after signup"}
+          {loc(lang, "Full lesson available after signup", "الدرس الكامل متاح بعد التسجيل", "La leçon complète est disponible après inscription")}
         </p>
       </div>
     );
@@ -161,7 +170,7 @@ export function TextViewer({
         {/* Article header */}
         {meta && (
           <div className="article-header">
-            <p className="article-label">{isRtl ? meta.labelAr : meta.label}</p>
+            <p className="article-label">{loc(lang, meta.label, meta.labelAr, meta.labelFr)}</p>
 
             {/* Lesson title from content data */}
             {partData && (
@@ -182,7 +191,7 @@ export function TextViewer({
                 <>
                   <span className="article-meta-item">
                     <Layers size={11} strokeWidth={2} />
-                    {isRtl ? `الجزء ${partNumber} من ${totalParts}` : `Part ${partNumber} of ${totalParts}`}
+                    {loc(lang, `Part ${partNumber} of ${totalParts}`, `الجزء ${partNumber} من ${totalParts}`, `Partie ${partNumber} sur ${totalParts}`)}
                   </span>
                   <span className="article-meta-sep" aria-hidden>·</span>
                 </>
@@ -200,7 +209,7 @@ export function TextViewer({
             </div>
 
             {/* What this document is */}
-            <p className="article-subtitle">{isRtl ? meta.subtitleAr : meta.subtitle}</p>
+            <p className="article-subtitle">{loc(lang, meta.subtitle, meta.subtitleAr, meta.subtitleFr)}</p>
 
             {/* Reading progress context */}
             <div className="article-progress-context">
@@ -211,9 +220,12 @@ export function TextViewer({
                 />
               </div>
               <span className="article-progress-context-label">
-                {isRtl
-                  ? (readProgress < 5 ? "ابدأ القراءة" : readProgress >= 95 ? "اكتمل" : `${readProgress}% تمت القراءة`)
-                  : (readProgress < 5 ? "Start reading" : readProgress >= 95 ? "Completed" : `${readProgress}% through`)}
+                {loc(
+                  lang,
+                  readProgress < 5 ? "Start reading" : readProgress >= 95 ? "Completed" : `${readProgress}% through`,
+                  readProgress < 5 ? "ابدأ القراءة" : readProgress >= 95 ? "اكتمل" : `${readProgress}% تمت القراءة`,
+                  readProgress < 5 ? "Commencer la lecture" : readProgress >= 95 ? "Terminé" : `${readProgress} % parcourus`,
+                )}
               </span>
             </div>
           </div>
@@ -234,9 +246,12 @@ export function TextViewer({
             <div className="article-end-line" />
             <p className="article-end-label">
               <BookOpen size={11} strokeWidth={2} />
-              {isRtl
-                ? `نهاية ${meta.labelAr}`
-                : `End of ${meta.label.toLowerCase().replace("lesson ", "")}`}
+              {loc(
+                lang,
+                `End of ${meta.label.toLowerCase().replace("lesson ", "")}`,
+                `نهاية ${meta.labelAr}`,
+                `Fin — ${meta.labelFr.toLowerCase()}`,
+              )}
             </p>
           </div>
         )}
@@ -251,7 +266,7 @@ export function TextViewer({
                 className="inline-flex items-center gap-2 px-6 py-3 min-h-[44px] bg-gold hover:bg-gold-light text-ink font-semibold rounded-xl text-sm transition-colors shadow-md shadow-gold/20"
               >
                 <ClipboardCheck className="w-4 h-4" />
-                {isRtl ? "ابدأ الاختبار" : "Take the Quiz"}
+                {loc(lang, "Take the Quiz", "ابدأ الاختبار", "Passer le quiz")}
               </button>
             ) : hasQuiz !== false && partNumber ? (
               <Link
@@ -259,12 +274,12 @@ export function TextViewer({
                 className="inline-flex items-center gap-2 px-6 py-3 min-h-[44px] bg-gold hover:bg-gold-light text-ink font-semibold rounded-xl text-sm transition-colors shadow-md shadow-gold/20"
               >
                 <ClipboardCheck className="w-4 h-4" />
-                {isRtl ? "ابدأ الاختبار" : "Take the Quiz"}
+                {loc(lang, "Take the Quiz", "ابدأ الاختبار", "Passer le quiz")}
               </Link>
             ) : null}
             {(onSwitchToQuiz || (hasQuiz !== false && partNumber)) && (
               <p className="text-[11px] text-text-muted/60">
-                {isRtl ? "اختبر فهمك لهذا الدرس" : "Test your understanding of this lesson"}
+                {loc(lang, "Test your understanding of this lesson", "اختبر فهمك لهذا الدرس", "Testez votre compréhension de cette leçon")}
               </p>
             )}
           </div>

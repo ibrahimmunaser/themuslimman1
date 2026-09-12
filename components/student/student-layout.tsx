@@ -1,6 +1,8 @@
 import { cookies } from "next/headers";
 import { StudentSidebar } from "./student-sidebar";
 import { parseLang, COURSE_LANG_COOKIE } from "@/lib/course-lang";
+import { getCachedStudent } from "@/lib/auth-cache";
+import { LanguagesLaunchGate } from "@/components/student/languages-launch-gate";
 
 interface StudentLayoutProps {
   children: React.ReactNode;
@@ -21,6 +23,7 @@ export async function StudentLayout({
   // so the sidebar is Arabic-aware everywhere StudentLayout is used.
   const cookieStore = await cookies();
   const lang = parseLang(cookieStore.get(COURSE_LANG_COOKIE)?.value);
+  const user = await getCachedStudent();
 
   return (
     <div
@@ -36,7 +39,7 @@ export async function StudentLayout({
         lang={lang}
         isRtl={lang === "ar"}
       />
-      
+
       {/* overflow-x:clip prevents horizontal overflow without creating a scroll
           container — unlike overflow-x:hidden, it does not break position:sticky
           on child elements like the resource tab strip. */}
@@ -45,6 +48,7 @@ export async function StudentLayout({
           {children}
         </div>
       </main>
+      <LanguagesLaunchGate userId={user.id} />
     </div>
   );
 }

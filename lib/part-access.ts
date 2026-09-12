@@ -83,7 +83,8 @@ export async function requirePartAccess(partNumber: number): Promise<NextRespons
  * Returns null if no part number can be parsed from the key.
  */
 export function extractPartNumberFromR2Key(key: string): number | null {
-  const match = /Part\s+(\d+)/i.exec(key);
+  // Matches: "Part 50", "Part_50", "Final_Part_50_Full.mp4", "part_001_..."
+  const match = /Part[_\s]+(\d+)/i.exec(key);
   if (!match) return null;
   const num = parseInt(match[1], 10);
   return isNaN(num) ? null : num;

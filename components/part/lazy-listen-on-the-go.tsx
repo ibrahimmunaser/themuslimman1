@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { ListenOnTheGo } from "./listen-on-the-go";
 import { fetchPartAssets } from "@/lib/part-asset-cache";
+import type { CourseLang } from "@/lib/course-lang";
 
 interface LazyListenOnTheGoProps {
   partNumber: number;
@@ -12,9 +13,10 @@ interface LazyListenOnTheGoProps {
   audioUrl?: string;
   videoCompleted?: boolean;
   isRtl?: boolean;
+  lang?: CourseLang;
 }
 
-export function LazyListenOnTheGo({ partNumber, title, previewMode, audioUrl: audioUrlProp, videoCompleted, isRtl }: LazyListenOnTheGoProps) {
+export function LazyListenOnTheGo({ partNumber, title, previewMode, audioUrl: audioUrlProp, videoCompleted, isRtl, lang }: LazyListenOnTheGoProps) {
   const [audioUrl, setAudioUrl] = useState<string | undefined>(audioUrlProp);
   const [loading, setLoading] = useState(!audioUrlProp);
 
@@ -37,5 +39,5 @@ export function LazyListenOnTheGo({ partNumber, title, previewMode, audioUrl: au
     return null;
   }
 
-  return <ListenOnTheGo audioUrl={audioUrl} title={title} partNumber={partNumber} previewMode={previewMode} videoCompleted={videoCompleted} isRtl={isRtl} />;
+  return <ListenOnTheGo audioUrl={audioUrl} title={title} partNumber={partNumber} previewMode={previewMode} videoCompleted={videoCompleted} isRtl={isRtl} lang={lang} />;
 }

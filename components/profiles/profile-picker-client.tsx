@@ -6,6 +6,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Settings, Check, LogOut } from "lucide-react";
 import { switchProfile } from "@/app/actions/profiles";
 import { IslamicPatternBackground } from "@/components/motion";
+import type { CourseLang } from "@/lib/course-lang";
+import { loc } from "@/lib/loc";
 
 // Each slot index gets a distinct gradient so the grid looks alive
 const SLOT_GRADIENTS = [
@@ -25,10 +27,10 @@ interface Profile {
 
 interface ProfilePickerClientProps {
   profiles: Profile[];
-  profileLimit: number;        // 5 for family, 1 for individual
+  profileLimit: number;
   isFamily: boolean;
   activeProfileId: string | null;
-  isRtl?: boolean;
+  lang?: CourseLang;
 }
 
 export function ProfilePickerClient({
@@ -36,8 +38,10 @@ export function ProfilePickerClient({
   profileLimit,
   isFamily,
   activeProfileId,
-  isRtl,
+  lang = "en",
 }: ProfilePickerClientProps) {
+  const isRtl = lang === "ar";
+
   const [selecting, setSelecting] = useState<string | null>(null);
   const [switchError, setSwitchError] = useState<string | null>(null);
 
@@ -51,7 +55,7 @@ export function ProfilePickerClient({
       const result = await switchProfile(profileId);
       if (!result.success) {
         setSelecting(null);
-        setSwitchError(isRtl ? "تعذّر تبديل الملف الشخصي. حاول مرة أخرى." : "Could not switch profile. Please try again.");
+        setSwitchError(loc(lang, "Could not switch profile. Please try again.", "تعذّر تبديل الملف الشخصي. حاول مرة أخرى.", "Impossible de changer de profil. Veuillez réessayer."));
         return;
       }
       // Small delay so the selection animation plays before navigation
@@ -60,7 +64,7 @@ export function ProfilePickerClient({
       window.location.href = "/seerah?from=profiles";
     } catch {
       setSelecting(null);
-      setSwitchError(isRtl ? "حدث خطأ ما. حاول مرة أخرى." : "Something went wrong. Please try again.");
+      setSwitchError(loc(lang, "Something went wrong. Please try again.", "حدث خطأ ما. حاول مرة أخرى.", "Une erreur s'est produite. Veuillez réessayer."));
     }
   }
 
@@ -96,7 +100,7 @@ export function ProfilePickerClient({
           className="rounded-xl mx-auto mb-6 opacity-80"
         />
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight">
-          {isRtl ? "من يتعلّم اليوم؟" : "Who is learning today?"}
+          {loc(lang, "Who is learning today?", "من يتعلّم اليوم؟", "Qui apprend aujourd'hui ?")}
         </h1>
         {switchError && (
           <p className="mt-3 text-sm text-red-400 bg-red-950/40 border border-red-800/50 rounded-lg px-4 py-2">
@@ -105,7 +109,7 @@ export function ProfilePickerClient({
         )}
         {isFamily && (
           <p className="text-zinc-500 text-sm mt-2">
-            {isRtl ? "اختر ملفك الشخصي التعليمي — يحتفظ كل ملف بتقدمه الخاص." : "Select your learner profile — each one keeps its own progress."}
+            {loc(lang, "Select your learner profile — each one keeps its own progress.", "اختر ملفك الشخصي التعليمي — يحتفظ كل ملف بتقدمه الخاص.", "Choisissez votre profil d'apprenant — chacun conserve sa propre progression.")}
           </p>
         )}
       </motion.div>
@@ -127,14 +131,14 @@ export function ProfilePickerClient({
               isSelecting={selecting === profile.id}
               anySelecting={!!selecting}
               onSelect={() => handleSelect(profile.id)}
-              isRtl={isRtl}
+              lang={lang}
             />
           ) : (
             isFamily && (
               <AddProfileSlot
                 key={`empty-${idx}`}
                 anySelecting={!!selecting}
-                isRtl={isRtl}
+                lang={lang}
               />
             )
           )
@@ -154,7 +158,7 @@ export function ProfilePickerClient({
             className="inline-flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-300 transition-colors px-4 py-2 rounded-lg hover:bg-zinc-800/60"
           >
             <Settings className="w-4 h-4" />
-            {isRtl ? "إدارة الملفات الشخصية" : "Manage profiles"}
+            {loc(lang, "Manage profiles", "إدارة الملفات الشخصية", "Gérer les profils")}
           </a>
         )}
         {isFamily && <span className="text-zinc-700 text-xs">·</span>}
@@ -163,7 +167,7 @@ export function ProfilePickerClient({
           className="inline-flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-300 transition-colors px-4 py-2 rounded-lg hover:bg-zinc-800/60"
         >
           <LogOut className="w-4 h-4" />
-          {isRtl ? "تسجيل الخروج" : "Sign out"}
+          {loc(lang, "Sign out", "تسجيل الخروج", "Se déconnecter")}
         </button>
       </motion.div>
     </div>
@@ -179,7 +183,7 @@ interface ProfileSlotProps {
   isSelecting: boolean;
   anySelecting: boolean;
   onSelect: () => void;
-  isRtl?: boolean;
+  lang?: CourseLang;
 }
 
 function ProfileSlot({
@@ -189,7 +193,7 @@ function ProfileSlot({
   isSelecting,
   anySelecting,
   onSelect,
-  isRtl,
+  lang = "en",
 }: ProfileSlotProps) {
   const [hovered, setHovered] = useState(false);
 
@@ -211,7 +215,7 @@ function ProfileSlot({
       whileTap={{ scale: 0.95 }}
       transition={{ duration: 0.15 }}
       className="flex flex-col items-center gap-3 group outline-none disabled:cursor-default"
-      aria-label={isRtl ? `اختر ${profile.displayName}` : `Select ${profile.displayName}`}
+      aria-label={loc(lang, `Select ${profile.displayName}`, `اختر ${profile.displayName}`, `Sélectionner ${profile.displayName}`)}
     >
       {/* Avatar circle */}
       <div className="relative">
@@ -281,10 +285,10 @@ function ProfileSlot({
           {profile.displayName}
         </p>
         {profile.isDefault && (
-          <span className="text-[10px] text-zinc-600 mt-0.5 block">{isRtl ? "أساسي" : "Primary"}</span>
+          <span className="text-[10px] text-zinc-600 mt-0.5 block">{loc(lang, "Primary", "أساسي", "Principal")}</span>
         )}
         {isSelecting && (
-          <span className="text-[10px] text-gold mt-0.5 block font-medium">{isRtl ? "جارٍ التحميل…" : "Loading…"}</span>
+          <span className="text-[10px] text-gold mt-0.5 block font-medium">{loc(lang, "Loading…", "جارٍ التحميل…", "Chargement…")}</span>
         )}
       </div>
     </motion.button>
@@ -293,7 +297,7 @@ function ProfileSlot({
 
 // ── Empty "Add Profile" slot ──────────────────────────────────────────────────
 
-function AddProfileSlot({ anySelecting, isRtl }: { anySelecting: boolean; isRtl?: boolean }) {
+function AddProfileSlot({ anySelecting, lang = "en" }: { anySelecting: boolean; lang?: CourseLang }) {
   return (
     <motion.a
       href="/student/profiles?action=new"
@@ -301,14 +305,14 @@ function AddProfileSlot({ anySelecting, isRtl }: { anySelecting: boolean; isRtl?
       whileTap={anySelecting ? undefined : { scale: 0.95 }}
       transition={{ duration: 0.15 }}
       className={`flex flex-col items-center gap-3 group outline-none ${anySelecting ? "pointer-events-none opacity-40" : ""}`}
-      aria-label={isRtl ? "إضافة ملف شخصي جديد" : "Add new profile"}
+      aria-label={loc(lang, "Add new profile", "إضافة ملف شخصي جديد", "Ajouter un nouveau profil")}
     >
       {/* Dashed circle */}
       <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full border-2 border-dashed border-zinc-700 group-hover:border-gold/50 group-hover:bg-zinc-800/40 flex items-center justify-center transition-all">
         <Plus className="w-8 h-8 text-zinc-600 group-hover:text-gold/70 transition-colors" />
       </div>
       <p className="text-sm font-medium text-zinc-600 group-hover:text-zinc-400 transition-colors max-w-[96px] truncate text-center">
-        {isRtl ? "إضافة ملف شخصي" : "Add Profile"}
+        {loc(lang, "Add Profile", "إضافة ملف شخصي", "Ajouter un profil")}
       </p>
     </motion.a>
   );
