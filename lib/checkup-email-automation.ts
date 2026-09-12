@@ -12,10 +12,11 @@ const PHYSICAL_ADDRESS = process.env.EMAIL_PHYSICAL_ADDRESS ?? "TheMuslimMan · 
 // ─── Checkout URL helpers ──────────────────────────────────────────────────────
 
 function checkoutUrl(recommendedPlan: string, source: string | null, step: number): string {
-  // Preserve the exact plan the quiz recommended — do not downgrade lifetime to monthly.
-  // Unknown/empty plans fall back to individual-monthly.
+  // Public purchase is lifetime-only — map legacy monthly recommendations to lifetime.
   const knownPlans = ["individual-monthly", "individual-lifetime", "family-monthly", "family-lifetime"];
-  const plan = knownPlans.includes(recommendedPlan) ? recommendedPlan : "individual-monthly";
+  let plan = knownPlans.includes(recommendedPlan) ? recommendedPlan : "individual-lifetime";
+  if (plan === "individual-monthly") plan = "individual-lifetime";
+  if (plan === "family-monthly") plan = "family-lifetime";
   const base = `${APP_URL}/checkout`;
   const p = new URLSearchParams({
     plan,
@@ -171,10 +172,9 @@ export function buildStep3Html(opts: {
   unsubscribeUrl: string;
 }): string {
   const { firstName, score, recommendedPlan, source, unsubscribeUrl } = opts;
-  const isLifetime = recommendedPlan.includes("lifetime");
-  const planKey    = isLifetime ? "individual-lifetime" : "individual-monthly";
-  const planLabel  = isLifetime ? "Individual Lifetime — $49 one-time" : "Individual Plan — $9.99/mo";
-  const planNote   = isLifetime ? "Full lifetime access to all 100 parts — pay once, done." : "Full access to all 100 parts — cancel anytime.";
+  const planKey    = "individual-lifetime";
+  const planLabel  = "Individual Lifetime — $49 one-time";
+  const planNote   = "Full lifetime access to all 100 parts — pay once, done.";
   const ctaUrl     = checkoutUrl(planKey, source, 3);
 
   return `<!DOCTYPE html>

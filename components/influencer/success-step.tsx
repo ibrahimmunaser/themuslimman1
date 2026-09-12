@@ -28,7 +28,7 @@ export function SuccessStep({ config, paymentIntentId }: SuccessStepProps) {
         {
           influencer_slug: config.slug,
           payment_intent:  paymentIntentId,
-          plan:            "individual-monthly",
+          plan:            "individual-lifetime",
           source:          "influencer_quick_checkout",
         },
         { creator: config.slug }

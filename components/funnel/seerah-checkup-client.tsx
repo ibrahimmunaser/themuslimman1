@@ -289,12 +289,10 @@ function getRecommendation(answers: Record<number, number>, urls: SeerahCheckupU
       primaryUrl: watchFreeUrl,
       primarySupport: "Full first lesson — video, reading, slides, flashcards, quiz. No payment.",
       showFreePrimary: true,
-      secondaryUrl: urls.individualMonthly,
-      secondaryLabel: "Unlock Individual Access — $9.99/month",
+      secondaryUrl: urls.individualLifetime,
+      secondaryLabel: "Get Lifetime Access — $49",
       secondaryPreamble: "Ready to continue after Part 1?",
       bridgeCopy: "Because you want to see the quality first, start with Part 1 free — full video, flashcards, and quiz included. No payment required.",
-      lifetimeUrl: urls.individualLifetime,
-      lifetimeLabel: "Or pay once — lifetime is $49 →",
       trackEvent: `${eventPrefix}watch_free_click`,
     };
   }
@@ -306,12 +304,10 @@ function getRecommendation(answers: Record<number, number>, urls: SeerahCheckupU
       primaryUrl: watchFreeUrl,
       primarySupport: "Part 1 is the very beginning of the full path. No payment, no commitment.",
       showFreePrimary: true,
-      secondaryUrl: urls.individualMonthly,
-      secondaryLabel: "Unlock Individual Access — $9.99/month",
+      secondaryUrl: urls.individualLifetime,
+      secondaryLabel: "Get Lifetime Access — $49",
       secondaryPreamble: "Ready to continue after Part 1?",
       bridgeCopy: "The best move when you don't know where to start is to simply start from Part 1 — free, in order, no commitment.",
-      lifetimeUrl: urls.individualLifetime,
-      lifetimeLabel: "Or pay once — lifetime is $49 →",
       trackEvent: `${eventPrefix}watch_free_click`,
     };
   }
@@ -326,12 +322,10 @@ function getRecommendation(answers: Record<number, number>, urls: SeerahCheckupU
           : "Based on your answers, the best next step is to start from Part 1 and follow one clear path in order.";
 
   return {
-    primaryLabel: "Unlock Individual Access — $9.99/month",
-    primaryUrl: urls.individualMonthly,
-    primarySupport: "Cancel anytime. Instant access.",
+    primaryLabel: "Get Lifetime Access — $49",
+    primaryUrl: urls.individualLifetime,
+    primarySupport: "One payment. Keep access forever.",
     showFreePrimary: false,
-    lifetimeUrl: urls.individualLifetime,
-    lifetimeLabel: "Or pay once — lifetime is $49 →",
     bridgeCopy,
     trackEvent: `${eventPrefix}recommended_plan_click`,
   };
@@ -888,8 +882,8 @@ export function SeerahCheckupClient({
   function planFromUrl(url: string): string {
     if (url.includes("family-lifetime"))    return "family-lifetime";
     if (url.includes("individual-lifetime")) return "individual-lifetime";
-    if (url.includes("family-monthly"))     return "family-monthly";
-    return "individual-monthly";
+    if (url.includes("family-monthly"))     return "family-lifetime";
+    return "individual-lifetime";
   }
 
   const isResultPhase = phase === "result";
@@ -899,9 +893,9 @@ export function SeerahCheckupClient({
       ? {
           ...rec,
           showFreePrimary: false,
-          primaryUrl: rec.secondaryUrl ?? urls.individualMonthly,
-          primaryLabel: rec.secondaryLabel ?? "Unlock Individual Access — $9.99/month",
-          primarySupport: "Cancel anytime. Instant access.",
+          primaryUrl: rec.secondaryUrl ?? urls.individualLifetime,
+          primaryLabel: rec.secondaryLabel ?? "Get Lifetime Access — $49",
+          primarySupport: "One payment. Keep access forever.",
           secondaryUrl: undefined,
           secondaryLabel: undefined,
           secondaryPreamble: undefined,
@@ -1229,15 +1223,15 @@ export function SeerahCheckupClient({
             {!embedMode && showInlinePreview && (
               <div ref={inlineRef} className="scroll-mt-24">
                 <InlinePart1Video
-                  checkoutUrl={withUserParams(rec.secondaryUrl ?? urls.individualMonthly)}
+                  checkoutUrl={withUserParams(rec.secondaryUrl ?? urls.individualLifetime)}
                   checkoutLabel={rec.secondaryLabel}
                   onVideoStart={() => track("watch_part1_clicked")}
                   onUnlockClick={() => track("quiz_recommended_cta_clicked", {
                     score,
                     result_type:      resultType,
-                    recommended_plan: planFromUrl(rec.secondaryUrl ?? urls.individualMonthly),
-                    cta_label:        rec.secondaryLabel ?? "Unlock Access",
-                    destination:      rec.secondaryUrl ?? urls.individualMonthly,
+                    recommended_plan: planFromUrl(rec.secondaryUrl ?? urls.individualLifetime),
+                    cta_label:        rec.secondaryLabel ?? "Get Lifetime Access — $49",
+                    destination:      rec.secondaryUrl ?? urls.individualLifetime,
                   })}
                 />
               </div>
@@ -1369,16 +1363,16 @@ export function SeerahCheckupClient({
             </button>
           ) : rec.showFreePrimary && showInlinePreview ? (
             <Link
-              href={withUserParams(rec.secondaryUrl ?? urls.individualMonthly)}
+              href={withUserParams(rec.secondaryUrl ?? urls.individualLifetime)}
               onClick={() => track("quiz_recommended_cta_clicked", {
                 score,
                 result_type:      resultType,
-                recommended_plan: planFromUrl(rec.secondaryUrl ?? urls.individualMonthly),
-                cta_label:        "Unlock Individual Access — $9.99/mo",
-                destination:      rec.secondaryUrl ?? urls.individualMonthly,
+                recommended_plan: planFromUrl(rec.secondaryUrl ?? urls.individualLifetime),
+                cta_label:        "Get Lifetime Access — $49",
+                destination:      rec.secondaryUrl ?? urls.individualLifetime,
               })}
               className="flex w-full items-center justify-center py-3 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-sm transition-colors shadow-lg shadow-gold/20">
-              Unlock Individual Access — $9.99/mo
+              Get Lifetime Access — $49
             </Link>
           ) : (
             <Link href={withUserParams(rec.primaryUrl)}
@@ -1386,11 +1380,11 @@ export function SeerahCheckupClient({
                 score,
                 result_type:      resultType,
                 recommended_plan: planFromUrl(rec.primaryUrl),
-                cta_label:        "Unlock Individual Access — $9.99/mo",
+                cta_label:        "Get Lifetime Access — $49",
                 destination:      rec.primaryUrl,
               })}
               className="flex w-full items-center justify-center py-3 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-sm transition-colors shadow-lg shadow-gold/20">
-              Unlock Individual Access — $9.99/mo
+              Get Lifetime Access — $49
             </Link>
           )}
         </div>

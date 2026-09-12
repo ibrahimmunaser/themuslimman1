@@ -871,7 +871,8 @@ function CheckoutPageContent({
 
   // ── Audience + billing state ───────────────────────────────────────────────
   const [audience, setAudience] = useState<Audience>(initialAudience);
-  const [billing,  setBilling]  = useState<Billing>(initialBilling);
+  // Public purchase is lifetime-only (legacy monthly URLs redirect server-side).
+  const [billing, setBilling] = useState<Billing>("lifetime");
 
   // Ann Arbor student offer: customise labels in the offer panel and buttons
   const isAnnArborStudent = initialSourceParam === "annarbor" && billing === "lifetime" && audience === "individual";
@@ -1321,14 +1322,13 @@ function CheckoutPageContent({
 
   const allBillingOptions: { id: Billing; label: string; price: number; priceSuffix?: string; priceOverride?: string; sub: string; badge?: string }[] = audience === "individual"
     ? [
-        { id: "monthly",  label: "Monthly",  price: PLANS.monthly.price,   priceSuffix: "/mo", sub: "Cancel anytime",          badge: "Most Popular" },
         { id: "lifetime", label: "Lifetime", price: PLANS.complete.price,  sub: "Pay once, access forever", badge: "Best Value" },
       ]
     : [
-        { id: "monthly",  label: "Monthly",  price: PLANS.familyMonthly.price, priceSuffix: "/mo", sub: "Up to 5 profiles · cancel anytime", badge: "Most Popular" },
         { id: "lifetime", label: "Lifetime", price: PLANS.family.price,        sub: "Up to 5 profiles · pay once", badge: "Best Value" },
       ];
 
+  // Public purchase is lifetime-only.
   const billingOptions = allBillingOptions;
 
   const PlanSummary = (

@@ -68,18 +68,17 @@ class AppConstants {
   static const String iapLifetimeIndividualLegacy = 'com.themuslimman.seerah.lifetime.individual';
   static const String iapLifetimeFamilyLegacy     = 'com.themuslimman.seerah.lifetime.family';
 
-  /// Public plans offered in the paywall UI (Individual Monthly + Lifetime).
-  /// Family SKUs stay queryable for restore / existing family accounts but are
-  /// not sold as a public purchase option.
+  /// Public plans offered in the paywall UI (Individual Lifetime only).
+  /// Monthly + family SKUs stay queryable for restore / existing accounts but
+  /// are not sold as a public purchase option.
   static const List<String> iapPublicPlanIds = [
-    iapMonthlyIndividual,
     iapLifetimeIndividual,
   ];
 
   /// Number of distinct plans on the public paywall (used for "X of Y plans
   /// loaded" UI messaging) — NOT the same as iapProductIds.length, which
-  /// includes family + legacy candidate IDs for restore compatibility.
-  static const int iapPlanCount = 2;
+  /// includes family + legacy + monthly candidate IDs for restore compatibility.
+  static const int iapPlanCount = 1;
 
   /// Maps each canonical plan ID to every product ID that might represent it
   /// in the store. [IAPState.productForPlan] tries them in order.

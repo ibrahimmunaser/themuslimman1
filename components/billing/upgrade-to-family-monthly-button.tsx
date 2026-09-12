@@ -32,7 +32,7 @@ export function UpgradeToFamilyMonthlyButton({ lang = "en" }: Props) {
       }
       if (!res.ok) throw new Error(data.error || "Upgrade failed");
       // If a clientSecret is returned (new subscriber, no existing card) fall back to checkout.
-      window.location.href = "/checkout?plan=family-monthly";
+      window.location.href = "/checkout?plan=family-lifetime";
     } catch (err) {
       setError(err instanceof Error ? err.message : t(lang, "somethingWentWrong"));
     } finally {

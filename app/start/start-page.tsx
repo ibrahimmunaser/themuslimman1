@@ -265,36 +265,22 @@ export function StartPage({ preview }: { preview?: ReactNode }) {
               One-time payment available — no subscription required.
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-              {[
-                { type: "Monthly",  audience: "Individual", price: "$9.99", period: "/month",    featured: false },
-                { type: "Lifetime", audience: "Individual", price: "$49",   period: " one time", featured: true  },
-              ].map((plan) => (
-                <div
-                  key={plan.audience + plan.type}
-                  className={`rounded-2xl border p-5 ${
-                    plan.featured
-                      ? "border-gold/40 bg-gold-bg"
-                      : "border-border bg-surface"
-                  }`}
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <p className="text-xs text-text-muted mb-0.5">{plan.type}</p>
-                      <p className="font-semibold text-text">{plan.audience}</p>
-                    </div>
-                    {plan.featured && (
-                      <span className="text-xs font-semibold text-gold bg-gold/10 border border-gold/25 px-2 py-0.5 rounded-full whitespace-nowrap">
-                        One time
-                      </span>
-                    )}
+            <div className="max-w-sm mx-auto mb-8">
+              <div className="rounded-2xl border border-gold/40 bg-gold-bg p-5">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <p className="text-xs text-text-muted mb-0.5">Lifetime</p>
+                    <p className="font-semibold text-text">Individual</p>
                   </div>
-                  <p className="text-2xl font-bold text-text">
-                    {plan.price}
-                    <span className="text-sm font-normal text-text-muted">{plan.period}</span>
-                  </p>
+                  <span className="text-xs font-semibold text-gold bg-gold/10 border border-gold/25 px-2 py-0.5 rounded-full whitespace-nowrap">
+                    One time
+                  </span>
                 </div>
-              ))}
+                <p className="text-2xl font-bold text-text">
+                  $49
+                  <span className="text-sm font-normal text-text-muted"> one time</span>
+                </p>
+              </div>
             </div>
 
             <div className="text-center">

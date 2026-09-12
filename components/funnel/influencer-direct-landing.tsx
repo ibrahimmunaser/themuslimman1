@@ -20,7 +20,7 @@ export interface InfluencerDirectConfig {
   creatorAvatarUrl?: string;
   /** Hero headline, e.g. "Learn the life of the Prophet ﷺ in order." */
   heroHeadline: string;
-  /** Price shown in hero, e.g. "$9.99/month" */
+  /** Price shown in hero, e.g. "$49 one-time" */
   price?: string;
   /** Full checkout URL */
   checkoutUrl: string;
@@ -75,7 +75,7 @@ export function InfluencerDirectLanding({ config, part1Preview, afterPart1Previe
   // Enriched checkout URL — updated on mount to include real landing-page UTMs
   const [checkoutUrl, setCheckoutUrl] = useState(config.checkoutUrl);
 
-  const price = config.price ?? "$9.99/month";
+  const price = config.price ?? "$49 one-time";
 
   // Sticky only shown when user has scrolled past hero AND no CTA section is on screen
   const showSticky = scrolledPast && !anyCTAVisible;
@@ -295,7 +295,7 @@ export function InfluencerDirectLanding({ config, part1Preview, afterPart1Previe
 
           {/* Friction reducer */}
           <p className="text-xs text-text-muted">
-            Part 1 is free · No app required · Cancel anytime · 7-day refund guarantee
+            Part 1 is free · No app required · One-time payment · 7-day refund guarantee
           </p>
         </div>
       </section>
@@ -369,7 +369,7 @@ export function InfluencerDirectLanding({ config, part1Preview, afterPart1Previe
             <a
               href={checkoutUrl}
               data-track="checkout_clicked"
-              data-plan="individual-monthly"
+              data-plan="individual-lifetime"
               className="flex-shrink-0 py-3 px-6 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-sm transition-colors"
             >
               Start the Course

@@ -181,10 +181,10 @@ export function InlinePart1Video({ checkoutUrl, checkoutLabel, hideCta = false, 
             onClick={onUnlockClick}
             className="flex items-center justify-center w-full py-5 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-lg transition-colors shadow-lg shadow-gold/25 mb-2"
           >
-            {checkoutLabel ?? loc(lang, "Unlock Individual Access — $9.99/month", "افتح الوصول الفردي — ٩٫٩٩$/شهر", "Débloquer l'accès individuel — 9,99 $/mois")}
+            {checkoutLabel ?? loc(lang, "Get Lifetime Access — $49", "احصل على وصول مدى الحياة — ٤٩$", "Obtenir l'accès à vie — 49 $")}
           </Link>
           <p className="text-xs text-text-muted/70">
-            {loc(lang, "Secure checkout · Instant access · Cancel anytime · 7-day refund guarantee", "دفع آمن · وصول فوري · ألغِ في أي وقت · ضمان ٧ أيام", "Paiement sécurisé · Accès immédiat · Annulez à tout moment · Garantie de 7 jours")}
+            {loc(lang, "Secure checkout · Instant access · One-time payment · 7-day refund guarantee", "دفع آمن · وصول فوري · دفعة واحدة · ضمان ٧ أيام", "Paiement sécurisé · Accès immédiat · Paiement unique · Garantie de 7 jours")}
           </p>
         </div>
       )}

@@ -121,7 +121,7 @@ export function PreviewStep({
           <ArrowRight className="w-4 h-4" aria-hidden="true" />
         </button>
         <p className="text-xs text-zinc-500 text-center -mt-3">
-          Unlock all 100 lessons — monthly and lifetime options available
+          Unlock all 100 lessons — $49 one-time lifetime access
         </p>
 
       </div>

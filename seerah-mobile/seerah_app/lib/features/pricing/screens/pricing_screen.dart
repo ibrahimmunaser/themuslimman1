@@ -51,14 +51,6 @@ const _plans = [
     badgeKey: 'mostPopular',
     isRecommended: true,
   ),
-  _Plan(
-    id: PlanId.individualMonthly,
-    iapId: AppConstants.iapMonthlyIndividual,
-    nameKey: 'planMonthly',
-    descriptionKey: 'oneLearnerCancelAnytime',
-    fallbackPrice: '\$${AppConstants.monthlyPrice}',
-    periodKey: 'perMonth',
-  ),
 ];
 
 List<({String q, String a})> _faqItems(String lang) => [
@@ -67,8 +59,8 @@ List<({String q, String a})> _faqItems(String lang) => [
     a: t(lang, 'faqWhatIncludedA'),
   ),
   (
-    q: t(lang, 'faqCancelAnytimeQ'),
-    a: t(lang, 'faqCancelAnytimeA'),
+    q: t(lang, 'faqIsSubscriptionQ'),
+    a: tv(lang, 'faqIsSubscriptionA', {'l': AppConstants.lifetimePrice}),
   ),
   (
     q: t(lang, 'faqRefundGuaranteeQ'),
@@ -77,10 +69,6 @@ List<({String q, String a})> _faqItems(String lang) => [
   (
     q: t(lang, 'faqPart1FreeQ'),
     a: t(lang, 'faqPart1FreeA'),
-  ),
-  (
-    q: t(lang, 'faqMonthlyVsLifetimeQ'),
-    a: tv(lang, 'faqMonthlyVsLifetimeA', {'m': AppConstants.monthlyPrice, 'l': AppConstants.lifetimePrice}),
   ),
 ];
 
@@ -458,9 +446,9 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
 
           const SizedBox(height: 28),
 
-          // ── Monthly vs lifetime ──────────────────────────────────
+          // ── Lifetime access ──────────────────────────────────────
           Text(
-            t(lang, 'monthlyVsLifetime'),
+            t(lang, 'lifetimeAccessTitle'),
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: AppColors.textPrimary,
@@ -470,20 +458,11 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
           ),
           const SizedBox(height: 12),
           _ComparisonCard(
-            title: t(lang, 'planMonthly'),
-            bullets: [
-              t(lang, 'lowerUpfrontCost'),
-              '\$${AppConstants.monthlyPrice}${t(lang, 'perMonth')}',
-              t(lang, 'cancelFromStoreAccount'),
-            ],
-          ),
-          const SizedBox(height: 10),
-          _ComparisonCard(
             title: t(lang, 'planLifetime'),
             bullets: [
               t(lang, 'payOnceKeepForever'),
               '\$${AppConstants.lifetimePrice} ${t(lang, 'oneTime')}',
-              t(lang, 'bestLongTermValue'),
+              t(lang, 'noSubscriptionNoRenewal'),
             ],
             highlighted: true,
           ),

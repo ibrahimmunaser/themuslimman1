@@ -30,8 +30,8 @@ const FAQ_ITEMS = [
     a: "Yes. Part 1 is free with no signup required — preview it on this page before you buy.",
   },
   {
-    q: "Can I cancel anytime?",
-    a: "Yes. Monthly plans can be canceled anytime from your billing page. Lifetime is a one-time payment with no renewal.",
+    q: "Is this a subscription?",
+    a: "No. Lifetime access is a one-time payment with no renewal. You keep access forever.",
   },
   {
     q: "Is there a refund guarantee?",
@@ -48,7 +48,7 @@ interface InfluencerSalesPageProps {
   part1: Part | null;
   part1AssetUrls: Part1AssetUrls;
   initialLang?: CourseLang;
-  onCheckout: (plan: "lifetime" | "monthly") => void;
+  onCheckout: () => void;
 }
 
 export function InfluencerSalesPage({
@@ -61,7 +61,6 @@ export function InfluencerSalesPage({
   const searchParams = useSearchParams();
   const lessonRef = useRef<HTMLElement>(null);
   const pricingRef = useRef<HTMLElement>(null);
-  const [showMonthly, setShowMonthly] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const prevModeRef = useRef<string | null>(null);
 
@@ -70,7 +69,6 @@ export function InfluencerSalesPage({
     "A structured 100-part course with videos, quizzes, flashcards, summaries, mind maps, and progress tracking.";
 
   const lifetimePrice = formatPrice(PLANS.complete.price);
-  const monthlyPrice = formatPrice(PLANS.monthly.price);
 
   useEffect(() => {
     const modeParam = searchParams.get("mode");
@@ -117,16 +115,7 @@ export function InfluencerSalesPage({
       { influencer_slug: config.slug, plan: "individual-lifetime", trigger },
       { creator: config.slug },
     );
-    onCheckout("lifetime");
-  }
-
-  function goMonthly(trigger: string) {
-    trackEvent(
-      "influencer_primary_cta_clicked",
-      { influencer_slug: config.slug, plan: "individual-monthly", trigger },
-      { creator: config.slug },
-    );
-    onCheckout("monthly");
+    onCheckout();
   }
 
   return (
@@ -350,38 +339,6 @@ export function InfluencerSalesPage({
               Get Lifetime Access — {lifetimePrice}
               <ArrowRight className="w-4 h-4" aria-hidden="true" />
             </button>
-          </div>
-
-          {/* Monthly — secondary / collapsed */}
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 overflow-hidden">
-            <button
-              type="button"
-              onClick={() => setShowMonthly((v) => !v)}
-              className="w-full flex items-center justify-between gap-3 px-4 py-3.5 text-left hover:bg-zinc-900/60 transition-colors"
-              aria-expanded={showMonthly}
-            >
-              <span className="text-sm text-zinc-400">Prefer a monthly option?</span>
-              <ChevronDown
-                className={`w-4 h-4 text-zinc-500 transition-transform ${showMonthly ? "rotate-180" : ""}`}
-                aria-hidden="true"
-              />
-            </button>
-            {showMonthly && (
-              <div className="px-4 pb-4 border-t border-zinc-800/80 pt-4">
-                <p className="text-lg font-bold text-text mb-1">
-                  {monthlyPrice}
-                  <span className="text-sm font-normal text-zinc-400">/month</span>
-                </p>
-                <p className="text-xs text-zinc-500 mb-4">Cancel anytime. Full course access while subscribed.</p>
-                <button
-                  type="button"
-                  onClick={() => goMonthly("pricing_monthly")}
-                  className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-zinc-700 hover:border-gold/40 text-text font-semibold text-sm transition-colors min-h-[44px]"
-                >
-                  Start Monthly — {monthlyPrice}/mo
-                </button>
-              </div>
-            )}
           </div>
 
           <p className="text-center text-xs text-zinc-500 flex items-center justify-center gap-1.5">

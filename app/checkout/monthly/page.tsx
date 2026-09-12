@@ -8,8 +8,5 @@ export default async function MonthlyCheckoutPage({
 }) {
   const params = await searchParams;
   const isFamily = params.plan === "familyMonthly" || params.plan === "family-monthly";
-  // Use plan=family-monthly directly — NOT plan=family&billing=monthly.
-  // LEGACY_PLAN_ALIASES["family"] maps to "family-lifetime", which would ignore
-  // the billing=monthly param and silently route to a lifetime checkout instead.
-  redirect(`/checkout?plan=${isFamily ? "family-monthly" : "individual-monthly"}`);
+  redirect(`/checkout?plan=${isFamily ? "family-lifetime" : "individual-lifetime"}`);
 }

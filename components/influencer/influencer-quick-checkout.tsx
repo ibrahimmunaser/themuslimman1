@@ -49,20 +49,9 @@ function InfluencerQuickCheckoutInner({
   const searchParams = useSearchParams();
 
   const screen = parseScreen(searchParams.get("step"));
-  const planParam = searchParams.get("plan");
-  const initialPlan: "lifetime" | "monthly" =
-    planParam === "individual-monthly" || planParam === "monthly"
-      ? "monthly"
-      : "lifetime";
-
   const [paymentIntentId, setPiId]    = useState<string | undefined>();
   const [redirecting, setRedirecting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [checkoutPlan, setCheckoutPlan] = useState<"lifetime" | "monthly">(initialPlan);
-
-  useEffect(() => {
-    if (screen === "checkout") setCheckoutPlan(initialPlan);
-  }, [screen, initialPlan]);
 
   useEffect(() => {
     captureAttribution();
@@ -94,12 +83,11 @@ function InfluencerQuickCheckoutInner({
     }
   }, [searchParams]);
 
-  const pushScreen = useCallback((next: Screen, plan?: "lifetime" | "monthly") => {
+  const pushScreen = useCallback((next: Screen) => {
     const params = new URLSearchParams(searchParams.toString());
     if (next === "checkout") {
       params.set("step", "checkout");
-      if (plan === "monthly") params.set("plan", "individual-monthly");
-      else params.set("plan", "individual-lifetime");
+      params.set("plan", "individual-lifetime");
     } else {
       params.delete("step");
       params.delete("plan");
@@ -108,9 +96,8 @@ function InfluencerQuickCheckoutInner({
     router.push(qs ? `${pathname}?${qs}` : pathname, { scroll: true });
   }, [pathname, searchParams, router]);
 
-  const goToCheckout = useCallback((plan: "lifetime" | "monthly") => {
-    setCheckoutPlan(plan);
-    pushScreen("checkout", plan);
+  const goToCheckout = useCallback(() => {
+    pushScreen("checkout");
   }, [pushScreen]);
 
   const goBackToSales = useCallback(() => {
@@ -154,7 +141,7 @@ function InfluencerQuickCheckoutInner({
           config={config}
           isAuthenticated={isAuthenticated}
           userEmail={userEmail}
-          initialPlan={checkoutPlan}
+          initialPlan="lifetime"
           onBack={goBackToSales}
           onSuccess={onPaymentSuccess}
           onRedirecting={onPaymentRedirecting}

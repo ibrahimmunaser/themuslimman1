@@ -24,7 +24,7 @@ const TRUST_ITEMS = [
   { icon: "📚", text: "100 structured lessons — every major event in order" },
   { icon: "▶",  text: "Video lessons, readings, quizzes, and flashcards" },
   { icon: "📊", text: "Progress tracking dashboard" },
-  { icon: "↩",  text: "Cancel anytime — monthly plans, no questions asked" },
+  { icon: "∞",  text: "Lifetime access — one payment, yours forever" },
   { icon: "🛡",  text: "7-day refund guarantee — not happy? Full refund." },
 ];
 
@@ -146,7 +146,7 @@ export function PricingSection({
             <p className="text-sm text-text-secondary">
               {lifetimeOnly
                 ? "Own the complete 100-part Seerah course forever."
-                : "Start monthly or save with lifetime access."}
+                : "One-time payment. Keep access forever."}
             </p>
           </FadeUp>
         )}

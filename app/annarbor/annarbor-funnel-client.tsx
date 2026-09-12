@@ -3,7 +3,7 @@ import { Part1FullPreview } from "@/components/landing/part1-full-preview";
 
 const SRC = "source=annarbor";
 const UTM = "utm_source=direct&utm_medium=promo&utm_campaign=seerah_launch&utm_content=annarbor";
-const CHECKOUT = `/checkout?plan=individual-monthly&${SRC}&${UTM}`;
+const CHECKOUT = `/checkout?plan=individual-lifetime&${SRC}&${UTM}`;
 
 export default function AnnArborFunnelClient() {
   return (
@@ -12,7 +12,7 @@ export default function AnnArborFunnelClient() {
         creator:     "annarbor",
         creatorName: "Ann Arbor Students",
         heroHeadline: "A Special Offer for Ann Arbor Students.",
-        price:        "$9.99/month",
+        price:        "$49 one-time",
         checkoutUrl:  CHECKOUT,
         watchFreeUrl: `/watch-free?${SRC}`,
         eventPrefix:  "annarbor_",
@@ -21,7 +21,7 @@ export default function AnnArborFunnelClient() {
       part1Preview={
         <Part1FullPreview
           checkoutHref={CHECKOUT}
-          ctaLabel="Start the Full Course — $9.99/month"
+          ctaLabel="Get Lifetime Access — $49"
         />
       }
     />

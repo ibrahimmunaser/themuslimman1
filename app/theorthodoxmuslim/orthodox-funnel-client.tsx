@@ -4,7 +4,7 @@ import { Part1FullPreview } from "@/components/landing/part1-full-preview";
 
 const SRC = "source=theorthodoxmuslim";
 const UTM = "utm_source=youtube&utm_medium=influencer&utm_campaign=seerah_launch&utm_content=theorthodoxmuslim";
-const CHECKOUT = `/checkout?plan=individual-monthly&${SRC}&${UTM}`;
+const CHECKOUT = `/checkout?plan=individual-lifetime&${SRC}&${UTM}`;
 
 export default function OrthodoxFunnelClient() {
   return (
@@ -14,16 +14,16 @@ export default function OrthodoxFunnelClient() {
         creatorName: "The Orthodox Muslim",
         creatorAvatarUrl: "/images/libyano.png",
         heroHeadline: "Learn the life of the Prophet ﷺ in order — start with Part 1 free.",
-        price:        "$9.99/month",
+        price:        "$49 one-time",
         checkoutUrl:  CHECKOUT,
         watchFreeUrl: "/watch-free",
         eventPrefix:  "orthodox_",
-        checkoutButtonLabel: "Continue for $9.99/month",
+        checkoutButtonLabel: "Get Lifetime Access — $49",
       }}
       part1Preview={
         <Part1FullPreview
           checkoutHref={CHECKOUT}
-          ctaLabel="Continue the Full Course — $9.99/month"
+          ctaLabel="Get Lifetime Access — $49"
         />
       }
       afterPart1Preview={<OrthodoxCheckupEmbed />}

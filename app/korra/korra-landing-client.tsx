@@ -3,7 +3,7 @@ import { Part1FullPreview } from "@/components/landing/part1-full-preview";
 
 const SRC      = "source=korra";
 const UTM      = "utm_source=tiktok&utm_medium=influencer&utm_campaign=seerah_launch&utm_content=korra";
-const CHECKOUT = `/checkout?plan=individual-monthly&${SRC}&${UTM}`;
+const CHECKOUT = `/checkout?plan=individual-lifetime&${SRC}&${UTM}`;
 
 export default function KorraLandingClient() {
   return (
@@ -12,7 +12,7 @@ export default function KorraLandingClient() {
         creator:             "korra",
         creatorName:         "Korra",
         heroHeadline:        "You came from Korra.",
-        price:               "$9.99/month",
+        price:               "$49 one-time",
         checkoutUrl:         CHECKOUT,
         watchFreeUrl:        "/watch-free",
         eventPrefix:         "korra_",
@@ -21,7 +21,7 @@ export default function KorraLandingClient() {
       part1Preview={
         <Part1FullPreview
           checkoutHref={CHECKOUT}
-          ctaLabel="Start the Full Course — $9.99/month"
+          ctaLabel="Get Lifetime Access — $49"
         />
       }
     />

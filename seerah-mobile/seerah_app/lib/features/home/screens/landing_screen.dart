@@ -58,14 +58,6 @@ const _plans = [
     badgeKey: 'mostPopular',
     isRecommended: true,
   ),
-  _Plan(
-    id: PlanId.individualMonthly,
-    iapId: AppConstants.iapMonthlyIndividual,
-    nameKey: 'planMonthly',
-    descriptionKey: 'oneLearnerCancelAnytime',
-    fallbackPrice: '\$${AppConstants.monthlyPrice}',
-    periodKey: 'perMonth',
-  ),
 ];
 
 // ── Screen ────────────────────────────────────────────────────────────────────

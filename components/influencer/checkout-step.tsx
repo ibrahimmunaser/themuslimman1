@@ -70,20 +70,7 @@ const LIFETIME_PLAN: PlanDef = {
   analyticsPlanId: "individual-lifetime",
 };
 
-const MONTHLY_PLAN: PlanDef = {
-  id:          "monthly",
-  label:       "Monthly",
-  sublabel:    "Full access while subscribed · cancel anytime",
-  price:       PLANS.monthly.price,
-  unit:        "/mo",
-  icon:        User,
-  inline:      true,
-  stripeMode:  "subscription",
-  apiEndpoint: "/api/stripe/create-subscription-intent",
-  analyticsPlanId: "individual-monthly",
-};
-
-const PLAN_OPTIONS: PlanDef[] = [LIFETIME_PLAN, MONTHLY_PLAN];
+const PLAN_OPTIONS: PlanDef[] = [LIFETIME_PLAN];
 
 // ── Button copy ───────────────────────────────────────────────────────────────
 function submitButtonLabel(plan: PlanDef): string {
@@ -171,7 +158,7 @@ function InnerCheckoutForm({
 
   // Ensure an attempt ID is created when the checkout step mounts
   useEffect(() => {
-    attemptRef.current = startCheckoutAttempt("individual-monthly", { source: config.slug });
+    attemptRef.current = startCheckoutAttempt("individual-lifetime", { source: config.slug });
     trackCheckoutEvent("checkout_loaded");
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -476,7 +463,7 @@ function InnerCheckoutForm({
 
       {/* Trust badges */}
       <div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5">
-        {["Instant access", "Cancel anytime", "7-day refund guarantee", "Secure checkout"].map((t) => (
+        {["Instant access", "One-time payment", "7-day refund guarantee", "Secure checkout"].map((t) => (
           <span key={t} className="flex items-center gap-1.5 text-xs text-zinc-400">
             <Check className="w-3 h-3 text-zinc-500" aria-hidden="true" />
             {t}
@@ -522,19 +509,11 @@ export function CheckoutStep({
   onSuccess,
   onRedirecting,
 }: CheckoutStepProps) {
-  const [selectedPlanId, setSelectedPlanId] = useState<PlanOption>(
-    initialPlan === "monthly" ? "monthly" : "complete",
-  );
-  const [showMonthly, setShowMonthly] = useState(initialPlan === "monthly");
+  const [selectedPlanId, setSelectedPlanId] = useState<PlanOption>("complete");
   const [fullName, setFullName]       = useState("");
   const [email, setEmail]             = useState(userEmail);
 
-  useEffect(() => {
-    setSelectedPlanId(initialPlan === "monthly" ? "monthly" : "complete");
-    setShowMonthly(initialPlan === "monthly");
-  }, [initialPlan]);
-
-  const selectedPlan = PLAN_OPTIONS.find((p) => p.id === selectedPlanId) ?? LIFETIME_PLAN;
+  const selectedPlan = LIFETIME_PLAN;
 
   function handlePlanChange(id: PlanOption) {
     setSelectedPlanId(id);
@@ -594,42 +573,6 @@ export function CheckoutStep({
             <Infinity className={`w-5 h-5 flex-shrink-0 ${selectedPlanId === "complete" ? "text-gold" : "text-zinc-600"}`} aria-hidden="true" />
           </div>
         </button>
-
-        {/* Monthly — collapsed secondary */}
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 overflow-hidden">
-          <button
-            type="button"
-            onClick={() => {
-              setShowMonthly((v) => !v);
-              if (!showMonthly) handlePlanChange("monthly");
-            }}
-            className="w-full flex items-center justify-between gap-3 px-4 py-3.5 text-left hover:bg-zinc-900/60 transition-colors"
-            aria-expanded={showMonthly}
-          >
-            <span className="text-sm text-zinc-400">Prefer a monthly option?</span>
-            <ChevronDown
-              className={`w-4 h-4 text-zinc-500 transition-transform ${showMonthly ? "rotate-180" : ""}`}
-              aria-hidden="true"
-            />
-          </button>
-          {showMonthly && (
-            <button
-              type="button"
-              onClick={() => handlePlanChange("monthly")}
-              className={[
-                "w-full text-left px-4 pb-4 border-t border-zinc-800/80 pt-4 transition-colors",
-                selectedPlanId === "monthly" ? "bg-gold/5" : "",
-              ].join(" ")}
-              aria-pressed={selectedPlanId === "monthly"}
-            >
-              <p className="text-lg font-bold text-text">
-                {formatPrice(MONTHLY_PLAN.price)}
-                <span className="text-sm font-normal text-zinc-400">/month</span>
-              </p>
-              <p className="text-xs text-zinc-500 mt-1">Cancel anytime. Full course access while subscribed.</p>
-            </button>
-          )}
-        </div>
 
         <Elements
           key={selectedPlanId}

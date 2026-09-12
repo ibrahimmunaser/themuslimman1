@@ -13,7 +13,7 @@ import { LanguagesLaunchGate } from "@/components/student/languages-launch-gate"
 export const metadata = {
   title: "Pricing — Complete Seerah",
   description:
-    "Choose your Seerah plan. Monthly or lifetime access. Part 1 is free.",
+    "Choose your Seerah plan. Lifetime access for $49. Part 1 is free.",
 };
 
 export const dynamic = "force-dynamic";
@@ -38,8 +38,8 @@ const FAQ_ITEMS = [
     a: "English, Arabic, and French — including lessons, quizzes, flashcards, and reference guides. More languages are planned.",
   },
   {
-    q: "Can I cancel anytime?",
-    a: "Yes. Monthly plans can be canceled anytime from your billing page. You keep access until the end of the current billing period.",
+    q: "Is this a subscription?",
+    a: "No. Lifetime access is a one-time $49 payment. You keep access forever with no renewal.",
   },
   {
     q: "Is there a refund guarantee?",
@@ -50,8 +50,8 @@ const FAQ_ITEMS = [
     a: "Yes. Part 1 is completely free with no account required. You can preview it on the Watch Part 1 Free page before choosing a plan.",
   },
   {
-    q: "What's the difference between monthly and lifetime?",
-    a: "Monthly is $9.99/month and you can cancel anytime. Lifetime is $49 once — you keep access forever with no renewal.",
+    q: "How much does lifetime access cost?",
+    a: "Lifetime access is $49 one-time. You keep access forever with no renewal.",
   },
   {
     q: "Do I get instant access?",
@@ -165,7 +165,7 @@ export default async function PricingPage({ searchParams }: Props) {
               summaries, mind maps, and progress tracking.
             </p>
             <p className="text-xs text-text-muted">
-              Part 1 is free · Cancel anytime · 7-day refund guarantee
+              Part 1 is free · One-time payment · 7-day refund guarantee
             </p>
           </FadeUp>
         </div>
@@ -177,30 +177,21 @@ export default async function PricingPage({ searchParams }: Props) {
         hasMonthly={hasMonthly}
         hasFamily={hasFamily}
         checkoutBaseUrl={checkoutBaseUrl}
-        variant="plans-only"
+        variant="lifetime-only"
       />
 
-      {/* 3. Monthly vs lifetime comparison */}
+      {/* 3. Lifetime value */}
       <section className="py-12 border-t border-border bg-surface/30">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6">
+        <div className="max-w-xl mx-auto px-4 sm:px-6">
           <FadeUp>
             <h2 className="text-xl sm:text-2xl font-bold text-text text-center mb-8">
-              Monthly vs lifetime
+              Lifetime access
             </h2>
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div className="rounded-xl border border-border bg-surface p-5">
-                <h3 className="font-bold text-text mb-2">Monthly</h3>
-                <p className="text-sm text-text-secondary leading-relaxed">
-                  Lower upfront cost. $9.99/month. Cancel anytime.
-                </p>
-              </div>
-              <div className="rounded-xl border border-gold/25 bg-surface p-5">
-                <h3 className="font-bold text-text mb-2">Lifetime</h3>
-                <p className="text-sm text-text-secondary leading-relaxed">
-                  Pay once, keep access forever. $49 one-time.
-                  Best long-term value if you plan to study for years.
-                </p>
-              </div>
+            <div className="rounded-xl border border-gold/25 bg-surface p-5 text-center">
+              <h3 className="font-bold text-text mb-2">$49 one-time</h3>
+              <p className="text-sm text-text-secondary leading-relaxed">
+                Pay once, keep access forever. No subscription. No renewal.
+              </p>
             </div>
           </FadeUp>
         </div>

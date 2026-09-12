@@ -12,8 +12,8 @@ export const dynamic = "force-dynamic";
 const LEGACY_PLAN_ALIASES: Record<string, string> = {
   "complete":      "individual-lifetime",
   "family":        "family-lifetime",
-  "monthly":       "individual-monthly",
-  "familymonthly": "family-monthly",
+  "monthly":       "individual-lifetime",
+  "familymonthly": "family-lifetime",
 };
 
 interface Props {
@@ -62,6 +62,27 @@ export default async function CheckoutPage({ searchParams }: Props) {
     }
   }
 
+  // Public purchase is lifetime-only — send legacy monthly/trial plan links to lifetime.
+  if (
+    normalizedPlan === "individual-monthly" ||
+    normalizedPlan === "individual-trial" ||
+    normalizedPlan === "family-monthly" ||
+    normalizedPlan === "family-trial"
+  ) {
+    const qs = new URLSearchParams();
+    const lifetimePlan =
+      normalizedPlan.startsWith("family") ? "family-lifetime" : "individual-lifetime";
+    qs.set("plan", lifetimePlan);
+    if (params.source) qs.set("source", params.source);
+    if (params.utm_source) qs.set("utm_source", params.utm_source);
+    if (params.utm_medium) qs.set("utm_medium", params.utm_medium);
+    if (params.utm_campaign) qs.set("utm_campaign", params.utm_campaign);
+    if (params.utm_content) qs.set("utm_content", params.utm_content);
+    if (params.email) qs.set("email", params.email);
+    if (params.name) qs.set("name", params.name);
+    redirect(`/checkout?${qs.toString()}`);
+  }
+
   type Audience = "individual" | "family";
   type Billing  = "lifetime"  | "monthly" | "trial";
 
@@ -74,18 +95,13 @@ export default async function CheckoutPage({ searchParams }: Props) {
   // Map plan IDs to audience + billing for the Elements flow.
   if      (normalizedPlan === "individual-lifetime") { initialAudience = "individual"; initialBilling = "lifetime"; }
   else if (normalizedPlan === "family-lifetime")     { initialAudience = "family";     initialBilling = "lifetime"; }
-  else if (normalizedPlan === "individual-monthly")  { initialAudience = "individual"; initialBilling = "monthly";  }
-  else if (normalizedPlan === "family-monthly")      { initialAudience = "family";     initialBilling = "monthly";  }
-  // Trial URLs → redirect to monthly (trials removed; monthly is the new entry-level plan)
-  else if (normalizedPlan === "individual-trial") { redirect("/checkout?plan=individual-monthly"); }
-  else if (normalizedPlan === "family-trial")     { redirect("/checkout?plan=family-monthly"); }
-  // Legacy URL param fallbacks (?billing=monthly&audience=individual, etc.)
+  // Legacy URL param fallbacks — monthly/trial billing params map to lifetime.
   else {
-    if (billingParam === "lifetime") initialBilling = "lifetime";
-    if (billingParam === "monthly")  initialBilling = "monthly";
+    initialBilling = "lifetime";
     const audienceParam = params.audience?.toLowerCase() ?? "";
     if (audienceParam === "family" || planParam === "family" || planParam === "familymonthly") initialAudience = "family";
     if (audienceParam === "individual" || planParam === "individual")                          initialAudience = "individual";
+    void billingParam;
   }
 
   // Base price for the selected plan — always sourced from PLANS so this stays

@@ -28,7 +28,7 @@ function faqsFor(lang: CourseLang) {
         category: "الحساب والفواتير",
         icon: CreditCard,
         questions: [
-          { q: "ما خيارات الدفع المتاحة؟", a: "يمكنك الدفع مرة واحدة للوصول مدى الحياة، أو اختيار خطة شهرية. خيار مدى الحياة يمنحك وصولاً دائماً بدون رسوم متكررة." },
+          { q: "ما خيارات الدفع المتاحة؟", a: "الدفع مرة واحدة: وصول مدى الحياة مقابل ٤٩ دولارًا — بدون اشتراك وبدون رسوم متكررة." },
           { q: "ما سياسة الاسترداد؟", a: "نقدم ضمان الوضوح لمدة ٧ أيام. إذا لم تكن الدورة كما توقعت، راسلنا خلال ٧ أيام لاسترداد كامل المبلغ." },
         ],
       },
@@ -77,7 +77,7 @@ function faqsFor(lang: CourseLang) {
         questions: [
           {
             q: "Quelles options de paiement sont disponibles ?",
-            a: "Vous pouvez payer une fois pour un accès à vie, ou choisir un abonnement mensuel. L'option à vie vous donne un accès permanent sans frais récurrents.",
+            a: "Paiement unique : accès à vie pour 49 $ — sans abonnement et sans frais récurrents.",
           },
           {
             q: "Quelle est votre politique de remboursement ?",
@@ -141,7 +141,7 @@ function faqsFor(lang: CourseLang) {
       questions: [
         {
           q: "What payment options are available?",
-          a: "You can pay once for lifetime access, or choose a monthly plan. The lifetime option gives you permanent access with no recurring charges. The monthly plan keeps you subscribed as long as it's active.",
+          a: "Lifetime access is $49 one-time — permanent access with no recurring charges. Pay once and keep the full course forever.",
         },
         {
           q: "What's your refund policy?",

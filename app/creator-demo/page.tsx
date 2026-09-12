@@ -126,7 +126,7 @@ export default async function CreatorDemoPage({ searchParams }: PageProps) {
 
           {/* Trust line */}
           <p className="text-xs text-text-muted/70 pt-2">
-            From $9/month · Lifetime access available · 7-Day Guarantee
+            $49 one-time · Lifetime access · 7-Day Guarantee
           </p>
         </div>
       </section>

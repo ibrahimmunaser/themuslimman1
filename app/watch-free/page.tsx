@@ -29,7 +29,7 @@ export default async function WatchFreePage({ searchParams }: Props) {
   const params = await searchParams;
 
   // Build checkout URL preserving any source/UTM attribution from the landing URL
-  const checkoutBase = "/checkout?plan=individual-monthly";
+  const checkoutBase = "/checkout?plan=individual-lifetime";
   const extra: string[] = [];
   if (params.source)       extra.push(`source=${encodeURIComponent(params.source)}`);
   if (params.utm_source)   extra.push(`utm_source=${encodeURIComponent(params.utm_source)}`);
@@ -90,7 +90,7 @@ export default async function WatchFreePage({ searchParams }: Props) {
         >
           <Part1FullPreview
             checkoutHref={checkoutHref}
-            ctaLabel="Continue the Full Course — $9.99/month"
+            ctaLabel="Get Lifetime Access — $49"
           />
         </Suspense>
       </section>
@@ -109,11 +109,11 @@ export default async function WatchFreePage({ searchParams }: Props) {
             href={checkoutHref}
             className="inline-flex items-center gap-2 bg-gold text-ink font-bold px-8 py-4 rounded-xl hover:bg-gold-light active:scale-[0.97] transition-all shadow-lg shadow-gold/20"
           >
-            Continue for $9.99/month
+            Get Lifetime Access — $49
             <ArrowRight className="w-5 h-5" />
           </Link>
           <p className="mt-3 text-xs text-text-muted">
-            Cancel anytime · 7-day refund guarantee
+            One-time payment · 7-day refund guarantee
           </p>
           <p className="mt-4">
             <Link href="/pricing" className="text-xs text-text-muted hover:text-gold transition-colors underline underline-offset-2">
