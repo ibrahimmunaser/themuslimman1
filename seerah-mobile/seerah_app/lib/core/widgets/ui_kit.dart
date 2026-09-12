@@ -622,10 +622,73 @@ class OfflineBanner extends ConsumerWidget {
   }
 }
 
-/// Self-contained app-wide language switch (English / Arabic). Reads and
-/// writes [courseLangProvider] directly so it can be dropped into any
-/// screen — e.g. the Profile screen's Settings group — without threading
-/// state through the caller.
+/// Compact EN / FR / عربي control for AppBars (Home, Lessons, Part).
+class AppLangToggle extends ConsumerWidget {
+  final bool showLabel;
+  const AppLangToggle({super.key, this.showLabel = false});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(courseLangProvider);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (showLabel) ...[
+          Text(
+            lang == 'ar'
+                ? t(lang, 'language')
+                : t(lang, 'language').toUpperCase(),
+            style: TextStyle(
+              fontSize: lang == 'ar' ? 11 : 8,
+              fontWeight: FontWeight.w800,
+              letterSpacing: lang == 'ar' ? 0 : 1.0,
+              color: AppColors.gold,
+            ),
+          ),
+          const SizedBox(height: 3),
+        ],
+        Container(
+          padding: const EdgeInsets.all(2.5),
+          decoration: BoxDecoration(
+            color: AppColors.background.withValues(alpha: 0.55),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: AppColors.gold.withValues(alpha: 0.45),
+              width: 1.1,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _AppLangBtn(
+                label: 'EN',
+                active: lang == 'en',
+                onTap: () =>
+                    ref.read(courseLangProvider.notifier).setLang('en'),
+              ),
+              _AppLangBtn(
+                label: 'FR',
+                active: lang == 'fr',
+                onTap: () =>
+                    ref.read(courseLangProvider.notifier).setLang('fr'),
+              ),
+              _AppLangBtn(
+                label: 'عربي',
+                active: lang == 'ar',
+                onTap: () =>
+                    ref.read(courseLangProvider.notifier).setLang('ar'),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Self-contained app-wide language switch (English / French / Arabic).
+/// Reads and writes [courseLangProvider] directly so it can be dropped into
+/// any screen — e.g. the Profile screen's Settings group.
 class AppLangSwitcherRow extends ConsumerWidget {
   const AppLangSwitcherRow({super.key});
 
@@ -660,29 +723,7 @@ class AppLangSwitcherRow extends ConsumerWidget {
               ),
             ),
           ),
-          Container(
-            padding: const EdgeInsets.all(3),
-            decoration: BoxDecoration(
-              color: AppColors.background.withValues(alpha: 0.55),
-              borderRadius: BorderRadius.circular(11),
-              border: Border.all(color: AppColors.gold.withValues(alpha: 0.45), width: 1.2),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _AppLangBtn(
-                  label: 'EN',
-                  active: lang == 'en',
-                  onTap: () => ref.read(courseLangProvider.notifier).setLang('en'),
-                ),
-                _AppLangBtn(
-                  label: 'عربي',
-                  active: lang == 'ar',
-                  onTap: () => ref.read(courseLangProvider.notifier).setLang('ar'),
-                ),
-              ],
-            ),
-          ),
+          const AppLangToggle(),
         ],
       ),
     );
@@ -701,17 +742,17 @@ class _AppLangBtn extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        constraints: const BoxConstraints(minWidth: 36, minHeight: 28),
+        constraints: const BoxConstraints(minWidth: 32, minHeight: 28),
         alignment: Alignment.center,
-        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
         decoration: BoxDecoration(
           color: active ? AppColors.gold : Colors.transparent,
-          borderRadius: BorderRadius.circular(9),
+          borderRadius: BorderRadius.circular(8),
         ),
         child: Text(
           label,
           style: TextStyle(
-            fontSize: 12,
+            fontSize: 11,
             fontWeight: FontWeight.w700,
             color: active ? Colors.black : AppColors.textSecondary,
           ),

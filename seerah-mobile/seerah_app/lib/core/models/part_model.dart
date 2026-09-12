@@ -1,3 +1,5 @@
+import '../data/parts_titles_fr.dart';
+
 class PartModel {
   final int partNumber;
   final String title;
@@ -20,9 +22,18 @@ class PartModel {
   String get id => 'part-$partNumber';
 
   /// English title/subtitle stay the source of truth for [description] and
-  /// any other field with no Arabic translation available yet.
-  String localizedTitle(String lang) => lang == 'ar' ? (titleAr ?? title) : title;
-  String localizedSubtitle(String lang) => lang == 'ar' ? (subtitleAr ?? subtitle) : subtitle;
+  /// any other field with no translation available yet.
+  String localizedTitle(String lang) {
+    if (lang == 'ar') return titleAr ?? title;
+    if (lang == 'fr') return kPartTitlesFr[partNumber]?.title ?? title;
+    return title;
+  }
+
+  String localizedSubtitle(String lang) {
+    if (lang == 'ar') return subtitleAr ?? subtitle;
+    if (lang == 'fr') return kPartTitlesFr[partNumber]?.subtitle ?? subtitle;
+    return subtitle;
+  }
 }
 
 class EraModel {
@@ -42,7 +53,11 @@ class EraModel {
     this.nameAr,
   });
 
-  String localizedName(String lang) => lang == 'ar' ? (nameAr ?? name) : name;
+  String localizedName(String lang) {
+    if (lang == 'ar') return nameAr ?? name;
+    if (lang == 'fr') return kEraNamesFr[id] ?? name;
+    return name;
+  }
 }
 
 class PartContent {

@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/data/parts_data.dart';
+import '../../../core/data/parts_titles_fr.dart';
 import '../../../core/models/part_model.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/part_provider.dart';
@@ -40,6 +41,12 @@ class _CourseScreenState extends ConsumerState<CourseScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         title: Text(t(lang, 'lessons')),
+        actions: const [
+          Padding(
+            padding: EdgeInsets.only(right: 12),
+            child: Center(child: AppLangToggle()),
+          ),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(72),
           child: Padding(
@@ -83,14 +90,17 @@ class _CourseScreenState extends ConsumerState<CourseScreen> {
   }
 
   Widget _buildSearchResults(bool hasAccess, ProgressState? progress, String lang) {
-    final results = PARTS.where((p) =>
-      p.title.toLowerCase().contains(_search) ||
-      p.subtitle.toLowerCase().contains(_search) ||
-      (p.titleAr?.contains(_search) ?? false) ||
-      (p.subtitleAr?.contains(_search) ?? false) ||
-      p.description.toLowerCase().contains(_search) ||
-      'part ${p.partNumber}'.contains(_search)
-    ).toList();
+    final results = PARTS.where((p) {
+      final fr = kPartTitlesFr[p.partNumber];
+      return p.title.toLowerCase().contains(_search) ||
+          p.subtitle.toLowerCase().contains(_search) ||
+          (p.titleAr?.contains(_search) ?? false) ||
+          (p.subtitleAr?.contains(_search) ?? false) ||
+          (fr?.title.toLowerCase().contains(_search) ?? false) ||
+          (fr?.subtitle.toLowerCase().contains(_search) ?? false) ||
+          p.description.toLowerCase().contains(_search) ||
+          'part ${p.partNumber}'.contains(_search);
+    }).toList();
 
     if (results.isEmpty) {
       return EmptyState(

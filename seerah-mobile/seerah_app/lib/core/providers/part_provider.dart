@@ -8,6 +8,11 @@ import '../network/api_client.dart';
 // automatically re-fetch because they watch this provider.
 
 const _courseLangKey = 'seerah_course_lang';
+const kSupportedCourseLangs = {'en', 'ar', 'fr'};
+
+/// Query suffix for content APIs. English is the default (no param).
+String courseLangQuery(String lang) =>
+    (lang == 'ar' || lang == 'fr') ? '?lang=$lang' : '';
 
 class CourseLangNotifier extends StateNotifier<String> {
   CourseLangNotifier() : super('en') {
@@ -17,11 +22,15 @@ class CourseLangNotifier extends StateNotifier<String> {
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
     final saved = prefs.getString(_courseLangKey);
-    if (saved != null && state != saved) state = saved;
+    if (saved != null &&
+        kSupportedCourseLangs.contains(saved) &&
+        state != saved) {
+      state = saved;
+    }
   }
 
   Future<void> setLang(String lang) async {
-    if (lang != 'en' && lang != 'ar') return;
+    if (!kSupportedCourseLangs.contains(lang)) return;
     state = lang;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_courseLangKey, lang);
@@ -55,7 +64,7 @@ final slidesProvider = FutureProvider.family<SlideSet, int>((ref, partNumber) as
   final lang = ref.watch(courseLangProvider);
   final partId = 'part-$partNumber';
   final response = await ApiClient.instance.dio.get(
-    '/api/slides/$partId${lang == 'ar' ? '?lang=ar' : ''}',
+    '/api/slides/$partId${courseLangQuery(lang)}',
   );
   final data = response.data as Map<String, dynamic>;
 
@@ -75,7 +84,7 @@ final slidesProvider = FutureProvider.family<SlideSet, int>((ref, partNumber) as
 final partContentProvider = FutureProvider.family<PartContent, int>((ref, partNumber) async {
   final lang = ref.watch(courseLangProvider);
   final response = await ApiClient.instance.dio.get(
-    '/api/part/$partNumber/content${lang == 'ar' ? '?lang=ar' : ''}',
+    '/api/part/$partNumber/content${courseLangQuery(lang)}',
   );
   return PartContent.fromJson(response.data as Map<String, dynamic>);
 });
@@ -102,7 +111,7 @@ final flashcardSetProvider = FutureProvider.family<FlashcardSet, int>((ref, part
   final lang = ref.watch(courseLangProvider);
   final partId = 'part-$partNumber';
   final response = await ApiClient.instance.dio.get(
-    '/api/flashcards/$partId${lang == 'ar' ? '?lang=ar' : ''}',
+    '/api/flashcards/$partId${courseLangQuery(lang)}',
   );
   final data = response.data;
 
@@ -136,7 +145,7 @@ final quizProvider = FutureProvider.family<List<QuizQuestion>, int>((ref, partNu
   final lang = ref.watch(courseLangProvider);
   final partId = 'part-$partNumber';
   final response = await ApiClient.instance.dio.get(
-    '/api/quiz/$partId${lang == 'ar' ? '?lang=ar' : ''}',
+    '/api/quiz/$partId${courseLangQuery(lang)}',
   );
   final data = response.data;
 
@@ -162,7 +171,7 @@ class PartAssets {
 final partAssetsProvider = FutureProvider.family<PartAssets, int>((ref, partNumber) async {
   final lang = ref.watch(courseLangProvider);
   final response = await ApiClient.instance.dio.get(
-    '/api/part/$partNumber/assets${lang == 'ar' ? '?lang=ar' : ''}',
+    '/api/part/$partNumber/assets${courseLangQuery(lang)}',
   );
   final data = response.data as Map<String, dynamic>;
   return PartAssets(
@@ -190,7 +199,7 @@ class InfographicSet {
 final infographicsProvider = FutureProvider.family<InfographicSet, int>((ref, partNumber) async {
   final lang = ref.watch(courseLangProvider);
   final response = await ApiClient.instance.dio.get(
-    '/api/infographics/$partNumber${lang == 'ar' ? '?lang=ar' : ''}',
+    '/api/infographics/$partNumber${courseLangQuery(lang)}',
   );
   final data = response.data as Map<String, dynamic>;
   return InfographicSet(

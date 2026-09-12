@@ -7,6 +7,7 @@ import '../../../core/providers/part_provider.dart';
 import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/adaptive_icons.dart';
+import '../../../core/widgets/ui_kit.dart';
 import '../widgets/video_tab.dart';
 import '../widgets/read_tab.dart';
 import '../../../core/utils/system_insets.dart';
@@ -247,13 +248,11 @@ class _PartScreenState extends ConsumerState<PartScreen> {
               tooltip: t(currentLang, 'back'),
               onPressed: () => context.pop(),
             ),
-            actions: [
-              _LangToggle(
-                current: currentLang,
-                onSwitch: (lang) =>
-                    ref.read(courseLangProvider.notifier).setLang(lang),
+            actions: const [
+              Padding(
+                padding: EdgeInsets.only(right: 8),
+                child: Center(child: AppLangToggle(showLabel: true)),
               ),
-              const SizedBox(width: 8),
             ],
             flexibleSpace: FlexibleSpaceBar(
               collapseMode: CollapseMode.pin,
@@ -573,98 +572,6 @@ class _AssetViewerScreen extends ConsumerWidget {
 }
 
 // ── UI components ─────────────────────────────────────────────────────────────
-
-// ── Language toggle ────────────────────────────────────────────────────────────
-
-class _LangToggle extends StatelessWidget {
-  final String current;
-  final ValueChanged<String> onSwitch;
-
-  const _LangToggle({required this.current, required this.onSwitch});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          current == 'ar' ? t(current, 'language') : t(current, 'language').toUpperCase(),
-          style: TextStyle(
-            fontSize: current == 'ar' ? 12 : 9,
-            fontWeight: FontWeight.w800,
-            letterSpacing: current == 'ar' ? 0 : 1.2,
-            color: AppColors.gold,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Container(
-          padding: const EdgeInsets.all(3),
-          decoration: BoxDecoration(
-            color: AppColors.background.withValues(alpha: 0.55),
-            borderRadius: BorderRadius.circular(11),
-            border: Border.all(color: AppColors.gold.withValues(alpha: 0.45), width: 1.2),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.gold.withValues(alpha: 0.15),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _LangBtn(label: 'EN', active: current == 'en', onTap: () => onSwitch('en')),
-              _LangBtn(label: 'عربي', active: current == 'ar', onTap: () => onSwitch('ar')),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _LangBtn extends StatelessWidget {
-  final String label;
-  final bool active;
-  final VoidCallback onTap;
-
-  const _LangBtn({required this.label, required this.active, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        constraints: const BoxConstraints(minWidth: 38, minHeight: 30),
-        alignment: Alignment.center,
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        decoration: BoxDecoration(
-          color: active ? AppColors.gold : Colors.transparent,
-          borderRadius: BorderRadius.circular(9),
-          boxShadow: active
-              ? [
-                  BoxShadow(
-                    color: AppColors.gold.withValues(alpha: 0.35),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            color: active ? Colors.black : AppColors.textSecondary,
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 // ── Pill ───────────────────────────────────────────────────────────────────────
 

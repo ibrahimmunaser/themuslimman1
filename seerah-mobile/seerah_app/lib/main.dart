@@ -137,7 +137,7 @@ class _SeerahAppState extends ConsumerState<SeerahApp>
       scaffoldMessengerKey: _scaffoldMessengerKey,
       routerConfig: router,
       locale: locale,
-      supportedLocales: const [Locale('en'), Locale('ar')],
+      supportedLocales: const [Locale('en'), Locale('ar'), Locale('fr')],
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,

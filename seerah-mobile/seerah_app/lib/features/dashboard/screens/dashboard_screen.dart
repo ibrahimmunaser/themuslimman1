@@ -60,6 +60,10 @@ class DashboardScreen extends ConsumerWidget {
           ],
         ),
         actions: [
+          const Padding(
+            padding: EdgeInsets.only(right: 4),
+            child: Center(child: AppLangToggle()),
+          ),
           // Profile switcher — taps go directly to profile picker if multi-profile
           Padding(
             padding: const EdgeInsets.only(right: 10),
