@@ -18,6 +18,8 @@ interface PricingSectionProps {
    * "lifetime-only" = homepage single lifetime card (no monthly option).
    */
   variant?: "full" | "plans-only" | "lifetime-only";
+  /** Skip default intro + trust list when pricing sits after proof sections. */
+  compact?: boolean;
 }
 
 const TRUST_ITEMS = [
@@ -119,26 +121,28 @@ export function PricingSection({
   hasFamily,
   checkoutBaseUrl = "/checkout",
   variant = "full",
+  compact = false,
 }: PricingSectionProps) {
   const hasAnyAccess = hasLifetime || hasMonthly || hasFamily;
   const plansOnly = variant === "plans-only";
   const lifetimeOnly = variant === "lifetime-only";
   const trustItems = lifetimeOnly ? LIFETIME_TRUST_ITEMS : TRUST_ITEMS;
+  const showIntro = !plansOnly && !compact;
 
   return (
     <section
       id="pricing"
-      className={plansOnly ? "py-8 sm:py-10" : "py-8 sm:py-10 border-t border-border"}
+      className="py-8 sm:py-10 border-t border-border"
     >
       <div
         className={
-          lifetimeOnly
+          lifetimeOnly || compact
             ? "max-w-lg md:max-w-xl mx-auto px-4 sm:px-6"
             : "max-w-lg md:max-w-2xl mx-auto px-4 sm:px-6"
         }
       >
 
-        {!plansOnly && (
+        {showIntro && (
           <FadeUp className="text-center mb-5">
             <h2 className="text-2xl sm:text-3xl font-bold text-text mb-1">
               {lifetimeOnly ? "Get lifetime access" : "Choose your plan"}
@@ -152,7 +156,7 @@ export function PricingSection({
         )}
 
         {/* Trust / value block — visible immediately, no animation gate */}
-        {!plansOnly && !hasAnyAccess && (
+        {showIntro && !hasAnyAccess && (
           <div className="mb-5 rounded-xl border border-gold/20 bg-gold/[0.04] px-4 py-4 sm:px-5">
             <p className="text-xs font-bold text-gold uppercase tracking-widest text-center mb-3">
               {lifetimeOnly ? "Included with lifetime access" : "Included instantly with every plan"}
@@ -168,19 +172,25 @@ export function PricingSection({
           </div>
         )}
 
+        {compact && !hasAnyAccess && (
+          <div className="text-center mb-6">
+            <h2 className="text-2xl sm:text-3xl font-bold text-text mb-2">
+              Lifetime access — $49
+            </h2>
+            <p className="text-sm text-text-secondary max-w-md mx-auto">
+              One payment. Full course. No subscription.
+            </p>
+          </div>
+        )}
+
         {hasAnyAccess ? (
           <div className="rounded-xl border border-green-500/30 bg-green-500/5 p-5 text-center">
             <p className="text-base font-semibold text-green-400 mb-1">✓ You already have access</p>
             <a href="/seerah" className="text-sm text-gold hover:underline">Go to the course →</a>
           </div>
-        ) : lifetimeOnly ? (
+        ) : lifetimeOnly || compact ? (
           <LifetimeOnlyCard checkoutBaseUrl={checkoutBaseUrl} />
         ) : (
-          /*
-            PlanPicker is NOT wrapped in FadeUp — it is interactive, critical content.
-            Wrapping it in a fade-in animation risks leaving it permanently invisible
-            if the user scrolls past the section before framer-motion's IntersectionObserver fires.
-          */
           <PlanPicker
             checkoutBaseUrl={checkoutBaseUrl}
             hasAccess={hasAnyAccess}

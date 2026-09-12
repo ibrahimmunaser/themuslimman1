@@ -1,11 +1,9 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Suspense } from "react";
-import { CheckCircle2, ChevronDown, Play } from "lucide-react";
+import { ChevronDown, Play } from "lucide-react";
 import {
   FadeUp,
-  StaggerChildren,
-  AnimatedCard,
   FloatingGlow,
   IslamicPatternBackground,
 } from "@/components/motion";
@@ -51,7 +49,7 @@ export default async function LandingPage() {
       <Navbar />
 
       {/* ============================================================
-          1. HERO
+          1. HERO — what it is, price, CTAs
       ============================================================ */}
       <section className="relative pt-10 pb-8 sm:pt-16 sm:pb-14 overflow-hidden">
         <div className="absolute inset-0 geo-pattern opacity-40" />
@@ -66,15 +64,15 @@ export default async function LandingPage() {
         <div className="relative max-w-3xl mx-auto px-4 sm:px-6 text-center">
           <FadeUp delay={0}>
             <h1 className="text-[1.85rem] sm:text-5xl font-bold tracking-tight leading-[1.2] sm:leading-tight mb-4">
-              Most Muslims only know fragments of the Seerah.{" "}
-              <span className="text-gradient-gold">Learn the life of the Prophet ﷺ in order.</span>
+              Learn the life of the Prophet ﷺ{" "}
+              <span className="text-gradient-gold">in order — beginning to end.</span>
             </h1>
           </FadeUp>
 
           <FadeUp delay={0.1}>
             <p className="text-base sm:text-xl text-text-secondary max-w-2xl mx-auto mb-2 leading-relaxed">
               A structured 100-part course with videos, readings, quizzes, flashcards,
-              summaries, and progress tracking.
+              and progress tracking — one connected story.
             </p>
             <p className="text-sm sm:text-base text-text-secondary max-w-xl mx-auto mb-2">
               Available in <span className="text-text font-semibold">English</span>,{" "}
@@ -83,7 +81,7 @@ export default async function LandingPage() {
               {" "}— with more languages planned.
             </p>
             <p className="text-base sm:text-lg font-semibold text-gold mb-6">
-              Lifetime access for $49.
+              $49 one-time · Lifetime access
             </p>
           </FadeUp>
 
@@ -114,39 +112,23 @@ export default async function LandingPage() {
       </section>
 
       {/* ============================================================
-          2. SHORT PROBLEM SECTION
+          2. SHORT PROBLEM — trimmed, non-judgmental
       ============================================================ */}
       <section className="border-t border-border bg-surface/40 px-4 sm:px-6 py-10">
         <div className="max-w-2xl mx-auto space-y-4 text-base sm:text-lg leading-relaxed text-center">
           <p className="text-text-secondary">
-            Most of us know Badr, Uhud, and the Hijrah as scattered stories. But if asked to
-            explain the Prophet&apos;s ﷺ life from beginning to end,{" "}
-            <span className="text-text font-semibold">many of us would struggle.</span>
-          </p>
-          <p className="text-text-secondary">
-            Many of us and our children know entertainment, sports, shows, games, and characters
-            better than we know the life of the Prophet ﷺ.{" "}
-            <span className="text-gold font-semibold">That should bother us.</span>
+            Most of us know Badr, Uhud, and the Hijrah as{" "}
+            <span className="text-text font-semibold">scattered stories</span>
+            {" "}— memorable moments, but not one continuous path.
           </p>
           <p className="text-text font-semibold">
-            This course gives you the full Seerah in order — one structured path from beginning
-            to end.
+            This course gives you the full Seerah in order — from beginning to end.
           </p>
         </div>
       </section>
 
       {/* ============================================================
-          3. PRICING  (before Part 1 preview)
-      ============================================================ */}
-      <PricingSection
-        hasLifetime={!!(user?.hasPaid)}
-        hasMonthly={false}
-        hasFamily={user?.planType === "family"}
-        variant="lifetime-only"
-      />
-
-      {/* ============================================================
-          4. PART 1 FREE PREVIEW  (framed as secondary / proof)
+          3. PART 1 FREE PREVIEW — proof early
       ============================================================ */}
       <section id="preview" className="pt-8 pb-10 sm:pb-12 border-t border-border bg-surface/30">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
@@ -155,12 +137,11 @@ export default async function LandingPage() {
               Free · No Account Required · EN · عربي · FR
             </p>
             <h2 className="text-2xl sm:text-3xl font-bold mb-2">
-              Not ready yet? Watch Part 1 free first.
+              Experience Part 1 free
             </h2>
             <p className="text-text-secondary max-w-xl mx-auto text-sm sm:text-base">
-              See the full quality of the course before you start — video, reading, slides,
-              quiz, and flashcards. Try it in English, Arabic, or French with the language
-              toggle — we plan to add more languages next.
+              See the real lesson format — video, reading, slides, quiz, and flashcards —
+              before you buy. Switch languages anytime.
             </p>
           </FadeUp>
 
@@ -179,65 +160,158 @@ export default async function LandingPage() {
       </section>
 
       {/* ============================================================
-          5. WHAT EVERY LESSON INCLUDES
+          4. WHAT EVERY LESSON INCLUDES — real examples, not icons only
       ============================================================ */}
       <section className="py-12 border-t border-border">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-8">
             <h2 className="text-2xl sm:text-3xl font-bold mb-2">
               What every lesson includes
             </h2>
-            <p className="text-text-secondary text-sm sm:text-base">
-              Eight learning tools per lesson — built to make the story stick.
+            <p className="text-text-secondary text-sm sm:text-base max-w-xl mx-auto">
+              Each of the 100 parts uses the same tools — so you learn, review, and retain
+              the story in order.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-            {[
-              { icon: "▶",  title: "Video lesson"     },
-              { icon: "📖", title: "Reading"           },
-              { icon: "📝", title: "Quiz"              },
-              { icon: "🗂", title: "Flashcards"        },
-              { icon: "🖼", title: "Slides"            },
-              { icon: "🗺", title: "Mind map"          },
-              { icon: "📋", title: "Summary"           },
-              { icon: "📊", title: "Progress tracking" },
-            ].map((item) => (
-              <div
-                key={item.title}
-                className="flex items-center gap-2.5 p-3 rounded-xl border border-border bg-surface hover:border-gold/20 transition-colors"
-              >
-                <span className="text-xl flex-shrink-0">{item.icon}</span>
-                <span className="text-sm font-medium text-text leading-tight">{item.title}</span>
+          <div className="grid md:grid-cols-3 gap-4 sm:gap-5">
+            {/* Slide example */}
+            <div className="rounded-2xl border border-border bg-surface overflow-hidden flex flex-col">
+              <div className="px-4 py-3 border-b border-border/60 flex items-center justify-between">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-gold">Slides</p>
+                <p className="text-[10px] text-text-muted">Part 1 · sample</p>
               </div>
-            ))}
+              <div className="p-4 flex-1 flex flex-col justify-center bg-gradient-to-b from-surface-raised/80 to-surface min-h-[180px]">
+                <p className="text-[10px] text-text-muted uppercase tracking-wider mb-2">Key idea</p>
+                <p className="text-base sm:text-lg font-bold text-text leading-snug mb-3">
+                  Pre-Islamic Arabia was not a blank slate
+                </p>
+                <ul className="space-y-1.5 text-xs sm:text-sm text-text-secondary">
+                  <li className="flex gap-2"><span className="text-gold">•</span> Trade routes shaped Makkah&apos;s power</li>
+                  <li className="flex gap-2"><span className="text-gold">•</span> Tribal loyalty defined justice</li>
+                  <li className="flex gap-2"><span className="text-gold">•</span> The Kaʿbah was already central</li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Flashcard example */}
+            <div className="rounded-2xl border border-border bg-surface overflow-hidden flex flex-col">
+              <div className="px-4 py-3 border-b border-border/60 flex items-center justify-between">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-gold">Flashcards</p>
+                <p className="text-[10px] text-text-muted">Flip to review</p>
+              </div>
+              <div className="p-4 flex-1 flex flex-col gap-3 min-h-[180px]">
+                <div className="rounded-xl border border-gold/25 bg-gold/[0.06] p-4 text-center">
+                  <p className="text-[10px] text-gold font-semibold uppercase tracking-wider mb-2">Front</p>
+                  <p className="text-sm font-semibold text-text leading-snug">
+                    What was the main religious practice in Makkah before Islam?
+                  </p>
+                </div>
+                <div className="rounded-xl border border-border bg-surface-raised p-4 text-center">
+                  <p className="text-[10px] text-text-muted font-semibold uppercase tracking-wider mb-2">Back</p>
+                  <p className="text-sm text-text-secondary leading-snug">
+                    Idol worship centered on the Kaʿbah, alongside remnants of monotheistic traditions.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Quiz example */}
+            <div className="rounded-2xl border border-border bg-surface overflow-hidden flex flex-col">
+              <div className="px-4 py-3 border-b border-border/60 flex items-center justify-between">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-gold">Quiz</p>
+                <p className="text-[10px] text-text-muted">Check understanding</p>
+              </div>
+              <div className="p-4 flex-1 flex flex-col min-h-[180px]">
+                <p className="text-sm font-semibold text-text leading-snug mb-3">
+                  Why was Makkah important before the Prophet ﷺ was born?
+                </p>
+                <div className="space-y-2">
+                  {[
+                    { label: "A", text: "It controlled key trade routes", active: true },
+                    { label: "B", text: "It had a large standing army", active: false },
+                    { label: "C", text: "It was the capital of an empire", active: false },
+                  ].map((opt) => (
+                    <div
+                      key={opt.label}
+                      className={[
+                        "flex items-start gap-2.5 rounded-lg border px-3 py-2 text-xs sm:text-sm",
+                        opt.active
+                          ? "border-gold/40 bg-gold/10 text-text"
+                          : "border-border bg-surface-raised/50 text-text-secondary",
+                      ].join(" ")}
+                    >
+                      <span className={`font-bold ${opt.active ? "text-gold" : "text-text-muted"}`}>
+                        {opt.label}
+                      </span>
+                      <span>{opt.text}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
+
+          <p className="text-center text-xs text-text-muted mt-5">
+            Plus video lessons, readings, summaries, mind maps, and progress tracking in every part.
+          </p>
         </div>
       </section>
 
       {/* ============================================================
-          6. WHAT HAPPENS AFTER YOU BUY
+          5. TRUST — sources & methodology
       ============================================================ */}
-      <section className="py-12 border-t border-border bg-surface/30">
+      <section className="py-10 border-t border-border bg-surface/30">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 text-center">
+          <h2 className="text-xl sm:text-2xl font-bold mb-3">Built with care for accuracy</h2>
+          <p className="text-sm sm:text-base text-text-secondary leading-relaxed mb-4">
+            The course follows classical Seerah sources in a clear, structured path —
+            teaching the life of the Prophet ﷺ as one connected story, not isolated anecdotes.
+            We document our approach, sources, and limits so you know what you&apos;re learning.
+          </p>
+          <Link
+            href="/methodology"
+            className="inline-flex text-sm font-semibold text-gold hover:text-gold-light transition-colors"
+          >
+            Read our sources &amp; methodology →
+          </Link>
+        </div>
+      </section>
+
+      {/* ============================================================
+          6. PRICING — after proof
+      ============================================================ */}
+      <PricingSection
+        hasLifetime={!!(user?.hasPaid)}
+        hasMonthly={false}
+        hasFamily={user?.planType === "family"}
+        variant="lifetime-only"
+        compact
+      />
+
+      {/* ============================================================
+          7. WHAT HAPPENS AFTER YOU BUY — brief
+      ============================================================ */}
+      <section className="py-10 border-t border-border bg-surface/30">
         <div className="max-w-xl mx-auto px-4 sm:px-6 text-center">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-1">
-            What happens after you buy?
+          <h2 className="text-xl sm:text-2xl font-bold mb-1">
+            After you buy
           </h2>
-          <p className="text-text-secondary text-sm mb-8">
-            Instant access. Under 60 seconds to your first lesson.
+          <p className="text-text-secondary text-sm mb-6">
+            Instant access — usually under a minute to your first lesson.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-stretch justify-center gap-4">
+          <div className="flex flex-col sm:flex-row items-stretch justify-center gap-3">
             {[
-              { step: "1", title: "Create your account",       sub: "Set your password from the email we send." },
-              { step: "2", title: "Get instant access",        sub: "Start immediately — no waiting." },
-              { step: "3", title: "Continue lesson by lesson", sub: "Go at your own pace. Progress saves automatically." },
+              { step: "1", title: "Create your account", sub: "Set your password from our email." },
+              { step: "2", title: "Start learning", sub: "Open Part 1 immediately." },
+              { step: "3", title: "Continue in order", sub: "Progress saves as you go." },
             ].map((item) => (
               <div
                 key={item.step}
-                className="flex-1 flex flex-col items-center gap-2 p-5 rounded-xl border border-border bg-surface"
+                className="flex-1 flex flex-col items-center gap-1.5 p-4 rounded-xl border border-border bg-surface"
               >
-                <div className="w-9 h-9 rounded-full bg-gold/10 border border-gold/25 flex items-center justify-center mb-1">
+                <div className="w-8 h-8 rounded-full bg-gold/10 border border-gold/25 flex items-center justify-center mb-0.5">
                   <span className="text-gold font-bold text-sm">{item.step}</span>
                 </div>
                 <p className="text-sm font-bold text-text">{item.title}</p>
@@ -249,7 +323,7 @@ export default async function LandingPage() {
       </section>
 
       {/* ============================================================
-          7. FAQ  (5 questions)
+          8. FAQ
       ============================================================ */}
       <section id="faq" className="py-12 border-t border-border">
         <div className="max-w-2xl mx-auto px-4 sm:px-6">
@@ -261,6 +335,10 @@ export default async function LandingPage() {
                 q: "Is Part 1 free?",
                 a: "Yes — full video, reading, slides, flashcards, and quiz. No account or payment required.",
                 open: true,
+              },
+              {
+                q: "What sources does the course use?",
+                a: "The course is prepared from classical Seerah material with a clear Sunni presentation. See our Methodology page for sources, approach, and what this course is — and is not.",
               },
               {
                 q: "What languages is the course available in?",
@@ -293,6 +371,14 @@ export default async function LandingPage() {
                 </summary>
                 <div className="px-5 pb-5 pt-1 text-sm text-text-secondary leading-relaxed border-t border-border/50">
                   {item.a}
+                  {item.q === "What sources does the course use?" && (
+                    <>
+                      {" "}
+                      <Link href="/methodology" className="text-gold hover:underline">
+                        Read the methodology →
+                      </Link>
+                    </>
+                  )}
                 </div>
               </details>
             ))}
@@ -301,7 +387,7 @@ export default async function LandingPage() {
       </section>
 
       {/* ============================================================
-          8. FINAL CTA
+          9. FINAL CTA
       ============================================================ */}
       <section className="py-16 sm:py-24 border-t border-border relative overflow-hidden">
         <div className="absolute inset-0 geo-pattern opacity-30" />
@@ -309,7 +395,7 @@ export default async function LandingPage() {
 
         <div className="relative max-w-2xl mx-auto px-4 sm:px-6 text-center">
           <h2 className="text-2xl sm:text-4xl font-bold mb-3 leading-tight">
-            Start the Prophet&apos;s ﷺ Life in Order
+            Start the Prophet&apos;s ﷺ life in order
           </h2>
           <p className="text-sm sm:text-base text-text-secondary mb-2 max-w-lg mx-auto">
             One structured path. 100 lessons. Video, reading, quiz, flashcards — all in order.
