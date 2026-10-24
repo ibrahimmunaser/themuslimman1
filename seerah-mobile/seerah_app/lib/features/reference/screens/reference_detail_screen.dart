@@ -6,6 +6,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/system_insets.dart';
 import '../../../core/widgets/ui_kit.dart';
 import '../../../l10n/app_strings.dart';
+import '../../../l10n/course_packs.dart';
 import '../data/reference_data.dart';
 
 class ReferenceDetailScreen extends ConsumerWidget {
@@ -330,7 +331,7 @@ class _KeyPeopleContentState extends State<_KeyPeopleContent> {
                   ? t(lang, 'all')
                   : (lang == 'ar'
                       ? kKeyPeople.firstWhere((p) => p.category == cat).categoryAr
-                      : cat);
+                      : CoursePacks.phrase(lang, cat));
               return Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: FilterChip(
@@ -594,7 +595,7 @@ class _TermsContentState extends State<_TermsContent> {
                   ? t(lang, 'all')
                   : (lang == 'ar'
                       ? kTerms.firstWhere((term) => term.category == cat).categoryAr
-                      : cat);
+                      : CoursePacks.phrase(lang, cat));
               return Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: FilterChip(
@@ -708,7 +709,7 @@ class _PlacesContent extends StatelessWidget {
 
         ...cats.map((cat) {
           final places = kPlaces.where((p) => p.category == cat).toList();
-          final catLabel = lang == 'ar' ? places.first.categoryAr : cat;
+          final catLabel = lang == 'ar' ? places.first.categoryAr : CoursePacks.phrase(lang, cat);
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -762,8 +763,8 @@ class _TribesContent extends StatelessWidget {
           ['Banu Adi',        'Clan of Umar ibn al-Khattab ؓ.',
            'بنو عدي',         'عشيرة عمر بن الخطاب ؓ.'],
         ].asMap().entries.map((e) => _InfoCard(
-          title: isAr ? e.value[2] : e.value[0],
-          body: isAr ? e.value[3] : e.value[1],
+          title: isAr ? e.value[2] : CoursePacks.phrase(lang, e.value[0]),
+          body: isAr ? e.value[3] : CoursePacks.phrase(lang, e.value[1]),
         ).animate(delay: (e.key * 40).ms).fadeIn()),
 
         _SubTitle(t(lang, 'majorTribesMadinahAnsar')),
@@ -772,7 +773,10 @@ class _TribesContent extends StatelessWidget {
            'بنو الأوس',       'إحدى القبيلتين الرئيسيتين في المدينة. كانوا من الأنصار الذين رحّبوا بالنبي ﷺ.'],
           ['Banu Khazraj',    'The larger of the two main Madinan tribes. Many leading Ansar companions were from here.',
            'بنو الخزرج',      'الأكبر من القبيلتين الرئيسيتين في المدينة. كان كثير من كبار الصحابة الأنصار منها.'],
-        ].map((d) => _InfoCard(title: isAr ? d[2] : d[0], body: isAr ? d[3] : d[1])),
+        ].map((d) => _InfoCard(
+          title: isAr ? d[2] : CoursePacks.phrase(lang, d[0]),
+          body: isAr ? d[3] : CoursePacks.phrase(lang, d[1]),
+        )),
 
         _SubTitle(t(lang, 'jewishTribesMadinah')),
         ...[
@@ -782,7 +786,10 @@ class _TribesContent extends StatelessWidget {
            'بنو النضير',      'أُجلوا عن المدينة في السنة الرابعة للهجرة لتدبيرهم مؤامرة ضد النبي ﷺ.'],
           ['Banu Qurayza',    'Broke their covenant during the Battle of the Trench.',
            'بنو قريظة',       'نقضوا عهدهم خلال غزوة الخندق.'],
-        ].map((d) => _InfoCard(title: isAr ? d[2] : d[0], body: isAr ? d[3] : d[1])),
+        ].map((d) => _InfoCard(
+          title: isAr ? d[2] : CoursePacks.phrase(lang, d[0]),
+          body: isAr ? d[3] : CoursePacks.phrase(lang, d[1]),
+        )),
       ],
     );
   }
@@ -816,7 +823,7 @@ class _LineageCard extends StatelessWidget {
       'Kilab → Murrah → Ka\'b → Luayy → Ghalib → Fihr (Quraysh)',
       '... → Kinanah → Khuzaymah → Mudrika → Ilyas → Mudar → Nizar → Ma\'add → Adnan',
       '... → Ibrahim ؑ',
-    ];
+    ].map((line) => CoursePacks.phrase(lang, line)).toList();
 
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),

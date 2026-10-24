@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../l10n/course_numbers.dart';
 import '../../../core/models/part_model.dart';
 import '../../../core/providers/part_provider.dart';
 import '../../../core/theme/app_colors.dart';
@@ -65,7 +66,7 @@ class PartCard extends ConsumerWidget {
                         ? Icon(Icons.lock_rounded,
                             color: color.withValues(alpha: 0.6), size: 16)
                         : Text(
-                            '${part.partNumber}',
+                            formatCourseNumber(lang, part.partNumber),
                             style: TextStyle(
                               color: color,
                               fontSize: 14,

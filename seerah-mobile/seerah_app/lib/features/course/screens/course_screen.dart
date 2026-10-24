@@ -92,7 +92,9 @@ class _CourseScreenState extends ConsumerState<CourseScreen> {
   Widget _buildSearchResults(bool hasAccess, ProgressState? progress, String lang) {
     final results = PARTS.where((p) {
       final fr = kPartTitlesFr[p.partNumber];
-      return p.title.toLowerCase().contains(_search) ||
+      return p.localizedTitle(lang).toLowerCase().contains(_search) ||
+          p.localizedSubtitle(lang).toLowerCase().contains(_search) ||
+          p.title.toLowerCase().contains(_search) ||
           p.subtitle.toLowerCase().contains(_search) ||
           (p.titleAr?.contains(_search) ?? false) ||
           (p.subtitleAr?.contains(_search) ?? false) ||
@@ -168,8 +170,8 @@ class _EraSectionState extends State<_EraSection> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
-              border: Border(
-                left: BorderSide(color: color, width: 3),
+              border: BorderDirectional(
+                start: BorderSide(color: color, width: 3),
                 bottom: const BorderSide(color: AppColors.border),
               ),
             ),

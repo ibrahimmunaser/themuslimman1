@@ -137,7 +137,23 @@ class _SeerahAppState extends ConsumerState<SeerahApp>
       scaffoldMessengerKey: _scaffoldMessengerKey,
       routerConfig: router,
       locale: locale,
-      supportedLocales: const [Locale('en'), Locale('ar'), Locale('fr')],
+      supportedLocales: const [
+        Locale('en'),
+        Locale('ar'),
+        Locale('fr'),
+        Locale('id'),
+        Locale('ms'),
+        Locale('zh'),
+        Locale('ru'),
+        Locale('sw'),
+        Locale('es'),
+        Locale('de'),
+        Locale('tr'),
+        Locale('hi'),
+        Locale('ur'),
+        Locale('bn'),
+        Locale('fa'),
+      ],
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
@@ -164,7 +180,7 @@ class _SeerahAppState extends ConsumerState<SeerahApp>
           // matching how the web app already flips wholesale via `dir` on
           // <html> in app/layout.tsx.
           child: Directionality(
-            textDirection: lang == 'ar' ? TextDirection.rtl : TextDirection.ltr,
+            textDirection: isRtlCourseLang(lang) ? TextDirection.rtl : TextDirection.ltr,
             child: child!,
           ),
         );

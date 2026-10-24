@@ -1,3 +1,4 @@
+import '../../l10n/course_packs.dart';
 import '../data/parts_titles_fr.dart';
 
 class PartModel {
@@ -26,13 +27,13 @@ class PartModel {
   String localizedTitle(String lang) {
     if (lang == 'ar') return titleAr ?? title;
     if (lang == 'fr') return kPartTitlesFr[partNumber]?.title ?? title;
-    return title;
+    return CoursePacks.phrase(lang, title);
   }
 
   String localizedSubtitle(String lang) {
     if (lang == 'ar') return subtitleAr ?? subtitle;
     if (lang == 'fr') return kPartTitlesFr[partNumber]?.subtitle ?? subtitle;
-    return subtitle;
+    return CoursePacks.phrase(lang, subtitle);
   }
 }
 
@@ -56,7 +57,7 @@ class EraModel {
   String localizedName(String lang) {
     if (lang == 'ar') return nameAr ?? name;
     if (lang == 'fr') return kEraNamesFr[id] ?? name;
-    return name;
+    return CoursePacks.phrase(lang, name);
   }
 }
 

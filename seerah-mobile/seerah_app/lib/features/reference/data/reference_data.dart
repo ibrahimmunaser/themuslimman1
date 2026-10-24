@@ -1,6 +1,7 @@
 // Reference Library data — mirrors the web app's reference sections
 
 import 'package:flutter/material.dart';
+import '../../../l10n/course_packs.dart';
 
 class ReferenceSection {
   final String id;
@@ -16,8 +17,8 @@ class ReferenceSection {
     required this.descriptionAr,
   });
 
-  String localizedTitle(String lang) => lang == 'ar' ? titleAr : title;
-  String localizedDescription(String lang) => lang == 'ar' ? descriptionAr : description;
+  String localizedTitle(String lang) => locField(lang, title, titleAr);
+  String localizedDescription(String lang) => locField(lang, description, descriptionAr);
 }
 
 IconData referenceSectionIcon(String id) {
@@ -69,8 +70,8 @@ class WifeEntry {
   final String notesAr;
   const WifeEntry({required this.name, required this.nameAr, required this.hasChildren, required this.notes, required this.notesAr});
 
-  String localizedName(String lang) => lang == 'ar' ? nameAr : name;
-  String localizedNotes(String lang) => lang == 'ar' ? notesAr : notes;
+  String localizedName(String lang) => locField(lang, name, nameAr);
+  String localizedNotes(String lang) => locField(lang, notes, notesAr);
 }
 
 const kWives = [
@@ -96,9 +97,9 @@ class ChildEntry {
   final String notesAr;
   const ChildEntry({required this.name, required this.nameAr, required this.mother, required this.motherAr, required this.notes, required this.notesAr});
 
-  String localizedName(String lang) => lang == 'ar' ? nameAr : name;
-  String localizedMother(String lang) => lang == 'ar' ? motherAr : mother;
-  String localizedNotes(String lang) => lang == 'ar' ? notesAr : notes;
+  String localizedName(String lang) => locField(lang, name, nameAr);
+  String localizedMother(String lang) => locField(lang, mother, motherAr);
+  String localizedNotes(String lang) => locField(lang, notes, notesAr);
 }
 
 const kChildren = [
@@ -121,8 +122,8 @@ class TimelineEvent {
   final String descriptionAr;
   const TimelineEvent({required this.date, required this.title, required this.titleAr, required this.description, required this.descriptionAr});
 
-  String localizedTitle(String lang) => lang == 'ar' ? titleAr : title;
-  String localizedDescription(String lang) => lang == 'ar' ? descriptionAr : description;
+  String localizedTitle(String lang) => locField(lang, title, titleAr);
+  String localizedDescription(String lang) => locField(lang, description, descriptionAr);
 }
 
 const kTimeline = [
@@ -170,10 +171,10 @@ class BattleEvent {
     required this.significanceAr,
   });
 
-  String localizedName(String lang) => lang == 'ar' ? nameAr : name;
-  String localizedType(String lang) => lang == 'ar' ? typeAr : type;
-  String localizedOutcome(String lang) => lang == 'ar' ? outcomeAr : outcome;
-  String localizedSignificance(String lang) => lang == 'ar' ? significanceAr : significance;
+  String localizedName(String lang) => locField(lang, name, nameAr);
+  String localizedType(String lang) => locField(lang, type, typeAr);
+  String localizedOutcome(String lang) => locField(lang, outcome, outcomeAr);
+  String localizedSignificance(String lang) => locField(lang, significance, significanceAr);
 }
 
 const kBattles = [
@@ -206,9 +207,9 @@ class MiracleEntry {
     required this.descriptionAr,
   });
 
-  String localizedSource(String lang) => lang == 'ar' ? sourceAr : source;
-  String localizedTitle(String lang) => lang == 'ar' ? titleAr : title;
-  String localizedDescription(String lang) => lang == 'ar' ? descriptionAr : description;
+  String localizedSource(String lang) => locField(lang, source, sourceAr);
+  String localizedTitle(String lang) => locField(lang, title, titleAr);
+  String localizedDescription(String lang) => locField(lang, description, descriptionAr);
 }
 
 const kMiracles = [
@@ -242,8 +243,8 @@ class TermEntry {
     required this.definitionAr,
   });
 
-  String localizedCategory(String lang) => lang == 'ar' ? categoryAr : category;
-  String localizedDefinition(String lang) => lang == 'ar' ? definitionAr : definition;
+  String localizedCategory(String lang) => locField(lang, category, categoryAr);
+  String localizedDefinition(String lang) => locField(lang, definition, definitionAr);
 }
 
 const kTerms = [
@@ -291,10 +292,10 @@ class PersonEntry {
     required this.descriptionAr,
   });
 
-  String localizedName(String lang) => lang == 'ar' ? nameAr : name;
-  String localizedCategory(String lang) => lang == 'ar' ? categoryAr : category;
-  String localizedRole(String lang) => lang == 'ar' ? roleAr : role;
-  String localizedDescription(String lang) => lang == 'ar' ? descriptionAr : description;
+  String localizedName(String lang) => locField(lang, name, nameAr);
+  String localizedCategory(String lang) => locField(lang, category, categoryAr);
+  String localizedRole(String lang) => locField(lang, role, roleAr);
+  String localizedDescription(String lang) => locField(lang, description, descriptionAr);
 }
 
 const kKeyPeople = [
@@ -338,9 +339,9 @@ class PlaceEntry {
     required this.significanceAr,
   });
 
-  String localizedName(String lang) => lang == 'ar' ? nameAr : name;
-  String localizedCategory(String lang) => lang == 'ar' ? categoryAr : category;
-  String localizedSignificance(String lang) => lang == 'ar' ? significanceAr : significance;
+  String localizedName(String lang) => locField(lang, name, nameAr);
+  String localizedCategory(String lang) => locField(lang, category, categoryAr);
+  String localizedSignificance(String lang) => locField(lang, significance, significanceAr);
 }
 
 const kPlaces = [

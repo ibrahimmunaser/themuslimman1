@@ -11,6 +11,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/adaptive_icons.dart';
 import '../../../core/widgets/ui_kit.dart';
 import '../../../l10n/app_strings.dart';
+import '../../../l10n/course_numbers.dart';
 
 // ── Resource type definitions ─────────────────────────────────────────────────
 
@@ -360,7 +361,7 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
                             child: locked
                                 ? Icon(Icons.lock_rounded, color: AppColors.textMuted, size: 15)
                                 : Center(
-                                    child: Text('${part.partNumber}',
+                                    child: Text(formatCourseNumber(lang, part.partNumber),
                                       style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w800))),
                           ),
                         const SizedBox(width: 12),

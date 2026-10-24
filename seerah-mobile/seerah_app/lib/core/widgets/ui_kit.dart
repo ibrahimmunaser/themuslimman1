@@ -622,7 +622,7 @@ class OfflineBanner extends ConsumerWidget {
   }
 }
 
-/// Compact EN / FR / عربي control for AppBars (Home, Lessons, Part).
+/// Course-language menu for AppBars (Home, Lessons, Part).
 class AppLangToggle extends ConsumerWidget {
   final bool showLabel;
   const AppLangToggle({super.key, this.showLabel = false});
@@ -630,65 +630,131 @@ class AppLangToggle extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final lang = ref.watch(courseLangProvider);
+    final rtl = isRtlCourseLang(lang);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         if (showLabel) ...[
           Text(
-            lang == 'ar'
-                ? t(lang, 'language')
-                : t(lang, 'language').toUpperCase(),
+            rtl ? t(lang, 'language') : t(lang, 'language').toUpperCase(),
             style: TextStyle(
-              fontSize: lang == 'ar' ? 11 : 8,
+              fontSize: rtl ? 11 : 8,
               fontWeight: FontWeight.w800,
-              letterSpacing: lang == 'ar' ? 0 : 1.0,
+              letterSpacing: rtl ? 0 : 1.0,
               color: AppColors.gold,
             ),
           ),
           const SizedBox(height: 3),
         ],
-        Container(
-          padding: const EdgeInsets.all(2.5),
-          decoration: BoxDecoration(
-            color: AppColors.background.withValues(alpha: 0.55),
+        Material(
+          color: AppColors.background.withValues(alpha: 0.55),
+          borderRadius: BorderRadius.circular(10),
+          child: InkWell(
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: AppColors.gold.withValues(alpha: 0.45),
-              width: 1.1,
+            onTap: () => _openLanguageSheet(context, ref, lang),
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 148),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: AppColors.gold.withValues(alpha: 0.45),
+                  width: 1.1,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.language_rounded, color: AppColors.gold, size: 14),
+                  const SizedBox(width: 4),
+                  Flexible(
+                    child: Text(
+                      courseLangLabel(lang),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  const Icon(Icons.expand_more_rounded, color: AppColors.gold, size: 16),
+                ],
+              ),
             ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _AppLangBtn(
-                label: 'EN',
-                active: lang == 'en',
-                onTap: () =>
-                    ref.read(courseLangProvider.notifier).setLang('en'),
-              ),
-              _AppLangBtn(
-                label: 'FR',
-                active: lang == 'fr',
-                onTap: () =>
-                    ref.read(courseLangProvider.notifier).setLang('fr'),
-              ),
-              _AppLangBtn(
-                label: 'عربي',
-                active: lang == 'ar',
-                onTap: () =>
-                    ref.read(courseLangProvider.notifier).setLang('ar'),
-              ),
-            ],
           ),
         ),
       ],
     );
   }
+
+  Future<void> _openLanguageSheet(BuildContext context, WidgetRef ref, String lang) {
+    return showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Directionality(
+            textDirection: isRtlCourseLang(lang) ? TextDirection.rtl : TextDirection.ltr,
+            child: ListView(
+              shrinkWrap: true,
+              children: [
+                const SizedBox(height: 8),
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppColors.border,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 14, 20, 6),
+                  child: Text(
+                    t(lang, 'language'),
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                for (final option in kCourseLangOptions)
+                  ListTile(
+                    title: Text(
+                      option.label,
+                      style: TextStyle(
+                        color: option.code == lang ? AppColors.gold : AppColors.textPrimary,
+                        fontWeight: option.code == lang ? FontWeight.w700 : FontWeight.w500,
+                      ),
+                    ),
+                    trailing: option.code == lang
+                        ? const Icon(Icons.check_rounded, color: AppColors.gold)
+                        : null,
+                    onTap: () {
+                      Navigator.of(sheetContext).pop();
+                      ref.read(courseLangProvider.notifier).setLang(option.code);
+                    },
+                  ),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
 
-/// Self-contained app-wide language switch (English / French / Arabic).
-/// Reads and writes [courseLangProvider] directly so it can be dropped into
-/// any screen — e.g. the Profile screen's Settings group.
+/// Self-contained app-wide language switch. Reads and writes
+/// [courseLangProvider] directly so it can be dropped into any screen —
+/// for example the Profile screen's Settings group.
 class AppLangSwitcherRow extends ConsumerWidget {
   const AppLangSwitcherRow({super.key});
 
@@ -725,38 +791,6 @@ class AppLangSwitcherRow extends ConsumerWidget {
           ),
           const AppLangToggle(),
         ],
-      ),
-    );
-  }
-}
-
-class _AppLangBtn extends StatelessWidget {
-  final String label;
-  final bool active;
-  final VoidCallback onTap;
-  const _AppLangBtn({required this.label, required this.active, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        constraints: const BoxConstraints(minWidth: 32, minHeight: 28),
-        alignment: Alignment.center,
-        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
-        decoration: BoxDecoration(
-          color: active ? AppColors.gold : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            color: active ? Colors.black : AppColors.textSecondary,
-          ),
-        ),
       ),
     );
   }

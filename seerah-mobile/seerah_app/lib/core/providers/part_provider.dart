@@ -1,18 +1,18 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../l10n/course_langs.dart';
+import '../../l10n/course_packs.dart';
 import '../models/part_model.dart';
 import '../network/api_client.dart';
+
+export '../../l10n/course_langs.dart'
+    show courseLangQuery, kSupportedCourseLangs, isRtlCourseLang, courseLangLabel, kCourseLangOptions;
 
 // ─── Course language preference ───────────────────────────────────────────────
 // Persisted to SharedPreferences. When changed, all lang-sensitive providers
 // automatically re-fetch because they watch this provider.
 
 const _courseLangKey = 'seerah_course_lang';
-const kSupportedCourseLangs = {'en', 'ar', 'fr'};
-
-/// Query suffix for content APIs. English is the default (no param).
-String courseLangQuery(String lang) =>
-    (lang == 'ar' || lang == 'fr') ? '?lang=$lang' : '';
 
 class CourseLangNotifier extends StateNotifier<String> {
   CourseLangNotifier() : super('en') {
@@ -25,12 +25,14 @@ class CourseLangNotifier extends StateNotifier<String> {
     if (saved != null &&
         kSupportedCourseLangs.contains(saved) &&
         state != saved) {
+      await CoursePacks.ensure(saved);
       state = saved;
     }
   }
 
   Future<void> setLang(String lang) async {
-    if (!kSupportedCourseLangs.contains(lang)) return;
+    if (!kSupportedCourseLangs.contains(lang) || lang == state) return;
+    await CoursePacks.ensure(lang);
     state = lang;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_courseLangKey, lang);

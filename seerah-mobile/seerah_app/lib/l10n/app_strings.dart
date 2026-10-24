@@ -1,11 +1,14 @@
 /// Lightweight localization dictionary for the Seerah app.
 ///
-/// The app supports three course languages ("en" / "ar" / "fr", driven by
-/// [courseLangProvider] in part_provider.dart). A full `flutter gen-l10n` /
+/// Course languages match the website (en / ar / fr plus the twelve
+/// translated courses). A full `flutter gen-l10n` /
 /// ARB pipeline would be pure overhead — this is a plain Dart map with a
 /// single lookup helper — `t(lang, key)` — used throughout the UI instead
 /// of hardcoded English strings.
 library;
+
+import 'course_numbers.dart';
+import 'course_packs.dart';
 
 const Map<String, Map<String, String>> _kStrings = {
   // ── Bottom navigation ────────────────────────────────────────────────────
@@ -553,19 +556,56 @@ const Map<String, Map<String, String>> _kStrings = {
   'theMuslimMan': {'en': 'The Muslim Man', 'ar': 'ذا مسلم مان', 'fr': 'The Muslim Man'},
 };
 
-/// Looks up [key] for [lang] ("en", "ar", or "fr"), falling back to English (or
-/// the raw key if even that's missing) so a typo never crashes the UI.
+/// Looks up [key] for [lang], falling back to English (or the raw key if even
+/// that's missing) so a typo never crashes the UI. English, Arabic, and the
+/// hand-written French strings live in [_kStrings]. Every other course
+/// language, and French strings that were still English, come from the
+/// bundled pack loaded by [CoursePacks].
 String t(String lang, String key) {
   final entry = _kStrings[key];
+  final en = entry?['en'];
+  if (lang != 'en' && lang != 'ar') {
+    final hand = entry?[lang];
+    final handIsTranslated = hand != null && hand.isNotEmpty && hand != en;
+    if (!handIsTranslated) {
+      final fromUi = CoursePacks.uiString(lang, key);
+      if (fromUi != null) return localizeNumerals(lang, fromUi);
+      if (en != null) {
+        final fromPhrase = CoursePacks.phrase(lang, en);
+        if (fromPhrase != en) return fromPhrase;
+      }
+    }
+  }
   if (entry == null) return key;
-  return entry[lang] ?? entry['en'] ?? key;
+  return localizeNumerals(lang, entry[lang] ?? en ?? key);
 }
 
 /// Same as [t] but substitutes `{name}`-style placeholders from [vars].
+/// Numbers are written in the course language's numerals.
 String tv(String lang, String key, Map<String, Object?> vars) {
-  var result = t(lang, key);
-  for (final entry in vars.entries) {
-    result = result.replaceAll('{${entry.key}}', '${entry.value}');
+  final entry = _kStrings[key];
+  var result = entry == null
+      ? key
+      : (lang == 'en' || lang == 'ar'
+          ? (entry[lang] ?? entry['en'] ?? key)
+          : _template(lang, key, entry));
+  for (final item in vars.entries) {
+    final value = item.value;
+    final rendered = value is num
+        ? formatCourseNumber(lang, value.toInt())
+        : localizeNumerals(lang, '${value ?? ''}');
+    result = result.replaceAll('{${item.key}}', rendered);
   }
-  return result;
+  return localizeNumerals(lang, result);
+}
+
+String _template(String lang, String key, Map<String, String> entry) {
+  final en = entry['en'];
+  final hand = entry[lang];
+  final handIsTranslated = hand != null && hand.isNotEmpty && hand != en;
+  if (!handIsTranslated) {
+    final fromUi = CoursePacks.uiString(lang, key);
+    if (fromUi != null) return fromUi;
+  }
+  return hand ?? en ?? key;
 }
