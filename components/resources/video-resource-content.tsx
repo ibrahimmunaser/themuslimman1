@@ -9,6 +9,7 @@ import { ResourcePageClient } from "./resource-page-client";
 import { Video, Play, CheckCircle2, Clock, X, Lock } from "lucide-react";
 import { VideoPlayer } from "@/components/part/video-player";
 import { getCachedResource, setCachedResource, prefetchResource } from "@/lib/resource-cache";
+import { formatCourseNumber } from "@/lib/course-numbers";
 import { t, tf } from "@/lib/ui-strings";
 
 interface VideoResourceContentProps {
@@ -242,7 +243,7 @@ export function VideoResourceContent({
                     />
                   ) : (
                     <span className="absolute inset-0 flex items-center justify-center opacity-10 text-5xl font-black text-white select-none">
-                      {continueWatchingPart.partNumber}
+                      {formatCourseNumber(lang, continueWatchingPart.partNumber)}
                     </span>
                   )}
                   {/* Play overlay */}
@@ -353,7 +354,7 @@ export function VideoResourceContent({
 
                       {/* Part number — bottom-start, inside gradient safe zone */}
                       <span className="absolute bottom-1.5 start-2 text-[10px] font-bold text-white/60 z-10">
-                        {part.partNumber}
+                        {formatCourseNumber(lang, part.partNumber)}
                       </span>
 
                       {/* Progress bar */}

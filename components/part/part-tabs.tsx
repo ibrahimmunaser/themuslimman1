@@ -29,8 +29,9 @@ import { SlidesViewer } from "./slides-viewer";
 import { QuizViewer, type QuizDraft } from "./quiz-viewer";
 import { FlashcardsViewer } from "./flashcards-viewer";
 import type { Part } from "@/lib/types";
-import type { CourseLang } from "@/lib/course-lang";
+import { courseHasMindmaps, isRtlLang, type CourseLang } from "@/lib/course-lang";
 import { loc } from "@/lib/loc";
+import { t } from "@/lib/ui-strings";
 import { trackAssetOpened } from "@/app/actions/progress";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -63,11 +64,117 @@ interface Mode {
   primary?: boolean;
 }
 
-/** Pick EN / AR / FR label depending on the active course language. */
+/** Label and subtitle for each lesson tab. English, Arabic, and French stay on the mode objects. */
+const MODE_COPY: Partial<Record<CourseLang, Partial<Record<ModeId, { label: string; short?: string; subtitle: string }>>>> = {
+  id: {
+    watch: { label: "Tonton", subtitle: "Pelajaran video" },
+    read: { label: "Baca", subtitle: "Catatan terstruktur" },
+    slides: { label: "Slide", subtitle: "Presentasi" },
+    infographic: { label: "Infografis", short: "Visual", subtitle: "Ringkasan visual" },
+    flashcards: { label: "Kartu", short: "Kartu", subtitle: "Ulasan ingatan" },
+    quiz: { label: "Kuis", subtitle: "Uji pengetahuan" },
+  },
+  ms: {
+    watch: { label: "Tonton", subtitle: "Pelajaran video" },
+    read: { label: "Baca", subtitle: "Nota berstruktur" },
+    slides: { label: "Slaid", subtitle: "Pembentangan" },
+    infographic: { label: "Infografik", short: "Visual", subtitle: "Ringkasan visual" },
+    flashcards: { label: "Kad", short: "Kad", subtitle: "Ulangan ingatan" },
+    quiz: { label: "Kuiz", subtitle: "Uji pengetahuan" },
+  },
+  zh: {
+    watch: { label: "观看", subtitle: "视频课程" },
+    read: { label: "阅读", subtitle: "结构化笔记" },
+    slides: { label: "幻灯片", subtitle: "演示文稿" },
+    infographic: { label: "信息图", short: "图示", subtitle: "视觉摘要" },
+    flashcards: { label: "闪卡", short: "卡片", subtitle: "记忆复习" },
+    quiz: { label: "测验", subtitle: "检验知识" },
+  },
+  ru: {
+    watch: { label: "Смотреть", subtitle: "Видеоурок" },
+    read: { label: "Читать", subtitle: "Структурные заметки" },
+    slides: { label: "Слайды", subtitle: "Презентация" },
+    infographic: { label: "Инфографика", short: "Схема", subtitle: "Наглядное резюме" },
+    flashcards: { label: "Карточки", short: "Карты", subtitle: "Повторение" },
+    quiz: { label: "Тест", subtitle: "Проверка знаний" },
+  },
+  sw: {
+    watch: { label: "Tazama", subtitle: "Somo la video" },
+    read: { label: "Soma", subtitle: "Maelezo yaliyopangwa" },
+    slides: { label: "Slaidi", subtitle: "Wasilisho" },
+    infographic: { label: "Infografia", short: "Picha", subtitle: "Muhtasari wa kuona" },
+    flashcards: { label: "Kadi", short: "Kadi", subtitle: "Marudio ya kumbukumbu" },
+    quiz: { label: "Maswali", subtitle: "Pima ujuzi" },
+  },
+  es: {
+    watch: { label: "Ver", subtitle: "Lección en video" },
+    read: { label: "Leer", subtitle: "Notas estructuradas" },
+    slides: { label: "Diapositivas", subtitle: "Presentación" },
+    infographic: { label: "Infografía", short: "Visual", subtitle: "Resumen visual" },
+    flashcards: { label: "Tarjetas", short: "Tarjetas", subtitle: "Repaso de memoria" },
+    quiz: { label: "Cuestionario", subtitle: "Pon a prueba" },
+  },
+  de: {
+    watch: { label: "Ansehen", subtitle: "Videolektion" },
+    read: { label: "Lesen", subtitle: "Strukturierte Notizen" },
+    slides: { label: "Folien", subtitle: "Präsentation" },
+    infographic: { label: "Infografik", short: "Grafik", subtitle: "Visuelle Zusammenfassung" },
+    flashcards: { label: "Karteikarten", short: "Karten", subtitle: "Wiederholung" },
+    quiz: { label: "Quiz", subtitle: "Wissen testen" },
+  },
+  tr: {
+    watch: { label: "İzle", subtitle: "Video ders" },
+    read: { label: "Oku", subtitle: "Yapılandırılmış notlar" },
+    slides: { label: "Slaytlar", subtitle: "Sunum" },
+    infographic: { label: "İnfografik", short: "Görsel", subtitle: "Görsel özet" },
+    flashcards: { label: "Kartlar", short: "Kartlar", subtitle: "Hafıza tekrarı" },
+    quiz: { label: "Kısa sınav", subtitle: "Bilgini sına" },
+  },
+  hi: {
+    watch: { label: "देखें", subtitle: "वीडियो पाठ" },
+    read: { label: "पढ़ें", subtitle: "संरचित नोट्स" },
+    slides: { label: "स्लाइड", subtitle: "प्रस्तुति" },
+    infographic: { label: "इन्फोग्राफिक", short: "चित्र", subtitle: "दृश्य सारांश" },
+    flashcards: { label: "फ्लैशकार्ड", short: "कार्ड", subtitle: "स्मृति समीक्षा" },
+    quiz: { label: "प्रश्नोत्तरी", subtitle: "ज्ञान परखें" },
+  },
+  ur: {
+    watch: { label: "دیکھیں", subtitle: "ویڈیو سبق" },
+    read: { label: "پڑھیں", subtitle: "منظم نوٹس" },
+    slides: { label: "سلائیڈز", subtitle: "پیشکش" },
+    infographic: { label: "انفوگرافک", short: "تصویر", subtitle: "بصری خلاصہ" },
+    flashcards: { label: "فلیش کارڈز", short: "کارڈ", subtitle: "یادداشت کا جائزہ" },
+    quiz: { label: "کوئز", subtitle: "علم کی جانچ" },
+  },
+  bn: {
+    watch: { label: "দেখুন", subtitle: "ভিডিও পাঠ" },
+    read: { label: "পড়ুন", subtitle: "কাঠামোবদ্ধ নোট" },
+    slides: { label: "স্লাইড", subtitle: "উপস্থাপনা" },
+    infographic: { label: "ইনফোগ্রাফিক", short: "চিত্র", subtitle: "দৃশ্যমান সারাংশ" },
+    flashcards: { label: "ফ্ল্যাশকার্ড", short: "কার্ড", subtitle: "স্মৃতি পর্যালোচনা" },
+    quiz: { label: "কুইজ", subtitle: "জ্ঞান যাচাই" },
+  },
+  fa: {
+    watch: { label: "تماشا", subtitle: "درس ویدیویی" },
+    read: { label: "بخوانید", subtitle: "یادداشت‌های ساخت‌یافته" },
+    slides: { label: "اسلایدها", subtitle: "ارائه" },
+    infographic: { label: "اینفوگرافیک", short: "تصویر", subtitle: "خلاصه تصویری" },
+    flashcards: { label: "فلش‌کارت", short: "کارت", subtitle: "مرور حافظه" },
+    quiz: { label: "آزمون", subtitle: "سنجش دانش" },
+  },
+};
+
+function modeCopy(mode: Mode, lang: CourseLang) {
+  return MODE_COPY[lang]?.[mode.id];
+}
+
+/** Pick the lesson-tab label for the active course language. */
 function modeLabel(mode: Mode, lang: CourseLang): string {
-  return loc(lang, mode.label, mode.labelAr, mode.labelFr);
+  return modeCopy(mode, lang)?.label ?? loc(lang, mode.label, mode.labelAr, mode.labelFr);
 }
 function modeShortLabel(mode: Mode, lang: CourseLang): string {
+  const copy = modeCopy(mode, lang);
+  if (copy) return copy.short ?? copy.label;
   return loc(
     lang,
     mode.shortLabel ?? mode.label,
@@ -76,7 +183,7 @@ function modeShortLabel(mode: Mode, lang: CourseLang): string {
   );
 }
 function modeSubtitle(mode: Mode, lang: CourseLang): string {
-  return loc(lang, mode.subtitle, mode.subtitleAr, mode.subtitleFr);
+  return modeCopy(mode, lang)?.subtitle ?? loc(lang, mode.subtitle, mode.subtitleAr, mode.subtitleFr);
 }
 function subTabLabel(tab: SubTab, lang: CourseLang): string {
   return loc(lang, tab.label, tab.labelAr, tab.labelFr);
@@ -236,11 +343,16 @@ export function InfographicPanel({ part, previewMode, lang = "en" }: { part: Par
     { id: "standard"  as const, label: "Standard",   labelAr: "قياسي", labelFr: "Standard" },
     { id: "bentoGrid" as const, label: "Bento Grid", labelAr: "شبكي",  labelFr: "Grille Bento" },
   ].filter((s) => inf?.[s.id]);
-  const currentSrc = inf?.[style] ?? inf?.[styles[0]?.id];
-  const mediumSrc = currentSrc ? infographicWebp(currentSrc, "-medium") : null;
+  // French (and Arabic) ship one infographic. "standard" is the English default,
+  // so fall back to whichever style actually has a file.
+  const activeStyle = styles.some((s) => s.id === style) ? style : (styles[0]?.id ?? "concise");
+  const currentSrc = inf?.[activeStyle];
+  // French files are watermarked PNGs with no WebP twin. Rewriting the signed
+  // URL would point at a key the signature does not cover.
+  const mediumSrc = (lang === "en" || lang === "ar") && currentSrc ? infographicWebp(currentSrc, "-medium") : null;
   // Lightbox uses the original signed URL — avoids invalid-signature from client-side URL rewriting
   const lightboxSrc = currentSrc;
-  const altLabel = `Part ${part.partNumber} Infographic — ${style}`;
+  const altLabel = `Part ${part.partNumber} Infographic — ${activeStyle}`;
 
   // Track when infographic is viewed — require 1.5s dwell after image loads
   // so that a URL-param (?mode=infographic) auto-open does not count unless
@@ -279,7 +391,7 @@ export function InfographicPanel({ part, previewMode, lang = "en" }: { part: Par
               onClick={() => handleStyleChange(s.id)}
               className={clsx(
                 "px-3 rounded-lg text-xs font-medium transition-all duration-150 min-h-[44px] active:scale-95",
-                style === s.id
+                activeStyle === s.id
                   ? "bg-gold/12 text-gold ring-1 ring-gold/25"
                   : "bg-surface-raised/50 text-text-muted/60 hover:text-text-secondary hover:bg-surface-raised"
               )}
@@ -679,8 +791,8 @@ interface PartTabsProps {
 }
 
 export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initialAssetUrls, initialVideoCompleted, initialVideoPercent, initialQuizBestScore, forcedInitialMode, hideTabNav = false, learnerProfileId, initialLang = "en" }: PartTabsProps) {
-  // Mind maps aren't produced for the Arabic course — hide the tab entirely in AR.
-  const modes = initialLang === "ar" ? MODES.filter((m) => m.id !== "mindmap") : MODES;
+  // Mind maps exist only in English.
+  const modes = courseHasMindmaps(initialLang) ? MODES : MODES.filter((m) => m.id !== "mindmap");
   const availableModes = modes.filter((m) => getModeSubTabs(m, part).length > 0);
   const defaultMode = availableModes[0] ?? modes[0];
 
@@ -709,7 +821,7 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
       setActiveSubTab(newSubTabs[0]?.id ?? modes.find((m) => m.id === incoming)!.subTabs[0].id as SubTabId);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [modeParam]);
+  }, [modeParam, initialLang]);
 
   // Use server-provided URLs immediately; update state whenever the server refreshes
   // (e.g. after a lang switch via router.refresh()). Fall back to a client-side fetch
@@ -769,7 +881,7 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
             <div className="sm:hidden space-y-2">
               {/* LEARN group */}
               <div className="space-y-1">
-                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-text-muted/35 px-0.5">{loc(initialLang, "Learn", "تعلّم", "Apprendre")}</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-text-muted/35 px-0.5">{t(initialLang, "learn")}</p>
                 <div className="flex gap-1.5">
                   {modes.filter((m) => m.primary).map((mode) => {
                     const available = getModeSubTabs(mode, part).length > 0;
@@ -789,7 +901,7 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
               </div>
               {/* REVIEW group */}
               <div className="space-y-1">
-                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-text-muted/35 px-0.5">{loc(initialLang, "Review", "مراجعة", "Réviser")}</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-text-muted/35 px-0.5">{t(initialLang, "review")}</p>
                 <div className="flex gap-1">
                   {modes.filter((m) => !m.primary).map((mode) => {
                     const available = getModeSubTabs(mode, part).length > 0;
@@ -878,7 +990,7 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
                   onQuizDraftChange={setQuizDraft}
                   learnerProfileId={learnerProfileId}
                   lang={initialLang}
-                  isRtl={initialLang === "ar"}
+                  isRtl={isRtlLang(initialLang)}
                 />
               </div>
             )}
@@ -897,7 +1009,7 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
                   onQuizDraftChange={setQuizDraft}
                   learnerProfileId={learnerProfileId}
                   lang={initialLang}
-                  isRtl={initialLang === "ar"}
+                  isRtl={isRtlLang(initialLang)}
                 />
               </div>
             )}

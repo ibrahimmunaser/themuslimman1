@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { parseLang, COURSE_LANG_COOKIE } from "@/lib/course-lang";
+import { parseLang, COURSE_LANG_COOKIE, type CourseLang } from "@/lib/course-lang";
 import { loc } from "@/lib/loc";
 
 export const metadata = { title: "Billing | Complete Seerah", robots: { index: false, follow: false } };
@@ -29,7 +29,7 @@ export const dynamic = "force-dynamic";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
-function formatDate(d: Date, lang: "en" | "ar" | "fr") {
+function formatDate(d: Date, lang: CourseLang) {
   if (lang === "ar") {
     return new Intl.DateTimeFormat("ar", {
       year: "numeric",

@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { getPartsForLang } from "@/lib/content";
-import { ERA_MAP, type Part } from "@/lib/types";
-import type { CourseLang } from "@/lib/course-lang";
+import { getPartsForLang, localizedEraLabel } from "@/lib/content";
+import type { Part } from "@/lib/types";
+import { isRtlLang, type CourseLang } from "@/lib/course-lang";
 import { loc } from "@/lib/loc";
+import { formatCourseNumber } from "@/lib/course-numbers";
 import { t, tf } from "@/lib/ui-strings";
 import { eraGradient } from "./era-gradient";
 import { ResourcePageClient } from "./resource-page-client";
@@ -211,11 +212,11 @@ export function QuizResourceContent({
                       )}
                       {/* Large part number watermark */}
                       <span className="absolute inset-0 flex items-center justify-center opacity-[0.12] text-[5rem] font-black text-white select-none pointer-events-none leading-none">
-                        {part.partNumber}
+                        {formatCourseNumber(lang, part.partNumber)}
                       </span>
                       {/* Era label */}
                       <span className="absolute bottom-8 left-0 right-0 text-center text-[10px] font-semibold uppercase tracking-widest text-white/40 select-none">
-                        {ERA_MAP[part.era as keyof typeof ERA_MAP]?.label ?? part.era}
+                        {localizedEraLabel(lang, part.era)}
                       </span>
 
                       {isPerfect && (
@@ -284,7 +285,7 @@ export function QuizResourceContent({
           onClick={handleCloseModal}
           role="dialog"
           aria-modal="true"
-          aria-label={loc(lang, `Part ${selectedPart.partNumber} Quiz`, `اختبار الجزء ${selectedPart.partNumber}`, `Quiz de la partie ${selectedPart.partNumber}`)}
+          aria-label={tf(lang, "partNQuiz", { n: selectedPart.partNumber })}
         >
           <div
             className="relative flex flex-col overflow-hidden w-full sm:max-w-4xl h-[100dvh] sm:h-[90vh] bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-950 border-0 sm:border-2 border-amber-500/20 rounded-none sm:rounded-2xl shadow-2xl"
@@ -294,7 +295,7 @@ export function QuizResourceContent({
             <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800 bg-zinc-950 flex-shrink-0">
               <div className="flex-1 min-w-0 pe-4">
                 <h2 className="text-lg sm:text-xl font-bold text-white truncate">
-                  {loc(lang, `Part ${selectedPart.partNumber} Quiz`, `اختبار الجزء ${selectedPart.partNumber}`, `Quiz de la partie ${selectedPart.partNumber}`)}
+                  {tf(lang, "partNQuiz", { n: selectedPart.partNumber })}
                 </h2>
                 <p className="text-sm text-zinc-400 truncate mt-0.5">
                   {selectedPart.title}
@@ -327,7 +328,7 @@ export function QuizResourceContent({
                   previewMode={false}
                   initialBestScore={progressMap[selectedPart.partNumber]?.quizBestScore ?? undefined}
                   lang={lang}
-                  isRtl={lang === "ar"}
+                  isRtl={isRtlLang(lang)}
                 />
               )}
               {!isLoadingQuiz && !quizData && (

@@ -4,6 +4,7 @@ import { isPartInEssentials } from "./essentials-sequence";
 import type { CourseLang } from "./course-lang";
 import { PART_TITLES_AR, ERA_LABELS_AR } from "./part-titles-ar";
 import { PART_TITLES_FR, ERA_LABELS_FR } from "./part-titles-fr";
+import { phrase } from "./phrases";
 
 function makePart(
   num: number,
@@ -164,34 +165,62 @@ export function getPartById(id: string): Part | undefined {
   return PARTS.find((p) => p.id === id);
 }
 
-/** Return PARTS with localized titles/subtitles when lang is "ar" or "fr". */
+function withPackCopy(part: Part, lang: CourseLang): Part {
+  return {
+    ...part,
+    title: phrase(lang, part.title),
+    subtitle: part.subtitle ? phrase(lang, part.subtitle) : part.subtitle,
+  };
+}
+
+/** Return PARTS with localized titles and subtitles. */
 export function getPartsForLang(lang: CourseLang = "en"): Part[] {
-  if (lang !== "ar" && lang !== "fr") return PARTS;
-  const titles = lang === "ar" ? PART_TITLES_AR : PART_TITLES_FR;
-  return PARTS.map((p) => {
-    const loc = titles[p.partNumber];
-    if (!loc) return p;
-    return { ...p, title: loc.title, subtitle: loc.subtitle };
-  });
+  if (lang === "en") return PARTS;
+  if (lang === "ar" || lang === "fr") {
+    const titles = lang === "ar" ? PART_TITLES_AR : PART_TITLES_FR;
+    return PARTS.map((p) => {
+      const loc = titles[p.partNumber];
+      if (!loc) return p;
+      return { ...p, title: loc.title, subtitle: loc.subtitle };
+    });
+  }
+  return PARTS.map((p) => withPackCopy(p, lang));
 }
 
 /** Localize a single part's title/subtitle. */
 export function localizePart(part: Part, lang: CourseLang = "en"): Part {
-  if (lang !== "ar" && lang !== "fr") return part;
-  const titles = lang === "ar" ? PART_TITLES_AR : PART_TITLES_FR;
-  const loc = titles[part.partNumber];
-  if (!loc) return part;
-  return { ...part, title: loc.title, subtitle: loc.subtitle };
+  if (lang === "en") return part;
+  if (lang === "ar" || lang === "fr") {
+    const titles = lang === "ar" ? PART_TITLES_AR : PART_TITLES_FR;
+    const loc = titles[part.partNumber];
+    if (!loc) return part;
+    return { ...part, title: loc.title, subtitle: loc.subtitle };
+  }
+  return withPackCopy(part, lang);
 }
 
-/** Era list with localized labels when lang is "ar" or "fr". */
+/** Era list with localized labels and descriptions. */
 export function getErasForLang(lang: CourseLang = "en"): EraInfo[] {
-  if (lang !== "ar" && lang !== "fr") return ERAS;
-  const labels = lang === "ar" ? ERA_LABELS_AR : ERA_LABELS_FR;
-  return ERAS.map((e) => {
-    const loc = labels[e.id];
-    return loc ? { ...e, label: loc.label, description: loc.description } : e;
-  });
+  if (lang === "ar" || lang === "fr") {
+    const labels = lang === "ar" ? ERA_LABELS_AR : ERA_LABELS_FR;
+    return ERAS.map((e) => {
+      const loc = labels[e.id];
+      return loc ? { ...e, label: loc.label, description: loc.description } : e;
+    });
+  }
+  if (lang === "en") return ERAS;
+  return ERAS.map((e) => ({
+    ...e,
+    label: phrase(lang, e.label),
+    description: phrase(lang, e.description),
+  }));
+}
+
+/** English era name translated for the active course language. */
+export function localizedEraLabel(lang: CourseLang, eraId: string): string {
+  const era = ERAS.find((e) => e.id === eraId);
+  if (!era) return eraId;
+  return getErasForLang(lang).find((e) => e.id === era.id)?.label ?? era.label;
 }
 
 export function getPartsByEra(era: Era): Part[] {

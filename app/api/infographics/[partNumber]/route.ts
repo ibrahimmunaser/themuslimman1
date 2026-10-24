@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { r2GetInfographicKey, r2GetArabicInfographicKey, generateSignedR2Url, IMAGE_URL_EXPIRY } from "@/lib/r2";
+import { r2GetInfographicKey, r2GetArabicInfographicKey, r2GetLocalizedInfographicKey, generateSignedR2Url, IMAGE_URL_EXPIRY } from "@/lib/r2";
 import { requirePartAccess } from "@/lib/part-access";
 import { TOTAL_COURSE_PARTS } from "@/lib/access";
-import { parseLang } from "@/lib/course-lang";
+import { localizedMedia, parseLang } from "@/lib/course-lang";
 
 export const dynamic = "force-dynamic";
 
@@ -23,9 +23,12 @@ export async function GET(
   const lang = parseLang(req.nextUrl.searchParams.get("lang"));
   const expiresAt = new Date(Date.now() + IMAGE_URL_EXPIRY * 1000).toISOString();
 
-  if (lang === "ar") {
-    // Arabic has a single infographic per part; expose it under "concise"
-    const key = await r2GetArabicInfographicKey(partNumber);
+  if (lang === "ar" || localizedMedia(lang)) {
+    // These languages have one infographic per part. The phone apps and the
+    // resources library read this route, so the image has to live on "concise".
+    const key = lang === "ar"
+      ? await r2GetArabicInfographicKey(partNumber)
+      : r2GetLocalizedInfographicKey(lang, partNumber);
     const url = await generateSignedR2Url(key, IMAGE_URL_EXPIRY).catch(() => null);
     return NextResponse.json({ bentoGrid: null, concise: url, standard: null, expiresAt });
   }

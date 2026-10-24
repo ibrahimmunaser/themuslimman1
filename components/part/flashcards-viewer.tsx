@@ -93,7 +93,7 @@ function FlipCard({
         role="button"
         tabIndex={0}
         aria-label={
-          isRtl
+          resolvedLang === "ar"
             ? (flipped ? "البطاقة تعرض الجواب — اضغط Enter أو انقر للعودة إلى السؤال" : "البطاقة تعرض السؤال — اضغط Enter أو انقر لإظهار الجواب")
             : (flipped ? "Card showing answer — press Enter or tap to flip back to question" : "Card showing question — press Enter or tap to reveal answer")
         }

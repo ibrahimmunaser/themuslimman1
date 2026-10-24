@@ -8,6 +8,7 @@ import { formatHadithRef } from "@/lib/localize-hadith-ref";
 import type { CourseLang } from "@/lib/course-lang";
 import { isRtlLang } from "@/lib/course-lang";
 import { loc } from "@/lib/loc";
+import { phrase } from "@/lib/phrases";
 import { useWidgetCycle, WIDGET_FADE_MS } from "./widget-cycle-context";
 
 interface Prophecy {
@@ -32,7 +33,12 @@ function pickRandom(list: Prophecy[], exclude?: number): Prophecy {
 function propheciesForLang(lang: CourseLang): Prophecy[] {
   if (lang === "ar") return PROPHECIES_AR;
   if (lang === "fr") return PROPHECIES_FR;
-  return PROPHECIES_EN;
+  if (lang === "en") return PROPHECIES_EN;
+  return PROPHECIES_EN.map((item) => ({
+    ...item,
+    fact: phrase(lang, item.fact),
+    fulfillment: phrase(lang, item.fulfillment),
+  }));
 }
 
 export function PropheciesWidget({

@@ -13,7 +13,7 @@ import '../../../core/widgets/adaptive_icons.dart';
 import '../../../core/widgets/app_logo.dart';
 import '../../../core/widgets/ui_kit.dart';
 import '../../../l10n/app_strings.dart';
-import '../../resources/screens/resources_screen.dart' show kResourceTypeCount;
+import '../../resources/screens/resources_screen.dart' show resourceTypeCountForLang;
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -164,7 +164,7 @@ class DashboardScreen extends ConsumerWidget {
                           ),
                           _StatDivider(),
                           _InlineStat(
-                            value: '$kResourceTypeCount',
+                            value: '${resourceTypeCountForLang(lang)}',
                             label: t(lang, 'resources'),
                             color: const Color(0xFF5A90B0),
                           ),
@@ -191,7 +191,7 @@ class DashboardScreen extends ConsumerWidget {
                           ),
                           _StatDivider(),
                           _InlineStat(
-                            value: '$kResourceTypeCount',
+                            value: '${resourceTypeCountForLang(lang)}',
                             label: t(lang, 'resources'),
                             color: const Color(0xFF5A90B0),
                           ),
@@ -218,7 +218,7 @@ class DashboardScreen extends ConsumerWidget {
                           ),
                           _StatDivider(),
                           _InlineStat(
-                            value: '$kResourceTypeCount',
+                            value: '${resourceTypeCountForLang(lang)}',
                             label: t(lang, 'resources'),
                             color: const Color(0xFF5A90B0),
                           ),

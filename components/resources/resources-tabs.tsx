@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Video, Headphones, FileText, Image, Map, Layers, Brain, ClipboardCheck, BarChart2, ChevronRight, ChevronLeft } from "lucide-react";
 import { clsx } from "clsx";
-import type { CourseLang } from "@/lib/course-lang";
+import { courseHasMindmaps, type CourseLang } from "@/lib/course-lang";
 import { t } from "@/lib/ui-strings";
 
 interface ResourcesTabsProps {
@@ -53,10 +53,10 @@ export function ResourcesTabs({
   initialLang = "en",
 }: ResourcesTabsProps) {
   const isRtl = initialLang === "ar";
-  // Hide mindmaps tab for Arabic
-  const TABS = ALL_TABS.filter((tab) => !(isRtl && tab.id === "mindmaps"));
+  const TABS = ALL_TABS.filter((tab) => courseHasMindmaps(initialLang) || tab.id !== "mindmaps");
   const BreadcrumbSep = isRtl ? ChevronLeft : ChevronRight;
   const [activeTab, setActiveTab] = useState<TabId>("videos");
+  const selectedTab: TabId = TABS.some((tab) => tab.id === activeTab) ? activeTab : "videos";
 
   return (
     <div className="w-full">
@@ -73,7 +73,7 @@ export function ResourcesTabs({
           </span>
           <BreadcrumbSep className="w-3 h-3 flex-shrink-0" aria-hidden />
           <span className="text-text capitalize">
-            {TABS.find((tab) => tab.id === activeTab)?.labelKey ? t(initialLang, TABS.find((tab) => tab.id === activeTab)!.labelKey) : t(initialLang, "videos")}
+            {t(initialLang, TABS.find((tab) => tab.id === selectedTab)?.labelKey ?? "videos")}
           </span>
         </nav>
         <div className="flex items-start justify-between gap-3">
@@ -99,7 +99,7 @@ export function ResourcesTabs({
           >
             {TABS.map((tab) => {
               const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
+              const isActive = selectedTab === tab.id;
               return (
                 <button
                   key={tab.id}
@@ -129,7 +129,7 @@ export function ResourcesTabs({
           >
             {TABS.map((tab) => {
               const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
+              const isActive = selectedTab === tab.id;
               return (
                 <button
                   key={tab.id}
@@ -156,15 +156,15 @@ export function ResourcesTabs({
 
       {/* Tab Content */}
       <div>
-        <div className={activeTab === "videos"       ? "block" : "hidden"}>{videosContent}</div>
-        <div className={activeTab === "audio"        ? "block" : "hidden"}>{audioContent}</div>
-        <div className={activeTab === "briefings"    ? "block" : "hidden"}>{briefingsContent}</div>
-        <div className={activeTab === "slides"       ? "block" : "hidden"}>{slidesContent}</div>
-        <div className={activeTab === "infographics" ? "block" : "hidden"}>{infographicsContent}</div>
-        <div className={activeTab === "mindmaps"     ? "block" : "hidden"}>{mindmapsContent}</div>
-        <div className={activeTab === "flashcards"   ? "block" : "hidden"}>{flashcardsContent}</div>
-        <div className={activeTab === "quizzes"      ? "block" : "hidden"}>{quizzesContent}</div>
-        <div className={activeTab === "facts"        ? "block" : "hidden"}>{factsContent}</div>
+        <div className={selectedTab === "videos"       ? "block" : "hidden"}>{videosContent}</div>
+        <div className={selectedTab === "audio"        ? "block" : "hidden"}>{audioContent}</div>
+        <div className={selectedTab === "briefings"    ? "block" : "hidden"}>{briefingsContent}</div>
+        <div className={selectedTab === "slides"       ? "block" : "hidden"}>{slidesContent}</div>
+        <div className={selectedTab === "infographics" ? "block" : "hidden"}>{infographicsContent}</div>
+        <div className={selectedTab === "mindmaps"     ? "block" : "hidden"}>{mindmapsContent}</div>
+        <div className={selectedTab === "flashcards"   ? "block" : "hidden"}>{flashcardsContent}</div>
+        <div className={selectedTab === "quizzes"      ? "block" : "hidden"}>{quizzesContent}</div>
+        <div className={selectedTab === "facts"        ? "block" : "hidden"}>{factsContent}</div>
       </div>
     </div>
   );

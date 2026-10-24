@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { getPartsForLang } from "@/lib/content";
-import type { CourseLang } from "@/lib/course-lang";
+import { isRtlLang, type CourseLang } from "@/lib/course-lang";
 import { loc } from "@/lib/loc";
 import { eraGradient } from "./era-gradient";
 import { ResourcePageClient } from "./resource-page-client";
@@ -316,7 +316,7 @@ export function SimpleResourceContent({
 
   const totalResources = PARTS.length;
   const notCompletedCount = totalResources - localCompletedCount;
-  const isRtl = lang === "ar";
+  const isRtl = isRtlLang(lang);
 
   const TITLE_AR: Record<string, string> = { slides: "الشرائح", infographic: "الرسوم المعلوماتية", mindmap: "الخرائط الذهنية", flashcard: "البطاقات التعليمية", audio: "الصوت" };
   const TITLE_FR: Record<string, string> = { slides: "Diapositives", infographic: "Infographies", mindmap: "Cartes mentales", flashcard: "Flashcards", audio: "Audio" };
@@ -328,17 +328,15 @@ export function SimpleResourceContent({
     audio: "النسخة الصوتية لكل درس",
   };
   const DESC_FR: Record<string, string> = {
-    slides: "3 formats : Présenté, Détaillé, Faits",
-    infographic: "3 formats : Grille Bento, Concis, Standard",
+    slides: "Diapositives présentées de chaque leçon",
+    infographic: "Une infographie par leçon",
     mindmap: "Cartes visuelles reliant personnes et événements",
     flashcard: "Jeux Facile, Moyen et Difficile",
     audio: "Version audio de chaque leçon",
   };
-  const STATUS_AR: Record<string, string> = { View: "تمت المشاهدة", Viewed: "تمت المشاهدة", Study: "تمت الدراسة", Studied: "تمت الدراسة" };
-  const STATUS_FR: Record<string, string> = { View: "Consulté", Viewed: "Consulté", Study: "Étudié", Studied: "Étudié" };
   const localTitle = loc(lang, title, TITLE_AR[resourceType] ?? title, TITLE_FR[resourceType] ?? title);
   const localDescription = loc(lang, description, DESC_AR[resourceType] ?? description, DESC_FR[resourceType] ?? description);
-  const localStatusLabel = loc(lang, statusLabel, STATUS_AR[statusLabel] ?? statusLabel, STATUS_FR[statusLabel] ?? statusLabel);
+  const localStatusLabel = t(lang, statusLabel === "Studied" ? "statStudied" : "statViewed");
 
   const filterByStatus = (part: Part, status: string) => {
     const isCompleted = localProgressMap[part.partNumber] || false;
@@ -501,7 +499,7 @@ export function SimpleResourceContent({
               <p className={`text-3xl font-bold ${localCompletedCount > 0 ? "text-green-400" : "text-zinc-400"}`}>{localCompletedCount}</p>
             </div>
             <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
-              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">{loc(lang, `Not ${statusLabel}`, `لم ${localStatusLabel}`, `Non ${statusLabel.toLowerCase()}`)}</p>
+              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1">{t(lang, statusLabel === "Studied" ? "statNotStudied" : "statNotViewed")}</p>
               <p className="text-3xl font-bold text-zinc-400">{notCompletedCount}</p>
             </div>
           </div>

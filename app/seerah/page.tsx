@@ -3,7 +3,9 @@ import { cookies } from "next/headers";
 import { getCachedStudent } from "@/lib/auth-cache";
 import { hasActiveCourseAccess, isFamilyPlan } from "@/lib/access";
 import { getActiveProfileId } from "@/app/actions/profiles";
-import { PARTS, getPartsForLang } from "@/lib/content";
+import { PARTS, getErasForLang, getPartsForLang } from "@/lib/content";
+import { phrase } from "@/lib/phrases";
+import { ERA_DESCRIPTIONS_AR, ERA_DESCRIPTIONS_FR } from "@/lib/ui-strings";
 import { getThumbnailUrls } from "@/lib/r2";
 import { getPartPageData } from "@/lib/part-content-cache";
 import { parseLang, COURSE_LANG_COOKIE } from "@/lib/course-lang";
@@ -288,14 +290,21 @@ export default async function LearnIndexPage({
   );
 
   // Era grouping — used by Home and Progress tabs (always shows all 100 parts).
+  const eraById = new Map(getErasForLang(lang).map((era) => [era.id, era]));
   const partsByEra = accessibleParts.reduce((acc, part) => {
     const eraInfo = ERA_MAP[part.era as keyof typeof ERA_MAP];
-    const era = eraInfo?.label || part.era;
+    const englishLabel = eraInfo?.label || part.era;
+    const era = eraById.get(part.era)?.label || englishLabel;
+    const longDescription = getEraDescription(englishLabel);
+    const description =
+      lang === "ar" ? (ERA_DESCRIPTIONS_AR[englishLabel] || longDescription)
+      : lang === "fr" ? (ERA_DESCRIPTIONS_FR[englishLabel] || longDescription)
+      : phrase(lang, longDescription);
     if (!acc[era]) {
       acc[era] = {
         label: era,
         labelAr: eraInfo?.labelAr || era,
-        description: getEraDescription(era),
+        description,
         color: eraInfo?.color ?? "#8B6F45",
         parts: [],
         completedCount: 0,
@@ -321,7 +330,7 @@ export default async function LearnIndexPage({
 
   // Build stagesData for home dashboard
   const stagesData = Object.values(partsByEra).map((era, idx) => ({
-    label: lang === "ar" ? era.labelAr : era.label,
+    label: era.label,
     description: era.description,
     stageNumber: idx + 1,
     totalCount: era.totalCount,

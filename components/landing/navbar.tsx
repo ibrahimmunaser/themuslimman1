@@ -5,6 +5,8 @@ import { hasActiveCourseAccess } from "@/lib/access";
 import { NavbarUserMenu } from "./navbar-user-menu";
 import { NavbarMobileMenu } from "./navbar-mobile-menu";
 import { NavLinks } from "./nav-links";
+import { LangToggle } from "@/components/part/lang-toggle";
+import { getPreviewLangFromCookies } from "@/lib/part1-preview-data";
 
 export async function Navbar() {
   let user = null;
@@ -30,6 +32,8 @@ export async function Navbar() {
     }
   }
 
+  const lang = await getPreviewLangFromCookies();
+
   return (
     <header className="sticky top-0 z-[90] w-full bg-ink">
       <div className="border-b border-white/5">
@@ -50,11 +54,12 @@ export async function Navbar() {
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-6">
             <NavLinks isLoggedIn={!!user} />
+            <LangToggle current={lang} nav />
             <NavbarUserMenu user={user} firstName={firstName} hasPaid={hasPaid} />
           </div>
 
           {/* Mobile menu */}
-          <NavbarMobileMenu user={user} firstName={firstName} hasPaid={hasPaid} />
+          <NavbarMobileMenu user={user} firstName={firstName} hasPaid={hasPaid} lang={lang} />
         </nav>
       </div>
     </header>

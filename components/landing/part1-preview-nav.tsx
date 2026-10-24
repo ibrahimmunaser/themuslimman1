@@ -2,8 +2,7 @@
 
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { Video, FileText, Layers, Map, Layers2, HelpCircle, Image } from "lucide-react";
-import type { CourseLang } from "@/lib/course-lang";
-import { isRtlLang } from "@/lib/course-lang";
+import { courseHasMindmaps, isRtlLang, type CourseLang } from "@/lib/course-lang";
 import { loc } from "@/lib/loc";
 
 type ModeId = "watch" | "read" | "slides" | "mindmap" | "infographic" | "flashcards" | "quiz";
@@ -32,7 +31,7 @@ export function Part1PreviewNav({ lang = "en" }: { lang?: CourseLang }) {
   const searchParams = useSearchParams();
   const currentMode = (searchParams.get("mode") as ModeId) || "watch";
   const isRtl = isRtlLang(lang);
-  const buttons = isRtl ? NAV_BUTTONS.filter((b) => b.id !== "mindmap") : NAV_BUTTONS;
+  const buttons = courseHasMindmaps(lang) ? NAV_BUTTONS : NAV_BUTTONS.filter((b) => b.id !== "mindmap");
 
   const handleModeChange = (modeId: ModeId) => {
     const params = new URLSearchParams(searchParams.toString());

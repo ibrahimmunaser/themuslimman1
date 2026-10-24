@@ -1,3 +1,6 @@
+import type { CourseLang } from "@/lib/course-lang";
+import { COURSE_LANGS } from "@/lib/course-lang";
+
 /**
  * Module-level cache for /api/part/N/assets responses.
  *
@@ -16,7 +19,7 @@ export interface PartAssets {
 
 const cache = new Map<string, Promise<PartAssets>>();
 
-export function fetchPartAssets(partNumber: number, lang: "en" | "ar" | "fr" = "en"): Promise<PartAssets> {
+export function fetchPartAssets(partNumber: number, lang: CourseLang = "en"): Promise<PartAssets> {
   const key = `${partNumber}-${lang}`;
   if (cache.has(key)) return cache.get(key)!;
 
@@ -43,7 +46,6 @@ export function clearPartAssetsCache(partNumber?: number): void {
   if (partNumber === undefined) {
     cache.clear();
   } else {
-    cache.delete(`${partNumber}-en`);
-    cache.delete(`${partNumber}-ar`);
+    for (const code of COURSE_LANGS) cache.delete(`${partNumber}-${code}`);
   }
 }

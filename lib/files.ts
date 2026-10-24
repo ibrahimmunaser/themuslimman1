@@ -21,16 +21,17 @@ import {
   r2ReadArabicStudyGuide,
   r2ReadArabicFlashcards,
   r2ReadArabicQuiz,
-  r2GetFrenchVideoKey,
-  r2GetFrenchInfographicKey,
-  r2GetFrenchSlideKeys,
+  r2GetLocalizedVideoKey,
+  r2GetLocalizedInfographicKey,
+  r2GetLocalizedSlideKeys,
   generateSignedR2Url,
   getThumbnailUrl,
   r2FileExists,
   VIDEO_URL_EXPIRY,
   IMAGE_URL_EXPIRY,
 } from "./r2";
-import type { CourseLang } from "./course-lang";
+import { localizedMedia, type CourseLang } from "./course-lang";
+import { readLangPackPart } from "./lang-packs";
 import { PART_CONTENT } from "./part-content-data";
 import { PART_CONTENT_AR } from "./part-content-data-ar";
 import { PART_CONTENT_FR } from "./part-content-data-fr";
@@ -95,6 +96,8 @@ export async function readBriefing(partNum: number, lang: CourseLang = "en"): Pr
     if (hardcoded != null) return hardcoded;
     return null;
   }
+  const packedBriefing = readLangPackPart(lang, partNum)?.briefingText;
+  if (packedBriefing) return packedBriefing;
   // Return hardcoded content if available (takes priority over R2/filesystem)
   const hardcoded = PART_CONTENT[partNum]?.briefingText;
   if (hardcoded != null) return hardcoded;
@@ -120,6 +123,8 @@ export async function readStatementOfFacts(partNum: number, lang: CourseLang = "
     if (hardcoded != null) return hardcoded;
     return null;
   }
+  const packedFacts = readLangPackPart(lang, partNum)?.statementOfFactsText;
+  if (packedFacts) return packedFacts;
   // Return hardcoded content if available (takes priority over R2/filesystem)
   const hardcoded = PART_CONTENT[partNum]?.statementOfFactsText;
   if (hardcoded != null) return hardcoded;
@@ -139,6 +144,8 @@ export async function readStudyGuide(partNum: number, lang: CourseLang = "en"): 
     if (!USE_R2) return null;
     return r2ReadArabicStudyGuide(partNum);
   }
+  const packedGuide = readLangPackPart(lang, partNum)?.studyGuideText;
+  if (packedGuide) return packedGuide;
   if (USE_R2) {
     return await r2ReadStudyGuide(partNum);
   }
@@ -200,8 +207,8 @@ export async function getInfographicFilename(
     // so callers can sign and populate whichever slot they prefer.
     return r2GetArabicInfographicKey(partNum);
   }
-  if (lang === "fr") {
-    return r2GetFrenchInfographicKey(partNum);
+  if (localizedMedia(lang)) {
+    return r2GetLocalizedInfographicKey(lang, partNum);
   }
   if (USE_R2) {
     const key = await r2GetInfographicKey(partNum, style);
@@ -293,12 +300,11 @@ export async function getSlideFiles(
       })
     );
   }
-  if (lang === "fr") {
-    // French slides: single presented-style set under french/slides/Part N/.
-    // No WebP variants uploaded yet — sign the watermarked PNGs directly.
+  if (localizedMedia(lang)) {
+    // One presented-style deck. No WebP variants — sign the watermarked PNGs.
     if (type !== "presented") return [];
     if (!USE_R2) return [];
-    const pngKeys = await r2GetFrenchSlideKeys(partNum);
+    const pngKeys = await r2GetLocalizedSlideKeys(lang, partNum);
     return Promise.all(
       pngKeys.map(async (pngKey) => {
         const url = await generateSignedR2Url(pngKey, IMAGE_URL_EXPIRY);
@@ -361,6 +367,8 @@ export async function readFlashcards(partNum: number, lang: CourseLang = "en"): 
     if (hardcoded != null) return hardcoded;
     return null;
   }
+  const packedCards = readLangPackPart(lang, partNum)?.flashcards;
+  if (packedCards) return packedCards;
   if (USE_R2) {
     return await r2ReadFlashcards(partNum);
   }
@@ -390,6 +398,8 @@ export async function readQuiz(partNum: number, lang: CourseLang = "en"): Promis
     if (hardcoded != null) return hardcoded;
     return null;
   }
+  const packedQuiz = readLangPackPart(lang, partNum)?.quiz;
+  if (packedQuiz) return packedQuiz;
   if (USE_R2) {
     return await r2ReadQuiz(partNum);
   }
@@ -455,10 +465,9 @@ export async function getPartAssetUrls(partNum: number, lang: CourseLang = "en")
     return { videoUrl, audioUrl, mindmapUrl, thumbnailUrl };
   }
 
-  if (lang === "fr") {
-    // French: deterministic video + infographic/slides elsewhere; no french/audio —
-    // fall back to English audio so Listen-on-the-Go still works.
-    const videoKey = r2GetFrenchVideoKey(partNum);
+  if (localizedMedia(lang)) {
+    // Translated video. No translated audio — fall back to English audio.
+    const videoKey = r2GetLocalizedVideoKey(lang, partNum);
     const [audioKey, mindmapKey] = await Promise.all([
       r2GetAudioKey(partNum),
       r2GetMindmapKey(partNum).catch(() => null),
@@ -467,7 +476,7 @@ export async function getPartAssetUrls(partNum: number, lang: CourseLang = "en")
       generateSignedR2Url(videoKey, VIDEO_URL_EXPIRY),
       audioKey ? generateSignedR2Url(audioKey, VIDEO_URL_EXPIRY) : Promise.resolve(undefined),
       mindmapKey ? generateSignedR2Url(mindmapKey, IMAGE_URL_EXPIRY) : Promise.resolve(undefined),
-      getThumbnailUrl(partNum, "fr").catch(() => undefined),
+      getThumbnailUrl(partNum, lang).catch(() => undefined),
     ]);
     return { videoUrl, audioUrl, mindmapUrl, thumbnailUrl };
   }

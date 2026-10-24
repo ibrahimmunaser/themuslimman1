@@ -109,6 +109,14 @@ const _resourceTypes = [
 /// added/removed here.
 final int kResourceTypeCount = _resourceTypes.length;
 
+/// Mind maps are part of the English course only.
+int resourceTypeCountForLang(String lang) =>
+    lang == 'en' ? kResourceTypeCount : kResourceTypeCount - 1;
+
+List<_ResourceType> resourceTypesForLang(String lang) => lang == 'en'
+    ? _resourceTypes
+    : _resourceTypes.where((r) => r.id != 'mindmap').toList();
+
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 class ResourcesScreen extends ConsumerStatefulWidget {
@@ -126,15 +134,16 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
     final hasAccess = ref.watch(authProvider).hasAccess;
     final progress = ref.watch(progressProvider).valueOrNull;
     final lang = ref.watch(courseLangProvider);
+    final activeType = _activeType == 'mindmap' && lang != 'en' ? null : _activeType;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        title: _activeType == null
+        title: activeType == null
             ? Text(t(lang, 'resources'))
-            : Text(_labelForType(_activeType!, lang)),
-        leading: _activeType != null
+            : Text(_labelForType(activeType, lang)),
+        leading: activeType != null
             ? IconButton(
                 icon: const BackIcon(),
                 tooltip: t(lang, 'back'),
@@ -144,9 +153,9 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
       ),
       body: AppGradientBackground(
         child: SafeArea(
-          child: _activeType == null
+          child: activeType == null
               ? _buildIndex(hasAccess, progress, lang)
-              : _buildPartsList(_activeType!, hasAccess, progress, lang),
+              : _buildPartsList(activeType, hasAccess, progress, lang),
         ),
       ),
     );
@@ -167,7 +176,7 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
         Padding(
           padding: const EdgeInsets.only(bottom: 14),
           child: Text(
-            tv(lang, 'resourceTypesStat', {'n': _resourceTypes.length, 'parts': PARTS.length}),
+            tv(lang, 'resourceTypesStat', {'n': resourceTypeCountForLang(lang), 'parts': PARTS.length}),
             style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
           ),
         ),
@@ -175,7 +184,7 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
         ClipRRect(
           borderRadius: BorderRadius.circular(14),
           child: Column(
-            children: _resourceTypes.asMap().entries.map((entry) {
+            children: resourceTypesForLang(lang).asMap().entries.map((entry) {
               final i = entry.key;
               final rt = entry.value;
               final isLast = i == _resourceTypes.length - 1;

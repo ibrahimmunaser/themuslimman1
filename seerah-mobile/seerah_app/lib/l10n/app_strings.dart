@@ -106,7 +106,7 @@ const Map<String, Map<String, String>> _kStrings = {
   'includedReadingNotes': {'en': 'Reading notes & briefings', 'ar': 'ملاحظات قرائية وموجزات', 'fr': 'Reading notes & briefings'},
   'includedQuizzesFlashcards': {'en': 'Quizzes & flashcards', 'ar': 'اختبارات وبطاقات تعليمية', 'fr': 'Quizzes & flashcards'},
   'includedProgress8Eras': {'en': 'Progress tracking across all 8 eras', 'ar': 'تتبّع التقدم عبر جميع العصور الثمانية', 'fr': 'Progress tracking across all 8 eras'},
-  'includedSlidesMindmaps': {'en': 'Slides, mindmaps, and infographics', 'ar': 'شرائح وخرائط ذهنية وإنفوغرافيك', 'fr': 'Slides, mindmaps, and infographics'},
+  'includedSlidesMindmaps': {'en': 'Slides, mindmaps, and infographics', 'ar': 'شرائح وإنفوغرافيك', 'fr': 'Diapositives et infographies'},
   'includedLifetimeOption': {'en': 'Lifetime access option available', 'ar': 'خيار الوصول مدى الحياة متوفر', 'fr': 'Lifetime access option available'},
   'monthlyVsLifetime': {'en': 'Monthly vs lifetime', 'ar': 'شهري مقابل مدى الحياة', 'fr': 'Monthly vs lifetime'},
   'lowerUpfrontCost': {'en': 'Lower upfront cost', 'ar': 'تكلفة أولية أقل', 'fr': 'Lower upfront cost'},

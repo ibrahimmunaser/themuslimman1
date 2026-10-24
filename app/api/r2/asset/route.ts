@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { r2StreamFile, r2GetMetadata, generateETag, isCached, generateSignedR2Url, IMAGE_URL_EXPIRY } from "@/lib/r2";
 import { requirePartAccess, extractPartNumberFromR2Key } from "@/lib/part-access";
 import { checkRateLimit, getIP } from "@/lib/rate-limit";
+import { localizedMediaPrefixes } from "@/lib/course-lang";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,10 +22,7 @@ const ALLOWED_PREFIXES = [
   "arabic/audio/",
   "arabic/slides/",
   "arabic/infographics/",
-  // French media
-  "french/videos/",
-  "french/slides/",
-  "french/infographics/",
+  ...localizedMediaPrefixes(),
 ] as const;
 
 const ALLOWED_EXTENSIONS = new Set([

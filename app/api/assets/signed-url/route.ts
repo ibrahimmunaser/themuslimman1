@@ -3,6 +3,7 @@ import { generateSignedR2Url, VIDEO_URL_EXPIRY, IMAGE_URL_EXPIRY } from "@/lib/r
 import { requirePartAccess, extractPartNumberFromR2Key } from "@/lib/part-access";
 import { TOTAL_COURSE_PARTS } from "@/lib/access";
 import { checkRateLimit, getIP } from "@/lib/rate-limit";
+import { localizedMediaPrefixes } from "@/lib/course-lang";
 
 export const dynamic = "force-dynamic";
 
@@ -21,10 +22,7 @@ const ALLOWED_PREFIXES = [
   "arabic/audio/",
   "arabic/slides/",
   "arabic/infographics/",
-  // French media
-  "french/videos/",
-  "french/slides/",
-  "french/infographics/",
+  ...localizedMediaPrefixes(),
 ] as const;
 
 const ALLOWED_EXTENSIONS = new Set([".mp4", ".mp3", ".wav", ".png", ".webp"]);

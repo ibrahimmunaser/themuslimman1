@@ -664,7 +664,7 @@ class _LearningTips extends StatelessWidget {
       [t(lang, 'tipListenGoTitle'), t(lang, 'tipListenGoBody')],
       [t(lang, 'tipReadBriefingTitle'), t(lang, 'tipReadBriefingBody')],
       [t(lang, 'tipStudySlidesTitle'), t(lang, 'tipStudySlidesBody')],
-      [t(lang, 'tipCheckMindmapTitle'), t(lang, 'tipCheckMindmapBody')],
+      if (lang == 'en') [t(lang, 'tipCheckMindmapTitle'), t(lang, 'tipCheckMindmapBody')],
       [t(lang, 'tipReviewFlashcardsTitle'), t(lang, 'tipReviewFlashcardsBody')],
       [t(lang, 'tipTestYourselfTitle'), t(lang, 'tipTestYourselfBody')],
       [t(lang, 'tipGoInOrderTitle'), t(lang, 'tipGoInOrderBody')],

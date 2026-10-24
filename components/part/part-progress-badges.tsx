@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { CheckCircle2, CircleDashed } from "lucide-react";
+import type { CourseLang } from "@/lib/course-lang";
+import type { UiStringKey } from "@/lib/ui-strings";
+import { t, tf } from "@/lib/ui-strings";
 
 export interface PartProgressInitial {
   videoWatchPercent: number;
@@ -14,21 +17,24 @@ export interface PartProgressInitial {
 
 interface PartProgressBadgesProps {
   initial: PartProgressInitial;
+  lang?: CourseLang;
   isRtl?: boolean;
+  /** Mind maps are English-only. Callers pass false for every other course language. */
+  includeMindmap?: boolean;
 }
 
-const LABELS_AR: Record<string, string> = {
-  video: "الفيديو",
-  briefing: "الموجز",
-  slides: "الشرائح",
-  audio: "الصوت",
-  mindmap: "الخريطة الذهنية",
-  infographic: "إنفوجرافيك",
-  flashcards: "البطاقات التعليمية",
-  quiz: "الاختبار",
+const LABEL_KEYS: Record<string, UiStringKey> = {
+  video: "assetVideo",
+  briefing: "assetBriefing",
+  slides: "assetSlides",
+  audio: "assetAudio",
+  mindmap: "assetMindmap",
+  infographic: "infographics",
+  flashcards: "assetFlashcards",
+  quiz: "assetQuiz",
 };
 
-export function PartProgressBadges({ initial, isRtl }: PartProgressBadgesProps) {
+export function PartProgressBadges({ initial, lang = "en", includeMindmap = true }: PartProgressBadgesProps) {
   const [state, setState] = useState(initial);
 
   useEffect(() => {
@@ -60,12 +66,11 @@ export function PartProgressBadges({ initial, isRtl }: PartProgressBadgesProps) 
     { key: "briefing",    label: "Briefing",     done: briefingOpened,                        partial: false },
     { key: "slides",      label: "Slides",       done: openedAssets.includes("slides"),       partial: false },
     { key: "audio",       label: "Audio",        done: openedAssets.includes("audio"),        partial: false },
-    // Mind maps aren't available in the Arabic course — exclude from AR tracking.
-    ...(isRtl ? [] : [{ key: "mindmap", label: "Mind Map", done: openedAssets.includes("mindmap"), partial: false }]),
+    ...(includeMindmap ? [{ key: "mindmap", label: "Mind Map", done: openedAssets.includes("mindmap"), partial: false }] : []),
     { key: "infographic", label: "Infographic",  done: openedAssets.includes("infographic"),  partial: false },
     { key: "flashcards",  label: "Flashcards",   done: flashcardsReviewed,                    partial: false },
     { key: "quiz",        label: "Quiz",         done: quizPassed,                            partial: !!(quizBestScore && !quizPassed) },
-  ].map((r) => ({ ...r, label: isRtl ? LABELS_AR[r.key] : r.label }));
+  ].map((r) => ({ ...r, label: t(lang, LABEL_KEYS[r.key]) }));
 
   const completedCount = resources.filter((r) => r.done).length;
   const total = resources.length;
@@ -75,22 +80,21 @@ export function PartProgressBadges({ initial, isRtl }: PartProgressBadgesProps) 
       {/* Mobile: compact summary + dots */}
       <div className="sm:hidden">
         <p className="text-[11px] text-text-muted mb-1.5">
-          {isRtl ? "المكتمل: " : "Completed: "}
           <span className={completedCount === total ? "text-green-400 font-semibold" : "text-text-secondary font-semibold"}>
-            {isRtl ? `${completedCount}/${total} من الموارد` : `${completedCount}/${total} Resources`}
+            {tf(lang, "completedNofM", { n: completedCount, m: total })}
           </span>
         </p>
-        <div className="flex items-center gap-1.5 flex-wrap" role="list" aria-label={isRtl ? "تقدّم الموارد" : "Resource progress"}>
+        <div className="flex items-center gap-1.5 flex-wrap" role="list" aria-label={t(lang, "resourceProgress")}>
           {resources.map((r) => (
             <span
               key={r.key}
               role="listitem"
               aria-label={`${r.label}: ${
                 r.done
-                  ? (isRtl ? "مكتمل" : "completed")
+                  ? t(lang, "completedFilter")
                   : r.partial
-                  ? (isRtl ? "قيد التقدم" : "in progress")
-                  : (isRtl ? "لم يبدأ" : "not started")
+                  ? t(lang, "inProgress")
+                  : t(lang, "notStarted")
               }`}
               className={
                 r.done

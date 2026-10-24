@@ -623,7 +623,7 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
             <button
               onClick={(e) => { e.stopPropagation(); setShowSpeedMenu(!showSpeedMenu); showControlsTemporarily(); }}
               className="flex items-center gap-1 px-2 min-h-[44px] text-white/70 hover:text-white transition-colors"
-              aria-label={loc(lang, `Playback speed: ${playbackRate}x`, `سرعة التشغيل: ${playbackRate}x`, `Vitesse de lecture : ${playbackRate}x`)}
+              aria-label={t(lang, "playbackSpeed")}
             >
               <Gauge className="w-3.5 h-3.5" />
               <span className="text-[11px] font-semibold tabular-nums">{playbackRate}x</span>

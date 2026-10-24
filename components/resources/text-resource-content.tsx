@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { getPartsForLang } from "@/lib/content";
-import { ERA_MAP } from "@/lib/types";
-import type { CourseLang } from "@/lib/course-lang";
+import { getPartsForLang, localizedEraLabel } from "@/lib/content";
+import { isRtlLang, type CourseLang } from "@/lib/course-lang";
 import { loc } from "@/lib/loc";
+import { formatCourseNumber } from "@/lib/course-numbers";
 import { t, tf } from "@/lib/ui-strings";
 import { getPartBriefingHtml, getPartStatementOfFactsText } from "@/app/actions/part-text-content";
 import { eraGradient } from "./era-gradient";
@@ -76,7 +76,7 @@ export function TextResourceContent({
 
   const totalResources = PARTS.length;
   const unreadCount = totalResources - localReadCount;
-  const isRtl = lang === "ar";
+  const isRtl = isRtlLang(lang);
   const TITLE_FR: Record<string, string> = {
     briefing: "Briefings",
     "statement-of-facts": "Faits",
@@ -334,10 +334,10 @@ export function TextResourceContent({
                         />
                       )}
                       <span className="absolute inset-0 flex items-center justify-center opacity-[0.12] text-[5rem] font-black text-white select-none pointer-events-none leading-none">
-                        {part.partNumber}
+                        {formatCourseNumber(lang, part.partNumber)}
                       </span>
                       <span className="absolute bottom-8 left-0 right-0 text-center text-[10px] font-semibold uppercase tracking-widest text-white/40 select-none">
-                        {ERA_MAP[part.era as keyof typeof ERA_MAP]?.label ?? part.era}
+                        {localizedEraLabel(lang, part.era)}
                       </span>
                       {isRead && (
                         <div className="absolute top-2 end-2 w-6 h-6 rounded-full bg-green-500/30 border border-green-500/50 flex items-center justify-center">
@@ -366,7 +366,7 @@ export function TextResourceContent({
                       {part.duration && (
                         <div className="flex items-center gap-1 text-xs text-zinc-500">
                           <Clock className="w-3 h-3" />
-                          {loc(lang, `~${part.duration} read`, `~${part.duration} قراءة`, `~${part.duration} de lecture`)}
+                          {tf(lang, "durationRead", { duration: part.duration ?? "" })}
                         </div>
                       )}
                     </div>

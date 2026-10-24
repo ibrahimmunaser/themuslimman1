@@ -1,7 +1,6 @@
 "use client";
 import type { CourseLang } from "@/lib/course-lang";
 import { isRtlLang } from "@/lib/course-lang";
-import { loc } from "@/lib/loc";
 import { t, tf } from "@/lib/ui-strings";
 
 import { useEffect } from "react";
@@ -62,7 +61,7 @@ export function PartNavButtons({
           >
             <BackIcon className="w-3.5 h-3.5 text-text-muted shrink-0" />
             <div className={isRtl ? "text-right" : "text-left"}>
-              <p className="text-[10px] text-text-muted">{loc(lang, "Previous", "السابق", "Précédent")}</p>
+              <p className="text-[10px] text-text-muted">{t(lang, "previous")}</p>
               <p className="text-xs font-medium text-text-secondary">{tf(lang, "partN", { n: prevPart.partNumber })}</p>
             </div>
           </PrefetchPartLink>
@@ -85,11 +84,11 @@ export function PartNavButtons({
       </div>
 
       <div className="mt-5 pb-2 flex items-center justify-center gap-2 text-[11px] text-text-muted/50 max-w-full" dir={isRtl ? "rtl" : undefined}>
-        <span className="flex-shrink-0">{loc(lang, `Part ${currentPart} of ${totalParts}`, `الجزء ${currentPart} من ${totalParts}`, `Partie ${currentPart} sur ${totalParts}`)}</span>
+        <span className="flex-shrink-0">{tf(lang, "partXofY", { n: currentPart, m: totalParts })}</span>
         {nextPart?.title && (
           <>
             <span className="text-[9px] flex-shrink-0">·</span>
-            <span className="truncate min-w-0">{loc(lang, `Next: ${nextPart.title}`, `التالي: ${nextPart.title}`, `Suivant : ${nextPart.title}`)}</span>
+            <span className="truncate min-w-0">{tf(lang, "nextTitle", { title: nextPart.title ?? "" })}</span>
           </>
         )}
       </div>

@@ -1,9 +1,12 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { ChevronDown } from "lucide-react";
 import { clsx } from "clsx";
 import { clearPartAssetsCache } from "@/lib/part-asset-cache";
-import type { CourseLang } from "@/lib/course-lang";
+import { COURSE_LANG_OPTIONS, type CourseLang } from "@/lib/course-lang";
+import { t } from "@/lib/ui-strings";
 
 interface LangToggleProps {
   current: CourseLang;
@@ -11,6 +14,8 @@ interface LangToggleProps {
   partNumber?: number;
   /** Narrow layout for a collapsed sidebar. */
   compact?: boolean;
+  /** Single-row control sized for the site header. */
+  nav?: boolean;
   /**
    * Larger, labeled control for marketing previews so visitors notice language options.
    * Keeps the compact sidebar style unchanged.
@@ -26,30 +31,33 @@ interface LangToggleProps {
 }
 
 function languageLabel(lang: CourseLang): string {
-  if (lang === "ar") return "اللغة";
-  if (lang === "fr") return "Langue";
-  return "Language";
+  return t(lang, "languageWord");
 }
 
 function groupAriaLabel(lang: CourseLang): string {
-  if (lang === "ar") return "لغة الدورة";
-  if (lang === "fr") return "Langue du cours";
-  return "Course language";
+  return t(lang, "courseLanguage");
 }
 
 export function LangToggle({
   current,
   partNumber,
   compact,
+  nav,
   prominent,
   className,
   clientManaged,
   onChange,
 }: LangToggleProps) {
   const router = useRouter();
+  // Show the choice immediately. The server prop catches up after refresh.
+  const [selected, setSelected] = useState(current);
+  useEffect(() => {
+    setSelected(current);
+  }, [current]);
 
   function switchLang(lang: CourseLang) {
-    if (lang === current) return;
+    if (lang === selected) return;
+    setSelected(lang);
     // Set the cookie (1 year expiry) then refresh the server component in-place
     document.cookie = `seerah_course_lang=${lang}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
     // Clear the client-side asset cache so the new lang's URLs are fetched fresh
@@ -59,6 +67,33 @@ export function LangToggle({
     // Re-run the server component with the new cookie (no full navigation)
     router.refresh();
   }
+
+  const select = (
+    <div className={clsx("relative", !prominent && className)}>
+      <select
+        value={selected}
+        onChange={(e) => switchLang(e.target.value as CourseLang)}
+        aria-label={groupAriaLabel(selected)}
+        className={clsx(
+          "appearance-none bg-ink/40 border border-gold/35 font-semibold text-text cursor-pointer focus:outline-none focus:ring-2 focus:ring-gold/40",
+          nav
+            ? "h-10 min-w-[12.5rem] max-w-[16rem] ps-3 pe-8 rounded-lg text-sm"
+            : compact
+              ? "h-9 w-full min-w-0 ps-2 pe-7 rounded-lg text-xs"
+              : "min-h-[44px] w-full min-w-[12.5rem] ps-3.5 pe-8 rounded-xl text-sm shadow-sm shadow-gold/10",
+        )}
+      >
+        {COURSE_LANG_OPTIONS.map((option) => (
+          <option key={option.code} value={option.code}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+      <ChevronDown className="pointer-events-none absolute top-1/2 -translate-y-1/2 end-2.5 w-4 h-4 text-gold" aria-hidden />
+    </div>
+  );
+
+  if (nav) return select;
 
   if (prominent) {
     return (
@@ -71,110 +106,17 @@ export function LangToggle({
         <span
           className={clsx(
             "font-bold text-gold",
-            current === "ar"
+            selected === "ar"
               ? "text-lg tracking-normal"
               : "text-[11px] uppercase tracking-[0.16em]",
           )}
         >
-          {languageLabel(current)}
+          {languageLabel(selected)}
         </span>
-        <div
-          className="flex items-center gap-1 rounded-xl p-1 bg-ink/40 border border-gold/35 shadow-sm shadow-gold/10"
-          role="group"
-          aria-label={groupAriaLabel(current)}
-        >
-          <button
-            type="button"
-            onClick={() => switchLang("en")}
-            className={clsx(
-              "min-h-[40px] min-w-[52px] px-3.5 rounded-lg text-sm font-bold transition-all duration-150",
-              current === "en"
-                ? "bg-gold text-ink shadow-md shadow-gold/25"
-                : "text-text-secondary hover:text-text hover:bg-surface-raised/80",
-            )}
-          >
-            EN
-          </button>
-          <button
-            type="button"
-            onClick={() => switchLang("ar")}
-            className={clsx(
-              "min-h-[40px] min-w-[72px] px-3.5 rounded-lg text-base font-bold transition-all duration-150",
-              current === "ar"
-                ? "bg-gold text-ink shadow-md shadow-gold/25"
-                : "text-text-secondary hover:text-text hover:bg-surface-raised/80",
-            )}
-            dir="rtl"
-          >
-            عربي
-          </button>
-          <button
-            type="button"
-            onClick={() => switchLang("fr")}
-            className={clsx(
-              "min-h-[40px] min-w-[52px] px-3.5 rounded-lg text-sm font-bold transition-all duration-150",
-              current === "fr"
-                ? "bg-gold text-ink shadow-md shadow-gold/25"
-                : "text-text-secondary hover:text-text hover:bg-surface-raised/80",
-            )}
-          >
-            FR
-          </button>
-        </div>
+        {select}
       </div>
     );
   }
 
-  return (
-    <div
-      className={clsx(
-        "flex items-center gap-1 rounded-lg p-0.5 bg-surface-raised/60 border border-border/40",
-        compact && "flex-col",
-        className
-      )}
-      role="group"
-      aria-label={groupAriaLabel(current)}
-    >
-      <button
-        type="button"
-        onClick={() => switchLang("en")}
-        className={clsx(
-          "rounded-md text-xs font-semibold transition-all duration-150",
-          compact ? "px-1.5 py-1" : "px-2.5 py-1",
-          current === "en"
-            ? "bg-gold/15 text-gold shadow-sm"
-            : "text-text-muted/70 hover:text-text-secondary"
-        )}
-      >
-        EN
-      </button>
-      <button
-        type="button"
-        onClick={() => switchLang("ar")}
-        className={clsx(
-          "rounded-md text-xs font-semibold transition-all duration-150",
-          compact ? "px-1.5 py-1" : "px-2.5 py-1",
-          current === "ar"
-            ? "bg-gold/15 text-gold shadow-sm"
-            : "text-text-muted/70 hover:text-text-secondary"
-        )}
-        dir="rtl"
-      >
-        {compact ? "ع" : "عربي"}
-      </button>
-      <button
-        type="button"
-        onClick={() => switchLang("fr")}
-        className={clsx(
-          "rounded-md text-xs font-semibold transition-all duration-150",
-          compact ? "px-1.5 py-1" : "px-2.5 py-1",
-          current === "fr"
-            ? "bg-gold/15 text-gold shadow-sm"
-            : "text-text-muted/70 hover:text-text-secondary"
-        )}
-      >
-        FR
-      </button>
-    </div>
-  );
+  return select;
 }

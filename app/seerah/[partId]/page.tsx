@@ -5,8 +5,7 @@ import { cookies } from "next/headers";
 import { getCachedStudent } from "@/lib/auth-cache";
 import { hasActiveCourseAccess, isFamilyPlan } from "@/lib/access";
 import { getActiveProfileId } from "@/app/actions/profiles";
-import { getPartById, PARTS, localizePart, getPartsForLang } from "@/lib/content";
-import { ERA_MAP, eraLabel } from "@/lib/types";
+import { getPartById, PARTS, localizePart, getPartsForLang, localizedEraLabel } from "@/lib/content";
 import type { Part, Quiz } from "@/lib/types";
 
 /** Remove correct_answer from all questions before the quiz crosses the server→client boundary.
@@ -19,7 +18,8 @@ function stripQuizAnswers(quiz: Quiz | null | undefined): Quiz | null | undefine
   };
 }
 import { getPartPageData } from "@/lib/part-content-cache";
-import { parseLang, COURSE_LANG_COOKIE, type CourseLang } from "@/lib/course-lang";
+import { parseLang, isRtlLang, courseHasMindmaps, COURSE_LANG_COOKIE, type CourseLang } from "@/lib/course-lang";
+import { t, tf } from "@/lib/ui-strings";
 import { prisma } from "@/lib/db";
 import {
   ArrowLeft,
@@ -49,9 +49,7 @@ export async function generateMetadata(props: Props) {
   const part = localizePart(partEn, lang);
 
   return {
-    title: lang === "ar"
-      ? `الجزء ${part.partNumber}: ${part.title}`
-      : `Part ${part.partNumber}: ${part.title}`,
+    title: `${tf(lang, "partLabel", { n: part.partNumber })}: ${part.title}`,
     description: part.description || `Seerah Part ${part.partNumber}`,
   };
 }
@@ -257,17 +255,17 @@ export default async function SeerahPartPage(props: Props) {
                 className="inline-flex items-center gap-1.5 text-text-secondary hover:text-text transition-colors text-sm min-h-[44px]"
               >
                 {lang === "ar" ? <ArrowRight className="w-4 h-4 shrink-0" /> : <ArrowLeft className="w-4 h-4 shrink-0" />}
-                <span className="hidden sm:inline">{lang === "ar" ? "العودة إلى السيرة" : "Back to Seerah"}</span>
-                <span className="sm:hidden">{lang === "ar" ? "رجوع" : "Back"}</span>
+                <span className="hidden sm:inline">{t(lang, "backToSeerah")}</span>
+                <span className="sm:hidden">{t(lang, "back")}</span>
               </Link>
 
               {/* End side — part badge + era (+ gap for floating menu on mobile) */}
               <div className="flex items-center gap-2 me-10 sm:me-0">
                 <span className="px-2 py-1 text-xs font-semibold rounded-md bg-gold/10 text-gold border border-gold/20">
-                  {lang === "ar" ? `الجزء ${partBase.partNumber}` : `Part ${partBase.partNumber}`}
+                  {tf(lang, "partLabel", { n: partBase.partNumber })}
                 </span>
                 <span className="text-xs text-text-muted uppercase tracking-wider hidden sm:inline">
-                  {eraLabel(ERA_MAP[partBase.era as keyof typeof ERA_MAP], lang === "ar") || partBase.era}
+                  {localizedEraLabel(lang, partBase.era)}
                 </span>
               </div>
             </div>
@@ -276,29 +274,31 @@ export default async function SeerahPartPage(props: Props) {
             <h1
               className="text-base sm:text-2xl font-bold text-text mt-1 leading-snug"
               style={{ hyphens: "none", overflowWrap: "normal", wordBreak: "normal" }}
-              dir={lang === "ar" ? "rtl" : undefined}
+              dir={isRtlLang(lang) ? "rtl" : undefined}
             >
               {partBase.title}
             </h1>
             {partBase.subtitle && (
-              <p className="hidden sm:block text-xs sm:text-sm text-text-secondary/80 mt-0.5 leading-snug" dir={lang === "ar" ? "rtl" : undefined}>{partBase.subtitle}</p>
+              <p className="hidden sm:block text-xs sm:text-sm text-text-secondary/80 mt-0.5 leading-snug" dir={isRtlLang(lang) ? "rtl" : undefined}>{partBase.subtitle}</p>
             )}
 
             {/* Lesson metadata — era (mobile only) + estimated time — collapsed on mobile to save header height */}
             <div className="hidden sm:flex items-center gap-2.5 mt-1.5">
               <span className="text-[11px] text-text-muted/60 uppercase tracking-wider">
-                {eraLabel(ERA_MAP[partBase.era as keyof typeof ERA_MAP], lang === "ar") || partBase.era}
+                {localizedEraLabel(lang, partBase.era)}
               </span>
               <span className="text-text-muted/30 text-[10px]">·</span>
               <span className="flex items-center gap-1 text-[11px] text-text-muted/60">
                 <Clock className="w-3 h-3" />
-                {lang === "ar" ? "15–20 دقيقة" : "15–20 min"}
+                {t(lang, "minRead")}
               </span>
             </div>
 
             {/* Per-asset progress indicators — live client component */}
             <PartProgressBadges
-              isRtl={lang === "ar"}
+              lang={lang}
+              isRtl={isRtlLang(lang)}
+              includeMindmap={courseHasMindmaps(lang)}
               initial={{
                 videoWatchPercent:  partProgress?.videoWatchPercent  ?? 0,
                 briefingOpened:     partProgress?.briefingOpened     ?? false,
@@ -330,7 +330,7 @@ export default async function SeerahPartPage(props: Props) {
           </Suspense>
 
           {/* Up Next card */}
-          <UpNextCard completePath={nextPart} isRtl={lang === "ar"} />
+          <UpNextCard completePath={nextPart} isRtl={isRtlLang(lang)} lang={lang} />
 
           {/* Navigation row — client component so startTransition keeps current page
               visible during load (no skeleton flash) */}
@@ -339,7 +339,7 @@ export default async function SeerahPartPage(props: Props) {
             nextPart={nextPart ? { id: nextPart.id, partNumber: nextPart.partNumber, title: nextPart.title, subtitle: nextPart.subtitle } : null}
             currentPart={n}
             totalParts={allParts.length}
-            isRtl={lang === "ar"}
+            isRtl={isRtlLang(lang)}
             lang={lang}
           />
         </div>

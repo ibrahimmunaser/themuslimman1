@@ -1,6 +1,7 @@
 "use client";
 import type { CourseLang } from "@/lib/course-lang";
 import { loc } from "@/lib/loc";
+import { t, tf } from "@/lib/ui-strings";
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
@@ -191,7 +192,7 @@ export function TextViewer({
                 <>
                   <span className="article-meta-item">
                     <Layers size={11} strokeWidth={2} />
-                    {loc(lang, `Part ${partNumber} of ${totalParts}`, `الجزء ${partNumber} من ${totalParts}`, `Partie ${partNumber} sur ${totalParts}`)}
+                    {tf(lang, "partXofY", { n: partNumber, m: totalParts })}
                   </span>
                   <span className="article-meta-sep" aria-hidden>·</span>
                 </>
@@ -220,12 +221,11 @@ export function TextViewer({
                 />
               </div>
               <span className="article-progress-context-label">
-                {loc(
-                  lang,
-                  readProgress < 5 ? "Start reading" : readProgress >= 95 ? "Completed" : `${readProgress}% through`,
-                  readProgress < 5 ? "ابدأ القراءة" : readProgress >= 95 ? "اكتمل" : `${readProgress}% تمت القراءة`,
-                  readProgress < 5 ? "Commencer la lecture" : readProgress >= 95 ? "Terminé" : `${readProgress} % parcourus`,
-                )}
+                {readProgress < 5
+                  ? t(lang, "startReading")
+                  : readProgress >= 95
+                  ? t(lang, "completedFilter")
+                  : tf(lang, "percentThrough", { n: readProgress })}
               </span>
             </div>
           </div>

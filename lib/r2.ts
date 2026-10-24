@@ -1,6 +1,7 @@
 import { S3Client, GetObjectCommand, ListObjectsV2Command, HeadObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import type { FlashcardSet, Quiz } from "@/lib/types";
+import { localizedMedia, type CourseLang } from "@/lib/course-lang";
 
 // ─── R2 Client Configuration ──────────────────────────────────────────────────
 
@@ -69,21 +70,23 @@ export async function generateSignedR2Url(
 const thumbnailCache = new Map<string, { url: string; expiresAt: number }>();
 const THUMBNAIL_CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 
-function thumbnailKey(n: number, lang: "en" | "ar" | "fr" = "en"): string {
+function thumbnailKey(n: number, lang: CourseLang = "en"): string {
   const pad = String(n).padStart(2, "0");
   if (lang === "ar") return `arabic/thumbnails/part-${pad}-thumb.jpg`;
-  // French has no dedicated thumbnails yet — use English posters.
+  const media = localizedMedia(lang);
+  if (media) return `${media.folder}/thumbnails/part-${pad}-thumb.jpg`;
   return `thumbnails/part-${pad}-thumb.jpg`;
 }
 
 /**
  * Get the signed thumbnail URL for a single part number.
  * Reuses the shared thumbnail cache so concurrent callers share one signed URL.
- * Pass lang="ar" for Arabic slide-deck posters.
+ * Arabic and each translated course language use a poster made from that
+ * language's first slide. English uses the English slide poster.
  */
 export async function getThumbnailUrl(
   partNumber: number,
-  lang: "en" | "ar" | "fr" = "en"
+  lang: CourseLang = "en"
 ): Promise<string | undefined> {
   const key = thumbnailKey(partNumber, lang);
   const now = Date.now();
@@ -100,7 +103,7 @@ export async function getThumbnailUrl(
 
 export async function getThumbnailUrls(
   partNumbers: number[],
-  lang: "en" | "ar" | "fr" = "en"
+  lang: CourseLang = "en"
 ): Promise<Record<number, string>> {
   const now = Date.now();
 
@@ -533,28 +536,49 @@ export async function r2ReadArabicQuiz(partNum: number) {
   return r2ReadJsonFile<Quiz>(`arabic/quizzes/Part_${pad}.json`);
 }
 
-// ─── French key helpers ────────────────────────────────────────────────────────
-// French media lives under french/ on R2 (videos, slides, infographics).
-// No french/audio — callers fall back to English audio when needed.
+// ─── Translated media key helpers ─────────────────────────────────────────────
+// French and the later languages each have a video, one infographic, and a
+// slide deck per part. There is no translated audio — callers keep English audio.
 
-/** French video — e.g. french/videos/Final_Part_84_Full.mp4 */
-export function r2GetFrenchVideoKey(partNum: number): string {
-  return `french/videos/Final_Part_${partNum}_Full.mp4`;
+/** Video — e.g. spanish/videos/Final_Part_84_Full.mp4 */
+export function r2GetLocalizedVideoKey(lang: CourseLang, partNum: number): string {
+  const media = localizedMedia(lang);
+  if (!media) throw new Error(`No translated video folder for ${lang}`);
+  return `${media.folder}/videos/Final_Part_${partNum}_Full.mp4`;
 }
 
-/** French infographic — e.g. french/infographics/Part 84_watermarked.png */
-export function r2GetFrenchInfographicKey(partNum: number): string {
-  return `french/infographics/Part ${partNum}_watermarked.png`;
+/** Infographic — e.g. spanish/infographics/Part 84_watermarked.png */
+export function r2GetLocalizedInfographicKey(lang: CourseLang, partNum: number): string {
+  const media = localizedMedia(lang);
+  if (!media) throw new Error(`No translated infographic folder for ${lang}`);
+  return `${media.folder}/infographics/Part ${partNum}_watermarked.png`;
 }
 
-/** French slide PNG keys — list prefix, sorted alphabetically */
-export async function r2GetFrenchSlideKeys(partNum: number): Promise<string[]> {
-  const prefix = `french/slides/Part ${partNum}/`;
+/** Slide PNG keys — list prefix, sorted alphabetically */
+export async function r2GetLocalizedSlideKeys(lang: CourseLang, partNum: number): Promise<string[]> {
+  const media = localizedMedia(lang);
+  if (!media) return [];
+  const prefix = `${media.folder}/${media.slides}/Part ${partNum}/`;
   const files = await r2ListFiles(prefix, 500);
   return files
     .filter((f) => f.key.endsWith(".png") && f.key !== prefix)
     .map((f) => f.key)
     .sort();
+}
+
+/** @deprecated use r2GetLocalizedVideoKey */
+export function r2GetFrenchVideoKey(partNum: number): string {
+  return r2GetLocalizedVideoKey("fr", partNum);
+}
+
+/** @deprecated use r2GetLocalizedInfographicKey */
+export function r2GetFrenchInfographicKey(partNum: number): string {
+  return r2GetLocalizedInfographicKey("fr", partNum);
+}
+
+/** @deprecated use r2GetLocalizedSlideKeys */
+export function r2GetFrenchSlideKeys(partNum: number): Promise<string[]> {
+  return r2GetLocalizedSlideKeys("fr", partNum);
 }
 
 // ─── Cache Utilities ───────────────────────────────────────────────────────────

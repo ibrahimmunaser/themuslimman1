@@ -1,4 +1,6 @@
 import type { CourseLang } from "./course-lang";
+import { formatCourseNumber, localizeNumerals } from "./course-numbers";
+import { shellUi } from "./phrases";
 
 /**
  * Shared UI string dictionary for the student course shell.
@@ -27,6 +29,9 @@ const S = {
   startHere:         { en: "Start here", ar: "ابدأ من هنا", fr: "Commencez ici" },
   continueLearning:  { en: "Continue learning", ar: "استمر في التعلم", fr: "Continuer l'apprentissage" },
   partN:             { en: "Part {n}", ar: "الجزء {n}", fr: "Partie {n}" },
+  partXofY:          { en: "Part {n} of {m}", ar: "الجزء {n} من {m}", fr: "Partie {n} sur {m}" },
+  partNQuiz:         { en: "Part {n} Quiz", ar: "اختبار الجزء {n}", fr: "Quiz de la partie {n}" },
+  durationRead:      { en: "~{duration} read", ar: "~{duration} قراءة", fr: "~{duration} de lecture" },
   stageNofM:         { en: "Stage {n} of {m}", ar: "المرحلة {n} من {m}", fr: "Étape {n} sur {m}" },
   minRead:           { en: "15–20 min", ar: "١٥–٢٠ دقيقة", fr: "15–20 min" },
   bestStartingPoint: { en: "Best starting point", ar: "أفضل نقطة بداية", fr: "Meilleur point de départ" },
@@ -48,8 +53,22 @@ const S = {
   requiresQuiz:      { en: "Requires passing the quiz (80%+)", ar: "يتطلب اجتياز الاختبار (٨٠٪+)", fr: "Nécessite de réussir le quiz (80 %+)" },
   currentStage:      { en: "Current Stage", ar: "المرحلة الحالية", fr: "Étape actuelle" },
   nextLesson:        { en: "Next Lesson", ar: "الدرس التالي", fr: "Leçon suivante" },
+  upNext:            { en: "Up Next", ar: "التالي", fr: "À suivre" },
   startNow:          { en: "Start now", ar: "ابدأ الآن", fr: "Commencer maintenant" },
   continue:          { en: "Continue", ar: "استمر", fr: "Continuer" },
+  previous:          { en: "Previous", ar: "السابق", fr: "Précédent" },
+  learn:             { en: "Learn", ar: "تعلّم", fr: "Apprendre" },
+  back:              { en: "Back", ar: "رجوع", fr: "Retour" },
+  backToSeerah:      { en: "Back to Seerah", ar: "العودة إلى السيرة", fr: "Retour à la Sîra" },
+  completedNofM:     { en: "Completed: {n}/{m} Resources", ar: "المكتمل: {n}/{m} من الموارد", fr: "Terminé : {n}/{m} ressources" },
+  nextTitle:         { en: "Next: {title}", ar: "التالي: {title}", fr: "Suivant : {title}" },
+  percentThrough:    { en: "{n}% through", ar: "{n}% تمت القراءة", fr: "{n} % parcourus" },
+  startReading:      { en: "Start reading", ar: "ابدأ القراءة", fr: "Commencer la lecture" },
+  partNotFound:      { en: "Part Not Found", ar: "الجزء غير موجود", fr: "Partie introuvable" },
+  resourceProgress:  { en: "Resource progress", ar: "تقدّم الموارد", fr: "Progression des ressources" },
+  courseLanguage:    { en: "Course language", ar: "لغة الدورة", fr: "Langue du cours" },
+  languageWord:      { en: "Language", ar: "اللغة", fr: "Langue" },
+  playbackSpeed:     { en: "Playback speed", ar: "سرعة التشغيل", fr: "Vitesse de lecture" },
   courseRoadmap:     { en: "Course Roadmap", ar: "خريطة الدورة", fr: "Parcours du cours" },
   seerahInStages:    { en: "The Seerah in {n} stages — from pre-Islamic Arabia to the Prophet\u2019s \ufdfa final years. Each part unlocks after you complete the previous lesson\u2019s quiz. Follow the order for the full picture.", ar: "السيرة النبوية في {n} مراحل — من الجزيرة العربية قبل الإسلام حتى السنوات الأخيرة من حياة النبي ﷺ.", fr: "La Sîra en {n} étapes — de l'Arabie préislamique aux dernières années du Prophète \ufdfa. Chaque partie se débloque après le quiz de la leçon précédente. Suivez l'ordre pour une vision d'ensemble." },
   currentStageLabel: { en: "▸ Current", ar: "▸ الحالية", fr: "▸ Actuelle" },
@@ -115,8 +134,8 @@ const S = {
   listenGoDesc:      { en: "Audio version of every lesson", ar: "النسخة الصوتية لكل درس", fr: "Version audio de chaque leçon" },
   briefings:         { en: "Briefings", ar: "الملخصات", fr: "Briefings" },
   briefingsDesc:     { en: "Read briefings for each part", ar: "اقرأ ملخص كل جزء", fr: "Lisez les briefings de chaque partie" },
-  slidesDesc:        { en: "3 formats: Presented, Detailed, Facts", ar: "٣ أشكال: مقدَّمة، مفصَّلة، معلومات", fr: "3 formats : Présenté, Détaillé, Faits" },
-  infographicsDesc:  { en: "3 formats: Concise, Standard, Bento Grid", ar: "٣ أشكال: موجزة، قياسية، شبكية", fr: "3 formats : Concis, Standard, Grille Bento" },
+  slidesDesc:        { en: "3 formats: Presented, Detailed, Facts", ar: "٣ أشكال: مقدَّمة، مفصَّلة، معلومات", fr: "Diapositives présentées de chaque leçon" },
+  infographicsDesc:  { en: "3 formats: Concise, Standard, Bento Grid", ar: "٣ أشكال: موجزة، قياسية، شبكية", fr: "Une infographie par leçon" },
   mindMapsDesc:      { en: "Visual maps connecting people and events", ar: "خرائط مرئية تربط الأشخاص والأحداث", fr: "Cartes visuelles reliant personnes et événements" },
   flashcardsDesc:    { en: "Easy, Medium, and Hard flashcard sets", ar: "مجموعات سهلة ومتوسطة وصعبة", fr: "Jeux de flashcards Facile, Moyen et Difficile" },
   quizzesDesc:       { en: "Test your knowledge for each part", ar: "اختبر معلوماتك في كل جزء", fr: "Testez vos connaissances pour chaque partie" },
@@ -336,21 +355,33 @@ const S = {
 
 export type UiStringKey = keyof typeof S;
 
+type UiEntry = { en: string; ar: string; fr: string };
+
+/** English, Arabic, and French are stored on each entry. Other course languages use the shell pack. */
+function pick(lang: CourseLang, key: UiStringKey, entry: UiEntry): string {
+  if (lang === "ar") return entry.ar;
+  if (lang === "fr") return entry.fr;
+  if (lang === "en") return entry.en;
+  return shellUi(lang, key) ?? entry.en;
+}
+
 /** Returns the UI string for the given lang. */
 export function t(lang: CourseLang, key: UiStringKey): string {
-  return S[key][lang];
+  return localizeNumerals(lang, pick(lang, key, S[key]));
 }
 
 /**
  * Returns a UI string with `{placeholder}` tokens replaced.
- * e.g. tf(lang, "stageNofM", { n: 3, m: 8 }) → "Stage 3 of 8" / "المرحلة 3 من 8"
+ * e.g. tf(lang, "stageNofM", { n: 3, m: 8 }) → "Stage 3 of 8" / "المرحلة ٣ من ٨"
+ * Numeric values are written in the selected language's numerals.
  */
 export function tf(lang: CourseLang, key: UiStringKey, vars: Record<string, string | number>): string {
-  let result = S[key][lang];
+  let result = pick(lang, key, S[key]);
   for (const [k, v] of Object.entries(vars)) {
-    result = result.replace(`{${k}}`, String(v));
+    const text = typeof v === "number" ? formatCourseNumber(lang, v) : String(v);
+    result = result.replaceAll(`{${k}}`, text);
   }
-  return result;
+  return localizeNumerals(lang, result);
 }
 
 /** ERA descriptions when Arabic is selected */

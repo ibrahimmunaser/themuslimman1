@@ -4,6 +4,8 @@ import { getCurrentUser } from "@/lib/auth";
 import { hasActiveCourseAccess, TOTAL_COURSE_PARTS } from "@/lib/access";
 import { PART_CONTENT } from "@/lib/part-content-data";
 import { PART_CONTENT_AR } from "@/lib/part-content-data-ar";
+import { PART_CONTENT_FR } from "@/lib/part-content-data-fr";
+import { readLangPackPart } from "@/lib/lang-packs";
 import { formatSeerahContent } from "@/lib/text-formatter";
 import type { CourseLang } from "@/lib/course-lang";
 
@@ -44,6 +46,15 @@ export async function getPartBriefingHtml(
     return null;
   }
 
+  if (lang === "fr") {
+    const fr = PART_CONTENT_FR[partNumber]?.briefingText;
+    if (fr) return formatSeerahContent(fr);
+    return null;
+  }
+
+  const packedBriefing = readLangPackPart(lang, partNumber)?.briefingText;
+  if (packedBriefing) return formatSeerahContent(packedBriefing);
+
   const entry = PART_CONTENT[partNumber];
   if (entry?.briefingHtml) return entry.briefingHtml;
   if (entry?.briefingText) return formatSeerahContent(entry.briefingText);
@@ -63,6 +74,13 @@ export async function getPartStatementOfFactsText(
   if (lang === "ar") {
     return PART_CONTENT_AR[partNumber]?.statementOfFactsText ?? null;
   }
+
+  if (lang === "fr") {
+    return PART_CONTENT_FR[partNumber]?.statementOfFactsText ?? null;
+  }
+
+  const packedFacts = readLangPackPart(lang, partNumber)?.statementOfFactsText;
+  if (packedFacts) return packedFacts;
 
   return PART_CONTENT[partNumber]?.statementOfFactsText ?? null;
 }

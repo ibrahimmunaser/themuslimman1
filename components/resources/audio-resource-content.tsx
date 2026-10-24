@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { getPartsForLang } from "@/lib/content";
-import { ERA_MAP, type Part } from "@/lib/types";
+import { getPartsForLang, localizedEraLabel } from "@/lib/content";
+import type { Part } from "@/lib/types";
 import type { CourseLang } from "@/lib/course-lang";
 import { loc } from "@/lib/loc";
+import { formatCourseNumber } from "@/lib/course-numbers";
 import { t, tf } from "@/lib/ui-strings";
 import { eraGradient } from "./era-gradient";
 import { ResourcePageClient } from "./resource-page-client";
@@ -463,11 +464,11 @@ export function AudioResourceContent({
                       )}
                       {/* Large part number watermark */}
                       <span className="absolute inset-0 flex items-center justify-center opacity-[0.12] text-[5rem] font-black text-white select-none pointer-events-none leading-none">
-                        {part.partNumber}
+                        {formatCourseNumber(lang, part.partNumber)}
                       </span>
                       {/* Era label */}
                       <span className="absolute bottom-8 left-0 right-0 text-center text-[10px] font-semibold uppercase tracking-widest text-white/40 select-none">
-                        {ERA_MAP[part.era as keyof typeof ERA_MAP]?.label ?? part.era}
+                        {localizedEraLabel(lang, part.era)}
                       </span>
 
                       {isCompleted && (

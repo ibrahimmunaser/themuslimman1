@@ -1,4 +1,6 @@
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { courseHasMindmaps, parseLang, COURSE_LANG_COOKIE } from "@/lib/course-lang";
 import { requireStudent } from "@/lib/auth";
 import { hasActiveCourseAccess, TOTAL_COURSE_PARTS } from "@/lib/access";
 import { StudentLayout } from "@/components/student/student-layout";
@@ -30,6 +32,8 @@ export default async function ProgressPage() {
   // Entitled unverified users keep progress access.
 
   const userPlan = "complete" as const;
+  const lang = parseLang((await cookies()).get(COURSE_LANG_COOKIE)?.value);
+  const showMindmaps = courseHasMindmaps(lang);
 
   // Resolve the active learner profile
   const learnerProfileId = user.activeProfileId ?? await getActiveProfileId(user.id);
@@ -183,7 +187,7 @@ export default async function ProgressPage() {
                 { icon: "🃏", label: "Flashcards", count: assetCounts.flashcards },
                 { icon: "✅", label: "Quizzes Passed", count: assetCounts.quizzes },
                 { icon: "🎧", label: "Audio", count: assetCounts.audio },
-                { icon: "🧠", label: "Mindmaps", count: assetCounts.mindmaps },
+                ...(showMindmaps ? [{ icon: "🧠", label: "Mindmaps", count: assetCounts.mindmaps }] : []),
                 { icon: "🖼️", label: "Infographics", count: assetCounts.infographics },
               ].map((asset) => (
                 <div key={asset.label} className="flex items-center gap-3 p-3 rounded-lg bg-surface-raised">

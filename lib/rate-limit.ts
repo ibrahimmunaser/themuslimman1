@@ -95,6 +95,12 @@ export async function checkRateLimit(
   maxRequests: number,
   windowMs: number,
 ): Promise<{ allowed: boolean; retryAfterSeconds?: number }> {
+  // Local dev hits these limits while testing login, checkout, and resets.
+  // Production still enforces them.
+  if (process.env.NODE_ENV !== "production") {
+    return { allowed: true };
+  }
+
   if (!redis) {
     return checkRateLimitInMemory(key, maxRequests, windowMs);
   }

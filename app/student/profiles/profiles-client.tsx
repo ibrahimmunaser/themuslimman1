@@ -15,7 +15,7 @@ import {
   deleteProfile,
   switchProfile,
 } from "@/app/actions/profiles";
-import type { CourseLang } from "@/lib/course-lang";
+import { courseHasMindmaps, type CourseLang } from "@/lib/course-lang";
 import { loc } from "@/lib/loc";
 
 // ─── Types ────────────────────────────────────────────────────
@@ -187,7 +187,7 @@ export function ProfilesClient({
       { label: loc(lang, "Briefings", "الملخصات", "Briefings"), value: s.briefingsOpened, icon: BookOpen, color: "text-green-400" },
       { label: loc(lang, "Slides", "الشرائح", "Diapositives"), value: s.slidesViewed, icon: Layers, color: "text-purple-400" },
       { label: loc(lang, "Infographics", "الرسوم المعلوماتية", "Infographies"), value: s.infographicsViewed, icon: Image, color: "text-pink-400" },
-      ...[{ label: loc(lang, "Mind Maps", "الخرائط الذهنية", "Cartes mentales"), value: s.mindmapsViewed, icon: Map, color: "text-teal-400" }],
+      ...(courseHasMindmaps(lang) ? [{ label: loc(lang, "Mind Maps", "الخرائط الذهنية", "Cartes mentales"), value: s.mindmapsViewed, icon: Map, color: "text-teal-400" }] : []),
       { label: loc(lang, "Audio", "الصوت", "Audio"), value: s.audioCompleted, icon: FileText, color: "text-orange-400" },
       { label: loc(lang, "Flashcards", "البطاقات التعليمية", "Flashcards"), value: s.flashcardsStudied, icon: Brain, color: "text-amber-400" },
       { label: loc(lang, "Quizzes", "الاختبارات", "Quiz"), value: s.quizzesPassed, icon: ClipboardCheck, color: "text-red-400" },

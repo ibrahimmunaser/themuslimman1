@@ -36,11 +36,11 @@ export function LazyVideoPlayer({ partNumber, title, poster, previewMode, videoU
     }
 
     let mounted = true;
-    fetchPartAssets(partNumber)
+    fetchPartAssets(partNumber, lang)
       .then((data) => { if (mounted) { setVideoUrl(data.videoUrl); setLoading(false); } })
       .catch(() => { if (mounted) { setError(true); setLoading(false); } });
     return () => { mounted = false; };
-  }, [partNumber, videoUrlProp]);
+  }, [partNumber, videoUrlProp, lang]);
 
   if (loading) {
     return (

@@ -1,17 +1,20 @@
 /**
  * Generates compressed JPEG thumbnails from the first slide of each part
- * and uploads them to R2 under the `thumbnails/` (English) or
- * `arabic/thumbnails/` (Arabic) prefix.
+ * and uploads them to R2.
  *
  * Run English:  npx tsx scripts/generate-thumbnails.ts
  * Run Arabic:   npx tsx scripts/generate-thumbnails.ts --ar
- * Single part:  npx tsx scripts/generate-thumbnails.ts 1 --ar
- * Force regen:  npx tsx scripts/generate-thumbnails.ts --ar --force
+ * One language: npx tsx scripts/generate-thumbnails.ts --lang hi
+ * All translated decks (French + the 12 course languages):
+ *               npx tsx scripts/generate-thumbnails.ts --all
+ * Single part:  npx tsx scripts/generate-thumbnails.ts 1 --lang hi
+ * Force regen:  npx tsx scripts/generate-thumbnails.ts --all --force
  */
 
 import { S3Client, GetObjectCommand, PutObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3";
 import sharp from "sharp";
 import dotenv from "dotenv";
+import { LOCALIZED_MEDIA, type CourseLang } from "../lib/course-lang";
 
 dotenv.config({ path: ".env.local" });
 dotenv.config({ path: ".env" });
@@ -34,24 +37,38 @@ const r2 = new S3Client({
 });
 
 const TOTAL_PARTS = 100;
-const THUMB_WIDTH = 640;   // px — enough for card display, ~4x smaller than typical HD
-const THUMB_QUALITY = 82;  // JPEG quality
-const IS_ARABIC = process.argv.includes("--ar");
+const THUMB_WIDTH = 640;
+const THUMB_QUALITY = 82;
+const BATCH = 3;
 
-function sourceKey(n: number): string {
-  if (IS_ARABIC) {
-    const p3 = String(n).padStart(3, "0");
-    return `arabic/slides/Part ${n}/part_${p3}_page_001.png`;
+const LOCALIZED_LANGS = Object.keys(LOCALIZED_MEDIA) as Exclude<CourseLang, "en" | "ar">[];
+
+export function thumbPaths(lang: CourseLang, n: number): { src: string; dest: string } {
+  const pad = String(n).padStart(2, "0");
+  const p3 = String(n).padStart(3, "0");
+  if (lang === "ar") {
+    return {
+      src: `arabic/slides/Part ${n}/part_${p3}_page_001.png`,
+      dest: `arabic/thumbnails/part-${pad}-thumb.jpg`,
+    };
   }
-  const p = String(n).padStart(2, "0");
-  return `slides-presented/Part ${p}/Part_${p}_Slide_001_watermarked.png`;
+  if (lang === "en") {
+    return {
+      src: `slides-presented/Part ${pad}/Part_${pad}_Slide_001_watermarked.png`,
+      dest: `thumbnails/part-${pad}-thumb.jpg`,
+    };
+  }
+  const media = LOCALIZED_MEDIA[lang];
+  return {
+    src: `${media.folder}/${media.slides}/Part ${n}/part_${p3}_page_001_image_001_watermarked.png`,
+    dest: `${media.folder}/thumbnails/part-${pad}-thumb.jpg`,
+  };
 }
 
-export function thumbKey(n: number): string {
-  const p = String(n).padStart(2, "0");
-  return IS_ARABIC
-    ? `arabic/thumbnails/part-${p}-thumb.jpg`
-    : `thumbnails/part-${p}-thumb.jpg`;
+function destPrefix(lang: CourseLang): string {
+  if (lang === "ar") return "arabic/thumbnails";
+  if (lang === "en") return "thumbnails";
+  return `${LOCALIZED_MEDIA[lang].folder}/thumbnails`;
 }
 
 async function exists(key: string): Promise<boolean> {
@@ -63,17 +80,14 @@ async function exists(key: string): Promise<boolean> {
   }
 }
 
-async function generateOne(n: number, force = false): Promise<"ok" | "skip" | "error"> {
-  const dest = thumbKey(n);
+async function generateOne(lang: CourseLang, n: number, force = false): Promise<"ok" | "skip" | "error"> {
+  const { src, dest } = thumbPaths(lang, n);
 
   if (!force && (await exists(dest))) {
-    process.stdout.write(`  Part ${String(n).padStart(3)}  → already exists, skipping\n`);
+    process.stdout.write(`  ${lang} part ${String(n).padStart(3)}  → already exists, skipping\n`);
     return "skip";
   }
 
-  const src = sourceKey(n);
-
-  // Download the source PNG from R2
   let sourceBuffer: Buffer;
   try {
     const res = await r2.send(new GetObjectCommand({ Bucket: R2_BUCKET, Key: src }));
@@ -83,17 +97,15 @@ async function generateOne(n: number, force = false): Promise<"ok" | "skip" | "e
     }
     sourceBuffer = Buffer.concat(chunks);
   } catch (err: any) {
-    process.stdout.write(`  Part ${String(n).padStart(3)}  ✗ Source missing (${err?.message})\n`);
+    process.stdout.write(`  ${lang} part ${String(n).padStart(3)}  ✗ Source missing (${src}) ${err?.message ?? ""}\n`);
     return "error";
   }
 
-  // Resize to JPEG thumbnail
   const thumb = await sharp(sourceBuffer)
     .resize({ width: THUMB_WIDTH, withoutEnlargement: true })
     .jpeg({ quality: THUMB_QUALITY, mozjpeg: true })
     .toBuffer();
 
-  // Upload back to R2
   await r2.send(new PutObjectCommand({
     Bucket: R2_BUCKET,
     Key: dest,
@@ -105,8 +117,23 @@ async function generateOne(n: number, force = false): Promise<"ok" | "skip" | "e
   const srcKb  = (sourceBuffer.byteLength / 1024).toFixed(0);
   const destKb = (thumb.byteLength / 1024).toFixed(0);
   const ratio  = ((1 - thumb.byteLength / sourceBuffer.byteLength) * 100).toFixed(0);
-  process.stdout.write(`  Part ${String(n).padStart(3)}  ${srcKb.padStart(8)} KB → ${destKb.padStart(5)} KB  (${ratio}% smaller)\n`);
+  process.stdout.write(`  ${lang} part ${String(n).padStart(3)}  ${srcKb.padStart(8)} KB → ${destKb.padStart(5)} KB  (${ratio}% smaller)\n`);
   return "ok";
+}
+
+function langsFromArgv(): CourseLang[] {
+  if (process.argv.includes("--all")) return [...LOCALIZED_LANGS];
+  const langFlag = process.argv.indexOf("--lang");
+  if (langFlag !== -1) {
+    const code = process.argv[langFlag + 1];
+    if (!code || (code !== "en" && code !== "ar" && !(code in LOCALIZED_MEDIA))) {
+      console.error(`Unknown language "${code}". Use en, ar, or one of: ${LOCALIZED_LANGS.join(", ")}`);
+      process.exit(1);
+    }
+    return [code as CourseLang];
+  }
+  if (process.argv.includes("--ar")) return ["ar"];
+  return ["en"];
 }
 
 (async () => {
@@ -116,29 +143,32 @@ async function generateOne(n: number, force = false): Promise<"ok" | "skip" | "e
     : Array.from({ length: TOTAL_PARTS }, (_, i) => i + 1);
 
   const force = process.argv.includes("--force");
-  const langLabel = IS_ARABIC ? "Arabic" : "English";
+  const langs = langsFromArgv();
 
   console.log("=".repeat(65));
-  console.log(` Thumbnail Generator (${langLabel})  —  ${parts.length} part(s)  ${force ? "(force re-generate)" : "(skip existing)"}`);
-  console.log(` Output: ${IS_ARABIC ? "arabic/thumbnails" : "thumbnails"}/part-XX-thumb.jpg`);
+  console.log(` Thumbnail Generator  —  ${langs.join(", ")}  —  ${parts.length} part(s)  ${force ? "(force re-generate)" : "(skip existing)"}`);
   console.log(" Size: 640px wide JPEG @ q82 (mozjpeg)");
+  console.log(" Source: first slide of each language's deck");
   console.log("=".repeat(65));
 
-  // Process in batches to avoid hammering R2
-  const BATCH = 5;
   let ok = 0, skipped = 0, errors = 0;
   const startMs = Date.now();
 
-  for (let i = 0; i < parts.length; i += BATCH) {
-    const batch = parts.slice(i, i + BATCH);
-    const results = await Promise.all(batch.map((n) => generateOne(n, force)));
-    ok      += results.filter((r) => r === "ok").length;
-    skipped += results.filter((r) => r === "skip").length;
-    errors  += results.filter((r) => r === "error").length;
+  for (const lang of langs) {
+    console.log(`\n${lang}  →  ${destPrefix(lang)}/part-XX-thumb.jpg`);
+    for (let i = 0; i < parts.length; i += BATCH) {
+      const batch = parts.slice(i, i + BATCH);
+      const results = await Promise.all(batch.map((n) => generateOne(lang, n, force)));
+      ok      += results.filter((r) => r === "ok").length;
+      skipped += results.filter((r) => r === "skip").length;
+      errors  += results.filter((r) => r === "error").length;
+    }
+    console.log(`${lang} complete`);
   }
 
   const elapsed = ((Date.now() - startMs) / 1000).toFixed(1);
   console.log("=".repeat(65));
   console.log(` Done in ${elapsed}s  |  Generated: ${ok}  Skipped: ${skipped}  Errors: ${errors}`);
+  console.log("ALL DONE");
   console.log("=".repeat(65));
 })();

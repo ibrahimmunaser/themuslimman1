@@ -8,6 +8,7 @@ import { formatHadithRef } from "@/lib/localize-hadith-ref";
 import type { CourseLang } from "@/lib/course-lang";
 import { isRtlLang } from "@/lib/course-lang";
 import { loc } from "@/lib/loc";
+import { phrase } from "@/lib/phrases";
 import { useWidgetCycle, WIDGET_FADE_MS } from "./widget-cycle-context";
 
 interface Fact {
@@ -60,7 +61,12 @@ function pickRandom(list: Fact[], exclude?: number): Fact {
 function factsForLang(lang: CourseLang): Fact[] {
   if (lang === "ar") return FACTS_AR;
   if (lang === "fr") return FACTS_FR;
-  return FACTS_EN;
+  if (lang === "en") return FACTS_EN;
+  return FACTS_EN.map((fact) => ({
+    ...fact,
+    clean_fact: phrase(lang, fact.clean_fact),
+    category: phrase(lang, fact.category),
+  }));
 }
 
 export function DidYouKnowWidget({

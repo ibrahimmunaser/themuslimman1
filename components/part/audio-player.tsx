@@ -182,7 +182,7 @@ export function AudioPlayer({ src, title, partNumber, compact = false, previewMo
             <button
               onClick={(e) => { e.stopPropagation(); setShowSpeedMenu(!showSpeedMenu); }}
               className="flex items-center gap-1 px-2 py-1.5 rounded-md bg-surface-raised hover:bg-surface-high transition-colors min-h-[44px]"
-              aria-label={loc(lang, `Playback speed: ${playbackRate}x`, `سرعة التشغيل: ${playbackRate}x`, `Vitesse de lecture : ${playbackRate}x`)}
+              aria-label={t(lang, "playbackSpeed")}
             >
               <Gauge className="w-3 h-3 text-text-muted/70" />
               <span className="text-[11px] text-text-muted font-medium">{playbackRate}x</span>

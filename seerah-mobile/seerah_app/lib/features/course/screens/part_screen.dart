@@ -97,11 +97,13 @@ class _PartScreenState extends ConsumerState<PartScreen> {
           builder: (url) => AudioTab(audioUrl: url, partNumber: partNumber, partTitle: PARTS.firstWhere((p) => p.partNumber == partNumber, orElse: () => PARTS.first).localizedTitle(lang)),
         );
       case 'mindmap':
-        _openAssetWhenReady(
-          urlGetter: (a) => a.mindmapUrl,
-          title: tv(lang, 'mindmapPartN', {'n': partNumber}),
-          builder: (url) => MindmapTab(partNumber: partNumber, mindmapUrl: url),
-        );
+        if (lang == 'en') {
+          _openAssetWhenReady(
+            urlGetter: (a) => a.mindmapUrl,
+            title: tv(lang, 'mindmapPartN', {'n': partNumber}),
+            builder: (url) => MindmapTab(partNumber: partNumber, mindmapUrl: url),
+          );
+        }
     }
   }
 
@@ -432,33 +434,33 @@ class _PartScreenState extends ConsumerState<PartScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
-
-                // ── Mindmap — full width ─────────────────────────────────
-                _AssetCard(
-                  icon: Icons.account_tree_rounded,
-                  iconColor: const Color(0xFFC06060),
-                  title: t(currentLang, 'mindmap'),
-                  subtitle: t(currentLang, 'visualOverviewConcepts'),
-                  notAvailableLabel: t(currentLang, 'notAvailable'),
-                  available: assetAvailable((a) => a.mindmapUrl != null),
-                  onTap: () {
-                    final assets = assetsAsync.valueOrNull;
-                    if (assets?.mindmapUrl != null) {
-                      _open(
-                        context,
-                        title: tv(currentLang, 'mindmapPartN', {'n': partNumber}),
-                        child: MindmapTab(partNumber: partNumber, mindmapUrl: assets!.mindmapUrl!),
-                      );
-                    } else if (isFreePart) {
-                      _openAssetWhenReady(
-                        urlGetter: (a) => a.mindmapUrl,
-                        title: tv(currentLang, 'mindmapPartN', {'n': partNumber}),
-                        builder: (url) => MindmapTab(partNumber: partNumber, mindmapUrl: url),
-                      );
-                    }
-                  },
-                ),
+                if (currentLang == 'en') ...[
+                  const SizedBox(height: 12),
+                  _AssetCard(
+                    icon: Icons.account_tree_rounded,
+                    iconColor: const Color(0xFFC06060),
+                    title: t(currentLang, 'mindmap'),
+                    subtitle: t(currentLang, 'visualOverviewConcepts'),
+                    notAvailableLabel: t(currentLang, 'notAvailable'),
+                    available: assetAvailable((a) => a.mindmapUrl != null),
+                    onTap: () {
+                      final assets = assetsAsync.valueOrNull;
+                      if (assets?.mindmapUrl != null) {
+                        _open(
+                          context,
+                          title: tv(currentLang, 'mindmapPartN', {'n': partNumber}),
+                          child: MindmapTab(partNumber: partNumber, mindmapUrl: assets!.mindmapUrl!),
+                        );
+                      } else if (isFreePart) {
+                        _openAssetWhenReady(
+                          urlGetter: (a) => a.mindmapUrl,
+                          title: tv(currentLang, 'mindmapPartN', {'n': partNumber}),
+                          builder: (url) => MindmapTab(partNumber: partNumber, mindmapUrl: url),
+                        );
+                      }
+                    },
+                  ),
+                ],
                 const SizedBox(height: 20),
 
                 _SectionLabel(text: t(currentLang, 'practiceReview'), color: eraColor),

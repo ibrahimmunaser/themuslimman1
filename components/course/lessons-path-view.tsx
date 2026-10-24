@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import type { Part } from "@/lib/types";
 import { ERA_MAP } from "@/lib/types";
-import type { CourseLang } from "@/lib/course-lang";
+import { courseHasMindmaps, type CourseLang } from "@/lib/course-lang";
 import { loc } from "@/lib/loc";
 import { t, tf, ERA_DESCRIPTIONS_AR, ERA_DESCRIPTIONS_FR } from "@/lib/ui-strings";
 
@@ -147,7 +147,7 @@ export function LessonsPathView({
       { key: "briefing",   label: prog.briefingOpened ? `✓ ${briefingLabel}` : briefingLabel,                  done: prog.briefingOpened,         partial: false },
       { key: "slides",     label: opened.includes("slides") ? `✓ ${slidesLabel}` : slidesLabel,               done: opened.includes("slides"),   partial: false },
       { key: "audio",      label: opened.includes("audio") ? `✓ ${audioLabel}` : audioLabel,                  done: opened.includes("audio"),    partial: false },
-      ...(!isRtl ? [{ key: "mindmap", label: opened.includes("mindmap") ? `✓ ${mindmapLabel}` : mindmapLabel, done: opened.includes("mindmap"),  partial: false }] : []),
+      ...(courseHasMindmaps(lang) ? [{ key: "mindmap", label: opened.includes("mindmap") ? `✓ ${mindmapLabel}` : mindmapLabel, done: opened.includes("mindmap"),  partial: false }] : []),
       { key: "flashcards", label: prog.flashcardsReviewed ? `✓ ${flashcardsLabel}` : flashcardsLabel,         done: prog.flashcardsReviewed,     partial: false },
       {
         key: "quiz",

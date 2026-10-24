@@ -70,16 +70,11 @@ class _SlidesTabState extends ConsumerState<SlidesTab> {
           (t(lang, 'keyFacts'), slides.facts),
         ];
 
-        final activeDeck = decks[_deckIndex].$2;
-
-        if (activeDeck.isEmpty) {
-          // Try another deck
-          final nonEmpty = decks.indexWhere((d) => d.$2.isNotEmpty);
-          if (nonEmpty >= 0 && nonEmpty != _deckIndex) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) setState(() { _deckIndex = nonEmpty; _slideIndex = 0; });
-            });
-          }
+        final filled = <int>[
+          for (var i = 0; i < decks.length; i++)
+            if (decks[i].$2.isNotEmpty) i,
+        ];
+        if (filled.isEmpty) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -91,6 +86,16 @@ class _SlidesTabState extends ConsumerState<SlidesTab> {
             ),
           );
         }
+
+        // French and Arabic only have the presented deck. Open that one
+        // immediately instead of flashing the empty Detailed deck.
+        final deckIndex = filled.contains(_deckIndex) ? _deckIndex : filled.first;
+        if (deckIndex != _deckIndex) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) setState(() { _deckIndex = deckIndex; _slideIndex = 0; });
+          });
+        }
+        final activeDeck = decks[deckIndex].$2;
 
         // Defensive: if a Retry (ref.invalidate below) ever returns a
         // smaller deck than the one the user had scrolled deep into,
@@ -111,7 +116,8 @@ class _SlidesTabState extends ConsumerState<SlidesTab> {
         return Column(
           children: [
             // ── Segmented deck selector ──────────────────────────────────────
-            Container(
+            // Hidden when the language only has one deck (French, Arabic).
+            if (filled.length > 1) Container(
               margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
               padding: const EdgeInsets.all(3),
               decoration: BoxDecoration(
@@ -121,7 +127,7 @@ class _SlidesTabState extends ConsumerState<SlidesTab> {
               ),
               child: Row(
                 children: decks.asMap().entries.map((e) {
-                  final selected = e.key == _deckIndex;
+                  final selected = e.key == deckIndex;
                   final hasSlides = e.value.$2.isNotEmpty;
                   return Expanded(
                     child: AnimatedContainer(

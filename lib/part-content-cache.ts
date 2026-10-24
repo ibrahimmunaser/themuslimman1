@@ -33,9 +33,10 @@ import {
   r2GetMindmapKey,
   r2GetArabicVideoKey,
   r2GetArabicAudioKey,
-  r2GetFrenchVideoKey,
+  r2GetLocalizedVideoKey,
 } from "@/lib/r2";
-import type { CourseLang } from "@/lib/course-lang";
+import { localizedMedia, type CourseLang } from "@/lib/course-lang";
+import { langPackRevision } from "@/lib/lang-packs";
 
 const TTL_MS = 90 * 60 * 1000; // 90 minutes
 
@@ -98,7 +99,6 @@ async function loadPartData(n: number, lang: CourseLang): Promise<CachedPartData
       flashcards,
       slidesPresentedFiles,
       infArKey,
-      mindmapKey,
     ] = await Promise.all([
       readBriefing(n, "ar").catch(() => null),
       readStatementOfFacts(n, "ar").catch(() => null),
@@ -107,18 +107,15 @@ async function loadPartData(n: number, lang: CourseLang): Promise<CachedPartData
       readFlashcards(n, "ar").catch(() => null),
       getSlideFiles(n, "presented", "ar").catch(() => []),
       getInfographicFilename(n, "Concise", "ar").catch(() => null),
-      // Mindmaps stay English; still sign so the Mindmap tab works in AR mode
-      r2GetMindmapKey(n).catch(() => null),
     ]);
 
     const videoKey = r2GetArabicVideoKey(n);
     const audioKey = r2GetArabicAudioKey(n);
 
-    const [infSignedConcise, videoUrl, audioUrl, mindmapUrl, thumbnailUrl] = await Promise.all([
+    const [infSignedConcise, videoUrl, audioUrl, thumbnailUrl] = await Promise.all([
       signImg(infArKey, "Concise"),
       generateSignedR2Url(videoKey, VIDEO_URL_EXPIRY).catch(() => undefined),
       generateSignedR2Url(audioKey, VIDEO_URL_EXPIRY).catch(() => undefined),
-      mindmapKey ? generateSignedR2Url(mindmapKey, IMAGE_URL_EXPIRY) : Promise.resolve(undefined),
       getThumbnailUrl(n, "ar").catch(() => undefined),
     ]);
 
@@ -135,21 +132,22 @@ async function loadPartData(n: number, lang: CourseLang): Promise<CachedPartData
       infConcise: infArKey,
       infStandard: null,
       infBento: null,
-      hasMindmap: !!mindmapKey,
+      hasMindmap: false,
       infSignedConcise,
       infSignedStandard: undefined,
       infSignedBento: undefined,
       videoUrl,
       audioUrl,
-      mindmapUrl,
+      mindmapUrl: undefined,
       thumbnailUrl,
       cachedAt: Date.now(),
     };
   }
 
-  if (lang === "fr") {
-    // French: deterministic video, single infographic, presented slides only.
-    // Audio falls back to English (no french/audio on R2). Mindmaps stay English.
+  if (localizedMedia(lang)) {
+    // Translated video, one infographic, presented slides only.
+    // Audio falls back to English. Mind maps are English-only.
+    // Briefing, facts, study guide, quiz, and flashcards come from the language pack when one exists.
     const [
       briefingText,
       statementOfFactsText,
@@ -158,28 +156,25 @@ async function loadPartData(n: number, lang: CourseLang): Promise<CachedPartData
       flashcards,
       slidesPresentedFiles,
       infFrKey,
-      mindmapKey,
       audioKey,
     ] = await Promise.all([
-      readBriefing(n, "fr").catch(() => null),
-      readStatementOfFacts(n, "fr").catch(() => null),
-      readStudyGuide(n, "fr").catch(() => null),
-      readQuiz(n, "fr").catch(() => null),
-      readFlashcards(n, "fr").catch(() => null),
-      getSlideFiles(n, "presented", "fr").catch(() => []),
-      getInfographicFilename(n, "Concise", "fr").catch(() => null),
-      r2GetMindmapKey(n).catch(() => null),
+      readBriefing(n, lang).catch(() => null),
+      readStatementOfFacts(n, lang).catch(() => null),
+      readStudyGuide(n, lang).catch(() => null),
+      readQuiz(n, lang).catch(() => null),
+      readFlashcards(n, lang).catch(() => null),
+      getSlideFiles(n, "presented", lang).catch(() => []),
+      getInfographicFilename(n, "Concise", lang).catch(() => null),
       r2GetAudioKey(n).catch(() => null),
     ]);
 
-    const videoKey = r2GetFrenchVideoKey(n);
+    const videoKey = r2GetLocalizedVideoKey(lang, n);
 
-    const [infSignedConcise, videoUrl, audioUrl, mindmapUrl, thumbnailUrl] = await Promise.all([
+    const [infSignedConcise, videoUrl, audioUrl, thumbnailUrl] = await Promise.all([
       signImg(infFrKey, "Concise"),
       generateSignedR2Url(videoKey, VIDEO_URL_EXPIRY).catch(() => undefined),
       audioKey ? generateSignedR2Url(audioKey, VIDEO_URL_EXPIRY).catch(() => undefined) : Promise.resolve(undefined),
-      mindmapKey ? generateSignedR2Url(mindmapKey, IMAGE_URL_EXPIRY) : Promise.resolve(undefined),
-      getThumbnailUrl(n, "fr").catch(() => undefined),
+      getThumbnailUrl(n, lang).catch(() => undefined),
     ]);
 
     return {
@@ -195,13 +190,13 @@ async function loadPartData(n: number, lang: CourseLang): Promise<CachedPartData
       infConcise: infFrKey,
       infStandard: null,
       infBento: null,
-      hasMindmap: !!mindmapKey,
+      hasMindmap: false,
       infSignedConcise,
       infSignedStandard: undefined,
       infSignedBento: undefined,
       videoUrl,
       audioUrl,
-      mindmapUrl,
+      mindmapUrl: undefined,
       thumbnailUrl,
       cachedAt: Date.now(),
     };
@@ -286,15 +281,23 @@ async function loadPartData(n: number, lang: CourseLang): Promise<CachedPartData
   };
 }
 
+function partCacheKey(n: number, lang: CourseLang): string {
+  return `${n}-${lang}-${langPackRevision(lang)}`;
+}
+
 /** Remove a specific part+lang from the cache so the next request re-fetches from R2. */
 export function invalidatePartCache(n: number, lang: CourseLang = "en"): void {
-  const key = `${n}-${lang}`;
-  cache.delete(key);
-  inflight.delete(key);
+  const prefix = `${n}-${lang}`;
+  for (const key of cache.keys()) {
+    if (key === prefix || key.startsWith(`${prefix}-`)) {
+      cache.delete(key);
+      inflight.delete(key);
+    }
+  }
 }
 
 export async function getPartPageData(n: number, lang: CourseLang = "en"): Promise<CachedPartData> {
-  const key = `${n}-${lang}`;
+  const key = partCacheKey(n, lang);
   const cached = cache.get(key);
   if (cached && Date.now() - cached.cachedAt < TTL_MS) return cached;
 

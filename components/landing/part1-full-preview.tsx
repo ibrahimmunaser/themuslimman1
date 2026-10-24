@@ -1,6 +1,6 @@
 import { getPart1PreviewData, getPreviewLangFromCookies } from "@/lib/part1-preview-data";
+import { isRtlLang } from "@/lib/course-lang";
 import { Part1PreviewTabs } from "@/components/landing/part1-preview-tabs";
-import { LangToggle } from "@/components/part/lang-toggle";
 import { Badge } from "@/components/ui/badge";
 
 export async function Part1FullPreview({
@@ -15,6 +15,7 @@ export async function Part1FullPreview({
   const lang = await getPreviewLangFromCookies();
   const { part, initialAssetUrls } = await getPart1PreviewData(lang);
   const isRtl = lang === "ar";
+  const contentDir = isRtlLang(lang) ? "rtl" : undefined;
 
   if (!part) {
     return (
@@ -29,7 +30,7 @@ export async function Part1FullPreview({
   }
 
   return (
-    <div className="rounded-2xl border border-gold/20 bg-surface overflow-hidden" dir={isRtl ? "rtl" : undefined}>
+    <div className="rounded-2xl border border-gold/20 bg-surface overflow-hidden" dir={contentDir}>
       <div className="p-4 bg-surface-raised border-b border-border">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
@@ -43,12 +44,9 @@ export async function Part1FullPreview({
               <p className="text-sm text-text-secondary mt-1">{part.subtitle}</p>
             )}
           </div>
-          <div className="flex items-center gap-3 self-start sm:self-auto flex-shrink-0">
-            <LangToggle current={lang} partNumber={1} prominent />
-            <Badge variant="gold" size="sm">
-              {isRtl ? "مجاني ١٠٠٪" : "100% Free"}
-            </Badge>
-          </div>
+          <Badge variant="gold" size="sm" className="self-start sm:self-auto flex-shrink-0">
+            {isRtl ? "مجاني ١٠٠٪" : "100% Free"}
+          </Badge>
         </div>
         <p className="text-xs sm:text-sm text-gold/90 mt-3 leading-relaxed">
           {isRtl

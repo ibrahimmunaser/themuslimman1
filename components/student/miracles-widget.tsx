@@ -8,6 +8,7 @@ import { formatHadithRef } from "@/lib/localize-hadith-ref";
 import type { CourseLang } from "@/lib/course-lang";
 import { isRtlLang } from "@/lib/course-lang";
 import { loc } from "@/lib/loc";
+import { phrase } from "@/lib/phrases";
 import { useWidgetCycle, WIDGET_FADE_MS } from "./widget-cycle-context";
 
 interface Miracle {
@@ -32,7 +33,12 @@ function pickRandom(list: Miracle[], exclude?: number): Miracle {
 function miraclesForLang(lang: CourseLang): Miracle[] {
   if (lang === "ar") return MIRACLES_AR;
   if (lang === "fr") return MIRACLES_FR;
-  return MIRACLES_EN;
+  if (lang === "en") return MIRACLES_EN;
+  return MIRACLES_EN.map((item) => ({
+    ...item,
+    fact: phrase(lang, item.fact),
+    type: phrase(lang, item.type),
+  }));
 }
 
 export function MiraclesWidget({

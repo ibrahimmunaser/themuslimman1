@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { StudentSidebar } from "./student-sidebar";
-import { parseLang, COURSE_LANG_COOKIE } from "@/lib/course-lang";
+import { parseLang, isRtlLang, COURSE_LANG_COOKIE } from "@/lib/course-lang";
 import { getCachedStudent } from "@/lib/auth-cache";
 import { LanguagesLaunchGate } from "@/components/student/languages-launch-gate";
 
@@ -28,7 +28,7 @@ export async function StudentLayout({
   return (
     <div
       className="flex min-h-screen bg-background items-start w-full"
-      dir={lang === "ar" ? "rtl" : "ltr"}
+      dir={isRtlLang(lang) ? "rtl" : "ltr"}
       lang={lang}
     >
       <StudentSidebar
