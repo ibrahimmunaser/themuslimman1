@@ -41,12 +41,6 @@ class _CourseScreenState extends ConsumerState<CourseScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         title: Text(t(lang, 'lessons')),
-        actions: const [
-          Padding(
-            padding: EdgeInsets.only(right: 12),
-            child: Center(child: AppLangToggle()),
-          ),
-        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(72),
           child: Padding(
@@ -55,7 +49,10 @@ class _CourseScreenState extends ConsumerState<CourseScreen> {
               controller: _searchCtrl,
               onChanged: (v) => setState(() => _search = v.toLowerCase()),
               onClear: _search.isNotEmpty
-                  ? () { _searchCtrl.clear(); setState(() => _search = ''); }
+                  ? () {
+                      _searchCtrl.clear();
+                      setState(() => _search = '');
+                    }
                   : null,
               hint: t(lang, 'searchPartsEllipsis'),
             ),
@@ -81,7 +78,13 @@ class _CourseScreenState extends ConsumerState<CourseScreen> {
         final group = groups[i];
         final era = group['era'] as EraModel;
         final parts = group['parts'] as List<PartModel>;
-        return _EraSection(era: era, parts: parts, hasAccess: hasAccess, progress: progress, lang: lang)
+        return _EraSection(
+              era: era,
+              parts: parts,
+              hasAccess: hasAccess,
+              progress: progress,
+              lang: lang,
+            )
             .animate(delay: (i * 50).ms)
             .fadeIn(duration: 400.ms)
             .slideY(begin: 0.05, end: 0);
@@ -89,7 +92,11 @@ class _CourseScreenState extends ConsumerState<CourseScreen> {
     );
   }
 
-  Widget _buildSearchResults(bool hasAccess, ProgressState? progress, String lang) {
+  Widget _buildSearchResults(
+    bool hasAccess,
+    ProgressState? progress,
+    String lang,
+  ) {
     final results = PARTS.where((p) {
       final fr = kPartTitlesFr[p.partNumber];
       return p.localizedTitle(lang).toLowerCase().contains(_search) ||
@@ -127,7 +134,8 @@ class _CourseScreenState extends ConsumerState<CourseScreen> {
             isFirst: i == 0,
             isLast: i == results.length - 1,
             isViewed: progress?.viewedParts.contains(p.partNumber) ?? false,
-            isCompleted: progress?.completedParts.contains(p.partNumber) ?? false,
+            isCompleted:
+                progress?.completedParts.contains(p.partNumber) ?? false,
             onTap: () => context.push('/part/${p.partNumber}'),
           ),
         );
@@ -142,7 +150,13 @@ class _EraSection extends StatefulWidget {
   final bool hasAccess;
   final ProgressState? progress;
   final String lang;
-  const _EraSection({required this.era, required this.parts, required this.hasAccess, this.progress, required this.lang});
+  const _EraSection({
+    required this.era,
+    required this.parts,
+    required this.hasAccess,
+    this.progress,
+    required this.lang,
+  });
 
   @override
   State<_EraSection> createState() => _EraSectionState();
@@ -181,7 +195,8 @@ class _EraSectionState extends State<_EraSection> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(widget.era.localizedName(widget.lang),
+                      Text(
+                        widget.era.localizedName(widget.lang),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -191,8 +206,15 @@ class _EraSectionState extends State<_EraSection> {
                         ),
                       ),
                       const SizedBox(height: 2),
-                      Text(tv(widget.lang, 'nPartsSuffix', {'n': widget.parts.length}),
-                        style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w500),
+                      Text(
+                        tv(widget.lang, 'nPartsSuffix', {
+                          'n': widget.parts.length,
+                        }),
+                        style: TextStyle(
+                          color: color,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ],
                   ),
@@ -200,7 +222,11 @@ class _EraSectionState extends State<_EraSection> {
                 AnimatedRotation(
                   turns: _expanded ? 0.5 : 0,
                   duration: const Duration(milliseconds: 200),
-                  child: Icon(Icons.keyboard_arrow_down, color: AppColors.textMuted, size: 22),
+                  child: Icon(
+                    Icons.keyboard_arrow_down,
+                    color: AppColors.textMuted,
+                    size: 22,
+                  ),
                 ),
               ],
             ),
@@ -223,14 +249,20 @@ class _EraSectionState extends State<_EraSection> {
                   grouped: true,
                   isFirst: i == 0,
                   isLast: i == widget.parts.length - 1,
-                  isViewed: widget.progress?.viewedParts.contains(p.partNumber) ?? false,
-                  isCompleted: widget.progress?.completedParts.contains(p.partNumber) ?? false,
+                  isViewed:
+                      widget.progress?.viewedParts.contains(p.partNumber) ??
+                      false,
+                  isCompleted:
+                      widget.progress?.completedParts.contains(p.partNumber) ??
+                      false,
                   onTap: () => context.push('/part/${p.partNumber}'),
                 );
               }).toList(),
             ),
           ),
-          crossFadeState: _expanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+          crossFadeState: _expanded
+              ? CrossFadeState.showSecond
+              : CrossFadeState.showFirst,
           duration: const Duration(milliseconds: 300),
           sizeCurve: Curves.easeOut,
         ),

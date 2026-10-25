@@ -535,11 +535,16 @@ class VerifyingPurchaseBanner extends ConsumerWidget {
 /// so both pricing surfaces show the identical banner.
 class PendingPurchaseRecoveryBanner extends ConsumerWidget {
   final VoidCallback onClaim;
+
   /// pendingLinkPurchases is a list — more than one unclaimed purchase can
   /// genuinely queue up — so the copy needs to reflect that instead of
   /// always implying exactly one.
   final int count;
-  const PendingPurchaseRecoveryBanner({super.key, required this.onClaim, required this.count});
+  const PendingPurchaseRecoveryBanner({
+    super.key,
+    required this.onClaim,
+    required this.count,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -556,13 +561,20 @@ class PendingPurchaseRecoveryBanner extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.receipt_long_rounded, color: AppColors.gold, size: 20),
+          const Icon(
+            Icons.receipt_long_rounded,
+            color: AppColors.gold,
+            size: 20,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               label,
               style: const TextStyle(
-                  color: AppColors.textPrimary, fontSize: 13, height: 1.4),
+                color: AppColors.textPrimary,
+                fontSize: 13,
+                height: 1.4,
+              ),
             ),
           ),
           const SizedBox(width: 8),
@@ -573,11 +585,14 @@ class PendingPurchaseRecoveryBanner extends ConsumerWidget {
               minimumSize: const Size(48, 44),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
-            child: Text(t(lang, 'claim'),
-                style: const TextStyle(
-                    color: AppColors.gold,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700)),
+            child: Text(
+              t(lang, 'claim'),
+              style: const TextStyle(
+                color: AppColors.gold,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ),
         ],
       ),
@@ -665,7 +680,11 @@ class AppLangToggle extends ConsumerWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.language_rounded, color: AppColors.gold, size: 14),
+                  const Icon(
+                    Icons.language_rounded,
+                    color: AppColors.gold,
+                    size: 14,
+                  ),
                   const SizedBox(width: 4),
                   Flexible(
                     child: Text(
@@ -679,7 +698,11 @@ class AppLangToggle extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  const Icon(Icons.expand_more_rounded, color: AppColors.gold, size: 16),
+                  const Icon(
+                    Icons.expand_more_rounded,
+                    color: AppColors.gold,
+                    size: 16,
+                  ),
                 ],
               ),
             ),
@@ -689,7 +712,11 @@ class AppLangToggle extends ConsumerWidget {
     );
   }
 
-  Future<void> _openLanguageSheet(BuildContext context, WidgetRef ref, String lang) {
+  Future<void> _openLanguageSheet(
+    BuildContext context,
+    WidgetRef ref,
+    String lang,
+  ) {
     return showModalBottomSheet<void>(
       context: context,
       backgroundColor: AppColors.surface,
@@ -699,7 +726,9 @@ class AppLangToggle extends ConsumerWidget {
       builder: (sheetContext) {
         return SafeArea(
           child: Directionality(
-            textDirection: isRtlCourseLang(lang) ? TextDirection.rtl : TextDirection.ltr,
+            textDirection: isRtlCourseLang(lang)
+                ? TextDirection.rtl
+                : TextDirection.ltr,
             child: ListView(
               shrinkWrap: true,
               children: [
@@ -730,8 +759,12 @@ class AppLangToggle extends ConsumerWidget {
                     title: Text(
                       option.label,
                       style: TextStyle(
-                        color: option.code == lang ? AppColors.gold : AppColors.textPrimary,
-                        fontWeight: option.code == lang ? FontWeight.w700 : FontWeight.w500,
+                        color: option.code == lang
+                            ? AppColors.gold
+                            : AppColors.textPrimary,
+                        fontWeight: option.code == lang
+                            ? FontWeight.w700
+                            : FontWeight.w500,
                       ),
                     ),
                     trailing: option.code == lang
@@ -739,7 +772,9 @@ class AppLangToggle extends ConsumerWidget {
                         : null,
                     onTap: () {
                       Navigator.of(sheetContext).pop();
-                      ref.read(courseLangProvider.notifier).setLang(option.code);
+                      ref
+                          .read(courseLangProvider.notifier)
+                          .setLang(option.code);
                     },
                   ),
                 const SizedBox(height: 8),
@@ -776,7 +811,11 @@ class AppLangSwitcherRow extends ConsumerWidget {
               color: AppColors.gold.withValues(alpha: 0.14),
               borderRadius: BorderRadius.circular(9),
             ),
-            child: const Icon(Icons.language_rounded, color: AppColors.gold, size: 17),
+            child: const Icon(
+              Icons.language_rounded,
+              color: AppColors.gold,
+              size: 17,
+            ),
           ),
           const SizedBox(width: 14),
           Expanded(

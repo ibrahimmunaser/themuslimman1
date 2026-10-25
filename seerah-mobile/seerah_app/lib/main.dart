@@ -14,6 +14,7 @@ import 'core/providers/part_provider.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_colors.dart';
 import 'core/theme/app_theme.dart';
+import 'core/widgets/ui_kit.dart';
 
 Future<void> main() async {
   // Preserve the native splash until init is complete.
@@ -27,7 +28,9 @@ Future<void> main() async {
     try {
       await InAppPurchaseStoreKitPlatform.enableStoreKit1();
     } catch (e) {
-      debugPrint('[IAP] enableStoreKit1 failed (continuing with StoreKit 2): $e');
+      debugPrint(
+        '[IAP] enableStoreKit1 failed (continuing with StoreKit 2): $e',
+      );
     }
   }
 
@@ -43,17 +46,17 @@ Future<void> main() async {
   // correctly-themed baseline; AppBarTheme's own systemOverlayStyle still
   // takes over (harmlessly re-asserting the same values) on any screen that
   // has an AppBar.
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.light,
-    statusBarBrightness: Brightness.dark,
-    systemNavigationBarColor: AppColors.surface,
-    systemNavigationBarIconBrightness: Brightness.light,
-  ));
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+      statusBarBrightness: Brightness.dark,
+      systemNavigationBarColor: AppColors.surface,
+      systemNavigationBarIconBrightness: Brightness.light,
+    ),
+  );
 
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-  ]);
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
   // Initialize Dio + restore secure cookies before any provider reads the API.
   // Wrapped in try-finally so the native splash is always removed even if
@@ -117,7 +120,12 @@ class _SeerahAppState extends ConsumerState<SeerahApp>
       if (notice != null) {
         _scaffoldMessengerKey.currentState
           ?..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(content: Text(notice), backgroundColor: Colors.red.shade700));
+          ..showSnackBar(
+            SnackBar(
+              content: Text(notice),
+              backgroundColor: Colors.red.shade700,
+            ),
+          );
         ref.read(authProvider.notifier).consumeSessionExpiredNotice();
       }
     });
@@ -166,22 +174,53 @@ class _SeerahAppState extends ConsumerState<SeerahApp>
       // existing fixed-size rows/icons without requiring a full redesign.
       builder: (context, child) {
         final mq = MediaQuery.of(context);
-        return MediaQuery(
-          data: mq.copyWith(
-            textScaler: mq.textScaler.clamp(
-              minScaleFactor: 0.85,
-              maxScaleFactor: 1.3,
-            ),
+        final topInset = mq.padding.top;
+        final clamped = mq.copyWith(
+          textScaler: mq.textScaler.clamp(
+            minScaleFactor: 0.85,
+            maxScaleFactor: 1.3,
           ),
-          // Directionality wraps the whole router/navigator tree so every
-          // screen — not just ones that individually opted into `dir:`
-          // handling — mirrors into RTL for Arabic (nav bar order, AppBar
-          // back-button side, Row/Padding start/end resolution, etc.),
-          // matching how the web app already flips wholesale via `dir` on
-          // <html> in app/layout.tsx.
+        );
+        // Directionality wraps the whole router/navigator tree so every
+        // screen — not just ones that individually opted into `dir:`
+        // handling — mirrors into RTL for Arabic (nav bar order, AppBar
+        // back-button side, Row/Padding start/end resolution, etc.),
+        // matching how the web app already flips wholesale via `dir` on
+        // <html> in app/layout.tsx.
+        // The language menu sits above every route. Top inset is consumed
+        // here so each screen's AppBar does not add the status bar again.
+        return MediaQuery(
+          data: clamped,
           child: Directionality(
-            textDirection: isRtlCourseLang(lang) ? TextDirection.rtl : TextDirection.ltr,
-            child: child!,
+            textDirection: isRtlCourseLang(lang)
+                ? TextDirection.rtl
+                : TextDirection.ltr,
+            child: Column(
+              children: [
+                ColoredBox(
+                  color: AppColors.background,
+                  child: Padding(
+                    padding: EdgeInsets.only(top: topInset),
+                    child: const Align(
+                      alignment: AlignmentDirectional.centerEnd,
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(12, 2, 12, 6),
+                        child: AppLangToggle(),
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: MediaQuery(
+                    data: clamped.copyWith(
+                      padding: clamped.padding.copyWith(top: 0),
+                      viewPadding: clamped.viewPadding.copyWith(top: 0),
+                    ),
+                    child: child!,
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },

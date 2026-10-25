@@ -13,7 +13,8 @@ import '../../../core/widgets/adaptive_icons.dart';
 import '../../../core/widgets/app_logo.dart';
 import '../../../core/widgets/ui_kit.dart';
 import '../../../l10n/app_strings.dart';
-import '../../resources/screens/resources_screen.dart' show resourceTypeCountForLang;
+import '../../resources/screens/resources_screen.dart'
+    show resourceTypeCountForLang;
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -37,7 +38,10 @@ class DashboardScreen extends ConsumerWidget {
     // ensureFamilyProfilesForUser and app/actions/profiles.ts's
     // createDefaultProfileForUser), so it's a safe, always-correct source for
     // BOTH individual and family plans.
-    final firstName = _firstName(activeProfile?.displayName ?? user?.name, lang);
+    final firstName = _firstName(
+      activeProfile?.displayName ?? user?.name,
+      lang,
+    );
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -60,10 +64,6 @@ class DashboardScreen extends ConsumerWidget {
           ],
         ),
         actions: [
-          const Padding(
-            padding: EdgeInsets.only(right: 4),
-            child: Center(child: AppLangToggle()),
-          ),
           // Profile switcher — taps go directly to profile picker if multi-profile
           Padding(
             padding: const EdgeInsets.only(right: 10),
@@ -252,9 +252,9 @@ class DashboardScreen extends ConsumerWidget {
                 SectionHeader(title: t(lang, 'quickAccess')),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: _QuickAccessGrid(lang: lang)
-                      .animate(delay: 160.ms)
-                      .fadeIn(duration: 400.ms),
+                  child: _QuickAccessGrid(
+                    lang: lang,
+                  ).animate(delay: 160.ms).fadeIn(duration: 400.ms),
                 ),
 
                 // ── Upgrade prompt ─────────────────────────────────────────────
@@ -262,9 +262,9 @@ class DashboardScreen extends ConsumerWidget {
                   const SizedBox(height: 16),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: _UpgradeBanner(lang: lang)
-                        .animate(delay: 200.ms)
-                        .fadeIn(duration: 400.ms),
+                    child: _UpgradeBanner(
+                      lang: lang,
+                    ).animate(delay: 200.ms).fadeIn(duration: 400.ms),
                   ),
                 ],
 
@@ -427,8 +427,10 @@ class _ContinueLearningCard extends StatelessWidget {
     // Only advance to "Up next" once the current furthest part is completed
     // (quiz passed) — don't skip past unfinished work just because it was opened.
     final isFirstVisit = progressAsync.valueOrNull?.totalViewed == 0;
-    final completed = progressAsync.valueOrNull?.completedParts ?? const <int>{};
-    final nextPartNum = (!isFirstVisit &&
+    final completed =
+        progressAsync.valueOrNull?.completedParts ?? const <int>{};
+    final nextPartNum =
+        (!isFirstVisit &&
             hasAccess &&
             partNum < PARTS.length &&
             completed.contains(partNum))
@@ -450,7 +452,9 @@ class _ContinueLearningCard extends StatelessWidget {
         ? (hasAccess ? t(lang, 'startHere') : t(lang, 'freeStartHere'))
         : locked
         ? t(lang, 'resumeUnlockContinue')
-        : (nextPartNum == partNum ? t(lang, 'continueLabel') : t(lang, 'upNext'));
+        : (nextPartNum == partNum
+              ? t(lang, 'continueLabel')
+              : t(lang, 'upNext'));
 
     return Material(
       color: Colors.transparent,

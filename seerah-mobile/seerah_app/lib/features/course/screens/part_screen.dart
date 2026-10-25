@@ -7,7 +7,6 @@ import '../../../core/providers/part_provider.dart';
 import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/adaptive_icons.dart';
-import '../../../core/widgets/ui_kit.dart';
 import '../widgets/video_tab.dart';
 import '../widgets/read_tab.dart';
 import '../../../core/utils/system_insets.dart';
@@ -23,6 +22,7 @@ import '../../../l10n/app_strings.dart';
 
 class PartScreen extends ConsumerStatefulWidget {
   final int partNumber;
+
   /// When set, automatically opens this asset viewer immediately after mount.
   /// Values: 'video' | 'read' | 'flashcards' | 'quiz' | 'slides' | 'infographics' | 'audio' | 'mindmap'
   final String? initialTab;
@@ -34,6 +34,7 @@ class PartScreen extends ConsumerStatefulWidget {
 
 class _PartScreenState extends ConsumerState<PartScreen> {
   int get partNumber => widget.partNumber;
+
   /// Ensures deep-link `initialTab` opens at most once, even across auth
   /// loading → ready transitions that previously caused `_autoOpen` to bail
   /// on `_isLocked` during restore and never retry.
@@ -75,33 +76,75 @@ class _PartScreenState extends ConsumerState<PartScreen> {
     final tab = widget.initialTab;
     switch (tab) {
       case 'video':
-        _open(context, title: tv(lang, 'watchPartN', {'n': partNumber}), child: VideoTab(partNumber: partNumber));
+        _open(
+          context,
+          title: tv(lang, 'watchPartN', {'n': partNumber}),
+          child: VideoTab(partNumber: partNumber),
+        );
       case 'briefing':
-        _open(context, title: tv(lang, 'briefingPartN', {'n': partNumber}), child: ReadTab(partNumber: partNumber, initialSection: 0));
+        _open(
+          context,
+          title: tv(lang, 'briefingPartN', {'n': partNumber}),
+          child: ReadTab(partNumber: partNumber, initialSection: 0),
+        );
       case 'facts':
-        _open(context, title: tv(lang, 'keyFactsPartN', {'n': partNumber}), child: ReadTab(partNumber: partNumber, initialSection: 2));
+        _open(
+          context,
+          title: tv(lang, 'keyFactsPartN', {'n': partNumber}),
+          child: ReadTab(partNumber: partNumber, initialSection: 2),
+        );
       case 'read':
-        _open(context, title: tv(lang, 'readPartN', {'n': partNumber}), child: ReadTab(partNumber: partNumber));
+        _open(
+          context,
+          title: tv(lang, 'readPartN', {'n': partNumber}),
+          child: ReadTab(partNumber: partNumber),
+        );
       case 'flashcards':
-        _open(context, title: tv(lang, 'flashcardsPartN', {'n': partNumber}), child: FlashcardsTab(partNumber: partNumber));
+        _open(
+          context,
+          title: tv(lang, 'flashcardsPartN', {'n': partNumber}),
+          child: FlashcardsTab(partNumber: partNumber),
+        );
       case 'quiz':
-        _open(context, title: tv(lang, 'quizPartN', {'n': partNumber}), child: QuizTab(partNumber: partNumber));
+        _open(
+          context,
+          title: tv(lang, 'quizPartN', {'n': partNumber}),
+          child: QuizTab(partNumber: partNumber),
+        );
       case 'slides':
-        _open(context, title: tv(lang, 'slidesPartN', {'n': partNumber}), child: SlidesTab(partNumber: partNumber, initialDeck: 1));
+        _open(
+          context,
+          title: tv(lang, 'slidesPartN', {'n': partNumber}),
+          child: SlidesTab(partNumber: partNumber, initialDeck: 1),
+        );
       case 'infographics':
-        _open(context, title: tv(lang, 'infographicsPartN', {'n': partNumber}), child: InfographicsTab(partNumber: partNumber));
+        _open(
+          context,
+          title: tv(lang, 'infographicsPartN', {'n': partNumber}),
+          child: InfographicsTab(partNumber: partNumber),
+        );
       case 'audio':
         _openAssetWhenReady(
           urlGetter: (a) => a.audioUrl,
           title: tv(lang, 'audioPartN', {'n': partNumber}),
-          builder: (url) => AudioTab(audioUrl: url, partNumber: partNumber, partTitle: PARTS.firstWhere((p) => p.partNumber == partNumber, orElse: () => PARTS.first).localizedTitle(lang)),
+          builder: (url) => AudioTab(
+            audioUrl: url,
+            partNumber: partNumber,
+            partTitle: PARTS
+                .firstWhere(
+                  (p) => p.partNumber == partNumber,
+                  orElse: () => PARTS.first,
+                )
+                .localizedTitle(lang),
+          ),
         );
       case 'mindmap':
         if (lang == 'en') {
           _openAssetWhenReady(
             urlGetter: (a) => a.mindmapUrl,
             title: tv(lang, 'mindmapPartN', {'n': partNumber}),
-            builder: (url) => MindmapTab(partNumber: partNumber, mindmapUrl: url),
+            builder: (url) =>
+                MindmapTab(partNumber: partNumber, mindmapUrl: url),
           );
         }
     }
@@ -162,10 +205,12 @@ class _PartScreenState extends ConsumerState<PartScreen> {
     final lang = ref.read(courseLangProvider);
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(
-        content: Text(tv(lang, 'assetNotAvailableGeneric', {'title': title})),
-        backgroundColor: Colors.red.shade700,
-      ));
+      ..showSnackBar(
+        SnackBar(
+          content: Text(tv(lang, 'assetNotAvailableGeneric', {'title': title})),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
   }
 
   @override
@@ -201,9 +246,7 @@ class _PartScreenState extends ConsumerState<PartScreen> {
     if (isPaidPart && authState.isLoading) {
       return const Scaffold(
         backgroundColor: AppColors.background,
-        body: Center(
-          child: CircularProgressIndicator(color: AppColors.gold),
-        ),
+        body: Center(child: CircularProgressIndicator(color: AppColors.gold)),
       );
     }
 
@@ -236,291 +279,334 @@ class _PartScreenState extends ConsumerState<PartScreen> {
     return Directionality(
       textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-      backgroundColor: AppColors.background,
-      body: CustomScrollView(
-        slivers: [
-          // ── Hero header ──────────────────────────────────────────────────
-          SliverAppBar(
-            expandedHeight: 190,
-            toolbarHeight: 68,
-            pinned: true,
-            backgroundColor: AppColors.background,
-            leading: IconButton(
-              icon: const BackIcon(size: 20),
-              tooltip: t(currentLang, 'back'),
-              onPressed: () => context.pop(),
-            ),
-            actions: const [
-              Padding(
-                padding: EdgeInsets.only(right: 8),
-                child: Center(child: AppLangToggle(showLabel: true)),
+        backgroundColor: AppColors.background,
+        body: CustomScrollView(
+          slivers: [
+            // ── Hero header ──────────────────────────────────────────────────
+            SliverAppBar(
+              expandedHeight: 190,
+              toolbarHeight: 68,
+              pinned: true,
+              backgroundColor: AppColors.background,
+              leading: IconButton(
+                icon: const BackIcon(size: 20),
+                tooltip: t(currentLang, 'back'),
+                onPressed: () => context.pop(),
               ),
-            ],
-            flexibleSpace: FlexibleSpaceBar(
-              collapseMode: CollapseMode.pin,
-              background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      eraColor.withValues(alpha: 0.18),
-                      AppColors.background,
+              flexibleSpace: FlexibleSpaceBar(
+                collapseMode: CollapseMode.pin,
+                background: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        eraColor.withValues(alpha: 0.18),
+                        AppColors.background,
+                      ],
+                    ),
+                  ),
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Era + part badge row
+                      Row(
+                        children: [
+                          Flexible(
+                            child: _Pill(
+                              label: tv(currentLang, 'partN', {
+                                'n': partNumber,
+                              }),
+                              color: eraColor,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: _Pill(
+                              label: _eraName(part.era, currentLang),
+                              color: eraColor,
+                              faint: true,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        part.localizedTitle(currentLang),
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                          height: 1.2,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        part.localizedSubtitle(currentLang),
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 13,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ],
                   ),
                 ),
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Era + part badge row
-                    Row(
-                      children: [
-                        Flexible(
-                          child: _Pill(
-                            label: tv(currentLang, 'partN', {'n': partNumber}),
-                            color: eraColor,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Flexible(
-                          child: _Pill(
-                            label: _eraName(part.era, currentLang),
-                            color: eraColor,
-                            faint: true,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      part.localizedTitle(currentLang),
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                        height: 1.2,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      part.localizedSubtitle(currentLang),
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 13,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
               ),
             ),
-          ),
 
-          // ── Body ─────────────────────────────────────────────────────────
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                // Section label
-                _SectionLabel(text: t(currentLang, 'studyMaterials'), color: eraColor),
-                const SizedBox(height: 12),
-
-                // ── Video — full-width hero ──────────────────────────────
-                _AssetHero(
-                  icon: Icons.play_circle_fill_rounded,
-                  iconColor: const Color(0xFF5A90B0),
-                  title: t(currentLang, 'watch'),
-                  subtitle: t(currentLang, 'fullVideoLecture'),
-                  description: t(currentLang, 'watchCompleteLesson'),
-                  accentColor: const Color(0xFF5A90B0),
-                  available: assetAvailable((a) => a.videoUrl != null),
-                  onTap: () => _open(
-                    context,
-                    title: tv(currentLang, 'watchPartN', {'n': partNumber}),
-                    child: VideoTab(partNumber: partNumber),
+            // ── Body ─────────────────────────────────────────────────────────
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  // Section label
+                  _SectionLabel(
+                    text: t(currentLang, 'studyMaterials'),
+                    color: eraColor,
                   ),
-                ),
-                const SizedBox(height: 12),
-
-                // ── Audio + Read — 2 col ─────────────────────────────────
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: _AssetCard(
-                        icon: Icons.headphones_rounded,
-                        iconColor: const Color(0xFF9A7AB8),
-                        title: t(currentLang, 'listen'),
-                        subtitle: t(currentLang, 'audioLesson'),
-                        notAvailableLabel: t(currentLang, 'notAvailable'),
-                        available: assetAvailable((a) => a.audioUrl != null),
-                        onTap: () {
-                          final assets = assetsAsync.valueOrNull;
-                          if (assets?.audioUrl != null) {
-                            _open(
-                              context,
-                              title: tv(currentLang, 'listenPartN', {'n': partNumber}),
-                              child: AudioTab(audioUrl: assets!.audioUrl!, partNumber: partNumber, partTitle: part.localizedTitle(currentLang)),
-                            );
-                          } else if (isFreePart) {
-                            _openAssetWhenReady(
-                              urlGetter: (a) => a.audioUrl,
-                              title: tv(currentLang, 'listenPartN', {'n': partNumber}),
-                              builder: (url) => AudioTab(audioUrl: url, partNumber: partNumber, partTitle: part.localizedTitle(currentLang)),
-                            );
-                          }
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _AssetCard(
-                        icon: Icons.menu_book_rounded,
-                        iconColor: const Color(0xFF4AA87E),
-                        title: t(currentLang, 'read'),
-                        subtitle: t(currentLang, 'studyNotes'),
-                        notAvailableLabel: t(currentLang, 'notAvailable'),
-                        available: true,
-                        onTap: () => _open(
-                          context,
-                          title: tv(currentLang, 'readPartN', {'n': partNumber}),
-                          child: ReadTab(partNumber: partNumber),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-
-                // ── Slides + Infographics — 2 col ──────────────────────────
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: _AssetCard(
-                        icon: Icons.view_carousel_rounded,
-                        iconColor: const Color(0xFFD4A017),
-                        title: t(currentLang, 'slides'),
-                        subtitle: t(currentLang, 'visualPresentation'),
-                        notAvailableLabel: t(currentLang, 'notAvailable'),
-                        available: true,
-                        onTap: () => _open(
-                          context,
-                          title: tv(currentLang, 'slidesPartN', {'n': partNumber}),
-                          child: SlidesTab(partNumber: partNumber),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _AssetCard(
-                        icon: Icons.auto_awesome_mosaic_outlined,
-                        iconColor: const Color(0xFFB08040),
-                        title: t(currentLang, 'infographics'),
-                        subtitle: t(currentLang, 'visualSummary'),
-                        notAvailableLabel: t(currentLang, 'notAvailable'),
-                        available: infographicAvailable(),
-                        onTap: () => _open(
-                          context,
-                          title: tv(currentLang, 'infographicsPartN', {'n': partNumber}),
-                          child: InfographicsTab(partNumber: partNumber),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                if (currentLang == 'en') ...[
                   const SizedBox(height: 12),
-                  _AssetCard(
-                    icon: Icons.account_tree_rounded,
-                    iconColor: const Color(0xFFC06060),
-                    title: t(currentLang, 'mindmap'),
-                    subtitle: t(currentLang, 'visualOverviewConcepts'),
-                    notAvailableLabel: t(currentLang, 'notAvailable'),
-                    available: assetAvailable((a) => a.mindmapUrl != null),
-                    onTap: () {
-                      final assets = assetsAsync.valueOrNull;
-                      if (assets?.mindmapUrl != null) {
-                        _open(
-                          context,
-                          title: tv(currentLang, 'mindmapPartN', {'n': partNumber}),
-                          child: MindmapTab(partNumber: partNumber, mindmapUrl: assets!.mindmapUrl!),
-                        );
-                      } else if (isFreePart) {
-                        _openAssetWhenReady(
-                          urlGetter: (a) => a.mindmapUrl,
-                          title: tv(currentLang, 'mindmapPartN', {'n': partNumber}),
-                          builder: (url) => MindmapTab(partNumber: partNumber, mindmapUrl: url),
-                        );
-                      }
-                    },
+
+                  // ── Video — full-width hero ──────────────────────────────
+                  _AssetHero(
+                    icon: Icons.play_circle_fill_rounded,
+                    iconColor: const Color(0xFF5A90B0),
+                    title: t(currentLang, 'watch'),
+                    subtitle: t(currentLang, 'fullVideoLecture'),
+                    description: t(currentLang, 'watchCompleteLesson'),
+                    accentColor: const Color(0xFF5A90B0),
+                    available: assetAvailable((a) => a.videoUrl != null),
+                    onTap: () => _open(
+                      context,
+                      title: tv(currentLang, 'watchPartN', {'n': partNumber}),
+                      child: VideoTab(partNumber: partNumber),
+                    ),
                   ),
-                ],
-                const SizedBox(height: 20),
+                  const SizedBox(height: 12),
 
-                _SectionLabel(text: t(currentLang, 'practiceReview'), color: eraColor),
-                const SizedBox(height: 12),
-
-                // ── Flashcards — full width ──────────────────────────────
-                _AssetHero(
-                  icon: Icons.style_rounded,
-                  iconColor: const Color(0xFF6AAE50),
-                  title: t(currentLang, 'flashcards'),
-                  subtitle: t(currentLang, 'spacedRepetitionCards'),
-                  description: t(currentLang, 'reviewFlipCards'),
-                  accentColor: const Color(0xFF6AAE50),
-                  available: true,
-                  onTap: () => _open(
-                    context,
-                    title: tv(currentLang, 'flashcardsPartN', {'n': partNumber}),
-                    child: FlashcardsTab(partNumber: partNumber),
+                  // ── Audio + Read — 2 col ─────────────────────────────────
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: _AssetCard(
+                          icon: Icons.headphones_rounded,
+                          iconColor: const Color(0xFF9A7AB8),
+                          title: t(currentLang, 'listen'),
+                          subtitle: t(currentLang, 'audioLesson'),
+                          notAvailableLabel: t(currentLang, 'notAvailable'),
+                          available: assetAvailable((a) => a.audioUrl != null),
+                          onTap: () {
+                            final assets = assetsAsync.valueOrNull;
+                            if (assets?.audioUrl != null) {
+                              _open(
+                                context,
+                                title: tv(currentLang, 'listenPartN', {
+                                  'n': partNumber,
+                                }),
+                                child: AudioTab(
+                                  audioUrl: assets!.audioUrl!,
+                                  partNumber: partNumber,
+                                  partTitle: part.localizedTitle(currentLang),
+                                ),
+                              );
+                            } else if (isFreePart) {
+                              _openAssetWhenReady(
+                                urlGetter: (a) => a.audioUrl,
+                                title: tv(currentLang, 'listenPartN', {
+                                  'n': partNumber,
+                                }),
+                                builder: (url) => AudioTab(
+                                  audioUrl: url,
+                                  partNumber: partNumber,
+                                  partTitle: part.localizedTitle(currentLang),
+                                ),
+                              );
+                            }
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _AssetCard(
+                          icon: Icons.menu_book_rounded,
+                          iconColor: const Color(0xFF4AA87E),
+                          title: t(currentLang, 'read'),
+                          subtitle: t(currentLang, 'studyNotes'),
+                          notAvailableLabel: t(currentLang, 'notAvailable'),
+                          available: true,
+                          onTap: () => _open(
+                            context,
+                            title: tv(currentLang, 'readPartN', {
+                              'n': partNumber,
+                            }),
+                            child: ReadTab(partNumber: partNumber),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 12),
+                  const SizedBox(height: 12),
 
-                // ── Quiz — full width ────────────────────────────────────
-                _AssetHero(
-                  icon: Icons.quiz_rounded,
-                  iconColor: const Color(0xFFE8C040),
-                  title: t(currentLang, 'quiz'),
-                  subtitle: t(currentLang, 'testYourKnowledge'),
-                  description: t(currentLang, 'mcqInstantFeedback'),
-                  accentColor: const Color(0xFFE8C040),
-                  available: true,
-                  onTap: () => _open(
-                    context,
-                    title: tv(currentLang, 'quizPartN', {'n': partNumber}),
-                    child: QuizTab(partNumber: partNumber),
+                  // ── Slides + Infographics — 2 col ──────────────────────────
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: _AssetCard(
+                          icon: Icons.view_carousel_rounded,
+                          iconColor: const Color(0xFFD4A017),
+                          title: t(currentLang, 'slides'),
+                          subtitle: t(currentLang, 'visualPresentation'),
+                          notAvailableLabel: t(currentLang, 'notAvailable'),
+                          available: true,
+                          onTap: () => _open(
+                            context,
+                            title: tv(currentLang, 'slidesPartN', {
+                              'n': partNumber,
+                            }),
+                            child: SlidesTab(partNumber: partNumber),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _AssetCard(
+                          icon: Icons.auto_awesome_mosaic_outlined,
+                          iconColor: const Color(0xFFB08040),
+                          title: t(currentLang, 'infographics'),
+                          subtitle: t(currentLang, 'visualSummary'),
+                          notAvailableLabel: t(currentLang, 'notAvailable'),
+                          available: infographicAvailable(),
+                          onTap: () => _open(
+                            context,
+                            title: tv(currentLang, 'infographicsPartN', {
+                              'n': partNumber,
+                            }),
+                            child: InfographicsTab(partNumber: partNumber),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
+                  if (currentLang == 'en') ...[
+                    const SizedBox(height: 12),
+                    _AssetCard(
+                      icon: Icons.account_tree_rounded,
+                      iconColor: const Color(0xFFC06060),
+                      title: t(currentLang, 'mindmap'),
+                      subtitle: t(currentLang, 'visualOverviewConcepts'),
+                      notAvailableLabel: t(currentLang, 'notAvailable'),
+                      available: assetAvailable((a) => a.mindmapUrl != null),
+                      onTap: () {
+                        final assets = assetsAsync.valueOrNull;
+                        if (assets?.mindmapUrl != null) {
+                          _open(
+                            context,
+                            title: tv(currentLang, 'mindmapPartN', {
+                              'n': partNumber,
+                            }),
+                            child: MindmapTab(
+                              partNumber: partNumber,
+                              mindmapUrl: assets!.mindmapUrl!,
+                            ),
+                          );
+                        } else if (isFreePart) {
+                          _openAssetWhenReady(
+                            urlGetter: (a) => a.mindmapUrl,
+                            title: tv(currentLang, 'mindmapPartN', {
+                              'n': partNumber,
+                            }),
+                            builder: (url) => MindmapTab(
+                              partNumber: partNumber,
+                              mindmapUrl: url,
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                  ],
+                  const SizedBox(height: 20),
 
-                // ── Continue CTA (Part 1 only, no access) ───────────────
-                if (isFreePart && !hasAccess) ...[
-                  const SizedBox(height: 28),
-                  _ContinueCTA(isLoggedIn: authState.isLoggedIn, lang: currentLang),
-                ],
+                  _SectionLabel(
+                    text: t(currentLang, 'practiceReview'),
+                    color: eraColor,
+                  ),
+                  const SizedBox(height: 12),
 
-                // ── Up Next card ─────────────────────────────────────────
-                if (partNumber < PARTS.length && hasAccess) ...[
-                  const SizedBox(height: 24),
-                  _UpNextCard(partNumber: partNumber, lang: currentLang),
-                ],
-              ]),
+                  // ── Flashcards — full width ──────────────────────────────
+                  _AssetHero(
+                    icon: Icons.style_rounded,
+                    iconColor: const Color(0xFF6AAE50),
+                    title: t(currentLang, 'flashcards'),
+                    subtitle: t(currentLang, 'spacedRepetitionCards'),
+                    description: t(currentLang, 'reviewFlipCards'),
+                    accentColor: const Color(0xFF6AAE50),
+                    available: true,
+                    onTap: () => _open(
+                      context,
+                      title: tv(currentLang, 'flashcardsPartN', {
+                        'n': partNumber,
+                      }),
+                      child: FlashcardsTab(partNumber: partNumber),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // ── Quiz — full width ────────────────────────────────────
+                  _AssetHero(
+                    icon: Icons.quiz_rounded,
+                    iconColor: const Color(0xFFE8C040),
+                    title: t(currentLang, 'quiz'),
+                    subtitle: t(currentLang, 'testYourKnowledge'),
+                    description: t(currentLang, 'mcqInstantFeedback'),
+                    accentColor: const Color(0xFFE8C040),
+                    available: true,
+                    onTap: () => _open(
+                      context,
+                      title: tv(currentLang, 'quizPartN', {'n': partNumber}),
+                      child: QuizTab(partNumber: partNumber),
+                    ),
+                  ),
+
+                  // ── Continue CTA (Part 1 only, no access) ───────────────
+                  if (isFreePart && !hasAccess) ...[
+                    const SizedBox(height: 28),
+                    _ContinueCTA(
+                      isLoggedIn: authState.isLoggedIn,
+                      lang: currentLang,
+                    ),
+                  ],
+
+                  // ── Up Next card ─────────────────────────────────────────
+                  if (partNumber < PARTS.length && hasAccess) ...[
+                    const SizedBox(height: 24),
+                    _UpNextCard(partNumber: partNumber, lang: currentLang),
+                  ],
+                ]),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
+        bottomNavigationBar: _PartNavBar(
+          partNumber: partNumber,
+          hasAccess: hasAccess,
+          lang: currentLang,
+        ),
       ),
-      bottomNavigationBar: _PartNavBar(partNumber: partNumber, hasAccess: hasAccess, lang: currentLang),
-    ),
     );
   }
 
-  void _open(BuildContext context, {required String title, required Widget child}) {
+  void _open(
+    BuildContext context, {
+    required String title,
+    required Widget child,
+  }) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => _AssetViewerScreen(title: title, child: child),
@@ -554,10 +640,12 @@ class _AssetViewerScreen extends ConsumerWidget {
           tooltip: t(lang, 'back'),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text(title,
+        title: Text(
+          title,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+        ),
         centerTitle: false,
         elevation: 0,
         bottom: PreferredSize(
@@ -675,82 +763,95 @@ class _AssetHero extends StatelessWidget {
           onTap: available ? onTap : null,
           borderRadius: BorderRadius.circular(16),
           child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.border),
-          ),
-          child: Stack(
-            children: [
-              // Accent glow
-              Positioned(
-                left: 0,
-                top: 0,
-                bottom: 0,
-                child: Container(
-                  width: 4,
-                  decoration: BoxDecoration(
-                    color: accentColor,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(16),
-                      bottomLeft: Radius.circular(16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Stack(
+              children: [
+                // Accent glow
+                Positioned(
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  child: Container(
+                    width: 4,
+                    decoration: BoxDecoration(
+                      color: accentColor,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(16),
+                        bottomLeft: Radius.circular(16),
+                      ),
                     ),
                   ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 16, 16),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 52,
-                      height: 52,
-                      decoration: BoxDecoration(
-                        color: iconColor.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: iconColor.withValues(alpha: 0.25)),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 16, 16),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 52,
+                        height: 52,
+                        decoration: BoxDecoration(
+                          color: iconColor.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: iconColor.withValues(alpha: 0.25),
+                          ),
+                        ),
+                        child: Icon(icon, color: iconColor, size: 26),
                       ),
-                      child: Icon(icon, color: iconColor, size: 26),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(title,
-                            style: const TextStyle(
-                              color: AppColors.textPrimary,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                            )),
-                          const SizedBox(height: 2),
-                          Text(subtitle,
-                            style: const TextStyle(
-                              color: AppColors.textSecondary,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                            )),
-                          const SizedBox(height: 4),
-                          Text(description,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              title,
+                              style: const TextStyle(
+                                color: AppColors.textPrimary,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              subtitle,
+                              style: const TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              description,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: AppColors.textMuted,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      available
+                          ? const ForwardChevronIcon(
                               color: AppColors.textMuted,
-                              fontSize: 12,
-                            )),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    available
-                        ? const ForwardChevronIcon(
-                            color: AppColors.textMuted, size: 22)
-                        : const Icon(Icons.lock_outline_rounded,
-                            color: AppColors.textMuted, size: 18),
-                  ],
+                              size: 22,
+                            )
+                          : const Icon(
+                              Icons.lock_outline_rounded,
+                              color: AppColors.textMuted,
+                              size: 18,
+                            ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
           ),
         ),
       ),
@@ -790,64 +891,80 @@ class _AssetCard extends StatelessWidget {
           onTap: available ? onTap : null,
           borderRadius: BorderRadius.circular(14),
           child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.border),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: iconColor.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: iconColor.withValues(alpha: 0.2)),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: iconColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: iconColor.withValues(alpha: 0.2),
+                        ),
+                      ),
+                      child: Icon(icon, color: iconColor, size: 20),
                     ),
-                    child: Icon(icon, color: iconColor, size: 20),
-                  ),
-                  available
-                      ? const ForwardChevronIcon(
-                          color: AppColors.textMuted, size: 18)
-                      : const Icon(Icons.lock_outline_rounded,
-                          color: AppColors.textMuted, size: 14),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(title,
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                )),
-              const SizedBox(height: 2),
-              Text(subtitle,
-                style: const TextStyle(
-                  color: AppColors.textMuted,
-                  fontSize: 11,
-                )),
-              if (!available) ...[
-                const SizedBox(height: 6),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: AppColors.textMuted.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(notAvailableLabel,
-                    style: const TextStyle(
-                      color: AppColors.textMuted,
-                      fontSize: 10,
-                    )),
+                    available
+                        ? const ForwardChevronIcon(
+                            color: AppColors.textMuted,
+                            size: 18,
+                          )
+                        : const Icon(
+                            Icons.lock_outline_rounded,
+                            color: AppColors.textMuted,
+                            size: 14,
+                          ),
+                  ],
                 ),
+                const SizedBox(height: 12),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    color: AppColors.textMuted,
+                    fontSize: 11,
+                  ),
+                ),
+                if (!available) ...[
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.textMuted.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      notAvailableLabel,
+                      style: const TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ),
+                ],
               ],
-            ],
-          ),
+            ),
           ),
         ),
       ),
@@ -885,76 +1002,89 @@ class _PaywallScreen extends StatelessWidget {
         bottom: false,
         child: Center(
           child: SingleChildScrollView(
-            padding: EdgeInsets.fromLTRB(32, 32, 32, 32 + bottomSystemInset(context)),
+            padding: EdgeInsets.fromLTRB(
+              32,
+              32,
+              32,
+              32 + bottomSystemInset(context),
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: AppColors.goldFaded,
-                  borderRadius: BorderRadius.circular(20),
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: AppColors.goldFaded,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Icon(
+                    Icons.lock_outline,
+                    size: 40,
+                    color: AppColors.gold,
+                  ),
                 ),
-                child: const Icon(Icons.lock_outline, size: 40, color: AppColors.gold),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                partTitle,
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
+                const SizedBox(height: 24),
+                Text(
+                  partTitle,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                tv(lang, 'requiresFullAccessBody', {'n': PARTS.length}),
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 14,
-                  height: 1.6,
+                const SizedBox(height: 12),
+                Text(
+                  tv(lang, 'requiresFullAccessBody', {'n': PARTS.length}),
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 14,
+                    height: 1.6,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 32),
-              Consumer(
-                builder: (context, ref, _) {
-                  final isLoggedIn = ref.watch(authProvider).isLoggedIn;
-                  return SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      // push (not go) so the back button returns here instead
-                      // of wiping the whole nav stack back to the paywall's
-                      // parent — losing wherever the user came from (course
-                      // list, a deep link, etc).
-                      onPressed: () => context.push(isLoggedIn ? '/pricing' : '/landing'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.gold,
-                        foregroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                const SizedBox(height: 32),
+                Consumer(
+                  builder: (context, ref, _) {
+                    final isLoggedIn = ref.watch(authProvider).isLoggedIn;
+                    return SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        // push (not go) so the back button returns here instead
+                        // of wiping the whole nav stack back to the paywall's
+                        // parent — losing wherever the user came from (course
+                        // list, a deep link, etc).
+                        onPressed: () =>
+                            context.push(isLoggedIn ? '/pricing' : '/landing'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.gold,
+                          foregroundColor: Colors.black,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text(
+                          t(lang, 'viewPlans'),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
-                      child: Text(
-                        t(lang, 'viewPlans'),
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-                      ),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 12),
-              TextButton(
-                onPressed: () => context.pop(),
-                child: Text(
-                  t(lang, 'goBack'),
-                  style: const TextStyle(color: AppColors.textSecondary),
+                    );
+                  },
                 ),
-              ),
+                const SizedBox(height: 12),
+                TextButton(
+                  onPressed: () => context.pop(),
+                  child: Text(
+                    t(lang, 'goBack'),
+                    style: const TextStyle(color: AppColors.textSecondary),
+                  ),
+                ),
               ],
             ),
           ),
@@ -1053,50 +1183,73 @@ class _UpNextCard extends StatelessWidget {
         onTap: () => context.pushReplacement('/part/${next.partNumber}'),
         borderRadius: BorderRadius.circular(16),
         child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 44, height: 44,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: color.withValues(alpha: 0.3)),
-              ),
-              child: Center(
-                child: Text(
-                  '${next.partNumber}',
-                  style: TextStyle(color: color, fontSize: 15, fontWeight: FontWeight.w800),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: color.withValues(alpha: 0.3)),
+                ),
+                child: Center(
+                  child: Text(
+                    '${next.partNumber}',
+                    style: TextStyle(
+                      color: color,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(t(lang, 'upNext'), style: const TextStyle(color: AppColors.textMuted, fontSize: 11, letterSpacing: 0.5)),
-                  const SizedBox(height: 2),
-                  Text(next.localizedTitle(lang),
-                    style: const TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w600),
-                    maxLines: 1, overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(next.localizedSubtitle(lang),
-                    style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
-                    maxLines: 1, overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      t(lang, 'upNext'),
+                      style: const TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 11,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      next.localizedTitle(lang),
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      next.localizedSubtitle(lang),
+                      style: const TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 12,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(width: 8),
-            const ForwardChevronIcon(color: AppColors.gold, size: 16),
-          ],
-        ),
+              const SizedBox(width: 8),
+              const ForwardChevronIcon(color: AppColors.gold, size: 16),
+            ],
+          ),
         ),
       ),
     );
@@ -1109,7 +1262,11 @@ class _PartNavBar extends StatelessWidget {
   final int partNumber;
   final bool hasAccess;
   final String lang;
-  const _PartNavBar({required this.partNumber, required this.hasAccess, required this.lang});
+  const _PartNavBar({
+    required this.partNumber,
+    required this.hasAccess,
+    required this.lang,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1128,7 +1285,8 @@ class _PartNavBar extends StatelessWidget {
           if (partNumber > 1)
             Expanded(
               child: OutlinedButton.icon(
-                onPressed: () => context.pushReplacement('/part/${partNumber - 1}'),
+                onPressed: () =>
+                    context.pushReplacement('/part/${partNumber - 1}'),
                 icon: const BackIcon(size: 14),
                 label: Text(tv(lang, 'partN', {'n': partNumber - 1})),
                 style: OutlinedButton.styleFrom(
@@ -1141,7 +1299,8 @@ class _PartNavBar extends StatelessWidget {
                 ),
               ),
             ),
-          if (partNumber > 1 && partNumber < PARTS.length) const SizedBox(width: 12),
+          if (partNumber > 1 && partNumber < PARTS.length)
+            const SizedBox(width: 12),
           // On Part 1 with no access the in-page CTA card already has the
           // "Unlock full access" button — hide the nav bar duplicate.
           if (partNumber < PARTS.length && !(partNumber == 1 && !hasAccess))
@@ -1170,8 +1329,14 @@ class _PartNavBar extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(tv(lang, 'partN', {'n': partNumber + 1}),
-                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: Colors.black)),
+                    Text(
+                      tv(lang, 'partN', {'n': partNumber + 1}),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                        color: Colors.black,
+                      ),
+                    ),
                     const SizedBox(width: 6),
                     const ForwardChevronIcon(size: 14, color: Colors.black),
                   ],

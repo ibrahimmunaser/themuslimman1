@@ -116,11 +116,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    const AppLangToggle(),
-                    const SizedBox(width: 4),
-                    // Returning learners only — purchase path is the primary CTAs
-                    // below (Start Part 1 Free / Start Full Course), not Sign In.
+                    const Spacer(),
                     TextButton(
                       onPressed: () {
                         HapticFeedback.selectionClick();
