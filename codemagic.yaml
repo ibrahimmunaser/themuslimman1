@@ -165,7 +165,10 @@ workflows:
 
     environment:
       flutter: stable
-      xcode: latest
+      # 1.0.45 was the last build Apple received. Later builds used xcode: latest,
+      # which now tracks Xcode 27. That SDK requires the UIScene lifecycle this
+      # project has not adopted, so the IPA never reached App Store Connect.
+      xcode: 26.6
       cocoapods: default
       vars:
         BUNDLE_ID: com.themuslimman.seerah
