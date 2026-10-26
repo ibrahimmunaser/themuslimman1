@@ -14,7 +14,6 @@ import 'core/providers/part_provider.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_colors.dart';
 import 'core/theme/app_theme.dart';
-import 'core/widgets/ui_kit.dart';
 
 Future<void> main() async {
   // Preserve the native splash until init is complete.
@@ -174,53 +173,20 @@ class _SeerahAppState extends ConsumerState<SeerahApp>
       // existing fixed-size rows/icons without requiring a full redesign.
       builder: (context, child) {
         final mq = MediaQuery.of(context);
-        final topInset = mq.padding.top;
-        final clamped = mq.copyWith(
-          textScaler: mq.textScaler.clamp(
-            minScaleFactor: 0.85,
-            maxScaleFactor: 1.3,
-          ),
-        );
-        // Directionality wraps the whole router/navigator tree so every
-        // screen — not just ones that individually opted into `dir:`
-        // handling — mirrors into RTL for Arabic (nav bar order, AppBar
-        // back-button side, Row/Padding start/end resolution, etc.),
-        // matching how the web app already flips wholesale via `dir` on
-        // <html> in app/layout.tsx.
-        // The language menu sits above every route. Top inset is consumed
-        // here so each screen's AppBar does not add the status bar again.
         return MediaQuery(
-          data: clamped,
+          data: mq.copyWith(
+            textScaler: mq.textScaler.clamp(
+              minScaleFactor: 0.85,
+              maxScaleFactor: 1.3,
+            ),
+          ),
+          // Directionality wraps the whole router/navigator tree so every
+          // screen mirrors into RTL for Arabic, Urdu, and Persian.
           child: Directionality(
             textDirection: isRtlCourseLang(lang)
                 ? TextDirection.rtl
                 : TextDirection.ltr,
-            child: Column(
-              children: [
-                ColoredBox(
-                  color: AppColors.background,
-                  child: Padding(
-                    padding: EdgeInsets.only(top: topInset),
-                    child: const Align(
-                      alignment: AlignmentDirectional.centerEnd,
-                      child: Padding(
-                        padding: EdgeInsets.fromLTRB(12, 2, 12, 6),
-                        child: AppLangToggle(),
-                      ),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: MediaQuery(
-                    data: clamped.copyWith(
-                      padding: clamped.padding.copyWith(top: 0),
-                      viewPadding: clamped.viewPadding.copyWith(top: 0),
-                    ),
-                    child: child!,
-                  ),
-                ),
-              ],
-            ),
+            child: child!,
           ),
         );
       },
