@@ -6,7 +6,6 @@ export default async function MonthlyCheckoutPage({
 }: {
   searchParams: Promise<{ plan?: string }>;
 }) {
-  const params = await searchParams;
-  const isFamily = params.plan === "familyMonthly" || params.plan === "family-monthly";
-  redirect(`/checkout?plan=${isFamily ? "family-lifetime" : "individual-lifetime"}`);
+  await searchParams;
+  redirect("/checkout?plan=individual-lifetime");
 }

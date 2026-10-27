@@ -29,7 +29,7 @@ function faqsFor(lang: CourseLang) {
         category: "الحساب والفواتير",
         icon: CreditCard,
         questions: [
-          { q: "ما خيارات الدفع المتاحة؟", a: "الدفع مرة واحدة: وصول مدى الحياة مقابل ٤٩ دولارًا — بدون اشتراك وبدون رسوم متكررة." },
+          { q: "ما خيارات الدفع المتاحة؟", a: "PRICE" },
           { q: "ما سياسة الاسترداد؟", a: "نقدم ضمان الوضوح لمدة ٧ أيام. إذا لم تكن الدورة كما توقعت، راسلنا خلال ٧ أيام لاسترداد كامل المبلغ." },
         ],
       },
@@ -78,7 +78,7 @@ function faqsFor(lang: CourseLang) {
         questions: [
           {
             q: "Quelles options de paiement sont disponibles ?",
-            a: "Paiement unique : accès à vie pour 49 $ — sans abonnement et sans frais récurrents.",
+            a: "PRICE",
           },
           {
             q: "Quelle est votre politique de remboursement ?",
@@ -142,7 +142,7 @@ function faqsFor(lang: CourseLang) {
       questions: [
         {
           q: "What payment options are available?",
-          a: "Lifetime access is $49 one-time — permanent access with no recurring charges. Pay once and keep the full course forever.",
+          a: "PRICE",
         },
         {
           q: "What's your refund policy?",
@@ -229,8 +229,14 @@ export default async function HelpPage() {
                       <div key={idx} className={idx > 0 ? "pt-6 border-t border-border" : ""}>
                         <h3 className="text-text font-semibold mb-2">{item.q}</h3>
                         <p className="text-text-secondary leading-relaxed">
-                          {item.a.includes("$49") ? (
-                            <>Lifetime access is <LifetimePrice /> one-time — permanent access with no recurring charges. Pay once and keep the full course forever.</>
+                          {item.a === "PRICE" ? (
+                            lang === "ar" ? (
+                              <>الدفع مرة واحدة: وصول مدى الحياة مقابل <LifetimePrice /> — بدون اشتراك وبدون رسوم متكررة.</>
+                            ) : lang === "fr" ? (
+                              <>Paiement unique : accès à vie pour <LifetimePrice /> — sans abonnement et sans frais récurrents.</>
+                            ) : (
+                              <>Lifetime access is <LifetimePrice /> one-time — permanent access with no recurring charges. Pay once and keep the full course forever.</>
+                            )
                           ) : (
                             item.a
                           )}

@@ -107,7 +107,7 @@ export function CourseDashboardTabs({
   return (
     <div>
       {/* Tab Navigation */}
-      <div className="sticky top-0 z-50 border-b border-border bg-surface shadow-sm">
+      <div className="sticky top-12 z-50 border-b border-border bg-surface shadow-sm">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex" role="tablist" aria-label={t(lang, "courseSections")}>
             {TAB_DEFS.map((tab) => {

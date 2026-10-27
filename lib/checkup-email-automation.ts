@@ -13,10 +13,8 @@ const PHYSICAL_ADDRESS = process.env.EMAIL_PHYSICAL_ADDRESS ?? "TheMuslimMan · 
 
 function checkoutUrl(recommendedPlan: string, source: string | null, step: number): string {
   // Public purchase is lifetime-only — map legacy monthly recommendations to lifetime.
-  const knownPlans = ["individual-monthly", "individual-lifetime", "family-monthly", "family-lifetime"];
-  let plan = knownPlans.includes(recommendedPlan) ? recommendedPlan : "individual-lifetime";
-  if (plan === "individual-monthly") plan = "individual-lifetime";
-  if (plan === "family-monthly") plan = "family-lifetime";
+  const plan = "individual-lifetime";
+  void recommendedPlan;
   const base = `${APP_URL}/checkout`;
   const p = new URLSearchParams({
     plan,
@@ -228,8 +226,7 @@ export function buildStep4Html(opts: {
   unsubscribeUrl: string;
 }): string {
   const { firstName, recommendedPlan, source, unsubscribeUrl } = opts;
-  const isFamily  = recommendedPlan.includes("family");
-  const planLabel = isFamily ? "Family Plan" : "Individual Plan";
+  const planLabel = "Lifetime Access";
   const ctaUrl    = checkoutUrl(recommendedPlan, source, 4);
 
   return `<!DOCTYPE html>

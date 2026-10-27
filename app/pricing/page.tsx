@@ -10,12 +10,16 @@ import { FunnelTracker } from "@/components/analytics/funnel-tracker";
 import { PortalButton } from "@/components/billing/portal-button";
 import { LanguagesLaunchGate } from "@/components/student/languages-launch-gate";
 import { LifetimePrice } from "@/components/pricing/country-price";
+import { getPreviewLangFromCookies } from "@/lib/part1-preview-data";
+import { siteT } from "@/lib/site-copy";
 
-export const metadata = {
-  title: "Complete Seerah Lifetime",
-  description:
-    "Finish the Prophet’s ﷺ life in order — and retain it. 100 parts, quizzes, flashcards. One-time lifetime access. Part 1 free. 7-day refund.",
-};
+export async function generateMetadata() {
+  const lang = await getPreviewLangFromCookies();
+  return {
+    title: siteT(lang, "priceKicker"),
+    description: siteT(lang, "priceH1"),
+  };
+}
 
 export const dynamic = "force-dynamic";
 
@@ -28,33 +32,6 @@ interface Props {
     utm_content?: string;
   }>;
 }
-
-const FAQ_ITEMS = [
-  {
-    q: "What do I get with Complete Seerah Lifetime?",
-    a: "The full 100-part course in order: video lessons, readings, quizzes, flashcards, summaries, mind maps, and progress tracking — plus future course updates included. English, Arabic, and French are available now.",
-  },
-  {
-    q: "Will I actually finish — or just collect another course?",
-    a: "The path is built to finish: one part at a time, in order, with quizzes and flashcards so you retain what you watch. Start free with Part 1, then unlock the full path.",
-  },
-  {
-    q: "Is this a subscription?",
-    a: "PRICE_ANSWER",
-  },
-  {
-    q: "What if it’s not for me?",
-    a: "7-day refund. If it’s not what you expected, contact us within 7 days for a full refund — the risk stays on us.",
-  },
-  {
-    q: "Can I try before I buy?",
-    a: "Yes. Part 1 is free with no account required. Preview it, then unlock the remaining 99 parts with lifetime access.",
-  },
-  {
-    q: "Do I get access right away?",
-    a: "Yes. Instant access after checkout on web and in the app.",
-  },
-];
 
 function buildCheckoutBaseUrl(params: {
   source?: string;
@@ -89,7 +66,19 @@ function buildWatchFreeUrl(params: {
 }
 
 export default async function PricingPage({ searchParams }: Props) {
-  const [user, params] = await Promise.all([getCurrentUser(), searchParams]);
+  const [user, params, lang] = await Promise.all([
+    getCurrentUser(),
+    searchParams,
+    getPreviewLangFromCookies(),
+  ]);
+  const faqItems = [
+    { q: siteT(lang, "pq1"), a: siteT(lang, "pa1") },
+    { q: siteT(lang, "pq2"), a: siteT(lang, "pa2") },
+    { q: siteT(lang, "q5"), a: "PRICE_ANSWER" },
+    { q: siteT(lang, "pq4"), a: siteT(lang, "pa4") },
+    { q: siteT(lang, "pq5"), a: siteT(lang, "pa5") },
+    { q: siteT(lang, "pq6"), a: siteT(lang, "pa6") },
+  ];
 
   let accessInfo: Awaited<ReturnType<typeof getUserAccessInfo>> | null = null;
   if (user) {
@@ -155,17 +144,16 @@ export default async function PricingPage({ searchParams }: Props) {
         <div className="max-w-2xl mx-auto px-4 sm:px-6 text-center">
           <FadeUp>
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold mb-3">
-              Complete Seerah Lifetime
+              {siteT(lang, "priceKicker")}
             </p>
             <h1 className="text-3xl sm:text-4xl font-bold text-text mb-4 leading-tight">
-              Finish the Prophet&apos;s ﷺ life in order — and retain it
+              {siteT(lang, "priceH1")}
             </h1>
             <p className="text-base sm:text-lg text-text-secondary leading-relaxed mb-4">
-              One clear path through 100 parts. Videos to learn. Quizzes and flashcards so it sticks.
-              Lifetime access for a one-time <LifetimePrice />.
+              {siteT(lang, "priceLead")} <LifetimePrice />.
             </p>
             <p className="text-xs text-text-muted">
-              Part 1 free · Instant access · 7-day refund — risk on us
+              {siteT(lang, "priceFine")}
             </p>
           </FadeUp>
         </div>
@@ -185,33 +173,18 @@ export default async function PricingPage({ searchParams }: Props) {
         <div className="max-w-xl mx-auto px-4 sm:px-6">
           <FadeUp>
             <h2 className="text-xl sm:text-2xl font-bold text-text text-center mb-2">
-              What&apos;s in the offer
+              {siteT(lang, "stackTitle")}
             </h2>
             <p className="text-sm text-text-secondary text-center mb-8 leading-relaxed">
-              Everything you need to start, finish, and remember — not another pile of content.
+              {siteT(lang, "stackSub")}
             </p>
             <ul className="space-y-3">
               {[
-                {
-                  title: "The Complete Path",
-                  body: "100 structured parts covering every major event in order — no hopping around YouTube.",
-                },
-                {
-                  title: "The Retention System",
-                  body: "Quizzes and flashcards after lessons so you keep what you learned.",
-                },
-                {
-                  title: "Progress You Can See",
-                  body: "Dashboard + mind maps so you always know where you are in the Seerah.",
-                },
-                {
-                  title: "Languages Included",
-                  body: "English, Arabic, and French now — future course updates included with lifetime access.",
-                },
-                {
-                  title: "Risk Reversal",
-                  body: "7-day full refund. Try Part 1 free first if you want proof before you pay.",
-                },
+                { title: siteT(lang, "stack1t"), body: siteT(lang, "stack1b") },
+                { title: siteT(lang, "stack2t"), body: siteT(lang, "stack2b") },
+                { title: siteT(lang, "stack3t"), body: siteT(lang, "stack3b") },
+                { title: siteT(lang, "stack4t"), body: siteT(lang, "stack4b") },
+                { title: siteT(lang, "stack5t"), body: siteT(lang, "stack5b") },
               ].map((item) => (
                 <li
                   key={item.title}
@@ -223,7 +196,7 @@ export default async function PricingPage({ searchParams }: Props) {
               ))}
             </ul>
             <p className="text-center text-sm text-text-muted mt-6">
-              <LifetimePrice suffix=" one-time" /> · No subscription · Yours forever
+              <LifetimePrice suffix={` ${siteT(lang, "oneTime")}`} /> · {siteT(lang, "stackForever")}
             </p>
           </FadeUp>
         </div>
@@ -232,13 +205,13 @@ export default async function PricingPage({ searchParams }: Props) {
       {/* Optional preview link */}
       <section className="py-8 border-t border-border">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 text-center">
-          <p className="text-sm text-text-secondary mb-3">Not sure yet? Prove it to yourself first.</p>
+          <p className="text-sm text-text-secondary mb-3">{siteT(lang, "notSure")}</p>
           <Link
             href={watchFreeUrl}
             className="inline-flex items-center gap-2 text-sm font-semibold text-gold hover:text-gold-light transition-colors"
           >
             <Play className="w-4 h-4 fill-current" />
-            Watch Part 1 Free
+            {siteT(lang, "watchFree")}
           </Link>
         </div>
       </section>
@@ -247,10 +220,10 @@ export default async function PricingPage({ searchParams }: Props) {
       <section className="py-12 border-t border-border">
         <div className="max-w-3xl mx-auto px-4 sm:px-6">
           <h2 className="text-xl sm:text-2xl font-bold text-text text-center mb-8">
-            Common questions
+            {siteT(lang, "commonQ")}
           </h2>
           <div className="space-y-3">
-            {FAQ_ITEMS.map(({ q, a }) => (
+            {faqItems.map(({ q, a }) => (
               <details
                 key={q}
                 className="group rounded-xl border border-border bg-surface overflow-hidden"
@@ -264,7 +237,7 @@ export default async function PricingPage({ searchParams }: Props) {
                 </summary>
                 <div className="px-5 pb-5 pt-1 text-sm text-text-secondary leading-relaxed border-t border-border/50">
                   {a === "PRICE_ANSWER" ? (
-                    <>No. Complete Seerah Lifetime is <LifetimePrice /> one-time. No renewal. No recurring charges.</>
+                    <>{siteT(lang, "pa3pre")} <LifetimePrice /> {siteT(lang, "pa3post")}</>
                   ) : (
                     a
                   )}

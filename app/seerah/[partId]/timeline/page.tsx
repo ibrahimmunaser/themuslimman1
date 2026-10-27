@@ -85,7 +85,7 @@ export default async function TimelinePage(props: Props) {
     <div className="min-h-screen bg-[#0a0a0a]">
 
         {/* ── Top bar ─────────────────────────────────────────────────────── */}
-        <div className="sticky top-0 z-30 border-b border-white/10 bg-[#0a0a0a]/95 backdrop-blur-lg">
+        <div className="sticky top-12 z-30 border-b border-white/10 bg-[#0a0a0a]/95 backdrop-blur-lg">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-4">
             <Link
               href={`/seerah/${partId}`}

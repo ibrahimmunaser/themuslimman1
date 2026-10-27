@@ -14,9 +14,9 @@ export function OrthodoxCheckupEmbed() {
       eventPrefix="orthodox_"
       urls={{
         individualMonthly:  `/checkout?plan=individual-lifetime&${SRC}&${UTM}`,
-        familyMonthly:      `/checkout?plan=family-lifetime&${SRC}&${UTM}`,
+        familyMonthly:      `/checkout?plan=individual-lifetime&${SRC}&${UTM}`,
         individualLifetime: `/checkout?plan=individual-lifetime&${SRC}&${UTM}`,
-        familyLifetime:     `/checkout?plan=family-lifetime&${SRC}&${UTM}`,
+        familyLifetime:     `/checkout?plan=individual-lifetime&${SRC}&${UTM}`,
         watchFree:          "/theorthodoxmuslim#part1",
       }}
     />

@@ -1,6 +1,6 @@
 class AppConstants {
   // App version — keep in sync with pubspec.yaml version field
-  static const String appVersion = '1.0.49';
+  static const String appVersion = '1.0.50';
 
   // API
   static const String baseUrl = 'https://themuslimman.com';
@@ -43,7 +43,9 @@ class AppConstants {
     keyPurchasePlatform,
   ];
 
-  // Plans — fallback prices shown while store products load
+  // US catalog anchors only. Do not show these in the app.
+  // The price on screen is ProductDetails.price from App Store or Play,
+  // which is already the user's country storefront price.
   static const String monthlyPrice        = '9.99';
   static const String familyMonthlyPrice  = '9.99';
   static const String lifetimePrice       = '49';

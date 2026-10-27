@@ -30,7 +30,7 @@ export function StudentHeader({ userFirstName, userPlan: _userPlan }: StudentHea
   const showUpgrade = false;
 
   return (
-    <header className="sticky top-0 z-50 bg-[#0a0a0a] border-b border-zinc-800">
+    <header className="sticky top-12 z-50 bg-[#0a0a0a] border-b border-zinc-800">
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14">
           {/* Logo */}

@@ -4,11 +4,12 @@ import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import Script from "next/script";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { ServiceWorkerRegistration } from "@/components/service-worker";
-import { SiteLangBar } from "@/components/site-lang-bar";
 import { CountryPriceProvider } from "@/components/pricing/country-price";
+import { SiteLangProvider } from "@/components/site-lang";
 import { quoteFromHeaderBag } from "@/lib/request-country-price";
+import { COURSE_LANG_COOKIE, isRtlLang, parseLang } from "@/lib/course-lang";
 import "./globals.css";
 
 const geist = Geist({
@@ -56,9 +57,10 @@ export default async function RootLayout({
 }>) {
   const hdrs = await headers();
   const countryPrice = quoteFromHeaderBag((name) => hdrs.get(name));
+  const lang = parseLang((await cookies()).get(COURSE_LANG_COOKIE)?.value);
 
   return (
-    <html lang="en" className={`${geist.variable} h-full`} data-scroll-behavior="smooth" suppressHydrationWarning>
+    <html lang={lang} dir={isRtlLang(lang) ? "rtl" : "ltr"} className={`${geist.variable} h-full`} data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
         <link rel="icon" type="image/png" href="/images/app-icon.png?v=1" />
         <link rel="shortcut icon" type="image/png" href="/images/app-icon.png?v=1" />
@@ -72,8 +74,8 @@ export default async function RootLayout({
       </head>
       <body className="min-h-full bg-ink text-text antialiased">
         <CountryPriceProvider quote={countryPrice}>
+        <SiteLangProvider lang={lang}>
         <ServiceWorkerRegistration />
-        <SiteLangBar />
         {children}
         <Toaster
           position="bottom-center"
@@ -98,6 +100,7 @@ export default async function RootLayout({
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img height="1" width="1" style={{display:"none"}} src="https://www.facebook.com/tr?id=859003573915526&ev=PageView&noscript=1" alt="" />
         </noscript>
+        </SiteLangProvider>
         </CountryPriceProvider>
       </body>
     </html>

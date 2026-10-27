@@ -29,7 +29,6 @@ import {
 
 import dynamic from "next/dynamic";
 import { WidgetCycleProvider } from "./widget-cycle-context";
-import { LangToggle } from "@/components/part/lang-toggle";
 import type { CourseLang } from "@/lib/course-lang";
 import { isRtlLang } from "@/lib/course-lang";
 import { loc } from "@/lib/loc";
@@ -272,10 +271,6 @@ export function StudentSidebar({
           </div>
         )}
 
-        {/* Course language — primary switch site-wide */}
-        <div className={clsx("mt-2", collapsed ? "flex justify-center" : "")}>
-          <LangToggle current={lang} compact={collapsed} className={collapsed ? undefined : "w-full justify-center"} />
-        </div>
       </div>
 
       {/* Course Navigation — scrollable middle */}
@@ -429,9 +424,6 @@ export function StudentSidebar({
               </Link>
             </div>
           )}
-          <div className="mt-2.5">
-            <LangToggle current={lang} className="w-full justify-center" />
-          </div>
         </div>
 
         {/* Course nav — only when top tabs are NOT visible (i.e. not on /seerah dashboard) */}
@@ -545,7 +537,7 @@ export function StudentSidebar({
           // Mirrored to the opposite corner from the drawer in RTL so the two stay
           // diagonally opposite, matching the LTR layout's relationship.
           className={clsx(
-            "lg:hidden fixed top-3 z-[70] flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface border border-border text-text-secondary hover:text-text hover:bg-surface-raised transition-all shadow-sm min-h-[44px]",
+            "lg:hidden fixed top-14 z-[70] flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface border border-border text-text-secondary hover:text-text hover:bg-surface-raised transition-all shadow-sm min-h-[44px]",
             isRtl ? "left-3" : "right-3"
           )}
         >
@@ -574,14 +566,14 @@ export function StudentSidebar({
         aria-label={loc(lang, "Account menu", "قائمة الحساب", "Menu du compte")}
         dir={isRtl ? "rtl" : "ltr"}
         className={clsx(
-          "fixed top-0 bottom-0 bg-surface flex flex-col",
+          "fixed top-12 bottom-0 bg-surface flex flex-col",
           // Anchored + bordered on the leading edge — right side in RTL so the
           // mobile drawer slides in from the same side the reading order starts.
           isRtl ? "right-0 border-l border-border" : "left-0 border-r border-border",
           // Smooth slide on mobile; no duration on desktop (instant collapse is fine)
           "transition-transform duration-200 ease-out will-change-transform",
           // Desktop: sticky, always visible, collapsible width
-          "lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:z-[40]",
+          "lg:sticky lg:top-12 lg:h-[calc(100dvh-3rem)] lg:translate-x-0 lg:z-[40]",
           // Mobile: off-canvas drawer — z-[65] sits above overlay (z-[55])
           "z-[65]",
           mobileOpen

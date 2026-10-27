@@ -5,9 +5,6 @@ import { prisma } from "@/lib/db";
 import { checkRateLimit, getIP } from "@/lib/rate-limit";
 import { lifetimePriceMetadata, quoteFromHeaderBag } from "@/lib/request-country-price";
 
-// Family lifetime price ID for Stripe metadata linkage
-const FAMILY_LIFETIME_PRICE_ID = process.env.STRIPE_FAMILY_LIFETIME_PRICE_ID ?? "";
-
 export async function POST(request: NextRequest) {
   try {
     const ip = getIP(request);
@@ -36,11 +33,10 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { recipientEmail, recipientName, giftMessage, planId: rawPlanId } = body as {
+    const { recipientEmail, recipientName, giftMessage } = body as {
       recipientEmail: string;
       recipientName?: string;
       giftMessage?: string;
-      planId?: string;
     };
 
     if (!recipientEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmail)) {
@@ -57,13 +53,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Resolve plan — "family" or default to "complete" (individual)
-    const planId = rawPlanId === "family" ? "family" : "complete";
-    const isFamily = planId === "family";
-    const plan = isFamily ? PLANS.family : PLANS.complete;
+    const planId = "complete";
+    const plan = PLANS.complete;
 
     const priceQuote = quoteFromHeaderBag((name) => request.headers.get(name));
-    const baseAmount = isFamily ? PLANS.family.price : priceQuote.amountCents;
+    const baseAmount = priceQuote.amountCents;
     const finalAmount: number = baseAmount;
 
     const paymentIntent = await stripe.paymentIntents.create({
@@ -79,12 +73,7 @@ export async function POST(request: NextRequest) {
         recipientEmail: recipientEmail.trim().toLowerCase(),
         recipientName: recipientName?.trim() ?? "",
         giftMessage: giftMessage?.trim() ?? "",
-        ...(isFamily
-          ? { baseAmount: String(baseAmount), finalAmount: String(finalAmount) }
-          : lifetimePriceMetadata(priceQuote)),
-        ...(isFamily && FAMILY_LIFETIME_PRICE_ID.startsWith("price_")
-          ? { stripePriceId: FAMILY_LIFETIME_PRICE_ID }
-          : {}),
+        ...lifetimePriceMetadata(priceQuote),
       },
       description: `Gift: ${plan.name} → ${recipientEmail.trim().toLowerCase()} — TheMuslimMan`,
       receipt_email: user.email,

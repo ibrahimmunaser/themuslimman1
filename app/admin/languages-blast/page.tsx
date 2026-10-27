@@ -129,11 +129,11 @@ export default function LanguagesBlastPage() {
         <div>
           <h1 className="text-2xl font-bold text-text flex items-center gap-2">
             <Languages className="w-6 h-6 text-gold" />
-            3 Languages Launch Email
+            15 Languages Email
           </h1>
           <p className="text-sm text-text-secondary mt-1 max-w-xl">
             Email every contact we have (registered accounts + quiz/visitor leads)
-            about English, Arabic, and French — with more languages planned — plus a
+            that Complete Seerah is available in 15 languages, plus a
             WhatsApp share link. Skips unsubscribed, blocked, and already-sent addresses.
           </p>
         </div>
@@ -180,7 +180,7 @@ export default function LanguagesBlastPage() {
       <div className="rounded-xl border border-gold/25 bg-gold/5 p-4 mb-6">
         <p className="text-sm font-semibold text-text mb-1">Subject</p>
         <p className="text-sm text-text-secondary mb-3">
-          Complete Seerah is now in English, Arabic &amp; French
+          Complete Seerah is available in 15 languages
         </p>
         <p className="text-xs text-text-muted">
           Includes Try Part 1 Free CTA + Share on WhatsApp button. Respects unsubscribe list.

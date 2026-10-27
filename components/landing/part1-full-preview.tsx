@@ -1,5 +1,6 @@
 import { getPart1PreviewData, getPreviewLangFromCookies } from "@/lib/part1-preview-data";
 import { isRtlLang } from "@/lib/course-lang";
+import { siteT } from "@/lib/site-copy";
 import { Part1PreviewTabs } from "@/components/landing/part1-preview-tabs";
 import { Badge } from "@/components/ui/badge";
 import { LifetimeAccessCta } from "@/components/pricing/country-price";
@@ -50,13 +51,9 @@ export async function Part1FullPreview({
           </Badge>
         </div>
         <p className="text-xs sm:text-sm text-gold/90 mt-3 leading-relaxed">
-          {isRtl
-            ? "الدورة متاحة بالإنجليزية والعربية والفرنسية — ونخطط لإضافة المزيد من اللغات."
-            : lang === "fr"
-              ? "Le cours est disponible en anglais, arabe et français — et nous prévoyons d'ajouter d'autres langues."
-              : "The course is available in English, Arabic, and French — and we plan to add more languages."}
+          {siteT(lang, "heroLangs")}
         </p>
-        {part.description && (
+        {lang === "en" && part.description && (
           <p className="text-sm text-text-secondary mt-2 leading-relaxed">
             {part.description}
           </p>
@@ -95,8 +92,8 @@ export async function Part1FullPreview({
           </a>
           <p className="text-xs text-text-muted mt-4">
             {isRtl
-              ? "ألغِ في أي وقت · ضمان استرداد خلال ٧ أيام"
-              : "Cancel anytime · 7-day refund guarantee"}
+              ? "ضمان استرداد خلال ٧ أيام"
+              : "7-day refund guarantee"}
           </p>
         </div>
       )}

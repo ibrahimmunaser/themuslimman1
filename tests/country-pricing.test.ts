@@ -11,6 +11,8 @@ describe("country lifetime pricing", () => {
     expect(quoteForCountryCode("GB")).toMatchObject({ tier: "A", amountCents: 4900 });
     expect(quoteForCountryCode("AE")).toMatchObject({ tier: "A", amountCents: 4900 });
     expect(quoteForCountryCode("ES")).toMatchObject({ tier: "A", amountCents: 4900 });
+    expect(quoteForCountryCode("JP")).toMatchObject({ tier: "A", amountCents: 4900 });
+    expect(quoteForCountryCode("KR")).toMatchObject({ tier: "A", amountCents: 4900 });
     expect(quoteForCountryCode("MX")).toMatchObject({ tier: "B", amountCents: 2900, label: "$29" });
     expect(quoteForCountryCode("TR")).toMatchObject({ tier: "B", amountCents: 2900 });
     expect(quoteForCountryCode("IN")).toMatchObject({ tier: "C", amountCents: 1500, label: "$15" });
@@ -22,7 +24,8 @@ describe("country lifetime pricing", () => {
 
   it("defaults unknown and unlisted countries to $29", () => {
     expect(quoteForCountryCode(null)).toMatchObject({ tier: "B", amountCents: 2900, country: null });
-    expect(quoteForCountryCode("JP")).toMatchObject({ tier: "B", amountCents: 2900, country: "JP" });
+    // Unlisted country → default Tier B ($29)
+    expect(quoteForCountryCode("FJ")).toMatchObject({ tier: "B", amountCents: 2900, country: "FJ" });
   });
 
   it("reads Vercel or Cloudflare country headers and ignores junk", () => {

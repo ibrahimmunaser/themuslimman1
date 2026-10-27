@@ -23,7 +23,6 @@ class _Plan {
   final String iapId;
   final String nameKey;
   final String descriptionKey;
-  final String fallbackPrice;
   final String periodKey;
   final String? badgeKey;
   final bool isRecommended;
@@ -33,7 +32,6 @@ class _Plan {
     required this.iapId,
     required this.nameKey,
     required this.descriptionKey,
-    required this.fallbackPrice,
     required this.periodKey,
     this.badgeKey,
     this.isRecommended = false,
@@ -46,21 +44,22 @@ const _plans = [
     iapId: AppConstants.iapLifetimeIndividual,
     nameKey: 'planLifetime',
     descriptionKey: 'oneLearnerPayOnce',
-    fallbackPrice: '\$${AppConstants.lifetimePrice}',
     periodKey: 'oneTime',
     badgeKey: 'mostPopular',
     isRecommended: true,
   ),
 ];
 
-List<({String q, String a})> _faqItems(String lang) => [
+List<({String q, String a})> _faqItems(String lang, String? storePrice) => [
   (
     q: t(lang, 'faqWhatIncludedQ'),
     a: t(lang, 'faqWhatIncludedA'),
   ),
   (
     q: t(lang, 'faqIsSubscriptionQ'),
-    a: tv(lang, 'faqIsSubscriptionA', {'l': AppConstants.lifetimePrice}),
+    a: storePrice == null
+        ? t(lang, 'faqIsSubscriptionAPlain')
+        : tWithStorePrice(lang, 'faqIsSubscriptionA', storePrice),
   ),
   (
     q: t(lang, 'faqRefundGuaranteeQ'),
@@ -95,13 +94,10 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
     ref.read(iapProvider);
   }
 
-  /// Audit M-fallback-price: null while store products are still loading —
-  /// see identical helper doc comment in landing_screen.dart.
+  /// Storefront price only. Never a hardcoded dollar amount — App Store and
+  /// Play already price this product for the user's country.
   String? _price(IAPState iap, _Plan plan) {
-    final resolved = iap.productForPlan(plan.iapId)?.price;
-    if (resolved != null) return resolved;
-    if (iap.status == IAPStatus.loading) return null;
-    return plan.fallbackPrice;
+    return iap.productForPlan(plan.iapId)?.price;
   }
 
   Future<void> _buyPlan(IAPState iap, _Plan plan) async {
@@ -276,6 +272,8 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
     final iap = ref.watch(iapProvider);
     final hasAccess = auth.hasAccess;
     final lang = ref.watch(courseLangProvider);
+    final storePrice =
+        iap.productForPlan(AppConstants.iapLifetimeIndividual)?.price;
 
     final busy =
         _buyTapInFlight ||
@@ -461,7 +459,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
             title: t(lang, 'planLifetime'),
             bullets: [
               t(lang, 'payOnceKeepForever'),
-              '\$${AppConstants.lifetimePrice} ${t(lang, 'oneTime')}',
+              if (storePrice != null) '$storePrice ${t(lang, 'oneTime')}',
               t(lang, 'noSubscriptionNoRenewal'),
             ],
             highlighted: true,
@@ -550,7 +548,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          ..._faqItems(lang).map(
+          ..._faqItems(lang, storePrice).map(
             (item) => _FaqTile(question: item.q, answer: item.a),
           ),
 

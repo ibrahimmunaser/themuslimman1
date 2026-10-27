@@ -45,6 +45,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json() as { type?: string };
     const checkoutType = (body.type ?? "individual-trial") as string;
 
+    if (checkoutType.startsWith("family")) {
+      return NextResponse.json(
+        { error: "Family plans are no longer available." },
+        { status: 410 },
+      );
+    }
+
     const [access, activeSub] = await Promise.all([
       getUserAccessInfo(user.id, user.hasPaid),
       getActiveSubscription(user.id),

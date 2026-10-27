@@ -11,7 +11,7 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://themuslimman.com";
 
 export const LANGUAGES_LAUNCH_OUTREACH_TYPE = "LANGUAGES_LAUNCH";
 export const LANGUAGES_LAUNCH_SUBJECT =
-  "Complete Seerah is now in English, Arabic & French";
+  "Complete Seerah is available in 15 languages";
 
 export function buildLanguagesLaunchHtml(opts: {
   firstName: string;
@@ -22,7 +22,7 @@ export function buildLanguagesLaunchHtml(opts: {
   const homeUrl = `${APP_URL}/?utm_source=email&utm_medium=languages_launch&utm_campaign=three_languages`;
   const previewUrl = `${APP_URL}/#preview?utm_source=email&utm_medium=languages_launch&utm_campaign=three_languages`;
   const waText = encodeURIComponent(
-    "Complete Seerah is now available in English, Arabic, and French — with more languages coming. Learn the life of the Prophet ﷺ in order: https://themuslimman.com",
+    "Complete Seerah is available in 15 languages. Learn the life of the Prophet ﷺ in order: https://themuslimman.com",
   );
   const waUrl = `https://wa.me/?text=${waText}`;
 
@@ -42,16 +42,15 @@ export function buildLanguagesLaunchHtml(opts: {
     <p style="font-size:16px;margin:0 0 20px 0;">Asalamu Alaikum${firstName ? ` ${firstName}` : ""},</p>
 
     <p style="font-size:15px;margin:0 0 16px 0;color:#333;">
-      Great news — <strong>Complete Seerah is now available in three languages:</strong>
-      English, Arabic, and French.
+      Great news — <strong>Complete Seerah is available in 15 languages.</strong>
     </p>
 
     <p style="font-size:15px;margin:0 0 16px 0;color:#333;">
-      That includes the lessons, quizzes, flashcards, and reference guides. And we plan to add more languages next.
+      That includes the lessons, quizzes, flashcards, and reference guides.
     </p>
 
     <p style="font-size:15px;margin:0 0 24px 0;color:#333;">
-      If you have not started yet, Part 1 is still free — no account required. Switch languages anytime with the EN / عربي / FR toggle.
+      If you have not started yet, Part 1 is still free — no account required. Switch languages anytime from the language menu.
     </p>
 
     <div style="text-align:center;margin:24px 0 16px 0;">

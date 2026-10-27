@@ -39,22 +39,19 @@ function fmtPrice(cents: number) {
 export function InfluencerPricingToggle({
   displayName,
   individualLifetimeUrl,
-  familyLifetimeUrl,
+  familyLifetimeUrl: _familyLifetimeUrl,
   individualLifetimePriceCents: _individualLifetimePriceCents,
-  familyLifetimePriceCents,
+  familyLifetimePriceCents: _familyLifetimePriceCents,
   regularIndividualPriceCents,
-  regularFamilyPriceCents,
+  regularFamilyPriceCents: _regularFamilyPriceCents,
   trackingPrefix,
 }: InfluencerPricingToggleProps) {
   const ev = (name: string) => trackingPrefix ? `${trackingPrefix}_${name}` : name;
   const countryPrice = useCountryPrice();
 
   const indLifetime    = countryPrice.label;
-  const famLifetime    = fmtPrice(familyLifetimePriceCents);
   const regInd         = regularIndividualPriceCents ? fmtPrice(regularIndividualPriceCents) : null;
-  const regFam         = regularFamilyPriceCents     ? fmtPrice(regularFamilyPriceCents)     : null;
   const showIndStrike  = !!(regularIndividualPriceCents && regularIndividualPriceCents > countryPrice.amountCents);
-  const showFamStrike  = !!(regularFamilyPriceCents     && regularFamilyPriceCents     > familyLifetimePriceCents);
 
   return (
     <section id="pricing" className="pb-14 scroll-mt-16">
@@ -67,7 +64,7 @@ export function InfluencerPricingToggle({
           <p className="text-sm text-text-muted mt-1">Pay once. No renewal ever.</p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-7 items-stretch">
+        <div className="grid grid-cols-1 gap-7 items-stretch max-w-xl mx-auto">
 
           {/* Individual Lifetime — primary / hero */}
           <div className="relative min-h-[520px] sm:min-h-[640px] rounded-3xl border-2 border-gold bg-gradient-to-b from-gold/8 to-surface shadow-2xl shadow-gold/10 p-6 sm:p-9 flex flex-col gold-glow">
@@ -113,25 +110,6 @@ export function InfluencerPricingToggle({
               <Infinity className="w-3.5 h-3.5" />
               One-time payment · yours forever
             </div>
-          </div>
-
-          {/* Family Lifetime */}
-          <div className="relative min-h-[520px] sm:min-h-[640px] rounded-3xl border border-border bg-surface/70 p-6 sm:p-9 flex flex-col">
-            <p className="text-xl font-bold text-text mb-1">For My Family</p>
-            <p className="text-sm text-text-muted mb-4">Family Lifetime Access</p>
-            <div className="mb-7">
-              {showFamStrike && <span className="text-xs text-text-muted line-through mr-2">{regFam}</span>}
-              <span className="text-8xl font-extrabold tracking-tight text-gold">{famLifetime}</span>
-              <p className="text-sm font-medium text-gold/70 mt-2">one-time · up to 5 profiles</p>
-            </div>
-            <Link
-              href={familyLifetimeUrl}
-              data-track={ev("lifetime_family_click")}
-              data-plan="family-lifetime"
-              className="block w-full py-4 rounded-2xl border-2 border-gold/50 text-gold font-bold text-base text-center hover:border-gold hover:bg-gold/5 transition-colors mt-auto"
-            >
-              Get Family Lifetime — {famLifetime} →
-            </Link>
           </div>
 
         </div>

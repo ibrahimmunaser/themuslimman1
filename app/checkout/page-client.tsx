@@ -19,6 +19,9 @@ import { SavedCardPicker } from "@/components/billing/saved-card-picker";
 import { friendlyPaymentError, friendlySubmitError } from "@/lib/payment-error-messages";
 import { PLANS, formatPrice } from "@/lib/stripe-config";
 import { useCountryPrice } from "@/components/pricing/country-price";
+import { useSiteLang } from "@/components/site-lang";
+import { siteT } from "@/lib/site-copy";
+import { isRtlLang } from "@/lib/course-lang";
 import CheckoutFunnelTracker, { sendCheckoutEvent, sendCheckoutLoadFailed, normalizePaymentError, markPaymentStartedInSession, markPaymentMethodInSession } from "./checkout-funnel-tracker";
 
 // Lazily memoized so it reads the env var at first render rather than at module
@@ -107,6 +110,7 @@ function CheckoutForm({
 }) {
   const stripe   = useStripe();
   const elements = useElements();
+  const lang = useSiteLang();
   const [error, setError]           = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
   const [showExpressCheckout, setShowExpressCheckout] = useState(false);
@@ -519,46 +523,33 @@ function CheckoutForm({
         ? `Get Student Lifetime Access — ${formatPrice(finalPrice)}`
         : audience === "family"
           ? `Get Family Lifetime Access — ${formatPrice(finalPrice)}`
-          : `Get Individual Lifetime Access — ${formatPrice(finalPrice)}`;
+          : `${siteT(lang, "getLifetime")} — ${formatPrice(finalPrice)}`;
 
   const trustBadges =
     billing === "trial"
       ? [
           "Due today: $0",
           "Cancel anytime before trial ends",
-          "Secure checkout",
+          siteT(lang, "ckSecure"),
         ]
       : billing === "monthly"
       ? ([
           `Due today: ${formatPrice(finalPrice)}`,
-          "Instant access after payment.",
+          siteT(lang, "ckStep1"),
           "Cancel anytime.",
-          "7-day refund guarantee.",
+          siteT(lang, "ckRefund"),
         ])
       : [
-          "One-time payment — no recurring charge",
-          "7-day refund guarantee",
-          "Secure checkout",
+          siteT(lang, "ckOneTimeNoRecur"),
+          siteT(lang, "ckRefund"),
+          siteT(lang, "ckSecure"),
         ];
 
-  const whatHappensNext =
-    billing === "trial"
-      ? [
-          "Your card is saved but not charged today.",
-          "You get full access immediately.",
-          "After 7 days, you're billed monthly. Cancel anytime.",
-        ]
-      : billing === "monthly"
-      ? [
-          "Get instant access after payment.",
-          "Set your password from your email.",
-          "Start Part 1 and continue at your own pace.",
-        ]
-      : [
-          "Get instant access after payment.",
-          "Set your password from your email.",
-          "Start Part 1 and continue at your own pace.",
-        ];
+  const whatHappensNext = [
+    siteT(lang, "ckStep1"),
+    siteT(lang, "ckStep2"),
+    siteT(lang, "ckStep3"),
+  ];
 
   return (
     <div className="space-y-5">
@@ -630,7 +621,7 @@ function CheckoutForm({
           {showExpressCheckout && (
             <div className="flex items-center gap-3 text-xs text-zinc-500">
               <div className="flex-1 h-px bg-zinc-700/60" />
-              <span>or pay with card</span>
+              <span>{siteT(lang, "ckOrCard")}</span>
               <div className="flex-1 h-px bg-zinc-700/60" />
             </div>
           )}
@@ -678,7 +669,7 @@ function CheckoutForm({
           className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-gold hover:bg-gold-light disabled:opacity-60 text-ink font-bold text-base transition-colors shadow-lg shadow-gold/20"
         >
           <Lock className="w-4 h-4" />
-          {processing ? "Processing…" : buttonLabel}
+          {processing ? siteT(lang, "ckProcessing") : buttonLabel}
         </button>
 
         {/* Contextual trust badges */}
@@ -693,19 +684,19 @@ function CheckoutForm({
 
         {/* Safety valve — give hesitant users a free path instead of losing them */}
         <p className="text-center text-xs text-zinc-500">
-          Not ready yet?{" "}
+          {siteT(lang, "ckNotReady")}{" "}
           <a
             href="/watch-free"
             onClick={() => creator && sendCheckoutEvent(creator, "checkout_escape_clicked", { escape_type: "watch_free", plan: `${audience}-${billing}` })}
             className="underline hover:text-zinc-300 transition-colors"
           >
-            Watch Part 1 free first
+            {siteT(lang, "ckWatchFree")}
           </a>
         </p>
 
         {/* What happens next */}
         <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 space-y-2">
-          <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wide">What happens next</p>
+          <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wide">{siteT(lang, "ckNext")}</p>
           <ol className="space-y-1.5">
             {whatHappensNext.map((step, i) => (
               <li key={i} className="flex items-start gap-2 text-xs text-zinc-400">
@@ -719,14 +710,15 @@ function CheckoutForm({
         </div>
 
         <p className="text-xs text-zinc-600 text-center leading-relaxed">
-          Built from Qur&apos;an, authentic hadith, and classical Seerah sources. Educational tool · Not a fatwa site.
+          {siteT(lang, "ckSources")}
         </p>
 
         <p className="text-xs text-zinc-600 text-center leading-relaxed">
-          By {billing === "trial" ? "starting your trial" : billing === "monthly" ? "subscribing" : "purchasing"} you agree to our{" "}
-          <a href="/terms"   className="underline hover:text-zinc-400 transition-colors">Terms of Service</a>{", "}
-          <a href="/privacy" className="underline hover:text-zinc-400 transition-colors">Privacy Policy</a>{", and "}
-          <a href="/refund"  className="underline hover:text-zinc-400 transition-colors">Refund Policy</a>.
+          {siteT(lang, "ckAgree")}{" "}
+          <a href="/terms"   className="underline hover:text-zinc-400 transition-colors">{siteT(lang, "ckTerms")}</a>{isRtlLang(lang) ? "، " : ", "}
+          <a href="/privacy" className="underline hover:text-zinc-400 transition-colors">{siteT(lang, "ckPrivacy")}</a>{" "}
+          {siteT(lang, "ckAnd")}{" "}
+          <a href="/refund"  className="underline hover:text-zinc-400 transition-colors">{siteT(lang, "ckRefundPol")}</a>.
         </p>
       </form>
     </div>
@@ -832,7 +824,7 @@ function CheckoutPageContent({
   userEmail = "",
   initialUserId = "",
   userPlanType = null,
-  initialAudience = "individual",
+  initialAudience: _initialAudience = "individual",
   initialBilling  = "lifetime",
   initialClientSecret = null,
   initialBasePrice: serverBasePrice,
@@ -871,7 +863,7 @@ function CheckoutPageContent({
   const [showPlanSelector, setShowPlanSelector] = useState(false);
 
   // ── Audience + billing state ───────────────────────────────────────────────
-  const [audience, setAudience] = useState<Audience>(initialAudience);
+  const [audience, setAudience] = useState<Audience>("individual");
   // Public purchase is lifetime-only (legacy monthly URLs redirect server-side).
   const [billing, setBilling] = useState<Billing>("lifetime");
 
@@ -1313,9 +1305,10 @@ function CheckoutPageContent({
   // ── Derived display values ─────────────────────────────────────────────────
 
   const countryPrice = useCountryPrice();
+  const lang = useSiteLang();
   const individualLifetimeCents = countryPrice.amountCents;
   const displayBase = audience === "individual" && isLifetime
-    ? basePrice
+    ? individualLifetimeCents
     : (!isAuthenticated ? currentPlan.price : basePrice);
   const displayPrice    = displayBase;
 
@@ -1357,20 +1350,20 @@ function CheckoutPageContent({
                   ? "Ann Arbor Student Lifetime"
                   : billing === "monthly"
                     ? audience === "family" ? "Family Access" : "Individual Access"
-                    : audience === "family" ? "Family Lifetime Access" : "Individual Lifetime Access"}
+                    : audience === "family" ? "Family Lifetime Access" : siteT(lang, "ckTitle")}
               </p>
               <p className="text-sm text-zinc-400 mt-0.5 leading-snug">
                 {audience === "family"
                   ? "Up to 5 profiles · separate progress · one household plan."
-                  : "Continue the full 100-part Seerah path."}
+                  : siteT(lang, "ckSub")}
               </p>
               <p className="text-xs text-zinc-600 mt-1.5">
-                Videos · quizzes · flashcards · summaries · progress tracking
+                {siteT(lang, "ckIncludes")}
               </p>
             </div>
             <div className="text-right flex-shrink-0">
               <p className="text-2xl sm:text-3xl font-extrabold text-gold leading-none">
-                {formatPrice(displayPrice)}
+                <span dir="ltr">{formatPrice(displayPrice)}</span>
               </p>
               {billing === "monthly" && <p className="text-xs text-zinc-500 mt-0.5">/month</p>}
             </div>
@@ -1378,9 +1371,9 @@ function CheckoutPageContent({
 
           <div className="flex flex-wrap gap-x-4 gap-y-1.5 pt-3 border-t border-zinc-800/60">
             {(billing === "monthly"
-              ? ["Cancel anytime", "Instant access", "7-day refund"]
+              ? ["Cancel anytime", siteT(lang, "ckInstant"), siteT(lang, "ckRefundShort")]
               : isLifetime
-                ? ["One-time payment", "No subscription", "7-day refund", "Instant access"]
+                ? [siteT(lang, "ckOneTime"), siteT(lang, "ckNoSub"), siteT(lang, "ckRefundShort"), siteT(lang, "ckInstant")]
                 : ["No charge today", "Cancel anytime"]
             ).map((t) => (
               <span key={t} className="flex items-center gap-1 text-xs text-zinc-400">
@@ -1399,7 +1392,7 @@ function CheckoutPageContent({
             }}
             className="mt-3 text-[10px] text-zinc-700 hover:text-zinc-500 transition-colors"
           >
-            Change plan →
+            {siteT(lang, "ckChangePlan")} {isRtlLang(lang) ? "←" : "→"}
           </button>
         </div>
       ) : (
@@ -1673,7 +1666,7 @@ function CheckoutPageContent({
           <input
             suppressHydrationWarning
             type="text"
-            placeholder="Full name (required)"
+            placeholder={siteT(lang, "ckFullName")}
             required
             autoComplete="name"
             inputMode="text"
@@ -1702,12 +1695,12 @@ function CheckoutPageContent({
                     }}
                     className="text-xs text-zinc-500 hover:text-gold transition-colors whitespace-nowrap flex-shrink-0"
                   >
-                    Use a different email
+                    {siteT(lang, "ckDifferentEmail")}
                   </button>
                 </div>
               ) : (
                 <input
-                  type="email" placeholder="Email address (required)" required
+                  type="email" placeholder={siteT(lang, "ckEmail")} required
                   autoComplete="email"
                   inputMode="email"
                   value={authForm.email}
@@ -1722,15 +1715,15 @@ function CheckoutPageContent({
               )}
               {authError === "__existing_account__" ? (
                 <div className="p-4 rounded-xl bg-gold/10 border border-gold/25 text-sm space-y-2">
-                  <p className="font-semibold text-white">You already have an account</p>
+                  <p className="font-semibold text-white">{siteT(lang, "ckHaveAcctTitle")}</p>
                   <p className="text-zinc-400 text-xs leading-relaxed">
-                    Sign in to your student dashboard to manage your plan or upgrade.
+                    {siteT(lang, "ckHaveAcctBody")}
                   </p>
                   <a
                     href={`/login?redirect=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "/checkout")}`}
                     className="inline-flex items-center gap-1.5 text-gold text-xs font-semibold hover:text-gold-light transition-colors"
                   >
-                    Go to sign in <ArrowRight className="w-3.5 h-3.5" />
+                    {siteT(lang, "ckGoSignIn")} <ArrowRight className="w-3.5 h-3.5" />
                   </a>
                 </div>
               ) : authError ? (
@@ -1739,13 +1732,13 @@ function CheckoutPageContent({
               <button type="submit" className="sr-only" aria-hidden>Continue</button>
               {!isInfluencerMode && !authError && (
                 <p className="text-xs text-zinc-600 text-center">
-                  Already have an account?{" "}
+                  {siteT(lang, "ckHaveAccount")}{" "}
                   <button
                     type="button"
                     onClick={() => { setAuthMode("login"); setAuthError(""); }}
                     className="text-zinc-500 hover:text-gold transition-colors underline"
                   >
-                    Sign in
+                    {siteT(lang, "ckSignIn")}
                   </button>
                 </p>
               )}
@@ -1762,13 +1755,13 @@ function CheckoutPageContent({
                   className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
                 >
                   <ArrowLeft className="w-3 h-3" />
-                  Back
+                  {siteT(lang, "ckBack")}
                 </button>
-                <p className="text-xs text-zinc-400">Sign in to continue</p>
+                <p className="text-xs text-zinc-400">{siteT(lang, "ckSignInContinue")}</p>
               </div>
               <form onSubmit={handleLogin} className="space-y-3">
                 <input
-                  type="email" placeholder="Email address (required)" required
+                  type="email" placeholder={siteT(lang, "ckEmail")} required
                   autoComplete="email"
                   inputMode="email"
                   value={authForm.email}
@@ -1777,7 +1770,7 @@ function CheckoutPageContent({
                 />
                 <div className="relative">
                   <input
-                    type={showPass ? "text" : "password"} placeholder="Password" required
+                    type={showPass ? "text" : "password"} placeholder={siteT(lang, "ckPassword")} required
                     value={authForm.password}
                     onChange={(e) => setAuthForm((f) => ({ ...f, password: e.target.value }))}
                     className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm pr-11"
@@ -1791,12 +1784,12 @@ function CheckoutPageContent({
                   type="submit" disabled={authLoading}
                   className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-gold hover:bg-gold-light disabled:opacity-60 text-ink font-bold text-sm transition-colors"
                 >
-                  {authLoading ? "Signing in…" : "Sign In & Continue"}
+                  {authLoading ? siteT(lang, "ckSigningIn") : siteT(lang, "ckSignInBtn")}
                   {!authLoading && <ArrowRight className="w-4 h-4" />}
                 </button>
                 <div className="text-center">
                   <a href="/forgot-password" className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors">
-                    Forgot your password?
+                    {siteT(lang, "ckForgot")}
                   </a>
                 </div>
               </form>
@@ -1904,27 +1897,32 @@ function CheckoutPageContent({
                 // allowRedirects is only valid in deferred/mode-based Elements (no clientSecret).
                 // When clientSecret is present, payment_method_types on the PaymentIntent
                 // already restricts to ["card"] server-side, so no client-side flag is needed.
+                const stripeLocales: Record<string, "en" | "ar" | "fr" | "id" | "ms" | "zh" | "ru" | "es" | "de" | "tr" | "auto"> = {
+                  en: "en", ar: "ar", fr: "fr", id: "id", ms: "ms", zh: "zh", ru: "ru", es: "es", de: "de", tr: "tr",
+                };
+                const stripeLocale = stripeLocales[lang] ?? "auto";
                 const elementsOptions =
                   billing === "trial"
-                    ? { mode: "setup" as const, currency: "usd", appearance: elementsAppearance, allowRedirects: "never" as const }
+                    ? { mode: "setup" as const, currency: "usd", locale: stripeLocale, appearance: elementsAppearance, allowRedirects: "never" as const }
                     : isMonthlyBilling
-                    ? { clientSecret: clientSecret!, appearance: elementsAppearance }
+                    ? { clientSecret: clientSecret!, locale: stripeLocale, appearance: elementsAppearance }
                     : clientSecret
-                    ? { clientSecret, appearance: elementsAppearance }
+                    ? { clientSecret, locale: stripeLocale, appearance: elementsAppearance }
                     : {
                         mode: "payment" as const,
                         amount: finalPrice > 0 ? finalPrice : 1,
                         currency: "usd",
+                        locale: stripeLocale,
                         appearance: elementsAppearance,
                         allowRedirects: "never" as const,
                         paymentMethodTypes: ["card"],
                       };
 
                 const elementsKey = isMonthlyBilling
-                  ? `${audience}-${billing}-${clientSecret}`
+                  ? `${audience}-${billing}-${lang}-${clientSecret}`
                   : clientSecret
-                  ? `${audience}-${billing}-${clientSecret}`
-                  : `${audience}-${billing}`;
+                  ? `${audience}-${billing}-${lang}-${clientSecret}`
+                  : `${audience}-${billing}-${lang}`;
 
                 // Default to "homepage" so organic checkout visitors are also tracked
               const trackerCreator = initialSourceParam ?? "homepage";

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/data/parts_data.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../core/providers/iap_provider.dart';
 import '../../../core/providers/part_provider.dart';
 import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
@@ -1096,14 +1098,21 @@ class _PaywallScreen extends StatelessWidget {
 
 // ── Continue CTA (Part 1 → unlock) ───────────────────────────────────────────
 
-class _ContinueCTA extends StatelessWidget {
+class _ContinueCTA extends ConsumerWidget {
   final bool isLoggedIn;
   final String lang;
   const _ContinueCTA({required this.isLoggedIn, required this.lang});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final paywall = isLoggedIn ? '/pricing' : '/landing';
+    final storePrice = ref
+        .watch(iapProvider)
+        .productForPlan(AppConstants.iapLifetimeIndividual)
+        ?.price;
+    final body = storePrice == null
+        ? t(lang, 'unlockFullAccessBodyPlain')
+        : tWithStorePrice(lang, 'unlockFullAccessBody', storePrice);
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -1126,7 +1135,7 @@ class _ContinueCTA extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            t(lang, 'unlockFullAccessBody'),
+            body,
             style: const TextStyle(
               color: AppColors.textSecondary,
               fontSize: 13,

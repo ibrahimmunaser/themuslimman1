@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown } from "lucide-react";
 import { clsx } from "clsx";
@@ -38,6 +38,104 @@ function groupAriaLabel(lang: CourseLang): string {
   return t(lang, "courseLanguage");
 }
 
+function LanguageMenu({
+  selected,
+  onSelect,
+  nav,
+  compact,
+  className,
+}: {
+  selected: CourseLang;
+  onSelect: (lang: CourseLang) => void;
+  nav?: boolean;
+  compact?: boolean;
+  className?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const listId = useId();
+  const currentLabel = COURSE_LANG_OPTIONS.find((option) => option.code === selected)?.label ?? selected;
+
+  useEffect(() => {
+    if (!open) return;
+    function onPointer(event: MouseEvent) {
+      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+    }
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  return (
+    <div ref={rootRef} className={clsx("relative", className)}>
+      <button
+        type="button"
+        aria-label={groupAriaLabel(selected)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={listId}
+        onClick={() => setOpen((value) => !value)}
+        className={clsx(
+          "flex w-full items-center bg-ink/40 border border-gold/35 font-semibold text-text cursor-pointer focus:outline-none focus:ring-2 focus:ring-gold/40",
+          nav
+            ? "h-10 min-w-[12.5rem] max-w-[16rem] ps-3 pe-8 rounded-lg text-sm"
+            : compact
+              ? "h-9 min-w-0 ps-2 pe-7 rounded-lg text-xs"
+              : "min-h-[44px] min-w-[12.5rem] ps-3.5 pe-8 rounded-xl text-sm shadow-sm shadow-gold/10",
+        )}
+      >
+        <span className="truncate">{currentLabel}</span>
+      </button>
+      <ChevronDown
+        className={clsx(
+          "pointer-events-none absolute top-1/2 -translate-y-1/2 end-2.5 w-4 h-4 text-gold transition-transform",
+          open && "rotate-180",
+        )}
+        aria-hidden
+      />
+      {open && (
+        <ul
+          id={listId}
+          role="listbox"
+          aria-label={groupAriaLabel(selected)}
+          className="absolute end-0 top-full z-[200] mt-1 max-h-72 w-full min-w-[12.5rem] overflow-auto rounded-lg border border-gold/40 bg-surface-high py-1 shadow-2xl shadow-black/70"
+        >
+          {COURSE_LANG_OPTIONS.map((option) => {
+            const active = option.code === selected;
+            return (
+              <li key={option.code} role="presentation">
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={active}
+                  onClick={() => {
+                    setOpen(false);
+                    onSelect(option.code);
+                  }}
+                  className={clsx(
+                    "flex w-full items-center px-3 py-2 text-start text-sm transition-colors",
+                    active
+                      ? "bg-gold/20 font-semibold text-gold"
+                      : "text-text hover:bg-gold/10 hover:text-gold-light",
+                  )}
+                >
+                  {option.label}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 export function LangToggle({
   current,
   partNumber,
@@ -69,28 +167,13 @@ export function LangToggle({
   }
 
   const select = (
-    <div className={clsx("relative", !prominent && className)}>
-      <select
-        value={selected}
-        onChange={(e) => switchLang(e.target.value as CourseLang)}
-        aria-label={groupAriaLabel(selected)}
-        className={clsx(
-          "appearance-none bg-ink/40 border border-gold/35 font-semibold text-text cursor-pointer focus:outline-none focus:ring-2 focus:ring-gold/40",
-          nav
-            ? "h-10 min-w-[12.5rem] max-w-[16rem] ps-3 pe-8 rounded-lg text-sm"
-            : compact
-              ? "h-9 w-full min-w-0 ps-2 pe-7 rounded-lg text-xs"
-              : "min-h-[44px] w-full min-w-[12.5rem] ps-3.5 pe-8 rounded-xl text-sm shadow-sm shadow-gold/10",
-        )}
-      >
-        {COURSE_LANG_OPTIONS.map((option) => (
-          <option key={option.code} value={option.code}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-      <ChevronDown className="pointer-events-none absolute top-1/2 -translate-y-1/2 end-2.5 w-4 h-4 text-gold" aria-hidden />
-    </div>
+    <LanguageMenu
+      selected={selected}
+      onSelect={switchLang}
+      nav={nav}
+      compact={compact}
+      className={prominent ? undefined : className}
+    />
   );
 
   if (nav) return select;

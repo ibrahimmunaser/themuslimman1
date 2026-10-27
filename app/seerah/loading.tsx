@@ -13,8 +13,8 @@ export default function SeerahLoading() {
     <div className="flex-1 min-w-0 overflow-x-clip">
 
       {/* ── Tab bar skeleton ──────────────────────────────────────────────────
-          CourseDashboardTabs: sticky top-0 z-50 border-b bg-surface        */}
-      <div className="sticky top-0 z-50 border-b border-border bg-surface shadow-sm">
+          CourseDashboardTabs: sticky top-12 z-50 border-b bg-surface        */}
+      <div className="sticky top-12 z-50 border-b border-border bg-surface shadow-sm">
         <div className="max-w-6xl mx-auto px-2 sm:px-6 lg:px-8">
           <div className="flex">
             {[52, 56, 60, 52].map((labelW, i) => (

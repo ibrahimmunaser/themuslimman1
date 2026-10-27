@@ -5,6 +5,8 @@ import { Gift, ArrowRight } from "lucide-react";
 import { FadeUp } from "@/components/motion";
 import { PlanPicker } from "@/components/landing/plan-picker";
 import { useCountryPrice } from "@/components/pricing/country-price";
+import { useSiteLang } from "@/components/site-lang";
+import { siteT } from "@/lib/site-copy";
 
 interface PricingSectionProps {
   hasLifetime: boolean;
@@ -22,16 +24,6 @@ interface PricingSectionProps {
   compact?: boolean;
 }
 
-const TRUST_ITEMS = [
-  { icon: "1", text: "Complete Path — 100 parts, every major event in order" },
-  { icon: "2", text: "Retention System — quizzes + flashcards after lessons" },
-  { icon: "3", text: "Progress you can see — dashboard + mind maps" },
-  { icon: "4", text: "Lifetime access — one payment, yours forever" },
-  { icon: "5", text: "7-day refund — risk on us, not you" },
-];
-
-const LIFETIME_TRUST_ITEMS = TRUST_ITEMS;
-
 function buildLifetimeUrl(base: string): string {
   try {
     const u = new URL(base, "https://x.com");
@@ -45,6 +37,7 @@ function buildLifetimeUrl(base: string): string {
 function LifetimeOnlyCard({ checkoutBaseUrl }: { checkoutBaseUrl: string }) {
   const checkoutUrl = buildLifetimeUrl(checkoutBaseUrl);
   const countryPrice = useCountryPrice();
+  const lang = useSiteLang();
 
   return (
     <div className="mx-auto w-full max-w-md">
@@ -68,22 +61,22 @@ function LifetimeOnlyCard({ checkoutBaseUrl }: { checkoutBaseUrl: string }) {
         ].join(" ")}
       >
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold mb-3">
-          One-time purchase
+          {siteT(lang, "oneTimePurchase")}
         </p>
 
         <h3 className="text-xl sm:text-2xl font-bold text-text leading-snug mb-4">
-          Complete Seerah Course
+          {siteT(lang, "courseName")}
         </h3>
 
         <p className="text-4xl sm:text-5xl font-extrabold text-text leading-none tracking-tight">
           {countryPrice.label}
-          <span className="ml-2 text-base sm:text-lg font-medium text-text-secondary">
-            one-time
+          <span className="ms-2 text-base sm:text-lg font-medium text-text-secondary">
+            {siteT(lang, "oneTime")}
           </span>
         </p>
 
         <p className="mt-4 text-sm sm:text-base text-text-secondary leading-relaxed max-w-xs">
-          Lifetime access. No subscription. No recurring charges.
+          {siteT(lang, "noSub")}
         </p>
 
         <span
@@ -97,13 +90,13 @@ function LifetimeOnlyCard({ checkoutBaseUrl }: { checkoutBaseUrl: string }) {
             "transition-colors",
           ].join(" ")}
         >
-          Get Lifetime Access
-          <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+          {siteT(lang, "getLifetime")}
+          <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 rtl:rotate-180" />
         </span>
       </a>
 
       <p className="text-xs text-text-muted text-center mt-4">
-        7-day refund guarantee · Instant access
+        {siteT(lang, "refundInstant")}
       </p>
     </div>
   );
@@ -118,10 +111,10 @@ export function PricingSection({
   compact = false,
 }: PricingSectionProps) {
   const countryPrice = useCountryPrice();
+  const lang = useSiteLang();
   const hasAnyAccess = hasLifetime || hasMonthly || hasFamily;
   const plansOnly = variant === "plans-only";
   const lifetimeOnly = variant === "lifetime-only";
-  const trustItems = lifetimeOnly ? LIFETIME_TRUST_ITEMS : TRUST_ITEMS;
   const showIntro = !plansOnly && !compact;
 
   return (
@@ -140,12 +133,10 @@ export function PricingSection({
         {showIntro && (
           <FadeUp className="text-center mb-5">
             <h2 className="text-2xl sm:text-3xl font-bold text-text mb-1">
-              {lifetimeOnly ? "Get lifetime access" : "Choose your plan"}
+              {siteT(lang, "getLifetime")}
             </h2>
             <p className="text-sm text-text-secondary">
-              {lifetimeOnly
-                ? "Own the complete 100-part Seerah course forever."
-                : "One-time payment. Keep access forever."}
+              {siteT(lang, "onePayment")}
             </p>
           </FadeUp>
         )}
@@ -154,13 +145,19 @@ export function PricingSection({
         {showIntro && !hasAnyAccess && (
           <div className="mb-5 rounded-xl border border-gold/20 bg-gold/[0.04] px-4 py-4 sm:px-5">
             <p className="text-xs font-bold text-gold uppercase tracking-widest text-center mb-3">
-              {lifetimeOnly ? "Included with lifetime access" : "Included instantly with every plan"}
+              {siteT(lang, "lifetimeAccess")}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
-              {trustItems.map((item) => (
-                <div key={item.text} className="flex items-start gap-2.5">
-                  <span className="text-base flex-shrink-0 mt-0.5">{item.icon}</span>
-                  <span className="text-xs sm:text-sm text-text-secondary leading-snug">{item.text}</span>
+              {[
+                siteT(lang, "stack1b"),
+                siteT(lang, "stack2b"),
+                siteT(lang, "stack3b"),
+                siteT(lang, "stack4b"),
+                siteT(lang, "stack5b"),
+              ].map((text, index) => (
+                <div key={text} className="flex items-start gap-2.5">
+                  <span className="text-base flex-shrink-0 mt-0.5">{index + 1}</span>
+                  <span className="text-xs sm:text-sm text-text-secondary leading-snug">{text}</span>
                 </div>
               ))}
             </div>
@@ -170,18 +167,18 @@ export function PricingSection({
         {compact && !hasAnyAccess && (
           <div className="text-center mb-6">
             <h2 className="text-2xl sm:text-3xl font-bold text-text mb-2">
-              Lifetime access — {countryPrice.label}
+              {siteT(lang, "lifetimeHeading")} {countryPrice.label}
             </h2>
             <p className="text-sm text-text-secondary max-w-md mx-auto">
-              One payment. Full course. No subscription.
+              {siteT(lang, "onePayment")}
             </p>
           </div>
         )}
 
         {hasAnyAccess ? (
           <div className="rounded-xl border border-green-500/30 bg-green-500/5 p-5 text-center">
-            <p className="text-base font-semibold text-green-400 mb-1">✓ You already have access</p>
-            <a href="/seerah" className="text-sm text-gold hover:underline">Go to the course →</a>
+            <p className="text-base font-semibold text-green-400 mb-1">✓ {siteT(lang, "alreadyAccess")}</p>
+            <a href="/seerah" className="text-sm text-gold hover:underline">{siteT(lang, "goCourse")}</a>
           </div>
         ) : lifetimeOnly || compact ? (
           <LifetimeOnlyCard checkoutBaseUrl={checkoutBaseUrl} />
@@ -200,7 +197,7 @@ export function PricingSection({
               className="inline-flex items-center gap-1.5 text-xs text-text-muted hover:text-gold transition-colors"
             >
               <Gift className="w-3.5 h-3.5" />
-              Gift this course to someone
+              {siteT(lang, "giftCourse")}
             </Link>
           </div>
         )}

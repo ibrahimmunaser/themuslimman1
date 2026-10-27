@@ -2,18 +2,21 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { CourseLang } from "@/lib/course-lang";
+import { siteT } from "@/lib/site-copy";
 
 interface NavLinksProps {
   isLoggedIn: boolean;
+  lang: CourseLang;
 }
 
-export function NavLinks({ isLoggedIn: _isLoggedIn }: NavLinksProps) {
+export function NavLinks({ isLoggedIn: _isLoggedIn, lang }: NavLinksProps) {
   const pathname = usePathname();
 
   const links = [
-    { href: "/", label: "Home" },
-    { href: "/pricing", label: "Pricing" },
-    { href: "/contact", label: "Help" },
+    { href: "/", label: siteT(lang, "navHome") },
+    { href: "/pricing", label: siteT(lang, "navPricing") },
+    { href: "/contact", label: siteT(lang, "navHelp") },
   ];
 
   return (

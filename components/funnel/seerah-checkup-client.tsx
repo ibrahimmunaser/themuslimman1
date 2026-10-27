@@ -339,7 +339,6 @@ const FAQ = [
   { q: "What happens after I buy?", a: "Immediate access. Set your password, create your profile, and start Part 1 — under 60 seconds." },
   { q: "Can I cancel anytime?",     a: "Yes. Cancel in 2 clicks from your dashboard. No call required." },
   { q: "Is there a refund?",        a: "Yes — 7-day clarity guarantee. If the course doesn't feel right, email us for a full refund. No questions asked." },
-  { q: "Can my family use it?",     a: "The course is an individual plan. You can study together on one account, or each person can get their own access." },
   { q: "Can I use it on mobile?",   a: "Yes. Works on phone, tablet, and desktop. Many students learn during commutes or before bed." },
 ];
 

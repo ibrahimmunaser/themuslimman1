@@ -62,6 +62,8 @@ export const COUNTRY_TIER: Record<string, PriceTier> = {
   HK: "A", // Chinese
   TW: "A", // Chinese
   MO: "A", // Chinese
+  JP: "A",
+  KR: "A",
   IL: "A",
   BN: "A", // Malay (Brunei)
 

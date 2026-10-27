@@ -53,9 +53,9 @@ export async function Navbar() {
 
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-6">
-            <NavLinks isLoggedIn={!!user} />
+            <NavLinks isLoggedIn={!!user} lang={lang} />
             <LangToggle current={lang} nav />
-            <NavbarUserMenu user={user} firstName={firstName} hasPaid={hasPaid} />
+            <NavbarUserMenu user={user} firstName={firstName} hasPaid={hasPaid} lang={lang} />
           </div>
 
           {/* Mobile menu */}

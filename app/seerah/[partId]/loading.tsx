@@ -12,7 +12,7 @@ export default function PartLoading() {
   return (
     <div className="min-h-screen bg-background">
       {/* Sticky header skeleton */}
-      <div className="border-b border-border bg-surface sticky top-0 z-10">
+      <div className="border-b border-border bg-surface sticky top-12 z-10">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-4">
           <div className="flex items-center justify-between gap-4">
             <div className="h-4 w-20 rounded bg-surface-raised animate-pulse" />

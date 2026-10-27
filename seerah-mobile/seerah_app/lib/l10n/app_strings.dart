@@ -128,7 +128,7 @@ const Map<String, Map<String, String>> _kStrings = {
   'faqPart1FreeQ': {'en': 'Is Part 1 free?', 'ar': 'هل الجزء الأول مجاني؟', 'fr': 'Is Part 1 free?'},
   'faqPart1FreeA': {'en': 'Yes. Part 1 is completely free with no account required. Watch it before choosing a plan.', 'ar': 'نعم. الجزء الأول مجاني تمامًا ولا يتطلب حسابًا. شاهده قبل اختيار خطة.', 'fr': 'Yes. Part 1 is completely free with no account required. Watch it before choosing a plan.'},
   'faqMonthlyVsLifetimeQ': {'en': "What's the difference between monthly and lifetime?", 'ar': 'ما الفرق بين الخطة الشهرية والخطة مدى الحياة؟'},
-  'faqMonthlyVsLifetimeA': {'en': 'New purchases are lifetime only — \${l} once, access forever. Existing monthly subscribers keep their plan until they cancel or upgrade.', 'ar': 'المشتريات الجديدة مدى الحياة فقط — \${l} مرة واحدة، وصول للأبد. مشتركو الخطط الشهرية الحاليون يحتفظون بخطتهم حتى الإلغاء أو الترقية.', 'fr': 'New purchases are lifetime only — \${l} once, access forever. Existing monthly subscribers keep their plan until they cancel or upgrade.'},
+  'faqMonthlyVsLifetimeA': {'en': 'New purchases are lifetime only — pay once, access forever. Existing monthly subscribers keep their plan until they cancel or upgrade.', 'ar': 'المشتريات الجديدة مدى الحياة فقط — دفعة واحدة، وصول للأبد. مشتركو الخطط الشهرية الحاليون يحتفظون بخطتهم حتى الإلغاء أو الترقية.', 'fr': 'Les nouveaux achats sont à vie uniquement — un paiement, un accès pour toujours. Les abonnés mensuels existants gardent leur formule jusqu’à l’annulation ou le passage à vie.'},
   'checkConnectionRetrySupport': {'en': 'Check your internet connection, then tap Retry. If this keeps happening, contact support@themuslimman.com.', 'ar': 'تحقق من اتصالك بالإنترنت، ثم اضغط إعادة المحاولة. إذا استمرت المشكلة، تواصل مع support@themuslimman.com.', 'fr': 'Check your internet connection, then tap Retry. If this keeps happening, contact support@themuslimman.com.'},
   'videoPlaybackError': {'en': 'Video playback error. Please check your connection and try again.', 'ar': 'خطأ في تشغيل الفيديو. تحقق من اتصالك وحاول مرة أخرى.', 'fr': 'Video playback error. Please check your connection and try again.'},
   'checkConnectionRetry': {'en': 'Check your internet connection, then tap Retry. If this keeps happening, contact support@themuslimman.com.', 'ar': 'تحقق من اتصالك بالإنترنت، ثم اضغط على إعادة المحاولة. إذا استمرت المشكلة، تواصل مع support@themuslimman.com.', 'fr': 'Check your internet connection, then tap Retry. If this keeps happening, contact support@themuslimman.com.'},
@@ -237,14 +237,16 @@ const Map<String, Map<String, String>> _kStrings = {
   'testYourKnowledge': {'en': 'Test your knowledge', 'ar': 'اختبر معرفتك', 'fr': 'Test your knowledge'},
   'mcqInstantFeedback': {'en': 'Multiple-choice questions with instant feedback', 'ar': 'أسئلة اختيار من متعدد مع تغذية راجعة فورية', 'fr': 'Multiple-choice questions with instant feedback'},
   'continueFullCourse': {'en': 'Continue the full {n}-part course', 'ar': 'استمر في الدورة الكاملة المكوّنة من {n} جزءًا', 'fr': 'Continue the full {n}-part course'},
-  'unlockFullAccessBody': {'en': 'You started the path. Unlock the full course for \$49 one-time to continue the Seerah step by step.', 'ar': 'لقد بدأت الطريق. افتح الدورة الكاملة مقابل ٤٩\$ دفعة واحدة لمواصلة السيرة خطوة بخطوة.', 'fr': 'You started the path. Unlock the full course for \$49 one-time to continue the Seerah step by step.'},
+  'unlockFullAccessBody': {'en': 'You started the path. Unlock the full course for {price} one-time to continue the Seerah step by step.', 'ar': 'لقد بدأت الطريق. افتح الدورة الكاملة مقابل {price} دفعة واحدة لمواصلة السيرة خطوة بخطوة.', 'fr': 'Vous avez commencé le chemin. Débloquez le cours complet pour {price}, en une fois, pour continuer la Sîra étape par étape.'},
+  'unlockFullAccessBodyPlain': {'en': 'You started the path. Unlock the full course with a one-time purchase to continue the Seerah step by step.', 'ar': 'لقد بدأت الطريق. افتح الدورة الكاملة بدفعة واحدة لمواصلة السيرة خطوة بخطوة.', 'fr': 'Vous avez commencé le chemin. Débloquez le cours complet par un paiement unique pour continuer la Sîra étape par étape.'},
   'unlockFullAccess': {'en': 'Unlock full access', 'ar': 'افتح الوصول الكامل', 'fr': 'Unlock full access'},
   'partN': {'en': 'Part {n}', 'ar': 'الجزء {n}', 'fr': 'Part {n}'},
   'requiresFullAccessBody': {'en': 'This part requires full access.\nUnlock all {n} parts of the Seerah course with lifetime access.', 'ar': 'يتطلب هذا الجزء وصولًا كاملًا.\nافتح جميع أجزاء دورة السيرة ({n}) بوصول مدى الحياة.', 'fr': 'This part requires full access.\nUnlock all {n} parts of the Seerah course with lifetime access.'},
   'lifetimeAccessTitle': {'en': 'Lifetime access', 'ar': 'وصول مدى الحياة', 'fr': 'Lifetime access'},
   'noSubscriptionNoRenewal': {'en': 'No subscription. No renewal.', 'ar': 'بلا اشتراك. بلا تجديد.', 'fr': 'No subscription. No renewal.'},
   'faqIsSubscriptionQ': {'en': 'Is this a subscription?', 'ar': 'هل هذا اشتراك؟', 'fr': 'Is this a subscription?'},
-  'faqIsSubscriptionA': {'en': 'No. Lifetime access is a one-time \${l} payment. You keep access forever with no renewal.', 'ar': 'لا. الوصول مدى الحياة دفعة واحدة بقيمة \${l}. تحتفظ بالوصول للأبد دون تجديد.', 'fr': 'No. Lifetime access is a one-time \${l} payment. You keep access forever with no renewal.'},
+  'faqIsSubscriptionA': {'en': 'No. Lifetime access is a one-time {price} payment. You keep access forever with no renewal.', 'ar': 'لا. الوصول مدى الحياة دفعة واحدة بقيمة {price}. تحتفظ بالوصول للأبد دون تجديد.', 'fr': 'Non. L’accès à vie est un paiement unique de {price}. Vous conservez l’accès pour toujours, sans renouvellement.'},
+  'faqIsSubscriptionAPlain': {'en': 'No. Lifetime access is a one-time payment. You keep access forever with no renewal.', 'ar': 'لا. الوصول مدى الحياة دفعة واحدة. تحتفظ بالوصول للأبد دون تجديد.', 'fr': 'Non. L’accès à vie est un paiement unique. Vous conservez l’accès pour toujours, sans renouvellement.'},
 
   // ── Video tab ────────────────────────────────────────────────────────────
   'unableToLoadVideoConnection': {'en': 'Unable to load video.\nPlease check your connection and try again.', 'ar': 'تعذّر تحميل الفيديو.\nتحقق من اتصالك وحاول مرة أخرى.', 'fr': 'Unable to load video.\nPlease check your connection and try again.'},
@@ -578,6 +580,12 @@ String t(String lang, String key) {
   }
   if (entry == null) return key;
   return localizeNumerals(lang, entry[lang] ?? en ?? key);
+}
+
+/// Inserts a store-formatted price. Apple and Google already localize the
+/// amount and currency for the user's country, so the digits are left as-is.
+String tWithStorePrice(String lang, String key, String price) {
+  return t(lang, key).replaceAll('{price}', price);
 }
 
 /// Same as [t] but substitutes `{name}`-style placeholders from [vars].

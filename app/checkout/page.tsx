@@ -4,7 +4,6 @@ import { getCachedCurrentUser } from "@/lib/auth-cache";
 import { getUserAccessInfo } from "@/lib/access";
 import CheckoutClientPage from "./page-client";
 import { stripe } from "@/lib/stripe";
-import { PLANS } from "@/lib/stripe-config";
 import { lifetimePriceMetadata, quoteFromHeaderBag } from "@/lib/request-country-price";
 
 export const dynamic = "force-dynamic";
@@ -29,52 +28,27 @@ export default async function CheckoutPage({ searchParams }: Props) {
   const rawPlan = (params.plan ?? "").toLowerCase().trim();
   const normalizedPlan = LEGACY_PLAN_ALIASES[rawPlan] ?? rawPlan;
 
-  // ── Redirect gate ─────────────────────────────────────────────────────────
-  // Send users with full lifetime access back to the dashboard UNLESS they are
-  // attempting a legitimate upgrade to a family plan.
-  //
-  //  Individual lifetime holders can only:
-  //    • /checkout?plan=family-lifetime  — upgrade to family lifetime ($50 diff)
-  //
-  //  family-trial and family-monthly are redirected to family-lifetime because:
-  //   - The free trial is one-per-account
-  //   - Monthly is a step down from a lifetime plan they already own
-  //
-  //  Family lifetime holders have nothing left to buy at all.
-  let isLifetimeUpgrade = false;
+  // Lifetime holders already own the course. Family is not sold or offered as an upgrade.
   if (user) {
     const { hasLifetime } = await getUserAccessInfo(user.id, user.hasPaid);
-    if (hasLifetime) {
-      // Family lifetime holders: nothing left to upgrade to.
-      if (user.planType === "family") redirect("/seerah");
-
-      // Individual lifetime holders trying family-trial or family-monthly:
-      // the free trial is one-time-per-account, and a monthly subscription is a
-      // step down from what they already own. Redirect both straight to the
-      // family lifetime upgrade page ($30 difference).
-      if (normalizedPlan === "family-trial" || normalizedPlan === "family-monthly") {
-        redirect("/checkout?plan=family-lifetime");
-      }
-
-      // Individual lifetime holders: only family-lifetime is a valid upgrade.
-      if (normalizedPlan !== "family-lifetime") redirect("/seerah");
-
-      // Flag used by the client to lock billing to "lifetime" only.
-      isLifetimeUpgrade = true;
-    }
+    if (hasLifetime) redirect("/seerah");
   }
 
-  // Public purchase is lifetime-only — send legacy monthly/trial plan links to lifetime.
+  const audienceParam = (params.audience ?? "").toLowerCase();
+  const wantsFamily =
+    normalizedPlan.startsWith("family") ||
+    audienceParam === "family" ||
+    rawPlan === "family" ||
+    rawPlan === "familymonthly";
+
+  // Public purchase is lifetime-only. Old family links become the individual plan.
   if (
+    wantsFamily ||
     normalizedPlan === "individual-monthly" ||
-    normalizedPlan === "individual-trial" ||
-    normalizedPlan === "family-monthly" ||
-    normalizedPlan === "family-trial"
+    normalizedPlan === "individual-trial"
   ) {
     const qs = new URLSearchParams();
-    const lifetimePlan =
-      normalizedPlan.startsWith("family") ? "family-lifetime" : "individual-lifetime";
-    qs.set("plan", lifetimePlan);
+    qs.set("plan", "individual-lifetime");
     if (params.source) qs.set("source", params.source);
     if (params.utm_source) qs.set("utm_source", params.utm_source);
     if (params.utm_medium) qs.set("utm_medium", params.utm_medium);
@@ -96,13 +70,11 @@ export default async function CheckoutPage({ searchParams }: Props) {
 
   // Map plan IDs to audience + billing for the Elements flow.
   if      (normalizedPlan === "individual-lifetime") { initialAudience = "individual"; initialBilling = "lifetime"; }
-  else if (normalizedPlan === "family-lifetime")     { initialAudience = "family";     initialBilling = "lifetime"; }
   // Legacy URL param fallbacks — monthly/trial billing params map to lifetime.
   else {
     initialBilling = "lifetime";
     const audienceParam = params.audience?.toLowerCase() ?? "";
-    if (audienceParam === "family" || planParam === "family" || planParam === "familymonthly") initialAudience = "family";
-    if (audienceParam === "individual" || planParam === "individual")                          initialAudience = "individual";
+    if (audienceParam === "individual" || planParam === "individual") initialAudience = "individual";
     void billingParam;
   }
 
@@ -113,17 +85,8 @@ export default async function CheckoutPage({ searchParams }: Props) {
   const hdrs = await headers();
   const lifetimeQuote = quoteFromHeaderBag((name) => hdrs.get(name));
 
-  const planBasePrice: Record<string, number> = {
-    "individual-lifetime": lifetimeQuote.amountCents,
-    "family-lifetime":     isLifetimeUpgrade
-                             ? PLANS.family.upgradeFromLifetimePrice  // $50 upgrade diff
-                             : PLANS.family.price,                    // $79 new purchase
-    "individual-monthly":  PLANS.monthly.price,       // $9.99
-    "family-monthly":      PLANS.familyMonthly.price, // $9.99
-    "individual-trial":    0,
-    "family-trial":        0,
-  };
-  const initialBasePrice  = planBasePrice[normalizedPlan] ?? PLANS.complete.price;
+  // Public checkout is the country lifetime price, including /checkout with no plan param.
+  const initialBasePrice = lifetimeQuote.amountCents;
   let initialClientSecret: string | null = null;
   let initialFinalPrice = initialBasePrice;
 
@@ -192,7 +155,7 @@ export default async function CheckoutPage({ searchParams }: Props) {
       initialBasePrice={initialBasePrice}
       initialFinalPrice={initialFinalPrice}
       initialSourceParam={sourceParamProp}
-      isLifetimeUpgrade={isLifetimeUpgrade}
+      isLifetimeUpgrade={false}
       initialEmail={prefillEmail}
       initialName={prefillName}
       initialQuizScore={initialQuizScore}

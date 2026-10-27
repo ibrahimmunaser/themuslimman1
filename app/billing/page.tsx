@@ -442,40 +442,6 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
           </div>
         </div>
 
-        {/* Family Monthly → Lifetime upgrade nudge */}
-        {!hideStripeBilling && isFamilyMonthly && (
-          <div className="rounded-2xl border border-gold/20 bg-gold/5 p-6">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-gold/15">
-                <Star className="w-5 h-5 text-gold" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-text">{loc(lang, "Upgrade to Family Lifetime", "الترقية إلى وصول العائلة مدى الحياة", "Passer à Famille à vie")}</p>
-                <p className="text-sm text-text-secondary mt-1 leading-relaxed">
-                  {loc(
-                    lang,
-                    "Stop paying monthly. Get permanent Family Access for a one-time payment of $79 — the same 5 learner profiles, separate progress for every course asset, lifetime access.",
-                    "توقّف عن الدفع الشهري. احصل على وصول العائلة الدائم بدفعة واحدة بقيمة $79 — نفس الـ ٥ ملفات المتعلّمين، تقدّم منفصل لكل مورد، وصول مدى الحياة.",
-                    "Arrêtez de payer chaque mois. Obtenez un accès Famille permanent pour un paiement unique de 79 $ — les mêmes 5 profils d'apprenants, une progression séparée pour chaque ressource, un accès à vie.",
-                  )}
-                </p>
-                <div className="mt-4 flex flex-wrap items-center gap-3">
-                  <Link
-                    href="/checkout?plan=family&billing=lifetime"
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gold hover:bg-gold-light text-black font-bold text-sm transition-colors shadow-sm"
-                  >
-                    {loc(lang, "Upgrade for $79", "الترقية بـ $79", "Passer à $79")}
-                    <UpgradeIcon className="w-4 h-4" />
-                  </Link>
-                  <span className="text-xs text-text-muted">
-                    {loc(lang, "One-time · Monthly subscription cancelled automatically", "دفعة واحدة · يُلغى الاشتراك الشهري تلقائيًا", "Paiement unique · Abonnement mensuel annulé automatiquement")}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Individual Monthly/Trial → Individual Lifetime upgrade card */}
         {!hideStripeBilling && !accessInfo.hasLifetime && !isFamily && isMonthly && !isPastDue && (
           <div className="rounded-2xl border border-gold/20 bg-gold/5 p-6">

@@ -304,7 +304,7 @@ function GiftCheckoutContent({ purchaserEmail, purchaserName: _purchaserName }: 
         <div>
           <p className="text-sm font-semibold text-white">{plan.name} Gift</p>
           <p className="text-xs text-zinc-500 mt-0.5">
-            {planChoice === "family" ? "Up to 5 learners · lifetime" : "1 learner · lifetime"}
+            1 learner · lifetime
           </p>
         </div>
         <p className="text-sm font-bold text-white ml-4">{formatPrice(plan.price)}</p>
@@ -539,7 +539,6 @@ function GiftCheckoutContent({ purchaserEmail, purchaserName: _purchaserName }: 
                 />
                 <p className="text-xs text-zinc-600 mt-1">
                   We&apos;ll send the claim link here.
-                  {planChoice === "family" && " They'll be the account owner and can add up to 4 learner profiles."}
                 </p>
               </div>
 

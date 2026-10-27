@@ -1,7 +1,12 @@
+"use client";
+
 import Link from "next/link";
 import { Lock, CheckCircle2, ShieldCheck } from "lucide-react";
+import { useSiteLang } from "@/components/site-lang";
+import { siteT } from "@/lib/site-copy";
 
 export function Footer() {
+  const lang = useSiteLang();
   const currentYear = new Date().getFullYear();
 
   return (
@@ -19,24 +24,24 @@ export function Footer() {
               />
             </Link>
             <p className="text-sm text-text-muted leading-relaxed mb-4">
-              Structured Seerah learning for serious Muslim learners.
+              {siteT(lang, "footBlurb")}
             </p>
             <div className="flex items-center gap-2 text-xs text-text-muted">
               <ShieldCheck className="w-3.5 h-3.5 text-text-muted" />
-              <span>Early Supporter Pricing</span>
+              <span>{siteT(lang, "footEarly")}</span>
             </div>
           </div>
 
           {/* Product */}
           <div>
-            <h3 className="font-semibold text-text text-sm mb-4">Product</h3>
+            <h3 className="font-semibold text-text text-sm mb-4">{siteT(lang, "footProduct")}</h3>
             <ul className="space-y-2.5">
               {[
-                { label: "What's Inside", href: "/#preview" },
-                { label: "Pricing", href: "/#pricing" },
-                { label: "About", href: "/about" },
-                { label: "Methodology", href: "/methodology" },
-                { label: "Get Started", href: "/checkout" },
+                { label: siteT(lang, "footInside"), href: "/#preview" },
+                { label: siteT(lang, "navPricing"), href: "/#pricing" },
+                { label: siteT(lang, "footAbout"), href: "/about" },
+                { label: siteT(lang, "footMethod"), href: "/methodology" },
+                { label: siteT(lang, "navGetStarted"), href: "/checkout" },
               ].map((link) => (
                 <li key={link.label}>
                   <Link
@@ -52,13 +57,13 @@ export function Footer() {
 
           {/* Support */}
           <div>
-            <h3 className="font-semibold text-text text-sm mb-4">Support</h3>
+            <h3 className="font-semibold text-text text-sm mb-4">{siteT(lang, "footSupport")}</h3>
             <ul className="space-y-2.5">
               {[
-                { label: "FAQ", href: "/#faq" },
-                { label: "Contact Us", href: "/contact" },
-                { label: "Help Center", href: "/contact" },
-                { label: "Refund Policy", href: "/refund" },
+                { label: siteT(lang, "footFaq"), href: "/#faq" },
+                { label: siteT(lang, "footContact"), href: "/contact" },
+                { label: siteT(lang, "footHelpCenter"), href: "/contact" },
+                { label: siteT(lang, "footRefund"), href: "/refund" },
               ].map((link) => (
                 <li key={link.label}>
                   <Link
@@ -74,12 +79,12 @@ export function Footer() {
 
           {/* Account */}
           <div>
-            <h3 className="font-semibold text-text text-sm mb-4">Account</h3>
+            <h3 className="font-semibold text-text text-sm mb-4">{siteT(lang, "footAccount")}</h3>
             <ul className="space-y-2.5">
               {[
-                { label: "Log In", href: "/login" },
-                { label: "Create Account", href: "/checkout" },
-                { label: "Member Dashboard", href: "/seerah" },
+                { label: siteT(lang, "navLogIn"), href: "/login" },
+                { label: siteT(lang, "footCreate"), href: "/checkout" },
+                { label: siteT(lang, "footDashboard"), href: "/seerah" },
               ].map((link) => (
                 <li key={link.label}>
                   <Link
@@ -98,45 +103,45 @@ export function Footer() {
         <div className="flex flex-wrap items-center justify-center gap-6 py-6 border-t border-border mb-6">
           <div className="flex items-center gap-2 text-xs text-text-muted">
             <Lock className="w-3.5 h-3.5" />
-            <span>Secure Checkout</span>
+            <span>{siteT(lang, "footSecure")}</span>
           </div>
           <div className="flex items-center gap-2 text-xs text-text-muted">
             <CheckCircle2 className="w-3.5 h-3.5 text-success" />
-            <span>Instant Access</span>
+            <span>{siteT(lang, "footInstant")}</span>
           </div>
           <div className="flex items-center gap-2 text-xs text-text-muted">
             <CheckCircle2 className="w-3.5 h-3.5 text-success" />
-            <span>7-Day Clarity Guarantee</span>
+            <span>{siteT(lang, "footGuarantee")}</span>
           </div>
           <div className="flex items-center gap-2 text-xs text-text-muted">
             <CheckCircle2 className="w-3.5 h-3.5 text-success" />
-            <span>Lifetime Access</span>
+            <span>{siteT(lang, "footLifetime")}</span>
           </div>
         </div>
 
         {/* Bottom bar */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-border">
           <p className="text-sm text-text-muted">
-            © {currentYear} TheMuslimMan. All rights reserved.
+            © {currentYear} TheMuslimMan. {siteT(lang, "footRights")}
           </p>
           <div className="flex items-center gap-4">
             <Link
               href="/privacy"
               className="text-sm text-text-muted hover:text-text transition-colors"
             >
-              Privacy
+              {siteT(lang, "footPrivacy")}
             </Link>
             <Link
               href="/terms"
               className="text-sm text-text-muted hover:text-text transition-colors"
             >
-              Terms
+              {siteT(lang, "footTerms")}
             </Link>
             <Link
               href="/refund"
               className="text-sm text-text-muted hover:text-text transition-colors"
             >
-              Refund Policy
+              {siteT(lang, "footRefund")}
             </Link>
             <a
               href="https://themuslimman.com"

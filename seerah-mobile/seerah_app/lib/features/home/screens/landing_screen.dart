@@ -30,7 +30,6 @@ class _Plan {
   final String iapId;
   final String nameKey;
   final String descriptionKey;
-  final String fallbackPrice;
   final String periodKey;
   final String? badgeKey;
   final bool isRecommended;
@@ -40,7 +39,6 @@ class _Plan {
     required this.iapId,
     required this.nameKey,
     required this.descriptionKey,
-    required this.fallbackPrice,
     required this.periodKey,
     this.badgeKey,
     this.isRecommended = false,
@@ -53,7 +51,6 @@ const _plans = [
     iapId: AppConstants.iapLifetimeIndividual,
     nameKey: 'planLifetime',
     descriptionKey: 'oneLearnerPayOnce',
-    fallbackPrice: '\$${AppConstants.lifetimePrice}',
     periodKey: 'payOnce',
     badgeKey: 'mostPopular',
     isRecommended: true,
@@ -88,19 +85,10 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
     super.dispose();
   }
 
-  /// Audit M-fallback-price: returns null while store products are still
-  /// loading so the UI can show a neutral placeholder instead of eagerly
-  /// rendering `plan.fallbackPrice` — a hardcoded USD figure that doesn't
-  /// reflect Apple/Google's actual per-region, per-currency pricing. Once
-  /// loading has genuinely finished and this specific product still isn't
-  /// found (a real misconfiguration, already flagged separately by the
-  /// retry banner), falling back to the hardcoded price is still better
-  /// than a permanent placeholder.
+  /// Storefront price only. A missing product stays blank rather than
+  /// showing a hardcoded US dollar amount.
   String? _price(IAPState iap, _Plan plan) {
-    final resolved = iap.productForPlan(plan.iapId)?.price;
-    if (resolved != null) return resolved;
-    if (iap.status == IAPStatus.loading) return null;
-    return plan.fallbackPrice;
+    return iap.productForPlan(plan.iapId)?.price;
   }
 
   Future<void> _buyPlan(IAPState iap, _Plan plan) async {

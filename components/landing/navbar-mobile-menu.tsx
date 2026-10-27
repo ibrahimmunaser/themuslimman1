@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { LangToggle } from "@/components/part/lang-toggle";
 import type { CourseLang } from "@/lib/course-lang";
+import { siteT } from "@/lib/site-copy";
 
 interface NavbarMobileMenuProps {
   user: { fullName: string } | null;
@@ -45,7 +46,7 @@ export function NavbarMobileMenu({ user, hasPaid, lang = "en" }: NavbarMobileMen
       <button
         onClick={() => setOpen(!open)}
         className="md:hidden flex items-center justify-center min-h-[44px] min-w-[44px] -mr-2 text-text-secondary hover:text-text transition-colors"
-        aria-label={open ? "Close menu" : "Open menu"}
+        aria-label={open ? siteT(lang, "navCloseMenu") : siteT(lang, "navOpenMenu")}
         aria-expanded={open}
         aria-controls="mobile-nav"
       >
@@ -77,7 +78,7 @@ export function NavbarMobileMenu({ user, hasPaid, lang = "en" }: NavbarMobileMen
                 onClick={close}
                 className="flex items-center px-5 min-h-[48px] text-sm text-text-secondary hover:text-text hover:bg-surface/50 transition-colors"
               >
-                Home
+                {siteT(lang, "navHome")}
               </Link>
               {user && (
                 <Link
@@ -85,7 +86,7 @@ export function NavbarMobileMenu({ user, hasPaid, lang = "en" }: NavbarMobileMen
                   onClick={close}
                   className="flex items-center px-5 min-h-[48px] text-sm text-text-secondary hover:text-text hover:bg-surface/50 transition-colors"
                 >
-                  My Course
+                  {siteT(lang, "navMyCourse")}
                 </Link>
               )}
               <Link
@@ -93,14 +94,14 @@ export function NavbarMobileMenu({ user, hasPaid, lang = "en" }: NavbarMobileMen
                 onClick={close}
                 className="flex items-center px-5 min-h-[48px] text-sm text-text-secondary hover:text-text hover:bg-surface/50 transition-colors"
               >
-                Pricing
+                {siteT(lang, "navPricing")}
               </Link>
               <Link
                 href={user ? "/help" : "/contact"}
                 onClick={close}
                 className="flex items-center px-5 min-h-[48px] text-sm text-text-secondary hover:text-text hover:bg-surface/50 transition-colors"
               >
-                Help
+                {siteT(lang, "navHelp")}
               </Link>
 
               <div className="mx-4 my-2 h-px bg-border/50" />
@@ -111,7 +112,7 @@ export function NavbarMobileMenu({ user, hasPaid, lang = "en" }: NavbarMobileMen
                   onClick={close}
                   className="flex items-center px-5 min-h-[48px] text-sm text-text-secondary hover:text-text hover:bg-surface/50 transition-colors"
                 >
-                  Settings
+                  {siteT(lang, "navSettings")}
                 </Link>
               ) : (
                 <div className="flex flex-col gap-2 px-4 pb-4 pt-1">
@@ -120,14 +121,14 @@ export function NavbarMobileMenu({ user, hasPaid, lang = "en" }: NavbarMobileMen
                     onClick={close}
                     className="flex items-center justify-center min-h-[48px] px-4 rounded-lg border border-border text-sm text-text-secondary hover:text-text hover:border-gold/30 transition-colors"
                   >
-                    Log In
+                    {siteT(lang, "navLogIn")}
                   </Link>
                   <Link
                     href={pricingHref(pathname)}
                     onClick={close}
                     className="flex items-center justify-center min-h-[48px] px-4 rounded-lg bg-gold text-ink text-sm font-semibold hover:bg-gold-light transition-colors"
                   >
-                    Get Started
+                    {siteT(lang, "navGetStarted")}
                   </Link>
                 </div>
               )}

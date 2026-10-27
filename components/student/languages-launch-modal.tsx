@@ -9,7 +9,7 @@ import { markLanguagesAnnouncementSeen } from "@/app/actions/onboarding";
 
 const SHARE_URL = "https://themuslimman.com";
 const SHARE_TEXT =
-  "Complete Seerah is now available in English, Arabic, and French — with more languages coming. Learn the life of the Prophet ﷺ in order: https://themuslimman.com";
+  "Complete Seerah is available in 15 languages. Learn the life of the Prophet ﷺ in order: https://themuslimman.com";
 
 interface LanguagesLaunchModalProps {
   show: boolean;
@@ -89,21 +89,21 @@ export function LanguagesLaunchModal({ show, lang = "en" }: LanguagesLaunchModal
 
   const title = loc(
     lang,
-    "Now in 3 languages!",
-    "الآن بثلاث لغات!",
-    "Désormais en 3 langues !",
+    "Now in 15 languages!",
+    "الآن بـ ١٥ لغة!",
+    "Désormais en 15 langues !",
   );
   const body = loc(
     lang,
-    "Complete Seerah is available in English, Arabic, and French — lessons, quizzes, flashcards, and more. We plan to add more languages next.",
-    "دورة السيرة الكاملة متاحة الآن بالإنجليزية والعربية والفرنسية — دروس واختبارات وبطاقات تعليمية والمزيد. ونخطط لإضافة المزيد من اللغات قريبًا.",
-    "Complete Seerah est disponible en anglais, arabe et français — leçons, quiz, flashcards et plus. Nous prévoyons d'ajouter d'autres langues ensuite.",
+    "Complete Seerah is available in 15 languages — lessons, quizzes, flashcards, and more.",
+    "دورة السيرة الكاملة متاحة بـ ١٥ لغة — دروس واختبارات وبطاقات تعليمية والمزيد.",
+    "Complete Seerah est disponible en 15 langues — leçons, quiz, flashcards et plus.",
   );
   const tip = loc(
     lang,
-    "Switch anytime with the EN / عربي / FR toggle in the sidebar.",
-    "بدّل اللغة في أي وقت من زر EN / عربي / FR في الشريط الجانبي.",
-    "Changez à tout moment avec le basculeur EN / عربي / FR dans la barre latérale.",
+    "Switch anytime from the language menu.",
+    "بدّل اللغة في أي وقت من قائمة اللغات.",
+    "Changez de langue à tout moment depuis le menu des langues.",
   );
 
   return (

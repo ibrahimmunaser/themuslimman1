@@ -12,9 +12,9 @@ export default function CheckupFunnelClient() {
       eventPrefix="homepage_"
       urls={{
         individualMonthly:  `/checkout?plan=individual-lifetime&${SRC}`,
-        familyMonthly:      `/checkout?plan=family-lifetime&${SRC}`,
+        familyMonthly:      `/checkout?plan=individual-lifetime&${SRC}`,
         individualLifetime: `/checkout?plan=individual-lifetime&${SRC}`,
-        familyLifetime:     `/checkout?plan=family-lifetime&${SRC}`,
+        familyLifetime:     `/checkout?plan=individual-lifetime&${SRC}`,
         watchFree:          "/watch-free",
       }}
     />

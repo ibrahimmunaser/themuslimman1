@@ -25,7 +25,7 @@ export function FunnelProgress({ current, onNavigate }: FunnelProgressProps) {
   return (
     <nav
       aria-label="Checkout progress"
-      className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b border-zinc-800/70"
+      className="sticky top-12 z-20 bg-background/95 backdrop-blur-sm border-b border-zinc-800/70"
     >
       <ol className="flex items-center max-w-lg mx-auto px-4 sm:px-5 py-2.5">
         {PROGRESS_STEPS.map((step, index) => {
