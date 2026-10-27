@@ -30,6 +30,7 @@ export function PlanPicker({
   onCtaClick,
   hasAccess = false,
 }: PlanPickerProps) {
+  const countryPrice = useCountryPrice();
   if (hasAccess) {
     return (
       <div className="rounded-xl border border-green-500/30 bg-green-500/5 p-5 text-center">
@@ -41,7 +42,6 @@ export function PlanPicker({
 
   const planId: PlanId = "individual-lifetime";
   const checkoutUrl = buildUrl(checkoutBaseUrl, planId);
-  const countryPrice = useCountryPrice();
 
   return (
     <div className="mx-auto w-full max-w-md">
