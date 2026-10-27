@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, Play } from "lucide-react";
 import { Part1FullPreview } from "@/components/landing/part1-full-preview";
+import { LifetimeAccessCta } from "@/components/pricing/country-price";
 import { WatchFreeTracker } from "./watch-free-tracker";
 
 export const metadata: Metadata = {
@@ -43,7 +44,7 @@ export default async function WatchFreePage({ searchParams }: Props) {
       <WatchFreeTracker />
 
       {/* ── Minimal nav ──────────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 bg-ink/95 backdrop-blur-sm border-b border-border/50">
+      <header className="sticky top-12 z-50 bg-ink/95 backdrop-blur-sm border-b border-border/50">
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
           <Link href="/" className="shrink-0">
             <Image
@@ -109,7 +110,7 @@ export default async function WatchFreePage({ searchParams }: Props) {
             href={checkoutHref}
             className="inline-flex items-center gap-2 bg-gold text-ink font-bold px-8 py-4 rounded-xl hover:bg-gold-light active:scale-[0.97] transition-all shadow-lg shadow-gold/20"
           >
-            Get Lifetime Access — $49
+            <LifetimeAccessCta />
             <ArrowRight className="w-5 h-5" />
           </Link>
           <p className="mt-3 text-xs text-text-muted">

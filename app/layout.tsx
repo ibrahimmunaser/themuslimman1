@@ -4,7 +4,11 @@ import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import Script from "next/script";
+import { headers } from "next/headers";
 import { ServiceWorkerRegistration } from "@/components/service-worker";
+import { SiteLangBar } from "@/components/site-lang-bar";
+import { CountryPriceProvider } from "@/components/pricing/country-price";
+import { quoteFromHeaderBag } from "@/lib/request-country-price";
 import "./globals.css";
 
 const geist = Geist({
@@ -45,11 +49,14 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const hdrs = await headers();
+  const countryPrice = quoteFromHeaderBag((name) => hdrs.get(name));
+
   return (
     <html lang="en" className={`${geist.variable} h-full`} data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
@@ -64,7 +71,9 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://themuslimman1.r2.cloudflarestorage.com" />
       </head>
       <body className="min-h-full bg-ink text-text antialiased">
+        <CountryPriceProvider quote={countryPrice}>
         <ServiceWorkerRegistration />
+        <SiteLangBar />
         {children}
         <Toaster
           position="bottom-center"
@@ -89,6 +98,7 @@ export default function RootLayout({
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img height="1" width="1" style={{display:"none"}} src="https://www.facebook.com/tr?id=859003573915526&ev=PageView&noscript=1" alt="" />
         </noscript>
+        </CountryPriceProvider>
       </body>
     </html>
   );

@@ -14,13 +14,14 @@ import { Part1FullPreview } from "@/components/landing/part1-full-preview";
 import { HomepageTracker } from "@/components/landing/homepage-tracker";
 import { getCurrentUser } from "@/lib/auth";
 import { hasActiveCourseAccess } from "@/lib/access";
+import { LifetimePrice } from "@/components/pricing/country-price";
 
 export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Complete Seerah | Learn the Life of Prophet Muhammad ﷺ",
   description:
-    "Learn the life of Prophet Muhammad ﷺ in order — 100 structured lessons with video, reading, quizzes, and flashcards. Lifetime access for $49.",
+    "Learn the life of Prophet Muhammad ﷺ in order — 100 structured lessons with video, reading, quizzes, and flashcards. One-time lifetime access. Part 1 is free.",
   openGraph: {
     title: "Complete Seerah | Learn the Life of Prophet Muhammad ﷺ",
     description:
@@ -81,7 +82,7 @@ export default async function LandingPage() {
               {" "}— with more languages planned.
             </p>
             <p className="text-base sm:text-lg font-semibold text-gold mb-6">
-              $49 one-time · Lifetime access
+              <LifetimePrice suffix=" one-time" /> · Lifetime access
             </p>
           </FadeUp>
 
@@ -350,7 +351,7 @@ export default async function LandingPage() {
               },
               {
                 q: "Is this a subscription?",
-                a: "No. Complete Seerah is $49 one-time for lifetime access — no subscription and no recurring charges.",
+                a: "SUBSCRIPTION_PRICE",
               },
               {
                 q: "Do I get instant access after buying?",
@@ -370,7 +371,11 @@ export default async function LandingPage() {
                   />
                 </summary>
                 <div className="px-5 pb-5 pt-1 text-sm text-text-secondary leading-relaxed border-t border-border/50">
-                  {item.a}
+                  {item.a === "SUBSCRIPTION_PRICE" ? (
+                    <>No. Complete Seerah is <LifetimePrice /> one-time for lifetime access — no subscription and no recurring charges.</>
+                  ) : (
+                    item.a
+                  )}
                   {item.q === "What sources does the course use?" && (
                     <>
                       {" "}
@@ -400,7 +405,7 @@ export default async function LandingPage() {
           <p className="text-sm sm:text-base text-text-secondary mb-2 max-w-lg mx-auto">
             One structured path. 100 lessons. Video, reading, quiz, flashcards — all in order.
           </p>
-          <p className="text-gold font-semibold text-base mb-7">$49 one-time · Lifetime access</p>
+          <p className="text-gold font-semibold text-base mb-7"><LifetimePrice suffix=" one-time" /> · Lifetime access</p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link

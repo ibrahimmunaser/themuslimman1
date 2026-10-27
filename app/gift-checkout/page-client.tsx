@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { PLANS, formatPrice } from "@/lib/stripe-config";
+import { useCountryPrice } from "@/components/pricing/country-price";
 
 // Lazily memoized so it reads the env var at first render rather than at module
 // evaluation time — avoids crashes when the key isn't yet compiled into the bundle.
@@ -119,7 +120,9 @@ function GiftCheckoutContent({ purchaserEmail, purchaserName: _purchaserName }: 
 
   // ── Gift state ─────────────────────────────────────────────────────────────
   const [planChoice, setPlanChoice]   = useState<GiftPlanId>("complete");
+  const countryPrice = useCountryPrice();
   const plan = planChoice === "family" ? PLANS.family : PLANS.complete;
+  const catalogPrice = planChoice === "family" ? PLANS.family.price : countryPrice.amountCents;
 
   const [step, setStep]               = useState<Step>("details");
   const [details, setDetails]         = useState<GiftDetails>({ recipientEmail: "", recipientName: "", giftMessage: "" });
@@ -130,7 +133,7 @@ function GiftCheckoutContent({ purchaserEmail, purchaserName: _purchaserName }: 
   const [requiresVerification, setRequiresVerification] = useState(false);
 
   const [pricing, setPricing] = useState<GiftPricing>({
-    baseAmount: plan.price, finalAmount: plan.price,
+    baseAmount: 0, finalAmount: 0,
   });
 
   const handlePlanChange = (newPlan: GiftPlanId) => {
@@ -139,7 +142,7 @@ function GiftCheckoutContent({ purchaserEmail, purchaserName: _purchaserName }: 
     if (step === "payment") { setStep("details"); setClientSecret(null); }
   };
 
-  const displayPrice = step === "payment" ? pricing.finalAmount : plan.price;
+  const displayPrice = step === "payment" && pricing.finalAmount > 0 ? pricing.finalAmount : catalogPrice;
 
   // ── Auth handlers ──────────────────────────────────────────────────────────
 
@@ -262,7 +265,7 @@ function GiftCheckoutContent({ purchaserEmail, purchaserName: _purchaserName }: 
       <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">Gift type</p>
       <div className="mb-8 rounded-xl border border-gold/50 bg-gold/8 ring-1 ring-gold/30 p-4">
         <p className="font-semibold text-white">Individual Lifetime</p>
-        <p className="text-sm text-zinc-400 mt-0.5">1 learner · one-time · ${PLANS.complete.price / 100}</p>
+        <p className="text-sm text-zinc-400 mt-0.5">1 learner · one-time · {countryPrice.label}</p>
       </div>
 
       {/* Features */}

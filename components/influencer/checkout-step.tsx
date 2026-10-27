@@ -20,6 +20,7 @@ type ExpressCheckoutConfirmHandler = ComponentProps<typeof ExpressCheckoutElemen
 type ExpressCheckoutConfirmEvent = Parameters<NonNullable<ExpressCheckoutConfirmHandler>>[0];
 import { ArrowLeft, Check, Lock, AlertCircle, Infinity, User, ChevronDown } from "lucide-react";
 import { PLANS, formatPrice } from "@/lib/stripe-config";
+import { useCountryPrice } from "@/components/pricing/country-price";
 import { trackEvent } from "@/lib/analytics";
 import { planAnalyticsProps } from "@/lib/plan-catalog";
 import { startCheckoutAttempt, checkoutAttemptPayload } from "@/lib/checkout-attempt";
@@ -512,8 +513,9 @@ export function CheckoutStep({
   const [selectedPlanId, setSelectedPlanId] = useState<PlanOption>("complete");
   const [fullName, setFullName]       = useState("");
   const [email, setEmail]             = useState(userEmail);
+  const countryPrice = useCountryPrice();
 
-  const selectedPlan = LIFETIME_PLAN;
+  const selectedPlan = { ...LIFETIME_PLAN, price: countryPrice.amountCents };
 
   function handlePlanChange(id: PlanOption) {
     setSelectedPlanId(id);
@@ -566,7 +568,7 @@ export function CheckoutStep({
             <div>
               <p className="text-sm font-semibold text-gold mb-1">Lifetime Access</p>
               <p className="text-3xl font-extrabold text-text leading-none">
-                {formatPrice(LIFETIME_PLAN.price)}
+                {formatPrice(selectedPlan.price)}
               </p>
               <p className="text-xs text-zinc-400 mt-2">One payment. Keep access forever.</p>
             </div>

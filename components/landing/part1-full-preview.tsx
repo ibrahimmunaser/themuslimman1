@@ -2,6 +2,7 @@ import { getPart1PreviewData, getPreviewLangFromCookies } from "@/lib/part1-prev
 import { isRtlLang } from "@/lib/course-lang";
 import { Part1PreviewTabs } from "@/components/landing/part1-preview-tabs";
 import { Badge } from "@/components/ui/badge";
+import { LifetimeAccessCta } from "@/components/pricing/country-price";
 
 export async function Part1FullPreview({
   checkoutHref = "/checkout?plan=individual-lifetime",
@@ -90,7 +91,7 @@ export async function Part1FullPreview({
             data-plan="individual-lifetime"
             className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-gold to-gold-light hover:from-gold-light hover:to-gold text-ink font-bold text-base shadow-lg shadow-gold/30 transition-all hover:shadow-gold/40 hover:scale-[1.02] active:scale-[0.99]"
           >
-            {ctaLabel}
+            {ctaLabel.includes("$49") || ctaLabel.includes("49 $") ? <LifetimeAccessCta /> : ctaLabel}
           </a>
           <p className="text-xs text-text-muted mt-4">
             {isRtl

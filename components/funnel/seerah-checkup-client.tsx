@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Play, ChevronRight, ArrowRight, BarChart2, CheckCircle2 } from "lucide-react";
 import { Footer } from "@/components/landing/footer";
+import { LifetimeAccessCta } from "@/components/pricing/country-price";
 import dynamic from "next/dynamic";
 
 // Lazy-load the inline Part 1 video only when the user expands it
@@ -907,7 +908,7 @@ export function SeerahCheckupClient({
       {!embedMode && (
       <>
       {/* ── Header ── */}
-      <header className="py-4 px-4 sm:px-6 border-b border-border/30 bg-ink sticky top-0 z-40">
+      <header className="py-4 px-4 sm:px-6 border-b border-border/30 bg-ink sticky top-12 z-40">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <Link href="/">
             <Image src="/images/logoicon.png" alt="The Muslim Man" width={967} height={219} className="h-9 sm:h-10 w-auto" priority />
@@ -1146,7 +1147,7 @@ export function SeerahCheckupClient({
                     className="flex items-center justify-center gap-2 w-full py-5 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-xl transition-colors shadow-lg shadow-gold/30 mb-3"
                   >
                     <Play className="w-5 h-5 fill-current" />
-                    {displayRec.primaryLabel}
+                    {displayRec.primaryLabel.includes("$49") ? <LifetimeAccessCta /> : displayRec.primaryLabel}
                   </button>
                   {displayRec.primarySupport && (
                     <p className="text-sm text-center text-text-muted/65 mb-5">{displayRec.primarySupport}</p>
@@ -1165,7 +1166,7 @@ export function SeerahCheckupClient({
                           destination:      displayRec.secondaryUrl ?? "",
                         })}
                         className="block w-full py-4 rounded-xl border-2 border-gold/35 text-gold font-bold text-base text-center hover:border-gold/60 hover:bg-gold/5 transition-colors mb-2">
-                        {displayRec.secondaryLabel}
+                        {displayRec.secondaryLabel.includes("$49") ? <LifetimeAccessCta /> : displayRec.secondaryLabel}
                       </Link>
                       <p className="text-xs text-center text-text-muted/55 mb-4">Start today. Continue at your own pace.</p>
                     </>
@@ -1182,7 +1183,7 @@ export function SeerahCheckupClient({
                       destination:      displayRec.primaryUrl,
                     })}
                     className="block w-full py-5 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-xl text-center transition-colors shadow-lg shadow-gold/30 mb-2">
-                    {displayRec.primaryLabel}
+                    {displayRec.primaryLabel.includes("$49") ? <LifetimeAccessCta /> : displayRec.primaryLabel}
                   </Link>
                   <p className="text-xs text-center text-text-muted/55 mb-2">Start today. Continue at your own pace.</p>
                   {displayRec.primarySupport && (
@@ -1372,7 +1373,7 @@ export function SeerahCheckupClient({
                 destination:      rec.secondaryUrl ?? urls.individualLifetime,
               })}
               className="flex w-full items-center justify-center py-3 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-sm transition-colors shadow-lg shadow-gold/20">
-              Get Lifetime Access — $49
+              <LifetimeAccessCta />
             </Link>
           ) : (
             <Link href={withUserParams(rec.primaryUrl)}
@@ -1384,7 +1385,7 @@ export function SeerahCheckupClient({
                 destination:      rec.primaryUrl,
               })}
               className="flex w-full items-center justify-center py-3 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-sm transition-colors shadow-lg shadow-gold/20">
-              Get Lifetime Access — $49
+              <LifetimeAccessCta />
             </Link>
           )}
         </div>

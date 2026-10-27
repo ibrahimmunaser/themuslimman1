@@ -9,6 +9,7 @@ import type { Part } from "@/lib/types";
 import type { Part1AssetUrls } from "@/lib/part1-preview-data";
 import type { CourseLang } from "@/lib/course-lang";
 import { Part1PreviewTabs } from "@/components/landing/part1-preview-tabs";
+import { LifetimePrice } from "@/components/pricing/country-price";
 
 interface PreviewStepProps {
   config: InfluencerConfig;
@@ -121,7 +122,7 @@ export function PreviewStep({
           <ArrowRight className="w-4 h-4" aria-hidden="true" />
         </button>
         <p className="text-xs text-zinc-500 text-center -mt-3">
-          Unlock all 100 lessons — $49 one-time lifetime access
+          Unlock all 100 lessons — <LifetimePrice suffix=" one-time" /> lifetime access
         </p>
 
       </div>

@@ -23,6 +23,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { parseLang, COURSE_LANG_COOKIE, type CourseLang } from "@/lib/course-lang";
 import { loc } from "@/lib/loc";
+import { LifetimeAccessCta } from "@/components/pricing/country-price";
 
 export const metadata = { title: "Billing | Complete Seerah", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
@@ -487,9 +488,9 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
                 <p className="text-sm text-text-secondary mt-1 leading-relaxed">
                   {loc(
                     lang,
-                    "Stop paying monthly. Get permanent access to all 100 Seerah parts for a one-time payment of $49 — no more recurring charges, yours forever.",
-                    "توقّف عن الدفع الشهري. احصل على وصول دائم لجميع أجزاء السيرة الـ ١٠٠ بدفعة واحدة بقيمة $49 — بلا رسوم متكررة، لك إلى الأبد.",
-                    "Arrêtez de payer chaque mois. Obtenez un accès permanent aux 100 parties de la Sîra pour un paiement unique de 49 $ — plus de frais récurrents, à vous pour toujours.",
+                    "Stop paying monthly. Get permanent access to all 100 Seerah parts for a one-time payment — no more recurring charges, yours forever.",
+                    "توقّف عن الدفع الشهري. احصل على وصول دائم لجميع أجزاء السيرة الـ ١٠٠ بدفعة واحدة — بلا رسوم متكررة، لك إلى الأبد.",
+                    "Arrêtez de payer chaque mois. Obtenez un accès permanent aux 100 parties de la Sîra pour un paiement unique — plus de frais récurrents, à vous pour toujours.",
                   )}
                 </p>
                 <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -497,7 +498,13 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
                     href="/checkout?plan=individual-lifetime"
                     className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gold hover:bg-gold-light text-black font-bold text-sm transition-colors shadow-sm"
                   >
-                    {loc(lang, "Lifetime Access — $49", "وصول مدى الحياة — $49", "Accès à vie — $49")}
+                    {lang === "ar" ? (
+                      <LifetimeAccessCta leading="وصول مدى الحياة — " />
+                    ) : lang === "fr" ? (
+                      <LifetimeAccessCta leading="Accès à vie — " />
+                    ) : (
+                      <LifetimeAccessCta leading="Lifetime Access — " />
+                    )}
                     <UpgradeIcon className="w-4 h-4" />
                   </Link>
                   <span className="text-xs text-text-muted">

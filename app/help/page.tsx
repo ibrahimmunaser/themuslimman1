@@ -6,6 +6,7 @@ import { StudentLayout } from "@/components/student/student-layout";
 import { HelpCircle, BookOpen, CreditCard, Lock } from "lucide-react";
 import { ContactSupportForm } from "@/components/help/contact-support-form";
 import { cookies } from "next/headers";
+import { LifetimePrice } from "@/components/pricing/country-price";
 import { parseLang, COURSE_LANG_COOKIE, type CourseLang } from "@/lib/course-lang";
 import { loc } from "@/lib/loc";
 
@@ -227,7 +228,13 @@ export default async function HelpPage() {
                     {category.questions.map((item, idx) => (
                       <div key={idx} className={idx > 0 ? "pt-6 border-t border-border" : ""}>
                         <h3 className="text-text font-semibold mb-2">{item.q}</h3>
-                        <p className="text-text-secondary leading-relaxed">{item.a}</p>
+                        <p className="text-text-secondary leading-relaxed">
+                          {item.a.includes("$49") ? (
+                            <>Lifetime access is <LifetimePrice /> one-time — permanent access with no recurring charges. Pay once and keep the full course forever.</>
+                          ) : (
+                            item.a
+                          )}
+                        </p>
                       </div>
                     ))}
                   </div>

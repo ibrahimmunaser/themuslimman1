@@ -1,7 +1,8 @@
 "use client";
 
 import { ArrowRight } from "lucide-react";
-import { planAnalyticsProps, type PlanId } from "@/lib/plan-catalog";
+import { type PlanId } from "@/lib/plan-catalog";
+import { useCountryPrice } from "@/components/pricing/country-price";
 
 export type { PlanId };
 
@@ -40,7 +41,7 @@ export function PlanPicker({
 
   const planId: PlanId = "individual-lifetime";
   const checkoutUrl = buildUrl(checkoutBaseUrl, planId);
-  const analytics = planAnalyticsProps(planId);
+  const countryPrice = useCountryPrice();
 
   return (
     <div className="mx-auto w-full max-w-md">
@@ -50,7 +51,7 @@ export function PlanPicker({
         data-plan={planId}
         data-plan-type="individual"
         data-billing="lifetime"
-        data-price={analytics.price as number}
+        data-price={countryPrice.amountCents}
         onClick={() => onCtaClick?.(planId, checkoutUrl)}
         className={[
           "group relative flex flex-col items-center text-center",
@@ -73,7 +74,7 @@ export function PlanPicker({
         </h3>
 
         <p className="text-4xl sm:text-5xl font-extrabold text-text leading-none tracking-tight">
-          $49
+          {countryPrice.label}
           <span className="ml-2 text-base sm:text-lg font-medium text-text-secondary">
             one-time
           </span>

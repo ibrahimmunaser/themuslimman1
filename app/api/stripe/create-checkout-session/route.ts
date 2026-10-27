@@ -3,6 +3,7 @@ import { stripe } from "@/lib/stripe";
 import { getCurrentUser } from "@/lib/auth";
 import { hasActiveCourseAccess, getUserAccessInfo, getActiveSubscription } from "@/lib/access";
 import { checkRateLimit, getIP } from "@/lib/rate-limit";
+import { lifetimePriceMetadata, quoteFromHeaderBag } from "@/lib/request-country-price";
 
 // ── Price ID environment variables ────────────────────────────────────────────
 // New unified naming convention. Old STRIPE_MONTHLY_PRICE_ID / STRIPE_FAMILY_MONTHLY_PRICE_ID
@@ -11,7 +12,6 @@ import { checkRateLimit, getIP } from "@/lib/rate-limit";
 const INDIVIDUAL_TRIAL_FEE_PRICE_ID  = process.env.STRIPE_PRICE_INDIVIDUAL_TRIAL_FEE ?? "";
 const INDIVIDUAL_MONTHLY_PRICE_ID    =
   process.env.STRIPE_PRICE_INDIVIDUAL_MONTHLY ?? process.env.STRIPE_MONTHLY_PRICE_ID ?? "";
-const INDIVIDUAL_LIFETIME_PRICE_ID   = process.env.STRIPE_PRICE_INDIVIDUAL_LIFETIME ?? "";
 const FAMILY_TRIAL_FEE_PRICE_ID      = process.env.STRIPE_PRICE_FAMILY_TRIAL_FEE ?? "";
 const FAMILY_MONTHLY_PRICE_ID        =
   process.env.STRIPE_PRICE_FAMILY_MONTHLY ?? process.env.STRIPE_FAMILY_MONTHLY_PRICE_ID ?? "";
@@ -201,31 +201,38 @@ export async function POST(request: NextRequest) {
         break;
       }
 
-      // ── Individual lifetime: $49 one-time ───────────────────────────────────
+      // ── Individual lifetime: country tier, one-time ─────────────────────────
       case "individual-lifetime": {
-        if (!INDIVIDUAL_LIFETIME_PRICE_ID.startsWith("price_")) {
-          console.error(
-            "[CHECKOUT-SESSION] Individual lifetime price ID not configured.",
-            "STRIPE_PRICE_INDIVIDUAL_LIFETIME:", INDIVIDUAL_LIFETIME_PRICE_ID
-          );
-          return NextResponse.json(
-            { error: "Individual lifetime checkout is not configured. Contact support." },
-            { status: 500 }
-          );
-        }
+        const lifetimeQuote = quoteFromHeaderBag((name) => request.headers.get(name));
         session = await stripe.checkout.sessions.create({
           mode: "payment",
           customer: customerId,
-          line_items: [{ price: INDIVIDUAL_LIFETIME_PRICE_ID, quantity: 1 }],
+          line_items: [{
+            quantity: 1,
+            price_data: {
+              currency: "usd",
+              unit_amount: lifetimeQuote.amountCents,
+              product_data: {
+                name: "Complete Seerah Lifetime",
+                description: "One-time unlock of the full course. All languages included.",
+              },
+            },
+          }],
           payment_intent_data: {
             metadata: {
               userId: user.id,
               planId: "complete",
               planName: "Complete Seerah",
               packageType: "individual",
+              ...lifetimePriceMetadata(lifetimeQuote),
             },
           },
-          metadata: { userId: user.id, planId: "complete", packageType: "individual" },
+          metadata: {
+            userId: user.id,
+            planId: "complete",
+            packageType: "individual",
+            ...lifetimePriceMetadata(lifetimeQuote),
+          },
           success_url: `${appUrl}/payment/success?type=lifetime&session_id={CHECKOUT_SESSION_ID}`,
           cancel_url: `${appUrl}/checkout?plan=individual-lifetime`,
           allow_promotion_codes: true,

@@ -9,11 +9,12 @@ import { FadeUp } from "@/components/motion";
 import { FunnelTracker } from "@/components/analytics/funnel-tracker";
 import { PortalButton } from "@/components/billing/portal-button";
 import { LanguagesLaunchGate } from "@/components/student/languages-launch-gate";
+import { LifetimePrice } from "@/components/pricing/country-price";
 
 export const metadata = {
-  title: "Pricing — Complete Seerah",
+  title: "Complete Seerah Lifetime",
   description:
-    "Choose your Seerah plan. Lifetime access for $49. Part 1 is free.",
+    "Finish the Prophet’s ﷺ life in order — and retain it. 100 parts, quizzes, flashcards. One-time lifetime access. Part 1 free. 7-day refund.",
 };
 
 export const dynamic = "force-dynamic";
@@ -30,32 +31,28 @@ interface Props {
 
 const FAQ_ITEMS = [
   {
-    q: "What is included?",
-    a: "Every plan includes the full 100-part Seerah course with video lessons, readings, quizzes, flashcards, summaries, mind maps, and progress tracking. All future content is included automatically.",
+    q: "What do I get with Complete Seerah Lifetime?",
+    a: "The full 100-part course in order: video lessons, readings, quizzes, flashcards, summaries, mind maps, and progress tracking — plus future course updates included. English, Arabic, and French are available now.",
   },
   {
-    q: "What languages is the course available in?",
-    a: "English, Arabic, and French — including lessons, quizzes, flashcards, and reference guides. More languages are planned.",
+    q: "Will I actually finish — or just collect another course?",
+    a: "The path is built to finish: one part at a time, in order, with quizzes and flashcards so you retain what you watch. Start free with Part 1, then unlock the full path.",
   },
   {
     q: "Is this a subscription?",
-    a: "No. Lifetime access is a one-time $49 payment. You keep access forever with no renewal.",
+    a: "PRICE_ANSWER",
   },
   {
-    q: "Is there a refund guarantee?",
-    a: "Yes. If the course is not what you expected, contact us within 7 days for a full refund.",
+    q: "What if it’s not for me?",
+    a: "7-day refund. If it’s not what you expected, contact us within 7 days for a full refund — the risk stays on us.",
   },
   {
-    q: "Is Part 1 free?",
-    a: "Yes. Part 1 is completely free with no account required. You can preview it on the Watch Part 1 Free page before choosing a plan.",
+    q: "Can I try before I buy?",
+    a: "Yes. Part 1 is free with no account required. Preview it, then unlock the remaining 99 parts with lifetime access.",
   },
   {
-    q: "How much does lifetime access cost?",
-    a: "Lifetime access is $49 one-time. You keep access forever with no renewal.",
-  },
-  {
-    q: "Do I get instant access?",
-    a: "Yes. After checkout, you get immediate access to the full course on any device.",
+    q: "Do I get access right away?",
+    a: "Yes. Instant access after checkout on web and in the app.",
   },
 ];
 
@@ -153,25 +150,28 @@ export default async function PricingPage({ searchParams }: Props) {
         </div>
       )}
 
-      {/* 1. Pricing hero */}
+      {/* 1. Offer hero */}
       <section className="pt-14 pb-8 border-b border-border">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 text-center">
           <FadeUp>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold mb-3">
+              Complete Seerah Lifetime
+            </p>
             <h1 className="text-3xl sm:text-4xl font-bold text-text mb-4 leading-tight">
-              Choose your Seerah plan
+              Finish the Prophet&apos;s ﷺ life in order — and retain it
             </h1>
             <p className="text-base sm:text-lg text-text-secondary leading-relaxed mb-4">
-              Get the full 100-part Seerah course with videos, readings, quizzes, flashcards,
-              summaries, mind maps, and progress tracking.
+              One clear path through 100 parts. Videos to learn. Quizzes and flashcards so it sticks.
+              Lifetime access for a one-time <LifetimePrice />.
             </p>
             <p className="text-xs text-text-muted">
-              Part 1 is free · One-time payment · 7-day refund guarantee
+              Part 1 free · Instant access · 7-day refund — risk on us
             </p>
           </FadeUp>
         </div>
       </section>
 
-      {/* 2. Plan cards */}
+      {/* 2. Offer card */}
       <PricingSection
         hasLifetime={hasLifetime}
         hasMonthly={hasMonthly}
@@ -180,19 +180,51 @@ export default async function PricingPage({ searchParams }: Props) {
         variant="lifetime-only"
       />
 
-      {/* 3. Lifetime value */}
+      {/* 3. Named offer stack */}
       <section className="py-12 border-t border-border bg-surface/30">
         <div className="max-w-xl mx-auto px-4 sm:px-6">
           <FadeUp>
-            <h2 className="text-xl sm:text-2xl font-bold text-text text-center mb-8">
-              Lifetime access
+            <h2 className="text-xl sm:text-2xl font-bold text-text text-center mb-2">
+              What&apos;s in the offer
             </h2>
-            <div className="rounded-xl border border-gold/25 bg-surface p-5 text-center">
-              <h3 className="font-bold text-text mb-2">$49 one-time</h3>
-              <p className="text-sm text-text-secondary leading-relaxed">
-                Pay once, keep access forever. No subscription. No renewal.
-              </p>
-            </div>
+            <p className="text-sm text-text-secondary text-center mb-8 leading-relaxed">
+              Everything you need to start, finish, and remember — not another pile of content.
+            </p>
+            <ul className="space-y-3">
+              {[
+                {
+                  title: "The Complete Path",
+                  body: "100 structured parts covering every major event in order — no hopping around YouTube.",
+                },
+                {
+                  title: "The Retention System",
+                  body: "Quizzes and flashcards after lessons so you keep what you learned.",
+                },
+                {
+                  title: "Progress You Can See",
+                  body: "Dashboard + mind maps so you always know where you are in the Seerah.",
+                },
+                {
+                  title: "Languages Included",
+                  body: "English, Arabic, and French now — future course updates included with lifetime access.",
+                },
+                {
+                  title: "Risk Reversal",
+                  body: "7-day full refund. Try Part 1 free first if you want proof before you pay.",
+                },
+              ].map((item) => (
+                <li
+                  key={item.title}
+                  className="rounded-xl border border-gold/20 bg-surface px-4 py-3.5"
+                >
+                  <p className="font-semibold text-text text-sm mb-0.5">{item.title}</p>
+                  <p className="text-sm text-text-secondary leading-relaxed">{item.body}</p>
+                </li>
+              ))}
+            </ul>
+            <p className="text-center text-sm text-text-muted mt-6">
+              <LifetimePrice suffix=" one-time" /> · No subscription · Yours forever
+            </p>
           </FadeUp>
         </div>
       </section>
@@ -200,7 +232,7 @@ export default async function PricingPage({ searchParams }: Props) {
       {/* Optional preview link */}
       <section className="py-8 border-t border-border">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 text-center">
-          <p className="text-sm text-text-secondary mb-3">Want to preview first?</p>
+          <p className="text-sm text-text-secondary mb-3">Not sure yet? Prove it to yourself first.</p>
           <Link
             href={watchFreeUrl}
             className="inline-flex items-center gap-2 text-sm font-semibold text-gold hover:text-gold-light transition-colors"
@@ -215,7 +247,7 @@ export default async function PricingPage({ searchParams }: Props) {
       <section className="py-12 border-t border-border">
         <div className="max-w-3xl mx-auto px-4 sm:px-6">
           <h2 className="text-xl sm:text-2xl font-bold text-text text-center mb-8">
-            Pricing questions
+            Common questions
           </h2>
           <div className="space-y-3">
             {FAQ_ITEMS.map(({ q, a }) => (
@@ -231,7 +263,11 @@ export default async function PricingPage({ searchParams }: Props) {
                   />
                 </summary>
                 <div className="px-5 pb-5 pt-1 text-sm text-text-secondary leading-relaxed border-t border-border/50">
-                  {a}
+                  {a === "PRICE_ANSWER" ? (
+                    <>No. Complete Seerah Lifetime is <LifetimePrice /> one-time. No renewal. No recurring charges.</>
+                  ) : (
+                    a
+                  )}
                 </div>
               </details>
             ))}

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { getUserAccessInfo } from "@/lib/access";
 import { checkRateLimit, getIP } from "@/lib/rate-limit";
+import { lifetimePriceMetadata, quoteFromHeaderBag } from "@/lib/request-country-price";
 
 
 /**
@@ -93,8 +94,9 @@ export async function POST(request: NextRequest) {
 
     const plan = PLANS[planId];
 
-    // Server decides the price — always $49 (4900 cents), client cannot override.
-    const baseAmount: number = PLANS.complete.price;
+    // Server decides the price from the visitor's country. The client cannot set the amount.
+    const priceQuote = quoteFromHeaderBag((name) => request.headers.get(name));
+    const baseAmount: number = priceQuote.amountCents;
     const finalAmount: number = baseAmount;
 
     // Creator attribution comes straight from the checkout's ?source= / body.creator —
@@ -113,8 +115,7 @@ export async function POST(request: NextRequest) {
         userId: user.id,
         planId: plan.id,
         planName: plan.name,
-        baseAmount: String(baseAmount),
-        finalAmount: String(finalAmount),
+        ...lifetimePriceMetadata(priceQuote),
         ...(resolvedCreator ? { creator: resolvedCreator } : {}),
         ...(source          ? { source }                  : {}),
         ...(utmSource   ? { utmSource   } : {}),

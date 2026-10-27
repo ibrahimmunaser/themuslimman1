@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useCountryPrice } from "@/components/pricing/country-price";
 import { CheckCircle2, Infinity, ShieldCheck, Lock, Zap, User } from "lucide-react";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -39,19 +40,20 @@ export function InfluencerPricingToggle({
   displayName,
   individualLifetimeUrl,
   familyLifetimeUrl,
-  individualLifetimePriceCents,
+  individualLifetimePriceCents: _individualLifetimePriceCents,
   familyLifetimePriceCents,
   regularIndividualPriceCents,
   regularFamilyPriceCents,
   trackingPrefix,
 }: InfluencerPricingToggleProps) {
   const ev = (name: string) => trackingPrefix ? `${trackingPrefix}_${name}` : name;
+  const countryPrice = useCountryPrice();
 
-  const indLifetime    = fmtPrice(individualLifetimePriceCents);
+  const indLifetime    = countryPrice.label;
   const famLifetime    = fmtPrice(familyLifetimePriceCents);
   const regInd         = regularIndividualPriceCents ? fmtPrice(regularIndividualPriceCents) : null;
   const regFam         = regularFamilyPriceCents     ? fmtPrice(regularFamilyPriceCents)     : null;
-  const showIndStrike  = !!(regularIndividualPriceCents && regularIndividualPriceCents > individualLifetimePriceCents);
+  const showIndStrike  = !!(regularIndividualPriceCents && regularIndividualPriceCents > countryPrice.amountCents);
   const showFamStrike  = !!(regularFamilyPriceCents     && regularFamilyPriceCents     > familyLifetimePriceCents);
 
   return (

@@ -3,6 +3,7 @@ import { stripe, PLANS } from "@/lib/stripe";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { checkRateLimit, getIP } from "@/lib/rate-limit";
+import { lifetimePriceMetadata, quoteFromHeaderBag } from "@/lib/request-country-price";
 
 // Family lifetime price ID for Stripe metadata linkage
 const FAMILY_LIFETIME_PRICE_ID = process.env.STRIPE_FAMILY_LIFETIME_PRICE_ID ?? "";
@@ -61,7 +62,8 @@ export async function POST(request: NextRequest) {
     const isFamily = planId === "family";
     const plan = isFamily ? PLANS.family : PLANS.complete;
 
-    const baseAmount = isFamily ? PLANS.family.price : PLANS.complete.price;
+    const priceQuote = quoteFromHeaderBag((name) => request.headers.get(name));
+    const baseAmount = isFamily ? PLANS.family.price : priceQuote.amountCents;
     const finalAmount: number = baseAmount;
 
     const paymentIntent = await stripe.paymentIntents.create({
@@ -77,8 +79,9 @@ export async function POST(request: NextRequest) {
         recipientEmail: recipientEmail.trim().toLowerCase(),
         recipientName: recipientName?.trim() ?? "",
         giftMessage: giftMessage?.trim() ?? "",
-        baseAmount: String(baseAmount),
-        finalAmount: String(finalAmount),
+        ...(isFamily
+          ? { baseAmount: String(baseAmount), finalAmount: String(finalAmount) }
+          : lifetimePriceMetadata(priceQuote)),
         ...(isFamily && FAMILY_LIFETIME_PRICE_ID.startsWith("price_")
           ? { stripePriceId: FAMILY_LIFETIME_PRICE_ID }
           : {}),

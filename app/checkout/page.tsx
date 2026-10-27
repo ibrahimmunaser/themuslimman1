@@ -1,9 +1,11 @@
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { getCachedCurrentUser } from "@/lib/auth-cache";
 import { getUserAccessInfo } from "@/lib/access";
 import CheckoutClientPage from "./page-client";
 import { stripe } from "@/lib/stripe";
 import { PLANS } from "@/lib/stripe-config";
+import { lifetimePriceMetadata, quoteFromHeaderBag } from "@/lib/request-country-price";
 
 export const dynamic = "force-dynamic";
 
@@ -108,8 +110,11 @@ export default async function CheckoutPage({ searchParams }: Props) {
   // in sync with stripe-config.ts. Never hardcode prices here.
   // For lifetime upgrades (individual → family), use the upgrade difference price
   // so the correct amount is shown immediately without waiting for the API response.
+  const hdrs = await headers();
+  const lifetimeQuote = quoteFromHeaderBag((name) => hdrs.get(name));
+
   const planBasePrice: Record<string, number> = {
-    "individual-lifetime": PLANS.complete.price,      // $49
+    "individual-lifetime": lifetimeQuote.amountCents,
     "family-lifetime":     isLifetimeUpgrade
                              ? PLANS.family.upgradeFromLifetimePrice  // $50 upgrade diff
                              : PLANS.family.price,                    // $79 new purchase
@@ -155,8 +160,7 @@ export default async function CheckoutPage({ searchParams }: Props) {
           userId:   user.id,
           planId:   "complete",
           planName: "Complete Seerah",
-          baseAmount:   String(initialBasePrice),
-          finalAmount:  String(finalAmount),
+          ...lifetimePriceMetadata(lifetimeQuote),
           ...(sourceParam ? { creator: sourceParam } : {}),
         },
         description:   `Complete Seerah Lifetime — TheMuslimMan`,

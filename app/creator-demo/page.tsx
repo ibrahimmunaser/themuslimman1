@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LifetimePrice, LifetimeAccessCta } from "@/components/pricing/country-price";
 import Image from "next/image";
 import {
   Play, CheckCircle, Star, Users, Brain,
@@ -27,7 +28,7 @@ export default async function CreatorDemoPage({ searchParams }: PageProps) {
 
       {/* ── Top Nav (hidden in clean mode) ──────────────────────────────── */}
       {!clean && (
-        <header className="sticky top-0 z-50 bg-ink/95 backdrop-blur border-b border-border/40 px-4 h-14 flex items-center justify-between">
+        <header className="sticky top-12 z-50 bg-ink/95 backdrop-blur border-b border-border/40 px-4 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <Image
               src="/images/logoicon.png"
@@ -126,7 +127,7 @@ export default async function CreatorDemoPage({ searchParams }: PageProps) {
 
           {/* Trust line */}
           <p className="text-xs text-text-muted/70 pt-2">
-            $49 one-time · Lifetime access · 7-Day Guarantee
+            <LifetimePrice suffix=" one-time" /> · Lifetime access · 7-Day Guarantee
           </p>
         </div>
       </section>
@@ -374,7 +375,7 @@ export default async function CreatorDemoPage({ searchParams }: PageProps) {
             <div className="flex items-center justify-between mb-3">
               <div>
                 <p className="text-xs font-bold text-gold/80 uppercase tracking-wider">Individual</p>
-                <p className="text-2xl font-extrabold text-text mt-0.5">$49 <span className="text-sm font-normal text-text-muted">once</span></p>
+                <p className="text-2xl font-extrabold text-text mt-0.5"><LifetimePrice /> <span className="text-sm font-normal text-text-muted">once</span></p>
               </div>
               <span className="text-[11px] bg-gold/15 border border-gold/30 text-gold px-2.5 py-1 rounded-full font-bold">Lifetime</span>
             </div>
@@ -383,7 +384,7 @@ export default async function CreatorDemoPage({ searchParams }: PageProps) {
               href="/checkout?plan=individual&billing=lifetime"
               className="flex items-center justify-center gap-2 w-full mt-4 bg-gold hover:bg-gold-light text-ink font-bold text-sm px-5 py-3.5 rounded-xl transition-colors"
             >
-              Get Lifetime Access — $49
+              <LifetimeAccessCta />
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>

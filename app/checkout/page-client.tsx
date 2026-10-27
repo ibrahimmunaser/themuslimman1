@@ -18,6 +18,7 @@ import Link from "next/link";
 import { SavedCardPicker } from "@/components/billing/saved-card-picker";
 import { friendlyPaymentError, friendlySubmitError } from "@/lib/payment-error-messages";
 import { PLANS, formatPrice } from "@/lib/stripe-config";
+import { useCountryPrice } from "@/components/pricing/country-price";
 import CheckoutFunnelTracker, { sendCheckoutEvent, sendCheckoutLoadFailed, normalizePaymentError, markPaymentStartedInSession, markPaymentMethodInSession } from "./checkout-funnel-tracker";
 
 // Lazily memoized so it reads the env var at first render rather than at module
@@ -1311,7 +1312,11 @@ function CheckoutPageContent({
 
   // ── Derived display values ─────────────────────────────────────────────────
 
-  const displayBase     = !isAuthenticated ? currentPlan.price : basePrice;
+  const countryPrice = useCountryPrice();
+  const individualLifetimeCents = countryPrice.amountCents;
+  const displayBase = audience === "individual" && isLifetime
+    ? basePrice
+    : (!isAuthenticated ? currentPlan.price : basePrice);
   const displayPrice    = displayBase;
 
   // ── Plan summary (top of single-column checkout) ──────────────────────────
@@ -1322,7 +1327,7 @@ function CheckoutPageContent({
 
   const allBillingOptions: { id: Billing; label: string; price: number; priceSuffix?: string; priceOverride?: string; sub: string; badge?: string }[] = audience === "individual"
     ? [
-        { id: "lifetime", label: "Lifetime", price: PLANS.complete.price,  sub: "Pay once, access forever", badge: "Best Value" },
+        { id: "lifetime", label: "Lifetime", price: individualLifetimeCents,  sub: "Pay once, access forever", badge: "Best Value" },
       ]
     : [
         { id: "lifetime", label: "Lifetime", price: PLANS.family.price,        sub: "Up to 5 profiles · pay once", badge: "Best Value" },
@@ -1447,7 +1452,9 @@ function CheckoutPageContent({
                   clientSecretRef.current = null;
                   setClientSecret(null);
                   const newPlan = PLANS[toPlanKey(audience, id)];
-                  const snap = id === "trial" ? (newPlan as typeof PLANS.individualTrial).trialFeeAmount ?? newPlan.price : newPlan.price;
+                  const snap = audience === "individual" && id === "lifetime"
+                    ? individualLifetimeCents
+                    : id === "trial" ? (newPlan as typeof PLANS.individualTrial).trialFeeAmount ?? newPlan.price : newPlan.price;
                   setBasePrice(snap); setFinalPrice(snap);
                 }}
                 className={`w-full flex items-center p-4 rounded-xl border transition-all text-left ${

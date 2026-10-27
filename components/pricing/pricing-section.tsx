@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Gift, ArrowRight } from "lucide-react";
 import { FadeUp } from "@/components/motion";
 import { PlanPicker } from "@/components/landing/plan-picker";
-import { planAnalyticsProps } from "@/lib/plan-catalog";
+import { useCountryPrice } from "@/components/pricing/country-price";
 
 interface PricingSectionProps {
   hasLifetime: boolean;
@@ -23,20 +23,14 @@ interface PricingSectionProps {
 }
 
 const TRUST_ITEMS = [
-  { icon: "📚", text: "100 structured lessons — every major event in order" },
-  { icon: "▶",  text: "Video lessons, readings, quizzes, and flashcards" },
-  { icon: "📊", text: "Progress tracking dashboard" },
-  { icon: "∞",  text: "Lifetime access — one payment, yours forever" },
-  { icon: "🛡",  text: "7-day refund guarantee — not happy? Full refund." },
+  { icon: "1", text: "Complete Path — 100 parts, every major event in order" },
+  { icon: "2", text: "Retention System — quizzes + flashcards after lessons" },
+  { icon: "3", text: "Progress you can see — dashboard + mind maps" },
+  { icon: "4", text: "Lifetime access — one payment, yours forever" },
+  { icon: "5", text: "7-day refund — risk on us, not you" },
 ];
 
-const LIFETIME_TRUST_ITEMS = [
-  { icon: "📚", text: "100 structured lessons — every major event in order" },
-  { icon: "▶",  text: "Video lessons, readings, quizzes, and flashcards" },
-  { icon: "📊", text: "Progress tracking dashboard" },
-  { icon: "∞",  text: "Lifetime access — one payment, yours forever" },
-  { icon: "🛡",  text: "7-day refund guarantee — not happy? Full refund." },
-];
+const LIFETIME_TRUST_ITEMS = TRUST_ITEMS;
 
 function buildLifetimeUrl(base: string): string {
   try {
@@ -50,7 +44,7 @@ function buildLifetimeUrl(base: string): string {
 
 function LifetimeOnlyCard({ checkoutBaseUrl }: { checkoutBaseUrl: string }) {
   const checkoutUrl = buildLifetimeUrl(checkoutBaseUrl);
-  const analytics = planAnalyticsProps("individual-lifetime");
+  const countryPrice = useCountryPrice();
 
   return (
     <div className="mx-auto w-full max-w-md">
@@ -60,7 +54,7 @@ function LifetimeOnlyCard({ checkoutBaseUrl }: { checkoutBaseUrl: string }) {
         data-plan="individual-lifetime"
         data-plan-type="individual"
         data-billing="lifetime"
-        data-price={analytics.price as number}
+        data-price={countryPrice.amountCents}
         className={[
           "group relative flex flex-col items-center text-center",
           "rounded-2xl border-2 border-gold",
@@ -82,7 +76,7 @@ function LifetimeOnlyCard({ checkoutBaseUrl }: { checkoutBaseUrl: string }) {
         </h3>
 
         <p className="text-4xl sm:text-5xl font-extrabold text-text leading-none tracking-tight">
-          $49
+          {countryPrice.label}
           <span className="ml-2 text-base sm:text-lg font-medium text-text-secondary">
             one-time
           </span>
@@ -123,6 +117,7 @@ export function PricingSection({
   variant = "full",
   compact = false,
 }: PricingSectionProps) {
+  const countryPrice = useCountryPrice();
   const hasAnyAccess = hasLifetime || hasMonthly || hasFamily;
   const plansOnly = variant === "plans-only";
   const lifetimeOnly = variant === "lifetime-only";
@@ -175,7 +170,7 @@ export function PricingSection({
         {compact && !hasAnyAccess && (
           <div className="text-center mb-6">
             <h2 className="text-2xl sm:text-3xl font-bold text-text mb-2">
-              Lifetime access — $49
+              Lifetime access — {countryPrice.label}
             </h2>
             <p className="text-sm text-text-secondary max-w-md mx-auto">
               One payment. Full course. No subscription.

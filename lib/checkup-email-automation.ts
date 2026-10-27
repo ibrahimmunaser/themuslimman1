@@ -173,7 +173,7 @@ export function buildStep3Html(opts: {
 }): string {
   const { firstName, score, recommendedPlan, source, unsubscribeUrl } = opts;
   const planKey    = "individual-lifetime";
-  const planLabel  = "Individual Lifetime — $49 one-time";
+  const planLabel  = "Individual Lifetime — one-time";
   const planNote   = "Full lifetime access to all 100 parts — pay once, done.";
   const ctaUrl     = checkoutUrl(planKey, source, 3);
 
