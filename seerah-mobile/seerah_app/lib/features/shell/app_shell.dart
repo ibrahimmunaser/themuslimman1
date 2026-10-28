@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/providers/part_provider.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/utils/system_insets.dart';
 import '../../l10n/app_strings.dart';
 
 class AppShell extends ConsumerWidget {
@@ -52,15 +51,15 @@ class AppShell extends ConsumerWidget {
                 color: AppColors.surface.withValues(alpha: 0.88),
                 border: const Border(top: BorderSide(color: AppColors.border, width: 0.5)),
               ),
-              // Audit H10 fix: SafeArea here relies on MediaQuery.padding,
-              // which bottomSystemInset's own doc comment notes some Android
-              // devices report as 0 even while the 3-button nav bar still
-              // overlaps content — those devices rendered this bar's icons
-              // partially hidden behind the system nav bar. Use the same
-              // helper every other bottom-inset spot in this app uses so
-              // behavior is consistent across all of them.
-              child: Padding(
-                padding: EdgeInsets.only(bottom: bottomSystemInset(context)),
+              // NavigationBar already inserts a SafeArea under the destinations,
+              // and this bar used to add bottomSystemInset on top of that.
+              // Together they left an empty band under the tabs on both
+              // Android and iOS. Drop the bottom padding so the destinations
+              // sit on the bottom edge; the system gesture/home indicator is
+              // drawn over the bar instead of pushing it up.
+              child: MediaQuery.removePadding(
+                context: context,
+                removeBottom: true,
                 child: NavigationBarTheme(
                   data: NavigationBarThemeData(
                     height: navHeight,
