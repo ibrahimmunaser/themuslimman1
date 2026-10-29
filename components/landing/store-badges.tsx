@@ -10,7 +10,7 @@ type StoreBadgesProps = {
 };
 
 const badgeClass =
-  "group inline-flex h-11 min-w-[8.5rem] items-center justify-center gap-2.5 rounded-xl border border-border bg-surface/80 px-3.5 hover:border-gold/35 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50";
+  "group inline-flex h-11 w-[10.75rem] shrink-0 items-center gap-2.5 rounded-xl border border-border bg-surface/80 px-3.5 hover:border-gold/35 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50";
 
 export function StoreBadges({ lang, className = "", showLabel = false }: StoreBadgesProps) {
   return (
@@ -29,7 +29,7 @@ export function StoreBadges({ lang, className = "", showLabel = false }: StoreBa
           className={badgeClass}
         >
           <AppleIcon />
-          <span className="flex flex-col items-center leading-tight text-center">
+          <span className="flex min-w-0 flex-col items-start leading-tight text-start">
             <span className="text-[10px] text-text-muted">{siteT(lang, "storeDownloadOn")}</span>
             <span className="text-sm font-semibold text-text">App Store</span>
           </span>
@@ -42,7 +42,7 @@ export function StoreBadges({ lang, className = "", showLabel = false }: StoreBa
           className={badgeClass}
         >
           <GooglePlayIcon />
-          <span className="flex flex-col items-center leading-tight text-center">
+          <span className="flex min-w-0 flex-col items-start leading-tight text-start">
             <span className="text-[10px] text-text-muted">{siteT(lang, "storeGetItOn")}</span>
             <span className="text-sm font-semibold text-text">Google Play</span>
           </span>
