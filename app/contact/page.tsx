@@ -2,24 +2,30 @@ import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
 import { ContactForm } from "@/components/help/contact-form";
 import { Mail, Clock } from "lucide-react";
-import type { Metadata } from "next";
+import { getPreviewLangFromCookies } from "@/lib/part1-preview-data";
+import { siteT } from "@/lib/site-copy";
 
-export const metadata: Metadata = {
-  title: "Contact Us — Complete Seerah",
-  description: "Get in touch with the Complete Seerah team for support, refunds, or general questions.",
-};
+export async function generateMetadata() {
+  const lang = await getPreviewLangFromCookies();
+  return {
+    title: siteT(lang, "footContact"),
+    description: siteT(lang, "contactMetaDesc"),
+  };
+}
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const lang = await getPreviewLangFromCookies();
+
   return (
     <>
       <Navbar />
       <main className="min-h-screen bg-ink py-16">
         <div className="max-w-3xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-10">
-            <h1 className="text-2xl sm:text-3xl font-bold text-text mb-3">Contact Us</h1>
-            <p className="text-text-secondary text-base">
-              Questions, refund requests, or anything else — we&apos;re here to help.
-            </p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-text mb-3">
+              {siteT(lang, "footContact")}
+            </h1>
+            <p className="text-text-secondary text-base">{siteT(lang, "contactIntro")}</p>
           </div>
 
           <div className="grid sm:grid-cols-2 gap-4 mb-10">
@@ -28,10 +34,13 @@ export default function ContactPage() {
                 <Mail className="w-4 h-4 text-gold" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-text mb-0.5">Email us directly</p>
+                <p className="text-sm font-semibold text-text mb-0.5">
+                  {siteT(lang, "contactEmailCard")}
+                </p>
                 <a
                   href="mailto:themuslimman77@gmail.com"
-                  className="text-sm text-gold hover:underline"
+                  dir="ltr"
+                  className="text-sm text-gold hover:underline inline-block"
                 >
                   themuslimman77@gmail.com
                 </a>
@@ -42,8 +51,10 @@ export default function ContactPage() {
                 <Clock className="w-4 h-4 text-gold" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-text mb-0.5">Response time</p>
-                <p className="text-sm text-text-secondary">Usually within 24–48 hours on business days.</p>
+                <p className="text-sm font-semibold text-text mb-0.5">
+                  {siteT(lang, "contactResponseCard")}
+                </p>
+                <p className="text-sm text-text-secondary">{siteT(lang, "contactResponseTime")}</p>
               </div>
             </div>
           </div>
@@ -55,5 +66,3 @@ export default function ContactPage() {
     </>
   );
 }
-
-

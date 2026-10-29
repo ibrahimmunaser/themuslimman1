@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Lock, CheckCircle2, ShieldCheck } from "lucide-react";
+import { StoreBadges } from "@/components/landing/store-badges";
 import { useSiteLang } from "@/components/site-lang";
 import { siteT } from "@/lib/site-copy";
 
@@ -26,10 +27,11 @@ export function Footer() {
             <p className="text-sm text-text-muted leading-relaxed mb-4">
               {siteT(lang, "footBlurb")}
             </p>
-            <div className="flex items-center gap-2 text-xs text-text-muted">
+            <div className="flex items-center gap-2 text-xs text-text-muted mb-6">
               <ShieldCheck className="w-3.5 h-3.5 text-text-muted" />
               <span>{siteT(lang, "footEarly")}</span>
             </div>
+            <StoreBadges lang={lang} showLabel />
           </div>
 
           {/* Product */}

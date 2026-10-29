@@ -2,8 +2,11 @@
 
 import { useState } from "react";
 import { MessageCircle, Send, CheckCircle2, AlertCircle, RefreshCcw } from "lucide-react";
+import { useSiteLang } from "@/components/site-lang";
+import { siteT } from "@/lib/site-copy";
 
 export function ContactForm() {
+  const lang = useSiteLang();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -16,10 +19,9 @@ export function ContactForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Reject whitespace-only fields
     if (!formData.name.trim() || !formData.subject.trim() || !formData.message.trim()) {
       setStatus("error");
-      setErrorMessage("Please fill in all fields with actual content.");
+      setErrorMessage(siteT(lang, "contactErrorFillAll"));
       return;
     }
 
@@ -44,14 +46,12 @@ export function ContactForm() {
 
       setStatus("success");
       setFormData({ name: "", email: "", subject: "", message: "" });
-      // No auto-reset — let the user read the confirmation at their own pace.
     } catch {
       setStatus("error");
-      setErrorMessage("Failed to send message. Please try again or email us directly.");
+      setErrorMessage(siteT(lang, "contactErrorFailed"));
     }
   };
 
-  // Replace the whole card with a clear confirmation so users can't miss it.
   if (status === "success") {
     return (
       <section className="py-16 border-t border-border bg-surface/30">
@@ -62,14 +62,12 @@ export function ContactForm() {
             aria-live="polite"
           >
             <CheckCircle2 className="w-12 h-12 text-green-400 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-text mb-2">Message Sent!</h2>
-            <p className="text-text-secondary mb-1">
-              We&apos;ve received your message and will respond within 24–48 hours.
-            </p>
+            <h2 className="text-xl font-bold text-text mb-2">{siteT(lang, "contactSuccessTitle")}</h2>
+            <p className="text-text-secondary mb-1">{siteT(lang, "contactSuccessBody")}</p>
             <p className="text-sm text-text-muted">
-              Need to follow up?{" "}
+              {siteT(lang, "contactSuccessFollowUp")}{" "}
               <a href="mailto:themuslimman77@gmail.com" className="text-gold hover:underline">
-                Email us directly
+                {siteT(lang, "contactEmailCard")}
               </a>
               .
             </p>
@@ -85,11 +83,9 @@ export function ContactForm() {
         <div className="text-center mb-10">
           <MessageCircle className="w-12 h-12 text-gold mx-auto mb-4" />
           <h2 className="text-2xl sm:text-3xl font-bold text-text mb-3">
-            Still Need Help?
+            {siteT(lang, "contactFormHeading")}
           </h2>
-          <p className="text-text-secondary">
-            Send us a message and we&apos;ll get back to you as soon as possible.
-          </p>
+          <p className="text-text-secondary">{siteT(lang, "contactFormSub")}</p>
         </div>
 
         <div className="bg-surface border border-border rounded-2xl p-8">
@@ -101,11 +97,15 @@ export function ContactForm() {
             >
               <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-red-400 font-medium mb-1">Couldn&apos;t send message</p>
+                <p className="text-red-400 font-medium mb-1">{siteT(lang, "contactErrorSendTitle")}</p>
                 <p className="text-sm text-text-secondary">{errorMessage}</p>
                 <p className="text-sm text-text-muted mt-2">
-                  Or email us directly at:{" "}
-                  <a href="mailto:themuslimman77@gmail.com" className="text-gold hover:underline">
+                  {siteT(lang, "contactErrorOrEmailPrefix")}{" "}
+                  <a
+                    href="mailto:themuslimman77@gmail.com"
+                    dir="ltr"
+                    className="text-gold hover:underline inline-block"
+                  >
                     themuslimman77@gmail.com
                   </a>
                 </p>
@@ -117,7 +117,7 @@ export function ContactForm() {
             <div className="grid sm:grid-cols-2 gap-5">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-text mb-2">
-                  Your Name
+                  {siteT(lang, "contactYourName")}
                 </label>
                 <input
                   type="text"
@@ -132,12 +132,13 @@ export function ContactForm() {
 
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-text mb-2">
-                  Your Email
+                  {siteT(lang, "contactYourEmail")}
                 </label>
                 <input
                   type="email"
                   id="email"
                   required
+                  dir="ltr"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="w-full px-4 py-2.5 bg-ink border border-border rounded-lg text-text placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent transition-all"
@@ -148,7 +149,7 @@ export function ContactForm() {
 
             <div>
               <label htmlFor="subject" className="block text-sm font-medium text-text mb-2">
-                Subject
+                {siteT(lang, "contactSubject")}
               </label>
               <input
                 type="text"
@@ -157,13 +158,13 @@ export function ContactForm() {
                 value={formData.subject}
                 onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                 className="w-full px-4 py-2.5 bg-ink border border-border rounded-lg text-text placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent transition-all"
-                placeholder="What do you need help with?"
+                placeholder={siteT(lang, "contactPlaceholderSubject")}
               />
             </div>
 
             <div>
               <label htmlFor="message" className="block text-sm font-medium text-text mb-2">
-                Message
+                {siteT(lang, "contactMessage")}
               </label>
               <textarea
                 id="message"
@@ -172,7 +173,7 @@ export function ContactForm() {
                 value={formData.message}
                 onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                 className="w-full px-4 py-2.5 bg-ink border border-border rounded-lg text-text placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent transition-all resize-none"
-                placeholder="Please describe your question or issue in detail..."
+                placeholder={siteT(lang, "contactPlaceholderMessage")}
               />
             </div>
 
@@ -184,19 +185,17 @@ export function ContactForm() {
               {status === "sending" ? (
                 <>
                   <RefreshCcw className="w-4 h-4 animate-spin" />
-                  Sending...
+                  {siteT(lang, "contactSending")}
                 </>
               ) : (
                 <>
                   <Send className="w-4 h-4" />
-                  Send Message
+                  {siteT(lang, "contactSendMessage")}
                 </>
               )}
             </button>
 
-            <p className="text-xs text-text-muted text-center">
-              We typically respond within 24-48 hours on business days.
-            </p>
+            <p className="text-xs text-text-muted text-center">{siteT(lang, "contactFormNote")}</p>
           </form>
         </div>
       </div>

@@ -10,6 +10,7 @@ import {
 import { PricingSection } from "@/components/pricing/pricing-section";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
+import { StoreBadges } from "@/components/landing/store-badges";
 import { Part1FullPreview } from "@/components/landing/part1-full-preview";
 import { HomepageTracker } from "@/components/landing/homepage-tracker";
 import { getCurrentUser } from "@/lib/auth";
@@ -110,6 +111,9 @@ export default async function LandingPage() {
             <p className="text-xs sm:text-sm text-text-muted text-center mt-3">
               {siteT(lang, "heroFine")}
             </p>
+            <div className="flex justify-center mt-6">
+              <StoreBadges lang={lang} />
+            </div>
           </FadeUp>
         </div>
       </section>
