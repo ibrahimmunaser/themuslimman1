@@ -8,8 +8,10 @@ import {
   Users, Shield, Eye, EyeOff,
 } from "lucide-react";
 import Link from "next/link";
-import { PLANS, formatPrice } from "@/lib/stripe-config";
-import { useCountryPrice } from "@/components/pricing/country-price";
+import { PLANS, formatPrice, formatWebsitePrice } from "@/lib/stripe-config";
+import { useCountryPrice, useLifetimePricePhrase } from "@/components/pricing/country-price";
+import { useSiteLang } from "@/components/site-lang";
+import { siteT } from "@/lib/site-copy";
 
 // Lazily memoized so it reads the env var at first render rather than at module
 // evaluation time — avoids crashes when the key isn't yet compiled into the bundle.
@@ -31,6 +33,7 @@ type Step       = "details" | "payment";
 function GiftPaymentForm({ finalPrice, recipientEmail }: { finalPrice: number; recipientEmail: string }) {
   const stripe   = useStripe();
   const elements = useElements();
+  const lang = useSiteLang();
   const [error, setError]           = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
 
@@ -70,7 +73,7 @@ function GiftPaymentForm({ finalPrice, recipientEmail }: { finalPrice: number; r
         className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-gold hover:bg-gold-light disabled:opacity-60 text-ink font-bold text-base transition-colors shadow-lg shadow-gold/20"
       >
         <Lock className="w-4 h-4" />
-        {processing ? "Processing…" : `Send Gift — ${formatPrice(finalPrice)}`}
+        {processing ? "Processing…" : `Send Gift — ${formatWebsitePrice(finalPrice, siteT(lang, "only"))}`}
       </button>
       <p className="text-xs text-zinc-500 text-center">
         Recipient gets a claim link at <span className="text-gold">{recipientEmail}</span>
@@ -121,6 +124,8 @@ function GiftCheckoutContent({ purchaserEmail, purchaserName: _purchaserName }: 
   // ── Gift state ─────────────────────────────────────────────────────────────
   const [planChoice, setPlanChoice]   = useState<GiftPlanId>("complete");
   const countryPrice = useCountryPrice();
+  const pricePhrase = useLifetimePricePhrase();
+  const lang = useSiteLang();
   const plan = planChoice === "family" ? PLANS.family : PLANS.complete;
   const catalogPrice = planChoice === "family" ? PLANS.family.price : countryPrice.amountCents;
 
@@ -265,7 +270,7 @@ function GiftCheckoutContent({ purchaserEmail, purchaserName: _purchaserName }: 
       <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">Gift type</p>
       <div className="mb-8 rounded-xl border border-gold/50 bg-gold/8 ring-1 ring-gold/30 p-4">
         <p className="font-semibold text-white">Individual Lifetime</p>
-        <p className="text-sm text-zinc-400 mt-0.5">1 learner · one-time · {countryPrice.label}</p>
+        <p className="text-sm text-zinc-400 mt-0.5">1 learner · one-time · {pricePhrase}</p>
       </div>
 
       {/* Features */}
@@ -307,11 +312,11 @@ function GiftCheckoutContent({ purchaserEmail, purchaserName: _purchaserName }: 
             1 learner · lifetime
           </p>
         </div>
-        <p className="text-sm font-bold text-white ml-4">{formatPrice(plan.price)}</p>
+        <p className="text-sm font-bold text-white ml-4">{planChoice === "family" ? formatPrice(plan.price) : formatWebsitePrice(catalogPrice, siteT(lang, "only"))}</p>
       </div>
       <div className="flex items-center justify-between pt-2 border-t border-zinc-800">
         <span className="text-sm font-semibold text-white">Gift Total</span>
-        <span className="text-lg font-bold text-gold">{formatPrice(displayPrice)}</span>
+        <span className="text-lg font-bold text-gold">{planChoice === "family" ? formatPrice(displayPrice) : formatWebsitePrice(displayPrice, siteT(lang, "only"))}</span>
       </div>
     </div>
   );
@@ -551,7 +556,7 @@ function GiftCheckoutContent({ purchaserEmail, purchaserName: _purchaserName }: 
                   type="text"
                   value={details.recipientName}
                   onChange={(e) => setDetails({ ...details, recipientName: e.target.value })}
-                  placeholder="e.g. Ibrahim"
+                  placeholder="e.g. Yusuf"
                   className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm"
                 />
               </div>

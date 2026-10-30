@@ -286,7 +286,7 @@ npx prisma generate
 
 **Body**:
 - Ticket ID: `clxxxxx`
-- From: Ibrahim Munaser
+- From: Ahmad Yusuf
 - Email: ibrahim@example.com (clickable)
 - Subject: Video won't play on Safari
 - Message: (full text)

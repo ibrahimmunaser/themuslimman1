@@ -182,7 +182,7 @@ export function InlinePart1Video({ checkoutUrl, checkoutLabel, hideCta = false, 
             onClick={onUnlockClick}
             className="flex items-center justify-center w-full py-5 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-lg transition-colors shadow-lg shadow-gold/25 mb-2"
           >
-            {!checkoutLabel || checkoutLabel.includes("$49") || checkoutLabel.includes("49 $") ? (
+            {!checkoutLabel || checkoutLabel.includes("$49") || checkoutLabel.includes("49 $") || checkoutLabel.includes("Only $99") ? (
               lang === "ar" ? <LifetimeAccessCta leading="احصل على وصول مدى الحياة — " /> :
               lang === "fr" ? <LifetimeAccessCta leading="Obtenir l'accès à vie — " /> :
               <LifetimeAccessCta />

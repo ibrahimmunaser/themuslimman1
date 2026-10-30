@@ -5,13 +5,13 @@ import {
   type PriceTier,
 } from "@/lib/country-pricing";
 
-/** One-time lifetime quote. Language never changes this — country does. */
+/** One-time lifetime quote. Language never changes the amount — country does. */
 export type CountryPriceQuote = {
   /** ISO country, or null when geo is missing (then tier B / $29). */
   country: string | null;
   tier: PriceTier;
   amountCents: number;
-  /** Display string, e.g. "$49". */
+  /** Dollar amount only, e.g. "$99". The word "Only" is added in the visitor's language. */
   label: string;
 };
 
@@ -34,7 +34,7 @@ export function countryFromHeaderBag(
 export function quoteForCountryCode(code: string | null | undefined): CountryPriceQuote {
   const country = code && /^[A-Z]{2}$/.test(code) ? code : null;
   const tier = country ? tierForCountry(country) : DEFAULT_TIER;
-  const amountCents = country ? priceUsdCentsForCountry(country) : priceUsdCentsForCountry(null);
+  const amountCents = priceUsdCentsForCountry(country);
   return {
     country,
     tier,

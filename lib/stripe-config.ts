@@ -1,6 +1,8 @@
 // Client-safe Stripe configuration
 // This can be imported in both client and server components
 
+import { TIER_PRICE_USD_CENTS } from "@/lib/country-pricing";
+
 // ─── Internal plan data (kept for DB compatibility, not exposed publicly) ──────
 const _ESSENTIALS_INTERNAL = {
   id: "essentials",
@@ -77,7 +79,7 @@ export const PLANS = {
     id: "complete",
     name: "Complete Seerah",
     subtitle: "Full access to the structured 100-part Seerah journey",
-    price: 4900, // $49.00 lifetime access
+    price: TIER_PRICE_USD_CENTS.A,
     features: [
       "All 100 Seerah parts",
       "Video lessons",
@@ -152,6 +154,11 @@ export function normalizeToActivePlan(_planId: string | null | undefined): "comp
 export function formatPrice(cents: number): string {
   const dollars = cents / 100;
   return dollars % 1 === 0 ? `$${dollars.toFixed(0)}` : `$${dollars.toFixed(2)}`;
+}
+
+/** Customer-facing lifetime price, e.g. "Only $99" or "فقط $29". */
+export function formatWebsitePrice(cents: number, onlyWord: string): string {
+  return `${onlyWord} ${formatPrice(cents)}`;
 }
 
 export function formatPriceWithCents(cents: number): string {

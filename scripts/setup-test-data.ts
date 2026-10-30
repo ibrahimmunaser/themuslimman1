@@ -18,7 +18,7 @@ const prisma = new PrismaClient();
 const TEST_USERS = [
   {
     username: "imunaser",
-    fullName: "Ibrahim Munaser",
+    fullName: "Ahmad Yusuf",
     email: "imunaser@test.com",
     password: "test123",
     planId: "complete",
@@ -26,7 +26,7 @@ const TEST_USERS = [
   },
   {
     username: "imunaser1",
-    fullName: "Ibrahim Munaser",
+    fullName: "Ahmad Yusuf",
     email: "imunaser1@test.com",
     password: "test123",
     planId: "essentials",
@@ -34,7 +34,7 @@ const TEST_USERS = [
   },
   {
     username: "imunaser2",
-    fullName: "Ibrahim Munaser",
+    fullName: "Ahmad Yusuf",
     email: "imunaser2@test.com",
     password: "test123",
     planId: "complete",

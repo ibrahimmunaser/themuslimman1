@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { X, ArrowRight } from "lucide-react";
-import { useCountryPrice } from "@/components/pricing/country-price";
+import { useLifetimePricePhrase } from "@/components/pricing/country-price";
 import { trackEvent } from "@/lib/analytics";
 import type { InfluencerConfig } from "@/lib/influencer-configs";
 
@@ -31,13 +31,13 @@ interface AlternatePlansModalProps {
 export function AlternatePlansModal({ config, isOpen, onClose }: AlternatePlansModalProps) {
   const dialogRef  = useRef<HTMLDivElement>(null);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
-  const countryPrice = useCountryPrice();
+  const pricePhrase = useLifetimePricePhrase();
 
   const plans: Plan[] = [
     {
       id:           "individual-lifetime",
       label:        "Individual Lifetime",
-      price:        countryPrice.label,
+      price:        pricePhrase,
       badge:        "Best Value",
       description:  "One-time payment · full access forever · all 100 parts",
       checkoutPath: buildCheckoutUrl("individual-lifetime", config),

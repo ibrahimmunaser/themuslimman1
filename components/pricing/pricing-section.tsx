@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Gift, ArrowRight } from "lucide-react";
 import { FadeUp } from "@/components/motion";
 import { PlanPicker } from "@/components/landing/plan-picker";
-import { useCountryPrice } from "@/components/pricing/country-price";
+import { LifetimePrice, useCountryPrice, useLifetimePricePhrase } from "@/components/pricing/country-price";
 import { useSiteLang } from "@/components/site-lang";
 import { siteT } from "@/lib/site-copy";
 
@@ -69,7 +69,7 @@ function LifetimeOnlyCard({ checkoutBaseUrl }: { checkoutBaseUrl: string }) {
         </h3>
 
         <p className="text-4xl sm:text-5xl font-extrabold text-text leading-none tracking-tight">
-          {countryPrice.label}
+          <LifetimePrice prominent />
           <span className="ms-2 text-base sm:text-lg font-medium text-text-secondary">
             {siteT(lang, "oneTime")}
           </span>
@@ -111,6 +111,7 @@ export function PricingSection({
   compact = false,
 }: PricingSectionProps) {
   const countryPrice = useCountryPrice();
+  const pricePhrase = useLifetimePricePhrase();
   const lang = useSiteLang();
   const hasAnyAccess = hasLifetime || hasMonthly || hasFamily;
   const plansOnly = variant === "plans-only";
@@ -167,7 +168,7 @@ export function PricingSection({
         {compact && !hasAnyAccess && (
           <div className="text-center mb-6">
             <h2 className="text-2xl sm:text-3xl font-bold text-text mb-2">
-              {siteT(lang, "lifetimeHeading")} {countryPrice.label}
+              {siteT(lang, "lifetimeHeading")} {pricePhrase}
             </h2>
             <p className="text-sm text-text-secondary max-w-md mx-auto">
               {siteT(lang, "onePayment")}

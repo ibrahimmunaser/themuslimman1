@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { PLANS, formatPrice } from "@/lib/stripe-config";
-import { useCountryPrice } from "@/components/pricing/country-price";
+import { useLifetimePricePhrase } from "@/components/pricing/country-price";
 
 // Lazily memoized so it reads the env var at first render rather than at module
 // evaluation time — avoids crashes when the key isn't yet compiled into the bundle.
@@ -143,7 +143,7 @@ function FamilyCheckoutContent({
   const [authError, setAuthError]             = useState("");
   const [authLoading, setAuthLoading]         = useState(false);
   const [needsVerification, setNeedsVerification] = useState(false);
-  const countryPrice = useCountryPrice();
+  const pricePhrase = useLifetimePricePhrase();
 
   // ── Payment state ──────────────────────────────────────────────────────────
   const [clientSecret, setClientSecret] = useState<string | null>(null);
@@ -582,7 +582,7 @@ function FamilyCheckoutContent({
               <p className="text-xs text-zinc-600 mb-1">Looking for individual access instead?</p>
               <Link href="/checkout" className="text-xs text-gold/70 hover:text-gold transition-colors font-medium flex items-center justify-center gap-1.5">
                 <User className="w-3.5 h-3.5" />
-                Individual Lifetime — {countryPrice.label} →
+                Individual Lifetime — {pricePhrase} →
               </Link>
             </div>
           </div>

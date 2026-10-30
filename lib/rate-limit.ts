@@ -1,22 +1,16 @@
 /**
  * Rate limiter for serverless auth endpoints.
  *
- * Uses Upstash Redis (durable, shared across all serverless instances) when
- * UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN are set. Falls back to a
- * per-instance in-memory store otherwise so local dev / early-launch
- * environments without a Redis add-on still work, just without the
- * cross-instance guarantee.
- *
- * NOTE on the fallback: on Vercel, each function invocation may run in a
- * separate instance, so the in-memory store is per-instance — it provides
- * meaningful protection against burst attacks hitting the same warm
- * instance, but a distributed attacker can multiply the effective limit by
- * however many cold instances get spun up. Set the two env vars above (a
- * free Upstash Redis database is enough) to close that gap in production.
+ * Uses Upstash Redis when UPSTASH_REDIS_REST_URL and
+ * UPSTASH_REDIS_REST_TOKEN are set. Otherwise production counters live in
+ * Postgres (RateLimitBucket), which is shared across serverless instances.
+ * The in-memory store is only a last resort if that write fails, and for
+ * local development (where limits are skipped entirely).
  */
 
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
+import { prisma } from "@/lib/db";
 
 interface RateLimitEntry {
   count: number;
@@ -58,6 +52,63 @@ function checkRateLimitInMemory(
   return { allowed: true };
 }
 
+let tableReady: Promise<void> | null = null;
+
+function ensureRateLimitTable(): Promise<void> {
+  if (!tableReady) {
+    tableReady = prisma
+      .$executeRawUnsafe(
+        `CREATE TABLE IF NOT EXISTS "RateLimitBucket" (
+          "key" TEXT NOT NULL,
+          "count" INTEGER NOT NULL,
+          "resetAt" TIMESTAMP(3) NOT NULL,
+          CONSTRAINT "RateLimitBucket_pkey" PRIMARY KEY ("key")
+        )`,
+      )
+      .then(() => undefined)
+      .catch((error) => {
+        tableReady = null;
+        throw error;
+      });
+  }
+  return tableReady;
+}
+
+async function checkRateLimitInDb(
+  key: string,
+  maxRequests: number,
+  windowMs: number,
+): Promise<{ allowed: boolean; retryAfterSeconds?: number }> {
+  await ensureRateLimitTable();
+  const resetAt = new Date(Date.now() + windowMs);
+  const rows = await prisma.$queryRaw<Array<{ count: number; resetAt: Date }>>`
+    INSERT INTO "RateLimitBucket" ("key", "count", "resetAt")
+    VALUES (${key}, 1, ${resetAt})
+    ON CONFLICT ("key") DO UPDATE SET
+      "count" = CASE
+        WHEN "RateLimitBucket"."resetAt" <= NOW() THEN 1
+        ELSE "RateLimitBucket"."count" + 1
+      END,
+      "resetAt" = CASE
+        WHEN "RateLimitBucket"."resetAt" <= NOW() THEN EXCLUDED."resetAt"
+        ELSE "RateLimitBucket"."resetAt"
+      END
+    RETURNING "count", "resetAt"
+  `;
+  if (Math.random() < 0.02) {
+    prisma
+      .$executeRaw`DELETE FROM "RateLimitBucket" WHERE "resetAt" < NOW() - INTERVAL '1 hour'`
+      .catch(() => undefined);
+  }
+  const row = rows[0];
+  if (!row || row.count <= maxRequests) return { allowed: true };
+  const resetMs = new Date(row.resetAt).getTime();
+  return {
+    allowed: false,
+    retryAfterSeconds: Math.max(1, Math.ceil((resetMs - Date.now()) / 1000)),
+  };
+}
+
 const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
 const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
 const redis = redisUrl && redisToken ? new Redis({ url: redisUrl, token: redisToken }) : null;
@@ -86,9 +137,9 @@ function getRatelimiter(maxRequests: number, windowMs: number): Ratelimit {
  * Check and increment rate limit for a given key.
  * Returns { allowed: true } or { allowed: false, retryAfterSeconds: number }.
  *
- * Durable (Upstash) when configured; otherwise falls back to the
- * per-instance in-memory store, never throwing — a Redis outage degrades to
- * the weaker fallback rather than taking the endpoint down.
+ * Durable across instances: Upstash when configured, otherwise Postgres.
+ * A database outage falls back to the per-instance store rather than
+ * taking the endpoint down.
  */
 export async function checkRateLimit(
   key: string,
@@ -96,21 +147,34 @@ export async function checkRateLimit(
   windowMs: number,
 ): Promise<{ allowed: boolean; retryAfterSeconds?: number }> {
   // Local dev hits these limits while testing login, checkout, and resets.
-  // Production still enforces them.
-  if (process.env.NODE_ENV !== "production") {
+  // Production still enforces them. The test runner uses the in-memory store.
+  if (process.env.NODE_ENV === "development") {
     return { allowed: true };
+  }
+  if (process.env.NODE_ENV !== "production") {
+    return checkRateLimitInMemory(key, maxRequests, windowMs);
   }
 
   if (!redis) {
-    return checkRateLimitInMemory(key, maxRequests, windowMs);
+    try {
+      return await checkRateLimitInDb(key, maxRequests, windowMs);
+    } catch (error) {
+      console.error("[RATE_LIMIT] Database counter failed, falling back to in-memory check:", error);
+      return checkRateLimitInMemory(key, maxRequests, windowMs);
+    }
   }
   try {
     const { success, reset } = await getRatelimiter(maxRequests, windowMs).limit(key);
     if (success) return { allowed: true };
     return { allowed: false, retryAfterSeconds: Math.max(1, Math.ceil((reset - Date.now()) / 1000)) };
   } catch (error) {
-    console.error("[RATE_LIMIT] Upstash request failed, falling back to in-memory check:", error);
-    return checkRateLimitInMemory(key, maxRequests, windowMs);
+    console.error("[RATE_LIMIT] Upstash request failed, falling back to the database counter:", error);
+    try {
+      return await checkRateLimitInDb(key, maxRequests, windowMs);
+    } catch (dbError) {
+      console.error("[RATE_LIMIT] Database counter failed, falling back to in-memory check:", dbError);
+      return checkRateLimitInMemory(key, maxRequests, windowMs);
+    }
   }
 }
 

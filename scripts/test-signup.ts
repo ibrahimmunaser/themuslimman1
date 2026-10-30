@@ -1,6 +1,6 @@
 async function testSignup() {
   const testData = {
-    fullName: "Ibrahim Munaser",
+    fullName: "Ahmad Yusuf",
     email: "ibrahimmunaser@gmail.com",
     password: process.env.TEST_ACCOUNT_PASSWORD ?? "ChangeMe-TestOnly-123!",
   };

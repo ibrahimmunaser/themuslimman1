@@ -7,7 +7,7 @@ import {
   ArrowRight, BookOpen, Brain, BarChart2, Check, ChevronDown, Infinity, ShieldCheck,
 } from "lucide-react";
 import { trackEvent } from "@/lib/analytics";
-import { useCountryPrice } from "@/components/pricing/country-price";
+import { LifetimePrice, useLifetimePricePhrase } from "@/components/pricing/country-price";
 import type { InfluencerConfig } from "@/lib/influencer-configs";
 import type { Part } from "@/lib/types";
 import type { Part1AssetUrls } from "@/lib/part1-preview-data";
@@ -68,7 +68,7 @@ export function InfluencerSalesPage({
     config.supportingCopy ??
     "A structured 100-part course with videos, quizzes, flashcards, summaries, mind maps, and progress tracking.";
 
-  const lifetimePrice = useCountryPrice().label;
+  const lifetimePrice = useLifetimePricePhrase();
 
   useEffect(() => {
     const modeParam = searchParams.get("mode");
@@ -312,7 +312,7 @@ export function InfluencerSalesPage({
               <p className="text-sm font-semibold text-gold">Lifetime Access</p>
             </div>
             <p className="text-4xl font-extrabold text-text tracking-tight mb-1">
-              {lifetimePrice}
+              <LifetimePrice prominent />
               <span className="text-sm font-normal text-zinc-400 ml-1.5">one-time</span>
             </p>
             <p className="text-sm text-zinc-400 mb-5">

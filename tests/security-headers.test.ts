@@ -18,7 +18,7 @@ import { describe, it, expect } from "vitest";
 
 const CSP_DIRECTIVES = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://connect.facebook.net",
+  "script-src 'self' 'unsafe-inline' https://js.stripe.com https://connect.facebook.net",
   "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
   "connect-src 'self' https://api.stripe.com https://*.r2.dev https://*.r2.cloudflarestorage.com https://vitals.vercel-insights.com https://www.facebook.com https://www.google-analytics.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
@@ -51,10 +51,12 @@ describe("CSP — script-src", () => {
   });
 
   it("does NOT have a wildcard * in script-src (would allow any script)", () => {
-    // 'unsafe-inline' and 'unsafe-eval' are allowed by Stripe/Next.js requirement
-    // but bare * is dangerous and should never be present
     const parts = scriptSrc?.split(" ") ?? [];
     expect(parts).not.toContain("*");
+  });
+
+  it("does not allow eval", () => {
+    expect(scriptSrc).not.toContain("'unsafe-eval'");
   });
 });
 

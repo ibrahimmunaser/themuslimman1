@@ -51,7 +51,7 @@ async function createTestAccount() {
     // Create user and student profile
     const user = await prisma.user.create({
       data: {
-        fullName: 'Ibrahim Munaser',
+        fullName: 'Ahmad Yusuf',
         email: 'ibrahimmunaser@gmail.com',
         username: 'imunaser1',
         passwordHash,

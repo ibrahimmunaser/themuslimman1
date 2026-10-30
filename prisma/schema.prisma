@@ -902,3 +902,12 @@ model User {
   @@index([role])
   @@index([verificationToken])
 }
+
+/// Shared counters for auth and purchase rate limits when Upstash is unset.
+/// One row per key (for example "signin:1.2.3.4"). Expired rows are deleted
+/// opportunistically by lib/rate-limit.ts.
+model RateLimitBucket {
+  key     String   @id
+  count   Int
+  resetAt DateTime
+}

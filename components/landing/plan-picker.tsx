@@ -2,7 +2,7 @@
 
 import { ArrowRight } from "lucide-react";
 import { type PlanId } from "@/lib/plan-catalog";
-import { useCountryPrice } from "@/components/pricing/country-price";
+import { LifetimePrice, useCountryPrice } from "@/components/pricing/country-price";
 
 export type { PlanId };
 
@@ -24,7 +24,7 @@ interface PlanPickerProps {
   hasAccess?: boolean;
 }
 
-/** Public purchase picker — lifetime $49 only. Monthly is no longer sold. */
+/** Public purchase picker — lifetime only. Monthly is no longer sold. */
 export function PlanPicker({
   checkoutBaseUrl = "/checkout",
   onCtaClick,
@@ -74,7 +74,7 @@ export function PlanPicker({
         </h3>
 
         <p className="text-4xl sm:text-5xl font-extrabold text-text leading-none tracking-tight">
-          {countryPrice.label}
+          <LifetimePrice prominent />
           <span className="ml-2 text-base sm:text-lg font-medium text-text-secondary">
             one-time
           </span>

@@ -17,7 +17,7 @@ import {
 import Link from "next/link";
 import { SavedCardPicker } from "@/components/billing/saved-card-picker";
 import { friendlyPaymentError, friendlySubmitError } from "@/lib/payment-error-messages";
-import { PLANS, formatPrice } from "@/lib/stripe-config";
+import { PLANS, formatPrice, formatWebsitePrice } from "@/lib/stripe-config";
 import { useCountryPrice } from "@/components/pricing/country-price";
 import { useSiteLang } from "@/components/site-lang";
 import { siteT } from "@/lib/site-copy";
@@ -523,7 +523,7 @@ function CheckoutForm({
         ? `Get Student Lifetime Access — ${formatPrice(finalPrice)}`
         : audience === "family"
           ? `Get Family Lifetime Access — ${formatPrice(finalPrice)}`
-          : `${siteT(lang, "getLifetime")} — ${formatPrice(finalPrice)}`;
+          : `${siteT(lang, "getLifetime")} — ${formatWebsitePrice(finalPrice, siteT(lang, "only"))}`;
 
   const trustBadges =
     billing === "trial"
@@ -1363,7 +1363,7 @@ function CheckoutPageContent({
             </div>
             <div className="text-right flex-shrink-0">
               <p className="text-2xl sm:text-3xl font-extrabold text-gold leading-none">
-                <span dir="ltr">{formatPrice(displayPrice)}</span>
+                <span>{isLifetime && audience === "individual" ? formatWebsitePrice(displayPrice, siteT(lang, "only")) : formatPrice(displayPrice)}</span>
               </p>
               {billing === "monthly" && <p className="text-xs text-zinc-500 mt-0.5">/month</p>}
             </div>
@@ -1474,7 +1474,7 @@ function CheckoutPageContent({
                 </div>
                 <div className="text-right ml-4 flex-shrink-0">
                   <span className={`text-xl font-bold ${billing === id ? "text-white" : "text-zinc-400"}`}>
-                    {priceOverride ?? formatPrice(price)}
+                    {priceOverride ?? (audience === "individual" ? formatWebsitePrice(price, siteT(lang, "only")) : formatPrice(price))}
                   </span>
                   {priceSuffix && <span className="text-xs text-zinc-500">{priceSuffix}</span>}
                 </div>
@@ -1527,7 +1527,7 @@ function CheckoutPageContent({
         </div>
         <div className="text-right ml-4 flex-shrink-0">
           <p className="text-sm font-bold text-white whitespace-nowrap">
-            {formatPrice(displayBase)}{!isLifetime ? "/mo" : ""}
+            {isLifetime && audience === "individual" ? formatWebsitePrice(displayBase, siteT(lang, "only")) : formatPrice(displayBase)}{!isLifetime ? "/mo" : ""}
           </p>
         </div>
       </div>
@@ -1536,7 +1536,7 @@ function CheckoutPageContent({
           {isLifetime ? "Total" : "Due today"}
         </span>
         <span className="text-lg font-bold text-gold">
-          {formatPrice(isLifetime ? displayPrice : displayBase)}
+          {isLifetime && audience === "individual" ? formatWebsitePrice(displayPrice, siteT(lang, "only")) : formatPrice(isLifetime ? displayPrice : displayBase)}
         </span>
       </div>
       {!isLifetime && (

@@ -19,8 +19,10 @@ import {
 type ExpressCheckoutConfirmHandler = ComponentProps<typeof ExpressCheckoutElement>["onConfirm"];
 type ExpressCheckoutConfirmEvent = Parameters<NonNullable<ExpressCheckoutConfirmHandler>>[0];
 import { ArrowLeft, Check, Lock, AlertCircle, Infinity, User, ChevronDown } from "lucide-react";
-import { PLANS, formatPrice } from "@/lib/stripe-config";
+import { PLANS, formatPrice, formatWebsitePrice } from "@/lib/stripe-config";
 import { useCountryPrice } from "@/components/pricing/country-price";
+import { useSiteLang } from "@/components/site-lang";
+import { siteT } from "@/lib/site-copy";
 import { trackEvent } from "@/lib/analytics";
 import { planAnalyticsProps } from "@/lib/plan-catalog";
 import { startCheckoutAttempt, checkoutAttemptPayload } from "@/lib/checkout-attempt";
@@ -74,11 +76,11 @@ const LIFETIME_PLAN: PlanDef = {
 const PLAN_OPTIONS: PlanDef[] = [LIFETIME_PLAN];
 
 // ── Button copy ───────────────────────────────────────────────────────────────
-function submitButtonLabel(plan: PlanDef): string {
+function submitButtonLabel(plan: PlanDef, onlyWord: string): string {
   switch (plan.id) {
     case "monthly":       return `Start Monthly — ${formatPrice(plan.price)}/month`;
     case "familyMonthly": return `Start Monthly — ${formatPrice(plan.price)}/month`;
-    case "complete":      return `Get Lifetime Access — ${formatPrice(plan.price)}`;
+    case "complete":      return `Get Lifetime Access — ${formatWebsitePrice(plan.price, onlyWord)}`;
     case "family":        return `Get Lifetime Access — ${formatPrice(plan.price)}`;
   }
 }
@@ -127,6 +129,7 @@ function InnerCheckoutForm({
 }: InnerFormProps) {
   const stripe   = useStripe();
   const elements = useElements();
+  const lang = useSiteLang();
 
   const [error, setError]               = useState<string | null>(null);
   const [processing, setProcessing]     = useState(false);
@@ -457,7 +460,7 @@ function InnerCheckoutForm({
         ) : (
           <>
             <Lock className="w-4 h-4" aria-hidden="true" />
-            {submitButtonLabel(plan)}
+            {submitButtonLabel(plan, siteT(lang, "only"))}
           </>
         )}
       </button>
@@ -514,6 +517,7 @@ export function CheckoutStep({
   const [fullName, setFullName]       = useState("");
   const [email, setEmail]             = useState(userEmail);
   const countryPrice = useCountryPrice();
+  const lang = useSiteLang();
 
   const selectedPlan = { ...LIFETIME_PLAN, price: countryPrice.amountCents };
 
@@ -568,7 +572,7 @@ export function CheckoutStep({
             <div>
               <p className="text-sm font-semibold text-gold mb-1">Lifetime Access</p>
               <p className="text-3xl font-extrabold text-text leading-none">
-                {formatPrice(selectedPlan.price)}
+                {selectedPlan.id === "complete" ? formatWebsitePrice(selectedPlan.price, siteT(lang, "only")) : formatPrice(selectedPlan.price)}
               </p>
               <p className="text-xs text-zinc-400 mt-2">One payment. Keep access forever.</p>
             </div>

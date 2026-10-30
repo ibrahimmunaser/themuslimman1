@@ -14,7 +14,7 @@
 export type PriceTier = "A" | "B" | "C" | "D";
 
 export const TIER_PRICE_USD_CENTS: Record<PriceTier, number> = {
-  A: 4900, // $49
+  A: 9900, // $99 — website. App stores stay on their own price points.
   B: 2900, // $29
   C: 1500, // $15
   D: 1000, // $10
@@ -27,7 +27,7 @@ export const DEFAULT_PRICE_USD_CENTS = TIER_PRICE_USD_CENTS[DEFAULT_TIER];
 
 /** ISO 3166-1 alpha-2 → tier. */
 export const COUNTRY_TIER: Record<string, PriceTier> = {
-  // ── Tier A — $49 (high-income / Gulf) ─────────────────────────────────────
+  // ── Tier A — $99 (high-income / Gulf) ─────────────────────────────────────
   US: "A", // English
   CA: "A", // English / French
   GB: "A", // English
@@ -182,7 +182,7 @@ export const COUNTRY_TIER: Record<string, PriceTier> = {
 
 /** Human-readable tier labels for admin / docs. */
 export const TIER_LABEL: Record<PriceTier, string> = {
-  A: "$49 — high-income / Gulf",
+  A: "$99 — high-income / Gulf",
   B: "$29 — mid-income",
   C: "$15 — lower-mid",
   D: "$10 — access",

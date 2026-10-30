@@ -3,8 +3,7 @@
  *
  * Verifies the rate limiter correctly allows and blocks requests. No
  * UPSTASH_REDIS_REST_URL/TOKEN env vars are set in the test environment, so
- * this exercises the in-memory fallback path (checkRateLimit is async
- * either way, since the Upstash path performs a real network call).
+ * this exercises the in-memory store. Production uses Upstash or Postgres.
  */
 
 import { describe, it, expect } from "vitest";

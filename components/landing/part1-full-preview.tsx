@@ -8,7 +8,7 @@ import { LifetimeAccessCta } from "@/components/pricing/country-price";
 export async function Part1FullPreview({
   checkoutHref = "/checkout?plan=individual-lifetime",
   hideCta = false,
-  ctaLabel = "Get Lifetime Access — $49",
+  ctaLabel = "Get Lifetime Access — Only $99",
 }: {
   checkoutHref?: string;
   hideCta?: boolean;
@@ -88,7 +88,7 @@ export async function Part1FullPreview({
             data-plan="individual-lifetime"
             className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-gold to-gold-light hover:from-gold-light hover:to-gold text-ink font-bold text-base shadow-lg shadow-gold/30 transition-all hover:shadow-gold/40 hover:scale-[1.02] active:scale-[0.99]"
           >
-            {ctaLabel.includes("$49") || ctaLabel.includes("49 $") ? <LifetimeAccessCta /> : ctaLabel}
+            {ctaLabel.includes("$49") || ctaLabel.includes("49 $") || ctaLabel.includes("Only $99") ? <LifetimeAccessCta /> : ctaLabel}
           </a>
           <p className="text-xs text-text-muted mt-4">
             {isRtl

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { timingSafeEqual } from "crypto";
 import { prisma } from "@/lib/db";
+import { authorizeGooglePlayPush } from "@/lib/google-rtdn-auth";
 import { fetchAndroidSubscriptionV2, fetchAndroidProduct, ANDROID_PACKAGE_NAME } from "@/lib/google-play";
 import { checkRateLimit, getIP } from "@/lib/rate-limit";
 import { clearHasPaidIfNoOtherLifetimeEvidence } from "@/lib/access";
@@ -15,7 +15,10 @@ import { clearHasPaidIfNoOtherLifetimeEvidence } from "@/lib/access";
  *      the well-known service account `google-play-developer-notifications@
  *      system.gserviceaccount.com`, then create a PUSH subscription on that
  *      topic pointing at:
- *        https://themuslimman.com/api/webhooks/google-play-notifications?secret=<GOOGLE_RTDN_WEBHOOK_SECRET>
+ *        https://themuslimman.com/api/webhooks/google-play-notifications
+ *      Enable OIDC on that push subscription. Audience is that same URL.
+ *      The token's service account needs roles/iam.serviceAccountTokenCreator
+ *      on itself. Optional: set GOOGLE_RTDN_OIDC_EMAIL to that account.
  *   2. Play Console → Monetization setup → Real-time developer notifications
  *      → paste the same topic name (projects/<project>/topics/<topic>).
  *
@@ -25,12 +28,11 @@ import { clearHasPaidIfNoOtherLifetimeEvidence } from "@/lib/access";
  * lifetime purchase refunded — SUBSCRIPTION_REVOKED / ONE_TIME_PRODUCT_CANCELED)
  * while the app is closed previously never reached the server at all.
  *
- * Authentication: Pub/Sub push requests aren't otherwise authenticated by
- * default, so a shared secret query-string token (set on the push
- * subscription's endpoint URL and compared here) stands in for the OIDC
- * verification Pub/Sub also supports — simple and sufficient since this
- * endpoint only ever triggers a re-fetch from Google's own API, never trusts
- * notification payload fields directly for anything security-sensitive.
+ * Authentication: a Google-signed OIDC bearer token, or the shared secret in
+ * the X-Webhook-Secret header (or a non-JWT Authorization bearer). The secret
+ * is not read from the query string — that value is written to access logs.
+ * The handler still re-fetches purchase state from Google's API and does not
+ * trust notification payload fields for access decisions.
  */
 
 const MAX_RAW_RESPONSE_BYTES = 4096;
@@ -48,33 +50,20 @@ interface DeveloperNotification {
   testNotification?: { version: string };
 }
 
-function timingSafeEqualStr(a: string, b: string): boolean {
-  const bufA = Buffer.from(a);
-  const bufB = Buffer.from(b);
-  if (bufA.length !== bufB.length) return false;
-  return timingSafeEqual(bufA, bufB);
-}
-
 export async function POST(req: NextRequest) {
-  const secret = process.env.GOOGLE_RTDN_WEBHOOK_SECRET;
-  // Audit C1 fix: this endpoint used to fail OPEN when the secret env var
-  // was unset — anyone who discovered the URL could POST arbitrary
-  // subscriptionNotification/oneTimeProductNotification payloads and force
-  // a live re-fetch (and resulting refunded/active status write) for any
-  // purchaseToken they cared to guess or had observed elsewhere. This
-  // endpoint is only ever reachable from a Pub/Sub push subscription that
-  // WE configure with this exact secret in the URL (see the setup docs
-  // above), so a missing secret is always a deployment misconfiguration,
-  // never a legitimate "no auth needed" state. Fail closed instead — an
-  // unset secret makes the endpoint fully return 503 rather than silently
-  // trusting whatever hits it.
-  if (!secret) {
-    console.error("[google-play-notifications] GOOGLE_RTDN_WEBHOOK_SECRET is not set — rejecting all requests");
+  if (req.nextUrl.searchParams.has("secret")) {
+    console.warn("[google-play-notifications] Ignoring ?secret= on the URL. Use Pub/Sub OIDC or the X-Webhook-Secret header.");
+  }
+
+  // Fail closed: no OIDC token and no shared secret means the deployment is
+  // misconfigured, not that the endpoint is public.
+  const auth = await authorizeGooglePlayPush(req);
+  if (auth === "unconfigured") {
+    console.error("[google-play-notifications] No OIDC token and GOOGLE_RTDN_WEBHOOK_SECRET is not set — rejecting all requests");
     return NextResponse.json({ error: "Webhook not configured" }, { status: 503 });
   }
-  const provided = req.nextUrl.searchParams.get("secret") ?? "";
-  if (!provided || !timingSafeEqualStr(provided, secret)) {
-    console.warn("[google-play-notifications] Rejected request with missing/invalid secret");
+  if (auth !== "ok") {
+    console.warn("[google-play-notifications] Rejected request with missing/invalid credentials");
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -119,8 +108,8 @@ export async function POST(req: NextRequest) {
   }
 
   // Audit M8 / follow-up: require packageName and it must match THIS app.
-  // Previously a missing packageName was silently accepted, so a leaked
-  // ?secret= plus a crafted payload without packageName could still drive
+  // Previously a missing packageName was silently accepted, so leaked
+  // credentials plus a crafted payload without packageName could still drive
   // live Play API lookups + DB writes. Real Google RTDN always includes it.
   if (!notification.packageName || notification.packageName !== ANDROID_PACKAGE_NAME) {
     console.warn(

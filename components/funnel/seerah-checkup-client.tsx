@@ -291,7 +291,7 @@ function getRecommendation(answers: Record<number, number>, urls: SeerahCheckupU
       primarySupport: "Full first lesson — video, reading, slides, flashcards, quiz. No payment.",
       showFreePrimary: true,
       secondaryUrl: urls.individualLifetime,
-      secondaryLabel: "Get Lifetime Access — $49",
+      secondaryLabel: "Get Lifetime Access — Only $99",
       secondaryPreamble: "Ready to continue after Part 1?",
       bridgeCopy: "Because you want to see the quality first, start with Part 1 free — full video, flashcards, and quiz included. No payment required.",
       trackEvent: `${eventPrefix}watch_free_click`,
@@ -306,7 +306,7 @@ function getRecommendation(answers: Record<number, number>, urls: SeerahCheckupU
       primarySupport: "Part 1 is the very beginning of the full path. No payment, no commitment.",
       showFreePrimary: true,
       secondaryUrl: urls.individualLifetime,
-      secondaryLabel: "Get Lifetime Access — $49",
+      secondaryLabel: "Get Lifetime Access — Only $99",
       secondaryPreamble: "Ready to continue after Part 1?",
       bridgeCopy: "The best move when you don't know where to start is to simply start from Part 1 — free, in order, no commitment.",
       trackEvent: `${eventPrefix}watch_free_click`,
@@ -323,7 +323,7 @@ function getRecommendation(answers: Record<number, number>, urls: SeerahCheckupU
           : "Based on your answers, the best next step is to start from Part 1 and follow one clear path in order.";
 
   return {
-    primaryLabel: "Get Lifetime Access — $49",
+    primaryLabel: "Get Lifetime Access — Only $99",
     primaryUrl: urls.individualLifetime,
     primarySupport: "One payment. Keep access forever.",
     showFreePrimary: false,
@@ -894,7 +894,7 @@ export function SeerahCheckupClient({
           ...rec,
           showFreePrimary: false,
           primaryUrl: rec.secondaryUrl ?? urls.individualLifetime,
-          primaryLabel: rec.secondaryLabel ?? "Get Lifetime Access — $49",
+          primaryLabel: rec.secondaryLabel ?? "Get Lifetime Access — Only $99",
           primarySupport: "One payment. Keep access forever.",
           secondaryUrl: undefined,
           secondaryLabel: undefined,
@@ -1146,7 +1146,7 @@ export function SeerahCheckupClient({
                     className="flex items-center justify-center gap-2 w-full py-5 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-xl transition-colors shadow-lg shadow-gold/30 mb-3"
                   >
                     <Play className="w-5 h-5 fill-current" />
-                    {displayRec.primaryLabel.includes("$49") ? <LifetimeAccessCta /> : displayRec.primaryLabel}
+                    {displayRec.primaryLabel.includes("Only $99") ? <LifetimeAccessCta /> : displayRec.primaryLabel}
                   </button>
                   {displayRec.primarySupport && (
                     <p className="text-sm text-center text-text-muted/65 mb-5">{displayRec.primarySupport}</p>
@@ -1165,7 +1165,7 @@ export function SeerahCheckupClient({
                           destination:      displayRec.secondaryUrl ?? "",
                         })}
                         className="block w-full py-4 rounded-xl border-2 border-gold/35 text-gold font-bold text-base text-center hover:border-gold/60 hover:bg-gold/5 transition-colors mb-2">
-                        {displayRec.secondaryLabel.includes("$49") ? <LifetimeAccessCta /> : displayRec.secondaryLabel}
+                        {displayRec.secondaryLabel.includes("Only $99") ? <LifetimeAccessCta /> : displayRec.secondaryLabel}
                       </Link>
                       <p className="text-xs text-center text-text-muted/55 mb-4">Start today. Continue at your own pace.</p>
                     </>
@@ -1182,7 +1182,7 @@ export function SeerahCheckupClient({
                       destination:      displayRec.primaryUrl,
                     })}
                     className="block w-full py-5 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-xl text-center transition-colors shadow-lg shadow-gold/30 mb-2">
-                    {displayRec.primaryLabel.includes("$49") ? <LifetimeAccessCta /> : displayRec.primaryLabel}
+                    {displayRec.primaryLabel.includes("Only $99") ? <LifetimeAccessCta /> : displayRec.primaryLabel}
                   </Link>
                   <p className="text-xs text-center text-text-muted/55 mb-2">Start today. Continue at your own pace.</p>
                   {displayRec.primarySupport && (
@@ -1230,7 +1230,7 @@ export function SeerahCheckupClient({
                     score,
                     result_type:      resultType,
                     recommended_plan: planFromUrl(rec.secondaryUrl ?? urls.individualLifetime),
-                    cta_label:        rec.secondaryLabel ?? "Get Lifetime Access — $49",
+                    cta_label:        rec.secondaryLabel ?? "Get Lifetime Access — Only $99",
                     destination:      rec.secondaryUrl ?? urls.individualLifetime,
                   })}
                 />
@@ -1368,7 +1368,7 @@ export function SeerahCheckupClient({
                 score,
                 result_type:      resultType,
                 recommended_plan: planFromUrl(rec.secondaryUrl ?? urls.individualLifetime),
-                cta_label:        "Get Lifetime Access — $49",
+                cta_label:        "Get Lifetime Access — Only $99",
                 destination:      rec.secondaryUrl ?? urls.individualLifetime,
               })}
               className="flex w-full items-center justify-center py-3 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-sm transition-colors shadow-lg shadow-gold/20">
@@ -1380,7 +1380,7 @@ export function SeerahCheckupClient({
                 score,
                 result_type:      resultType,
                 recommended_plan: planFromUrl(rec.primaryUrl),
-                cta_label:        "Get Lifetime Access — $49",
+                cta_label:        "Get Lifetime Access — Only $99",
                 destination:      rec.primaryUrl,
               })}
               className="flex w-full items-center justify-center py-3 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-sm transition-colors shadow-lg shadow-gold/20">

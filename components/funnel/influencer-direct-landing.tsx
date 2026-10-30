@@ -8,7 +8,7 @@ import type { PlanId } from "@/components/landing/plan-picker";
 import { captureAttribution, attributionToProps } from "@/lib/attribution";
 import { trackEvent, captureAndTrack } from "@/lib/analytics";
 import { handleCanonicalFunnelClick } from "@/lib/funnel-click-analytics";
-import { useCountryPrice } from "@/components/pricing/country-price";
+import { useLifetimePricePhrase } from "@/components/pricing/country-price";
 
 // ── Config ─────────────────────────────────────────────────────────────────────
 
@@ -76,8 +76,7 @@ export function InfluencerDirectLanding({ config, part1Preview, afterPart1Previe
   // Enriched checkout URL — updated on mount to include real landing-page UTMs
   const [checkoutUrl, setCheckoutUrl] = useState(config.checkoutUrl);
 
-  const countryPrice = useCountryPrice();
-  const price = `${countryPrice.label} one-time`;
+  const price = `${useLifetimePricePhrase()} one-time`;
 
   // Sticky only shown when user has scrolled past hero AND no CTA section is on screen
   const showSticky = scrolledPast && !anyCTAVisible;

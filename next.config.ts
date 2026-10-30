@@ -14,8 +14,9 @@ const securityHeaders = [
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
-      // Stripe checkout JS + Facebook Pixel
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://connect.facebook.net",
+      // Next.js and the Meta pixel inject inline scripts, so 'unsafe-inline'
+      // stays. 'unsafe-eval' does not — Stripe.js and the pixel do not need it.
+      "script-src 'self' 'unsafe-inline' https://js.stripe.com https://connect.facebook.net",
       // Stripe iframe
       "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
       // API calls: Stripe, R2, Vercel Analytics, Facebook
