@@ -7,6 +7,7 @@ import { LangToggle } from "@/components/part/lang-toggle";
 import type { CourseLang } from "@/lib/course-lang";
 import { isRtlLang } from "@/lib/course-lang";
 import { loc } from "@/lib/loc";
+import { siteT } from "@/lib/site-copy";
 import { LifetimeAccessCta } from "@/components/pricing/country-price";
 
 interface Part1PreviewData {
@@ -107,7 +108,7 @@ export function InlinePart1Video({ checkoutUrl, checkoutLabel, hideCta = false, 
       <div className="px-5 py-4 bg-surface-raised border-b border-border flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-bold text-gold uppercase tracking-widest mb-0.5">
-            {loc(lang, "Complete Preview — No Signup Required", "معاينة كاملة — بدون تسجيل", "Aperçu complet — sans inscription")}
+            {siteT(lang, "previewEyebrow")}
           </p>
           <h3 className="text-base sm:text-lg font-bold text-text leading-snug">
             {loc(lang, `Part 1: ${data.title}`, `الجزء ١: ${data.title}`, `Partie 1 : ${data.title}`)}
@@ -125,7 +126,7 @@ export function InlinePart1Video({ checkoutUrl, checkoutLabel, hideCta = false, 
             onChange={setLang}
           />
           <span className="text-xs font-bold bg-gold/15 border border-gold/30 text-gold px-2.5 py-1 rounded-full">
-            {loc(lang, "100% Free", "مجاني ١٠٠٪", "100 % gratuit")}
+            {siteT(lang, "previewFree")}
           </span>
         </div>
       </div>

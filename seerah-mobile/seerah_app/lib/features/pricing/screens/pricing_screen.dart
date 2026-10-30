@@ -44,7 +44,7 @@ const _plans = [
     iapId: AppConstants.iapLifetimeIndividual,
     nameKey: 'planLifetime',
     descriptionKey: 'oneLearnerPayOnce',
-    periodKey: 'oneTime',
+    periodKey: 'only',
     badgeKey: 'mostPopular',
     isRecommended: true,
   ),
@@ -459,7 +459,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
             title: t(lang, 'planLifetime'),
             bullets: [
               t(lang, 'payOnceKeepForever'),
-              if (storePrice != null) '$storePrice ${t(lang, 'oneTime')}',
+              if (storePrice != null) '${t(lang, 'only')} \u200E$storePrice',
               t(lang, 'noSubscriptionNoRenewal'),
             ],
             highlighted: true,
@@ -737,19 +737,6 @@ class _PlanTile extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                          price!,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color:
-                                isRecommended
-                                    ? AppColors.gold
-                                    : AppColors.textPrimary,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        Text(
                           t(lang, plan.periodKey),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -759,6 +746,20 @@ class _PlanTile extends StatelessWidget {
                                     ? AppColors.gold.withValues(alpha: 0.7)
                                     : AppColors.textMuted,
                             fontSize: 11,
+                          ),
+                        ),
+                        Text(
+                          price!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textDirection: TextDirection.ltr,
+                          style: TextStyle(
+                            color:
+                                isRecommended
+                                    ? AppColors.gold
+                                    : AppColors.textPrimary,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
                       ],

@@ -37,7 +37,7 @@ export async function Part1FullPreview({
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <p className="text-xs text-text-muted uppercase tracking-wider mb-1">
-              {isRtl ? "معاينة كاملة — بدون تسجيل" : "Complete Preview — No Signup Required"}
+              {siteT(lang, "previewEyebrow")}
             </p>
             <h3 className="text-xl font-bold text-text">
               {isRtl ? `الجزء ١: ${part.title}` : `Part 1: ${part.title}`}
@@ -47,7 +47,7 @@ export async function Part1FullPreview({
             )}
           </div>
           <Badge variant="gold" size="sm" className="self-start sm:self-auto flex-shrink-0">
-            {isRtl ? "مجاني ١٠٠٪" : "100% Free"}
+            {siteT(lang, "previewFree")}
           </Badge>
         </div>
         <p className="text-xs sm:text-sm text-gold/90 mt-3 leading-relaxed">

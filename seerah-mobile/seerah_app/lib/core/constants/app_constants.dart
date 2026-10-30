@@ -48,7 +48,7 @@ class AppConstants {
   // which is already the user's country storefront price.
   static const String monthlyPrice        = '9.99';
   static const String familyMonthlyPrice  = '9.99';
-  static const String lifetimePrice       = '49';
+  static const String lifetimePrice       = '99';
   static const String familyLifetimePrice = '79';
 
   // In-App Purchase product IDs

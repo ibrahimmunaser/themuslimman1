@@ -9,7 +9,7 @@ text = (ROOT / "lib" / "country-pricing.ts").read_text(encoding="utf-8")
 body = re.search(r"export const COUNTRY_TIER[^=]*= \{([\s\S]*?)\n\};", text)
 if not body:
     raise SystemExit("COUNTRY_TIER not found")
-tiers = {"A": 49.0, "B": 29.0, "C": 15.0, "D": 10.0}
+tiers = {"A": 99.0, "B": 29.0, "C": 15.0, "D": 10.0}
 rows: list[tuple[str, float]] = []
 for line in body.group(1).splitlines():
     m = re.match(r'\s*([A-Z]{2}): "([ABCD])"', line)

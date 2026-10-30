@@ -10,7 +10,7 @@ type StoreBadgesProps = {
 };
 
 const badgeClass =
-  "group inline-flex h-11 w-[10.75rem] shrink-0 items-center gap-2.5 rounded-xl border border-border bg-surface/80 px-3.5 hover:border-gold/35 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50";
+  "group inline-flex h-14 w-max min-w-[13.5rem] shrink-0 items-center gap-3 rounded-xl border border-white/20 bg-black px-4 hover:border-gold/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50";
 
 export function StoreBadges({ lang, className = "", showLabel = false }: StoreBadgesProps) {
   return (
@@ -29,9 +29,9 @@ export function StoreBadges({ lang, className = "", showLabel = false }: StoreBa
           className={badgeClass}
         >
           <AppleIcon />
-          <span className="flex min-w-0 flex-col items-start leading-tight text-start">
-            <span className="text-[10px] text-text-muted">{siteT(lang, "storeDownloadOn")}</span>
-            <span className="text-sm font-semibold text-text">App Store</span>
+          <span className="flex flex-col items-start leading-none text-start">
+            <span className="text-[11px] text-white/70 whitespace-nowrap">{siteT(lang, "storeDownloadOn")}</span>
+            <span className="mt-1 text-base font-semibold text-white whitespace-nowrap">App Store</span>
           </span>
         </a>
         <a
@@ -42,9 +42,9 @@ export function StoreBadges({ lang, className = "", showLabel = false }: StoreBa
           className={badgeClass}
         >
           <GooglePlayIcon />
-          <span className="flex min-w-0 flex-col items-start leading-tight text-start">
-            <span className="text-[10px] text-text-muted">{siteT(lang, "storeGetItOn")}</span>
-            <span className="text-sm font-semibold text-text">Google Play</span>
+          <span className="flex flex-col items-start leading-none text-start">
+            <span className="text-[11px] text-white/70 whitespace-nowrap">{siteT(lang, "storeGetItOn")}</span>
+            <span className="mt-1 text-base font-semibold text-white whitespace-nowrap">Google Play</span>
           </span>
         </a>
       </div>
@@ -57,21 +57,21 @@ function AppleIcon() {
     <svg
       aria-hidden
       viewBox="0 0 24 24"
-      className="h-7 w-7 shrink-0 text-text"
+      className="h-7 w-7 shrink-0 text-white"
       fill="currentColor"
     >
-      <path d="M16.365 1.43c0 1.14-.493 2.27-1.177 3.08-.744.89-1.99 1.57-3.047 1.47-.12-1.09.507-2.26 1.23-3.04.787-.84 2.173-1.48 3.2-1.51.013.33.02.67.02 1.01zm1.238 13.75c-.687-.81-1.988-1.16-3.127-1.16-1.416 0-2.698.67-3.477.67-.8 0-2.035-.64-3.35-.62-1.724.03-3.316 1.01-4.193 2.57-1.793 3.11-1.465 7.76 1.285 10.29.857.79 1.874 1.67 3.208 1.64 1.287-.05 1.776-.83 3.332-.83 1.544 0 1.989.83 3.35.8 1.386-.02 2.262-.79 3.106-1.59 1.224-1.12 1.728-2.2 1.753-2.26-.038-.02-3.365-1.29-3.395-5.12-.028-3.21 2.635-4.74 2.753-4.83-1.504-2.2-3.842-2.47-4.655-2.52z" />
+      <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
     </svg>
   );
 }
 
 function GooglePlayIcon() {
   return (
-    <svg aria-hidden viewBox="0 0 24 24" className="h-7 w-7 shrink-0" fill="none">
-      <path d="M4 3.5v17l10.5-8.5L4 3.5z" fill="#00C1FF" />
-      <path d="M14.5 12 4 21.5 19 12l-4.5-3.5L14.5 12z" fill="#FFCE00" />
-      <path d="M4 3.5 14.5 12 19 8.5 4 3.5z" fill="#00E676" />
-      <path d="M4 21.5 19 12 14.5 12 4 3.5v18z" fill="#FF3A44" />
+    <svg aria-hidden viewBox="0 0 24 24" className="h-7 w-7 shrink-0">
+      <path fill="#EA4335" d="M11.128 12.003 1.09 22.011a2.73 2.73 0 0 0 3.999 1.62l11.29-6.377-5.251-5.25Z" />
+      <path fill="#FBBC04" d="m21.338 9.67-4.899-2.806-5.311 5.14 5.251 5.25 4.944-2.865a2.663 2.663 0 0 0 0-4.719h.015Z" />
+      <path fill="#4285F4" d="M1.09 1.995c-.06.225-.091.457-.09.69V21.32c0 .233.03.465.09.69l10.038-10.007L1.09 1.995Z" />
+      <path fill="#34A853" d="m11.128 12.003 5.311-5.139L5.126.383A2.79 2.79 0 0 0 3.723 0 2.73 2.73 0 0 0 1.09 1.988l10.038 10.015Z" />
     </svg>
   );
 }

@@ -14,7 +14,7 @@
 export type PriceTier = "A" | "B" | "C" | "D";
 
 export const TIER_PRICE_USD_CENTS: Record<PriceTier, number> = {
-  A: 9900, // $99 — website. App stores stay on their own price points.
+  A: 9900, // $99 — website, Play, and the App Store.
   B: 2900, // $29
   C: 1500, // $15
   D: 1000, // $10

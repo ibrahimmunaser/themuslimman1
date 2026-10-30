@@ -51,7 +51,7 @@ const _plans = [
     iapId: AppConstants.iapLifetimeIndividual,
     nameKey: 'planLifetime',
     descriptionKey: 'oneLearnerPayOnce',
-    periodKey: 'payOnce',
+    periodKey: 'only',
     badgeKey: 'mostPopular',
     isRecommended: true,
   ),
@@ -672,20 +672,6 @@ class _PlanTile extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text(
-                            price!,
-                            maxLines: 1,
-                            style: TextStyle(
-                              color: isRecommended
-                                  ? AppColors.gold
-                                  : AppColors.textPrimary,
-                              fontSize: 19,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ),
                         Text(
                           t(lang, plan.periodKey),
                           maxLines: 1,
@@ -695,6 +681,21 @@ class _PlanTile extends StatelessWidget {
                                 ? AppColors.gold.withValues(alpha: 0.7)
                                 : AppColors.textMuted,
                             fontSize: 11,
+                          ),
+                        ),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            price!,
+                            maxLines: 1,
+                            textDirection: TextDirection.ltr,
+                            style: TextStyle(
+                              color: isRecommended
+                                  ? AppColors.gold
+                                  : AppColors.textPrimary,
+                              fontSize: 19,
+                              fontWeight: FontWeight.w800,
+                            ),
                           ),
                         ),
                       ],

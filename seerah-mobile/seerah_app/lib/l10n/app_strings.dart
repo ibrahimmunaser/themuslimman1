@@ -116,6 +116,23 @@ const Map<String, Map<String, String>> _kStrings = {
   'cancelFromStoreAccount': {'en': 'Cancel anytime from your store account', 'ar': 'إلغاء في أي وقت من حساب متجرك', 'fr': 'Cancel anytime from your store account'},
   'payOnceKeepForever': {'en': 'Pay once, keep access forever', 'ar': 'ادفع مرة واحدة واحتفظ بالوصول للأبد', 'fr': 'Pay once, keep access forever'},
   'oneTime': {'en': 'one-time', 'ar': 'دفعة واحدة', 'fr': 'one-time'},
+  'only': {
+    'en': 'Only',
+    'ar': 'فقط',
+    'fr': 'Seulement',
+    'id': 'Hanya',
+    'ms': 'Hanya',
+    'zh': '只要',
+    'ru': 'Всего',
+    'sw': 'Tu',
+    'es': 'Solo',
+    'de': 'Nur',
+    'tr': 'Sadece',
+    'hi': 'सिर्फ़',
+    'ur': 'صرف',
+    'bn': 'মাত্র',
+    'fa': 'فقط',
+  },
   'bestLongTermValue': {'en': 'Best long-term value if you plan to study for years', 'ar': 'أفضل قيمة على المدى الطويل إن كنت تخطط للدراسة لسنوات', 'fr': 'Best long-term value if you plan to study for years'},
   'wantToPreviewFirst': {'en': 'Want to preview first?', 'ar': 'تريد معاينة أولًا؟', 'fr': 'Want to preview first?'},
   'watchPart1FreeNoPurchase': {'en': 'Watch Part 1 free — no purchase needed', 'ar': 'شاهد الجزء الأول مجانًا — لا حاجة للشراء', 'fr': 'Watch Part 1 free — no purchase needed'},
@@ -237,7 +254,7 @@ const Map<String, Map<String, String>> _kStrings = {
   'testYourKnowledge': {'en': 'Test your knowledge', 'ar': 'اختبر معرفتك', 'fr': 'Test your knowledge'},
   'mcqInstantFeedback': {'en': 'Multiple-choice questions with instant feedback', 'ar': 'أسئلة اختيار من متعدد مع تغذية راجعة فورية', 'fr': 'Multiple-choice questions with instant feedback'},
   'continueFullCourse': {'en': 'Continue the full {n}-part course', 'ar': 'استمر في الدورة الكاملة المكوّنة من {n} جزءًا', 'fr': 'Continue the full {n}-part course'},
-  'unlockFullAccessBody': {'en': 'You started the path. Unlock the full course for {price} one-time to continue the Seerah step by step.', 'ar': 'لقد بدأت الطريق. افتح الدورة الكاملة مقابل {price} دفعة واحدة لمواصلة السيرة خطوة بخطوة.', 'fr': 'Vous avez commencé le chemin. Débloquez le cours complet pour {price}, en une fois, pour continuer la Sîra étape par étape.'},
+  'unlockFullAccessBody': {'en': 'You started the path. Unlock the full course for {only} {price} to continue the Seerah step by step.', 'ar': 'لقد بدأت الطريق. افتح الدورة الكاملة مقابل {only} {price} لمواصلة السيرة خطوة بخطوة.', 'fr': 'Vous avez commencé le chemin. Débloquez le cours complet pour {only} {price} afin de continuer la Sîra étape par étape.'},
   'unlockFullAccessBodyPlain': {'en': 'You started the path. Unlock the full course with a one-time purchase to continue the Seerah step by step.', 'ar': 'لقد بدأت الطريق. افتح الدورة الكاملة بدفعة واحدة لمواصلة السيرة خطوة بخطوة.', 'fr': 'Vous avez commencé le chemin. Débloquez le cours complet par un paiement unique pour continuer la Sîra étape par étape.'},
   'unlockFullAccess': {'en': 'Unlock full access', 'ar': 'افتح الوصول الكامل', 'fr': 'Unlock full access'},
   'partN': {'en': 'Part {n}', 'ar': 'الجزء {n}', 'fr': 'Part {n}'},
@@ -245,7 +262,7 @@ const Map<String, Map<String, String>> _kStrings = {
   'lifetimeAccessTitle': {'en': 'Lifetime access', 'ar': 'وصول مدى الحياة', 'fr': 'Lifetime access'},
   'noSubscriptionNoRenewal': {'en': 'No subscription. No renewal.', 'ar': 'بلا اشتراك. بلا تجديد.', 'fr': 'No subscription. No renewal.'},
   'faqIsSubscriptionQ': {'en': 'Is this a subscription?', 'ar': 'هل هذا اشتراك؟', 'fr': 'Is this a subscription?'},
-  'faqIsSubscriptionA': {'en': 'No. Lifetime access is a one-time {price} payment. You keep access forever with no renewal.', 'ar': 'لا. الوصول مدى الحياة دفعة واحدة بقيمة {price}. تحتفظ بالوصول للأبد دون تجديد.', 'fr': 'Non. L’accès à vie est un paiement unique de {price}. Vous conservez l’accès pour toujours, sans renouvellement.'},
+  'faqIsSubscriptionA': {'en': 'No. Lifetime access is {only} {price}. You keep access forever with no renewal.', 'ar': 'لا. الوصول مدى الحياة {only} {price}. تحتفظ بالوصول للأبد دون تجديد.', 'fr': 'Non. L’accès à vie, c’est {only} {price}. Vous conservez l’accès pour toujours, sans renouvellement.'},
   'faqIsSubscriptionAPlain': {'en': 'No. Lifetime access is a one-time payment. You keep access forever with no renewal.', 'ar': 'لا. الوصول مدى الحياة دفعة واحدة. تحتفظ بالوصول للأبد دون تجديد.', 'fr': 'Non. L’accès à vie est un paiement unique. Vous conservez l’accès pour toujours, sans renouvellement.'},
 
   // ── Video tab ────────────────────────────────────────────────────────────
@@ -585,7 +602,9 @@ String t(String lang, String key) {
 /// Inserts a store-formatted price. Apple and Google already localize the
 /// amount and currency for the user's country, so the digits are left as-is.
 String tWithStorePrice(String lang, String key, String price) {
-  return t(lang, key).replaceAll('{price}', price);
+  return t(lang, key)
+      .replaceAll('{only}', t(lang, 'only'))
+      .replaceAll('{price}', '\u200E$price');
 }
 
 /// Same as [t] but substitutes `{name}`-style placeholders from [vars].
