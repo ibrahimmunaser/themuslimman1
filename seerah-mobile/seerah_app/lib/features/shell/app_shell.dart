@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/providers/part_provider.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/system_insets.dart';
 import '../../l10n/app_strings.dart';
 
 class AppShell extends ConsumerWidget {
@@ -15,10 +16,10 @@ class AppShell extends ConsumerWidget {
   int _currentIndex(BuildContext context) {
     final loc = GoRouterState.of(context).uri.path;
     if (loc.startsWith('/dashboard')) return 0;
-    if (loc.startsWith('/course'))    return 1;
+    if (loc.startsWith('/course')) return 1;
     if (loc.startsWith('/resources')) return 2;
     if (loc.startsWith('/reference')) return 3;
-    if (loc.startsWith('/progress'))  return 4;
+    if (loc.startsWith('/progress')) return 4;
     // Pricing isn't one of the 5 primary tabs — it used to fall under
     // "Lessons" (index 1), which wrongly implied the user was viewing course
     // content while actually looking at a paywall/upsell screen. Fall
@@ -49,88 +50,122 @@ class AppShell extends ConsumerWidget {
             child: Container(
               decoration: BoxDecoration(
                 color: AppColors.surface.withValues(alpha: 0.88),
-                border: const Border(top: BorderSide(color: AppColors.border, width: 0.5)),
+                border: const Border(
+                  top: BorderSide(color: AppColors.border, width: 0.5),
+                ),
               ),
-              // NavigationBar already inserts a SafeArea under the destinations,
-              // and this bar used to add bottomSystemInset on top of that.
-              // Together they left an empty band under the tabs on both
-              // Android and iOS. Drop the bottom padding so the destinations
-              // sit on the bottom edge; the system gesture/home indicator is
-              // drawn over the bar instead of pushing it up.
-              child: MediaQuery.removePadding(
-                context: context,
-                removeBottom: true,
-                child: NavigationBarTheme(
-                  data: NavigationBarThemeData(
-                    height: navHeight,
-                    backgroundColor: Colors.transparent,
-                    indicatorColor: AppColors.gold.withValues(alpha: 0.14),
-                    indicatorShape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+              // One inset only. NavigationBar's own SafeArea is removed so it
+              // does not stack on top of this padding. The bar background
+              // still fills the system area; the icons and labels sit above
+              // the Android 3-button bar and the iOS home indicator.
+              child: Padding(
+                padding: EdgeInsets.only(bottom: bottomSystemInset(context)),
+                child: MediaQuery.removePadding(
+                  context: context,
+                  removeBottom: true,
+                  child: NavigationBarTheme(
+                    data: NavigationBarThemeData(
+                      height: navHeight,
+                      backgroundColor: Colors.transparent,
+                      indicatorColor: AppColors.gold.withValues(alpha: 0.14),
+                      indicatorShape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      labelTextStyle: WidgetStateProperty.resolveWith((states) {
+                        final selected = states.contains(WidgetState.selected);
+                        return TextStyle(
+                          fontSize: compact ? 10 : 10.5,
+                          fontWeight: selected
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                          color: selected
+                              ? AppColors.gold
+                              : AppColors.textMuted,
+                        );
+                      }),
+                      iconTheme: WidgetStateProperty.resolveWith((states) {
+                        final selected = states.contains(WidgetState.selected);
+                        return IconThemeData(
+                          size: compact ? 22 : 23,
+                          color: selected
+                              ? AppColors.gold
+                              : AppColors.textMuted,
+                        );
+                      }),
                     ),
-                    labelTextStyle: WidgetStateProperty.resolveWith((states) {
-                      final selected = states.contains(WidgetState.selected);
-                      return TextStyle(
-                        fontSize: compact ? 10 : 10.5,
-                        fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                        color: selected ? AppColors.gold : AppColors.textMuted,
-                      );
-                    }),
-                    iconTheme: WidgetStateProperty.resolveWith((states) {
-                      final selected = states.contains(WidgetState.selected);
-                      return IconThemeData(
-                        size: compact ? 22 : 23,
-                        color: selected ? AppColors.gold : AppColors.textMuted,
-                      );
-                    }),
-                  ),
-                  child: NavigationBar(
-                    selectedIndex: idx,
-                    onDestinationSelected: (i) {
-                      HapticFeedback.selectionClick();
-                      switch (i) {
-                        case 0: context.go('/dashboard'); break;
-                        case 1: context.go('/course'); break;
-                        case 2: context.go('/resources'); break;
-                        case 3: context.go('/reference'); break;
-                        case 4: context.go('/progress'); break;
-                      }
-                    },
-                    labelBehavior: compact
-                        ? NavigationDestinationLabelBehavior.alwaysHide
-                        : NavigationDestinationLabelBehavior.alwaysShow,
-                    destinations: [
-                      NavigationDestination(
-                        icon: const Icon(Icons.home_outlined),
-                        selectedIcon: const Icon(Icons.home_rounded, color: AppColors.gold),
-                        label: t(lang, 'navHome'),
-                        tooltip: t(lang, 'navHome'),
-                      ),
-                      NavigationDestination(
-                        icon: const Icon(Icons.menu_book_outlined),
-                        selectedIcon: const Icon(Icons.menu_book_rounded, color: AppColors.gold),
-                        label: t(lang, 'navLessons'),
-                        tooltip: t(lang, 'navLessons'),
-                      ),
-                      NavigationDestination(
-                        icon: const Icon(Icons.folder_outlined),
-                        selectedIcon: const Icon(Icons.folder_rounded, color: AppColors.gold),
-                        label: t(lang, 'navResources'),
-                        tooltip: t(lang, 'navResources'),
-                      ),
-                      NavigationDestination(
-                        icon: const Icon(Icons.library_books_outlined),
-                        selectedIcon: const Icon(Icons.library_books_rounded, color: AppColors.gold),
-                        label: t(lang, 'navReference'),
-                        tooltip: t(lang, 'navReference'),
-                      ),
-                      NavigationDestination(
-                        icon: const Icon(Icons.insights_outlined),
-                        selectedIcon: const Icon(Icons.insights_rounded, color: AppColors.gold),
-                        label: t(lang, 'navProgress'),
-                        tooltip: t(lang, 'navProgress'),
-                      ),
-                    ],
+                    child: NavigationBar(
+                      selectedIndex: idx,
+                      onDestinationSelected: (i) {
+                        HapticFeedback.selectionClick();
+                        switch (i) {
+                          case 0:
+                            context.go('/dashboard');
+                            break;
+                          case 1:
+                            context.go('/course');
+                            break;
+                          case 2:
+                            context.go('/resources');
+                            break;
+                          case 3:
+                            context.go('/reference');
+                            break;
+                          case 4:
+                            context.go('/progress');
+                            break;
+                        }
+                      },
+                      labelBehavior: compact
+                          ? NavigationDestinationLabelBehavior.alwaysHide
+                          : NavigationDestinationLabelBehavior.alwaysShow,
+                      destinations: [
+                        NavigationDestination(
+                          icon: const Icon(Icons.home_outlined),
+                          selectedIcon: const Icon(
+                            Icons.home_rounded,
+                            color: AppColors.gold,
+                          ),
+                          label: t(lang, 'navHome'),
+                          tooltip: t(lang, 'navHome'),
+                        ),
+                        NavigationDestination(
+                          icon: const Icon(Icons.menu_book_outlined),
+                          selectedIcon: const Icon(
+                            Icons.menu_book_rounded,
+                            color: AppColors.gold,
+                          ),
+                          label: t(lang, 'navLessons'),
+                          tooltip: t(lang, 'navLessons'),
+                        ),
+                        NavigationDestination(
+                          icon: const Icon(Icons.folder_outlined),
+                          selectedIcon: const Icon(
+                            Icons.folder_rounded,
+                            color: AppColors.gold,
+                          ),
+                          label: t(lang, 'navResources'),
+                          tooltip: t(lang, 'navResources'),
+                        ),
+                        NavigationDestination(
+                          icon: const Icon(Icons.library_books_outlined),
+                          selectedIcon: const Icon(
+                            Icons.library_books_rounded,
+                            color: AppColors.gold,
+                          ),
+                          label: t(lang, 'navReference'),
+                          tooltip: t(lang, 'navReference'),
+                        ),
+                        NavigationDestination(
+                          icon: const Icon(Icons.insights_outlined),
+                          selectedIcon: const Icon(
+                            Icons.insights_rounded,
+                            color: AppColors.gold,
+                          ),
+                          label: t(lang, 'navProgress'),
+                          tooltip: t(lang, 'navProgress'),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
