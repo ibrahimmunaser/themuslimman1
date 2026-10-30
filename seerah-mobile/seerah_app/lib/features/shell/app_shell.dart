@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -54,12 +55,13 @@ class AppShell extends ConsumerWidget {
                   top: BorderSide(color: AppColors.border, width: 0.5),
                 ),
               ),
-              // One inset only. NavigationBar's own SafeArea is removed so it
-              // does not stack on top of this padding. The bar background
-              // still fills the system area; the icons and labels sit above
-              // the Android 3-button bar and the iOS home indicator.
+              // iPhone has no software buttons, only a thin home indicator drawn
+              // over the bar. Lifting the tabs there leaves an empty band.
+              // Android's 3-button bar covers the labels, so only Android
+              // gets the inset. NavigationBar's own SafeArea stays removed
+              // so it cannot add a second gap.
               child: Padding(
-                padding: EdgeInsets.only(bottom: bottomSystemInset(context)),
+                padding: EdgeInsets.only(bottom: _androidNavInset(context)),
                 child: MediaQuery.removePadding(
                   context: context,
                   removeBottom: true,
@@ -175,4 +177,11 @@ class AppShell extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Space the tab labels need to clear Android's system navigation buttons.
+/// iOS returns 0 so the bar stays on the screen edge.
+double _androidNavInset(BuildContext context) {
+  if (defaultTargetPlatform != TargetPlatform.android) return 0;
+  return bottomSystemInset(context);
 }
