@@ -29,6 +29,7 @@ import {
 
 import dynamic from "next/dynamic";
 import { WidgetCycleProvider } from "./widget-cycle-context";
+import { LangToggle } from "@/components/part/lang-toggle";
 import type { CourseLang } from "@/lib/course-lang";
 import { isRtlLang } from "@/lib/course-lang";
 import { loc } from "@/lib/loc";
@@ -253,6 +254,15 @@ export function StudentSidebar({
           )}
         </div>
 
+        {!collapsed && (
+          <div className="relative z-20 mt-3">
+            <p className="px-0.5 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+              {t(lang, "languageWord")}
+            </p>
+            <LangToggle current={lang} compact className="w-full" />
+          </div>
+        )}
+
         {/* Active learner profile indicator - only for family plans */}
         {!collapsed && planType === "family" && activeProfileName && (
           <div className="mt-2 pt-2 border-t border-border/60">
@@ -387,6 +397,14 @@ export function StudentSidebar({
         >
           <X className="w-4 h-4" />
         </button>
+      </div>
+
+      {/* Outside the scrolling list so the menu is not clipped */}
+      <div className="relative z-20 px-4 py-3 border-b border-border flex-shrink-0">
+        <p className="pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+          {t(lang, "languageWord")}
+        </p>
+        <LangToggle current={lang} compact className="w-full" />
       </div>
 
       {/* Scrollable content */}
@@ -606,6 +624,7 @@ export function StudentSidebar({
             >
               {isRtl ? <PanelRightOpen className="w-4 h-4" /> : <PanelLeftOpen className="w-4 h-4" />}
             </button>
+            <LangToggle current={lang} iconOnly />
           </div>
         )}
 

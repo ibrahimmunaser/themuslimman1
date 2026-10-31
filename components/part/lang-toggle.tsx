@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Languages } from "lucide-react";
 import { clsx } from "clsx";
 import { clearPartAssetsCache } from "@/lib/part-asset-cache";
 import { COURSE_LANG_OPTIONS, type CourseLang } from "@/lib/course-lang";
@@ -14,6 +14,8 @@ interface LangToggleProps {
   partNumber?: number;
   /** Narrow layout for a collapsed sidebar. */
   compact?: boolean;
+  /** Icon button for a collapsed sidebar. The menu opens toward the page. */
+  iconOnly?: boolean;
   /** Single-row control sized for the site header. */
   nav?: boolean;
   /**
@@ -43,12 +45,14 @@ function LanguageMenu({
   onSelect,
   nav,
   compact,
+  iconOnly,
   className,
 }: {
   selected: CourseLang;
   onSelect: (lang: CourseLang) => void;
   nav?: boolean;
   compact?: boolean;
+  iconOnly?: boolean;
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -81,30 +85,44 @@ function LanguageMenu({
         aria-expanded={open}
         aria-controls={listId}
         onClick={() => setOpen((value) => !value)}
+        title={currentLabel}
         className={clsx(
-          "flex w-full items-center bg-ink/40 border border-gold/35 font-semibold text-text cursor-pointer focus:outline-none focus:ring-2 focus:ring-gold/40",
-          nav
-            ? "h-10 min-w-[12.5rem] max-w-[16rem] ps-3 pe-8 rounded-lg text-sm"
-            : compact
-              ? "h-9 min-w-0 ps-2 pe-7 rounded-lg text-xs"
-              : "min-h-[44px] min-w-[12.5rem] ps-3.5 pe-8 rounded-xl text-sm shadow-sm shadow-gold/10",
+          "flex items-center bg-ink/40 border border-gold/35 font-semibold text-text cursor-pointer focus:outline-none focus:ring-2 focus:ring-gold/40",
+          iconOnly
+            ? "h-9 w-9 justify-center rounded-lg"
+            : nav
+              ? "h-10 w-full min-w-[12.5rem] max-w-[16rem] ps-3 pe-8 rounded-lg text-sm"
+              : compact
+                ? "h-9 w-full min-w-0 ps-2 pe-7 rounded-lg text-xs"
+                : "min-h-[44px] w-full min-w-[12.5rem] ps-3.5 pe-8 rounded-xl text-sm shadow-sm shadow-gold/10",
         )}
       >
-        <span className="truncate">{currentLabel}</span>
-      </button>
-      <ChevronDown
-        className={clsx(
-          "pointer-events-none absolute top-1/2 -translate-y-1/2 end-2.5 w-4 h-4 text-gold transition-transform",
-          open && "rotate-180",
+        {iconOnly ? (
+          <Languages className="w-4 h-4 text-gold" aria-hidden />
+        ) : (
+          <span className="truncate">{currentLabel}</span>
         )}
-        aria-hidden
-      />
+      </button>
+      {!iconOnly && (
+        <ChevronDown
+          className={clsx(
+            "pointer-events-none absolute top-1/2 -translate-y-1/2 end-2.5 w-4 h-4 text-gold transition-transform",
+            open && "rotate-180",
+          )}
+          aria-hidden
+        />
+      )}
       {open && (
         <ul
           id={listId}
           role="listbox"
           aria-label={groupAriaLabel(selected)}
-          className="absolute end-0 top-full z-[200] mt-1 max-h-72 w-full min-w-[12.5rem] overflow-auto rounded-lg border border-gold/40 bg-surface-high py-1 shadow-2xl shadow-black/70"
+          className={clsx(
+            "absolute z-[200] max-h-72 overflow-auto rounded-lg border border-gold/40 bg-surface-high py-1 shadow-2xl shadow-black/70",
+            iconOnly
+              ? "start-full top-0 ms-2 w-56"
+              : "end-0 top-full mt-1 w-full min-w-[12.5rem]",
+          )}
         >
           {COURSE_LANG_OPTIONS.map((option) => {
             const active = option.code === selected;
@@ -140,6 +158,7 @@ export function LangToggle({
   current,
   partNumber,
   compact,
+  iconOnly,
   nav,
   prominent,
   className,
@@ -172,6 +191,7 @@ export function LangToggle({
       onSelect={switchLang}
       nav={nav}
       compact={compact}
+      iconOnly={iconOnly}
       className={prominent ? undefined : className}
     />
   );
