@@ -34,6 +34,7 @@ import {
   r2GetArabicVideoKey,
   r2GetArabicAudioKey,
   r2GetLocalizedVideoKey,
+  r2ResolveAudioKey,
 } from "@/lib/r2";
 import { localizedMedia, type CourseLang } from "@/lib/course-lang";
 import { langPackRevision } from "@/lib/lang-packs";
@@ -145,8 +146,8 @@ async function loadPartData(n: number, lang: CourseLang): Promise<CachedPartData
   }
 
   if (localizedMedia(lang)) {
-    // Translated video, one infographic, presented slides only.
-    // Audio falls back to English. Mind maps are English-only.
+    // Translated video, dubbed audio, one infographic, presented slides only.
+    // Mind maps are English-only. Audio uses the English track only until the dubbed mp3 exists.
     // Briefing, facts, study guide, quiz, and flashcards come from the language pack when one exists.
     const [
       briefingText,
@@ -165,7 +166,7 @@ async function loadPartData(n: number, lang: CourseLang): Promise<CachedPartData
       readFlashcards(n, lang).catch(() => null),
       getSlideFiles(n, "presented", lang).catch(() => []),
       getInfographicFilename(n, "Concise", lang).catch(() => null),
-      r2GetAudioKey(n).catch(() => null),
+      r2ResolveAudioKey(n, lang).catch(() => null),
     ]);
 
     const videoKey = r2GetLocalizedVideoKey(lang, n);

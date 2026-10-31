@@ -87,6 +87,7 @@ export function localizedMedia(lang: CourseLang): LocalizedMedia | null {
 export function localizedMediaPrefixes(): string[] {
   return Object.values(LOCALIZED_MEDIA).flatMap((m) => [
     `${m.folder}/videos/`,
+    `${m.folder}/audio/`,
     `${m.folder}/infographics/`,
     `${m.folder}/${m.slides}/`,
   ]);

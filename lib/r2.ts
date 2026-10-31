@@ -537,8 +537,28 @@ export async function r2ReadArabicQuiz(partNum: number) {
 }
 
 // ─── Translated media key helpers ─────────────────────────────────────────────
-// French and the later languages each have a video, one infographic, and a
-// slide deck per part. There is no translated audio — callers keep English audio.
+// French and the later languages each have a video, one infographic, a slide
+// deck, and a standalone mp3 per part. The mp3 is the dubbed soundtrack.
+
+/** Dubbed audio — e.g. spanish/audio/Part 84.mp3 */
+export function r2GetLocalizedAudioKey(lang: CourseLang, partNum: number): string {
+  const media = localizedMedia(lang);
+  if (!media) throw new Error(`No translated audio folder for ${lang}`);
+  return `${media.folder}/audio/Part ${partNum}.mp3`;
+}
+
+/**
+ * Audio key for a lesson. Translated languages use their own mp3 when it
+ * exists, and the English track until that file has been uploaded.
+ */
+export async function r2ResolveAudioKey(partNum: number, lang: CourseLang = "en"): Promise<string | null> {
+  if (lang === "ar") return r2GetArabicAudioKey(partNum);
+  if (localizedMedia(lang)) {
+    const local = r2GetLocalizedAudioKey(lang, partNum);
+    if (await r2FileExists(local)) return local;
+  }
+  return r2GetAudioKey(partNum);
+}
 
 /** Video — e.g. spanish/videos/Final_Part_84_Full.mp4 */
 export function r2GetLocalizedVideoKey(lang: CourseLang, partNum: number): string {

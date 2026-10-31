@@ -22,6 +22,7 @@ import {
   r2ReadArabicFlashcards,
   r2ReadArabicQuiz,
   r2GetLocalizedVideoKey,
+  r2ResolveAudioKey,
   r2GetLocalizedInfographicKey,
   r2GetLocalizedSlideKeys,
   generateSignedR2Url,
@@ -466,10 +467,10 @@ export async function getPartAssetUrls(partNum: number, lang: CourseLang = "en")
   }
 
   if (localizedMedia(lang)) {
-    // Translated video. No translated audio — fall back to English audio.
+    // Translated video and dubbed audio. English audio until the dubbed mp3 exists.
     const videoKey = r2GetLocalizedVideoKey(lang, partNum);
     const [audioKey, mindmapKey] = await Promise.all([
-      r2GetAudioKey(partNum),
+      r2ResolveAudioKey(partNum, lang),
       r2GetMindmapKey(partNum).catch(() => null),
     ]);
     const [videoUrl, audioUrl, mindmapUrl, thumbnailUrl] = await Promise.all([
