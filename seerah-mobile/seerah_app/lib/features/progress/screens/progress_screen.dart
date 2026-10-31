@@ -30,6 +30,7 @@ class ProgressScreen extends ConsumerWidget {
       ),
       body: AppGradientBackground(
         child: SafeArea(
+          bottom: false,
           // See dashboard_screen.dart's RefreshIndicator for why this exists —
           // previously a failed sync (offline, transient server error) had no
           // manual retry short of force-quitting the app.
@@ -38,7 +39,7 @@ class ProgressScreen extends ConsumerWidget {
             onRefresh: () =>
                 ref.read(progressProvider.notifier).manualRefresh(),
             child: ListView(
-              padding: const EdgeInsets.only(bottom: 24),
+              padding: const EdgeInsets.only(bottom: 12),
               children: [
                 if (progressAsync.valueOrNull?.syncFailed == true)
                   const Padding(

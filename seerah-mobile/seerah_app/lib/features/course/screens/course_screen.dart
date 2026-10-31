@@ -61,6 +61,7 @@ class _CourseScreenState extends ConsumerState<CourseScreen> {
       ),
       body: AppGradientBackground(
         child: SafeArea(
+          bottom: false,
           child: _search.isNotEmpty
               ? _buildSearchResults(hasAccess, progress, lang)
               : _buildEraList(hasAccess, progress, lang),
@@ -72,7 +73,7 @@ class _CourseScreenState extends ConsumerState<CourseScreen> {
   Widget _buildEraList(bool hasAccess, ProgressState? progress, String lang) {
     final groups = getEraGroups();
     return ListView.builder(
-      padding: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.only(bottom: 12),
       itemCount: groups.length,
       itemBuilder: (ctx, i) {
         final group = groups[i];

@@ -23,8 +23,9 @@ class ReferenceScreen extends ConsumerWidget {
       ),
       body: AppGradientBackground(
         child: SafeArea(
+          bottom: false,
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
             children: [
               // Compact header
               Padding(

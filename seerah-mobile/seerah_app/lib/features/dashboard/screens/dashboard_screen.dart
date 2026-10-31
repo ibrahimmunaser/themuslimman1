@@ -112,6 +112,9 @@ class DashboardScreen extends ConsumerWidget {
       ),
       body: AppGradientBackground(
         child: SafeArea(
+          // The shell already owns the bottom edge. A second bottom inset
+          // here is the empty band above the tab bar.
+          bottom: false,
           // Previously the ONLY way to recover from a sync failure (offline,
           // transient server error — see progress_provider.dart's syncFailed)
           // was to force-quit and relaunch the app; there was no manual retry
@@ -121,9 +124,16 @@ class DashboardScreen extends ConsumerWidget {
             color: AppColors.gold,
             onRefresh: () =>
                 ref.read(progressProvider.notifier).manualRefresh(),
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(0, 4, 0, 32),
-              children: [
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                    child: IntrinsicHeight(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
                 if (progressAsync.valueOrNull?.syncFailed == true)
                   const Padding(
                     padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
@@ -268,6 +278,7 @@ class DashboardScreen extends ConsumerWidget {
                   ),
                 ],
 
+                const Spacer(),
                 // ── Era overview ───────────────────────────────────────────────
                 SectionHeader(
                   title: t(lang, 'courseOverview'),
@@ -277,7 +288,12 @@ class DashboardScreen extends ConsumerWidget {
                   hasAccess: hasAccess,
                   lang: lang,
                 ).animate(delay: 240.ms).fadeIn(duration: 400.ms),
-              ],
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         ),

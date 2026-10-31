@@ -154,6 +154,7 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
       ),
       body: AppGradientBackground(
         child: SafeArea(
+          bottom: false,
           child: activeType == null
               ? _buildIndex(hasAccess, progress, lang)
               : _buildPartsList(activeType, hasAccess, progress, lang),
@@ -166,7 +167,7 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
 
   Widget _buildIndex(bool hasAccess, ProgressState? progress, String lang) {
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
       children: [
         // Stats strip
         if (progress != null && progress.totalViewed > 0) ...[
