@@ -40,6 +40,20 @@ function groupAriaLabel(lang: CourseLang): string {
   return t(lang, "courseLanguage");
 }
 
+/** Flag emoji render as two-letter country codes on Windows (no flag glyphs
+ * in Segoe UI Emoji), so we use real SVG icons instead — this keeps the
+ * language dropdown's flags visible on every OS, not just macOS/iOS. */
+function FlagIcon({ code, className }: { code: CourseLang; className?: string }) {
+  return (
+    <img
+      src={`/images/flags/${code}.svg`}
+      alt=""
+      aria-hidden
+      className={clsx("inline-block flex-shrink-0 rounded-[2px] object-cover", className)}
+    />
+  );
+}
+
 function LanguageMenu({
   selected,
   onSelect,
@@ -60,7 +74,6 @@ function LanguageMenu({
   const listId = useId();
   const currentOption = COURSE_LANG_OPTIONS.find((option) => option.code === selected);
   const currentLabel = currentOption?.label ?? selected;
-  const currentFlag = currentOption?.flag ?? "";
 
   useEffect(() => {
     if (!open) return;
@@ -103,7 +116,7 @@ function LanguageMenu({
           <Languages className="w-4 h-4 text-gold" aria-hidden />
         ) : (
           <span className="flex items-center gap-2 truncate">
-            <span aria-hidden>{currentFlag}</span>
+            <FlagIcon code={selected} className="w-5 h-[14px]" />
             <span className="truncate">{currentLabel}</span>
           </span>
         )}
@@ -148,7 +161,7 @@ function LanguageMenu({
                       : "text-text hover:bg-gold/10 hover:text-gold-light",
                   )}
                 >
-                  <span aria-hidden>{option.flag}</span>
+                  <FlagIcon code={option.code} className="w-5 h-[14px]" />
                   <span className="truncate">{option.label}</span>
                 </button>
               </li>
