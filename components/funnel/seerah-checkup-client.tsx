@@ -907,7 +907,7 @@ export function SeerahCheckupClient({
       {!embedMode && (
       <>
       {/* ── Header ── */}
-      <header className="py-4 px-4 sm:px-6 border-b border-border/30 bg-ink sticky top-12 z-40">
+      <header className="py-4 px-4 sm:px-6 border-b border-border/30 bg-ink sticky top-0 z-40">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <Link href="/">
             <Image src="/images/logoicon.png" alt="The Muslim Man" width={967} height={219} className="h-9 sm:h-10 w-auto" priority />

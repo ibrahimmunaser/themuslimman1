@@ -290,7 +290,7 @@ function GiftCheckoutContent({ purchaserEmail, purchaserName: _purchaserName }: 
         {[
           { Icon: Shield,  text: "7-day refund guarantee" },
           { Icon: Lock,    text: "Secure payment" },
-          { Icon: Gift,    text: "Claim link sent by email" },
+          { Icon: Gift,    text: "Claim link emailed to the recipient" },
         ].map(({ Icon, text }) => (
           <div key={text} className="flex items-center gap-2 text-xs text-zinc-500">
             <Icon className="w-4 h-4 text-zinc-600" />
@@ -380,7 +380,10 @@ function GiftCheckoutContent({ purchaserEmail, purchaserName: _purchaserName }: 
         {LeftColumn}
         <div className="lg:w-1/2 px-6 sm:px-12 py-12 flex flex-col justify-center">
           <div className="max-w-md w-full mx-auto">
-            <h2 className="text-xl font-bold text-white mb-6">Complete your gift purchase</h2>
+            <h2 className="text-xl font-bold text-white mb-2">Step 1 of 3 — Your account</h2>
+            <p className="text-sm text-zinc-500 mb-6">
+              Sign in as the person buying the gift. You&apos;ll enter the recipient&apos;s email on the next step.
+            </p>
             {OrderSummary}
 
             {/* Auth tabs */}
@@ -393,7 +396,7 @@ function GiftCheckoutContent({ purchaserEmail, purchaserName: _purchaserName }: 
                     authMode === mode ? "bg-zinc-700 text-white shadow-sm" : "text-zinc-500 hover:text-zinc-300"
                   }`}
                 >
-                  {mode === "signup" ? "New customer" : "Sign in"}
+                  {mode === "signup" ? "Create my account" : "Sign in"}
                 </button>
               ))}
             </div>
@@ -402,7 +405,8 @@ function GiftCheckoutContent({ purchaserEmail, purchaserName: _purchaserName }: 
               <form onSubmit={handleSignup} className="space-y-3">
                 <input
                   type="text"
-                  placeholder="Full name"
+                  placeholder="Your full name"
+                  autoComplete="name"
                   value={authForm.fullName}
                   onChange={(e) => setAuthForm((f) => ({ ...f, fullName: e.target.value }))}
                   required
@@ -410,16 +414,21 @@ function GiftCheckoutContent({ purchaserEmail, purchaserName: _purchaserName }: 
                 />
                 <input
                   type="email"
-                  placeholder="Email address"
+                  placeholder="Your email address"
+                  autoComplete="email"
                   value={authForm.email}
                   onChange={(e) => setAuthForm((f) => ({ ...f, email: e.target.value }))}
                   required
                   className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm"
                 />
+                <p className="text-xs text-zinc-500 -mt-1">
+                  This is your email as the buyer — not the person receiving the gift.
+                </p>
                 <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
                     placeholder="Password (min 8 characters)"
+                    autoComplete="new-password"
                     value={authForm.password}
                     onChange={(e) => setAuthForm((f) => ({ ...f, password: e.target.value }))}
                     required
@@ -433,6 +442,7 @@ function GiftCheckoutContent({ purchaserEmail, purchaserName: _purchaserName }: 
                 <input
                   type={showPassword ? "text" : "password"}
                   placeholder="Confirm password"
+                  autoComplete="new-password"
                   value={authForm.confirmPassword}
                   onChange={(e) => setAuthForm((f) => ({ ...f, confirmPassword: e.target.value }))}
                   required
@@ -444,7 +454,7 @@ function GiftCheckoutContent({ purchaserEmail, purchaserName: _purchaserName }: 
                   disabled={authLoading}
                   className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-gold hover:bg-gold-light disabled:opacity-60 text-ink font-bold text-sm transition-colors"
                 >
-                  {authLoading ? "Creating account…" : "Create Account & Continue"}
+                  {authLoading ? "Creating account…" : "Continue to recipient details"}
                   {!authLoading && <ArrowRight className="w-4 h-4" />}
                 </button>
                 <p className="text-xs text-zinc-600 text-center leading-relaxed">
@@ -460,16 +470,21 @@ function GiftCheckoutContent({ purchaserEmail, purchaserName: _purchaserName }: 
               <form onSubmit={handleLogin} className="space-y-3">
                 <input
                   type="email"
-                  placeholder="Email address"
+                  placeholder="Your email address"
+                  autoComplete="email"
                   value={authForm.email}
                   onChange={(e) => setAuthForm((f) => ({ ...f, email: e.target.value }))}
                   required
                   className="w-full px-4 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-zinc-500 focus:outline-none focus:border-gold/50 transition-colors text-base sm:text-sm"
                 />
+                <p className="text-xs text-zinc-500 -mt-1">
+                  This is your email as the buyer — not the person receiving the gift.
+                </p>
                 <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
                     placeholder="Password"
+                    autoComplete="current-password"
                     value={authForm.password}
                     onChange={(e) => setAuthForm((f) => ({ ...f, password: e.target.value }))}
                     required
@@ -485,7 +500,7 @@ function GiftCheckoutContent({ purchaserEmail, purchaserName: _purchaserName }: 
                   disabled={authLoading}
                   className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-gold hover:bg-gold-light disabled:opacity-60 text-ink font-bold text-sm transition-colors"
                 >
-                  {authLoading ? "Signing in…" : "Sign In & Continue"}
+                  {authLoading ? "Signing in…" : "Continue to recipient details"}
                   {!authLoading && <ArrowRight className="w-4 h-4" />}
                 </button>
                 <div className="text-center">
@@ -518,10 +533,12 @@ function GiftCheckoutContent({ purchaserEmail, purchaserName: _purchaserName }: 
       <div className="lg:w-1/2 px-6 sm:px-12 py-12 flex flex-col justify-center">
         <div className="max-w-md w-full mx-auto">
           <h2 className="text-xl font-bold text-white mb-1">
-            {step === "details" ? "Recipient Details" : "Payment Details"}
+            {step === "details" ? "Step 2 of 3 — Who is this gift for?" : "Step 3 of 3 — Payment"}
           </h2>
           <p className="text-sm text-zinc-500 mb-7">
-            Purchasing as <span className="text-zinc-300">{authEmail}</span>
+            {step === "details"
+              ? "Enter the person who will receive the course. The claim link goes to their email."
+              : <>Purchasing as <span className="text-zinc-300">{authEmail}</span></>}
           </p>
 
           {OrderSummary}

@@ -85,7 +85,7 @@ export function StartPage({ preview }: { preview?: ReactNode }) {
       <div className="min-h-screen bg-ink text-text pb-14">
 
         {/* ── Top nav ───────────────────────────────────────────────────────── */}
-        <header className="sticky top-12 z-50 bg-ink/95 backdrop-blur-sm border-b border-border/50">
+        <header className="sticky top-0 z-50 bg-ink/95 backdrop-blur-sm border-b border-border/50">
           <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
             <Link href="/" className="shrink-0">
               <Image

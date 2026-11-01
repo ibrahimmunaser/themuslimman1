@@ -467,6 +467,7 @@ const Map<String, Map<String, String>> _kStrings = {
   'account': {'en': 'Account', 'ar': 'الحساب', 'fr': 'Compte'},
   'changePassword': {'en': 'Change Password', 'ar': 'تغيير كلمة المرور', 'fr': 'Change Password'},
   'billingSubscription': {'en': 'Billing & Subscription', 'ar': 'الفواتير والاشتراك', 'fr': 'Billing & Subscription'},
+  'giftCourse': {'en': 'Gift the course', 'ar': 'إهداء الدورة', 'fr': 'Offrir le cours'},
   'support': {'en': 'Support', 'ar': 'الدعم', 'fr': 'Support'},
   'helpAndFaq': {'en': 'Help & FAQ', 'ar': 'المساعدة والأسئلة الشائعة', 'fr': 'Help & FAQ'},
   'contactUs': {'en': 'Contact Us', 'ar': 'اتصل بنا', 'fr': 'Contact Us'},

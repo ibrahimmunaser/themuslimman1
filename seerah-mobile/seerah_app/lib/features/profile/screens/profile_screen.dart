@@ -121,6 +121,12 @@ class ProfileScreen extends ConsumerWidget {
                 color: AppColors.gold,
                 onTap: () => _openBilling(context, auth, lang),
               ),
+              _SettingsDatum(
+                icon: Icons.card_giftcard_outlined,
+                label: t(lang, 'giftCourse'),
+                color: AppColors.gold,
+                onTap: () => _launch('${AppConstants.baseUrl}/gift-checkout', context, lang),
+              ),
             ]).animate(delay: 70.ms).fadeIn(duration: 350.ms),
 
             const SizedBox(height: 20),
@@ -290,6 +296,7 @@ class ProfileScreen extends ConsumerWidget {
 
   String _titleFor(String url, String lang) {
     if (url.contains('change-password')) return t(lang, 'changePassword');
+    if (url.contains('gift-checkout')) return t(lang, 'giftCourse');
     if (url.contains('billing')) return t(lang, 'billingSubscription');
     if (url.contains('help')) return t(lang, 'helpAndFaq');
     if (url.contains('contact')) return t(lang, 'contactUs');
