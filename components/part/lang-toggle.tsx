@@ -58,7 +58,9 @@ function LanguageMenu({
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const listId = useId();
-  const currentLabel = COURSE_LANG_OPTIONS.find((option) => option.code === selected)?.label ?? selected;
+  const currentOption = COURSE_LANG_OPTIONS.find((option) => option.code === selected);
+  const currentLabel = currentOption?.label ?? selected;
+  const currentFlag = currentOption?.flag ?? "";
 
   useEffect(() => {
     if (!open) return;
@@ -100,7 +102,10 @@ function LanguageMenu({
         {iconOnly ? (
           <Languages className="w-4 h-4 text-gold" aria-hidden />
         ) : (
-          <span className="truncate">{currentLabel}</span>
+          <span className="flex items-center gap-2 truncate">
+            <span aria-hidden>{currentFlag}</span>
+            <span className="truncate">{currentLabel}</span>
+          </span>
         )}
       </button>
       {!iconOnly && (
@@ -137,13 +142,14 @@ function LanguageMenu({
                     onSelect(option.code);
                   }}
                   className={clsx(
-                    "flex w-full items-center px-3 py-2 text-start text-sm transition-colors",
+                    "flex w-full items-center gap-2 px-3 py-2 text-start text-sm transition-colors",
                     active
                       ? "bg-gold/20 font-semibold text-gold"
                       : "text-text hover:bg-gold/10 hover:text-gold-light",
                   )}
                 >
-                  {option.label}
+                  <span aria-hidden>{option.flag}</span>
+                  <span className="truncate">{option.label}</span>
                 </button>
               </li>
             );

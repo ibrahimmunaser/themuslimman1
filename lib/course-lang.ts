@@ -17,22 +17,22 @@ export type CourseLang =
 
 export const COURSE_LANG_COOKIE = "seerah_course_lang";
 
-export const COURSE_LANG_OPTIONS: { code: CourseLang; label: string }[] = [
-  { code: "en", label: "English" },
-  { code: "ar", label: "العربية" },
-  { code: "fr", label: "Français" },
-  { code: "id", label: "Bahasa Indonesia" },
-  { code: "ms", label: "Bahasa Melayu" },
-  { code: "zh", label: "中文" },
-  { code: "ru", label: "Русский" },
-  { code: "sw", label: "Kiswahili" },
-  { code: "es", label: "Español" },
-  { code: "de", label: "Deutsch" },
-  { code: "tr", label: "Türkçe" },
-  { code: "hi", label: "हिन्दी" },
-  { code: "ur", label: "اردو" },
-  { code: "bn", label: "বাংলা" },
-  { code: "fa", label: "فارسی" },
+export const COURSE_LANG_OPTIONS: { code: CourseLang; label: string; flag: string }[] = [
+  { code: "en", label: "English", flag: "🇬🇧" },
+  { code: "ar", label: "العربية", flag: "🇸🇦" },
+  { code: "fr", label: "Français", flag: "🇫🇷" },
+  { code: "id", label: "Bahasa Indonesia", flag: "🇮🇩" },
+  { code: "ms", label: "Bahasa Melayu", flag: "🇲🇾" },
+  { code: "zh", label: "中文", flag: "🇨🇳" },
+  { code: "ru", label: "Русский", flag: "🇷🇺" },
+  { code: "sw", label: "Kiswahili", flag: "🇹🇿" },
+  { code: "es", label: "Español", flag: "🇪🇸" },
+  { code: "de", label: "Deutsch", flag: "🇩🇪" },
+  { code: "tr", label: "Türkçe", flag: "🇹🇷" },
+  { code: "hi", label: "हिन्दी", flag: "🇮🇳" },
+  { code: "ur", label: "اردو", flag: "🇵🇰" },
+  { code: "bn", label: "বাংলা", flag: "🇧🇩" },
+  { code: "fa", label: "فارسی", flag: "🇮🇷" },
 ];
 
 export const COURSE_LANGS: CourseLang[] = COURSE_LANG_OPTIONS.map((o) => o.code);

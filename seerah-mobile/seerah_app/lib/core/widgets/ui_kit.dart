@@ -680,12 +680,8 @@ class AppLangToggle extends ConsumerWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
-                    Icons.language_rounded,
-                    color: AppColors.gold,
-                    size: 14,
-                  ),
-                  const SizedBox(width: 4),
+                  Text(courseLangFlag(lang), style: const TextStyle(fontSize: 14)),
+                  const SizedBox(width: 5),
                   Flexible(
                     child: Text(
                       courseLangLabel(lang),
@@ -756,6 +752,10 @@ class AppLangToggle extends ConsumerWidget {
                 ),
                 for (final option in kCourseLangOptions)
                   ListTile(
+                    leading: Text(
+                      option.flag,
+                      style: const TextStyle(fontSize: 20),
+                    ),
                     title: Text(
                       option.label,
                       style: TextStyle(
