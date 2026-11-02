@@ -124,16 +124,12 @@ class DashboardScreen extends ConsumerWidget {
             color: AppColors.gold,
             onRefresh: () =>
                 ref.read(progressProvider.notifier).manualRefresh(),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                    child: IntrinsicHeight(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
+            // Plain ListView — no Spacer / min-height Column. Those used to
+            // stretch an empty band between Quick Access and the tab bar.
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(0, 4, 0, 16),
+              children: [
                 if (progressAsync.valueOrNull?.syncFailed == true)
                   const Padding(
                     padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
@@ -278,7 +274,6 @@ class DashboardScreen extends ConsumerWidget {
                   ),
                 ],
 
-                const Spacer(),
                 // ── Era overview ───────────────────────────────────────────────
                 SectionHeader(
                   title: t(lang, 'courseOverview'),
@@ -288,12 +283,7 @@ class DashboardScreen extends ConsumerWidget {
                   hasAccess: hasAccess,
                   lang: lang,
                 ).animate(delay: 240.ms).fadeIn(duration: 400.ms),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
+              ],
             ),
           ),
         ),
