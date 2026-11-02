@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/providers/part_provider.dart';
@@ -32,7 +31,10 @@ class ReferenceScreen extends ConsumerWidget {
                 padding: const EdgeInsets.only(bottom: 14),
                 child: Text(
                   t(lang, 'deepenUnderstanding'),
-                  style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+                  style: const TextStyle(
+                    color: AppColors.textMuted,
+                    fontSize: 13,
+                  ),
                 ),
               ),
 
@@ -51,14 +53,18 @@ class ReferenceScreen extends ConsumerWidget {
                         Material(
                           color: AppColors.card,
                           child: InkWell(
-                            onTap: () => context.push('/reference/${section.id}'),
+                            onTap: () =>
+                                context.push('/reference/${section.id}'),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 13),
+                                horizontal: 16,
+                                vertical: 13,
+                              ),
                               child: Row(
                                 children: [
                                   Container(
-                                    width: 38, height: 38,
+                                    width: 38,
+                                    height: 38,
                                     decoration: BoxDecoration(
                                       color: accent.withValues(alpha: 0.18),
                                       borderRadius: BorderRadius.circular(10),
@@ -68,43 +74,55 @@ class ReferenceScreen extends ConsumerWidget {
                                   const SizedBox(width: 14),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        Text(section.localizedTitle(lang),
+                                        Text(
+                                          section.localizedTitle(lang),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                           style: const TextStyle(
                                             color: AppColors.textPrimary,
                                             fontSize: 15,
                                             fontWeight: FontWeight.w600,
-                                          )),
-                                        Text(section.localizedDescription(lang),
+                                          ),
+                                        ),
+                                        Text(
+                                          section.localizedDescription(lang),
                                           style: const TextStyle(
                                             color: AppColors.textMuted,
                                             fontSize: 12,
                                             height: 1.3,
                                           ),
                                           maxLines: 1,
-                                          overflow: TextOverflow.ellipsis),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
                                       ],
                                     ),
                                   ),
                                   const SizedBox(width: 8),
                                   const ForwardChevronIcon(
-                                    color: AppColors.textMuted, size: 18),
+                                    color: AppColors.textMuted,
+                                    size: 18,
+                                  ),
                                 ],
                               ),
                             ),
                           ),
                         ),
                         if (!isLast)
-                          const Divider(height: 1, thickness: 1,
-                            color: AppColors.border, indent: 68, endIndent: 0),
+                          const Divider(
+                            height: 1,
+                            thickness: 1,
+                            color: AppColors.border,
+                            indent: 68,
+                            endIndent: 0,
+                          ),
                       ],
                     );
                   }).toList(),
                 ),
-              ).animate().fadeIn(duration: 350.ms),
+              ),
             ],
           ),
         ),

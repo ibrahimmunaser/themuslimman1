@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
@@ -46,6 +45,12 @@ class ProgressScreen extends ConsumerWidget {
                     padding: EdgeInsets.fromLTRB(16, 0, 16, 12),
                     child: OfflineBanner(),
                   ),
+                // No entrance animations below: the shell's plain ShellRoute
+                // rebuilds this screen from scratch every time the Progress
+                // tab is reopened, so a staggered fade-in replayed on every
+                // visit instead of just once — it read as a recurring flash
+                // of near-empty content right before the bottom nav bar.
+
                 // Overview stats
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -53,7 +58,7 @@ class ProgressScreen extends ConsumerWidget {
                     hasAccess: hasAccess,
                     progressAsync: progressAsync,
                     lang: lang,
-                  ).animate(delay: 100.ms).fadeIn(duration: 400.ms),
+                  ),
                 ),
 
                 SectionHeader(title: t(lang, 'courseMap')),
@@ -63,15 +68,13 @@ class ProgressScreen extends ConsumerWidget {
                     hasAccess: hasAccess,
                     progressAsync: progressAsync,
                     lang: lang,
-                  ).animate(delay: 150.ms).fadeIn(duration: 400.ms),
+                  ),
                 ),
 
                 if (!hasAccess) ...[
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: _UpgradeCta(lang: lang)
-                        .animate(delay: 200.ms)
-                        .fadeIn(duration: 400.ms),
+                    child: _UpgradeCta(lang: lang),
                   ),
                   const SizedBox(height: 12),
                 ],
@@ -79,17 +82,13 @@ class ProgressScreen extends ConsumerWidget {
                 SectionHeader(title: t(lang, 'quickLinks')),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: _QuickLinks(lang: lang)
-                      .animate(delay: 200.ms)
-                      .fadeIn(duration: 400.ms),
+                  child: _QuickLinks(lang: lang),
                 ),
 
                 SectionHeader(title: t(lang, 'learningTips')),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: _LearningTips(lang: lang)
-                      .animate(delay: 250.ms)
-                      .fadeIn(duration: 400.ms),
+                  child: _LearningTips(lang: lang),
                 ),
 
                 const SizedBox(height: 32),
@@ -108,7 +107,11 @@ class _OverviewStats extends StatelessWidget {
   final bool hasAccess;
   final AsyncValue<ProgressState> progressAsync;
   final String lang;
-  const _OverviewStats({required this.hasAccess, required this.progressAsync, required this.lang});
+  const _OverviewStats({
+    required this.hasAccess,
+    required this.progressAsync,
+    required this.lang,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -134,7 +137,10 @@ class _OverviewStats extends StatelessWidget {
           child: Row(
             children: [
               Semantics(
-                label: tv(lang, 'partsStudiedOfTotal', {'viewed': viewed, 'total': totalUnlocked}),
+                label: tv(lang, 'partsStudiedOfTotal', {
+                  'viewed': viewed,
+                  'total': totalUnlocked,
+                }),
                 value: '${(studiedPercent * 100).round()}%',
                 // The CircularPercentIndicator package is a custom-painted
                 // widget (unlike Flutter's built-in progress indicators) and
@@ -196,7 +202,9 @@ class _OverviewStats extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      tv(lang, 'percentComplete', {'n': (studiedPercent * 100).round()}),
+                      tv(lang, 'percentComplete', {
+                        'n': (studiedPercent * 100).round(),
+                      }),
                       style: const TextStyle(
                         color: AppColors.gold,
                         fontSize: 17,
@@ -364,7 +372,11 @@ class _CourseMap extends StatelessWidget {
   final bool hasAccess;
   final AsyncValue<ProgressState> progressAsync;
   final String lang;
-  const _CourseMap({required this.hasAccess, required this.progressAsync, required this.lang});
+  const _CourseMap({
+    required this.hasAccess,
+    required this.progressAsync,
+    required this.lang,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -504,7 +516,11 @@ class _UpgradeCta extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.lock_open_outlined, color: AppColors.gold, size: 20),
+              const Icon(
+                Icons.lock_open_outlined,
+                color: AppColors.gold,
+                size: 20,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -520,7 +536,10 @@ class _UpgradeCta extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            tv(lang, 'unlockFullProgressBody', {'parts': PARTS.length, 'eras': ERAS.length}),
+            tv(lang, 'unlockFullProgressBody', {
+              'parts': PARTS.length,
+              'eras': ERAS.length,
+            }),
             style: const TextStyle(
               color: AppColors.textSecondary,
               fontSize: 13,
@@ -544,7 +563,10 @@ class _UpgradeCta extends StatelessWidget {
               ),
               child: Text(
                 t(lang, 'viewPlans'),
-                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                ),
               ),
             ),
           ),
@@ -665,7 +687,8 @@ class _LearningTips extends StatelessWidget {
       [t(lang, 'tipListenGoTitle'), t(lang, 'tipListenGoBody')],
       [t(lang, 'tipReadBriefingTitle'), t(lang, 'tipReadBriefingBody')],
       [t(lang, 'tipStudySlidesTitle'), t(lang, 'tipStudySlidesBody')],
-      if (lang == 'en') [t(lang, 'tipCheckMindmapTitle'), t(lang, 'tipCheckMindmapBody')],
+      if (lang == 'en')
+        [t(lang, 'tipCheckMindmapTitle'), t(lang, 'tipCheckMindmapBody')],
       [t(lang, 'tipReviewFlashcardsTitle'), t(lang, 'tipReviewFlashcardsBody')],
       [t(lang, 'tipTestYourselfTitle'), t(lang, 'tipTestYourselfBody')],
       [t(lang, 'tipGoInOrderTitle'), t(lang, 'tipGoInOrderBody')],

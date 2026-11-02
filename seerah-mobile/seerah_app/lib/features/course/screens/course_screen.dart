@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/data/parts_data.dart';
@@ -79,16 +78,17 @@ class _CourseScreenState extends ConsumerState<CourseScreen> {
         final group = groups[i];
         final era = group['era'] as EraModel;
         final parts = group['parts'] as List<PartModel>;
+        // No entrance animation: the shell's plain ShellRoute rebuilds this
+        // screen from scratch every time the Lessons tab is reopened, so a
+        // staggered per-item fade-in replayed on every visit instead of just
+        // once — it read as a recurring flash of near-empty content.
         return _EraSection(
-              era: era,
-              parts: parts,
-              hasAccess: hasAccess,
-              progress: progress,
-              lang: lang,
-            )
-            .animate(delay: (i * 50).ms)
-            .fadeIn(duration: 400.ms)
-            .slideY(begin: 0.05, end: 0);
+          era: era,
+          parts: parts,
+          hasAccess: hasAccess,
+          progress: progress,
+          lang: lang,
+        );
       },
     );
   }

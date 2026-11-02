@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/data/parts_data.dart';
@@ -136,13 +135,17 @@ class DashboardScreen extends ConsumerWidget {
                     child: OfflineBanner(),
                   ),
                 // ── Welcome hero ───────────────────────────────────────────────
+                // No entrance animation here: the shell's plain ShellRoute
+                // rebuilds this screen from scratch every time the Home tab
+                // is reopened, so a staggered fade-in replayed on every visit
+                // instead of just once — it read as a recurring flash of
+                // near-empty content right before the bottom nav bar.
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                  child:
-                      _WelcomeCard(firstName: firstName, hasAccess: hasAccess)
-                          .animate()
-                          .fadeIn(duration: 400.ms)
-                          .slideY(begin: -0.05, end: 0),
+                  child: _WelcomeCard(
+                    firstName: firstName,
+                    hasAccess: hasAccess,
+                  ),
                 ),
 
                 // ── At-a-glance stats strip ────────────────────────────────────
@@ -237,7 +240,7 @@ class DashboardScreen extends ConsumerWidget {
                         ],
                       ),
                     ),
-                  ).animate(delay: 70.ms).fadeIn(duration: 400.ms),
+                  ),
                 ),
 
                 // ── Continue learning ──────────────────────────────────────────
@@ -251,16 +254,14 @@ class DashboardScreen extends ConsumerWidget {
                     hasAccess: hasAccess,
                     progressAsync: progressAsync,
                     lang: lang,
-                  ).animate(delay: 120.ms).fadeIn(duration: 400.ms),
+                  ),
                 ),
 
                 // ── Quick access ───────────────────────────────────────────────
                 SectionHeader(title: t(lang, 'quickAccess')),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: _QuickAccessGrid(
-                    lang: lang,
-                  ).animate(delay: 160.ms).fadeIn(duration: 400.ms),
+                  child: _QuickAccessGrid(lang: lang),
                 ),
 
                 // ── Upgrade prompt ─────────────────────────────────────────────
@@ -268,9 +269,7 @@ class DashboardScreen extends ConsumerWidget {
                   const SizedBox(height: 16),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: _UpgradeBanner(
-                      lang: lang,
-                    ).animate(delay: 200.ms).fadeIn(duration: 400.ms),
+                    child: _UpgradeBanner(lang: lang),
                   ),
                 ],
 
@@ -279,10 +278,7 @@ class DashboardScreen extends ConsumerWidget {
                   title: t(lang, 'courseOverview'),
                   subtitle: tv(lang, 'allErasOfSeerah', {'n': ERAS.length}),
                 ),
-                _EraOverviewList(
-                  hasAccess: hasAccess,
-                  lang: lang,
-                ).animate(delay: 240.ms).fadeIn(duration: 400.ms),
+                _EraOverviewList(hasAccess: hasAccess, lang: lang),
               ],
             ),
           ),
