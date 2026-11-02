@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/part_provider.dart';
 import '../theme/app_colors.dart';
@@ -450,29 +451,36 @@ class PriceLoadingPlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // A perpetual, looping pulse (not a one-shot entrance effect, so it's
+    // fine for this to replay for as long as the widget is mounted) — makes
+    // it read as "still fetching the price" rather than a frozen/broken box,
+    // which matters on devices where billing takes a while (or, as on an
+    // Android emulator with no Play Store, never resolves at all).
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 44,
-          height: 16,
-          decoration: BoxDecoration(
-            color: AppColors.border,
-            borderRadius: BorderRadius.circular(4),
-          ),
-        ),
-        const SizedBox(height: 5),
-        Container(
-          width: 28,
-          height: 9,
-          decoration: BoxDecoration(
-            color: AppColors.border.withValues(alpha: 0.6),
-            borderRadius: BorderRadius.circular(3),
-          ),
-        ),
-      ],
-    );
+          crossAxisAlignment: CrossAxisAlignment.end,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 44,
+              height: 16,
+              decoration: BoxDecoration(
+                color: AppColors.border,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+            const SizedBox(height: 5),
+            Container(
+              width: 28,
+              height: 9,
+              decoration: BoxDecoration(
+                color: AppColors.border.withValues(alpha: 0.6),
+                borderRadius: BorderRadius.circular(3),
+              ),
+            ),
+          ],
+        )
+        .animate(onPlay: (c) => c.repeat(reverse: true))
+        .fade(begin: 0.35, end: 1.0, duration: 700.ms, curve: Curves.easeInOut);
   }
 }
 
@@ -680,7 +688,10 @@ class AppLangToggle extends ConsumerWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(courseLangFlag(lang), style: const TextStyle(fontSize: 14)),
+                  Text(
+                    courseLangFlag(lang),
+                    style: const TextStyle(fontSize: 14),
+                  ),
                   const SizedBox(width: 5),
                   Flexible(
                     child: Text(

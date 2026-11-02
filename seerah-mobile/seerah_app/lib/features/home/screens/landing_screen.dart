@@ -130,8 +130,10 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
       if (!ready || !ref.read(authProvider).isLoggedIn) {
         ref.read(iapProvider.notifier).clearPurchaseIntent();
         if (mounted) setState(() => _purchasingPlanId = null);
-        _snack(ref.read(authProvider).error ??
-            t(ref.read(courseLangProvider), 'couldNotStartCheckout'));
+        _snack(
+          ref.read(authProvider).error ??
+              t(ref.read(courseLangProvider), 'couldNotStartCheckout'),
+        );
         return;
       }
 
@@ -149,13 +151,13 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
 
   void _snack(String msg) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(msg), behavior: SnackBarBehavior.floating));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg), behavior: SnackBarBehavior.floating),
+    );
   }
 
   void _onIAP(IAPState? prev, IAPState next) {
-    if (next.status == IAPStatus.success &&
-        prev?.status != IAPStatus.success) {
+    if (next.status == IAPStatus.success && prev?.status != IAPStatus.success) {
       if (mounted) setState(() => _purchasingPlanId = null);
       _showSuccessSheet();
       ref.read(iapProvider.notifier).clearSuccess();
@@ -203,7 +205,12 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
         bottom: false,
         child: SingleChildScrollView(
           child: Padding(
-            padding: EdgeInsets.fromLTRB(28, 28, 28, 40 + bottomSystemInset(context)),
+            padding: EdgeInsets.fromLTRB(
+              28,
+              28,
+              28,
+              40 + bottomSystemInset(context),
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -214,23 +221,30 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                     color: const Color(0xFF4CAF50).withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.check_rounded,
-                      color: Color(0xFF4CAF50), size: 32),
+                  child: const Icon(
+                    Icons.check_rounded,
+                    color: Color(0xFF4CAF50),
+                    size: 32,
+                  ),
                 ),
                 const SizedBox(height: 20),
                 Text(
                   t(lang, 'jazakAllahKhayran'),
                   style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800),
+                    color: AppColors.textPrimary,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
                 const SizedBox(height: 10),
                 Text(
                   t(lang, 'purchaseSuccessBody'),
                   textAlign: TextAlign.center,
                   style: const TextStyle(
-                      color: AppColors.textSecondary, fontSize: 15, height: 1.5),
+                    color: AppColors.textSecondary,
+                    fontSize: 15,
+                    height: 1.5,
+                  ),
                 ),
                 const SizedBox(height: 28),
                 FilledButton(
@@ -246,9 +260,13 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),
-                  child: Text(t(lang, 'startLearning'),
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w700)),
+                  child: Text(
+                    t(lang, 'startLearning'),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -263,7 +281,8 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
     ref.listen<IAPState>(iapProvider, _onIAP);
     final iap = ref.watch(iapProvider);
     final lang = ref.watch(courseLangProvider);
-    final busy = _buyTapInFlight ||
+    final busy =
+        _buyTapInFlight ||
         iap.status == IAPStatus.purchasing ||
         iap.status == IAPStatus.verifying ||
         iap.status == IAPStatus.loading;
@@ -279,245 +298,359 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: AppGradientBackground(child: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            // ── Top bar ───────────────────────────────────────────────────
-            // No Sign In here — Apple Guideline 5.1.1(v): plan picking / purchase
-            // must not look like it requires registration first.
-            // Landing is reached both via router redirect (no way back
-            // wanted) and via push() from part_screen/welcome_screen (a back
-            // affordance is expected there) — show the button only when
-            // there's actually somewhere to pop back to.
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-              child: Row(
-                children: [
-                  if (context.canPop())
-                    Padding(
-                      padding: const EdgeInsets.only(right: 4),
-                      child: IconButton(
-                        icon: const BackIcon(size: 20),
-                        tooltip: t(lang, 'back'),
-                        onPressed: () => context.pop(),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-                      ),
-                    ),
-                  Expanded(
-                    child: Text(
-                      t(lang, 'choosePlan'),
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.3,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            Expanded(
-              child: SingleChildScrollView(
-                controller: _scrollCtrl,
-                padding: EdgeInsets.fromLTRB(20, 12, 20, 24 + bottomSystemInset(context)),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+      body: AppGradientBackground(
+        child: SafeArea(
+          bottom: false,
+          child: Column(
+            children: [
+              // ── Top bar ───────────────────────────────────────────────────
+              // No Sign In here — Apple Guideline 5.1.1(v): plan picking / purchase
+              // must not look like it requires registration first.
+              // Landing is reached both via router redirect (no way back
+              // wanted) and via push() from part_screen/welcome_screen (a back
+              // affordance is expected there) — show the button only when
+              // there's actually somewhere to pop back to.
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                child: Row(
                   children: [
-                    // ── Recovery banner — legacy unlinked purchase(s) ───────
-                    if (showRecovery) ...[
-                      PendingPurchaseRecoveryBanner(
-                        count: iap.pendingLinkPurchases.length,
-                        onClaim: () async {
-                          await ref
-                              .read(iapProvider.notifier)
-                              .claimPendingPurchase();
-                        },
+                    if (context.canPop())
+                      Padding(
+                        padding: const EdgeInsets.only(right: 4),
+                        child: IconButton(
+                          icon: const BackIcon(size: 20),
+                          tooltip: t(lang, 'back'),
+                          onPressed: () => context.pop(),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(
+                            minWidth: 40,
+                            minHeight: 40,
+                          ),
+                        ),
                       ),
-                      const SizedBox(height: 12),
-                    ],
-
-                    if (showRetry) ...[
-                      _ProductRetryBanner(
-                        status: iap.storeStatusLabel(lang),
-                        lang: lang,
-                        onRetry: () =>
-                            ref.read(iapProvider.notifier).reloadProducts(),
-                      ),
-                      const SizedBox(height: 12),
-                    ],
-
-                    // ── Verifying purchase — can take up to ~2 minutes (retries) ─
-                    if (iap.status == IAPStatus.verifying) ...[
-                      const VerifyingPurchaseBanner(),
-                      const SizedBox(height: 12),
-                    ],
-
-                    // ── Plans ─────────────────────────────────────────────
-                    ...List.generate(_plans.length, (i) {
-                      final plan = _plans[i];
-                      return _PlanTile(
-                        plan: plan,
-                        lang: lang,
-                        price: _price(iap, plan),
-                        isLoading: _purchasingPlanId == plan.id && busy,
-                        enabled: !busy && !hasAccess,
-                        onTap: () => _buyPlan(iap, plan),
-                        bottomMargin: i < _plans.length - 1 ? 10 : 0,
-                        isRecommended: plan.isRecommended,
-                      );
-                    }),
-
-                    const SizedBox(height: 14),
-
-                    // ── Guarantee strip ───────────────────────────────────
-                    Text(
-                      '${refundBadgeText(lang)}  ·  ${t(lang, 'instantAccess')}  ·  ${t(lang, 'cancelAnytime')}',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: AppColors.textMuted, fontSize: 11.5),
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    // Apple 3.1.2(c): condensed auto-renewal disclosure right
-                    // under the Buy buttons, in the viewport before any
-                    // scrolling — the full version further down repeats it.
-                    SubscriptionLegalText(
-                      compact: true,
-                      onOpenUrl: (url) {
-                        Navigator.of(context).push(MaterialPageRoute(
-                          builder: (_) => LegalWebScreen(url: url),
-                        ));
-                      },
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // ── What's included ───────────────────────────────────
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppColors.card,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: AppColors.border),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(t(lang, 'whatsIncluded'),
-                              style: const TextStyle(
-                                color: AppColors.textPrimary,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                              )),
-                          const SizedBox(height: 10),
-                          ...[
-                            (Icons.play_circle_outline_rounded, t(lang, 'includedVideos')),
-                            (Icons.article_outlined, t(lang, 'includedNotes')),
-                            (Icons.quiz_outlined, t(lang, 'includedQuizzes')),
-                            (Icons.insights_rounded, t(lang, 'includedProgress')),
-                            (Icons.all_inclusive_rounded, t(lang, 'includedLifetime')),
-                          ].map((item) => Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: Row(
-                              children: [
-                                Icon(item.$1, color: AppColors.gold, size: 16),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Text(item.$2,
-                                      style: const TextStyle(
-                                        color: AppColors.textSecondary,
-                                        fontSize: 13,
-                                      )),
-                                ),
-                              ],
-                            ),
-                          )),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // ── Part 1 preview ────────────────────────────────────
-                    _Part1PreviewSection(
-                      lang: lang,
-                      // pushReplacement (not push) — this and Part 1's
-                      // "Unlock full access" CTA form a two-screen loop; a
-                      // plain push here would grow the back stack forever if
-                      // a logged-out user bounces between the two.
-                      onWatch: () => context.pushReplacement('/part/1'),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // ── Bottom actions ────────────────────────────────────
-                    Text(
-                      t(lang, 'noAccountRequired'),
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: AppColors.textMuted,
-                        fontSize: 12.5,
-                        height: 1.4,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Center(
-                      child: TextButton(
-                        onPressed: busy
-                            ? null
-                            : () async {
-                                // A device-linked guest session works fine
-                                // for restore too — no registration needed.
-                                final ready = await ref
-                                    .read(authProvider.notifier)
-                                    .ensureSession();
-                                if (!ready ||
-                                    !ref.read(authProvider).isLoggedIn ||
-                                    !mounted) return;
-                                ref
-                                    .read(iapProvider.notifier)
-                                    .restorePurchases();
-                              },
-                        style: TextButton.styleFrom(
-                            foregroundColor: AppColors.gold),
-                        child: Text(t(lang, 'restorePurchases'),
-                            style: const TextStyle(
-                                fontSize: 13, fontWeight: FontWeight.w600)),
-                      ),
-                    ),
-                    Center(
-                      child: TextButton(
-                        onPressed: () => context.push('/login'),
-                        style: TextButton.styleFrom(
-                            foregroundColor: AppColors.textMuted),
-                        child: Text(
-                          t(lang, 'alreadyLearningSignIn'),
-                          style: const TextStyle(
-                              fontSize: 12, color: AppColors.textMuted),
+                    Expanded(
+                      child: Text(
+                        t(lang, 'choosePlan'),
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.3,
                         ),
                       ),
                     ),
-
-                    const SizedBox(height: 12),
-
-                    SubscriptionLegalText(onOpenUrl: (url) {
-                      Navigator.of(context).push(MaterialPageRoute(
-                        builder: (_) => LegalWebScreen(url: url),
-                      ));
-                    }),
-
-                    const SizedBox(height: 8),
                   ],
                 ),
               ),
-            ),
-          ],
+
+              // ── Value-proposition subtitle ─────────────────────────
+              // Leads with what the learner gets before they even reach the
+              // plan card, instead of jumping straight from the bare title
+              // into price/legal text.
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+                child: Text(
+                  t(lang, 'planScreenSubtitle'),
+                  style: const TextStyle(
+                    color: AppColors.textMuted,
+                    fontSize: 13,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: _scrollCtrl,
+                  padding: EdgeInsets.fromLTRB(
+                    20,
+                    12,
+                    20,
+                    24 + bottomSystemInset(context),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // ── Recovery banner — legacy unlinked purchase(s) ───────
+                      if (showRecovery) ...[
+                        PendingPurchaseRecoveryBanner(
+                          count: iap.pendingLinkPurchases.length,
+                          onClaim: () async {
+                            await ref
+                                .read(iapProvider.notifier)
+                                .claimPendingPurchase();
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+
+                      if (showRetry) ...[
+                        _ProductRetryBanner(
+                          status: iap.storeStatusLabel(lang),
+                          lang: lang,
+                          onRetry: () =>
+                              ref.read(iapProvider.notifier).reloadProducts(),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+
+                      // ── Verifying purchase — can take up to ~2 minutes (retries) ─
+                      if (iap.status == IAPStatus.verifying) ...[
+                        const VerifyingPurchaseBanner(),
+                        const SizedBox(height: 12),
+                      ],
+
+                      // ── Plans ─────────────────────────────────────────────
+                      ...List.generate(_plans.length, (i) {
+                        final plan = _plans[i];
+                        return _PlanTile(
+                          plan: plan,
+                          lang: lang,
+                          price: _price(iap, plan),
+                          isLoading: _purchasingPlanId == plan.id && busy,
+                          enabled: !busy && !hasAccess,
+                          onTap: () => _buyPlan(iap, plan),
+                          bottomMargin: i < _plans.length - 1 ? 10 : 0,
+                          isRecommended: plan.isRecommended,
+                        );
+                      }),
+
+                      const SizedBox(height: 16),
+
+                      // ── Trust badges ───────────────────────────────────────
+                      // Previously one plain gray line that visually blended
+                      // straight into the legal disclaimer text right below it
+                      // ("Cancel anytime" didn't even apply — the only plan is
+                      // a one-time Lifetime purchase, not a subscription).
+                      // Distinct pills read as a trust row, not more fine print.
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          _TrustBadge(
+                            icon: Icons.shield_outlined,
+                            label: refundBadgeText(lang),
+                          ),
+                          _TrustBadge(
+                            icon: Icons.flash_on_rounded,
+                            label: t(lang, 'instantAccess'),
+                          ),
+                          _TrustBadge(
+                            icon: Icons.check_circle_outline_rounded,
+                            label: t(lang, 'oneTimePayment'),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 14),
+
+                      // Apple 3.1.2(c): condensed auto-renewal disclosure right
+                      // under the Buy buttons, in the viewport before any
+                      // scrolling — the full version further down repeats it.
+                      SubscriptionLegalText(
+                        compact: true,
+                        onOpenUrl: (url) {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => LegalWebScreen(url: url),
+                            ),
+                          );
+                        },
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // ── What's included ───────────────────────────────────
+                      Container(
+                        padding: const EdgeInsets.all(18),
+                        decoration: BoxDecoration(
+                          color: AppColors.card,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.auto_awesome_rounded,
+                                  color: AppColors.gold,
+                                  size: 17,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  t(lang, 'whatsIncluded'),
+                                  style: const TextStyle(
+                                    color: AppColors.textPrimary,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            ...[
+                              (
+                                Icons.play_circle_outline_rounded,
+                                t(lang, 'includedVideos'),
+                              ),
+                              (
+                                Icons.article_outlined,
+                                t(lang, 'includedNotes'),
+                              ),
+                              (Icons.quiz_outlined, t(lang, 'includedQuizzes')),
+                              (
+                                Icons.insights_rounded,
+                                t(lang, 'includedProgress'),
+                              ),
+                              (
+                                Icons.all_inclusive_rounded,
+                                t(lang, 'includedLifetime'),
+                              ),
+                            ].map(
+                              (item) => Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 28,
+                                      height: 28,
+                                      decoration: const BoxDecoration(
+                                        color: AppColors.goldFaded,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(
+                                        item.$1,
+                                        color: AppColors.gold,
+                                        size: 14,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        item.$2,
+                                        style: const TextStyle(
+                                          color: AppColors.textSecondary,
+                                          fontSize: 13.5,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // ── Part 1 preview ────────────────────────────────────
+                      _Part1PreviewSection(
+                        lang: lang,
+                        // pushReplacement (not push) — this and Part 1's
+                        // "Unlock full access" CTA form a two-screen loop; a
+                        // plain push here would grow the back stack forever if
+                        // a logged-out user bounces between the two.
+                        onWatch: () => context.pushReplacement('/part/1'),
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // ── Bottom actions ────────────────────────────────────
+                      Text(
+                        t(lang, 'noAccountRequired'),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: AppColors.textMuted,
+                          fontSize: 12.5,
+                          height: 1.4,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      // A single, compact row reads as one cohesive "secondary
+                      // actions" group instead of two full-width links floating
+                      // one under the other with no visual relationship. Wrap
+                      // (not Row) lets the sign-in link — notably longer in
+                      // some languages — drop to its own line instead of
+                      // overflowing on narrow screens.
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          TextButton(
+                            onPressed: busy
+                                ? null
+                                : () async {
+                                    // A device-linked guest session works fine
+                                    // for restore too — no registration needed.
+                                    final ready = await ref
+                                        .read(authProvider.notifier)
+                                        .ensureSession();
+                                    if (!ready ||
+                                        !ref.read(authProvider).isLoggedIn ||
+                                        !mounted)
+                                      return;
+                                    ref
+                                        .read(iapProvider.notifier)
+                                        .restorePurchases();
+                                  },
+                            style: TextButton.styleFrom(
+                              foregroundColor: AppColors.gold,
+                            ),
+                            child: Text(
+                              t(lang, 'restorePurchases'),
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            width: 1,
+                            height: 14,
+                            margin: const EdgeInsets.symmetric(horizontal: 2),
+                            color: AppColors.border,
+                          ),
+                          TextButton(
+                            onPressed: () => context.push('/login'),
+                            style: TextButton.styleFrom(
+                              foregroundColor: AppColors.textMuted,
+                            ),
+                            child: Text(
+                              t(lang, 'alreadyLearningSignIn'),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: AppColors.textMuted,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      SubscriptionLegalText(
+                        onOpenUrl: (url) {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => LegalWebScreen(url: url),
+                            ),
+                          );
+                        },
+                      ),
+
+                      const SizedBox(height: 8),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
-      )),
+      ),
     );
   }
 }
@@ -527,6 +660,7 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
 class _PlanTile extends StatelessWidget {
   final _Plan plan;
   final String lang;
+
   /// Null while the real store price is still loading — see [_price] doc
   /// comment (audit M-fallback-price). Renders a neutral placeholder
   /// instead of a stale hardcoded price in that window.
@@ -597,124 +731,219 @@ class _PlanTile extends StatelessWidget {
                     ]
                   : null,
             ),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Left — badge (if any) + name + description
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (plan.badgeKey != null)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 6),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: isRecommended
-                                  ? AppColors.gold
-                                  : AppColors.goldFaded,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              t(lang, plan.badgeKey!),
-                              style: TextStyle(
-                                color: isRecommended
-                                    ? Colors.black
-                                    : AppColors.gold,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.3,
+                Row(
+                  children: [
+                    // Left — badge (if any) + name + description
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (plan.badgeKey != null)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 6),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isRecommended
+                                      ? AppColors.gold
+                                      : AppColors.goldFaded,
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  t(lang, plan.badgeKey!),
+                                  style: TextStyle(
+                                    color: isRecommended
+                                        ? Colors.black
+                                        : AppColors.gold,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
-                        ),
-                      Text(
-                        t(lang, plan.nameKey),
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        t(lang, plan.descriptionKey),
-                        style: TextStyle(
-                          color: isRecommended
-                              ? AppColors.textSecondary
-                              : AppColors.textMuted,
-                          fontSize: 12.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(width: 12),
-
-                // Right — price + loading
-                if (isLoading)
-                  SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator.adaptive(
-                      strokeWidth: 2.5,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                          isRecommended ? AppColors.gold : AppColors.textMuted),
-                    ),
-                  )
-                else if (price == null)
-                  const PriceLoadingPlaceholder()
-                else
-                  Flexible(
-                    fit: FlexFit.loose,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          t(lang, plan.periodKey),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: isRecommended
-                                ? AppColors.gold.withValues(alpha: 0.7)
-                                : AppColors.textMuted,
-                            fontSize: 11,
-                          ),
-                        ),
-                        FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text(
-                            price!,
-                            maxLines: 1,
-                            textDirection: TextDirection.ltr,
-                            style: TextStyle(
-                              color: isRecommended
-                                  ? AppColors.gold
-                                  : AppColors.textPrimary,
-                              fontSize: 19,
-                              fontWeight: FontWeight.w800,
+                          Text(
+                            t(lang, plan.nameKey),
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 3),
+                          Text(
+                            t(lang, plan.descriptionKey),
+                            style: TextStyle(
+                              color: isRecommended
+                                  ? AppColors.textSecondary
+                                  : AppColors.textMuted,
+                              fontSize: 12.5,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
 
-                const SizedBox(width: 10),
-                ForwardChevronIcon(
-                  size: 13,
+                    const SizedBox(width: 12),
+
+                    // Right — price + loading
+                    if (isLoading)
+                      SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator.adaptive(
+                          strokeWidth: 2.5,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            isRecommended
+                                ? AppColors.gold
+                                : AppColors.textMuted,
+                          ),
+                        ),
+                      )
+                    else if (price == null)
+                      const PriceLoadingPlaceholder()
+                    else
+                      Flexible(
+                        fit: FlexFit.loose,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              t(lang, plan.periodKey),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: isRecommended
+                                    ? AppColors.gold.withValues(alpha: 0.7)
+                                    : AppColors.textMuted,
+                                fontSize: 11,
+                              ),
+                            ),
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                price!,
+                                maxLines: 1,
+                                textDirection: TextDirection.ltr,
+                                style: TextStyle(
+                                  color: isRecommended
+                                      ? AppColors.gold
+                                      : AppColors.textPrimary,
+                                  fontSize: 19,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+
+                const SizedBox(height: 14),
+                Container(
+                  height: 1,
                   color: isRecommended
-                      ? AppColors.gold.withValues(alpha: 0.7)
-                      : (enabled
-                          ? AppColors.textMuted
-                          : AppColors.textMuted.withValues(alpha: 0.4)),
+                      ? AppColors.gold.withValues(alpha: 0.18)
+                      : AppColors.border,
+                ),
+                const SizedBox(height: 14),
+
+                // ── Explicit CTA button ───────────────────────────────
+                // The whole card stays tappable (see the outer InkWell) for
+                // a forgiving tap target, but a visible button — instead of
+                // just a small trailing chevron — removes any doubt about
+                // what tapping this card does.
+                SizedBox(
+                  width: double.infinity,
+                  height: 46,
+                  child: ElevatedButton(
+                    onPressed: enabled && !isLoading
+                        ? () {
+                            HapticFeedback.mediumImpact();
+                            onTap();
+                          }
+                        : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.gold,
+                      disabledBackgroundColor: AppColors.border,
+                      foregroundColor: Colors.black,
+                      disabledForegroundColor: AppColors.textMuted.withValues(
+                        alpha: 0.7,
+                      ),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: isLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator.adaptive(
+                              strokeWidth: 2.2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.black,
+                              ),
+                            ),
+                          )
+                        : Text(
+                            t(lang, 'getFullAccess'),
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                  ),
                 ),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Small pill badge used in a trust-signal row (refund policy, instant
+/// access, one-time payment) — visually distinct from the muted legal
+/// disclosure text that follows it, instead of both reading as one gray
+/// wall of fine print.
+class _TrustBadge extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _TrustBadge({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: AppColors.gold),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 11.5,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -754,10 +983,15 @@ class _Part1PreviewSection extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: AppColors.goldFaded,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.gold.withValues(alpha: 0.25)),
+                  border: Border.all(
+                    color: AppColors.gold.withValues(alpha: 0.25),
+                  ),
                 ),
-                child: const Icon(Icons.play_circle_outline_rounded,
-                    color: AppColors.gold, size: 26),
+                child: const Icon(
+                  Icons.play_circle_outline_rounded,
+                  color: AppColors.gold,
+                  size: 26,
+                ),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -785,8 +1019,7 @@ class _Part1PreviewSection extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              const ForwardChevronIcon(
-                  color: AppColors.textMuted, size: 14),
+              const ForwardChevronIcon(color: AppColors.textMuted, size: 14),
             ],
           ),
         ),
@@ -799,7 +1032,11 @@ class _ProductRetryBanner extends StatelessWidget {
   final String status;
   final String lang;
   final VoidCallback onRetry;
-  const _ProductRetryBanner({required this.status, required this.lang, required this.onRetry});
+  const _ProductRetryBanner({
+    required this.status,
+    required this.lang,
+    required this.onRetry,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -815,21 +1052,31 @@ class _ProductRetryBanner extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.warning_amber_rounded,
-                  color: AppColors.textMuted, size: 18),
+              const Icon(
+                Icons.warning_amber_rounded,
+                color: AppColors.textMuted,
+                size: 18,
+              ),
               const SizedBox(width: 10),
               Expanded(
-                child: Text(status,
-                    style: const TextStyle(
-                        color: AppColors.textSecondary, fontSize: 13)),
+                child: Text(
+                  status,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 13,
+                  ),
+                ),
               ),
               TextButton(
                 onPressed: onRetry,
                 style: TextButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                    minimumSize: const Size(48, 44)),
-                child: Text(t(lang, 'retry'),
-                    style: const TextStyle(color: AppColors.gold, fontSize: 13)),
+                  padding: EdgeInsets.zero,
+                  minimumSize: const Size(48, 44),
+                ),
+                child: Text(
+                  t(lang, 'retry'),
+                  style: const TextStyle(color: AppColors.gold, fontSize: 13),
+                ),
               ),
             ],
           ),
@@ -843,7 +1090,11 @@ class _ProductRetryBanner extends StatelessWidget {
           // advice since they can't act on it from a real store install.
           Text(
             t(lang, 'checkConnectionRetry'),
-            style: const TextStyle(color: AppColors.textMuted, fontSize: 11.5, height: 1.4),
+            style: const TextStyle(
+              color: AppColors.textMuted,
+              fontSize: 11.5,
+              height: 1.4,
+            ),
           ),
         ],
       ),

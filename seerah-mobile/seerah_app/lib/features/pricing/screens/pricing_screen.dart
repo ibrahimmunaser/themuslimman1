@@ -12,7 +12,11 @@ import '../../../core/widgets/subscription_legal_text.dart';
 import '../../../core/utils/refund_copy.dart';
 import '../../../core/utils/system_insets.dart';
 import '../../../core/providers/part_provider.dart';
-import '../../../core/widgets/ui_kit.dart' show VerifyingPurchaseBanner, PriceLoadingPlaceholder, PendingPurchaseRecoveryBanner;
+import '../../../core/widgets/ui_kit.dart'
+    show
+        VerifyingPurchaseBanner,
+        PriceLoadingPlaceholder,
+        PendingPurchaseRecoveryBanner;
 import '../../../l10n/app_strings.dart';
 import '../../home/screens/landing_screen.dart' show PlanId;
 
@@ -51,24 +55,15 @@ const _plans = [
 ];
 
 List<({String q, String a})> _faqItems(String lang, String? storePrice) => [
-  (
-    q: t(lang, 'faqWhatIncludedQ'),
-    a: t(lang, 'faqWhatIncludedA'),
-  ),
+  (q: t(lang, 'faqWhatIncludedQ'), a: t(lang, 'faqWhatIncludedA')),
   (
     q: t(lang, 'faqIsSubscriptionQ'),
     a: storePrice == null
         ? t(lang, 'faqIsSubscriptionAPlain')
         : tWithStorePrice(lang, 'faqIsSubscriptionA', storePrice),
   ),
-  (
-    q: t(lang, 'faqRefundGuaranteeQ'),
-    a: refundGuaranteeAnswer(lang),
-  ),
-  (
-    q: t(lang, 'faqPart1FreeQ'),
-    a: t(lang, 'faqPart1FreeA'),
-  ),
+  (q: t(lang, 'faqRefundGuaranteeQ'), a: refundGuaranteeAnswer(lang)),
+  (q: t(lang, 'faqPart1FreeQ'), a: t(lang, 'faqPart1FreeA')),
 ];
 
 // ── Screen ────────────────────────────────────────────────────────────────────
@@ -130,8 +125,9 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
       final ready = await ref.read(authProvider.notifier).ensureSession();
       if (!ready || !ref.read(authProvider).isLoggedIn) {
         if (mounted) setState(() => _purchasingPlanId = null);
-        _snack(ref.read(authProvider).error ??
-            t(lang, 'couldNotStartCheckout'));
+        _snack(
+          ref.read(authProvider).error ?? t(lang, 'couldNotStartCheckout'),
+        );
         return;
       }
 
@@ -196,72 +192,79 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder:
-          (_) => SafeArea(
-            top: false,
-            bottom: false,
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(28, 28, 28, 40 + bottomSystemInset(context)),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF4CAF50).withValues(alpha: 0.15),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.check_rounded,
-                        color: Color(0xFF4CAF50),
-                        size: 32,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      t(lang, 'jazakAllahKhayran'),
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      t(lang, 'purchaseSuccessBody'),
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 15,
-                        height: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 28),
-                    FilledButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        context.go('/dashboard');
-                      },
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.gold,
-                        foregroundColor: Colors.black,
-                        minimumSize: const Size.fromHeight(50),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                      child: Text(
-                        t(lang, 'startLearning'),
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-                      ),
-                    ),
-                  ],
+      builder: (_) => SafeArea(
+        top: false,
+        bottom: false,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(
+              28,
+              28,
+              28,
+              40 + bottomSystemInset(context),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4CAF50).withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.check_rounded,
+                    color: Color(0xFF4CAF50),
+                    size: 32,
+                  ),
                 ),
-              ),
+                const SizedBox(height: 20),
+                Text(
+                  t(lang, 'jazakAllahKhayran'),
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  t(lang, 'purchaseSuccessBody'),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 15,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 28),
+                FilledButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    context.go('/dashboard');
+                  },
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.gold,
+                    foregroundColor: Colors.black,
+                    minimumSize: const Size.fromHeight(50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: Text(
+                    t(lang, 'startLearning'),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
+        ),
+      ),
     );
   }
 
@@ -272,8 +275,9 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
     final iap = ref.watch(iapProvider);
     final hasAccess = auth.hasAccess;
     final lang = ref.watch(courseLangProvider);
-    final storePrice =
-        iap.productForPlan(AppConstants.iapLifetimeIndividual)?.price;
+    final storePrice = iap
+        .productForPlan(AppConstants.iapLifetimeIndividual)
+        ?.price;
 
     final busy =
         _buyTapInFlight ||
@@ -303,6 +307,23 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
         // bar. Use plain content padding like other shell tabs (dashboard).
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
         children: [
+          // ── Value-proposition subtitle ───────────────────────────
+          // Leads with what the learner gets before the plan card, rather
+          // than jumping straight from the bare AppBar title into price
+          // and legal text.
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Text(
+              t(lang, 'planScreenSubtitle'),
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: AppColors.textMuted,
+                fontSize: 13,
+                height: 1.4,
+              ),
+            ),
+          ),
+
           // ── Access banner ────────────────────────────────────────
           if (hasAccess) ...[
             _StatusBanner(
@@ -360,14 +381,32 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
             );
           }),
 
-          const SizedBox(height: 12),
-          Text(
-            tv(lang, 'refundInstantCancel', {'refund': refundBadgeText(lang)}),
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.textMuted, fontSize: 11.5),
+          const SizedBox(height: 16),
+
+          // ── Trust badges ──────────────────────────────────────────
+          // Distinct pills instead of one plain gray line that used to
+          // blend straight into the legal disclaimer text right below it.
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _TrustBadge(
+                icon: Icons.shield_outlined,
+                label: refundBadgeText(lang),
+              ),
+              _TrustBadge(
+                icon: Icons.flash_on_rounded,
+                label: t(lang, 'instantAccess'),
+              ),
+              _TrustBadge(
+                icon: Icons.check_circle_outline_rounded,
+                label: t(lang, 'oneTimePayment'),
+              ),
+            ],
           ),
 
-          const SizedBox(height: 10),
+          const SizedBox(height: 14),
 
           // Apple 3.1.2(c): condensed auto-renewal disclosure right under
           // the Buy buttons, in the viewport before any scrolling — the
@@ -381,27 +420,44 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
             },
           ),
 
-          const SizedBox(height: 28),
+          const SizedBox(height: 24),
 
           // ── What's included ──────────────────────────────────────
-          Text(
-            t(lang, 'whatsIncluded'),
-            style: const TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 17,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 10),
+          // Audit M2: this used to be followed by a separate "Lifetime
+          // access" header + comparison card repeating the exact same
+          // "pay once / keep forever / no subscription" facts already on
+          // the plan tile above — pure redundancy that padded out the page
+          // without adding information. Removed; this card alone now
+          // covers "what do I get".
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
               color: AppColors.card,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(color: AppColors.border),
             ),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.auto_awesome_rounded,
+                      color: AppColors.gold,
+                      size: 17,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      t(lang, 'whatsIncluded'),
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
                 ...[
                   (
                     Icons.play_circle_outline_rounded,
@@ -409,10 +465,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
                   ),
                   (Icons.article_outlined, t(lang, 'includedReadingNotes')),
                   (Icons.quiz_outlined, t(lang, 'includedQuizzesFlashcards')),
-                  (
-                    Icons.insights_rounded,
-                    t(lang, 'includedProgress8Eras'),
-                  ),
+                  (Icons.insights_rounded, t(lang, 'includedProgress8Eras')),
                   (Icons.map_outlined, t(lang, 'includedSlidesMindmaps')),
                   (
                     Icons.all_inclusive_rounded,
@@ -420,17 +473,25 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
                   ),
                 ].map(
                   (item) => Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.only(bottom: 12),
                     child: Row(
                       children: [
-                        Icon(item.$1, color: AppColors.gold, size: 16),
+                        Container(
+                          width: 28,
+                          height: 28,
+                          decoration: const BoxDecoration(
+                            color: AppColors.goldFaded,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(item.$1, color: AppColors.gold, size: 14),
+                        ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
                             item.$2,
                             style: const TextStyle(
                               color: AppColors.textSecondary,
-                              fontSize: 13,
+                              fontSize: 13.5,
                             ),
                           ),
                         ),
@@ -442,36 +503,16 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
             ),
           ),
 
-          const SizedBox(height: 28),
-
-          // ── Lifetime access ──────────────────────────────────────
-          Text(
-            t(lang, 'lifetimeAccessTitle'),
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 17,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 12),
-          _ComparisonCard(
-            title: t(lang, 'planLifetime'),
-            bullets: [
-              t(lang, 'payOnceKeepForever'),
-              if (storePrice != null) '${t(lang, 'only')} \u200E$storePrice',
-              t(lang, 'noSubscriptionNoRenewal'),
-            ],
-            highlighted: true,
-          ),
-
-          const SizedBox(height: 28),
+          const SizedBox(height: 24),
 
           // ── Free Part 1 ──────────────────────────────────────────
           Text(
             t(lang, 'wantToPreviewFirst'),
             textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+            ),
           ),
           const SizedBox(height: 10),
           InkWell(
@@ -548,9 +589,10 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          ..._faqItems(lang, storePrice).map(
-            (item) => _FaqTile(question: item.q, answer: item.a),
-          ),
+          ..._faqItems(
+            lang,
+            storePrice,
+          ).map((item) => _FaqTile(question: item.q, answer: item.a)),
 
           const SizedBox(height: 16),
 
@@ -561,22 +603,21 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
 
           Center(
             child: TextButton.icon(
-              onPressed:
-                  busy
-                      ? null
-                      : () async {
-                          final ready = await ref
-                              .read(authProvider.notifier)
-                              .ensureSession();
-                          if (!ready || !ref.read(authProvider).isLoggedIn) {
-                            _snack(ref.read(authProvider).error ??
-                                t(lang, 'couldNotRestore'));
-                            return;
-                          }
-                          await ref
-                              .read(iapProvider.notifier)
-                              .restorePurchases();
-                        },
+              onPressed: busy
+                  ? null
+                  : () async {
+                      final ready = await ref
+                          .read(authProvider.notifier)
+                          .ensureSession();
+                      if (!ready || !ref.read(authProvider).isLoggedIn) {
+                        _snack(
+                          ref.read(authProvider).error ??
+                              t(lang, 'couldNotRestore'),
+                        );
+                        return;
+                      }
+                      await ref.read(iapProvider.notifier).restorePurchases();
+                    },
               icon: const Icon(
                 Icons.restore_rounded,
                 size: 17,
@@ -584,7 +625,10 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
               ),
               label: Text(
                 t(lang, 'restorePurchases'),
-                style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+                style: const TextStyle(
+                  color: AppColors.textMuted,
+                  fontSize: 13,
+                ),
               ),
             ),
           ),
@@ -610,6 +654,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
 
 class _PlanTile extends StatelessWidget {
   final _Plan plan;
+
   /// Null while the real store price is still loading — see [_price] doc
   /// comment (audit M-fallback-price).
   final String? price;
@@ -642,136 +687,181 @@ class _PlanTile extends StatelessWidget {
           duration: const Duration(milliseconds: 150),
           margin: EdgeInsets.only(bottom: bottomMargin),
           decoration: BoxDecoration(
-            gradient:
-                isRecommended
-                    ? LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        AppColors.gold.withValues(alpha: 0.14),
-                        AppColors.gold.withValues(alpha: 0.04),
-                      ],
-                    )
-                    : null,
+            gradient: isRecommended
+                ? LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      AppColors.gold.withValues(alpha: 0.14),
+                      AppColors.gold.withValues(alpha: 0.04),
+                    ],
+                  )
+                : null,
             color: isRecommended ? null : AppColors.card,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color:
-                  isRecommended
-                      ? AppColors.gold.withValues(alpha: 0.6)
-                      : AppColors.border,
+              color: isRecommended
+                  ? AppColors.gold.withValues(alpha: 0.6)
+                  : AppColors.border,
               width: isRecommended ? 1.5 : 1.2,
             ),
           ),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (plan.badgeKey != null)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 5),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 7,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color:
-                                  isRecommended
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (plan.badgeKey != null)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 5),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 7,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isRecommended
                                       ? AppColors.gold
                                       : AppColors.goldFaded,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              t(lang, plan.badgeKey!),
-                              style: TextStyle(
-                                color:
-                                    isRecommended
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  t(lang, plan.badgeKey!),
+                                  style: TextStyle(
+                                    color: isRecommended
                                         ? Colors.black
                                         : AppColors.gold,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
                               ),
                             ),
+                          Text(
+                            t(lang, plan.nameKey),
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            t(lang, plan.descriptionKey),
+                            style: const TextStyle(
+                              color: AppColors.textMuted,
+                              fontSize: 12.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    if (isLoading)
+                      const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator.adaptive(
+                          strokeWidth: 2.5,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            AppColors.gold,
                           ),
                         ),
-                      Text(
-                        t(lang, plan.nameKey),
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        t(lang, plan.descriptionKey),
-                        style: const TextStyle(
-                          color: AppColors.textMuted,
-                          fontSize: 12.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                if (isLoading)
-                  const SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator.adaptive(
-                      strokeWidth: 2.5,
-                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.gold),
-                    ),
-                  )
-                else if (price == null)
-                  const PriceLoadingPlaceholder()
-                else
-                  Flexible(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          t(lang, plan.periodKey),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color:
-                                isRecommended
+                      )
+                    else if (price == null)
+                      const PriceLoadingPlaceholder()
+                    else
+                      Flexible(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              t(lang, plan.periodKey),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: isRecommended
                                     ? AppColors.gold.withValues(alpha: 0.7)
                                     : AppColors.textMuted,
-                            fontSize: 11,
-                          ),
-                        ),
-                        Text(
-                          price!,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          textDirection: TextDirection.ltr,
-                          style: TextStyle(
-                            color:
-                                isRecommended
+                                fontSize: 11,
+                              ),
+                            ),
+                            Text(
+                              price!,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textDirection: TextDirection.ltr,
+                              style: TextStyle(
+                                color: isRecommended
                                     ? AppColors.gold
                                     : AppColors.textPrimary,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                          ),
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
+                  ],
+                ),
+
+                const SizedBox(height: 14),
+                Container(
+                  height: 1,
+                  color: isRecommended
+                      ? AppColors.gold.withValues(alpha: 0.18)
+                      : AppColors.border,
+                ),
+                const SizedBox(height: 14),
+
+                // ── Explicit CTA button ───────────────────────────────
+                // The whole card stays tappable (outer InkWell) for a
+                // forgiving tap target, but a visible button removes any
+                // doubt about what tapping this card does — previously
+                // just a small trailing chevron.
+                SizedBox(
+                  width: double.infinity,
+                  height: 46,
+                  child: ElevatedButton(
+                    onPressed: enabled && !isLoading ? onTap : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.gold,
+                      disabledBackgroundColor: AppColors.border,
+                      foregroundColor: Colors.black,
+                      disabledForegroundColor: AppColors.textMuted.withValues(
+                        alpha: 0.7,
+                      ),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
+                    child: isLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator.adaptive(
+                              strokeWidth: 2.2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.black,
+                              ),
+                            ),
+                          )
+                        : Text(
+                            t(lang, 'getFullAccess'),
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                   ),
-                const SizedBox(width: 10),
-                ForwardChevronIcon(
-                  size: 14,
-                  color:
-                      enabled
-                          ? AppColors.textMuted
-                          : AppColors.textMuted.withValues(alpha: 0.4),
                 ),
               ],
             ),
@@ -834,7 +924,11 @@ class _RetryBanner extends StatelessWidget {
   final String status;
   final VoidCallback onRetry;
   final String lang;
-  const _RetryBanner({required this.status, required this.onRetry, required this.lang});
+  const _RetryBanner({
+    required this.status,
+    required this.onRetry,
+    required this.lang,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -918,7 +1012,10 @@ class _GuaranteeRow extends StatelessWidget {
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+            ),
           ),
         ),
       ],
@@ -926,65 +1023,36 @@ class _GuaranteeRow extends StatelessWidget {
   }
 }
 
-class _ComparisonCard extends StatelessWidget {
-  final String title;
-  final List<String> bullets;
-  final bool highlighted;
+/// Small pill badge used in the trust-signal row (refund policy, instant
+/// access, one-time payment) — visually distinct from the muted legal
+/// disclosure text right after it, instead of both reading as one gray
+/// wall of fine print. Mirrors landing_screen.dart's identical widget.
+class _TrustBadge extends StatelessWidget {
+  final IconData icon;
+  final String label;
 
-  const _ComparisonCard({
-    required this.title,
-    required this.bullets,
-    this.highlighted = false,
-  });
+  const _TrustBadge({required this.icon, required this.label});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color:
-              highlighted
-                  ? AppColors.gold.withValues(alpha: 0.25)
-                  : AppColors.border,
-        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
+          Icon(icon, size: 13, color: AppColors.gold),
+          const SizedBox(width: 5),
           Text(
-            title,
+            label,
             style: const TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 8),
-          ...bullets.map(
-            (b) => Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    '•  ',
-                    style: TextStyle(color: AppColors.textMuted, fontSize: 13),
-                  ),
-                  Expanded(
-                    child: Text(
-                      b,
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 13,
-                        height: 1.45,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              color: AppColors.textSecondary,
+              fontSize: 11.5,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
