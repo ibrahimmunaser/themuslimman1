@@ -143,7 +143,7 @@ function UnlockDialog({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
       dir={isRtl ? "rtl" : "ltr"}
     >
       <div
