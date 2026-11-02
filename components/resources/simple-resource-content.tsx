@@ -1,9 +1,10 @@
 "use client";
 
+import { useUnlockPrompt } from "@/components/course/unlock-prompt";
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { getPartsForLang } from "@/lib/content";
 import { isRtlLang, type CourseLang } from "@/lib/course-lang";
-import { loc } from "@/lib/loc";
+import { loc, locf } from "@/lib/loc";
 import { eraGradient } from "./era-gradient";
 import { ResourcePageClient } from "./resource-page-client";
 import { Headphones, Layers, Image as ImageIcon, Map, Brain, CheckCircle2, X, Maximize2, Minimize2, Lock } from "lucide-react";
@@ -113,6 +114,8 @@ interface SimpleResourceContentProps {
   statusLabel: string;
   thumbnails?: Record<number, string>;
   lockedPartNumbers?: number[];
+  /** Guest (signed-out) visitors: unlocked cards redirect here instead of opening in-place. */
+  guestPreviewHref?: string;
   lang?: CourseLang;
 }
 
@@ -126,9 +129,11 @@ export function SimpleResourceContent({
   statusLabel,
   thumbnails: thumbnailsProp = {},
   lockedPartNumbers = [],
+  guestPreviewHref,
   lang = "en",
 }: SimpleResourceContentProps) {
   const lockedSet = new Set(lockedPartNumbers);
+  const openUnlock = useUnlockPrompt();
   const PARTS = useMemo(() => getPartsForLang(lang), [lang]);
   const [mounted, setMounted] = useState(false);
   const [selectedPart, setSelectedPart] = useState<{ partNumber: number; title: string; subtitle?: string; id: string } | null>(null);
@@ -604,11 +609,20 @@ export function SimpleResourceContent({
                       <div className="flex-1 min-h-0">
                         <SlidesViewer
                           slides={slideData[slideType]}
-                          title={loc(
+                          title={locf(
                             lang,
-                            `Part ${selectedPart.partNumber} — ${slideType === "presented" ? "Presented" : slideType === "detailed" ? "Detailed" : "Facts"} Slides`,
-                            `الجزء ${selectedPart.partNumber} — ${slideType === "presented" ? "مقدَّمة" : slideType === "detailed" ? "مفصَّلة" : "معلومات"}`,
-                            `Partie ${selectedPart.partNumber} — Diapositives ${slideType === "presented" ? "présentées" : slideType === "detailed" ? "détaillées" : "faits"}`,
+                            "Part {n} — {type} Slides",
+                            "الجزء {n} — {type}",
+                            "Partie {n} — Diapositives {type}",
+                            {
+                              n: selectedPart.partNumber,
+                              type: loc(
+                                lang,
+                                slideType === "presented" ? "Presented" : slideType === "detailed" ? "Detailed" : "Facts",
+                                slideType === "presented" ? "مقدَّمة" : slideType === "detailed" ? "مفصَّلة" : "معلومات",
+                                slideType === "presented" ? "présentées" : slideType === "detailed" ? "détaillées" : "faits",
+                              ),
+                            },
                           )}
                           type={slideType === "facts" ? "presented" : slideType}
                           partNumber={selectedPart.partNumber}
@@ -828,12 +842,13 @@ export function SimpleResourceContent({
               {mounted && parts.map((part) => {
                 const isCompleted = localProgressMap[part.partNumber] || false;
                 const isLocked = lockedSet.has(part.partNumber);
+                const redirectHref = isLocked ? "/pricing" : guestPreviewHref;
 
                 return (
                   <div
                     key={part.id}
-                    onClick={isLocked ? () => { window.location.assign("/pricing"); } : () => handleOpenResource(part)}
-                    onMouseEnter={isLocked ? undefined : () => handlePrefetch(part.id)}
+                    onClick={redirectHref ? () => { if (isLocked) openUnlock({ partNumber: part.partNumber, title: part.title }); else window.location.assign(redirectHref); } : () => handleOpenResource(part)}
+                    onMouseEnter={redirectHref ? undefined : () => handlePrefetch(part.id)}
                     className={`group rounded-xl border border-zinc-800 bg-zinc-900/50 transition-all overflow-hidden ${
                       isLocked
                         ? "cursor-not-allowed opacity-60"

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { getCachedStudent } from "@/lib/auth-cache";
+import { getCachedStudentOrGuest } from "@/lib/auth-cache";
+import { GUEST_PART1_HREF } from "@/lib/guest-access";
 import { hasActiveCourseAccess, isFamilyPlan } from "@/lib/access";
 import { getActiveProfileId } from "@/app/actions/profiles";
 import { prisma } from "@/lib/db";
@@ -18,49 +19,58 @@ export const metadata = { title: "Resource Library | Complete Seerah" };
 export const dynamic = "force-dynamic";
 
 export default async function SeerahResourcesPage() {
-  // getCachedStudent() deduplicates this call with the parent layout's auth
-  // query — no extra DB round-trip on this page.
-  const user = await getCachedStudent();
+  // getCachedStudentOrGuest() deduplicates this call with the parent layout's auth
+  // query — no extra DB round-trip on this page. `null` = signed-out visitor,
+  // who sees the library with Part 1 free and Parts 2+ locked (no progress).
+  const user = await getCachedStudentOrGuest();
+  const isGuest = user === null;
   // No studentProfile yet — redirect to /seerah which auto-creates it.
-  if (!user.studentProfileId) redirect("/seerah");
+  if (user && !user.studentProfileId) redirect("/seerah");
 
   // Run access check and profile ID lookup in parallel — both only need user.id.
   // Unpaid users stay on resources with parts 2–100 locked (mobile parity).
   const [hasAccess, learnerProfileId] = await Promise.all([
-    hasActiveCourseAccess(user.id, user.hasPaid),
-    user.activeProfileId
-      ? Promise.resolve(user.activeProfileId)
-      : getActiveProfileId(user.id),
+    user ? hasActiveCourseAccess(user.id, user.hasPaid) : Promise.resolve(false),
+    !user
+      ? Promise.resolve<string | null>(null)
+      : user.activeProfileId
+        ? Promise.resolve(user.activeProfileId)
+        : getActiveProfileId(user.id),
   ]);
   // Entitled unverified users keep access (part-access waive parity).
 
   const cookieStore = await cookies();
   const lang = parseLang(cookieStore.get(COURSE_LANG_COOKIE)?.value);
 
-  if (isFamilyPlan(user.planType)) {
+  if (user && isFamilyPlan(user.planType)) {
     if (!cookieStore.get("seerah_profile")?.value) redirect("/profiles");
   }
 
   const _userPlan = "complete" as const;
 
+  // Guest: Part 1 opens the free public preview (content APIs need a session).
+  const guestPreviewHref = isGuest ? GUEST_PART1_HREF : undefined;
+
   // Fetch progress and thumbnail URLs in parallel, scoped to active profile.
   // Thumbnails follow the course language cookie (Arabic slide posters when lang=ar).
   const [progress, thumbnails] = await Promise.all([
-    prisma.partProgress.findMany({
-      where: { learnerProfileId },
-      select: {
-        partNumber: true,
-        videoWatchPercent: true,
-        videoCompleted: true,
-        openedAssets: true,
-        quizCompleted: true,
-        quizPassed: true,
-        quizScoreVerified: true,
-        quizBestScore: true,
-        quizAttempts: true,
-        status: true,
-      },
-    }),
+    learnerProfileId
+      ? prisma.partProgress.findMany({
+          where: { learnerProfileId },
+          select: {
+            partNumber: true,
+            videoWatchPercent: true,
+            videoCompleted: true,
+            openedAssets: true,
+            quizCompleted: true,
+            quizPassed: true,
+            quizScoreVerified: true,
+            quizBestScore: true,
+            quizAttempts: true,
+            status: true,
+          },
+        })
+      : Promise.resolve([]),
     getThumbnailUrls(PARTS.map((p) => p.partNumber), lang),
   ]);
 
@@ -160,6 +170,7 @@ export default async function SeerahResourcesPage() {
             continueWatching={videoContinueWatching}
             thumbnails={thumbnails}
             lockedPartNumbers={lockedPartNumbers}
+            guestPreviewHref={guestPreviewHref}
             lang={lang}
           />
         }
@@ -169,6 +180,7 @@ export default async function SeerahResourcesPage() {
             completedCount={audioCompletedCount}
             thumbnails={thumbnails}
             lockedPartNumbers={lockedPartNumbers}
+            guestPreviewHref={guestPreviewHref}
             lang={lang}
           />
         }
@@ -181,6 +193,7 @@ export default async function SeerahResourcesPage() {
             completedCount={briefingsCompletedCount}
             thumbnails={thumbnails}
             lockedPartNumbers={lockedPartNumbers}
+            guestPreviewHref={guestPreviewHref}
             lang={lang}
           />
         }
@@ -195,6 +208,7 @@ export default async function SeerahResourcesPage() {
             statusLabel="Viewed"
             thumbnails={thumbnails}
             lockedPartNumbers={lockedPartNumbers}
+            guestPreviewHref={guestPreviewHref}
             lang={lang}
           />
         }
@@ -209,6 +223,7 @@ export default async function SeerahResourcesPage() {
             statusLabel="Viewed"
             thumbnails={thumbnails}
             lockedPartNumbers={lockedPartNumbers}
+            guestPreviewHref={guestPreviewHref}
             lang={lang}
           />
         }
@@ -223,6 +238,7 @@ export default async function SeerahResourcesPage() {
             statusLabel="Viewed"
             thumbnails={thumbnails}
             lockedPartNumbers={lockedPartNumbers}
+            guestPreviewHref={guestPreviewHref}
             lang={lang}
           />
         }
@@ -237,6 +253,7 @@ export default async function SeerahResourcesPage() {
             statusLabel="Studied"
             thumbnails={thumbnails}
             lockedPartNumbers={lockedPartNumbers}
+            guestPreviewHref={guestPreviewHref}
             lang={lang}
           />
         }
@@ -249,6 +266,7 @@ export default async function SeerahResourcesPage() {
             totalAttempts={quizTotalAttempts}
             thumbnails={thumbnails}
             lockedPartNumbers={lockedPartNumbers}
+            guestPreviewHref={guestPreviewHref}
             lang={lang}
           />
         }
@@ -261,6 +279,7 @@ export default async function SeerahResourcesPage() {
             completedCount={factsCompletedCount}
             thumbnails={thumbnails}
             lockedPartNumbers={lockedPartNumbers}
+            guestPreviewHref={guestPreviewHref}
             lang={lang}
           />
         }

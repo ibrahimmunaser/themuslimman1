@@ -1,5 +1,6 @@
 "use client";
 
+import { useUnlockPrompt } from "@/components/course/unlock-prompt";
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { getPartsForLang } from "@/lib/content";
 import type { Part } from "@/lib/types";
@@ -19,6 +20,8 @@ interface VideoResourceContentProps {
   continueWatching?: { partNumber: number; videoWatchPercent: number };
   thumbnails?: Record<number, string>;
   lockedPartNumbers?: number[];
+  /** Guest (signed-out) visitors: unlocked cards redirect here instead of opening in-place. */
+  guestPreviewHref?: string;
   lang?: CourseLang;
 }
 
@@ -29,9 +32,11 @@ export function VideoResourceContent({
   continueWatching,
   thumbnails = {},
   lockedPartNumbers = [],
+  guestPreviewHref,
   lang = "en",
 }: VideoResourceContentProps) {
   const lockedSet = new Set(lockedPartNumbers);
+  const openUnlock = useUnlockPrompt();
   const PARTS = useMemo(() => getPartsForLang(lang), [lang]);
   const [mounted, setMounted] = useState(false);
   const [selectedPart, setSelectedPart] = useState<{
@@ -295,12 +300,13 @@ export function VideoResourceContent({
                 const watchPct    = progress?.videoWatchPercent || 0;
                 const isCompleted = progress?.videoCompleted || watchPct >= 85;
                 const isLocked    = lockedSet.has(part.partNumber);
+                const redirectHref = isLocked ? "/pricing" : guestPreviewHref;
 
                 return (
                   <div
                     key={part.id}
-                    onClick={isLocked ? () => { window.location.assign("/pricing"); } : () => handleOpenVideo(part)}
-                    onMouseEnter={isLocked ? undefined : () => handlePrefetch(part.partNumber)}
+                    onClick={redirectHref ? () => { if (isLocked) openUnlock({ partNumber: part.partNumber, title: part.title }); else window.location.assign(redirectHref); } : () => handleOpenVideo(part)}
+                    onMouseEnter={redirectHref ? undefined : () => handlePrefetch(part.partNumber)}
                     className={`group rounded-xl border border-zinc-800 bg-zinc-900/50 transition-all overflow-hidden ${
                       isLocked
                         ? "cursor-pointer opacity-60 hover:opacity-80"

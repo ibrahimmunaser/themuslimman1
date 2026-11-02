@@ -20,7 +20,7 @@ function pricingHref(pathname: string): string {
   return "/#pricing";
 }
 
-export function NavbarMobileMenu({ user, hasPaid, lang = "en" }: NavbarMobileMenuProps) {
+export function NavbarMobileMenu({ user, lang = "en" }: NavbarMobileMenuProps) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -80,15 +80,14 @@ export function NavbarMobileMenu({ user, hasPaid, lang = "en" }: NavbarMobileMen
               >
                 {siteT(lang, "navHome")}
               </Link>
-              {user && (
-                <Link
-                  href={hasPaid ? "/seerah" : "/pricing"}
-                  onClick={close}
-                  className="flex items-center px-5 min-h-[48px] text-sm text-text-secondary hover:text-text hover:bg-surface/50 transition-colors"
-                >
-                  {siteT(lang, "navMyCourse")}
-                </Link>
-              )}
+              {/* Course dashboard is open to everyone (Part 1 free, rest locked). */}
+              <Link
+                href="/seerah"
+                onClick={close}
+                className="flex items-center px-5 min-h-[48px] text-sm text-text-secondary hover:text-text hover:bg-surface/50 transition-colors"
+              >
+                {siteT(lang, user ? "navMyCourse" : "navCourse")}
+              </Link>
               <Link
                 href="/pricing"
                 onClick={close}

@@ -10,11 +10,13 @@ interface NavLinksProps {
   lang: CourseLang;
 }
 
-export function NavLinks({ isLoggedIn: _isLoggedIn, lang }: NavLinksProps) {
+export function NavLinks({ isLoggedIn, lang }: NavLinksProps) {
   const pathname = usePathname();
 
   const links = [
     { href: "/", label: siteT(lang, "navHome") },
+    // Course dashboard is open to everyone (Part 1 free, rest locked).
+    { href: "/seerah", label: siteT(lang, isLoggedIn ? "navMyCourse" : "navCourse") },
     { href: "/pricing", label: siteT(lang, "navPricing") },
     { href: "/contact", label: siteT(lang, "navHelp") },
   ];

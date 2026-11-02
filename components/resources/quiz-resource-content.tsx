@@ -1,5 +1,6 @@
 "use client";
 
+import { useUnlockPrompt } from "@/components/course/unlock-prompt";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { getPartsForLang, localizedEraLabel } from "@/lib/content";
 import type { Part } from "@/lib/types";
@@ -28,6 +29,8 @@ interface QuizResourceContentProps {
   totalAttempts: number;
   thumbnails?: Record<number, string>;
   lockedPartNumbers?: number[];
+  /** Guest (signed-out) visitors: unlocked cards redirect here instead of opening in-place. */
+  guestPreviewHref?: string;
   lang?: CourseLang;
 }
 
@@ -39,9 +42,11 @@ export function QuizResourceContent({
   totalAttempts,
   thumbnails = {},
   lockedPartNumbers = [],
+  guestPreviewHref,
   lang = "en",
 }: QuizResourceContentProps) {
   const lockedSet = new Set(lockedPartNumbers);
+  const openUnlock = useUnlockPrompt();
   const PARTS = useMemo(() => getPartsForLang(lang), [lang]);
   const totalQuizzes = PARTS.length;
   const _notAttemptedCount = totalQuizzes - completedCount;
@@ -170,6 +175,7 @@ export function QuizResourceContent({
                 const attempts = progress?.quizAttempts || 0;
                 const isPerfect = bestScore === 100;
                 const isLocked = lockedSet.has(part.partNumber);
+                const redirectHref = isLocked ? "/pricing" : guestPreviewHref;
 
                 return (
                   <div
@@ -177,11 +183,11 @@ export function QuizResourceContent({
                     onClick={
                       !mounted
                         ? undefined
-                        : isLocked
-                          ? () => { window.location.assign("/pricing"); }
+                        : redirectHref
+                          ? () => { if (isLocked) openUnlock({ partNumber: part.partNumber, title: part.title }); else window.location.assign(redirectHref); }
                           : () => handleOpenQuiz(part)
                     }
-                    onMouseEnter={mounted && !isLocked ? () => handlePrefetch(part.id) : undefined}
+                    onMouseEnter={mounted && !redirectHref ? () => handlePrefetch(part.id) : undefined}
                     className={`group rounded-xl border border-zinc-800 bg-zinc-900/50 transition-all overflow-hidden ${
                       isLocked
                         ? "cursor-pointer opacity-60 hover:opacity-80"

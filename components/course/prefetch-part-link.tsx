@@ -12,6 +12,11 @@ interface PrefetchPartLinkProps {
   children?: React.ReactNode;
   /** Flips the trailing chevron for RTL (Arabic) contexts. */
   isRtl?: boolean;
+  /**
+   * Override the destination (e.g. guests: Part 1 → public preview, other
+   * parts → /pricing). Skips cache warming, since guests can't load part content.
+   */
+  href?: string;
 }
 
 /**
@@ -21,20 +26,21 @@ interface PrefetchPartLinkProps {
  * Use `label` for the simple text+chevron style (stage card links).
  * Use `children` for custom content (primary CTA buttons).
  */
-export function PrefetchPartLink({ partNumber, label, className, children, isRtl }: PrefetchPartLinkProps) {
+export function PrefetchPartLink({ partNumber, label, className, children, isRtl, href }: PrefetchPartLinkProps) {
   const warmed = useRef(false);
+  const destination = href ?? `/seerah/part-${partNumber}`;
 
   const handleMouseEnter = useCallback(() => {
-    if (warmed.current) return;
+    if (href || warmed.current) return;
     warmed.current = true;
     fetch(`/api/part/${partNumber}/warm`, { method: "GET" }).catch(() => {});
-  }, [partNumber]);
+  }, [partNumber, href]);
 
   if (label !== undefined) {
     const Chevron = isRtl ? ChevronLeft : ChevronRight;
     return (
       <Link
-        href={`/seerah/part-${partNumber}`}
+        href={destination}
         className={className ?? "inline-flex items-center gap-1.5 text-xs font-medium text-gold hover:text-gold-light transition-colors"}
         onMouseEnter={handleMouseEnter}
       >
@@ -46,7 +52,7 @@ export function PrefetchPartLink({ partNumber, label, className, children, isRtl
 
   return (
     <Link
-      href={`/seerah/part-${partNumber}`}
+      href={destination}
       className={className}
       onMouseEnter={handleMouseEnter}
     >

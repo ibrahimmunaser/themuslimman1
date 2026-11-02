@@ -12,6 +12,7 @@ import { FadeUp, StaggerChildren, AnimatedCounter, AnimatedProgressBar, Animated
 import type { CourseLang } from "@/lib/course-lang";
 import { loc } from "@/lib/loc";
 import { t, tf } from "@/lib/ui-strings";
+import { guestPartHref, GUEST_SIGN_IN_HREF } from "@/lib/guest-access";
 
 export interface StageData {
   label: string;
@@ -36,6 +37,8 @@ interface CourseHomeContentProps {
   currentStageNumber: number;
   /** When false, show Part 1 free copy + upgrade banner (mobile parity). */
   hasAccess?: boolean;
+  /** Signed-out visitor: Part 1 → free public preview, every other part → /pricing. */
+  isGuest?: boolean;
   lang?: CourseLang;
 }
 
@@ -51,8 +54,11 @@ export function CourseHomeContent({
   stagesData,
   currentStageNumber,
   hasAccess = true,
+  isGuest = false,
   lang = "en",
 }: CourseHomeContentProps) {
+  // Guests can't open lesson pages; undefined keeps the normal /seerah/part-N link.
+  const partHref = (n: number): string | undefined => (isGuest ? guestPartHref(n) : undefined);
   const isNewUser = completedLessons === 0;
   const isRtl = lang === "ar";
   const currentStage = stagesData[currentStageNumber - 1];
@@ -65,11 +71,23 @@ export function CourseHomeContent({
 
       {/* ── Welcome header ─────────────────────────────────────────────────── */}
       <FadeUp>
-        <p className="text-text-muted text-sm mb-1">{t(lang, "welcomeBack")}</p>
-        <h1 className="text-2xl sm:text-3xl font-bold text-text">{userName}</h1>
+        <p className="text-text-muted text-sm mb-1">
+          {isGuest ? loc(lang, "Welcome", "مرحبًا بك", "Bienvenue") : t(lang, "welcomeBack")}
+        </p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-text">
+          {isGuest ? loc(lang, "The Complete Seerah", "السيرة النبوية الكاملة", "La Sîra complète") : userName}
+        </h1>
         {!hasAccess && (
           <p className="text-text-secondary text-sm mt-2">
             {t(lang, "part1Free")}
+          </p>
+        )}
+        {isGuest && (
+          <p className="text-text-muted text-sm mt-1">
+            {loc(lang, "Already have an account?", "لديك حساب بالفعل؟", "Vous avez déjà un compte ?")}{" "}
+            <Link href={GUEST_SIGN_IN_HREF} className="text-gold hover:text-gold-light font-medium underline underline-offset-2">
+              {loc(lang, "Sign in", "تسجيل الدخول", "Se connecter")}
+            </Link>
           </p>
         )}
       </FadeUp>
@@ -101,7 +119,7 @@ export function CourseHomeContent({
                     lang,
                     "Begin with the world the Prophet ﷺ was sent into, then follow the Seerah as one connected story.",
                     "ابدأ بفهم العالم الذي بُعث فيه النبي ﷺ، ثم تابع السيرة النبوية كقصة متكاملة.",
-                    "Commencez par comprendre le monde dans lequel le Prophète ﷺ a été envoyé, puis suivez la Sîra comme une histoire liée.",
+                    "Commencez par comprendre le monde dans lequel le Prophète ﷺ a été envoyé, puis suivez la Sîra comme un récit continu.",
                   )}
                 </p>
               ) : (
@@ -149,6 +167,7 @@ export function CourseHomeContent({
               <div className="flex flex-wrap gap-3">
                 <PrefetchPartLink
                   partNumber={currentPart}
+                  href={partHref(currentPart)}
                   className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[44px] bg-gold hover:bg-gold-light text-ink font-semibold rounded-xl text-sm transition-colors shadow-lg shadow-gold/20"
                 >
                   <Play className="w-4 h-4" />
@@ -240,7 +259,7 @@ export function CourseHomeContent({
               <AnimatedCounter to={currentStageNumber} duration={600} />
               <span className="text-text-muted font-normal text-xl"> {loc(lang, "of", "من", "sur")} {stagesData.length}</span>
             </p>
-            <p className="text-xs text-text-muted mt-1 truncate">{currentStage?.label ?? loc(lang, "Arabia Before Revelation", "جزيرة العرب قبل الإسلام", "Arabie avant la Révélation")}</p>
+            <p className="text-xs text-text-muted mt-1 truncate">{currentStage?.label ?? loc(lang, "Arabia Before Revelation", "جزيرة العرب قبل البعثة", "Arabie avant la Révélation")}</p>
           </AnimatedCard>
 
           {/* Next Lesson */}
@@ -250,6 +269,7 @@ export function CourseHomeContent({
             <p className="text-xs text-text-muted mt-0.5 line-clamp-2 leading-relaxed">{currentPartTitle}</p>
             <PrefetchPartLink
               partNumber={currentPart}
+              href={partHref(currentPart)}
               label={isNewUser ? t(lang, "startNow") : t(lang, "continue")}
               className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-gold hover:text-gold/80 transition-colors min-h-[44px]"
               isRtl={isRtl}
@@ -340,6 +360,7 @@ export function CourseHomeContent({
                     />
                     <PrefetchPartLink
                       partNumber={stage.firstPartNumber}
+                      href={partHref(stage.firstPartNumber)}
                       label={isDone ? t(lang, "review") : stage.completedCount > 0 ? t(lang, "continue") : t(lang, "start")}
                       className={`mt-2 inline-flex items-center gap-1 text-[10px] font-medium transition-colors min-h-[44px] ${
                         isCurrent ? "text-gold hover:text-gold/80" : "text-text-muted/50 hover:text-gold/70"
@@ -394,6 +415,7 @@ export function CourseHomeContent({
                   <span className="text-[10px] text-text-muted tabular-nums">{stage.completedCount}/{stage.totalCount}</span>
                   <PrefetchPartLink
                     partNumber={stage.firstPartNumber}
+                    href={partHref(stage.firstPartNumber)}
                     label={isDone ? t(lang, "review") : stage.completedCount > 0 ? t(lang, "continue") : t(lang, "start")}
                     className="text-[10px] font-medium text-gold/70 hover:text-gold transition-colors min-h-[44px] flex items-center"
                     isRtl={isRtl}

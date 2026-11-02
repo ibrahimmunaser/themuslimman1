@@ -1,11 +1,13 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { getCachedStudent } from "@/lib/auth-cache";
+import { getCachedStudentOrGuest } from "@/lib/auth-cache";
+import { GUEST_PART1_HREF } from "@/lib/guest-access";
+import { UnlockBar } from "@/components/course/unlock-prompt";
 import { hasActiveCourseAccess, isFamilyPlan } from "@/lib/access";
 import { getActiveProfileId } from "@/app/actions/profiles";
 import { PARTS, getErasForLang, getPartsForLang } from "@/lib/content";
 import { phrase } from "@/lib/phrases";
-import { ERA_DESCRIPTIONS_AR, ERA_DESCRIPTIONS_FR } from "@/lib/ui-strings";
+import { ERA_DESCRIPTIONS_AR, ERA_DESCRIPTIONS_FR, t } from "@/lib/ui-strings";
 import { getThumbnailUrls } from "@/lib/r2";
 import { getPartPageData } from "@/lib/part-content-cache";
 import { parseLang, COURSE_LANG_COOKIE } from "@/lib/course-lang";
@@ -36,33 +38,38 @@ export default async function LearnIndexPage({
 }: {
   searchParams: Promise<Record<string, string>>;
 }) {
-  // getCachedStudent() deduplicates with the seerah/layout.tsx call in the same request.
-  const user = await getCachedStudent();
+  // getCachedStudentOrGuest() deduplicates with the seerah/layout.tsx call in the same request.
+  // `null` means a signed-out visitor: they get the public dashboard (Part 1 free,
+  // Parts 2+ locked, no progress). Everything account-specific below is skipped for them.
+  const user = await getCachedStudentOrGuest();
+  const isGuest = user === null;
 
-  // Auto-create a StudentProfile if one doesn't exist yet.
-  // This happens for new users who just set their password after purchase —
-  // the webhook grants access but does not create a StudentProfile.
-  if (!user.studentProfileId) {
-    await prisma.studentProfile.upsert({
-      where:  { userId: user.id },
-      create: { id: crypto.randomUUID(), userId: user.id, updatedAt: new Date() },
-      update: {},
-    });
-    // Redirect back to /seerah so getCachedStudent() re-runs with the new profile.
-    redirect("/seerah");
-  }
+  if (user) {
+    // Auto-create a StudentProfile if one doesn't exist yet.
+    // This happens for new users who just set their password after purchase —
+    // the webhook grants access but does not create a StudentProfile.
+    if (!user.studentProfileId) {
+      await prisma.studentProfile.upsert({
+        where:  { userId: user.id },
+        create: { id: crypto.randomUUID(), userId: user.id, updatedAt: new Date() },
+        update: {},
+      });
+      // Redirect back to /seerah so the session lookup re-runs with the new profile.
+      redirect("/seerah");
+    }
 
-  // Family plan holders must pick a learner profile before accessing the dashboard,
-  // but only when no profile cookie is set (first login / cookie expired).
-  // Once a profile is chosen the cookie persists for 30 days, so sidebar
-  // navigation (/seerah, /seerah?tab=lessons, etc.) works without re-prompting.
-  // The ?from=profiles param is kept as a secondary bypass to avoid loops if the
-  // cookie and redirect race during a fresh profile switch.
-  const params = await searchParams;
-  if (isFamilyPlan(user.planType) && params.from !== "profiles") {
-    const cookieStore = await cookies();
-    const hasProfileCookie = !!cookieStore.get("seerah_profile")?.value;
-    if (!hasProfileCookie) redirect("/profiles");
+    // Family plan holders must pick a learner profile before accessing the dashboard,
+    // but only when no profile cookie is set (first login / cookie expired).
+    // Once a profile is chosen the cookie persists for 30 days, so sidebar
+    // navigation (/seerah, /seerah?tab=lessons, etc.) works without re-prompting.
+    // The ?from=profiles param is kept as a secondary bypass to avoid loops if the
+    // cookie and redirect race during a fresh profile switch.
+    const params = await searchParams;
+    if (isFamilyPlan(user.planType) && params.from !== "profiles") {
+      const cookieStore = await cookies();
+      const hasProfileCookie = !!cookieStore.get("seerah_profile")?.value;
+      if (!hasProfileCookie) redirect("/profiles");
+    }
   }
 
   // Gate 1: Unverified users may still browse the dashboard (Part 1 free /
@@ -73,40 +80,50 @@ export default async function LearnIndexPage({
   const cookieStoreForLang = await cookies();
   const lang = parseLang(cookieStoreForLang.get(COURSE_LANG_COOKIE)?.value);
 
+  // Guests: no purchase, no learner profile, no onboarding flags — only thumbnails.
   const [hasAccess, thumbnails, learnerProfileId, welcomeTourFlag, languagesFlag] = await Promise.all([
-    hasActiveCourseAccess(user.id, user.hasPaid),
+    user ? hasActiveCourseAccess(user.id, user.hasPaid) : Promise.resolve(false),
     getThumbnailUrls(PARTS.map((p) => p.partNumber), lang),
-    user.activeProfileId
-      ? Promise.resolve(user.activeProfileId)
-      : getActiveProfileId(user.id),
-    prisma.user.findUnique({
-      where: { id: user.id },
-      select: {
-        createdAt: true,
-        hasSeenWelcomeTour: true,
-        hasSeenArabicAnnouncement: true,
-      },
-    }),
-    prisma.$queryRaw<Array<{ seen: boolean }>>`
-      SELECT "hasSeenLanguagesAnnouncement" AS seen
-      FROM "User"
-      WHERE id = ${user.id}
-      LIMIT 1
-    `,
+    !user
+      ? Promise.resolve<string | null>(null)
+      : user.activeProfileId
+        ? Promise.resolve(user.activeProfileId)
+        : getActiveProfileId(user.id),
+    user
+      ? prisma.user.findUnique({
+          where: { id: user.id },
+          select: {
+            createdAt: true,
+            hasSeenWelcomeTour: true,
+            hasSeenArabicAnnouncement: true,
+          },
+        })
+      : Promise.resolve(null),
+    user
+      ? prisma.$queryRaw<Array<{ seen: boolean }>>`
+          SELECT "hasSeenLanguagesAnnouncement" AS seen
+          FROM "User"
+          WHERE id = ${user.id}
+          LIMIT 1
+        `
+      : Promise.resolve<Array<{ seen: boolean }>>([]),
   ]);
   // Languages celebration shows once to everyone. Welcome tour / Arabic banner
   // wait until that celebration has been seen so messages don't stack.
-  const { showWelcomeTour, showArabicAnnouncement } = getDashboardOnboardingFlags({
-    createdAt: welcomeTourFlag?.createdAt ?? new Date(),
-    hasSeenWelcomeTour: welcomeTourFlag?.hasSeenWelcomeTour === true,
-    hasSeenArabicAnnouncement: welcomeTourFlag?.hasSeenArabicAnnouncement === true,
-    hasSeenLanguagesAnnouncement: languagesFlag?.[0]?.seen === true,
-  });
+  // Onboarding (welcome tour / announcements) is per-account — never shown to guests.
+  const { showWelcomeTour, showArabicAnnouncement } = isGuest
+    ? { showWelcomeTour: false, showArabicAnnouncement: false }
+    : getDashboardOnboardingFlags({
+        createdAt: welcomeTourFlag?.createdAt ?? new Date(),
+        hasSeenWelcomeTour: welcomeTourFlag?.hasSeenWelcomeTour === true,
+        hasSeenArabicAnnouncement: welcomeTourFlag?.hasSeenArabicAnnouncement === true,
+        hasSeenLanguagesAnnouncement: languagesFlag?.[0]?.seen === true,
+      });
 
   // Check if the user's subscription is past_due — they still have access
   // (we include past_due in ACTIVE_SUBSCRIPTION_STATUSES) but we show a
   // persistent banner so they know to fix their payment before retries run out.
-  const pastDueSub = user.hasPaid ? null : await prisma.subscription.findFirst({
+  const pastDueSub = !user || user.hasPaid ? null : await prisma.subscription.findFirst({
     where: { userId: user.id, status: "past_due" },
     select: { id: true },
   });
@@ -115,23 +132,26 @@ export default async function LearnIndexPage({
   const userPlan = "complete" as const;
 
   // Fetch all per-part progress for this profile in one query.
-  const allPartProgress = await prisma.partProgress.findMany({
-    where: { learnerProfileId },
-    orderBy: { partNumber: "asc" },
-    select: {
-      partNumber:         true,
-      status:             true,
-      videoWatchPercent:  true,
-      briefingOpened:     true,
-      quizPassed:         true,
-      quizScoreVerified:  true,
-      quizBestScore:      true,
-      quizAttempts:       true,
-      flashcardsReviewed: true,
-      openedAssets:       true,
-      lastAccessedAt:     true,
-    },
-  });
+  // Guests have no learner profile, so they start with a blank slate.
+  const allPartProgress = learnerProfileId
+    ? await prisma.partProgress.findMany({
+        where: { learnerProfileId },
+        orderBy: { partNumber: "asc" },
+        select: {
+          partNumber:         true,
+          status:             true,
+          videoWatchPercent:  true,
+          briefingOpened:     true,
+          quizPassed:         true,
+          quizScoreVerified:  true,
+          quizBestScore:      true,
+          quizAttempts:       true,
+          flashcardsReviewed: true,
+          openedAssets:       true,
+          lastAccessedAt:     true,
+        },
+      })
+    : [];
 
   // Derive progress overview stats inline (replaces the old getProgress() call).
   // Quiz "passed" requires quizScoreVerified (Audit C4 / mobile get parity).
@@ -155,7 +175,8 @@ export default async function LearnIndexPage({
 
   // Proactively warm the user's current part so clicking "Continue" / "Start stage"
   // hits a hot cache instead of waiting for cold R2 fetches.
-  getPartPageData(currentPart).catch(() => {});
+  // Skipped for guests: their Part 1 link goes to the public preview instead.
+  if (!isGuest) getPartPageData(currentPart).catch(() => {});
 
   const progressMap = Object.fromEntries(
     allPartProgress.map(p => [p.partNumber, p])
@@ -323,10 +344,16 @@ export default async function LearnIndexPage({
   // Show the active learner profile's name on the dashboard.
   // For family plans this will be "Ahmad", "Maryam" etc.
   // For individual plans it will be the account owner's first name.
-  const userFirstName =
-    user.activeProfileName ??
-    user.fullName.split(" ")[0] ??
-    user.email.split("@")[0];
+  // Guests get a generic greeting (the home tab swaps the header out entirely).
+  const userFirstName = user
+    ? (user.activeProfileName ??
+        user.fullName.split(" ")[0] ??
+        user.email.split("@")[0])
+    : "";
+
+  // Guest links: Part 1 → free public preview (no content API works without a session);
+  // locked parts already route to /pricing.
+  const guestPreviewHref = isGuest ? GUEST_PART1_HREF : undefined;
 
   // Build stagesData for home dashboard
   const stagesData = Object.values(partsByEra).map((era, idx) => ({
@@ -373,6 +400,7 @@ export default async function LearnIndexPage({
       progressData={lessonsProgressData}
       currentPart={currentPart}
       lockedPartNumbers={lockedPartNumbers}
+      guestPreviewHref={guestPreviewHref}
       lang={lang}
     />
   );
@@ -380,22 +408,20 @@ export default async function LearnIndexPage({
   // StudentLayout is provided by app/seerah/layout.tsx — no wrapper needed here.
   return (
     <>
-      {!user.emailVerified && (
+      {user && !user.emailVerified && (
         <EmailVerificationBanner email={user.email} isRtl={lang === "ar"} />
       )}
       <ArabicAnnouncementBanner show={showArabicAnnouncement} lang={lang} />
       {isPastDue && (
         <div className="bg-red-500/10 border-b border-red-500/20 px-4 py-3 flex items-center justify-between gap-4 flex-wrap">
           <p className="text-sm text-red-400 font-medium">
-            {lang === "ar"
-              ? "⚠️ فشل آخر دفع. أصلح بطاقتك للحفاظ على وصولك — تقدمك محفوظ."
-              : "⚠️ Your last payment failed. Fix your card to keep access — your progress is safe."}
+            {t(lang, "pastDueBanner")}
           </p>
           <a
             href="/billing"
             className="text-xs font-bold text-red-400 border border-red-500/30 px-3 py-1.5 rounded-lg hover:bg-red-500/10 transition-colors whitespace-nowrap"
           >
-            {lang === "ar" ? "تحديث الدفع →" : "Update payment →"}
+            {t(lang, "updatePayment")}
           </a>
         </div>
       )}
@@ -415,6 +441,7 @@ export default async function LearnIndexPage({
             stagesData={stagesData}
             currentStageNumber={currentStageNumber}
             hasAccess={hasAccess}
+            isGuest={isGuest}
             lang={lang}
           />
         }
@@ -430,6 +457,7 @@ export default async function LearnIndexPage({
                 continueWatching={videoContinueWatching}
                 thumbnails={thumbnails}
                 lockedPartNumbers={lockedPartNumbers}
+              guestPreviewHref={guestPreviewHref}
               lang={lang}
               />
             }
@@ -439,6 +467,7 @@ export default async function LearnIndexPage({
                 completedCount={audioCompletedCount}
                 thumbnails={thumbnails}
                 lockedPartNumbers={lockedPartNumbers}
+              guestPreviewHref={guestPreviewHref}
               lang={lang}
               />
             }
@@ -451,6 +480,7 @@ export default async function LearnIndexPage({
                 completedCount={briefingsCompletedCount}
                 thumbnails={thumbnails}
                 lockedPartNumbers={lockedPartNumbers}
+              guestPreviewHref={guestPreviewHref}
               lang={lang}
               />
             }
@@ -465,6 +495,7 @@ export default async function LearnIndexPage({
                 statusLabel="Viewed"
                 thumbnails={thumbnails}
                 lockedPartNumbers={lockedPartNumbers}
+              guestPreviewHref={guestPreviewHref}
               lang={lang}
               />
             }
@@ -479,6 +510,7 @@ export default async function LearnIndexPage({
                 statusLabel="Viewed"
                 thumbnails={thumbnails}
                 lockedPartNumbers={lockedPartNumbers}
+              guestPreviewHref={guestPreviewHref}
               lang={lang}
               />
             }
@@ -493,6 +525,7 @@ export default async function LearnIndexPage({
                 statusLabel="Viewed"
                 thumbnails={thumbnails}
                 lockedPartNumbers={lockedPartNumbers}
+              guestPreviewHref={guestPreviewHref}
               lang={lang}
               />
             }
@@ -507,6 +540,7 @@ export default async function LearnIndexPage({
                 statusLabel="Studied"
                 thumbnails={thumbnails}
                 lockedPartNumbers={lockedPartNumbers}
+              guestPreviewHref={guestPreviewHref}
               lang={lang}
               />
             }
@@ -519,6 +553,7 @@ export default async function LearnIndexPage({
                 totalAttempts={quizTotalAttempts}
                 thumbnails={thumbnails}
                 lockedPartNumbers={lockedPartNumbers}
+              guestPreviewHref={guestPreviewHref}
               lang={lang}
               />
             }
@@ -531,6 +566,7 @@ export default async function LearnIndexPage({
                 completedCount={factsCompletedCount}
                 thumbnails={thumbnails}
                 lockedPartNumbers={lockedPartNumbers}
+              guestPreviewHref={guestPreviewHref}
               lang={lang}
               />
             }
@@ -549,11 +585,14 @@ export default async function LearnIndexPage({
             quizTotalAttempts={quizTotalAttempts}
             activeParts={activeParts}
             partTitleMap={partTitleMap}
+            part1Href={guestPreviewHref}
             lang={lang}
         />
       }
     />
     <WelcomeTour show={showWelcomeTour} lang={lang} />
+    {/* Sticky buy button for anyone without access (guests + signed-in free users). */}
+    {!hasAccess && <UnlockBar lang={lang} />}
     </>
   );
 }

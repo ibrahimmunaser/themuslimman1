@@ -19,6 +19,8 @@ interface CourseProgressContentProps {
   quizTotalAttempts: number;
   activeParts: number[];
   partTitleMap: Record<number, string>;
+  /** Destination for the "Start Part 1" calls to action (guests → public free preview). */
+  part1Href?: string;
   lang?: CourseLang;
 }
 
@@ -33,6 +35,7 @@ export function CourseProgressContent({
   quizTotalAttempts,
   activeParts,
   partTitleMap,
+  part1Href = "/seerah/part-1",
   lang = "en",
 }: CourseProgressContentProps) {
   const hasAnyActivity = completedLessons > 0 || activeParts.length > 0;
@@ -54,7 +57,7 @@ export function CourseProgressContent({
 
         {!hasAnyActivity ? (
           <Link
-            href="/seerah/part-1"
+            href={part1Href}
             className="flex items-center justify-between gap-3 w-full px-5 py-4 min-h-[56px] bg-gold hover:bg-gold-light text-ink font-bold rounded-xl text-sm transition-colors shadow-md shadow-gold/20"
           >
             <div className="flex items-center gap-2">
@@ -251,7 +254,7 @@ export function CourseProgressContent({
             <p className="font-medium text-text mb-1 text-sm">{t(lang, "noActivityYet")}</p>
             <p className="text-xs text-text-secondary mb-4">{t(lang, "startPart1Prompt")}</p>
             <Link
-              href="/seerah/part-1"
+              href={part1Href}
               className="inline-flex items-center gap-2 px-4 py-2.5 min-h-[44px] bg-gold hover:bg-gold/90 text-ink font-semibold rounded-lg text-sm transition-colors"
             >
               <Play className="w-3.5 h-3.5" />

@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { getPartsForLang, getErasForLang } from "@/lib/content";
 import type { Era, Part } from "@/lib/types";
-import type { CourseLang } from "@/lib/course-lang";
+import { isRtlLang, type CourseLang } from "@/lib/course-lang";
 import { loc } from "@/lib/loc";
 import { ResourceFilterBar } from "./resource-filter-bar";
 
@@ -54,7 +54,7 @@ export function ResourcePageClient({
   }, [filteredParts, eras]);
 
   return (
-    <div className="space-y-6" dir={lang === "ar" ? "rtl" : undefined}>
+    <div className="space-y-6" dir={isRtlLang(lang) ? "rtl" : "ltr"}>
       <ResourceFilterBar
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}

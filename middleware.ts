@@ -22,15 +22,29 @@ const PROTECTED_PREFIXES = [
   "/conclusion",
 ];
 
+// Routes under a protected prefix that signed-out visitors may still view.
+// The course dashboard is browsable by guests: Part 1 is free, Parts 2+ show
+// as locked and route to /pricing. These pages check the session themselves
+// (getCachedStudentOrGuest) and render a guest view when there isn't one.
+// Everything else under /seerah (lesson pages, timeline) stays gated, and the
+// content APIs enforce access independently.
+const PUBLIC_EXACT_PATHS = new Set(["/seerah", "/seerah/resources", "/learn"]);
+
 const SESSION_COOKIE = "seerah_session";
 
 export function middleware(request: NextRequest) {
   const token = request.cookies.get(SESSION_COOKIE)?.value;
   const { pathname, search } = request.nextUrl;
 
-  const isProtected = PROTECTED_PREFIXES.some(
-    (r) => pathname === r || pathname.startsWith(r + "/")
-  );
+  // Normalise a trailing slash so "/seerah/" can't slip past (or fall out of) the allow-list.
+  const normalizedPath =
+    pathname.length > 1 && pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
+
+  const isProtected =
+    !PUBLIC_EXACT_PATHS.has(normalizedPath) &&
+    PROTECTED_PREFIXES.some(
+      (r) => normalizedPath === r || normalizedPath.startsWith(r + "/")
+    );
 
   // Only gate protected routes — middleware cannot verify session validity against
   // the DB (edge runtime has no DB access). If the cookie exists but the

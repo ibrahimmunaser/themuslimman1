@@ -1,10 +1,11 @@
 "use client";
 
+import { useUnlockPrompt } from "@/components/course/unlock-prompt";
 import { useState, useEffect, useMemo } from "react";
 import { getPartsForLang, localizedEraLabel } from "@/lib/content";
 import type { Part } from "@/lib/types";
 import type { CourseLang } from "@/lib/course-lang";
-import { loc } from "@/lib/loc";
+import { loc, locf } from "@/lib/loc";
 import { formatCourseNumber } from "@/lib/course-numbers";
 import { t, tf } from "@/lib/ui-strings";
 import { eraGradient } from "./era-gradient";
@@ -17,6 +18,8 @@ interface AudioResourceContentProps {
   completedCount: number;
   thumbnails?: Record<number, string>;
   lockedPartNumbers?: number[];
+  /** Guest (signed-out) visitors: unlocked cards redirect here instead of playing in-place. */
+  guestPreviewHref?: string;
   lang?: CourseLang;
 }
 
@@ -25,9 +28,11 @@ export function AudioResourceContent({
   completedCount,
   thumbnails = {},
   lockedPartNumbers = [],
+  guestPreviewHref,
   lang = "en",
 }: AudioResourceContentProps) {
   const lockedSet = new Set(lockedPartNumbers);
+  const openUnlock = useUnlockPrompt();
   const PARTS = useMemo(() => getPartsForLang(lang), [lang]);
   const [mounted, setMounted] = useState(false);
   const [currentAudio, setCurrentAudio] = useState<{ partNumber: number; title: string; subtitle?: string } | null>(null);
@@ -402,12 +407,21 @@ export function AudioResourceContent({
                 type="button"
                 onClick={() => handlePlayAudio(continuePart.partNumber, continuePart.title, continuePart.subtitle)}
                 className="inline-flex items-center gap-2 px-4 py-2 min-h-[40px] bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-lg text-xs transition-colors flex-shrink-0"
-                aria-label={loc(
-                  lang,
-                  `${isCurrentlyActive ? "Now playing" : "Listen to"} Part ${continuePart.partNumber}: ${continuePart.title}`,
-                  `${isCurrentlyActive ? "يُشغَّل الآن" : "استمع إلى"} الجزء ${continuePart.partNumber}: ${continuePart.title}`,
-                  `${isCurrentlyActive ? "En cours de lecture" : "Écouter"} Partie ${continuePart.partNumber} : ${continuePart.title}`,
-                )}
+                aria-label={(() => {
+                  const action = loc(
+                    lang,
+                    isCurrentlyActive ? "Now playing" : "Listen to",
+                    isCurrentlyActive ? "يُشغَّل الآن" : "استمع إلى",
+                    isCurrentlyActive ? "En cours de lecture" : "Écouter",
+                  );
+                  return locf(
+                    lang,
+                    "{action} Part {n}: {title}",
+                    "{action} الجزء {n}: {title}",
+                    "{action} Partie {n} : {title}",
+                    { action, n: continuePart.partNumber, title: continuePart.title },
+                  );
+                })()}
               >
                 <Headphones className="w-3.5 h-3.5" />
                 {isCurrentlyActive ? t(lang, "nowPlaying") : t(lang, "listenNow")}
@@ -427,11 +441,12 @@ export function AudioResourceContent({
                 const isCompleted = localProgressMap[part.partNumber] || false;
                 const isCurrentlyPlaying = currentAudio?.partNumber === part.partNumber && isPlaying;
                 const isLocked = lockedSet.has(part.partNumber);
+                const redirectHref = isLocked ? "/pricing" : guestPreviewHref;
 
                 return (
                   <div
                     key={part.id}
-                    onClick={isLocked ? () => { window.location.assign("/pricing"); } : () => handlePlayAudio(part.partNumber, part.title, part.subtitle)}
+                    onClick={redirectHref ? () => { if (isLocked) openUnlock({ partNumber: part.partNumber, title: part.title }); else window.location.assign(redirectHref); } : () => handlePlayAudio(part.partNumber, part.title, part.subtitle)}
                     className={`group rounded-xl border transition-all overflow-hidden ${
                       isLocked
                         ? "cursor-not-allowed opacity-60 border-zinc-800 bg-zinc-900/50"

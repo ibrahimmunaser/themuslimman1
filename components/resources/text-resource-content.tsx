@@ -1,5 +1,6 @@
 "use client";
 
+import { useUnlockPrompt } from "@/components/course/unlock-prompt";
 import { useState, useEffect, useMemo } from "react";
 import { getPartsForLang, localizedEraLabel } from "@/lib/content";
 import { isRtlLang, type CourseLang } from "@/lib/course-lang";
@@ -38,6 +39,8 @@ interface TextResourceContentProps {
   completedCount: number;
   thumbnails?: Record<number, string>;
   lockedPartNumbers?: number[];
+  /** Guest (signed-out) visitors: unlocked cards redirect here instead of opening in-place. */
+  guestPreviewHref?: string;
   lang?: CourseLang;
 }
 
@@ -49,9 +52,11 @@ export function TextResourceContent({
   completedCount,
   thumbnails = {},
   lockedPartNumbers = [],
+  guestPreviewHref,
   lang = "en",
 }: TextResourceContentProps) {
   const lockedSet = new Set(lockedPartNumbers);
+  const openUnlock = useUnlockPrompt();
   const PARTS = useMemo(() => getPartsForLang(lang), [lang]);
   const [selectedPart, setSelectedPart] = useState<{ partNumber: number; title: string; subtitle?: string } | null>(null);
   const [localProgressMap, setLocalProgressMap] = useState(progressMap);
@@ -302,10 +307,11 @@ export function TextResourceContent({
               {parts.map((part) => {
                 const isRead = localProgressMap[part.partNumber] || false;
                 const isLocked = lockedSet.has(part.partNumber);
+                const redirectHref = isLocked ? "/pricing" : guestPreviewHref;
                 return (
                   <div
                     key={part.id}
-                    onClick={isLocked ? () => { window.location.assign("/pricing"); } : () => handleOpenContent(part)}
+                    onClick={redirectHref ? () => { if (isLocked) openUnlock({ partNumber: part.partNumber, title: part.title }); else window.location.assign(redirectHref); } : () => handleOpenContent(part)}
                     className={`group rounded-xl border border-zinc-800 bg-zinc-900/50 transition-all overflow-hidden ${
                       isLocked
                         ? "cursor-not-allowed opacity-60"

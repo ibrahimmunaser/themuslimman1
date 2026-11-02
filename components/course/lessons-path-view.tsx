@@ -14,6 +14,7 @@ import type { Part } from "@/lib/types";
 import { ERA_MAP } from "@/lib/types";
 import { courseHasMindmaps, type CourseLang } from "@/lib/course-lang";
 import { loc } from "@/lib/loc";
+import { useUnlockPrompt } from "@/components/course/unlock-prompt";
 import { t, tf, ERA_DESCRIPTIONS_AR, ERA_DESCRIPTIONS_FR } from "@/lib/ui-strings";
 
 const ERA_LABELS_FR: Record<string, string> = {
@@ -44,6 +45,8 @@ interface LessonsPathViewProps {
   currentPart: number;
   /** Parts locked for unpaid users (Part 1 free). Locked cards link to /pricing. */
   lockedPartNumbers?: number[];
+  /** Guest (signed-out) visitors: unlocked cards link here instead of /seerah/part-N. */
+  guestPreviewHref?: string;
   lang?: CourseLang;
 }
 
@@ -63,9 +66,11 @@ export function LessonsPathView({
   progressData,
   currentPart,
   lockedPartNumbers = [],
+  guestPreviewHref,
   lang = "en",
 }: LessonsPathViewProps) {
   const isRtl = lang === "ar";
+  const openUnlock = useUnlockPrompt();
   const filteredParts = parts;
 
   const pathLockedSet = new Set(lockedPartNumbers);
@@ -320,13 +325,18 @@ export function LessonsPathView({
                       );
 
                       return isLocked ? (
+                        // href stays as a no-JS fallback; with JS, show the in-page unlock popup.
                         <Link key={part.id} href="/pricing"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            openUnlock({ partNumber: part.partNumber, title: part.title });
+                          }}
                           className="block p-4 rounded-xl border bg-zinc-900/30 border-zinc-800/50 opacity-60 hover:opacity-80 hover:border-amber-500/20 transition-all"
                         >
                           {cardInner}
                         </Link>
                       ) : (
-                        <Link key={part.id} href={`/seerah/part-${part.partNumber}`}
+                        <Link key={part.id} href={guestPreviewHref ?? `/seerah/part-${part.partNumber}`}
                           className="group block p-4 rounded-xl border transition-all bg-zinc-900/50 border-zinc-800 hover:border-amber-500/30 hover:bg-zinc-900"
                         >
                           {cardInner}

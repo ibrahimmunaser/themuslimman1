@@ -10,6 +10,8 @@ interface StudentLayoutProps {
   userName: string;
   activeProfileName?: string | null;
   planType?: string;
+  /** Signed-out visitor browsing the public course dashboard. */
+  isGuest?: boolean;
 }
 
 export async function StudentLayout({
@@ -18,12 +20,15 @@ export async function StudentLayout({
   userName,
   activeProfileName,
   planType = "individual",
+  isGuest = false,
 }: StudentLayoutProps) {
   // Read directly here (rather than requiring every call site to pass it down)
   // so the sidebar is Arabic-aware everywhere StudentLayout is used.
   const cookieStore = await cookies();
   const lang = parseLang(cookieStore.get(COURSE_LANG_COOKIE)?.value);
-  const user = await getCachedStudent();
+  // Guests have no account, so there is nothing to look up (and no one-time
+  // announcement modal to show).
+  const user = isGuest ? null : await getCachedStudent();
 
   return (
     <div
@@ -38,6 +43,7 @@ export async function StudentLayout({
         planType={planType}
         lang={lang}
         isRtl={lang === "ar"}
+        isGuest={isGuest}
       />
 
       {/* overflow-x:clip prevents horizontal overflow without creating a scroll
@@ -48,7 +54,7 @@ export async function StudentLayout({
           {children}
         </div>
       </main>
-      <LanguagesLaunchGate userId={user.id} />
+      {user && <LanguagesLaunchGate userId={user.id} />}
     </div>
   );
 }

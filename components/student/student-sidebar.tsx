@@ -17,6 +17,7 @@ import {
   CreditCard,
   Gift,
   LogOut,
+  LogIn,
   ChevronRight,
   ChevronLeft,
   Menu,
@@ -34,7 +35,7 @@ import { LangToggle } from "@/components/part/lang-toggle";
 import type { CourseLang } from "@/lib/course-lang";
 import { isRtlLang } from "@/lib/course-lang";
 import { loc } from "@/lib/loc";
-import { t } from "@/lib/ui-strings";
+import { t, type UiStringKey } from "@/lib/ui-strings";
 
 // Lazy-load widget components so their bundled JSON data (facts, miracles, prophecies)
 // does not block the initial sidebar render. ssr:false avoids hydration mismatch
@@ -59,6 +60,8 @@ interface StudentSidebarProps {
   planType?: string;
   lang?: CourseLang;
   isRtl?: boolean;
+  /** Signed-out visitor viewing the public course dashboard. */
+  isGuest?: boolean;
 }
 
 interface MenuItem {
@@ -72,7 +75,18 @@ interface MenuItem {
   tabId?: string;
 }
 
+/** Prefer shell UI dictionary keys so sidebar labels stay in sync with t(). */
+const MENU_UI_KEYS: Record<string, UiStringKey> = {
+  Dashboard: "tabDashboard",
+  Lessons: "tabLessons",
+  Resources: "tabResources",
+  Reference: "tabReference",
+  Progress: "tabProgress",
+};
+
 function menuLabel(item: MenuItem, lang: CourseLang): string {
+  const uiKey = MENU_UI_KEYS[item.label];
+  if (uiKey) return t(lang, uiKey);
   return loc(lang, item.label, item.labelAr, item.labelFr);
 }
 
@@ -86,6 +100,7 @@ export function StudentSidebar({
   planType = "individual",
   lang = "en",
   isRtl: isRtlProp,
+  isGuest = false,
 }: StudentSidebarProps) {
   const pathname = usePathname();
   const isRtl = isRtlProp ?? isRtlLang(lang);
@@ -174,15 +189,28 @@ export function StudentSidebar({
   ];
 
   const isFamily = planType === "family";
-  const ACCOUNT_MENU: MenuItem[] = [
-    { id: "help",    label: "Help",    labelAr: "المساعدة", labelFr: "Aide", href: "/help",    icon: HelpCircle },
-    // For family plans, "Profiles" goes to the Netflix-style picker (/profiles).
-    // For individual plans, it goes to the profile management page.
-    { id: "settings", label: "Settings", labelAr: "الإعدادات", labelFr: "Paramètres", href: "/student/settings", icon: User },
-    { id: "profiles", label: "Profiles", labelAr: "الملفات الشخصية", labelFr: "Profils", href: isFamily ? "/profiles" : "/student/profiles", icon: Users },
-    { id: "billing", label: "Billing",  labelAr: "الفواتير",  labelFr: "Facturation", href: "/billing",  icon: CreditCard },
-    { id: "gift", label: "Gift course", labelAr: "إهداء الدورة", labelFr: "Offrir le cours", href: "/gift-checkout", icon: Gift },
-  ];
+  const ACCOUNT_MENU: MenuItem[] = isGuest
+    ? [
+        // Guests have no account pages — just help and a way to buy.
+        { id: "help",    label: "Help",    labelAr: "المساعدة", labelFr: "Aide", href: "/help",    icon: HelpCircle },
+        { id: "pricing", label: "Plans & Pricing", labelAr: "الخطط والأسعار", labelFr: "Formules et tarifs", href: "/pricing", icon: CreditCard },
+      ]
+    : [
+        { id: "help",    label: "Help",    labelAr: "المساعدة", labelFr: "Aide", href: "/help",    icon: HelpCircle },
+        // For family plans, "Profiles" goes to the Netflix-style picker (/profiles).
+        // For individual plans, it goes to the profile management page.
+        { id: "settings", label: "Settings", labelAr: "الإعدادات", labelFr: "Paramètres", href: "/student/settings", icon: User },
+        { id: "profiles", label: "Profiles", labelAr: "الملفات الشخصية", labelFr: "Profils", href: isFamily ? "/profiles" : "/student/profiles", icon: Users },
+        { id: "billing", label: "Billing",  labelAr: "الفواتير",  labelFr: "Facturation", href: "/billing",  icon: CreditCard },
+        { id: "gift", label: "Gift course", labelAr: "إهداء الدورة", labelFr: "Offrir le cours", href: "/gift-checkout", icon: Gift },
+      ];
+
+  const accessBadge = isGuest
+    ? loc(lang, "Free Preview", "معاينة مجانية", "Aperçu gratuit")
+    : loc(lang, "Complete Access", "وصول كامل", "Accès complet");
+  // Guests return to the dashboard they were browsing after signing in.
+  const signInHref = "/login?redirect=%2Fseerah";
+  const signInLabel = loc(lang, "Sign In", "تسجيل الدخول", "Se connecter");
 
   const isActive = (item: MenuItem) => {
     if (item.tabId !== undefined) {
@@ -250,7 +278,7 @@ export function StudentSidebar({
             <div className="flex-1 min-w-0">
               <p className="text-xs font-semibold text-text truncate">{userName}</p>
               <span className="inline-block px-2 py-0.5 rounded text-[10px] font-semibold bg-gold/10 text-gold border border-gold/20 mt-1">
-                {loc(lang, "Complete Access", "وصول كامل", "Accès complet")}
+                {accessBadge}
               </span>
             </div>
           )}
@@ -364,13 +392,23 @@ export function StudentSidebar({
           </div>
         </nav>
         <div className="px-3 pb-3">
-          <button
-            onClick={handleSignOut}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-red-400/70 hover:text-red-400 hover:bg-red-500/8 transition-all"
-          >
-            <LogOut className="w-5 h-5 flex-shrink-0" />
-            {!collapsed && <span className="flex-1 text-start">{loc(lang, "Sign Out", "تسجيل الخروج", "Se déconnecter")}</span>}
-          </button>
+          {isGuest ? (
+            <Link
+              href={signInHref}
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-semibold text-gold bg-gold/10 border border-gold/25 hover:bg-gold/15 transition-all"
+            >
+              <LogIn className="w-5 h-5 flex-shrink-0" />
+              {!collapsed && <span className="flex-1 text-start">{signInLabel}</span>}
+            </Link>
+          ) : (
+            <button
+              onClick={handleSignOut}
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-red-400/70 hover:text-red-400 hover:bg-red-500/8 transition-all"
+            >
+              <LogOut className="w-5 h-5 flex-shrink-0" />
+              {!collapsed && <span className="flex-1 text-start">{loc(lang, "Sign Out", "تسجيل الخروج", "Se déconnecter")}</span>}
+            </button>
+          )}
         </div>
       </div>
     </>
@@ -421,7 +459,7 @@ export function StudentSidebar({
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-text truncate">{userName}</p>
               <span className="inline-block px-2 py-0.5 rounded text-[10px] font-semibold bg-gold/10 text-gold border border-gold/20 mt-0.5">
-                {loc(lang, "Complete Access", "وصول كامل", "Accès complet")}
+                {accessBadge}
               </span>
             </div>
           </div>
@@ -532,13 +570,24 @@ export function StudentSidebar({
       {/* Sign Out — pinned bottom */}
       <div className="px-3 py-3 border-t border-border flex-shrink-0"
            style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
-        <button
-          onClick={handleSignOut}
-          className="w-full flex items-center gap-3 px-3 py-2.5 min-h-[44px] rounded-lg text-sm font-medium text-red-400/70 hover:text-red-400 hover:bg-red-500/8 transition-all"
-        >
-          <LogOut className="w-4 h-4 flex-shrink-0" />
-          <span>{loc(lang, "Sign Out", "تسجيل الخروج", "Se déconnecter")}</span>
-        </button>
+        {isGuest ? (
+          <Link
+            href={signInHref}
+            onClick={closeDrawer}
+            className="w-full flex items-center gap-3 px-3 py-2.5 min-h-[44px] rounded-lg text-sm font-semibold text-gold bg-gold/10 border border-gold/25 hover:bg-gold/15 transition-all"
+          >
+            <LogIn className="w-4 h-4 flex-shrink-0" />
+            <span>{signInLabel}</span>
+          </Link>
+        ) : (
+          <button
+            onClick={handleSignOut}
+            className="w-full flex items-center gap-3 px-3 py-2.5 min-h-[44px] rounded-lg text-sm font-medium text-red-400/70 hover:text-red-400 hover:bg-red-500/8 transition-all"
+          >
+            <LogOut className="w-4 h-4 flex-shrink-0" />
+            <span>{loc(lang, "Sign Out", "تسجيل الخروج", "Se déconnecter")}</span>
+          </button>
+        )}
       </div>
     </>
   );
