@@ -60,11 +60,25 @@ class AppShell extends ConsumerWidget {
               // Android's 3-button bar covers the labels, so only Android
               // gets the inset. NavigationBar's own SafeArea stays removed
               // so it cannot add a second gap.
+              //
+              // NavigationBar's `build()` wraps its content in a bare
+              // `SafeArea(...)` that protects ALL FOUR sides by default, not
+              // just the bottom. Only ever stripping `removeBottom` here left
+              // the ambient status-bar `MediaQuery.padding.top` (~24-55dp
+              // depending on device) intact, so that SafeArea kept inserting
+              // it as blank space ABOVE the icon row every time — this was
+              // the actual, long-recurring "empty space above the tab bar"
+              // bug (confirmed live via Flutter's debugPaint on a Pixel 9
+              // emulator: the gap's height matched the status bar exactly).
+              // Stripping all four sides removes every such reservation.
               child: Padding(
                 padding: EdgeInsets.only(bottom: _androidNavInset(context)),
                 child: MediaQuery.removePadding(
                   context: context,
+                  removeTop: true,
                   removeBottom: true,
+                  removeLeft: true,
+                  removeRight: true,
                   child: NavigationBarTheme(
                     data: NavigationBarThemeData(
                       height: navHeight,
