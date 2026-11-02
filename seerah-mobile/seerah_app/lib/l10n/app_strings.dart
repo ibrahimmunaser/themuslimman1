@@ -52,7 +52,7 @@ const Map<String, Map<String, String>> _kStrings = {
 
   // ── Welcome screen ───────────────────────────────────────────────────────
   'welcomeTitleLine1': {'en': 'Complete Seerah', 'ar': 'السيرة الكاملة', 'fr': 'Sîra complète'},
-  'welcomeReturning': {'en': 'Returning?', 'ar': 'عائد من جديد؟', 'fr': 'Déjà inscrit ?'},
+  'welcomeReturning': {'en': 'Sign in', 'ar': 'تسجيل الدخول', 'fr': 'Se connecter'},
   'welcomeCourseHeadline': {'en': '100-Part Seerah Course', 'ar': 'دورة السيرة المكوّنة من ١٠٠ جزء', 'fr': 'Cours de Sîra en 100 parties'},
   'welcomeTagline': {'en': 'Learn the life of the\nProphet Muhammad ﷺ\nin 100 structured parts', 'ar': 'تعلّم سيرة\nالنبي محمد ﷺ\nفي ١٠٠ جزء منظّم', 'fr': 'Apprenez la vie du\nProphète Muhammad ﷺ\nen 100 parties structurées'},
   'welcomeFormats': {'en': 'Watch, listen, or read', 'ar': 'شاهد أو استمع أو اقرأ', 'fr': 'Regarder, écouter ou lire'},

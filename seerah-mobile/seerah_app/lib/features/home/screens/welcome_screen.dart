@@ -75,8 +75,10 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     if (!mounted) return;
     if (!ready || !ref.read(authProvider).isLoggedIn) {
       setState(() => _restoring = false);
-      _snack(ref.read(authProvider).error ??
-          t(ref.read(courseLangProvider), 'welcomeRestoreError'));
+      _snack(
+        ref.read(authProvider).error ??
+            t(ref.read(courseLangProvider), 'welcomeRestoreError'),
+      );
       return;
     }
     await ref.read(iapProvider.notifier).restorePurchases();
@@ -87,7 +89,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     ref.listen<IAPState>(iapProvider, _onIAP);
     final iap = ref.watch(iapProvider);
     final lang = ref.watch(courseLangProvider);
-    final busy = _restoring ||
+    final busy =
+        _restoring ||
         iap.status == IAPStatus.purchasing ||
         iap.status == IAPStatus.verifying;
 
@@ -124,7 +127,10 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                       },
                       child: Text(
                         t(lang, 'welcomeReturning'),
-                        style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+                        style: const TextStyle(
+                          color: AppColors.textMuted,
+                          fontSize: 13,
+                        ),
                       ),
                     ),
                   ],
@@ -132,47 +138,63 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
               ).animate().fadeIn(duration: 400.ms),
 
               // ── Scrollable body ───────────────────────────────────────────
+              // Only the hero/feature content scrolls — the CTA buttons below
+              // are pinned outside this Expanded so they're always visible,
+              // never pushed off-screen by extra content or a short viewport.
               Expanded(
                 child: SingleChildScrollView(
-                  padding: EdgeInsets.fromLTRB(24, 16, 24, 24 + bottomSystemInset(context)),
+                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-
                       // ── Hero ──────────────────────────────────────────────
                       Center(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: AppColors.goldFaded,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: AppColors.gold.withValues(alpha: 0.4)),
-                          ),
-                          child: Text(
-                            t(lang, 'welcomeCourseHeadline'),
-                            style: const TextStyle(
-                              color: AppColors.gold,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.3,
-                            ),
-                          ),
-                        ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.2, end: 0),
+                        child:
+                            Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.goldFaded,
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                      color: AppColors.gold.withValues(
+                                        alpha: 0.4,
+                                      ),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    t(lang, 'welcomeCourseHeadline'),
+                                    style: const TextStyle(
+                                      color: AppColors.gold,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 0.3,
+                                    ),
+                                  ),
+                                )
+                                .animate()
+                                .fadeIn(duration: 500.ms)
+                                .slideY(begin: 0.2, end: 0),
                       ),
 
                       const SizedBox(height: 18),
 
                       Text(
-                        t(lang, 'welcomeTagline'),
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 26,
-                          fontWeight: FontWeight.w800,
-                          height: 1.25,
-                          letterSpacing: -0.5,
-                        ),
-                      ).animate(delay: 80.ms).fadeIn(duration: 500.ms).slideY(begin: 0.15, end: 0),
+                            t(lang, 'welcomeTagline'),
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 26,
+                              fontWeight: FontWeight.w800,
+                              height: 1.25,
+                              letterSpacing: -0.5,
+                            ),
+                          )
+                          .animate(delay: 80.ms)
+                          .fadeIn(duration: 500.ms)
+                          .slideY(begin: 0.15, end: 0),
 
                       const SizedBox(height: 12),
 
@@ -213,106 +235,130 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                           ),
                         ],
                       ).animate(delay: 180.ms).fadeIn(duration: 500.ms),
-
-                      const SizedBox(height: 32),
-
-                      // ── CTAs ──────────────────────────────────────────────
-                      ElevatedButton(
-                        onPressed: () {
-                          HapticFeedback.mediumImpact();
-                          context.push('/part/1');
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.gold,
-                          foregroundColor: Colors.black,
-                          padding: const EdgeInsets.symmetric(vertical: 17),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          elevation: 0,
-                          shadowColor: Colors.transparent,
-                        ),
-                        child: Text(
-                          t(lang, 'welcomeStartFree'),
-                          style: const TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.1,
-                          ),
-                        ),
-                      ).animate(delay: 240.ms).fadeIn(duration: 400.ms).slideY(begin: 0.2, end: 0),
-
-                      const SizedBox(height: 10),
-
-                      OutlinedButton(
-                        onPressed: () {
-                          HapticFeedback.selectionClick();
-                          context.push('/landing');
-                        },
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.gold,
-                          side: BorderSide(color: AppColors.gold.withValues(alpha: 0.40)),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                        child: Text(
-                          t(lang, 'welcomeStartFull'),
-                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                        ),
-                      ).animate(delay: 260.ms).fadeIn(duration: 400.ms),
-
-                      const SizedBox(height: 16),
-
-                      Center(
-                        child: TextButton(
-                          onPressed: () {
-                            HapticFeedback.selectionClick();
-                            context.push('/login');
-                          },
-                          style: TextButton.styleFrom(
-                            minimumSize: const Size(48, 44),
-                            padding: const EdgeInsets.symmetric(horizontal: 8),
-                          ),
-                          child: Text(
-                            t(lang, 'welcomeAlreadyAccess'),
-                            style: const TextStyle(fontSize: 13, color: AppColors.textMuted),
-                          ),
-                        ),
-                      ).animate(delay: 280.ms).fadeIn(duration: 400.ms),
-
-                      const SizedBox(height: 8),
-
-                      Center(
-                        child: iap.status == IAPStatus.verifying
-                            // Restoring a genuine purchase re-verifies against
-                            // the same slow backend call as a fresh buy — see
-                            // VerifyingPurchaseBanner doc comment.
-                            ? const VerifyingPurchaseBanner()
-                            : busy
-                                ? const SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator.adaptive(
-                                      strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                          AppColors.gold),
-                                    ),
-                                  )
-                                : TextButton(
-                                    onPressed: _restore,
-                                    style: TextButton.styleFrom(
-                                        foregroundColor: AppColors.textMuted),
-                                    child: Text(
-                                      t(lang, 'welcomeRestore'),
-                                      style: const TextStyle(fontSize: 12),
-                                    ),
-                                  ),
-                      ).animate(delay: 320.ms).fadeIn(duration: 400.ms),
-
                     ],
                   ),
+                ),
+              ),
+
+              // ── CTAs ─────────────────────────────────────────────────────
+              // Fixed footer, outside the scrollview — always visible.
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  24,
+                  0,
+                  24,
+                  16 + bottomSystemInset(context),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    ElevatedButton(
+                          onPressed: () {
+                            HapticFeedback.mediumImpact();
+                            context.push('/part/1');
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.gold,
+                            foregroundColor: Colors.black,
+                            padding: const EdgeInsets.symmetric(vertical: 17),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            elevation: 0,
+                            shadowColor: Colors.transparent,
+                          ),
+                          child: Text(
+                            t(lang, 'welcomeStartFree'),
+                            style: const TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.1,
+                            ),
+                          ),
+                        )
+                        .animate(delay: 240.ms)
+                        .fadeIn(duration: 400.ms)
+                        .slideY(begin: 0.2, end: 0),
+
+                    const SizedBox(height: 10),
+
+                    OutlinedButton(
+                      onPressed: () {
+                        HapticFeedback.selectionClick();
+                        context.push('/landing');
+                      },
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.gold,
+                        side: BorderSide(
+                          color: AppColors.gold.withValues(alpha: 0.40),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: Text(
+                        t(lang, 'welcomeStartFull'),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ).animate(delay: 260.ms).fadeIn(duration: 400.ms),
+
+                    const SizedBox(height: 16),
+
+                    Center(
+                      child: TextButton(
+                        onPressed: () {
+                          HapticFeedback.selectionClick();
+                          context.push('/login');
+                        },
+                        style: TextButton.styleFrom(
+                          minimumSize: const Size(48, 44),
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                        ),
+                        child: Text(
+                          t(lang, 'welcomeAlreadyAccess'),
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                      ),
+                    ).animate(delay: 280.ms).fadeIn(duration: 400.ms),
+
+                    const SizedBox(height: 8),
+
+                    Center(
+                      child: iap.status == IAPStatus.verifying
+                          // Restoring a genuine purchase re-verifies against
+                          // the same slow backend call as a fresh buy — see
+                          // VerifyingPurchaseBanner doc comment.
+                          ? const VerifyingPurchaseBanner()
+                          : busy
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator.adaptive(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  AppColors.gold,
+                                ),
+                              ),
+                            )
+                          : TextButton(
+                              onPressed: _restore,
+                              style: TextButton.styleFrom(
+                                foregroundColor: AppColors.textMuted,
+                              ),
+                              child: Text(
+                                t(lang, 'welcomeRestore'),
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                            ),
+                    ).animate(delay: 320.ms).fadeIn(duration: 400.ms),
+                  ],
                 ),
               ),
             ],
@@ -383,8 +429,11 @@ class _FeatureRow extends StatelessWidget {
               ],
             ),
           ),
-          Icon(Icons.check_circle_rounded,
-              size: 16, color: color.withValues(alpha: 0.7)),
+          Icon(
+            Icons.check_circle_rounded,
+            size: 16,
+            color: color.withValues(alpha: 0.7),
+          ),
         ],
       ),
     );
