@@ -57,7 +57,8 @@ export function CourseHomeContent({
   isGuest = false,
   lang = "en",
 }: CourseHomeContentProps) {
-  // Guests can't open lesson pages; undefined keeps the normal /seerah/part-N link.
+  // Guests get Part 1 as a public preview and Parts 2+ sent to /pricing;
+  // undefined keeps the normal /seerah/part-N link for signed-in users.
   const partHref = (n: number): string | undefined => (isGuest ? guestPartHref(n) : undefined);
   const isNewUser = completedLessons === 0;
   const isRtl = lang === "ar";

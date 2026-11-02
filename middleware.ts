@@ -26,9 +26,10 @@ const PROTECTED_PREFIXES = [
 // The course dashboard is browsable by guests: Part 1 is free, Parts 2+ show
 // as locked and route to /pricing. These pages check the session themselves
 // (getCachedStudentOrGuest) and render a guest view when there isn't one.
-// Everything else under /seerah (lesson pages, timeline) stays gated, and the
-// content APIs enforce access independently.
-const PUBLIC_EXACT_PATHS = new Set(["/seerah", "/seerah/resources", "/learn"]);
+// /seerah/part-1 is the one lesson page guests may open directly (free
+// preview, no progress tracking); every other /seerah/part-N stays gated,
+// and the content APIs enforce access independently either way.
+const PUBLIC_EXACT_PATHS = new Set(["/seerah", "/seerah/resources", "/seerah/part-1", "/learn"]);
 
 const SESSION_COOKIE = "seerah_session";
 

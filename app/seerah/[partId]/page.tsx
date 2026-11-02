@@ -2,10 +2,13 @@ import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { getCachedStudent } from "@/lib/auth-cache";
+import { getCachedStudentOrGuest } from "@/lib/auth-cache";
 import { hasActiveCourseAccess, isFamilyPlan } from "@/lib/access";
 import { getActiveProfileId } from "@/app/actions/profiles";
 import { getPartById, PARTS, localizePart, getPartsForLang, localizedEraLabel } from "@/lib/content";
+import { getPart1PreviewData } from "@/lib/part1-preview-data";
+import { Part1PreviewTabs } from "@/components/landing/part1-preview-tabs";
+import { loc } from "@/lib/loc";
 import type { Part, Quiz } from "@/lib/types";
 
 /** Remove correct_answer from all questions before the quiz crosses the server→client boundary.
@@ -177,8 +180,85 @@ export default async function SeerahPartPage(props: Props) {
   getPartPageData(n, lang).catch(() => {});
 
   // ② Auth + access check + progress fetch (parallel where possible)
-  // getCachedStudent() deduplicates with the seerah/layout.tsx call in the same request.
-  const user = await getCachedStudent();
+  // getCachedStudentOrGuest() deduplicates with the seerah/layout.tsx call in the same request.
+  const user = await getCachedStudentOrGuest();
+
+  // Signed-out visitors: middleware only lets /seerah/part-1 through for
+  // guests (every other /seerah/part-N redirects to /login before this ever
+  // runs), so n !== 1 here is just a defensive fallback. Render the same
+  // guest-safe preview the old /watch-free page used (previewMode, no
+  // learnerProfileId, no progress writes) directly at this URL instead of
+  // bouncing to a separate page.
+  if (!user) {
+    if (n !== 1) redirect("/pricing");
+
+    const { part: previewPart, initialAssetUrls } = await getPart1PreviewData(lang);
+    if (!previewPart) notFound();
+
+    return (
+      <div className="min-h-screen bg-background animate-page-enter">
+        <div className="border-b border-border bg-surface sticky top-0 z-10">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-4">
+            <div className="flex items-center justify-between gap-4">
+              <Link
+                href="/seerah"
+                className="inline-flex items-center gap-1.5 text-text-secondary hover:text-text transition-colors text-sm min-h-[44px]"
+              >
+                {lang === "ar" ? <ArrowRight className="w-4 h-4 shrink-0" /> : <ArrowLeft className="w-4 h-4 shrink-0" />}
+                <span className="hidden sm:inline">{t(lang, "backToSeerah")}</span>
+                <span className="sm:hidden">{t(lang, "back")}</span>
+              </Link>
+              <div className="flex items-center gap-2 me-10 sm:me-0">
+                <span className="px-2 py-1 text-xs font-semibold rounded-md bg-gold/10 text-gold border border-gold/20">
+                  {tf(lang, "partLabel", { n: 1 })}
+                </span>
+                <span className="text-xs text-text-muted uppercase tracking-wider hidden sm:inline">
+                  {localizedEraLabel(lang, partBase.era)}
+                </span>
+              </div>
+            </div>
+
+            <h1
+              className="text-base sm:text-2xl font-bold text-text mt-1 leading-snug"
+              style={{ hyphens: "none", overflowWrap: "normal", wordBreak: "normal" }}
+              dir={isRtlLang(lang) ? "rtl" : undefined}
+            >
+              {partBase.title}
+            </h1>
+            {partBase.subtitle && (
+              <p className="hidden sm:block text-xs sm:text-sm text-text-secondary/80 mt-0.5 leading-snug" dir={isRtlLang(lang) ? "rtl" : undefined}>{partBase.subtitle}</p>
+            )}
+          </div>
+        </div>
+
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
+          <Suspense fallback={<PartTabsFallback />}>
+            <Part1PreviewTabs part={previewPart} initialAssetUrls={initialAssetUrls} initialLang={lang} />
+          </Suspense>
+
+          {/* Guests can't advance to Part 2+ without purchasing — replaces the
+              "Up Next" card / next-part nav buttons shown to enrolled users. */}
+          <div className="mt-8 px-4 py-5 sm:px-6 sm:py-6 rounded-xl bg-gold/5 border border-gold/15 text-center">
+            <p className="text-sm text-text-secondary mb-3">
+              {loc(
+                lang,
+                "Like what you see? Unlock all 100 parts.",
+                "أعجبك ما رأيت؟ افتح كل الأجزاء الـ١٠٠.",
+                "Vous aimez ce que vous voyez ? Débloquez les 100 parties.",
+              )}
+            </p>
+            <Link
+              href="/pricing"
+              className="inline-flex items-center gap-2 bg-gold text-ink font-bold px-6 py-3 rounded-xl hover:bg-gold-light active:scale-[0.97] transition-all"
+            >
+              {loc(lang, "View Plans", "عرض الخطط", "Voir les forfaits")}
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!user.studentProfileId) notFound();
 
   // Unverified users without course access go to dashboard verify wall —
