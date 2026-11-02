@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/app_constants.dart';
 import '../network/api_client.dart';
+import 'auth_provider.dart';
 
 // ─── Keys ────────────────────────────────────────────────────────────────────
 //
@@ -16,10 +17,10 @@ import '../network/api_client.dart';
 // and is discarded — never unioned into a mismatched profile — the moment
 // the real id is known. See ProgressNotifier._syncFromServer.
 
-const _kViewedKey      = 'seerah:viewed_parts';
-const _kCompletedKey   = 'seerah:completed_parts';
-const _kLastPartKey    = 'seerah:last_part';
-const _kQuizScoresKey  = 'seerah:quiz_scores';
+const _kViewedKey = 'seerah:viewed_parts';
+const _kCompletedKey = 'seerah:completed_parts';
+const _kLastPartKey = 'seerah:last_part';
+const _kQuizScoresKey = 'seerah:quiz_scores';
 // partNumber -> {questionId: chosen option text}. Cached alongside the score
 // itself so a quiz finished while offline can still be independently
 // re-verified server-side (via bulk-sync) once connectivity returns, instead
@@ -28,7 +29,7 @@ const _kQuizAnswersKey = 'seerah:quiz_answers';
 // Audit C4: partNumber -> highest watchPercent observed locally. Previously
 // trackVideoProgress was fire-and-forget POST only — offline/flaky network
 // permanently lost video completion toward the shared 85% threshold.
-const _kVideoWatchKey  = 'seerah:video_watch';
+const _kVideoWatchKey = 'seerah:video_watch';
 const _kUnscopedSuffix = 'unknown';
 
 String _scoped(String base, String profileId) => '$base::$profileId';
@@ -40,14 +41,17 @@ class ProgressState {
   final Set<int> completedParts;
   final int? lastPartNumber;
   final Map<int, int> quizScores;
+
   /// partNumber -> {questionId: chosen option text} for the best-scoring
   /// attempt cached locally. Only populated once a quiz recorded via
   /// [ProgressNotifier.recordQuizScore] hasn't yet been confirmed accepted
   /// by the server; see [ProgressNotifier.pushLocalToServer].
   final Map<int, Map<String, String>> quizAnswers;
+
   /// partNumber -> highest video/audio watch percent cached locally that
   /// may not yet have reached the server (Audit C4).
   final Map<int, int> videoWatchPercents;
+
   /// True when the most recent attempt to reach the server (sync or push)
   /// failed — e.g. offline, or a transient server error. The UI shown is
   /// always the local cache regardless, but this lets screens surface a
@@ -74,18 +78,17 @@ class ProgressState {
     Map<int, Map<String, String>>? quizAnswers,
     Map<int, int>? videoWatchPercents,
     bool? syncFailed,
-  }) =>
-      ProgressState(
-        viewedParts: viewedParts ?? this.viewedParts,
-        completedParts: completedParts ?? this.completedParts,
-        lastPartNumber: lastPartNumber ?? this.lastPartNumber,
-        quizScores: quizScores ?? this.quizScores,
-        quizAnswers: quizAnswers ?? this.quizAnswers,
-        videoWatchPercents: videoWatchPercents ?? this.videoWatchPercents,
-        syncFailed: syncFailed ?? this.syncFailed,
-      );
+  }) => ProgressState(
+    viewedParts: viewedParts ?? this.viewedParts,
+    completedParts: completedParts ?? this.completedParts,
+    lastPartNumber: lastPartNumber ?? this.lastPartNumber,
+    quizScores: quizScores ?? this.quizScores,
+    quizAnswers: quizAnswers ?? this.quizAnswers,
+    videoWatchPercents: videoWatchPercents ?? this.videoWatchPercents,
+    syncFailed: syncFailed ?? this.syncFailed,
+  );
 
-  int get totalViewed    => viewedParts.length;
+  int get totalViewed => viewedParts.length;
   int get totalCompleted => completedParts.length;
 
   double viewedFraction(int total) =>
@@ -112,12 +115,26 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
 
   @override
   Future<ProgressState> build() async {
+    // AuthNotifier restores its session from SharedPreferences
+    // asynchronously too (see auth_provider.dart's _restore), so on a cold
+    // app start it can still be mid-flight here with its placeholder
+    // `isLoggedIn: false` / `isLoading: true` default. Watching it (rather
+    // than the one-shot `ref.read` inside _syncFromServer) means that once
+    // auth finishes resolving, Riverpod re-runs this build() with the real
+    // value — so a genuinely logged-in user's first sync of the session
+    // never gets silently skipped just because auth hadn't loaded yet.
+    final authState = ref.watch(authProvider);
+
     final cachedProfileId = await _cachedActiveProfileId();
     _profileId = cachedProfileId ?? _kUnscopedSuffix;
     // Start with local cache for instant UI, then try server sync.
     final local = await _loadLocal(_profileId!);
-    // Fire-and-forget server sync — don't block the UI.
-    _syncFromServer(local, loadedForProfileId: _profileId!);
+    // Fire-and-forget server sync — don't block the UI. Wait for auth to
+    // finish resolving before deciding whether there's even a session to
+    // sync; see _syncFromServer's own guard for why guests skip this.
+    if (!authState.isLoading) {
+      _syncFromServer(local, loadedForProfileId: _profileId!);
+    }
     return local;
   }
 
@@ -145,8 +162,9 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
       final raw = prefs.getString(_scoped(_kQuizScoresKey, profileId));
       if (raw == null) return {};
       try {
-        return (jsonDecode(raw) as Map<String, dynamic>)
-            .map((k, v) => MapEntry(int.parse(k), (v as num).toInt()));
+        return (jsonDecode(raw) as Map<String, dynamic>).map(
+          (k, v) => MapEntry(int.parse(k), (v as num).toInt()),
+        );
       } catch (_) {
         return {};
       }
@@ -157,7 +175,10 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
       if (raw == null) return {};
       try {
         return (jsonDecode(raw) as Map<String, dynamic>).map(
-          (k, v) => MapEntry(int.parse(k), (v as Map<String, dynamic>).cast<String, String>()),
+          (k, v) => MapEntry(
+            int.parse(k),
+            (v as Map<String, dynamic>).cast<String, String>(),
+          ),
         );
       } catch (_) {
         return {};
@@ -174,8 +195,9 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
         final raw = prefs.getString(_scoped(_kVideoWatchKey, profileId));
         if (raw == null) return <int, int>{};
         try {
-          return (jsonDecode(raw) as Map<String, dynamic>)
-              .map((k, v) => MapEntry(int.parse(k), (v as num).toInt()));
+          return (jsonDecode(raw) as Map<String, dynamic>).map(
+            (k, v) => MapEntry(int.parse(k), (v as num).toInt()),
+          );
         } catch (_) {
           return <int, int>{};
         }
@@ -185,17 +207,29 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
 
   Future<void> _saveLocal(ProgressState s, String profileId) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_scoped(_kViewedKey, profileId), jsonEncode(s.viewedParts.toList()));
-    await prefs.setString(_scoped(_kCompletedKey, profileId), jsonEncode(s.completedParts.toList()));
+    await prefs.setString(
+      _scoped(_kViewedKey, profileId),
+      jsonEncode(s.viewedParts.toList()),
+    );
+    await prefs.setString(
+      _scoped(_kCompletedKey, profileId),
+      jsonEncode(s.completedParts.toList()),
+    );
     if (s.lastPartNumber != null) {
       await prefs.setInt(_scoped(_kLastPartKey, profileId), s.lastPartNumber!);
     }
-    await prefs.setString(_scoped(_kQuizScoresKey, profileId),
-        jsonEncode(s.quizScores.map((k, v) => MapEntry(k.toString(), v))));
-    await prefs.setString(_scoped(_kQuizAnswersKey, profileId),
-        jsonEncode(s.quizAnswers.map((k, v) => MapEntry(k.toString(), v))));
-    await prefs.setString(_scoped(_kVideoWatchKey, profileId),
-        jsonEncode(s.videoWatchPercents.map((k, v) => MapEntry(k.toString(), v))));
+    await prefs.setString(
+      _scoped(_kQuizScoresKey, profileId),
+      jsonEncode(s.quizScores.map((k, v) => MapEntry(k.toString(), v))),
+    );
+    await prefs.setString(
+      _scoped(_kQuizAnswersKey, profileId),
+      jsonEncode(s.quizAnswers.map((k, v) => MapEntry(k.toString(), v))),
+    );
+    await prefs.setString(
+      _scoped(_kVideoWatchKey, profileId),
+      jsonEncode(s.videoWatchPercents.map((k, v) => MapEntry(k.toString(), v))),
+    );
   }
 
   // ── Server sync ────────────────────────────────────────────────────────────
@@ -205,14 +239,30 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
     required String loadedForProfileId,
     bool reconcileLocal = true,
   }) async {
+    // Guests/anonymous visitors (the dashboard is reachable without logging
+    // in — see app_router.dart's redirect) have no session for
+    // /api/mobile-progress/get to read, so the server correctly answers
+    // 401. That 401 used to fall into the catch-all below and set
+    // syncFailed, surfacing a "Couldn't reach the server" banner to every
+    // signed-out visitor even though nothing is actually wrong — there's
+    // simply no server-side progress to sync yet. Treat "not logged in" as
+    // local-only by design, not a failure.
+    if (!ref.read(authProvider).isLoggedIn) return;
     try {
-      final response = await ApiClient.instance.dio.get('/api/mobile-progress/get');
+      final response = await ApiClient.instance.dio.get(
+        '/api/mobile-progress/get',
+      );
       final data = response.data as Map<String, dynamic>;
 
-      final serverViewed = (data['viewedParts'] as List?)?.cast<int>().toSet() ?? <int>{};
-      final serverCompleted = (data['completedParts'] as List?)?.cast<int>().toSet() ?? <int>{};
-      final serverScoresRaw = (data['quizScores'] as Map<String, dynamic>?) ?? {};
-      final serverScores = serverScoresRaw.map((k, v) => MapEntry(int.parse(k), (v as num).toInt()));
+      final serverViewed =
+          (data['viewedParts'] as List?)?.cast<int>().toSet() ?? <int>{};
+      final serverCompleted =
+          (data['completedParts'] as List?)?.cast<int>().toSet() ?? <int>{};
+      final serverScoresRaw =
+          (data['quizScores'] as Map<String, dynamic>?) ?? {};
+      final serverScores = serverScoresRaw.map(
+        (k, v) => MapEntry(int.parse(k), (v as num).toInt()),
+      );
       final serverLastPart = data['lastPartNumber'] as int?;
       final serverProfileId = data['activeProfileId'] as String?;
 
@@ -223,7 +273,8 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
       // now-known id so every subsequent build() loads the right bucket
       // from the start.
       final effectiveProfileId = serverProfileId ?? loadedForProfileId;
-      final localMatchesProfile = serverProfileId == null || serverProfileId == loadedForProfileId;
+      final localMatchesProfile =
+          serverProfileId == null || serverProfileId == loadedForProfileId;
       final baseLocal = localMatchesProfile ? local : const ProgressState();
 
       if (serverProfileId != null) {
@@ -244,7 +295,9 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
       final mergedScores = <int, int>{...baseLocal.quizScores};
       for (final entry in serverScores.entries) {
         final localBest = mergedScores[entry.key] ?? 0;
-        mergedScores[entry.key] = entry.value > localBest ? entry.value : localBest;
+        mergedScores[entry.key] = entry.value > localBest
+            ? entry.value
+            : localBest;
       }
 
       // Audit H9 fix: completedParts used to be a straight union
@@ -264,11 +317,11 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
       final pendingLocalCompleted = baseLocal.completedParts
           .difference(serverCompleted)
           .where((part) {
-        final localScore = baseLocal.quizScores[part];
-        if (localScore == null) return false;
-        final srvScore = serverScores[part];
-        return srvScore == null || srvScore < localScore;
-      });
+            final localScore = baseLocal.quizScores[part];
+            if (localScore == null) return false;
+            final srvScore = serverScores[part];
+            return srvScore == null || srvScore < localScore;
+          });
 
       // lastPartNumber takes the max of local/server for the same reason as
       // quiz scores above: the server now derives this as the furthest part
@@ -278,9 +331,10 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
       // server push must not regress it locally in the meantime either.
       final mergedLastPart = (serverLastPart == null)
           ? baseLocal.lastPartNumber
-          : (baseLocal.lastPartNumber == null || serverLastPart > baseLocal.lastPartNumber!)
-              ? serverLastPart
-              : baseLocal.lastPartNumber;
+          : (baseLocal.lastPartNumber == null ||
+                serverLastPart > baseLocal.lastPartNumber!)
+          ? serverLastPart
+          : baseLocal.lastPartNumber;
 
       final merged = ProgressState(
         viewedParts: {...baseLocal.viewedParts, ...serverViewed},
@@ -336,13 +390,20 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
   /// the user a real answer to "did my progress actually save?" — previously
   /// unanswerable, since sync failures were only ever silently debugPrint'd.
   Future<void> manualRefresh() async {
-    final current = state.valueOrNull ?? await _loadLocal(_profileId ?? _kUnscopedSuffix);
-    await _syncFromServer(current, loadedForProfileId: _profileId ?? _kUnscopedSuffix);
+    final current =
+        state.valueOrNull ?? await _loadLocal(_profileId ?? _kUnscopedSuffix);
+    await _syncFromServer(
+      current,
+      loadedForProfileId: _profileId ?? _kUnscopedSuffix,
+    );
   }
 
   Future<void> _trackServer(Map<String, dynamic> body) async {
     try {
-      await ApiClient.instance.dio.post('/api/mobile-progress/track', data: body);
+      await ApiClient.instance.dio.post(
+        '/api/mobile-progress/track',
+        data: body,
+      );
     } catch (e) {
       // Silently dropped events are exactly what _pushToServer (run on every
       // _syncFromServer) exists to catch up on later — see its doc comment.
@@ -357,7 +418,9 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
     final prevLast = current.lastPartNumber ?? 0;
     // Monotonic furthest-part (matches server get route's Math.max) — opening
     // an earlier part must not regress Continue / lastPartNumber.
-    final nextLast = partNumber > prevLast ? partNumber : current.lastPartNumber;
+    final nextLast = partNumber > prevLast
+        ? partNumber
+        : current.lastPartNumber;
     if (current.viewedParts.contains(partNumber) &&
         current.lastPartNumber == nextLast) {
       return;
@@ -373,7 +436,11 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
   }
 
   Future<void> trackAssetOpened(int partNumber, String assetId) async {
-    _trackServer({'type': 'asset_opened', 'partNumber': partNumber, 'assetId': assetId});
+    _trackServer({
+      'type': 'asset_opened',
+      'partNumber': partNumber,
+      'assetId': assetId,
+    });
   }
 
   Future<void> trackVideoProgress(int partNumber, int watchPercent) async {
@@ -382,24 +449,36 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
     final prev = current.videoWatchPercents[partNumber] ?? 0;
     if (clamped > prev) {
       final updated = current.copyWith(
-        videoWatchPercents: {...current.videoWatchPercents, partNumber: clamped},
+        videoWatchPercents: {
+          ...current.videoWatchPercents,
+          partNumber: clamped,
+        },
       );
       state = AsyncData(updated);
       await _saveLocal(updated, _profileId ?? _kUnscopedSuffix);
     }
-    _trackServer({'type': 'video_progress', 'partNumber': partNumber, 'watchPercent': clamped});
+    _trackServer({
+      'type': 'video_progress',
+      'partNumber': partNumber,
+      'watchPercent': clamped,
+    });
   }
 
   /// [answers] (questionId -> chosen option text) is required so the server
   /// can independently recompute the score from the part's authoritative
   /// quiz data — a bare client-supplied [score] is never trusted on its own
   /// (see /api/mobile-progress/track's quiz_completed handling).
-  Future<void> recordQuizScore(int partNumber, int score, {required Map<String, String> answers}) async {
+  Future<void> recordQuizScore(
+    int partNumber,
+    int score, {
+    required Map<String, String> answers,
+  }) async {
     final current = state.valueOrNull ?? const ProgressState();
     final prevBest = current.quizScores[partNumber] ?? 0;
     final isNewBest = score > prevBest;
     final newBest = isNewBest ? score : prevBest;
-    final newScores = Map<int, int>.from(current.quizScores)..[partNumber] = newBest;
+    final newScores = Map<int, int>.from(current.quizScores)
+      ..[partNumber] = newBest;
     // Only cache the answers behind the current best score — this is what
     // gets replayed to bulk-sync if the immediate `track` POST below never
     // makes it to the server (offline attempt), so it must correspond to the
@@ -436,15 +515,24 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
   Future<void> _pushToServer(ProgressState current) async {
     if (current.viewedParts.isEmpty &&
         current.quizScores.isEmpty &&
-        current.videoWatchPercents.isEmpty) return;
+        current.videoWatchPercents.isEmpty)
+      return;
     try {
-      await ApiClient.instance.dio.post('/api/mobile-progress/bulk-sync', data: {
-        'viewedParts': current.viewedParts.toList(),
-        'quizScores': current.quizScores.map((k, v) => MapEntry(k.toString(), v)),
-        'quizAnswers': current.quizAnswers.map((k, v) => MapEntry(k.toString(), v)),
-        'videoWatchPercents':
-            current.videoWatchPercents.map((k, v) => MapEntry(k.toString(), v)),
-      });
+      await ApiClient.instance.dio.post(
+        '/api/mobile-progress/bulk-sync',
+        data: {
+          'viewedParts': current.viewedParts.toList(),
+          'quizScores': current.quizScores.map(
+            (k, v) => MapEntry(k.toString(), v),
+          ),
+          'quizAnswers': current.quizAnswers.map(
+            (k, v) => MapEntry(k.toString(), v),
+          ),
+          'videoWatchPercents': current.videoWatchPercents.map(
+            (k, v) => MapEntry(k.toString(), v),
+          ),
+        },
+      );
     } catch (e) {
       debugPrint('[Progress] bulk sync failed: $e');
     }
@@ -530,5 +618,6 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
   }
 }
 
-final progressProvider =
-    AsyncNotifierProvider<ProgressNotifier, ProgressState>(ProgressNotifier.new);
+final progressProvider = AsyncNotifierProvider<ProgressNotifier, ProgressState>(
+  ProgressNotifier.new,
+);
