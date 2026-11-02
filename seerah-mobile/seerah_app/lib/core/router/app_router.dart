@@ -47,9 +47,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isAnonymous = authState.isAnonymous;
       final loc = state.uri.path;
 
-      final authRoutes = ['/login', '/signup'];
-      final isOnAuth = authRoutes.contains(loc);
-
       // /signup upgrades an anonymous guest to a real email/password account
       // (same user id, so any purchase already made — or made later — stays
       // attached). It must be reachable at any time, purchased or not: Apple
@@ -59,26 +56,32 @@ final routerProvider = Provider<GoRouter>((ref) {
       // /landing, since /signup upgrades an *existing* guest session.
       if (loc == '/signup' && !isLoggedIn) return '/landing';
 
-      // Part 1 is always free — allow logged-out users through directly.
-      final isFreePartRoute = loc == '/part/1';
+      // Splash always lands straight on the dashboard — signed in or not,
+      // paid or not. Mirrors the website: a guest sees the full dashboard
+      // immediately (Part 1 free, Parts 2+ shown locked) with no forced
+      // login/onboarding wall first; only opening locked content prompts a
+      // purchase (PartScreen's own paywall, or the Pricing/Landing screens).
+      if (loc == '/') return '/dashboard';
 
-      // Logged-out routing:
-      // - /welcome and /landing are always allowed (welcome = first screen, landing = plan picker)
-      // - /part/1 allowed (free preview)
-      // - Auth routes always allowed
-      // - / (splash) → redirect to welcome screen on first open
-      // - Everything else (locked content) → plan picker (/landing)
-      if (!isLoggedIn && !isOnAuth && !isFreePartRoute) {
-        if (loc == '/welcome' || loc == '/landing') return null;
-        if (loc == '/') return '/welcome';
-        return '/landing';
-      }
+      // Account-only screens read/write personal data (profile, learner
+      // profiles, quiz history, certificate), so they still need at least a
+      // session — guest or real. Everything else — dashboard, lessons,
+      // resources, reference, progress, pricing, and every /part/:n — is
+      // browsable with no session at all; per-content locking happens at
+      // the screen level (hasAccess), not here.
+      const accountOnlyRoutes = [
+        '/profile',
+        '/profiles',
+        '/quiz-history',
+        '/certificate',
+      ];
+      if (!isLoggedIn && accountOnlyRoutes.contains(loc)) return '/login';
 
-      // Logged-in on splash/welcome → dashboard.
+      // Logged-in on welcome → dashboard.
       // Keep unpaid users on /landing so guest checkout can finish StoreKit
       // (Apple 2.1(b) / 5.1.1(v)). Sending them to /dashboard mid-buy was
       // disposing the paywall before buy() ran.
-      if (isLoggedIn && (loc == '/' || loc == '/welcome')) {
+      if (isLoggedIn && loc == '/welcome') {
         return '/dashboard';
       }
       if (isLoggedIn && loc == '/landing' && authState.hasAccess) {
