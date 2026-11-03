@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/data/parts_data.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/progress_provider.dart';
@@ -117,7 +118,7 @@ class QuizHistoryScreen extends ConsumerWidget {
               final part = partByNumber[partNum]!;
               final rowPassed = score >= 80;
               final color = AppColors.forEra(part.era);
-              final locked = partNum > 1 && !hasAccess;
+              final locked = partNum != AppConstants.kFreePartNumber && !hasAccess;
 
               return Padding(
                 padding: const EdgeInsets.only(bottom: 8),

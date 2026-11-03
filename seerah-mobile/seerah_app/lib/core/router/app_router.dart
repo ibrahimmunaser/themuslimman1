@@ -58,9 +58,10 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // Splash always lands straight on the dashboard — signed in or not,
       // paid or not. Mirrors the website: a guest sees the full dashboard
-      // immediately (Part 1 free, Parts 2+ shown locked) with no forced
-      // login/onboarding wall first; only opening locked content prompts a
-      // purchase (PartScreen's own paywall, or the Pricing/Landing screens).
+      // immediately (the free part unlocked, every other part shown locked)
+      // with no forced login/onboarding wall first; only opening locked
+      // content prompts a purchase (PartScreen's own paywall, or the
+      // Pricing/Landing screens).
       if (loc == '/') return '/dashboard';
 
       // Account-only screens read/write personal data (profile, learner

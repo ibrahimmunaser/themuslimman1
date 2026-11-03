@@ -80,7 +80,7 @@ export function NavbarMobileMenu({ user, lang = "en" }: NavbarMobileMenuProps) {
               >
                 {siteT(lang, "navHome")}
               </Link>
-              {/* Course dashboard is open to everyone (Part 1 free, rest locked). */}
+              {/* Course dashboard is open to everyone (free part unlocked, rest locked). */}
               <Link
                 href="/seerah"
                 onClick={close}

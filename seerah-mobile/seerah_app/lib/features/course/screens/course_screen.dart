@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/data/parts_data.dart';
 import '../../../core/data/parts_titles_fr.dart';
 import '../../../core/models/part_model.dart';
@@ -125,7 +126,7 @@ class _CourseScreenState extends ConsumerState<CourseScreen> {
       itemCount: results.length,
       itemBuilder: (ctx, i) {
         final p = results[i];
-        final locked = p.partNumber > 1 && !hasAccess;
+        final locked = p.partNumber != AppConstants.kFreePartNumber && !hasAccess;
         return Padding(
           padding: const EdgeInsets.only(bottom: 1),
           child: PartCard(
@@ -243,7 +244,7 @@ class _EraSectionState extends State<_EraSection> {
               children: widget.parts.asMap().entries.map((e) {
                 final i = e.key;
                 final p = e.value;
-                final locked = p.partNumber > 1 && !widget.hasAccess;
+                final locked = p.partNumber != AppConstants.kFreePartNumber && !widget.hasAccess;
                 return PartCard(
                   part: p,
                   isLocked: locked,

@@ -7,7 +7,7 @@ import { Plus, Settings, Check, LogOut } from "lucide-react";
 import { switchProfile } from "@/app/actions/profiles";
 import { IslamicPatternBackground } from "@/components/motion";
 import type { CourseLang } from "@/lib/course-lang";
-import { loc } from "@/lib/loc";
+import { loc, locf } from "@/lib/loc";
 
 // Each slot index gets a distinct gradient so the grid looks alive
 const SLOT_GRADIENTS = [
@@ -215,7 +215,7 @@ function ProfileSlot({
       whileTap={{ scale: 0.95 }}
       transition={{ duration: 0.15 }}
       className="flex flex-col items-center gap-3 group outline-none disabled:cursor-default"
-      aria-label={loc(lang, `Select ${profile.displayName}`, `اختر ${profile.displayName}`, `Sélectionner ${profile.displayName}`)}
+      aria-label={locf(lang, "Select {name}", "اختر {name}", "Sélectionner {name}", { name: profile.displayName })}
     >
       {/* Avatar circle */}
       <div className="relative">

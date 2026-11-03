@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { Eye, EyeOff, Loader2, Check, X } from "lucide-react";
+import { isRtlLang } from "@/lib/course-lang";
 import type { CourseLang } from "@/lib/course-lang";
 import { t } from "@/lib/ui-strings";
 
 export function ChangePasswordForm({ lang = "en" }: { lang?: CourseLang }) {
-  const isRtl = lang === "ar";
+  const isRtl = isRtlLang(lang);
   const [open, setOpen] = useState(false);
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");

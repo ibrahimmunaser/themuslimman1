@@ -62,14 +62,17 @@ class _PartScreenState extends ConsumerState<PartScreen> {
   /// already-scheduled callback would push the real, unlocked content right
   /// on top of it.
   bool get _isLocked =>
-      widget.partNumber > 1 && !ref.read(authProvider).hasAccess;
+      widget.partNumber != AppConstants.kFreePartNumber &&
+      !ref.read(authProvider).hasAccess;
 
   void _autoOpen() {
     if (!mounted || _autoOpenDone || widget.initialTab == null) return;
     final auth = ref.read(authProvider);
     // Wait out auth restore — during loading hasAccess is false, so paid
     // parts look locked and we'd permanently skip the deep-link open.
-    if (widget.partNumber > 1 && auth.isLoading) return;
+    if (widget.partNumber != AppConstants.kFreePartNumber && auth.isLoading) {
+      return;
+    }
     // Locked: do NOT set _autoOpenDone — wait for access restore / purchase
     // so the deep-link can retry via the authProvider listener.
     if (_isLocked) return;
@@ -225,7 +228,7 @@ class _PartScreenState extends ConsumerState<PartScreen> {
     final eraColor = AppColors.forEra(part.era);
 
     final authState = ref.watch(authProvider);
-    final isPaidPart = partNumber > 1;
+    final isPaidPart = partNumber != AppConstants.kFreePartNumber;
     final hasAccess = authState.hasAccess;
 
     // Deep-link retry: initial postFrameCallback often runs while auth is
@@ -263,7 +266,7 @@ class _PartScreenState extends ConsumerState<PartScreen> {
 
     final assetsAsync = ref.watch(partAssetsProvider(partNumber));
     final infographicsAsync = ref.watch(infographicsProvider(partNumber));
-    final isFreePart = partNumber == 1;
+    final isFreePart = partNumber == AppConstants.kFreePartNumber;
 
     // Returns true only once the API confirms the URL exists.
     // While loading: free parts show as available (tap triggers wait-and-open),
@@ -1310,12 +1313,13 @@ class _PartNavBar extends StatelessWidget {
             ),
           if (partNumber > 1 && partNumber < PARTS.length)
             const SizedBox(width: 12),
-          // On Part 1 with no access the in-page CTA card already has the
-          // "Unlock full access" button — hide the nav bar duplicate.
-          if (partNumber < PARTS.length && !(partNumber == 1 && !hasAccess))
+          // On the free part with no access the in-page CTA card already has
+          // the "Unlock full access" button — hide the nav bar duplicate.
+          if (partNumber < PARTS.length &&
+              !(partNumber == AppConstants.kFreePartNumber && !hasAccess))
             Expanded(
               // This button only ever renders when hasAccess is true (the
-              // `partNumber == 1 && !hasAccess` case is excluded above, and
+              // `partNumber == kFreePartNumber && !hasAccess` case is excluded above, and
               // any other locked part already returns _PaywallScreen earlier
               // in build()) — so unlike the locked-content styling this
               // block used to carry, there's no lock/unlock branch to handle

@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { ArrowLeft, Search, MapPin, Info } from "lucide-react";
 import type { CourseLang } from "@/lib/course-lang";
-import { loc } from "@/lib/loc";
+import { loc, locf } from "@/lib/loc";
 
 interface Place {
   name: string;
@@ -326,11 +326,12 @@ export function PlacesMapsContent({ lang = "en" }: { lang?: CourseLang }) {
             <div className="mb-4 flex items-center gap-2 text-sm text-text-muted">
               <MapPin className="w-4 h-4" />
               <span>
-                {loc(
+                {locf(
                   lang,
-                  `Showing ${displayedPlaces.length} of ${filteredPlaces.length} places`,
-                  `عرض ${displayedPlaces.length} من ${filteredPlaces.length} مكانًا`,
-                  `Affichage de ${displayedPlaces.length} sur ${filteredPlaces.length} lieux`,
+                  "Showing {current} of {total} places",
+                  "عرض {current} من {total} مكانًا",
+                  "Affichage de {current} sur {total} lieux",
+                  { current: displayedPlaces.length, total: filteredPlaces.length },
                 )}
               </span>
             </div>
@@ -350,11 +351,12 @@ export function PlacesMapsContent({ lang = "en" }: { lang?: CourseLang }) {
                 >
                   {showAllPlaces
                     ? loc(lang, "Show Less", "عرض أقل", "Afficher moins")
-                    : loc(
+                    : locf(
                         lang,
-                        `Show All ${filteredPlaces.length} Places`,
-                        `عرض جميع الأماكن (${filteredPlaces.length})`,
-                        `Afficher les ${filteredPlaces.length} lieux`,
+                        "Show All {n} Places",
+                        "عرض جميع الأماكن ({n})",
+                        "Afficher les {n} lieux",
+                        { n: filteredPlaces.length },
                       )}
                 </button>
               </div>
@@ -396,11 +398,12 @@ export function PlacesMapsContent({ lang = "en" }: { lang?: CourseLang }) {
               <div className="flex gap-3 p-4 rounded-xl border border-gold/20 bg-gold-bg/30 text-xs text-text-secondary">
                 <Info className="w-4 h-4 text-gold flex-shrink-0 mt-0.5" />
                 <p className="text-start">
-                  {loc(
+                  {locf(
                     lang,
-                    `For now, use the search and filter above to explore all ${allPlaces.length} locations across Makkah, Madinah, battlefields, and key routes.`,
-                    `في الوقت الحالي، استخدم البحث والتصفية أعلاه لاستكشاف جميع المواقع البالغ عددها ${allPlaces.length} عبر مكة والمدينة وساحات المعارك والطرق الرئيسية.`,
-                    `Pour l'instant, utilisez la recherche et le filtre ci-dessus pour explorer les ${allPlaces.length} lieux à travers La Mecque, Médine, les champs de bataille et les routes clés.`,
+                    "For now, use the search and filter above to explore all {n} locations across Makkah, Madinah, battlefields, and key routes.",
+                    "في الوقت الحالي، استخدم البحث والتصفية أعلاه لاستكشاف جميع المواقع البالغ عددها {n} عبر مكة والمدينة وساحات المعارك والطرق الرئيسية.",
+                    "Pour l'instant, utilisez la recherche et le filtre ci-dessus pour explorer les {n} lieux à travers La Mecque, Médine, les champs de bataille et les routes clés.",
+                    { n: allPlaces.length },
                   )}
                 </p>
               </div>

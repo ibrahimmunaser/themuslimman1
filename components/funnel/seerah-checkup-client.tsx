@@ -256,7 +256,7 @@ function getInsights(answers: Record<number, number>) {
       weak: tRaw < 30,
       label: "Timeline Accuracy",
       text: tRaw < 30
-        ? "The order of events in the Seerah is not yet fully clear. Starting from Part 1 and going in sequence will fix this quickly."
+        ? "The order of events in the Seerah is not yet fully clear. Starting from the beginning and going in sequence will fix this quickly."
         : "You can place the major events in order. Completing the full 100-part path will strengthen this further.",
     },
   };
@@ -286,29 +286,29 @@ function getRecommendation(answers: Record<number, number>, urls: SeerahCheckupU
   // "I want to see the quality first" → free preview path
   if (q9 === 4) {
     return {
-      primaryLabel: "Watch Part 1 Free",
+      primaryLabel: "Watch the First Revelation Free",
       primaryUrl: watchFreeUrl,
-      primarySupport: "Full first lesson — video, reading, slides, flashcards, quiz. No payment.",
+      primarySupport: "The free preview lesson — video, reading, slides, flashcards, quiz. No payment.",
       showFreePrimary: true,
       secondaryUrl: urls.individualLifetime,
       secondaryLabel: "Get Lifetime Access — Only $49",
-      secondaryPreamble: "Ready to continue after Part 1?",
-      bridgeCopy: "Because you want to see the quality first, start with Part 1 free — full video, flashcards, and quiz included. No payment required.",
+      secondaryPreamble: "Ready to continue after the free preview?",
+      bridgeCopy: "Because you want to see the quality first, start with the First Revelation free — full video, flashcards, and quiz included. No payment required.",
       trackEvent: `${eventPrefix}watch_free_click`,
     };
   }
 
-  // "I don't know where to start" → ease them in with Part 1 free
+  // "I don't know where to start" → ease them in with the free preview
   if (q9 === 0) {
     return {
-      primaryLabel: "Watch Part 1 Free",
+      primaryLabel: "Watch the First Revelation Free",
       primaryUrl: watchFreeUrl,
-      primarySupport: "Part 1 is the very beginning of the full path. No payment, no commitment.",
+      primarySupport: "The First Revelation is a free preview of the full path. No payment, no commitment.",
       showFreePrimary: true,
       secondaryUrl: urls.individualLifetime,
       secondaryLabel: "Get Lifetime Access — Only $49",
-      secondaryPreamble: "Ready to continue after Part 1?",
-      bridgeCopy: "The best move when you don't know where to start is to simply start from Part 1 — free, in order, no commitment.",
+      secondaryPreamble: "Ready to continue after the free preview?",
+      bridgeCopy: "The best move when you don't know where to start is to simply start with the free preview — free, in order, no commitment.",
       trackEvent: `${eventPrefix}watch_free_click`,
     };
   }
@@ -320,7 +320,7 @@ function getRecommendation(answers: Record<number, number>, urls: SeerahCheckupU
         ? "Every lesson includes flashcards and a quiz so what you learn actually sticks — not just watch and forget."
         : q9 === 3
           ? "The 100-part structure means you always know exactly where to pick back up. No replanning, no lost progress."
-          : "Based on your answers, the best next step is to start from Part 1 and follow one clear path in order.";
+          : "Based on your answers, the best next step is to start from the beginning and follow one clear path in order.";
 
   return {
     primaryLabel: "Get Lifetime Access — Only $49",
@@ -335,8 +335,8 @@ function getRecommendation(answers: Record<number, number>, urls: SeerahCheckupU
 // ── FAQ ───────────────────────────────────────────────────────────────────────
 
 const FAQ = [
-  { q: "Is Part 1 free?",           a: "Yes. Full video, reading, slides, flashcards, and quiz — no signup or payment required." },
-  { q: "What happens after I buy?", a: "Immediate access. Set your password, create your profile, and start Part 1 — under 60 seconds." },
+  { q: "Is there a free preview?",  a: "Yes. The First Revelation is a full free lesson — video, reading, slides, flashcards, and quiz — no signup or payment required." },
+  { q: "What happens after I buy?", a: "Immediate access. Set your password, create your profile, and start learning — under 60 seconds." },
   { q: "Can I cancel anytime?",     a: "Yes. Cancel in 2 clicks from your dashboard. No call required." },
   { q: "Is there a refund?",        a: "Yes — 7-day clarity guarantee. If the course doesn't feel right, email us for a full refund. No questions asked." },
   { q: "Can I use it on mobile?",   a: "Yes. Works on phone, tablet, and desktop. Many students learn during commutes or before bed." },
@@ -978,7 +978,7 @@ export function SeerahCheckupClient({
               Prefer to watch first?{" "}
               <Link href={watchFreeUrl} onClick={() => track("watch_part1_clicked")}
                 className="text-text-muted hover:text-gold underline underline-offset-2 transition-colors">
-                Watch Part 1 free
+                Watch the First Revelation free
               </Link>
             </p>
 
@@ -1194,7 +1194,7 @@ export function SeerahCheckupClient({
                     <Link href={watchFreeUrl}
                       onClick={() => track("watch_part1_clicked")}
                       className="text-text-muted hover:text-gold underline underline-offset-2 transition-colors">
-                      Watch Part 1 free
+                      Watch the First Revelation free
                     </Link>
                   </p>
                   )}
@@ -1219,7 +1219,7 @@ export function SeerahCheckupClient({
               <TrustStrip />
             </div>
 
-            {/* Inline Part 1 preview */}
+            {/* Inline free-preview video */}
             {!embedMode && showInlinePreview && (
               <div ref={inlineRef} className="scroll-mt-24">
                 <InlinePart1Video
@@ -1359,7 +1359,7 @@ export function SeerahCheckupClient({
               }}
               className="w-full flex items-center justify-center gap-1.5 py-3 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-sm transition-colors shadow-lg shadow-gold/20">
               <Play className="w-4 h-4 fill-current" />
-              Watch Part 1 Free
+              Watch the First Revelation Free
             </button>
           ) : rec.showFreePrimary && showInlinePreview ? (
             <Link

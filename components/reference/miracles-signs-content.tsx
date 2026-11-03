@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { ArrowLeft, Search, Info, Book, Moon, Droplet, Utensils, Shield, Mountain, Sparkles, Heart } from "lucide-react";
 import type { CourseLang } from "@/lib/course-lang";
-import { loc } from "@/lib/loc";
+import { loc, locf } from "@/lib/loc";
 
 // IMPORTANT: Do not add miracle reports without a source and authenticity grading.
 // This section prioritizes narrations from the Qur'an, Sahih al-Bukhari, Sahih Muslim,
@@ -1170,11 +1170,12 @@ export function MiraclesSignsContent({ lang = "en" }: { lang?: CourseLang }) {
                 >
                   {showAll
                     ? loc(lang, "Show Less", "عرض أقل", "Afficher moins")
-                    : loc(
+                    : locf(
                         lang,
-                        `View All ${filteredMiracles.length} Miracles and Signs`,
-                        `عرض كل ${filteredMiracles.length} من المعجزات والآيات`,
-                        `Voir les ${filteredMiracles.length} miracles et signes`
+                        "View All {n} Miracles and Signs",
+                        "عرض كل {n} من المعجزات والآيات",
+                        "Voir les {n} miracles et signes",
+                        { n: filteredMiracles.length },
                       )}
                 </button>
               </div>

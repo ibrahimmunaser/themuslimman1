@@ -43,7 +43,7 @@ interface LessonsPathViewProps {
   parts: Part[];
   progressData: Record<number, PartProgressData>;
   currentPart: number;
-  /** Parts locked for unpaid users (Part 1 free). Locked cards link to /pricing. */
+  /** Parts locked for unpaid users (the free part is unlocked). Locked cards link to /pricing. */
   lockedPartNumbers?: number[];
   /** Guest (signed-out) visitors: unlocked cards link here instead of /seerah/part-N. */
   guestPreviewHref?: string;

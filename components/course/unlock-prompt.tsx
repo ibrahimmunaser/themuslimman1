@@ -250,9 +250,9 @@ export function UnlockBar({ lang }: { lang: CourseLang }) {
         <p className="hidden min-w-0 flex-1 truncate text-sm text-text-secondary sm:block">
           {locCount(
             lang,
-            "Part 1 is free. Unlock all {n} parts with a one-time payment.",
-            "الجزء الأول مجاني. افتح جميع الأجزاء الـ{n} بدفعة واحدة.",
-            "La partie 1 est gratuite. Débloquez les {n} parties en un seul paiement.",
+            "The First Revelation is free. Unlock all {n} parts with a one-time payment.",
+            "الوحي الأول مجاني. افتح جميع الأجزاء الـ{n} بدفعة واحدة.",
+            "La Première Révélation est gratuite. Débloquez les {n} parties en un seul paiement.",
           )}
         </p>
         <Link

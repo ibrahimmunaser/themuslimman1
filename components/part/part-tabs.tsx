@@ -30,7 +30,7 @@ import { QuizViewer, type QuizDraft } from "./quiz-viewer";
 import { FlashcardsViewer } from "./flashcards-viewer";
 import type { Part } from "@/lib/types";
 import { courseHasMindmaps, isRtlLang, type CourseLang } from "@/lib/course-lang";
-import { loc } from "@/lib/loc";
+import { loc, locf } from "@/lib/loc";
 import { t } from "@/lib/ui-strings";
 import { trackAssetOpened } from "@/app/actions/progress";
 
@@ -302,11 +302,12 @@ function EmptyContent({
   return (
     <div className="py-14 text-center">
       <p className="text-text-secondary text-sm font-medium">
-        {loc(
+        {locf(
           lang,
-          `${name} not available for this part`,
-          `${name} غير متاح لهذا الجزء`,
-          `${name} non disponible pour cette partie`,
+          "{name} not available for this part",
+          "{name} غير متاح لهذا الجزء",
+          "{name} non disponible pour cette partie",
+          { name },
         )}
       </p>
       <p className="text-xs text-text-muted mt-1">
@@ -519,11 +520,12 @@ export function SlidesPanel({ part, previewMode, lang = "en", isRtl }: { part: P
         const typeLabel = typeInfo
           ? loc(lang, typeInfo.label, typeInfo.labelAr, typeInfo.labelFr)
           : "";
-        const title = loc(
+        const title = locf(
           lang,
-          `Part ${part.partNumber} — ${typeLabel} Slides`,
-          `الجزء ${part.partNumber} — شرائح ${typeLabel}`,
-          `Partie ${part.partNumber} — Diapositives ${typeLabel}`,
+          "Part {n} — {type} Slides",
+          "الجزء {n} — شرائح {type}",
+          "Partie {n} — Diapositives {type}",
+          { n: part.partNumber, type: typeLabel },
         );
         return (
           <div key={key} className={type === key ? "" : "hidden"}>
@@ -638,7 +640,7 @@ function SubTabContent({ id, part, previewMode, assetUrls, onSwitchMode, videoCo
           />
         : <EmptyContent label="Quiz" labelAr="الاختبار" labelFr="Quiz" lang={lang} />}</div>);
     case "slides":      return <SlidesPanel part={part} previewMode={previewMode} lang={lang} isRtl={isRtl} />;
-    case "mindmap":     return <LazyMindmapViewer partNumber={part.partNumber} title={loc(lang, `Part ${part.partNumber} — Mindmap`, `الجزء ${part.partNumber} — الخريطة الذهنية`, `Partie ${part.partNumber} — Carte mentale`)} previewMode={previewMode} mindmapUrl={assetUrls.mindmapUrl} />;
+    case "mindmap":     return <LazyMindmapViewer partNumber={part.partNumber} title={locf(lang, "Part {n} — Mindmap", "الجزء {n} — الخريطة الذهنية", "Partie {n} — Carte mentale", { n: part.partNumber })} previewMode={previewMode} mindmapUrl={assetUrls.mindmapUrl} />;
     case "infographic": return <InfographicPanel part={part} previewMode={previewMode} lang={lang} />;
   }
 }

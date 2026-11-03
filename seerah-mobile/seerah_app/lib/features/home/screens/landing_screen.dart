@@ -547,14 +547,16 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
 
                       const SizedBox(height: 20),
 
-                      // ── Part 1 preview ────────────────────────────────────
+                      // ── Free part preview ────────────────────────────────────
                       _Part1PreviewSection(
                         lang: lang,
-                        // pushReplacement (not push) — this and Part 1's
-                        // "Unlock full access" CTA form a two-screen loop; a
-                        // plain push here would grow the back stack forever if
-                        // a logged-out user bounces between the two.
-                        onWatch: () => context.pushReplacement('/part/1'),
+                        // pushReplacement (not push) — this and the free
+                        // part's "Unlock full access" CTA form a two-screen
+                        // loop; a plain push here would grow the back stack
+                        // forever if a logged-out user bounces between the two.
+                        onWatch: () => context.pushReplacement(
+                          '/part/${AppConstants.kFreePartNumber}',
+                        ),
                       ),
 
                       const SizedBox(height: 20),
@@ -949,7 +951,7 @@ class _TrustBadge extends StatelessWidget {
   }
 }
 
-// ── Part 1 preview section ────────────────────────────────────────────────────
+// ── Free part preview section ─────────────────────────────────────────────────
 
 class _Part1PreviewSection extends StatelessWidget {
   final String lang;

@@ -488,7 +488,7 @@ export async function getPartAssetUrls(partNum: number, lang: CourseLang = "en")
     r2GetMindmapKey(partNum),
   ]);
 
-  // All parts — including free Part 1 — use short-lived signed URLs.
+  // All parts — including the free preview part — use short-lived signed URLs.
   // Access control (free vs paid) is enforced at the page/API level, not via permanent URLs.
   const [videoUrl, audioUrl, mindmapUrl, thumbnailUrl] = await Promise.all([
     videoKey ? generateSignedR2Url(videoKey, VIDEO_URL_EXPIRY) : Promise.resolve(undefined),

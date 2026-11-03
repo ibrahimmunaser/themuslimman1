@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { getCachedStudentOrGuest } from "@/lib/auth-cache";
-import { hasActiveCourseAccess, isFamilyPlan } from "@/lib/access";
+import { hasActiveCourseAccess, isFamilyPlan, FREE_PART_NUMBER } from "@/lib/access";
 import { getActiveProfileId } from "@/app/actions/profiles";
 import { getPartById, PARTS, localizePart, getPartsForLang, localizedEraLabel } from "@/lib/content";
 import { getPart1PreviewData } from "@/lib/part1-preview-data";
@@ -183,14 +183,14 @@ export default async function SeerahPartPage(props: Props) {
   // getCachedStudentOrGuest() deduplicates with the seerah/layout.tsx call in the same request.
   const user = await getCachedStudentOrGuest();
 
-  // Signed-out visitors: middleware only lets /seerah/part-1 through for
-  // guests (every other /seerah/part-N redirects to /login before this ever
-  // runs), so n !== 1 here is just a defensive fallback. Render the same
-  // guest-safe preview the old /watch-free page used (previewMode, no
-  // learnerProfileId, no progress writes) directly at this URL instead of
-  // bouncing to a separate page.
+  // Signed-out visitors: middleware only lets /seerah/part-{FREE_PART_NUMBER}
+  // through for guests (every other /seerah/part-N redirects to /login before
+  // this ever runs), so n !== FREE_PART_NUMBER here is just a defensive
+  // fallback. Render the same guest-safe preview the old /watch-free page
+  // used (previewMode, no learnerProfileId, no progress writes) directly at
+  // this URL instead of bouncing to a separate page.
   if (!user) {
-    if (n !== 1) redirect("/pricing");
+    if (n !== FREE_PART_NUMBER) redirect("/pricing");
 
     const { part: previewPart, initialAssetUrls } = await getPart1PreviewData(lang);
     if (!previewPart) notFound();
@@ -210,7 +210,7 @@ export default async function SeerahPartPage(props: Props) {
               </Link>
               <div className="flex items-center gap-2 me-10 sm:me-0">
                 <span className="px-2 py-1 text-xs font-semibold rounded-md bg-gold/10 text-gold border border-gold/20">
-                  {tf(lang, "partLabel", { n: 1 })}
+                  {tf(lang, "partLabel", { n: FREE_PART_NUMBER })}
                 </span>
                 <span className="text-xs text-text-muted uppercase tracking-wider hidden sm:inline">
                   {localizedEraLabel(lang, partBase.era)}
@@ -262,10 +262,10 @@ export default async function SeerahPartPage(props: Props) {
   if (!user.studentProfileId) notFound();
 
   // Unverified users without course access go to dashboard verify wall —
-  // except Part 1, which is free (mirrors lib/part-access + mobile).
+  // except the free part, which is free (mirrors lib/part-access + mobile).
   // Entitled users keep lesson access — soft verify from profile/dashboard.
   if (!user.emailVerified) {
-    if (n !== 1) {
+    if (n !== FREE_PART_NUMBER) {
       const entitled = await hasActiveCourseAccess(user.id, user.hasPaid);
       if (!entitled) redirect("/seerah");
     }
@@ -281,7 +281,7 @@ export default async function SeerahPartPage(props: Props) {
   const learnerProfileId = user.activeProfileId ?? await getActiveProfileId(user.id);
 
   const [accessOk, partProgress] = await Promise.all([
-    n === 1 ? Promise.resolve(true) : hasActiveCourseAccess(user.id, user.hasPaid),
+    n === FREE_PART_NUMBER ? Promise.resolve(true) : hasActiveCourseAccess(user.id, user.hasPaid),
     prisma.partProgress.findUnique({
       where: { learnerProfileId_partNumber: { learnerProfileId, partNumber: n } },
       select: {

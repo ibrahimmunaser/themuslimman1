@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { XCircle, Loader2, AlertTriangle } from "lucide-react";
-import type { CourseLang } from "@/lib/course-lang";
+import { COURSE_LANG_LOCALES, type CourseLang } from "@/lib/course-lang";
 import { t, tf } from "@/lib/ui-strings";
 
 interface Props {
@@ -16,11 +16,12 @@ export function CancelSubscriptionButton({ cancelDate, isTrial, lang = "en" }: P
   const [error, setError] = useState<string | null>(null);
 
   const formattedDate = new Date(cancelDate).toLocaleDateString(
-    lang === "ar" ? "ar-EG" : lang === "fr" ? "fr-FR" : "en-US",
+    COURSE_LANG_LOCALES[lang],
     {
       month: "long",
       day: "numeric",
       year: "numeric",
+      ...(lang === "ar" ? { numberingSystem: "arab" as const } : {}),
     },
   );
   async function handleCancel() {

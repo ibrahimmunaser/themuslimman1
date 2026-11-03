@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getActiveProfileId } from "@/app/actions/profiles";
-import { hasActiveCourseAccess, TOTAL_COURSE_PARTS } from "@/lib/access";
+import { hasActiveCourseAccess, TOTAL_COURSE_PARTS, FREE_PART_NUMBER } from "@/lib/access";
 import { getPartPageData } from "@/lib/part-content-cache";
 import { computeQuizScore, VIDEO_COMPLETION_THRESHOLD } from "@/lib/progress";
 import { getUserPlan, recomputeAndSaveStatus } from "@/lib/progress-writes";
@@ -97,15 +97,15 @@ export async function POST(request: NextRequest) {
       if (isValidPart(n)) partNumbers.add(n);
     }
 
-    // Part 1 is always free (mirrors lib/part-access.ts's requirePartAccess).
+    // The free part is always free (mirrors lib/part-access.ts's requirePartAccess).
     // Gating this whole endpoint on hasActiveCourseAccess meant a guest who
-    // only ever browsed the free Part 1 lost that local progress the moment
+    // only ever browsed the free part lost that local progress the moment
     // they signed up/signed in — the exact scenario pushLocalToServer/
-    // bulk-sync exists to preserve. Only drop parts > 1 when access is
-    // missing; Part 1 always merges.
+    // bulk-sync exists to preserve. Only drop other parts when access is
+    // missing; the free part always merges.
     const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
     if (!hasAccess) {
-      partNumbers = new Set([...partNumbers].filter((n) => n === 1));
+      partNumbers = new Set([...partNumbers].filter((n) => n === FREE_PART_NUMBER));
     }
 
     if (partNumbers.size === 0) {

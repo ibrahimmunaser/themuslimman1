@@ -78,19 +78,19 @@ export function buildManualOutreachHtml(opts: {
     </p>
 
     <p style="font-size:15px;margin:0 0 16px 0;color:#333;">
-      Start with Part 1 for free and see how the course is structured.
+      Start with the First Revelation for free and see how the course is structured.
     </p>
 
     <p style="font-size:15px;margin:0 0 24px 0;color:#333;">
       The goal is simple: to help Muslims learn the life of the Prophet ﷺ in order, step by step — not scattered stories.
     </p>
 
-    <p style="font-size:15px;margin:0 0 8px 0;color:#333;">Watch Part 1 free:</p>
+    <p style="font-size:15px;margin:0 0 8px 0;color:#333;">Watch the First Revelation free:</p>
 
     <div style="text-align:center;margin:24px 0 32px 0;">
       <a href="${part1Url}"
          style="display:inline-block;background:#f4c542;color:#1a1a1a;text-decoration:none;padding:16px 40px;border-radius:8px;font-weight:700;font-size:16px;">
-        Watch Part 1 Free
+        Watch the First Revelation Free
       </a>
     </div>
 
@@ -164,7 +164,7 @@ function buildStep1Html(firstName: string, unsubscribeUrl: string): string {
     </p>
 
     <p style="font-size:15px;margin:0 0 16px 0;color:#333;">
-      Start with Part 1 for free and see how the course is structured.
+      Start with the First Revelation for free and see how the course is structured.
     </p>
 
     <p style="font-size:15px;margin:0 0 24px 0;color:#333;">
@@ -174,7 +174,7 @@ function buildStep1Html(firstName: string, unsubscribeUrl: string): string {
     <div style="text-align:center;margin:32px 0;">
       <a href="${part1Url}"
          style="display:inline-block;background:#f4c542;color:#1a1a1a;text-decoration:none;padding:16px 40px;border-radius:8px;font-weight:700;font-size:16px;">
-        Watch Part 1 Free
+        Watch the First Revelation Free
       </a>
     </div>
 
@@ -230,13 +230,13 @@ function buildStep2Html(firstName: string, unsubscribeUrl: string): string {
     </p>
 
     <p style="font-size:15px;margin:0 0 24px 0;color:#333;">
-      You can continue with Part 1 free here:
+      You can continue with the First Revelation free here:
     </p>
 
     <div style="text-align:center;margin:28px 0;">
       <a href="${part1Url}"
          style="display:inline-block;background:#f4c542;color:#1a1a1a;text-decoration:none;padding:16px 40px;border-radius:8px;font-weight:700;font-size:16px;">
-        Continue Part 1
+        Continue the First Revelation
       </a>
     </div>
 

@@ -15,7 +15,7 @@ export function NavLinks({ isLoggedIn, lang }: NavLinksProps) {
 
   const links = [
     { href: "/", label: siteT(lang, "navHome") },
-    // Course dashboard is open to everyone (Part 1 free, rest locked).
+    // Course dashboard is open to everyone (free part unlocked, rest locked).
     { href: "/seerah", label: siteT(lang, isLoggedIn ? "navMyCourse" : "navCourse") },
     { href: "/pricing", label: siteT(lang, "navPricing") },
     { href: "/contact", label: siteT(lang, "navHelp") },

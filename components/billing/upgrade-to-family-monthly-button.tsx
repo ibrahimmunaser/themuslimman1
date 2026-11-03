@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ArrowRight, ArrowLeft } from "lucide-react";
-import type { CourseLang } from "@/lib/course-lang";
+import { isRtlLang, type CourseLang } from "@/lib/course-lang";
 import { t, tf } from "@/lib/ui-strings";
 
 interface Props {
@@ -17,7 +17,7 @@ interface Props {
 export function UpgradeToFamilyMonthlyButton({ lang = "en" }: Props) {
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState<string | null>(null);
-  const Icon = lang === "ar" ? ArrowLeft : ArrowRight;
+  const Icon = isRtlLang(lang) ? ArrowLeft : ArrowRight;
 
   const handleUpgrade = async () => {
     setLoading(true);

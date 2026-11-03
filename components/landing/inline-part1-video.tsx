@@ -6,9 +6,10 @@ import { Play } from "lucide-react";
 import { LangToggle } from "@/components/part/lang-toggle";
 import type { CourseLang } from "@/lib/course-lang";
 import { isRtlLang } from "@/lib/course-lang";
-import { loc } from "@/lib/loc";
+import { loc, locf } from "@/lib/loc";
 import { siteT } from "@/lib/site-copy";
 import { LifetimeAccessCta } from "@/components/pricing/country-price";
+import { FREE_PART_NUMBER } from "@/lib/free-part-number";
 
 interface Part1PreviewData {
   title: string;
@@ -96,7 +97,7 @@ export function InlinePart1Video({ checkoutUrl, checkoutLabel, hideCta = false, 
           {loc(lang, "Preview temporarily unavailable.", "المعاينة غير متاحة مؤقتًا.", "Aperçu temporairement indisponible.")}
         </p>
         <Link href="/watch-free" className="text-gold text-sm underline underline-offset-2 hover:text-gold/80">
-          {loc(lang, "Open Part 1 on its own page →", "افتح الجزء ١ في صفحة مستقلة ←", "Ouvrir la partie 1 sur sa propre page →")}
+          {loc(lang, "Open the free preview on its own page →", "افتح المعاينة المجانية في صفحة مستقلة ←", "Ouvrir l'aperçu gratuit sur sa propre page →")}
         </Link>
       </div>
     );
@@ -111,7 +112,7 @@ export function InlinePart1Video({ checkoutUrl, checkoutLabel, hideCta = false, 
             {siteT(lang, "previewEyebrow")}
           </p>
           <h3 className="text-base sm:text-lg font-bold text-text leading-snug">
-            {loc(lang, `Part 1: ${data.title}`, `الجزء ١: ${data.title}`, `Partie 1 : ${data.title}`)}
+            {locf(lang, "The First Revelation: {title}", "الوحي الأول: {title}", "La Première Révélation : {title}", { title: data.title })}
           </h3>
           {data.subtitle && (
             <p className="text-sm text-text-secondary mt-0.5 leading-snug">{data.subtitle}</p>
@@ -120,7 +121,7 @@ export function InlinePart1Video({ checkoutUrl, checkoutLabel, hideCta = false, 
         <div className="flex items-center gap-3 flex-shrink-0">
           <LangToggle
             current={lang}
-            partNumber={1}
+            partNumber={FREE_PART_NUMBER}
             prominent
             clientManaged
             onChange={setLang}
@@ -184,9 +185,7 @@ export function InlinePart1Video({ checkoutUrl, checkoutLabel, hideCta = false, 
             className="flex items-center justify-center w-full py-5 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-lg transition-colors shadow-lg shadow-gold/25 mb-2"
           >
             {!checkoutLabel || checkoutLabel.includes("$49") || checkoutLabel.includes("49 $") || checkoutLabel.includes("Only $99") ? (
-              lang === "ar" ? <LifetimeAccessCta leading="احصل على وصول مدى الحياة — " /> :
-              lang === "fr" ? <LifetimeAccessCta leading="Obtenir l'accès à vie — " /> :
-              <LifetimeAccessCta />
+              <LifetimeAccessCta leading={`${loc(lang, "Get lifetime access", "احصل على وصول مدى الحياة", "Obtenir l'accès à vie")} — `} />
             ) : checkoutLabel}
           </Link>
           <p className="text-xs text-text-muted/70">

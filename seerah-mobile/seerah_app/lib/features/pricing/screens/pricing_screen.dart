@@ -505,7 +505,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
 
           const SizedBox(height: 24),
 
-          // ── Free Part 1 ──────────────────────────────────────────
+          // ── Free preview part ────────────────────────────────────
           Text(
             t(lang, 'wantToPreviewFirst'),
             textAlign: TextAlign.center,
@@ -517,9 +517,10 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
           const SizedBox(height: 10),
           InkWell(
             // push (not go) preserves whatever back-stack the user arrived
-            // with — matches the identical "preview Part 1" card on
+            // with — matches the identical "preview the free part" card on
             // landing_screen.dart and part_screen.dart's continue CTA.
-            onTap: () => context.push('/part/1'),
+            onTap: () =>
+                context.push('/part/${AppConstants.kFreePartNumber}'),
             borderRadius: BorderRadius.circular(12),
             child: Container(
               padding: const EdgeInsets.all(16),

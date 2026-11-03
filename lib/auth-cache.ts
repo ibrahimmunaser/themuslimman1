@@ -18,7 +18,7 @@ export const getCachedCurrentUser = cache(getCurrentUser);
 /**
  * For the publicly viewable course dashboard (/seerah, /seerah/resources).
  *
- * - Signed-out visitors → `null` (render the guest view: Part 1 free, rest locked).
+ * - Signed-out visitors → `null` (render the guest view: free part unlocked, rest locked).
  * - Signed-in students  → the SessionUser.
  * - Signed-in non-students (e.g. platform admins) → redirected home by requireStudent().
  *

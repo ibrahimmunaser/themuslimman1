@@ -7,6 +7,7 @@ import {
 import type { StageData } from "./course-home-content";
 import type { CourseLang } from "@/lib/course-lang";
 import { t, tf } from "@/lib/ui-strings";
+import { FREE_PART_NUMBER } from "@/lib/access";
 
 interface CourseProgressContentProps {
   userPlan: "essentials" | "complete";
@@ -19,7 +20,7 @@ interface CourseProgressContentProps {
   quizTotalAttempts: number;
   activeParts: number[];
   partTitleMap: Record<number, string>;
-  /** Destination for the "Start Part 1" calls to action (guests → public free preview). */
+  /** Destination for the "Start the First Revelation" calls to action (guests → public free preview). */
   part1Href?: string;
   lang?: CourseLang;
 }
@@ -35,7 +36,7 @@ export function CourseProgressContent({
   quizTotalAttempts,
   activeParts,
   partTitleMap,
-  part1Href = "/seerah/part-1",
+  part1Href = `/seerah/part-${FREE_PART_NUMBER}`,
   lang = "en",
 }: CourseProgressContentProps) {
   const hasAnyActivity = completedLessons > 0 || activeParts.length > 0;

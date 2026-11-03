@@ -8,9 +8,9 @@ import { LifetimeAccessCta } from "@/components/pricing/country-price";
 import { WatchFreeTracker } from "./watch-free-tracker";
 
 export const metadata: Metadata = {
-  title: "Watch Part 1 Free | The Muslim Man",
+  title: "Watch the First Revelation Free | The Muslim Man",
   description:
-    "No card needed. Watch the first lesson of the structured 100-part Seerah course — short video, quiz, flashcards, and summaries. Free, no signup required.",
+    "No card needed. Watch the free preview lesson of the structured 100-part Seerah course — short video, quiz, flashcards, and summaries. Free, no signup required.",
   robots: { index: false, follow: true },
 };
 
@@ -72,20 +72,20 @@ export default async function WatchFreePage({ searchParams }: Props) {
           100% Free · No Signup Required
         </div>
         <h1 className="text-3xl sm:text-5xl font-extrabold text-text leading-tight tracking-tight mb-4">
-          Watch Part 1 Free
+          Watch the First Revelation — Free
         </h1>
         <p className="text-text-secondary text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
           No card needed. Start learning the life of the Prophet ﷺ in order.
         </p>
       </section>
 
-      {/* ── Part 1 Preview ───────────────────────────────────────────────────── */}
+      {/* ── Free Part Preview ───────────────────────────────────────────────────── */}
       <section className="max-w-5xl mx-auto px-4 pb-16">
         <Suspense
           fallback={
             <div className="rounded-2xl border border-border bg-surface overflow-hidden p-10 text-center">
               <div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin mx-auto mb-4" />
-              <p className="text-text-secondary text-sm">Loading Part 1…</p>
+              <p className="text-text-secondary text-sm">Loading the free preview…</p>
             </div>
           }
         >

@@ -1,6 +1,6 @@
 /**
  * Server-side data fetcher for influencer quick-checkout pages.
- * Loads the full Part 1 preview (video, slides, quiz, flashcards, etc.)
+ * Loads the full free-part preview (video, slides, quiz, flashcards, etc.)
  * in the visitor's selected course language (EN/AR cookie).
  */
 

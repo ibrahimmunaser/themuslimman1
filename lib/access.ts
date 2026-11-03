@@ -18,6 +18,13 @@ export const FAMILY_PROFILE_LIMIT     = 5;
  */
 export const TOTAL_COURSE_PARTS: number = 100;
 
+// Re-exported so existing call sites can keep importing FREE_PART_NUMBER
+// from "@/lib/access" alongside TOTAL_COURSE_PARTS. The value itself lives
+// in lib/free-part-number.ts (a zero-dependency module) so client components
+// and edge middleware can import it directly without pulling this
+// Prisma-importing file into their bundle.
+export { FREE_PART_NUMBER } from "./free-part-number";
+
 /**
  * Subscription statuses that grant full course access when paired with an
  * appropriate time-based guard (see hasActiveCourseAccess for the full logic).

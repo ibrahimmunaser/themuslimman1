@@ -183,7 +183,7 @@ export default function LanguagesBlastPage() {
           Complete Seerah is available in 15 languages
         </p>
         <p className="text-xs text-text-muted">
-          Includes Try Part 1 Free CTA + Share on WhatsApp button. Respects unsubscribe list.
+          Includes Try the First Revelation Free CTA + Share on WhatsApp button. Respects unsubscribe list.
         </p>
       </div>
 

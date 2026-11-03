@@ -5,7 +5,7 @@ import { StudentLayout } from "@/components/student/student-layout";
 import { User, Mail, Shield } from "lucide-react";
 import { ChangePasswordForm } from "@/components/student/change-password-form";
 import { cookies } from "next/headers";
-import { parseLang, COURSE_LANG_COOKIE } from "@/lib/course-lang";
+import { parseLang, COURSE_LANG_COOKIE, isRtlLang } from "@/lib/course-lang";
 import { loc } from "@/lib/loc";
 
 export const metadata = { title: "Settings | Complete Seerah" };
@@ -21,11 +21,11 @@ export default async function SettingsPage() {
   const userPlan = "complete" as const;
   const cookieStore = await cookies();
   const lang = parseLang(cookieStore.get(COURSE_LANG_COOKIE)?.value);
-  const ar = lang === "ar";
+  const rtl = isRtlLang(lang);
 
   return (
     <StudentLayout userPlan={userPlan} userName={user.fullName}>
-      <div className="min-h-screen bg-[#0a0a0a]" dir={ar ? "rtl" : undefined}>
+      <div className="min-h-screen bg-[#0a0a0a]" dir={rtl ? "rtl" : "ltr"}>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="mb-8">
             <h1 className="text-xl sm:text-3xl font-bold text-text mb-2">
@@ -111,7 +111,7 @@ export default async function SettingsPage() {
                   {loc(
                     lang,
                     "Complete Seerah Early Access",
-                    "وصول كامل إلى السيرة النبوية",
+                    "الوصول المبكر إلى السيرة النبوية الكاملة",
                     "Accès anticipé Complete Seerah",
                   )}
                 </p>

@@ -1,7 +1,7 @@
 "use server";
 
 import { getCurrentUser } from "@/lib/auth";
-import { hasActiveCourseAccess, TOTAL_COURSE_PARTS } from "@/lib/access";
+import { hasActiveCourseAccess, TOTAL_COURSE_PARTS, FREE_PART_NUMBER } from "@/lib/access";
 import { PART_CONTENT } from "@/lib/part-content-data";
 import { PART_CONTENT_AR } from "@/lib/part-content-data-ar";
 import { PART_CONTENT_FR } from "@/lib/part-content-data-fr";
@@ -19,7 +19,7 @@ async function canAccessPartContent(partNumber: number): Promise<boolean> {
 
   const user = await getCurrentUser();
   if (!user) return false;
-  if (partNumber === 1) return true;
+  if (partNumber === FREE_PART_NUMBER) return true;
   if (!user.emailVerified && !user.isAnonymous) {
     const entitled = await hasActiveCourseAccess(user.id, user.hasPaid);
     if (!entitled) return false;

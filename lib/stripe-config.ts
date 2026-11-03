@@ -19,8 +19,8 @@ export const PLANS = {
     subtitle: "Try Before You Buy",
     price: 0,
     features: [
-      "Part 1 video lesson — no signup required",
-      "Part 1 briefing and study guide",
+      "The First Revelation (Part 15) video lesson — no signup required",
+      "The First Revelation (Part 15) briefing and study guide",
       "Preview of the complete Seerah study system",
     ],
   },

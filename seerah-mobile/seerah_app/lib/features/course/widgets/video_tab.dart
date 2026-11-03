@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:video_player/video_player.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/providers/part_provider.dart';
 import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
@@ -24,7 +25,7 @@ class VideoTab extends ConsumerWidget {
         ),
       ),
       error: (e, _) => _ErrorState(
-        message: partNumber == 1
+        message: partNumber == AppConstants.kFreePartNumber
             ? t(lang, 'unableToLoadVideoConnection')
             : t(lang, 'unableToLoadVideoSub'),
         onRetry: () => ref.invalidate(partAssetsProvider(partNumber)),

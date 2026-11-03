@@ -24,8 +24,8 @@ export async function Part1FullPreview({
       <div className="rounded-2xl border border-border bg-surface p-8 text-center">
         <p className="text-text-secondary">
           {isRtl
-            ? "معاينة الجزء الأول غير متاحة مؤقتًا. يرجى المحاولة لاحقًا."
-            : "Part 1 preview is temporarily unavailable. Please try again later."}
+            ? "معاينة الوحي الأول غير متاحة مؤقتًا. يرجى المحاولة لاحقًا."
+            : "The free preview is temporarily unavailable. Please try again later."}
         </p>
       </div>
     );
@@ -40,7 +40,7 @@ export async function Part1FullPreview({
               {siteT(lang, "previewEyebrow")}
             </p>
             <h3 className="text-xl font-bold text-text">
-              {isRtl ? `الجزء ١: ${part.title}` : `Part 1: ${part.title}`}
+              {isRtl ? `الجزء ${part.partNumber}: ${part.title}` : `Part ${part.partNumber}: ${part.title}`}
             </h3>
             {part.subtitle && (
               <p className="text-sm text-text-secondary mt-1">{part.subtitle}</p>
@@ -72,7 +72,7 @@ export async function Part1FullPreview({
       {!hideCta && (
         <div className="p-8 border-t border-gold/20 bg-surface-raised text-center">
           <p className="text-xs font-bold text-gold uppercase tracking-widest mb-2">
-            {isRtl ? "جاهز للجزء ٢؟" : "Ready for Part 2?"}
+            {isRtl ? `جاهز للجزء ${part.partNumber + 1}؟` : `Ready for Part ${part.partNumber + 1}?`}
           </p>
           <h3 className="text-xl sm:text-2xl font-bold text-text mb-2">
             {isRtl ? "تابع الدورة كاملة." : "Continue the full course."}

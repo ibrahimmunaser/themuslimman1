@@ -15,7 +15,7 @@ import {
   recomputeAndSaveStatus,
   applyVerifiedQuizScore,
 } from "@/lib/progress-writes";
-import { hasActiveCourseAccess, TOTAL_COURSE_PARTS } from "@/lib/access";
+import { hasActiveCourseAccess, TOTAL_COURSE_PARTS, FREE_PART_NUMBER } from "@/lib/access";
 
 // Verbose trace logs are active in development only to avoid spamming
 // production logs on every video-threshold tick.
@@ -41,7 +41,7 @@ function isValidPartNumber(partNumber: unknown): partNumber is number {
   );
 }
 
-/** Resolve plan for progress writes — Part 1 unpaid uses "complete" like mobile track. */
+/** Resolve plan for progress writes — the free part unpaid uses "complete" like mobile track. */
 async function resolveProgressPlan(
   userId: string,
   sessionHasPaid: boolean | undefined,
@@ -49,8 +49,8 @@ async function resolveProgressPlan(
 ) {
   const userPlan = await getUserPlan(userId, sessionHasPaid);
   if (userPlan) return userPlan;
-  // Mobile: `(await getUserPlan(...)) ?? "complete"` after Part 1 carve-out.
-  if (partNumber === 1) return "complete" as const;
+  // Mobile: `(await getUserPlan(...)) ?? "complete"` after the free-part carve-out.
+  if (partNumber === FREE_PART_NUMBER) return "complete" as const;
   return null;
 }
 
@@ -268,7 +268,7 @@ export async function trackAssetOpened(partNumber: number, assetId: string) {
 
 /**
  * Mark a part as started (called when user opens the part page).
- * Requires active course access (or Part 1 free) — do not trust page-only gates;
+ * Requires active course access (or the free part) — do not trust page-only gates;
  * this action is callable directly and would inflate certificate "studied" counts.
  */
 export async function trackPartOpened(partNumber: number) {
@@ -276,7 +276,7 @@ export async function trackPartOpened(partNumber: number) {
   if (!user) return;
   if (!isValidPartNumber(partNumber)) return;
 
-  if (partNumber !== 1) {
+  if (partNumber !== FREE_PART_NUMBER) {
     const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
     if (!hasAccess) return;
   }

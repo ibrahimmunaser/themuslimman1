@@ -161,7 +161,7 @@ const COPY = {
   oneTime: L("one-time", "دفعة واحدة", "en une fois", "sekali bayar", "sekali bayar", "一次性", "разово", "mara moja", "pago único", "einmalig", "tek sefer", "एक बार", "ایک بار", "একবার", "یک‌بار"),
   lifetimeAccess: L("Lifetime access", "وصول مدى الحياة", "Accès à vie", "Akses seumur hidup", "Akses seumur hidup", "终身访问", "Доступ навсегда", "Ufikiaji wa maisha", "Acceso de por vida", "Lebenslanger Zugang", "Ömür boyu erişim", "आजीवन पहुँच", "تاحیات رسائی", "আজীবন প্রবেশ", "دسترسی مادام‌العمر"),
   getLifetime: L("Get Lifetime Access", "احصل على الوصول مدى الحياة", "Obtenir l'accès à vie", "Dapatkan akses seumur hidup", "Dapatkan akses seumur hidup", "获得终身访问", "Получить доступ навсегда", "Pata ufikiaji wa maisha", "Obtener acceso de por vida", "Lebenslangen Zugang holen", "Ömür boyu erişim al", "आजीवन पहुँच पाएँ", "تاحیات رسائی حاصل کریں", "আজীবন প্রবেশ নিন", "دسترسی مادام‌العمر بگیرید"),
-  watchFree: L("Watch Part 1 Free", "شاهد الجزء الأول مجانًا", "Voir la partie 1 gratuite", "Tonton Bagian 1 gratis", "Tonton Bahagian 1 percuma", "免费观看第1部分", "Смотреть часть 1 бесплатно", "Tazama Sehemu ya 1 bure", "Ver la parte 1 gratis", "Teil 1 kostenlos ansehen", "1. bölümü ücretsiz izle", "भाग 1 मुफ़्त देखें", "حصہ ۱ مفت دیکھیں", "পর্ব ১ বিনামূল্যে দেখুন", "بخش ۱ را رایگان ببینید"),
+  watchFree: L("Watch the First Revelation — Free.", "شاهد الوحي الأول — مجانًا.", "Regardez la Première Révélation — gratuitement.", "Tonton Wahyu Pertama — Gratis.", "Tonton Wahyu Pertama — Percuma.", "观看第一次启示 — 免费。", "Смотрите Первое Откровение — бесплатно.", "Tazama Ufunuo wa Kwanza — Bure.", "Mira la Primera Revelación — gratis.", "Sieh die Erste Offenbarung — kostenlos.", "İlk Vahyi İzle — Ücretsiz.", "पहला वह्य देखें — मुफ़्त।", "پہلی وحی دیکھیں — مفت۔", "প্রথম ওহী দেখুন — বিনামূল্যে।", "اولین وحی را ببینید — رایگان."),
 
   heroLead: L(
     "Learn the life of the Prophet ﷺ",
@@ -351,7 +351,7 @@ const COPY = {
     "100% বিনামূল্যে",
     "۱۰۰٪ رایگان",
   ),
-  previewTitle: L("Experience Part 1 free", "جرّب الجزء الأول مجانًا", "Essayez la partie 1 gratuitement", "Coba Bagian 1 gratis", "Cuba Bahagian 1 percuma", "免费体验第1部分", "Попробуйте часть 1 бесплатно", "Jaribu Sehemu ya 1 bure", "Prueba la parte 1 gratis", "Teil 1 kostenlos erleben", "1. bölümü ücretsiz dene", "भाग 1 मुफ़्त आज़माएँ", "حصہ ۱ مفت آزمائیں", "পর্ব ১ বিনামূল্যে দেখুন", "بخش ۱ را رایگان تجربه کنید"),
+  previewTitle: L("Experience the First Revelation free", "جرّب الوحي الأول مجانًا", "Découvrez la Première Révélation gratuitement", "Rasakan Wahyu Pertama secara gratis", "Alami Wahyu Pertama secara percuma", "免费体验第一次启示", "Познакомьтесь с Первым Откровением бесплатно", "Pata Ufunuo wa Kwanza bure", "Experimenta la Primera Revelación gratis", "Erlebe die Erste Offenbarung kostenlos", "İlk Vahyi ücretsiz deneyimle", "पहला वह्य मुफ़्त में अनुभव करें", "پہلی وحی مفت میں تجربہ کریں", "প্রথম ওহী বিনামূল্যে অনুভব করুন", "اولین وحی را رایگان تجربه کنید"),
   previewBody: L(
     "See the real lesson format — video, reading, slides, quiz, and flashcards — before you buy. Switch languages anytime.",
     "شاهد شكل الدرس الحقيقي — فيديو وقراءة وشرائح واختبار وبطاقات — قبل الشراء. وبدّل اللغة متى شئت.",

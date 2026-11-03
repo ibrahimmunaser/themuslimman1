@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { getCachedStudentOrGuest } from "@/lib/auth-cache";
-import { GUEST_PART1_HREF } from "@/lib/guest-access";
-import { hasActiveCourseAccess, isFamilyPlan } from "@/lib/access";
+import { GUEST_FREE_PART_HREF } from "@/lib/guest-access";
+import { hasActiveCourseAccess, isFamilyPlan, FREE_PART_NUMBER } from "@/lib/access";
 import { getActiveProfileId } from "@/app/actions/profiles";
 import { prisma } from "@/lib/db";
 import { ResourcesTabs } from "@/components/resources/resources-tabs";
@@ -21,14 +21,14 @@ export const dynamic = "force-dynamic";
 export default async function SeerahResourcesPage() {
   // getCachedStudentOrGuest() deduplicates this call with the parent layout's auth
   // query — no extra DB round-trip on this page. `null` = signed-out visitor,
-  // who sees the library with Part 1 free and Parts 2+ locked (no progress).
+  // who sees the library with only the free preview part unlocked (no progress).
   const user = await getCachedStudentOrGuest();
   const isGuest = user === null;
   // No studentProfile yet — redirect to /seerah which auto-creates it.
   if (user && !user.studentProfileId) redirect("/seerah");
 
   // Run access check and profile ID lookup in parallel — both only need user.id.
-  // Unpaid users stay on resources with parts 2–100 locked (mobile parity).
+  // Unpaid users stay on resources with every part but the free part locked (mobile parity).
   const [hasAccess, learnerProfileId] = await Promise.all([
     user ? hasActiveCourseAccess(user.id, user.hasPaid) : Promise.resolve(false),
     !user
@@ -48,8 +48,8 @@ export default async function SeerahResourcesPage() {
 
   const _userPlan = "complete" as const;
 
-  // Guest: Part 1 opens the free public preview (content APIs need a session).
-  const guestPreviewHref = isGuest ? GUEST_PART1_HREF : undefined;
+  // Guest: the free part opens the free public preview (content APIs need a session).
+  const guestPreviewHref = isGuest ? GUEST_FREE_PART_HREF : undefined;
 
   // Fetch progress and thumbnail URLs in parallel, scoped to active profile.
   // Thumbnails follow the course language cookie (Arabic slide posters when lang=ar).
@@ -136,7 +136,7 @@ export default async function SeerahResourcesPage() {
 
   const lockedPartNumbers: number[] = hasAccess
     ? []
-    : PARTS.filter((p) => p.partNumber > 1).map((p) => p.partNumber);
+    : PARTS.filter((p) => p.partNumber !== FREE_PART_NUMBER).map((p) => p.partNumber);
 
   // Asset progress maps
   const audioProgressMap = getAssetProgressMap("audio");

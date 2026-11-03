@@ -21,8 +21,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { parseLang, COURSE_LANG_COOKIE, type CourseLang } from "@/lib/course-lang";
-import { loc } from "@/lib/loc";
+import { parseLang, COURSE_LANG_COOKIE, COURSE_LANG_LOCALES, isRtlLang, type CourseLang } from "@/lib/course-lang";
+import { loc, locf } from "@/lib/loc";
 import { LifetimeAccessCta } from "@/components/pricing/country-price";
 
 export const metadata = { title: "Billing | Complete Seerah", robots: { index: false, follow: false } };
@@ -31,25 +31,19 @@ export const dynamic = "force-dynamic";
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 function formatDate(d: Date, lang: CourseLang) {
+  const opts: Intl.DateTimeFormatOptions = {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: "UTC",
+  };
   if (lang === "ar") {
-    return new Intl.DateTimeFormat("ar", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      timeZone: "UTC",
+    return new Intl.DateTimeFormat(COURSE_LANG_LOCALES.ar, {
+      ...opts,
       numberingSystem: "arab",
     }).format(d);
   }
-  if (lang === "fr") {
-    return new Intl.DateTimeFormat("fr-FR", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      timeZone: "UTC",
-    }).format(d);
-  }
-  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  return `${months[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
+  return new Intl.DateTimeFormat(COURSE_LANG_LOCALES[lang], opts).format(d);
 }
 
 function formatAmount(cents: number, currency: string) {
@@ -112,8 +106,8 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
   const userPlan = "complete" as const;
   const cookieStore = await cookies();
   const lang = parseLang(cookieStore.get(COURSE_LANG_COOKIE)?.value);
-  const ar = lang === "ar";
-  const UpgradeIcon = ar ? ArrowLeft : ArrowRight;
+  const rtl = isRtlLang(lang);
+  const UpgradeIcon = rtl ? ArrowLeft : ArrowRight;
 
   const isFamily          = user.planType === "family";
   // Treat past_due/unpaid monthly subs as monthly even after grace expires —
@@ -164,7 +158,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
     "Visual learning resources": "موارد التعلم المرئية",
     "Progress tracking": "تتبع التقدم",
     "Lifetime access to the full course": "وصول مدى الحياة إلى الدورة كاملة",
-    "Start today. Continue at your own pace.": "ابدأ اليوم. وتابع بالوتيرة التي تناسبك.",
+    "Start today. Continue at your own pace.": "ابدأ اليوم، وتابع بالوتيرة التي تناسبك.",
     "Videos, quizzes, flashcards, mind maps": "فيديوهات واختبارات وبطاقات تعليمية وخرائط ذهنية",
     "Progress dashboard · Mobile friendly": "لوحة تقدّم · مناسب للجوال",
     "Cancel anytime": "ألغِ في أي وقت",
@@ -216,11 +210,11 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
     : isMonthly
     ? PLANS.monthly.features
     : PLANS.complete.features
-  ).slice(0, 8).map((f) => (lang === "ar" ? (FEATURES_AR[f] ?? f) : lang === "fr" ? (FEATURES_FR[f] ?? f) : f));
+  ).slice(0, 8).map((f) => loc(lang, f, FEATURES_AR[f] ?? f, FEATURES_FR[f] ?? f));
 
   return (
     <StudentLayout userPlan={userPlan} userName={user.fullName} planType={user.planType}>
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 space-y-8" dir={ar ? "rtl" : undefined}>
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 space-y-8" dir={rtl ? "rtl" : "ltr"}>
 
         {/* Header */}
         <div>
@@ -237,11 +231,12 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
             <div>
               <p className="font-semibold text-emerald-400">{loc(lang, "Upgraded to Family Monthly", "تمت الترقية إلى عضوية العائلة الشهرية", "Passage à Famille Mensuel")}</p>
               <p className="text-sm text-text-secondary mt-1 leading-relaxed">
-                {loc(
+                {locf(
                   lang,
-                  `Your plan has been upgraded to Family Monthly — $${(PLANS.familyMonthly.price / 100).toFixed(2)}/mo. Your existing card will be charged at the next billing date with Stripe handling any proration automatically.`,
-                  `تمت ترقية خطتك إلى عضوية العائلة الشهرية — ${(PLANS.familyMonthly.price / 100).toFixed(2)}$/شهر. سيتم تحصيل المبلغ من بطاقتك الحالية في تاريخ الفوترة القادم، وسيتولى Stripe حساب أي فرق تلقائيًا.`,
-                  `Votre plan a été passé à Famille Mensuel — ${(PLANS.familyMonthly.price / 100).toFixed(2)} $/mois. Votre carte actuelle sera débitée à la prochaine date de facturation ; Stripe gérera automatiquement tout prorata.`,
+                  "Your plan has been upgraded to Family Monthly — ${price}/mo. Your existing card will be charged at the next billing date with Stripe handling any proration automatically.",
+                  "تمت ترقية خطتك إلى عضوية العائلة الشهرية — ${price}/شهر. سيتم تحصيل المبلغ من بطاقتك الحالية في تاريخ الفوترة القادم، وسيتولى Stripe حساب أي فرق تلقائيًا.",
+                  "Votre plan a été passé à Famille Mensuel — {price} $/mois. Votre carte actuelle sera débitée à la prochaine date de facturation ; Stripe gérera automatiquement tout prorata.",
+                  { price: (PLANS.familyMonthly.price / 100).toFixed(2) },
                 )}
               </p>
             </div>
@@ -314,20 +309,22 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
               {isFamilyMonthly && isTrial ? (
                 <>
                   <p className="text-xs text-text-muted">
-                    {loc(
+                    {locf(
                       lang,
-                      `Free today · then $${(PLANS.familyMonthly.price / 100).toFixed(2)}/mo`,
-                      `مجاني الآن · ثم $${(PLANS.familyMonthly.price / 100).toFixed(2)}/شهر`,
-                      `Gratuit aujourd'hui · puis ${(PLANS.familyMonthly.price / 100).toFixed(2)} $/mois`,
+                      "Free today · then ${price}/mo",
+                      "مجاني الآن · ثم ${price}/شهر",
+                      "Gratuit aujourd'hui · puis {price} $/mois",
+                      { price: (PLANS.familyMonthly.price / 100).toFixed(2) },
                     )}
                   </p>
                   {sub && (
                     <p className="text-xs text-text-muted mt-0.5">
-                      {loc(
+                      {locf(
                         lang,
-                        `Trial ends ${formatDate(sub.currentPeriodEnd, lang)}`,
-                        `تنتهي الفترة التجريبية: ${formatDate(sub.currentPeriodEnd, lang)}`,
-                        `Fin de l'essai : ${formatDate(sub.currentPeriodEnd, lang)}`,
+                        "Trial ends {date}",
+                        "تنتهي الفترة التجريبية: {date}",
+                        "Fin de l'essai : {date}",
+                        { date: formatDate(sub.currentPeriodEnd, lang) },
                       )}
                     </p>
                   )}
@@ -338,28 +335,30 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
                   {sub && (
                     <p className="text-xs text-text-muted mt-0.5">
                       {sub.cancelAtPeriodEnd
-                        ? loc(lang, `Cancels ${formatDate(sub.currentPeriodEnd, lang)}`, `ينتهي: ${formatDate(sub.currentPeriodEnd, lang)}`, `Se termine le ${formatDate(sub.currentPeriodEnd, lang)}`)
-                        : loc(lang, `Renews ${formatDate(sub.currentPeriodEnd, lang)}`, `يُجدَّد: ${formatDate(sub.currentPeriodEnd, lang)}`, `Se renouvelle le ${formatDate(sub.currentPeriodEnd, lang)}`)}
+                        ? locf(lang, "Cancels {date}", "ينتهي: {date}", "Se termine le {date}", { date: formatDate(sub.currentPeriodEnd, lang) })
+                        : locf(lang, "Renews {date}", "يُجدَّد: {date}", "Se renouvelle le {date}", { date: formatDate(sub.currentPeriodEnd, lang) })}
                     </p>
                   )}
                 </>
               ) : isMonthly && isTrial ? (
                 <>
                   <p className="text-xs text-text-muted">
-                    {loc(
+                    {locf(
                       lang,
-                      `Free today · then $${(PLANS.monthly.price / 100).toFixed(2)}/mo`,
-                      `مجاني الآن · ثم $${(PLANS.monthly.price / 100).toFixed(2)}/شهر`,
-                      `Gratuit aujourd'hui · puis ${(PLANS.monthly.price / 100).toFixed(2)} $/mois`,
+                      "Free today · then ${price}/mo",
+                      "مجاني الآن · ثم ${price}/شهر",
+                      "Gratuit aujourd'hui · puis {price} $/mois",
+                      { price: (PLANS.monthly.price / 100).toFixed(2) },
                     )}
                   </p>
                   {sub && (
                     <p className="text-xs text-text-muted mt-0.5">
-                      {loc(
+                      {locf(
                         lang,
-                        `Trial ends ${formatDate(sub.currentPeriodEnd, lang)}`,
-                        `تنتهي الفترة التجريبية: ${formatDate(sub.currentPeriodEnd, lang)}`,
-                        `Fin de l'essai : ${formatDate(sub.currentPeriodEnd, lang)}`,
+                        "Trial ends {date}",
+                        "تنتهي الفترة التجريبية: {date}",
+                        "Fin de l'essai : {date}",
+                        { date: formatDate(sub.currentPeriodEnd, lang) },
                       )}
                     </p>
                   )}
@@ -370,8 +369,8 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
                   {sub && (
                     <p className="text-xs text-text-muted mt-0.5">
                       {sub.cancelAtPeriodEnd
-                        ? loc(lang, `Cancels ${formatDate(sub.currentPeriodEnd, lang)}`, `ينتهي: ${formatDate(sub.currentPeriodEnd, lang)}`, `Se termine le ${formatDate(sub.currentPeriodEnd, lang)}`)
-                        : loc(lang, `Renews ${formatDate(sub.currentPeriodEnd, lang)}`, `يُجدَّد: ${formatDate(sub.currentPeriodEnd, lang)}`, `Se renouvelle le ${formatDate(sub.currentPeriodEnd, lang)}`)}
+                        ? locf(lang, "Cancels {date}", "ينتهي: {date}", "Se termine le {date}", { date: formatDate(sub.currentPeriodEnd, lang) })
+                        : locf(lang, "Renews {date}", "يُجدَّد: {date}", "Se renouvelle le {date}", { date: formatDate(sub.currentPeriodEnd, lang) })}
                     </p>
                   )}
                 </>
@@ -387,11 +386,12 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
           {isMonthly && sub?.cancelAtPeriodEnd && (
             <div className="mt-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 space-y-2">
               <p className="text-amber-400 text-xs">
-                {loc(
+                {locf(
                   lang,
-                  `Your subscription is set to cancel on ${formatDate(sub.currentPeriodEnd, lang)}. You'll retain access until then.`,
-                  `اشتراكك مُحدَّد للإلغاء في ${formatDate(sub.currentPeriodEnd, lang)}. ستحتفظ بالوصول حتى ذلك الحين.`,
-                  `Votre abonnement est prévu pour se terminer le ${formatDate(sub.currentPeriodEnd, lang)}. Vous conserverez l'accès jusqu'à cette date.`,
+                  "Your subscription is set to cancel on {date}. You'll retain access until then.",
+                  "من المقرر إلغاء اشتراكك في {date}. ستحتفظ بالوصول حتى ذلك الحين.",
+                  "Votre abonnement prendra fin le {date}. Vous conserverez l'accès jusque-là.",
+                  { date: formatDate(sub.currentPeriodEnd, lang) },
                 )}
               </p>
               <ReactivateSubscriptionButton isTrial={isTrial} lang={lang} />
@@ -422,11 +422,12 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
           {isStorePurchase && isMonthly && (
             <div className="mt-5 pt-5 border-t border-border/60">
               <p className="text-xs text-text-muted">
-                {loc(
+                {locf(
                   lang,
-                  `Your subscription is billed through the ${accessInfo.purchasePlatform === "apple" ? "App Store" : "Google Play Store"}. Manage or cancel it in your device's subscription settings.`,
-                  `اشتراكك يُفوتَر عبر ${accessInfo.purchasePlatform === "apple" ? "App Store" : "Google Play Store"}. أدِر أو ألغِ الاشتراك من إعدادات الاشتراكات على جهازك.`,
-                  `Votre abonnement est facturé via ${accessInfo.purchasePlatform === "apple" ? "l'App Store" : "le Google Play Store"}. Gérez-le ou résiliez-le dans les paramètres d'abonnement de votre appareil.`,
+                  "Your subscription is billed through the {store}. Manage or cancel it in your device's subscription settings.",
+                  "تتم فوترة اشتراكك عبر {store}. أدِر أو ألغِ الاشتراك من إعدادات الاشتراكات على جهازك.",
+                  "Votre abonnement est facturé via {store}. Gérez-le ou résiliez-le dans les paramètres d'abonnement de votre appareil.",
+                  { store: accessInfo.purchasePlatform === "apple" ? "App Store" : "Google Play Store" },
                 )}
               </p>
             </div>
@@ -464,13 +465,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
                     href="/checkout?plan=individual-lifetime"
                     className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gold hover:bg-gold-light text-black font-bold text-sm transition-colors shadow-sm"
                   >
-                    {lang === "ar" ? (
-                      <LifetimeAccessCta leading="وصول مدى الحياة — " />
-                    ) : lang === "fr" ? (
-                      <LifetimeAccessCta leading="Accès à vie — " />
-                    ) : (
-                      <LifetimeAccessCta leading="Lifetime Access — " />
-                    )}
+                    <LifetimeAccessCta leading={`${loc(lang, "Lifetime Access", "وصول مدى الحياة", "Accès à vie")} — `} />
                     <UpgradeIcon className="w-4 h-4" />
                   </Link>
                   <span className="text-xs text-text-muted">
@@ -532,13 +527,18 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
           <div>
             <p className="text-sm font-semibold text-text">{loc(lang, "Questions about billing?", "أسئلة حول الفواتير؟", "Questions sur la facturation ?")}</p>
             <p className="text-xs text-text-secondary mt-1 leading-relaxed">
-              {lang === "ar" ? (
-                <>للإيصالات وطلبات الاسترداد وتغييرات الاشتراك أو أسئلة الفوترة،{" "}<Link href="/help" className="text-gold hover:text-gold-light underline underline-offset-2">تواصل مع الدعم</Link>.</>
-              ) : lang === "fr" ? (
-                <>Pour les reçus, demandes de remboursement, changements d'abonnement ou questions de facturation,{" "}<Link href="/help" className="text-gold hover:text-gold-light underline underline-offset-2">contactez le support</Link>.</>
-              ) : (
-                <>For receipts, refund requests, subscription changes, or billing questions,{" "}<Link href="/help" className="text-gold hover:text-gold-light underline underline-offset-2">contact support</Link>.</>
-              )}
+              <>
+                {loc(
+                  lang,
+                  "For receipts, refund requests, subscription changes, or billing questions,",
+                  "للإيصالات وطلبات الاسترداد وتغييرات الاشتراك أو أسئلة الفوترة،",
+                  "Pour les reçus, demandes de remboursement, changements d'abonnement ou questions de facturation,",
+                )}{" "}
+                <Link href="/help" className="text-gold hover:text-gold-light underline underline-offset-2">
+                  {loc(lang, "contact support", "تواصل مع الدعم", "contactez le support")}
+                </Link>
+                .
+              </>
             </p>
           </div>
         </div>

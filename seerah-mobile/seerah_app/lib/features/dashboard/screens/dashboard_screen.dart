@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/data/parts_data.dart';
 import '../../../core/models/part_model.dart';
 import '../../../core/providers/auth_provider.dart';
@@ -423,8 +424,9 @@ class _ContinueLearningCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Use the last visited part from progress; fall back to Part 1 for new users.
-    final lastPartNumber = progressAsync.valueOrNull?.lastPartNumber ?? 1;
+    // Use the last visited part from progress; fall back to the free part for new users.
+    final lastPartNumber =
+        progressAsync.valueOrNull?.lastPartNumber ?? AppConstants.kFreePartNumber;
     final partNum = lastPartNumber.clamp(1, PARTS.length);
     // Only advance to "Up next" once the current furthest part is completed
     // (quiz passed) — don't skip past unfinished work just because it was opened.
@@ -448,7 +450,7 @@ class _ContinueLearningCard extends StatelessWidget {
     // real (possibly > 1) lastPartNumber — without this check the card would
     // silently promise "Continue" and then bounce them straight into the
     // paywall on tap, with no indication anything had changed.
-    final locked = !hasAccess && nextPartNum > 1;
+    final locked = !hasAccess && nextPartNum != AppConstants.kFreePartNumber;
 
     final label = isFirstVisit
         ? (hasAccess ? t(lang, 'startHere') : t(lang, 'freeStartHere'))

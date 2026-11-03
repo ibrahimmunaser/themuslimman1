@@ -416,8 +416,8 @@ export default function EmailAutomationPage() {
       <div className="p-5 rounded-xl bg-surface border border-border">
         <h2 className="text-sm font-semibold text-text mb-3">How it works</h2>
         <div className="space-y-2 text-sm text-text-secondary">
-          <p><strong className="text-text">Step 1 (Auto)</strong> — Sent 3 hours after verified signup to anyone without a plan. Subject: &ldquo;The first lesson is unlocked&rdquo;. CTA: Watch Part 1 Free.</p>
-          <p><strong className="text-text">Step 2 (Auto)</strong> — Sent 24 hours after Step 1. Subject: &ldquo;Most Muslims learn scattered stories&rdquo;. CTAs: Continue Part 1 + View Plans.</p>
+          <p><strong className="text-text">Step 1 (Auto)</strong> — Sent 3 hours after verified signup to anyone without a plan. Subject: &ldquo;The first lesson is unlocked&rdquo;. CTA: Watch the First Revelation Free.</p>
+          <p><strong className="text-text">Step 2 (Auto)</strong> — Sent 24 hours after Step 1. Subject: &ldquo;Most Muslims learn scattered stories&rdquo;. CTAs: Continue the First Revelation + View Plans.</p>
           <p><strong className="text-text">Manual outreach</strong> — One-off sends to selected non-purchasers via the <Link href="/admin/email-outreach" className="text-gold hover:underline">Email Outreach</Link> page. Shown here as &ldquo;Manual&rdquo; rows in the log.</p>
           <p><strong className="text-text">Stop condition</strong> — All flows stop once the user purchases any plan. Max 2 automated emails per user.</p>
           <p><strong className="text-text">Schedule</strong> — Automated cron runs daily at 8:00 AM UTC. Use &ldquo;Send now&rdquo; to trigger manually.</p>

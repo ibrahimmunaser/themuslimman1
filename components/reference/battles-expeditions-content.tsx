@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { ArrowLeft, Search, Info, Swords, Flag, Shield } from "lucide-react";
 import type { CourseLang } from "@/lib/course-lang";
-import { loc } from "@/lib/loc";
+import { loc, locf } from "@/lib/loc";
 
 interface Event {
   id: number;
@@ -1784,11 +1784,12 @@ export function BattlesExpeditionsContent({ lang = "en" }: { lang?: CourseLang }
                 >
                   {showAll
                     ? loc(lang, "Show Less", "عرض أقل", "Afficher moins")
-                    : loc(
+                    : locf(
                         lang,
-                        `View All ${filteredEvents.length} Events`,
-                        `عرض جميع الأحداث (${filteredEvents.length})`,
-                        `Voir les ${filteredEvents.length} événements`
+                        "View All {n} Events",
+                        "عرض جميع الأحداث ({n})",
+                        "Voir les {n} événements",
+                        { n: filteredEvents.length },
                       )}
                 </button>
               </div>

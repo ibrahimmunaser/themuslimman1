@@ -35,9 +35,9 @@ interface CourseHomeContentProps {
   currentPartVideoProgress: number;
   stagesData: StageData[];
   currentStageNumber: number;
-  /** When false, show Part 1 free copy + upgrade banner (mobile parity). */
+  /** When false, show free-preview copy + upgrade banner (mobile parity). */
   hasAccess?: boolean;
-  /** Signed-out visitor: Part 1 → free public preview, every other part → /pricing. */
+  /** Signed-out visitor: the free part → free public preview, every other part → /pricing. */
   isGuest?: boolean;
   lang?: CourseLang;
 }
@@ -57,7 +57,7 @@ export function CourseHomeContent({
   isGuest = false,
   lang = "en",
 }: CourseHomeContentProps) {
-  // Guests get Part 1 as a public preview and Parts 2+ sent to /pricing;
+  // Guests get the free part as a public preview and all other parts sent to /pricing;
   // undefined keeps the normal /seerah/part-N link for signed-in users.
   const partHref = (n: number): string | undefined => (isGuest ? guestPartHref(n) : undefined);
   const isNewUser = completedLessons === 0;

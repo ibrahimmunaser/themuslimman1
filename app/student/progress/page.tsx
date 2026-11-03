@@ -171,7 +171,7 @@ export default async function ProgressPage() {
               {inProgressParts.length > 0
                 ? `${inProgressParts.length} lesson${inProgressParts.length !== 1 ? "s" : ""} in progress`
                 : completedCount === 0
-                ? "Start Part 1 to begin tracking your progress"
+                ? "Start the First Revelation to begin tracking your progress"
                 : "Keep going — you're making great progress!"}
             </p>
           </FadeUp>

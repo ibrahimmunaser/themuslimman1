@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/data/parts_data.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/part_provider.dart';
@@ -369,7 +370,7 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
         final partIndex = hasContinue ? i - 2 : i - 1;
         final part = PARTS[partIndex];
         final isLast = partIndex == PARTS.length - 1;
-        final locked = part.partNumber > 1 && !hasAccess;
+        final locked = part.partNumber != AppConstants.kFreePartNumber && !hasAccess;
         final color = AppColors.forEra(part.era);
         final isFirst = partIndex == 0;
 

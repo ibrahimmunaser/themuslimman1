@@ -26,8 +26,8 @@ const FAQ_ITEMS = [
     a: "Full access to all 100 Seerah lessons with video, reading, quizzes, flashcards, summaries, mind maps, and progress tracking.",
   },
   {
-    q: "Is Part 1 free?",
-    a: "Yes. Part 1 is free with no signup required — preview it on this page before you buy.",
+    q: "Is there a free preview?",
+    a: "Yes. The First Revelation (Part 15) is free with no signup required — preview it on this page before you buy.",
   },
   {
     q: "Is this a subscription?",
@@ -174,7 +174,7 @@ export function InfluencerSalesPage({
               onClick={scrollToLesson}
               className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl border border-zinc-700 bg-zinc-900/50 hover:border-gold/40 text-text font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold min-h-[48px]"
             >
-              Preview Part 1 Free
+              Preview the First Revelation Free
             </button>
             <p className="text-center text-xs text-zinc-500">
               One payment · Keep access forever · 7-day refund
@@ -214,7 +214,7 @@ export function InfluencerSalesPage({
               Free · No signup required
             </p>
             <h2 className="text-xl sm:text-2xl font-bold text-text">
-              Part 1 — {part1?.title ?? "The Beginning of Revelation"}
+              {part1 ? `Part ${part1.partNumber}` : "Part 15"} — {part1?.title ?? "The First Revelation"}
             </h2>
             <p className="text-sm text-zinc-400 mt-1">
               Watch, read, quiz, and review — see exactly how every lesson works.
@@ -233,7 +233,7 @@ export function InfluencerSalesPage({
             </div>
           ) : (
             <div className="rounded-xl bg-zinc-900 border border-zinc-800 aspect-video flex items-center justify-center">
-              <p className="text-zinc-500 text-sm">Part 1 preview is temporarily unavailable.</p>
+              <p className="text-zinc-500 text-sm">The free preview is temporarily unavailable.</p>
             </div>
           )}
 

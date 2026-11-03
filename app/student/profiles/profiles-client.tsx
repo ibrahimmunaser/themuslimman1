@@ -15,8 +15,8 @@ import {
   deleteProfile,
   switchProfile,
 } from "@/app/actions/profiles";
-import { courseHasMindmaps, type CourseLang } from "@/lib/course-lang";
-import { loc } from "@/lib/loc";
+import { COURSE_LANG_LOCALES, courseHasMindmaps, type CourseLang } from "@/lib/course-lang";
+import { loc, locf } from "@/lib/loc";
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -226,7 +226,7 @@ export function ProfilesClient({
           <div className="flex items-end gap-3 mb-3">
             <span className="text-4xl font-bold text-amber-400">{s.completionPercent}%</span>
             <span className="text-zinc-500 text-sm pb-1">
-              {loc(lang, `${s.completedParts}/${s.totalParts} lessons`, `${s.completedParts}/${s.totalParts} درس`, `${s.completedParts}/${s.totalParts} leçons`)}
+              {locf(lang, "{completed}/{total} lessons", "{completed}/{total} درس", "{completed}/{total} leçons", { completed: s.completedParts, total: s.totalParts })}
             </span>
           </div>
           <div className="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
@@ -235,7 +235,7 @@ export function ProfilesClient({
           {s.lastActivity && (
             <p className="text-xs text-zinc-600 mt-3">
               {loc(lang, "Last active: ", "آخر نشاط: ", "Dernière activité : ")}
-              {new Date(s.lastActivity).toLocaleDateString(lang === "ar" ? "ar" : lang === "fr" ? "fr-FR" : "en")}
+              {new Date(s.lastActivity).toLocaleDateString(COURSE_LANG_LOCALES[lang])}
             </p>
           )}
         </div>
@@ -260,7 +260,7 @@ export function ProfilesClient({
             {loc(lang, "Edit Profile", "تعديل الملف", "Modifier le profil")}
           </button>
           <button onClick={() => handleSwitch(selectedProfile.id)} disabled={isPending} className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black text-sm font-bold transition-colors disabled:opacity-50">
-            {loc(lang, `Learn as ${selectedProfile.displayName}`, `تعلّم كـ ${selectedProfile.displayName}`, `Apprendre en tant que ${selectedProfile.displayName}`)}
+            {locf(lang, "Learn as {name}", "تعلّم كـ {name}", "Apprendre en tant que {name}", { name: selectedProfile.displayName })}
           </button>
         </div>
       </div>
@@ -347,7 +347,7 @@ export function ProfilesClient({
             {confirmDelete === selectedProfile.id ? (
               <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
                 <p className="text-sm text-red-400 mb-3">
-                  {loc(lang, `Delete "${selectedProfile.displayName}"? Their progress data will be permanently removed.`, `حذف «${selectedProfile.displayName}»؟ ستُحذف بيانات تقدّمه نهائيًا.`, `Supprimer « ${selectedProfile.displayName} » ? Ses données de progression seront définitivement effacées.`)}
+                  {locf(lang, "Delete \"{name}\"? Their progress data will be permanently removed.", "حذف «{name}»؟ ستُحذف بيانات تقدّمه نهائيًا.", "Supprimer « {name} » ? Ses données de progression seront définitivement effacées.", { name: selectedProfile.displayName })}
                 </p>
                 <div className="flex gap-3">
                   <button onClick={() => setConfirmDelete(null)} className="flex-1 px-3 py-2 rounded-lg border border-zinc-700 text-zinc-400 text-sm hover:text-white transition-colors">
@@ -384,7 +384,7 @@ export function ProfilesClient({
         </h1>
         {isFamily && (
           <p className="text-zinc-500 text-sm mt-2">
-            {loc(lang, `Family Access · up to ${profileLimit} learner profiles`, `وصول العائلة · حتى ${profileLimit} ملفات متعلّمين`, `Accès Famille · jusqu'à ${profileLimit} profils d'apprenants`)}
+            {locf(lang, "Family Access · up to {n} learner profiles", "وصول العائلة · حتى {n} ملفات متعلّمين", "Accès Famille · jusqu'à {n} profils d'apprenants", { n: profileLimit })}
           </p>
         )}
       </div>
@@ -421,7 +421,7 @@ export function ProfilesClient({
                     }
                     disabled:cursor-wait
                   `}
-                  title={loc(lang, `Learn as ${profile.displayName}`, `تعلّم كـ ${profile.displayName}`, `Apprendre en tant que ${profile.displayName}`)}
+                  title={locf(lang, "Learn as {name}", "تعلّم كـ {name}", "Apprendre en tant que {name}", { name: profile.displayName })}
                 >
                   {isSwitching ? (
                     <div className="w-7 h-7 border-2 border-white/30 border-t-white rounded-full animate-spin" />

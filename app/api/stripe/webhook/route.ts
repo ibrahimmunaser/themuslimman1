@@ -2710,7 +2710,7 @@ async function sendAbandonedCheckoutEmail(
               but your payment was not completed.
             </p>
             <p style="font-size:15px;margin:0 0 24px 0;">
-              Part 1 is still free. If you want to continue after Part 1, your spot is still here.
+              The First Revelation is still free. If you want to continue after that, your spot is still here.
             </p>
             <div style="text-align:center;margin:32px 0;">
               <a href="${checkoutUrl}" style="display:inline-block;background:#f4c542;color:#1a1a1a;text-decoration:none;padding:16px 40px;border-radius:8px;font-weight:700;font-size:16px;">

@@ -109,9 +109,9 @@ const Map<String, Map<String, String>> _kStrings = {
     'fr': 'Regarder, écouter ou lire',
   },
   'welcomeStartFree': {
-    'en': 'Start Part 1 Free',
-    'ar': 'ابدأ الجزء الأول مجانًا',
-    'fr': 'Commencer la partie 1 gratuitement',
+    'en': 'Watch the First Revelation — Free',
+    'ar': 'شاهد الوحي الأول — مجانًا',
+    'fr': 'Regardez la Première Révélation — gratuitement',
   },
   'welcomeStartFull': {
     'en': 'Start Full Course',
@@ -322,19 +322,19 @@ const Map<String, Map<String, String>> _kStrings = {
     'fr': 'Les 100 leçons, notes et quiz — à vous pour toujours.',
   },
   'watchPart1': {
-    'en': 'Watch Part 1',
-    'ar': 'شاهد الجزء الأول',
-    'fr': 'Voir la partie 1',
+    'en': 'Watch the First Revelation',
+    'ar': 'شاهد الوحي الأول',
+    'fr': 'Regarder la Première Révélation',
   },
   'part1NoAccountNeeded': {
-    'en': 'The Pre-Islamic Arabian Context · No account needed',
-    'ar': 'السياق العربي قبل الإسلام · لا حاجة لحساب',
-    'fr': 'Le contexte arabique préislamique · Aucun compte requis',
+    'en': 'The First Revelation · No account needed',
+    'ar': 'الوحي الأول · لا حاجة لحساب',
+    'fr': 'La Première Révélation · Aucun compte requis',
   },
   'part1AlwaysFree': {
-    'en': 'Part 1 — Always Free',
-    'ar': 'الجزء الأول — مجاني دائمًا',
-    'fr': 'Partie 1 — Toujours gratuite',
+    'en': 'The First Revelation — Always Free',
+    'ar': 'الوحي الأول — مجاني دائمًا',
+    'fr': 'La Première Révélation — Toujours gratuite',
   },
   'chooseYourPlan': {
     'en': 'Choose Your Plan',
@@ -435,9 +435,9 @@ const Map<String, Map<String, String>> _kStrings = {
     'fr': 'Want to preview first?',
   },
   'watchPart1FreeNoPurchase': {
-    'en': 'Watch Part 1 free — no purchase needed',
-    'ar': 'شاهد الجزء الأول مجانًا — لا حاجة للشراء',
-    'fr': 'Watch Part 1 free — no purchase needed',
+    'en': 'Watch the First Revelation — Free. No purchase needed',
+    'ar': 'شاهد الوحي الأول — مجانًا. لا حاجة للشراء',
+    'fr': 'Regardez la Première Révélation — gratuitement. Aucun achat requis',
   },
   'pricingQuestions': {
     'en': 'Pricing questions',
@@ -476,17 +476,17 @@ const Map<String, Map<String, String>> _kStrings = {
     'fr': 'Is there a refund guarantee?',
   },
   'faqPart1FreeQ': {
-    'en': 'Is Part 1 free?',
-    'ar': 'هل الجزء الأول مجاني؟',
-    'fr': 'Is Part 1 free?',
+    'en': 'Is there a free preview?',
+    'ar': 'هل هناك معاينة مجانية؟',
+    'fr': 'Y a-t-il un aperçu gratuit ?',
   },
   'faqPart1FreeA': {
     'en':
-        'Yes. Part 1 is completely free with no account required. Watch it before choosing a plan.',
+        'Yes. The First Revelation is completely free with no account required. Watch it before choosing a plan.',
     'ar':
-        'نعم. الجزء الأول مجاني تمامًا ولا يتطلب حسابًا. شاهده قبل اختيار خطة.',
+        'نعم. الوحي الأول مجاني تمامًا ولا يتطلب حسابًا. شاهده قبل اختيار خطة.',
     'fr':
-        'Yes. Part 1 is completely free with no account required. Watch it before choosing a plan.',
+        'Oui. La Première Révélation est entièrement gratuite, sans compte requis. Regardez-la avant de choisir un plan.',
   },
   'faqMonthlyVsLifetimeQ': {
     'en': "What's the difference between monthly and lifetime?",
@@ -660,15 +660,15 @@ const Map<String, Map<String, String>> _kStrings = {
   'gotIt': {'en': 'Got it', 'ar': 'حسنًا', 'fr': 'Got it'},
   'verifyEmailFailedBody': {
     'en':
-        "Your account was created, but we couldn't send a verification email to {email} right now. Part 1 is free to explore right away, and if you purchase a plan we'll verify your email automatically — otherwise, use \"Resend Email\" from your profile once you're signed in.",
+        "Your account was created, but we couldn't send a verification email to {email} right now. The First Revelation is free to explore right away, and if you purchase a plan we'll verify your email automatically — otherwise, use \"Resend Email\" from your profile once you're signed in.",
     'ar':
-        'تم إنشاء حسابك، ولكن تعذّر إرسال بريد التحقق إلى {email} الآن. الجزء الأول مجاني للاستكشاف فورًا، وإذا اشتريت خطة سنتحقق من بريدك تلقائيًا — وإلا، استخدم "إعادة إرسال البريد" من ملفك الشخصي بعد تسجيل الدخول.',
+        'تم إنشاء حسابك، ولكن تعذّر إرسال بريد التحقق إلى {email} الآن. الوحي الأول مجاني للاستكشاف فورًا، وإذا اشتريت خطة سنتحقق من بريدك تلقائيًا — وإلا، استخدم "إعادة إرسال البريد" من ملفك الشخصي بعد تسجيل الدخول.',
   },
   'verifyEmailSentBody': {
     'en':
-        "We've sent a verification link to {email}. Part 1 is free to explore right away. If you purchase a plan before verifying, we'll verify your email for you automatically — otherwise, click the link so you can also sign in from other devices.",
+        "We've sent a verification link to {email}. The First Revelation is free to explore right away. If you purchase a plan before verifying, we'll verify your email for you automatically — otherwise, click the link so you can also sign in from other devices.",
     'ar':
-        'أرسلنا رابط تحقق إلى {email}. الجزء الأول مجاني للاستكشاف فورًا. إذا اشتريت خطة قبل التحقق، سنتحقق من بريدك تلقائيًا — وإلا، اضغط على الرابط لتتمكن من تسجيل الدخول من أجهزة أخرى أيضًا.',
+        'أرسلنا رابط تحقق إلى {email}. الوحي الأول مجاني للاستكشاف فورًا. إذا اشتريت خطة قبل التحقق، سنتحقق من بريدك تلقائيًا — وإلا، اضغط على الرابط لتتمكن من تسجيل الدخول من أجهزة أخرى أيضًا.',
   },
   'showPassword': {
     'en': 'Show password',
@@ -700,9 +700,9 @@ const Map<String, Map<String, String>> _kStrings = {
     'fr': 'Continue your journey through the life of the Prophet ﷺ.',
   },
   'dashboardFreeIntro': {
-    'en': 'Part 1 is free — begin the Seerah today.',
-    'ar': 'الجزء الأول مجاني — ابدأ السيرة اليوم.',
-    'fr': 'Part 1 is free — begin the Seerah today.',
+    'en': 'The First Revelation is free — begin the Seerah today.',
+    'ar': 'الوحي الأول مجاني — ابدأ السيرة اليوم.',
+    'fr': 'La Première Révélation est gratuite — commencez la Sîra aujourd\'hui.',
   },
   'fullAccess': {'en': 'Full Access', 'ar': 'وصول كامل', 'fr': 'Full Access'},
   'eras': {'en': 'Eras', 'ar': 'العصور', 'fr': 'Eras'},

@@ -89,7 +89,7 @@ export default function RefundPage() {
               <h2 className="text-base font-semibold text-text mb-2">After a Refund</h2>
               <p>
                 Once a refund is processed, your account access to paid content will be removed. Free
-                preview access (Part 1) remains available. Your account is not deleted.
+                preview access (The First Revelation) remains available. Your account is not deleted.
               </p>
             </section>
 

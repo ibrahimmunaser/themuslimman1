@@ -2,6 +2,7 @@
 
 import { getPartPageData } from "@/lib/part-content-cache";
 import { requirePartAccess } from "@/lib/part-access";
+import { FREE_PART_NUMBER } from "@/lib/access";
 import { normalizeQuizAnswer } from "@/lib/progress";
 import type { Quiz } from "@/lib/types";
 import type { CourseLang } from "@/lib/course-lang";
@@ -21,7 +22,7 @@ export interface QuizAnswerResult {
  * payload, but options are already visible on screen; web uses this action.
  * Server-side submitQuizAnswers remains authoritative for scores/progress.
  *
- * @param previewMode - When true and partNumber is 1, skip access check (free preview)
+ * @param previewMode - When true and partNumber is the free part, skip access check (free preview)
  * @param lang - Course language the quiz was rendered in — must match so the
  *   returned correctAnswer/explanation (and the correctness check itself) use
  *   the same-language quiz data the user is actually looking at.
@@ -33,7 +34,7 @@ export async function checkQuizAnswer(
   previewMode = false,
   lang: CourseLang = "en",
 ): Promise<QuizAnswerResult | { error: string }> {
-  const skipAccessCheck = previewMode && partNumber === 1;
+  const skipAccessCheck = previewMode && partNumber === FREE_PART_NUMBER;
 
   if (!skipAccessCheck) {
     const deny = await requirePartAccess(partNumber);

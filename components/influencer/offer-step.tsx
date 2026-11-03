@@ -102,9 +102,9 @@ export function OfferStep({
           <button
             onClick={onContinue}
             className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-gold hover:bg-gold-light active:scale-[0.98] text-ink font-bold text-base transition-all shadow-lg shadow-gold/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-background min-h-[52px]"
-            aria-label="Watch Part 1 free — no signup required"
+            aria-label="Watch the First Revelation free — no signup required"
           >
-            Watch Part 1 Free
+            Watch the First Revelation Free
             <ArrowRight className="w-4 h-4" aria-hidden="true" />
           </button>
           <p className="text-center text-xs text-zinc-500">

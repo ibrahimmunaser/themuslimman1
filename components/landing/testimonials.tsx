@@ -25,7 +25,7 @@ export function TestimonialsSection() {
             yourself, and track your progress.
           </p>
           <p className="text-sm text-text-muted max-w-xl mx-auto mb-10">
-            Part 1 is free. Continue at your own pace — monthly or lifetime access.
+            The First Revelation is free. Continue at your own pace — monthly or lifetime access.
           </p>
         </FadeUp>
 
@@ -63,7 +63,7 @@ export function TestimonialsSection() {
           href="#preview"
           className={buttonClass("primary", "lg", "shadow-lg shadow-gold/20")}
         >
-          Start with the Free Part 1 Preview
+          Start with the Free First Revelation Preview
           <ArrowRight className="w-4 h-4" />
         </Link>
       </div>

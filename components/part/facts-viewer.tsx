@@ -1,7 +1,7 @@
 "use client";
 import type { CourseLang } from "@/lib/course-lang";
 import { isRtlLang } from "@/lib/course-lang";
-import { loc } from "@/lib/loc";
+import { loc, locf } from "@/lib/loc";
 
 import { useEffect } from "react";
 import { trackAssetOpened } from "@/app/actions/progress";
@@ -64,7 +64,7 @@ export function FactsViewer({ content, partNumber, previewMode, isRtl, lang: lan
       {/* Header */}
       <div className="mb-5">
         <p className="text-[10px] font-bold uppercase tracking-widest text-gold/60">{loc(lang, "Statement of Facts", "معلومات الدرس", "Énoncé des faits")}</p>
-        <p className="text-[11px] text-text-muted/50 mt-0.5">{loc(lang, `${facts.length} key points from this lesson`, `${facts.length} نقطة رئيسية في هذا الدرس`, `${facts.length} points clés de cette leçon`)}</p>
+        <p className="text-[11px] text-text-muted/50 mt-0.5">{locf(lang, "{n} key points from this lesson", "{n} نقطة رئيسية في هذا الدرس", "{n} points clés de cette leçon", { n: facts.length })}</p>
       </div>
 
       <ol className="space-y-4">

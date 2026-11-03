@@ -1,7 +1,7 @@
 "use client";
 import type { CourseLang } from "@/lib/course-lang";
 import { isRtlLang } from "@/lib/course-lang";
-import { loc } from "@/lib/loc";
+import { loc, locf } from "@/lib/loc";
 import { t } from "@/lib/ui-strings";
 
 import { useState, useRef, useEffect } from "react";
@@ -172,7 +172,7 @@ export function AudioPlayer({ src, title, partNumber, compact = false, previewMo
         </div>
         <div className="min-w-0 flex-1">
           <p className={`font-medium text-text truncate leading-tight ${compact ? "text-xs" : "text-sm"}`}>
-            {title || loc(lang, `Part ${partNumber} — Audio`, `الجزء ${partNumber} — صوت`, `Partie ${partNumber} — Audio`)}
+            {title || locf(lang, "Part {n} — Audio", "الجزء {n} — صوت", "Partie {n} — Audio", { n: partNumber ?? "" })}
           </p>
           {!compact && <p className="text-[11px] text-text-muted leading-none mt-0.5">{loc(lang, "Audio Version", "النسخة الصوتية", "Version audio")}</p>}
         </div>

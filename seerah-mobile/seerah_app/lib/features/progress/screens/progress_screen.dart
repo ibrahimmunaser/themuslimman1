@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/data/parts_data.dart';
 import '../../../core/models/part_model.dart';
 import '../../../core/providers/auth_provider.dart';
@@ -121,7 +122,7 @@ class _OverviewStats extends StatelessWidget {
     final totalUnlocked = hasAccess ? PARTS.length : 1;
     // Same denominator (totalUnlocked) as the "Parts Studied" bar below —
     // previously the ring always divided by 100 while the bar used
-    // totalUnlocked, so a free user who viewed Part 1 saw "1% complete"
+    // totalUnlocked, so a free user who viewed the free part saw "1% complete"
     // in the ring right above a fully-filled "1/1" bar.
     final studiedPercent = totalUnlocked == 0
         ? 0.0
@@ -398,7 +399,10 @@ class _CourseMap extends StatelessWidget {
           final eraPartNumbers = parts.map((p) => p.partNumber).toList();
           final viewedCount = progress?.viewedInEra(eraPartNumbers) ?? 0;
           final completedCount = progress?.completedInEra(eraPartNumbers) ?? 0;
-          final isUnlocked = hasAccess || i == 0;
+          // The era containing the free part is always "unlocked" for display
+          // purposes (not era index 0 — the free part can live in any era).
+          final isUnlocked =
+              hasAccess || eraPartNumbers.contains(AppConstants.kFreePartNumber);
           final displayCount = isUnlocked ? viewedCount : 0;
           final fraction = parts.isEmpty
               ? 0.0

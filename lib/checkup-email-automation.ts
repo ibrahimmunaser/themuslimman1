@@ -96,7 +96,7 @@ export function buildStep1Html(opts: {
       </a>
     </div>
 
-    <p style="font-size:14px;color:#666;margin:0;">Or start with Part 1 free: <a href="${part1Url(1)}" style="color:#b8902a;">Watch here</a></p>
+    <p style="font-size:14px;color:#666;margin:0;">Or start with the First Revelation free: <a href="${part1Url(1)}" style="color:#b8902a;">Watch here</a></p>
 
     <p style="font-size:15px;color:#333;margin:32px 0 0 0;">
       Jazak Allahu khayran,<br>
@@ -140,12 +140,12 @@ export function buildStep2Html(opts: {
       The Muslim Man is 100 structured parts — short videos, quizzes, flashcards, mind maps, and summaries — built to take you through the entire Seerah step by step.
     </p>
 
-    <p style="font-size:15px;margin:0 0 24px 0;color:#333;">Part 1 is free. No account needed to start.</p>
+    <p style="font-size:15px;margin:0 0 24px 0;color:#333;">The First Revelation is free. No account needed to start.</p>
 
     <div style="text-align:center;margin:28px 0;">
       <a href="${p1}"
          style="display:inline-block;background:#f4c542;color:#1a1a1a;text-decoration:none;padding:16px 40px;border-radius:8px;font-weight:700;font-size:16px;">
-        Watch Part 1 Free
+        Watch the First Revelation Free
       </a>
     </div>
 

@@ -1,6 +1,6 @@
 "use client";
 import type { CourseLang } from "@/lib/course-lang";
-import { loc } from "@/lib/loc";
+import { loc, locf } from "@/lib/loc";
 import { t, tf } from "@/lib/ui-strings";
 
 import { useEffect, useRef, useState } from "react";
@@ -34,7 +34,7 @@ const ASSET_META: Record<string, { label: string; labelAr: string; labelFr: stri
 function estimateReadTime(html: string, lang: CourseLang = "en"): string {
   const words = html.replace(/<[^>]+>/g, " ").trim().split(/\s+/).length;
   const minutes = Math.max(2, Math.round(words / 220));
-  return loc(lang, `${minutes} min read`, `${minutes} دقيقة قراءة`, `${minutes} min de lecture`);
+  return locf(lang, "{n} min read", "{n} دقيقة قراءة", "{n} min de lecture", { n: minutes });
 }
 
 interface TextViewerProps {
@@ -246,11 +246,19 @@ export function TextViewer({
             <div className="article-end-line" />
             <p className="article-end-label">
               <BookOpen size={11} strokeWidth={2} />
-              {loc(
+              {locf(
                 lang,
-                `End of ${meta.label.toLowerCase().replace("lesson ", "")}`,
-                `نهاية ${meta.labelAr}`,
-                `Fin — ${meta.labelFr.toLowerCase()}`,
+                "End of {label}",
+                "نهاية {label}",
+                "Fin — {label}",
+                {
+                  label: loc(
+                    lang,
+                    meta.label.toLowerCase().replace("lesson ", ""),
+                    meta.labelAr,
+                    meta.labelFr.toLowerCase(),
+                  ),
+                },
               )}
             </p>
           </div>

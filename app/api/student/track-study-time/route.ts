@@ -3,7 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getActiveProfileId } from "@/app/actions/profiles";
 import { checkRateLimit, getIP } from "@/lib/rate-limit";
-import { hasActiveCourseAccess, TOTAL_COURSE_PARTS } from "@/lib/access";
+import { hasActiveCourseAccess, TOTAL_COURSE_PARTS, FREE_PART_NUMBER } from "@/lib/access";
 
 export async function POST(request: NextRequest) {
   // Rate limit: 30 updates per minute per IP (1 update per 2 s is plenty for 60-second intervals)
@@ -48,8 +48,8 @@ export async function POST(request: NextRequest) {
 
     if (!user.emailVerified) {
       // Entitled (paid/IAP) users may track without verify — mirrors part-access / mobile track.
-      // Part 1 free users also waive verify (same as part page soft path for free content).
-      if (partNumber !== 1) {
+      // Free-part users also waive verify (same as part page soft path for free content).
+      if (partNumber !== FREE_PART_NUMBER) {
         const entitled = await hasActiveCourseAccess(user.id, user.hasPaid);
         if (!entitled) {
           return NextResponse.json({ error: "Email verification required" }, { status: 403 });
@@ -57,8 +57,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Part 1 is free — mirrors mobile-progress/track carve-out.
-    if (partNumber !== 1) {
+    // The free part is free — mirrors mobile-progress/track carve-out.
+    if (partNumber !== FREE_PART_NUMBER) {
       const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
       if (!hasAccess) {
         return NextResponse.json({ error: "No active subscription" }, { status: 403 });

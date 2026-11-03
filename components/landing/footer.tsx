@@ -146,6 +146,14 @@ export function Footer() {
               {siteT(lang, "footRefund")}
             </Link>
             <a
+              href="https://www.instagram.com/themuslimmann1/"
+              className="text-sm text-text-muted hover:text-text transition-colors"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Instagram
+            </a>
+            <a
               href="https://themuslimman.com"
               className="text-sm text-text-muted hover:text-text transition-colors"
               target="_blank"

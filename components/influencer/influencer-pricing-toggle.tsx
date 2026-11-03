@@ -117,7 +117,7 @@ export function InfluencerPricingToggle({
           Secure checkout · Instant access after payment · 7-day refund guarantee
         </p>
         <div className="flex items-center justify-center gap-4 sm:gap-6 flex-wrap text-xs text-text-muted mt-3">
-          <span className="flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-gold/60" />No card needed for Part 1</span>
+          <span className="flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-gold/60" />No card needed for the free preview</span>
           <span className="flex items-center gap-1.5"><Lock className="w-3.5 h-3.5 text-gold/60" />One-time payment</span>
           <span className="flex items-center gap-1.5"><Zap className="w-3.5 h-3.5 text-gold/60" />Start in under 60 seconds</span>
         </div>

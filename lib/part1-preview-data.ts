@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { getPartById, localizePart } from "@/lib/content";
 import { getPartPageData } from "@/lib/part-content-cache";
 import { parseLang, COURSE_LANG_COOKIE, type CourseLang } from "@/lib/course-lang";
+import { FREE_PART_NUMBER } from "@/lib/access";
 import type { Part, Quiz } from "@/lib/types";
 
 export interface Part1AssetUrls {
@@ -25,9 +26,17 @@ function stripQuizAnswers(quiz: Quiz | null | undefined): Quiz | null | undefine
   };
 }
 
-/** Server-side Part 1 preview payload (video, slides, quiz, flashcards, etc.). */
+/**
+ * Server-side free-preview payload (video, slides, quiz, flashcards, etc.)
+ * for the course's single free part (lib/access.ts's FREE_PART_NUMBER).
+ *
+ * NOTE: this module/function keeps its legacy "part1" name for historical
+ * reasons (it originally always previewed Part 1), but it now always loads
+ * FREE_PART_NUMBER — currently Part 15, "The First Revelation". Change
+ * FREE_PART_NUMBER in lib/access.ts to move the free preview elsewhere.
+ */
 export async function getPart1PreviewData(lang: CourseLang = "en"): Promise<Part1PreviewData> {
-  const partBaseEn = getPartById("part-1");
+  const partBaseEn = getPartById(`part-${FREE_PART_NUMBER}`);
   if (!partBaseEn) return { part: null, initialAssetUrls: {}, lang };
 
   const partBase = localizePart(partBaseEn, lang);
@@ -50,7 +59,7 @@ export async function getPart1PreviewData(lang: CourseLang = "en"): Promise<Part
       audioUrl,
       mindmapUrl,
       thumbnailUrl,
-    } = await getPartPageData(1, lang);
+    } = await getPartPageData(FREE_PART_NUMBER, lang);
 
     const part: Part = {
       ...partBase,

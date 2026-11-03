@@ -145,7 +145,7 @@ export default async function CheckupLeadsPage() {
           { label: "Failed",           value: emailsFailed,   icon: <Mail className="w-4 h-4 text-red-400" /> },
           { label: "Skipped",          value: emailsSkipped,  icon: <Mail className="w-4 h-4 text-zinc-500" /> },
           { label: "Checkout clicks",  value: checkoutClicks, icon: <ShoppingCart className="w-4 h-4 text-gold" /> },
-          { label: "Part 1 clicks",    value: part1Clicks,    icon: <Play className="w-4 h-4 text-blue-400" /> },
+          { label: "Free preview clicks", value: part1Clicks, icon: <Play className="w-4 h-4 text-blue-400" /> },
           { label: "Purchased",        value: purchased,      icon: <MousePointerClick className="w-4 h-4 text-emerald-400" /> },
           { label: "Unsubscribed",     value: unsubs,         icon: <UserX className="w-4 h-4 text-zinc-400" /> },
         ].map(c => (
@@ -268,7 +268,7 @@ export default async function CheckupLeadsPage() {
                 <th className="px-3 py-2.5 text-center font-medium">S3</th>
                 <th className="px-3 py-2.5 text-center font-medium">S4</th>
                 <th className="px-3 py-2.5 text-center font-medium">Checkout</th>
-                <th className="px-3 py-2.5 text-center font-medium">Part 1</th>
+                <th className="px-3 py-2.5 text-center font-medium">Free</th>
                 <th className="px-3 py-2.5 text-center font-medium">Paid</th>
                 <th className="px-3 py-2.5 text-center font-medium">Unsub</th>
                 <th className="px-3 py-2.5 text-left font-medium">Date</th>

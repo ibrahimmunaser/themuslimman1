@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { hasActiveCourseAccess } from "@/lib/access";
+import { hasActiveCourseAccess, FREE_PART_NUMBER } from "@/lib/access";
 
 /**
  * Server-side access guard for paid content/media API routes.
  *
- * Part 1 is always free — no account or subscription required.
+ * Part FREE_PART_NUMBER (15) is always free — no account or subscription required.
  *
- * Parts 2–100 require an authenticated user who has:
+ * Every other part requires an authenticated user who has:
  *   1. A verified email address (emailVerified = true) — waived for
  *      device-linked guest accounts (isAnonymous = true), which have no
  *      real, reachable email address to verify. Requiring it for them would
@@ -29,8 +29,8 @@ import { hasActiveCourseAccess } from "@/lib/access";
  *   if (deny) return deny;
  */
 export async function requirePartAccess(partNumber: number): Promise<NextResponse | null> {
-  // Part 1 is always free — no auth or subscription required.
-  if (partNumber === 1) {
+  // The free preview part is always free — no auth or subscription required.
+  if (partNumber === FREE_PART_NUMBER) {
     return null;
   }
 

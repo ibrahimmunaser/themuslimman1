@@ -1,7 +1,7 @@
 "use client";
 import type { CourseLang } from "@/lib/course-lang";
 import { isRtlLang } from "@/lib/course-lang";
-import { loc } from "@/lib/loc";
+import { loc, locf } from "@/lib/loc";
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { ChevronLeft, ChevronRight, Layers, Maximize2, X } from "lucide-react";
@@ -136,12 +136,21 @@ export function SlidesViewer({ slides, title, type = "presented", partNumber, pr
             {loc(lang, "No slides for this part", "لا توجد شرائح لهذا الجزء", "Aucune diapositive pour cette partie")}
           </p>
           <p className="text-xs text-text-muted mt-1">
-            {loc(
-              lang,
-              `${type === "presented" ? "Presented" : "Detailed"} slides will be available shortly`,
-              `شرائح ${type === "presented" ? "المُقدَّمة" : "التفصيلية"} ستكون متاحة قريبًا`,
-              `Les diapositives ${type === "presented" ? "présentées" : "détaillées"} seront bientôt disponibles`,
-            )}
+            {(() => {
+              const typeAdj = loc(
+                lang,
+                type === "presented" ? "Presented" : "Detailed",
+                type === "presented" ? "المُقدَّمة" : "التفصيلية",
+                type === "presented" ? "présentées" : "détaillées",
+              );
+              return locf(
+                lang,
+                "{type} slides will be available shortly",
+                "شرائح {type} ستكون متاحة قريبًا",
+                "Les diapositives {type} seront bientôt disponibles",
+                { type: typeAdj },
+              );
+            })()}
           </p>
         </div>
       </div>
@@ -203,7 +212,7 @@ export function SlidesViewer({ slides, title, type = "presented", partNumber, pr
                 zIndex: idx === current ? 1 : 0,
               }}
             >
-              <SlideImg src={slide.medium} alt={loc(lang, `Slide ${idx + 1}`, `الشريحة ${idx + 1}`, `Diapositive ${idx + 1}`)} priority={idx === current} />
+              <SlideImg src={slide.medium} alt={locf(lang, "Slide {n}", "الشريحة {n}", "Diapositive {n}", { n: idx + 1 })} priority={idx === current} />
             </div>
           );
         })}
@@ -248,7 +257,7 @@ export function SlidesViewer({ slides, title, type = "presented", partNumber, pr
             <button
               key={i}
               onClick={() => setCurrent(i)}
-              aria-label={loc(lang, `Go to slide ${i + 1}`, `الانتقال إلى الشريحة ${i + 1}`, `Aller à la diapositive ${i + 1}`)}
+              aria-label={locf(lang, "Go to slide {n}", "الانتقال إلى الشريحة {n}", "Aller à la diapositive {n}", { n: i + 1 })}
               aria-current={i === current ? "true" : undefined}
               className={`flex-shrink-0 w-20 h-11 rounded border overflow-hidden transition-all ${
                 i === current
@@ -257,7 +266,7 @@ export function SlidesViewer({ slides, title, type = "presented", partNumber, pr
               }`}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={slide.thumb} alt={loc(lang, `Slide ${i + 1}`, `الشريحة ${i + 1}`, `Diapositive ${i + 1}`)} className="w-full h-full object-cover" />
+              <img src={slide.thumb} alt={locf(lang, "Slide {n}", "الشريحة {n}", "Diapositive {n}", { n: i + 1 })} className="w-full h-full object-cover" />
             </button>
           ))}
           <div className="flex-shrink-0 w-8" aria-hidden />

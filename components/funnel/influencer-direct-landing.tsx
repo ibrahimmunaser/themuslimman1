@@ -283,7 +283,7 @@ export function InfluencerDirectLanding({ config, part1Preview, afterPart1Previe
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-base transition-colors shadow-lg shadow-gold/25"
             >
               <Play className="w-4 h-4 fill-current" />
-              Watch Part 1 Free
+              Watch the First Revelation Free
             </button>
             <button
               onClick={scrollToPlans}
@@ -296,7 +296,7 @@ export function InfluencerDirectLanding({ config, part1Preview, afterPart1Previe
 
           {/* Friction reducer */}
           <p className="text-xs text-text-muted">
-            Part 1 is free · No app required · One-time payment · 7-day refund guarantee
+            The First Revelation is free · No app required · One-time payment · 7-day refund guarantee
           </p>
         </div>
       </section>
@@ -308,7 +308,7 @@ export function InfluencerDirectLanding({ config, part1Preview, afterPart1Previe
             <p className="text-xs font-bold text-gold uppercase tracking-widest mb-1.5">
               Free · No Signup Required
             </p>
-            <h2 className="text-xl font-bold text-text mb-1">Start with Part 1 free</h2>
+            <h2 className="text-xl font-bold text-text mb-1">Start with the First Revelation — free</h2>
             <p className="text-sm text-text-secondary">
               Watch the first lesson and see how the course works before choosing a plan.
             </p>
@@ -345,7 +345,7 @@ export function InfluencerDirectLanding({ config, part1Preview, afterPart1Previe
               Ready to continue the full course?
             </h2>
             <p className="text-sm text-text-secondary max-w-md mx-auto leading-relaxed">
-              Part 1 is free. The full course includes 100 structured lessons with videos,
+              The First Revelation is free. The full course includes 100 structured lessons with videos,
               readings, quizzes, flashcards, summaries, mind maps, and progress tracking.
             </p>
           </div>

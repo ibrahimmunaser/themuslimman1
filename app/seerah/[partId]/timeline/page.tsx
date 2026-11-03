@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { requireStudent } from "@/lib/auth";
-import { hasActiveCourseAccess, isFamilyPlan } from "@/lib/access";
+import { hasActiveCourseAccess, isFamilyPlan, FREE_PART_NUMBER } from "@/lib/access";
 import { getActiveProfileId } from "@/app/actions/profiles";
 import { cookies } from "next/headers";
 import { getPartById, PARTS } from "@/lib/content";
@@ -33,9 +33,9 @@ export default async function TimelinePage(props: Props) {
   if (!partBase) notFound();
 
   const hasAccess =
-    partBase.partNumber === 1 || (await hasActiveCourseAccess(user.id, user.hasPaid));
+    partBase.partNumber === FREE_PART_NUMBER || (await hasActiveCourseAccess(user.id, user.hasPaid));
   if (!hasAccess) redirect("/pricing");
-  // Part 1 timeline is free (mirrors part page + mobile). Entitled unverified keep access.
+  // The free part's timeline is free (mirrors part page + mobile). Entitled unverified keep access.
 
   if (isFamilyPlan(user.planType)) {
     const cookieStore = await cookies();

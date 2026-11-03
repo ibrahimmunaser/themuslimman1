@@ -7,174 +7,133 @@ import { HelpCircle, BookOpen, CreditCard, Lock } from "lucide-react";
 import { ContactSupportForm } from "@/components/help/contact-support-form";
 import { cookies } from "next/headers";
 import { LifetimePrice } from "@/components/pricing/country-price";
-import { parseLang, COURSE_LANG_COOKIE, type CourseLang } from "@/lib/course-lang";
+import { parseLang, COURSE_LANG_COOKIE, type CourseLang, isRtlLang } from "@/lib/course-lang";
 import { loc } from "@/lib/loc";
 
 export const metadata = { title: "Help & FAQ | Complete Seerah" };
 export const dynamic = "force-dynamic";
 
+/**
+ * English-structured FAQ. Every category title, question, and answer is
+ * wrapped in loc(lang, en, ar, fr) so Arabic and French get their existing,
+ * hand-written text, and the other 12 course languages fall back to
+ * data/i18n/shell/*.json phrase packs (see lib/loc.ts -> lib/phrases.ts).
+ * The PRICE answer is rendered separately around <LifetimePrice />.
+ */
 function faqsFor(lang: CourseLang) {
-  if (lang === "ar") {
-    return [
-      {
-        category: "البدء",
-        icon: BookOpen,
-        questions: [
-          { q: "كيف أصل إلى دورتي؟", a: "بعد الشراء، يمكنك الوصول إلى دورتك من لوحة التحكم. فقط انقر على بطاقة الدورة لبدء التعلم." },
-          { q: "ما الذي يتضمنه الوصول الكامل للسيرة النبوية؟", a: "تحصل على رحلة السيرة النبوية الكاملة في ١٠٠ جزء: دروس فيديو، ملخصات، اختبارات، بطاقات تعليمية، خرائط ذهنية، موارد مرئية، أدلة دراسية، تقارير، وتتبع التقدم. وصول كامل منذ اليوم الأول." },
-          { q: "كيف تُبنى الدروس؟", a: "كل جزء يشمل: درس فيديو، ملخص، دليل دراسي، بطاقات تعليمية، اختبار، خريطة ذهنية، شرائح، رسوم معلوماتية، وتقارير — كل ما تحتاجه للتعلم والمراجعة والاحتفاظ." },
-        ],
-      },
-      {
-        category: "الحساب والفواتير",
-        icon: CreditCard,
-        questions: [
-          { q: "ما خيارات الدفع المتاحة؟", a: "PRICE" },
-          { q: "ما سياسة الاسترداد؟", a: "نقدم ضمان الوضوح لمدة ٧ أيام. إذا لم تكن الدورة كما توقعت، راسلنا خلال ٧ أيام لاسترداد كامل المبلغ." },
-        ],
-      },
-      {
-        category: "الوصول إلى الدورة",
-        icon: Lock,
-        questions: [
-          { q: "هل يمكنني الوصول إلى الأجزاء بأي ترتيب؟", a: "نعم — جميع الـ ١٠٠ جزء متاحة فور تفعيل خطتك. يمكنك الانتقال إلى أي درس في أي وقت. الأجزاء مرقّمة لمساعدتك على متابعة السيرة بشكل تسلسلي." },
-          { q: "هل يمكنني الوصول إلى الدروس من الهاتف؟", a: "نعم. الدورة متجاوبة بالكامل وتعمل على جميع الأجهزة بما فيها الهواتف والأجهزة اللوحية." },
-        ],
-      },
-      {
-        category: "الشهادة",
-        icon: BookOpen,
-        questions: [
-          { q: "كيف أحصل على شهادة؟", a: "أكمل جميع الدروس المطلوبة في خطتك. يجب أيضاً اجتياز جميع الاختبارات بنسبة ٧٠٪ على الأقل. بعدها ستكون شهادتك متاحة في قسم الشهادات." },
-          { q: "هل الشهادة رسمية؟", a: "نعم، هي شهادة إتمام رسمية من The Muslim Man تُثبت أنك أكملت دورة السيرة النبوية الكاملة." },
-        ],
-      },
-    ];
-  }
-
-  if (lang === "fr") {
-    return [
-      {
-        category: "Pour commencer",
-        icon: BookOpen,
-        questions: [
-          {
-            q: "Comment accéder à mon cours ?",
-            a: "Après l'achat, vous pouvez accéder à votre cours depuis le Tableau de bord. Cliquez simplement sur la carte du cours pour commencer.",
-          },
-          {
-            q: "Que comprend l'accès complet à Complete Seerah ?",
-            a: "Vous obtenez le parcours complet de la Sîra en 100 parties : leçons vidéo, briefings, quiz, flashcards, cartes mentales, ressources visuelles, guides d'étude, rapports et suivi de progression. Accès complet dès le premier jour.",
-          },
-          {
-            q: "Comment les leçons sont-elles structurées ?",
-            a: "Chaque partie comprend une leçon vidéo, un briefing, un guide d'étude, des flashcards, un quiz, une carte mentale, des diapositives, des infographies et des rapports — tout ce qu'il faut pour apprendre, réviser et mémoriser.",
-          },
-        ],
-      },
-      {
-        category: "Compte et facturation",
-        icon: CreditCard,
-        questions: [
-          {
-            q: "Quelles options de paiement sont disponibles ?",
-            a: "PRICE",
-          },
-          {
-            q: "Quelle est votre politique de remboursement ?",
-            a: "Nous offrons une garantie de clarté de 7 jours. Si le cours n'est pas ce que vous attendiez, écrivez-nous dans les 7 jours pour un remboursement intégral.",
-          },
-        ],
-      },
-      {
-        category: "Accès au cours",
-        icon: Lock,
-        questions: [
-          {
-            q: "Puis-je accéder aux parties dans n'importe quel ordre ?",
-            a: "Oui — les 100 parties sont immédiatement accessibles une fois votre plan actif. Vous pouvez aller à n'importe quelle leçon à tout moment. Les parties sont numérotées pour suivre la Sîra chronologiquement, mais il n'y a pas de verrous entre les leçons.",
-          },
-          {
-            q: "Puis-je suivre les leçons sur mobile ?",
-            a: "Oui. Le cours est entièrement responsive et fonctionne sur tous les appareils, y compris téléphones et tablettes.",
-          },
-        ],
-      },
-      {
-        category: "Certificat",
-        icon: BookOpen,
-        questions: [
-          {
-            q: "Comment obtenir un certificat ?",
-            a: "Complétez toutes les leçons requises de votre plan. Les utilisateurs avec accès complet doivent aussi réussir tous les quiz avec au moins 70 %. Votre certificat sera ensuite disponible dans la section Certificat.",
-          },
-          {
-            q: "Le certificat est-il officiel ?",
-            a: "Oui, c'est un certificat officiel de réussite de The Muslim Man attestant que vous avez terminé Complete Seerah.",
-          },
-        ],
-      },
-    ];
-  }
-
   return [
     {
-      category: "Getting Started",
+      category: loc(lang, "Getting Started", "البدء", "Pour commencer"),
       icon: BookOpen,
       questions: [
         {
-          q: "How do I access my course?",
-          a: "After purchasing, you can access your course from the Dashboard or My Courses page. Simply click on the course card to start learning.",
+          q: loc(lang, "How do I access my course?", "كيف أصل إلى دورتي؟", "Comment accéder à mon cours ?"),
+          a: loc(
+            lang,
+            "After purchasing, you can access your course from the Dashboard or My Courses page. Simply click on the course card to start learning.",
+            "بعد الشراء، يمكنك الوصول إلى دورتك من لوحة التحكم. فقط انقر على بطاقة الدورة لبدء التعلم.",
+            "Après l'achat, vous pouvez accéder à votre cours depuis le Tableau de bord. Cliquez simplement sur la carte du cours pour commencer.",
+          ),
         },
         {
-          q: "What does Complete Seerah Early Access include?",
-          a: "You get the full 100-part Seerah journey: video lessons, briefings, quizzes, flashcards, mind maps, visual resources, study guides, reports, and guided progress tracking. Full access from day one.",
+          q: loc(
+            lang,
+            "What does Complete Seerah Early Access include?",
+            "ما الذي يتضمنه الوصول الكامل للسيرة النبوية؟",
+            "Que comprend l'accès complet à Complete Seerah ?",
+          ),
+          a: loc(
+            lang,
+            "You get the full 100-part Seerah journey: video lessons, briefings, quizzes, flashcards, mind maps, visual resources, study guides, reports, and guided progress tracking. Full access from day one.",
+            "تحصل على رحلة السيرة النبوية الكاملة في ١٠٠ جزء: دروس فيديو، ملخصات، اختبارات، بطاقات تعليمية، خرائط ذهنية، موارد مرئية، أدلة دراسية، تقارير، وتتبع التقدم. وصول كامل منذ اليوم الأول.",
+            "Vous obtenez le parcours complet de la Sîra en 100 parties : leçons vidéo, briefings, quiz, flashcards, cartes mentales, ressources visuelles, guides d'étude, rapports et suivi de progression. Accès complet dès le premier jour.",
+          ),
         },
         {
-          q: "How are lessons structured?",
-          a: "Each part includes a video lesson, briefing, study guide, flashcards, quiz, mind map, slides, infographics, and reports — everything you need to learn, review, and retain each part.",
+          q: loc(lang, "How are lessons structured?", "كيف تُبنى الدروس؟", "Comment les leçons sont-elles structurées ?"),
+          a: loc(
+            lang,
+            "Each part includes a video lesson, briefing, study guide, flashcards, quiz, mind map, slides, infographics, and reports — everything you need to learn, review, and retain each part.",
+            "كل جزء يشمل: درس فيديو، ملخص، دليل دراسي، بطاقات تعليمية، اختبار، خريطة ذهنية، شرائح، رسوم معلوماتية، وتقارير — كل ما تحتاجه للتعلم والمراجعة والاحتفاظ.",
+            "Chaque partie comprend une leçon vidéo, un briefing, un guide d'étude, des flashcards, un quiz, une carte mentale, des diapositives, des infographies et des rapports — tout ce qu'il faut pour apprendre, réviser et mémoriser.",
+          ),
         },
       ],
     },
     {
-      category: "Account & Billing",
+      category: loc(lang, "Account & Billing", "الحساب والفواتير", "Compte et facturation"),
       icon: CreditCard,
       questions: [
         {
-          q: "What payment options are available?",
+          q: loc(
+            lang,
+            "What payment options are available?",
+            "ما خيارات الدفع المتاحة؟",
+            "Quelles options de paiement sont disponibles ?",
+          ),
           a: "PRICE",
         },
         {
-          q: "What's your refund policy?",
-          a: "We offer a 7-Day Clarity Guarantee. If the course isn't what you expected, email us within 7 days for a full refund.",
+          q: loc(lang, "What's your refund policy?", "ما سياسة الاسترداد؟", "Quelle est votre politique de remboursement ?"),
+          a: loc(
+            lang,
+            "We offer a 7-Day Clarity Guarantee. If the course isn't what you expected, email us within 7 days for a full refund.",
+            "نقدم ضمان الوضوح لمدة ٧ أيام. إذا لم تكن الدورة كما توقعت، راسلنا خلال ٧ أيام لاسترداد كامل المبلغ.",
+            "Nous offrons une garantie de clarté de 7 jours. Si le cours n'est pas ce que vous attendiez, écrivez-nous dans les 7 jours pour un remboursement intégral.",
+          ),
         },
       ],
     },
     {
-      category: "Course Access",
+      category: loc(lang, "Course Access", "الوصول إلى الدورة", "Accès au cours"),
       icon: Lock,
       questions: [
         {
-          q: "Can I access parts in any order?",
-          a: "Yes — all 100 parts are immediately accessible once your plan is active. You can jump to any lesson at any time. The parts are numbered to help you follow the Seerah chronologically, but there are no locks or requirements between lessons.",
+          q: loc(
+            lang,
+            "Can I access parts in any order?",
+            "هل يمكنني الوصول إلى الأجزاء بأي ترتيب؟",
+            "Puis-je accéder aux parties dans n'importe quel ordre ?",
+          ),
+          a: loc(
+            lang,
+            "Yes — all 100 parts are immediately accessible once your plan is active. You can jump to any lesson at any time. The parts are numbered to help you follow the Seerah chronologically, but there are no locks or requirements between lessons.",
+            "نعم — جميع الـ ١٠٠ جزء متاحة فور تفعيل خطتك. يمكنك الانتقال إلى أي درس في أي وقت. الأجزاء مرقّمة لمساعدتك على متابعة السيرة بشكل تسلسلي.",
+            "Oui — les 100 parties sont immédiatement accessibles une fois votre plan actif. Vous pouvez aller à n'importe quelle leçon à tout moment. Les parties sont numérotées pour suivre la Sîra chronologiquement, mais il n'y a pas de verrous entre les leçons.",
+          ),
         },
         {
-          q: "Can I access lessons on mobile?",
-          a: "Yes. The course is fully responsive and works on all devices including phones and tablets.",
+          q: loc(lang, "Can I access lessons on mobile?", "هل يمكنني الوصول إلى الدروس من الهاتف؟", "Puis-je suivre les leçons sur mobile ?"),
+          a: loc(
+            lang,
+            "Yes. The course is fully responsive and works on all devices including phones and tablets.",
+            "نعم. الدورة متجاوبة بالكامل وتعمل على جميع الأجهزة بما فيها الهواتف والأجهزة اللوحية.",
+            "Oui. Le cours est entièrement responsive et fonctionne sur tous les appareils, y compris téléphones et tablettes.",
+          ),
         },
       ],
     },
     {
-      category: "Certificate",
+      category: loc(lang, "Certificate", "الشهادة", "Certificat"),
       icon: BookOpen,
       questions: [
         {
-          q: "How do I earn a certificate?",
-          a: "Complete all required lessons in your plan. Complete users must also pass all quizzes with at least 70%. Your certificate will then be available in the Certificate section.",
+          q: loc(lang, "How do I earn a certificate?", "كيف أحصل على شهادة؟", "Comment obtenir un certificat ?"),
+          a: loc(
+            lang,
+            "Complete all required lessons in your plan. Complete users must also pass all quizzes with at least 70%. Your certificate will then be available in the Certificate section.",
+            "أكمل جميع الدروس المطلوبة في خطتك. يجب أيضاً اجتياز جميع الاختبارات بنسبة ٧٠٪ على الأقل. بعدها ستكون شهادتك متاحة في قسم الشهادات.",
+            "Complétez toutes les leçons requises de votre plan. Les utilisateurs avec accès complet doivent aussi réussir tous les quiz avec au moins 70 %. Votre certificat sera ensuite disponible dans la section Certificat.",
+          ),
         },
         {
-          q: "Is the certificate official?",
-          a: "Yes, it's an official certificate of completion from The Muslim Man showing you've completed Complete Seerah.",
+          q: loc(lang, "Is the certificate official?", "هل الشهادة رسمية؟", "Le certificat est-il officiel ?"),
+          a: loc(
+            lang,
+            "Yes, it's an official certificate of completion from The Muslim Man showing you've completed Complete Seerah.",
+            "نعم، هي شهادة إتمام رسمية من The Muslim Man تُثبت أنك أكملت دورة السيرة النبوية الكاملة.",
+            "Oui, c'est un certificat officiel de réussite de The Muslim Man attestant que vous avez terminé Complete Seerah.",
+          ),
         },
       ],
     },
@@ -195,7 +154,7 @@ export default async function HelpPage() {
 
   return (
     <StudentLayout userPlan={userPlan} userName={user.fullName}>
-      <div className="min-h-screen bg-[#0a0a0a]">
+      <div className="min-h-screen bg-[#0a0a0a]" dir={isRtlLang(lang) ? "rtl" : undefined}>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-text mb-2">
@@ -230,13 +189,21 @@ export default async function HelpPage() {
                         <h3 className="text-text font-semibold mb-2">{item.q}</h3>
                         <p className="text-text-secondary leading-relaxed">
                           {item.a === "PRICE" ? (
-                            lang === "ar" ? (
-                              <>الدفع مرة واحدة: وصول مدى الحياة مقابل <LifetimePrice /> — بدون اشتراك وبدون رسوم متكررة.</>
-                            ) : lang === "fr" ? (
-                              <>Paiement unique : accès à vie pour <LifetimePrice /> — sans abonnement et sans frais récurrents.</>
-                            ) : (
-                              <>Lifetime access is <LifetimePrice /> one-time — permanent access with no recurring charges. Pay once and keep the full course forever.</>
-                            )
+                            <>
+                              {loc(
+                                lang,
+                                "Lifetime access is",
+                                "الدفع مرة واحدة: وصول مدى الحياة مقابل",
+                                "Paiement unique : accès à vie pour",
+                              )}{" "}
+                              <LifetimePrice />{" "}
+                              {loc(
+                                lang,
+                                "one-time — permanent access with no recurring charges. Pay once and keep the full course forever.",
+                                "— بدون اشتراك وبدون رسوم متكررة.",
+                                "— sans abonnement et sans frais récurrents.",
+                              )}
+                            </>
                           ) : (
                             item.a
                           )}

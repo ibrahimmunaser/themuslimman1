@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { ArrowLeft, Search, Info, Book, Users, Map, Swords, Heart, FileText, Globe, Shield } from "lucide-react";
 import type { CourseLang } from "@/lib/course-lang";
-import { loc } from "@/lib/loc";
+import { loc, locf } from "@/lib/loc";
 
 // IMPORTANT: Future editors should not add technical terms without a plain-English
 // definition and a Seerah-specific explanation.
@@ -2044,11 +2044,12 @@ export function ImportantTermsContent({ lang = "en" }: { lang?: CourseLang }) {
                 >
                   {showAll
                     ? loc(lang, "Show Less", "عرض أقل", "Afficher moins")
-                    : loc(
+                    : locf(
                         lang,
-                        `View All ${filteredTerms.length} Terms`,
-                        `عرض جميع المصطلحات (${filteredTerms.length})`,
-                        `Voir les ${filteredTerms.length} termes`
+                        "View All {n} Terms",
+                        "عرض جميع المصطلحات ({n})",
+                        "Voir les {n} termes",
+                        { n: filteredTerms.length },
                       )}
                 </button>
               </div>

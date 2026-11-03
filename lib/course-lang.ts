@@ -37,6 +37,25 @@ export const COURSE_LANG_OPTIONS: { code: CourseLang; label: string; flag: strin
 
 export const COURSE_LANGS: CourseLang[] = COURSE_LANG_OPTIONS.map((o) => o.code);
 
+/** BCP 47 locales for dates, numbers, and Intl formatting. */
+export const COURSE_LANG_LOCALES: Record<CourseLang, string> = {
+  en: "en-US",
+  ar: "ar",
+  fr: "fr-FR",
+  id: "id-ID",
+  ms: "ms-MY",
+  zh: "zh-CN",
+  ru: "ru-RU",
+  sw: "sw-TZ",
+  es: "es-ES",
+  de: "de-DE",
+  tr: "tr-TR",
+  hi: "hi-IN",
+  ur: "ur-PK",
+  bn: "bn-BD",
+  fa: "fa-IR",
+};
+
 const LANG_SET = new Set<string>(COURSE_LANGS);
 
 export function parseLang(v: string | null | undefined): CourseLang {

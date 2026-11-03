@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { ArrowLeft, Search, Users, Info } from "lucide-react";
 import type { CourseLang } from "@/lib/course-lang";
-import { loc } from "@/lib/loc";
+import { loc, locf } from "@/lib/loc";
 
 interface Person {
   name: string;
@@ -360,11 +360,12 @@ export function KeyPeopleContent({ lang = "en" }: { lang?: CourseLang }) {
         <div className="mb-6 flex items-center gap-2 text-sm text-text-muted">
           <Users className="w-4 h-4" />
           <span>
-            {loc(
+            {locf(
               lang,
-              `Showing ${displayedPeople.length} of ${filteredPeople.length} key figures`,
-              `عرض ${displayedPeople.length} من أصل ${filteredPeople.length} من أبرز الشخصيات`,
-              `Affichage de ${displayedPeople.length} sur ${filteredPeople.length} figures clés`
+              "Showing {current} of {total} key figures",
+              "عرض {current} من أصل {total} من أبرز الشخصيات",
+              "Affichage de {current} sur {total} figures clés",
+              { current: displayedPeople.length, total: filteredPeople.length },
             )}
             {selectedCategory !== "All" || searchQuery ? (
               <> {loc(lang, "(filtered)", "(مُصفّاة)", "(filtrées)")}</>
@@ -438,11 +439,12 @@ export function KeyPeopleContent({ lang = "en" }: { lang?: CourseLang }) {
                 >
                   {showAll
                     ? loc(lang, "Show Less", "عرض أقل", "Afficher moins")
-                    : loc(
+                    : locf(
                         lang,
-                        `Show All ${filteredPeople.length} People`,
-                        `عرض جميع الأشخاص (${filteredPeople.length})`,
-                        `Afficher les ${filteredPeople.length} personnes`
+                        "Show All {n} People",
+                        "عرض جميع الأشخاص ({n})",
+                        "Afficher les {n} personnes",
+                        { n: filteredPeople.length },
                       )}
                 </button>
               </div>

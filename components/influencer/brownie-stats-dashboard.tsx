@@ -64,7 +64,7 @@ const DEFAULT_FUNNEL_STEPS: FunnelStep[] = [
   { key: "brownie_landing_page_view",           label: "Landing Views"                    },
   { key: "individual_lifetime_cta_clicked",     label: "Clicked Individual Lifetime CTA"  },
   { key: "family_lifetime_cta_clicked",         label: "Clicked Family Lifetime CTA"      },
-  { key: "watch_part1_clicked",                 label: "Clicked Watch Part 1 Free"        },
+  { key: "watch_part1_clicked",                 label: "Clicked Watch First Revelation Free" },
   { key: "checkout_loaded_individual_lifetime", label: "Checkout — Individual Lifetime"   },
   { key: "checkout_loaded_family_lifetime",     label: "Checkout — Family Lifetime"       },
   { key: "change_plan_clicked",                 label: "Clicked Change Plan"              },

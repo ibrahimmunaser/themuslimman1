@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getActiveProfileId } from "@/app/actions/profiles";
-import { hasActiveCourseAccess, TOTAL_COURSE_PARTS } from "@/lib/access";
+import { hasActiveCourseAccess, TOTAL_COURSE_PARTS, FREE_PART_NUMBER } from "@/lib/access";
 import { getPartPageData } from "@/lib/part-content-cache";
 import { computeQuizScore, VIDEO_COMPLETION_THRESHOLD } from "@/lib/progress";
 import { getUserPlan, recomputeAndSaveStatus } from "@/lib/progress-writes";
@@ -55,11 +55,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid partNumber" }, { status: 400 });
     }
 
-    // Part 1 is always free (mirrors lib/part-access.ts's requirePartAccess)
+    // The free part is always free (mirrors lib/part-access.ts's requirePartAccess)
     // — gating this whole endpoint on hasActiveCourseAccess with no carve-out
-    // meant every free-tier user's Part 1 activity 403'd and only ever
+    // meant every free-tier user's free-part activity 403'd and only ever
     // survived in local SharedPreferences, lost on reinstall/new device.
-    if (partNumber !== 1) {
+    if (partNumber !== FREE_PART_NUMBER) {
       const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
       if (!hasAccess) return NextResponse.json({ error: "No active subscription" }, { status: 403 });
     }
@@ -186,7 +186,7 @@ export async function POST(request: NextRequest) {
     // though every underlying field (quiz, video, briefing) was correct.
     // No "essentials"-tier purchase path exists on mobile, so default to
     // "complete" when the user has no billing record we recognize yet
-    // (e.g. a guest tracking the free Part 1).
+    // (e.g. a guest tracking the free part).
     const userPlan = (await getUserPlan(userId, user.hasPaid)) ?? "complete";
     await recomputeAndSaveStatus(learnerProfileId, partNumber, userPlan);
 

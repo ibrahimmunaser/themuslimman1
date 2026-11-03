@@ -90,7 +90,7 @@ export function PreviewStep({
             Free · No signup required
           </p>
           <h2 className="text-xl font-bold text-text">
-            Part 1 — {part?.title ?? "The Beginning of Revelation"}
+            {part ? `Part ${part.partNumber}` : "Part 15"} — {part?.title ?? "The First Revelation"}
           </h2>
           <p className="text-sm text-zinc-400 mt-1">
             Watch, read, quiz, and review — see exactly how every lesson works.
@@ -109,7 +109,7 @@ export function PreviewStep({
           </div>
         ) : (
           <div className="rounded-xl bg-zinc-900 border border-zinc-800 aspect-video flex items-center justify-center">
-            <p className="text-zinc-500 text-sm">Part 1 preview is temporarily unavailable.</p>
+            <p className="text-zinc-500 text-sm">The free preview is temporarily unavailable.</p>
           </div>
         )}
 

@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { getCachedStudentOrGuest } from "@/lib/auth-cache";
-import { GUEST_PART1_HREF } from "@/lib/guest-access";
+import { GUEST_FREE_PART_HREF } from "@/lib/guest-access";
 import { UnlockBar } from "@/components/course/unlock-prompt";
-import { hasActiveCourseAccess, isFamilyPlan } from "@/lib/access";
+import { hasActiveCourseAccess, isFamilyPlan, FREE_PART_NUMBER } from "@/lib/access";
 import { getActiveProfileId } from "@/app/actions/profiles";
 import { PARTS, getErasForLang, getPartsForLang } from "@/lib/content";
 import { phrase } from "@/lib/phrases";
@@ -39,8 +39,9 @@ export default async function LearnIndexPage({
   searchParams: Promise<Record<string, string>>;
 }) {
   // getCachedStudentOrGuest() deduplicates with the seerah/layout.tsx call in the same request.
-  // `null` means a signed-out visitor: they get the public dashboard (Part 1 free,
-  // Parts 2+ locked, no progress). Everything account-specific below is skipped for them.
+  // `null` means a signed-out visitor: they get the public dashboard (only the free
+  // preview part unlocked, everything else locked, no progress). Everything
+  // account-specific below is skipped for them.
   const user = await getCachedStudentOrGuest();
   const isGuest = user === null;
 
@@ -72,11 +73,11 @@ export default async function LearnIndexPage({
     }
   }
 
-  // Gate 1: Unverified users may still browse the dashboard (Part 1 free /
+  // Gate 1: Unverified users may still browse the dashboard (free part free /
   // locked parts → pricing), matching mobile. Content APIs still enforce
   // requirePartAccess. Soft verify banner is shown below when needed.
-  // Gate 2: Access check — unpaid users stay on the dashboard with parts 2–100
-  // locked (mobile parity). Do NOT hard-redirect to /pricing.
+  // Gate 2: Access check — unpaid users stay on the dashboard with every part
+  // other than the free part locked (mobile parity). Do NOT hard-redirect to /pricing.
   const cookieStoreForLang = await cookies();
   const lang = parseLang(cookieStoreForLang.get(COURSE_LANG_COOKIE)?.value);
 
@@ -160,8 +161,8 @@ export default async function LearnIndexPage({
     .map(p => p.partNumber);
 
   // Current part = the most recently accessed part (by lastAccessedAt).
-  // All parts are now freely accessible, so we simply resume wherever they left off.
-  // Falls back to Part 1 for brand-new users with no activity yet.
+  // Paid users are freely accessible, so we simply resume wherever they left off.
+  // Falls back to Part 1 for brand-new paid users with no activity yet.
   const lastAccessed = allPartProgress
     .filter(p => p.lastAccessedAt)
     .sort((a, b) => {
@@ -171,7 +172,7 @@ export default async function LearnIndexPage({
     })[0];
   // Unpaid users: continue card must not point at a locked part (mobile: Free — Start Here).
   const rawCurrentPart: number = lastAccessed?.partNumber ?? 1;
-  const currentPart: number = !hasAccess && rawCurrentPart > 1 ? 1 : rawCurrentPart;
+  const currentPart: number = !hasAccess && rawCurrentPart !== FREE_PART_NUMBER ? FREE_PART_NUMBER : rawCurrentPart;
 
   // Proactively warm the user's current part so clicking "Continue" / "Start stage"
   // hits a hot cache instead of waiting for cold R2 fetches.
@@ -274,10 +275,10 @@ export default async function LearnIndexPage({
   // Language-specific parts list for display (titles, subtitles, era names)
   const partsForDisplay = getPartsForLang(lang);
 
-  // Unpaid: lock parts 2–100 (Part 1 free) — mirrors mobile resources/dashboard.
+  // Unpaid: lock every part except the free preview part — mirrors mobile resources/dashboard.
   const lockedPartNumbers: number[] = hasAccess
     ? []
-    : partsForDisplay.filter((p) => p.partNumber > 1).map((p) => p.partNumber);
+    : partsForDisplay.filter((p) => p.partNumber !== FREE_PART_NUMBER).map((p) => p.partNumber);
 
   // Show all parts (plan-locked parts are shown for upsell purposes)
   const accessibleParts = partsForDisplay;
@@ -351,9 +352,9 @@ export default async function LearnIndexPage({
         user.email.split("@")[0])
     : "";
 
-  // Guest links: Part 1 → free public preview (no content API works without a session);
+  // Guest links: free part → free public preview (no content API works without a session);
   // locked parts already route to /pricing.
-  const guestPreviewHref = isGuest ? GUEST_PART1_HREF : undefined;
+  const guestPreviewHref = isGuest ? GUEST_FREE_PART_HREF : undefined;
 
   // Build stagesData for home dashboard
   const stagesData = Object.values(partsByEra).map((era, idx) => ({

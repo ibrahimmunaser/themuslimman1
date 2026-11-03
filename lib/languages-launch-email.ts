@@ -50,13 +50,13 @@ export function buildLanguagesLaunchHtml(opts: {
     </p>
 
     <p style="font-size:15px;margin:0 0 24px 0;color:#333;">
-      If you have not started yet, Part 1 is still free — no account required. Switch languages anytime from the language menu.
+      If you have not started yet, the First Revelation is still free — no account required. Switch languages anytime from the language menu.
     </p>
 
     <div style="text-align:center;margin:24px 0 16px 0;">
       <a href="${previewUrl}"
          style="display:inline-block;background:#f4c542;color:#1a1a1a;text-decoration:none;padding:16px 40px;border-radius:8px;font-weight:700;font-size:16px;">
-        Try Part 1 Free
+        Try the First Revelation Free
       </a>
     </div>
 

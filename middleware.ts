@@ -23,13 +23,15 @@ const PROTECTED_PREFIXES = [
 ];
 
 // Routes under a protected prefix that signed-out visitors may still view.
-// The course dashboard is browsable by guests: Part 1 is free, Parts 2+ show
-// as locked and route to /pricing. These pages check the session themselves
+// The course dashboard is browsable by guests: only the free preview part
+// (lib/access.ts's FREE_PART_NUMBER) is free, every other part shows as
+// locked and routes to /pricing. These pages check the session themselves
 // (getCachedStudentOrGuest) and render a guest view when there isn't one.
-// /seerah/part-1 is the one lesson page guests may open directly (free
+// /seerah/part-15 is the one lesson page guests may open directly (free
 // preview, no progress tracking); every other /seerah/part-N stays gated,
 // and the content APIs enforce access independently either way.
-const PUBLIC_EXACT_PATHS = new Set(["/seerah", "/seerah/resources", "/seerah/part-1", "/learn"]);
+// NOTE: keep this part number in sync with FREE_PART_NUMBER in lib/access.ts.
+const PUBLIC_EXACT_PATHS = new Set(["/seerah", "/seerah/resources", "/seerah/part-15", "/learn"]);
 
 const SESSION_COOKIE = "seerah_session";
 

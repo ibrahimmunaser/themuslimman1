@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/constants/app_constants.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/iap_provider.dart';
 import '../../../core/providers/part_provider.dart';
@@ -255,7 +256,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                     ElevatedButton(
                           onPressed: () {
                             HapticFeedback.mediumImpact();
-                            context.push('/part/1');
+                            context.push(
+                              '/part/${AppConstants.kFreePartNumber}',
+                            );
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.gold,
