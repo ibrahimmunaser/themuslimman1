@@ -91,7 +91,7 @@ export default async function WatchFreePage({ searchParams }: Props) {
         >
           <Part1FullPreview
             checkoutHref={checkoutHref}
-            ctaLabel="Get Lifetime Access — Only $99"
+            ctaLabel="Get Lifetime Access — Only $49"
           />
         </Suspense>
       </section>

@@ -8,7 +8,7 @@ import { LifetimeAccessCta } from "@/components/pricing/country-price";
 export async function Part1FullPreview({
   checkoutHref = "/checkout?plan=individual-lifetime",
   hideCta = false,
-  ctaLabel = "Get Lifetime Access — Only $99",
+  ctaLabel = "Get Lifetime Access — Only $49",
 }: {
   checkoutHref?: string;
   hideCta?: boolean;

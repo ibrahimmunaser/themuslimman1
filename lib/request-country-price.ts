@@ -11,7 +11,7 @@ export type CountryPriceQuote = {
   country: string | null;
   tier: PriceTier;
   amountCents: number;
-  /** Dollar amount only, e.g. "$99". The word "Only" is added in the visitor's language. */
+  /** Dollar amount only, e.g. "$49". The word "Only" is added in the visitor's language. */
   label: string;
 };
 

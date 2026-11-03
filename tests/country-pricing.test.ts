@@ -6,11 +6,11 @@ import {
 } from "@/lib/request-country-price";
 
 describe("country lifetime pricing", () => {
-  it("prices high-income at $99 and keeps the lower tiers", () => {
-    expect(quoteForCountryCode("US")).toMatchObject({ tier: "A", amountCents: 9900, label: "$99" });
-    expect(quoteForCountryCode("GB")).toMatchObject({ tier: "A", amountCents: 9900, label: "$99" });
-    expect(quoteForCountryCode("AE")).toMatchObject({ tier: "A", amountCents: 9900, label: "$99" });
-    expect(quoteForCountryCode("JP")).toMatchObject({ tier: "A", amountCents: 9900, label: "$99" });
+  it("prices high-income at $49 and keeps the lower tiers", () => {
+    expect(quoteForCountryCode("US")).toMatchObject({ tier: "A", amountCents: 4900, label: "$49" });
+    expect(quoteForCountryCode("GB")).toMatchObject({ tier: "A", amountCents: 4900, label: "$49" });
+    expect(quoteForCountryCode("AE")).toMatchObject({ tier: "A", amountCents: 4900, label: "$49" });
+    expect(quoteForCountryCode("JP")).toMatchObject({ tier: "A", amountCents: 4900, label: "$49" });
     expect(quoteForCountryCode("MX")).toMatchObject({ tier: "B", amountCents: 2900, label: "$29" });
     expect(quoteForCountryCode("TR")).toMatchObject({ tier: "B", amountCents: 2900, label: "$29" });
     expect(quoteForCountryCode("IN")).toMatchObject({ tier: "C", amountCents: 1500, label: "$15" });

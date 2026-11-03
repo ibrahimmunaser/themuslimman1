@@ -156,7 +156,7 @@ export function formatPrice(cents: number): string {
   return dollars % 1 === 0 ? `$${dollars.toFixed(0)}` : `$${dollars.toFixed(2)}`;
 }
 
-/** Customer-facing lifetime price, e.g. "Only $99" or "فقط $29". */
+/** Customer-facing lifetime price, e.g. "Only $49" or "فقط $29". */
 export function formatWebsitePrice(cents: number, onlyWord: string): string {
   return `${onlyWord} ${formatPrice(cents)}`;
 }

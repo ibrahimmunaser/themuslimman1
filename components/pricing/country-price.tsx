@@ -29,7 +29,7 @@ export function useCountryPrice(): CountryPriceQuote {
   return useContext(CountryPriceContext);
 }
 
-/** "Only $99" in the selected language. The dollar amount stays in label. */
+/** "Only $49" in the selected language. The dollar amount stays in label. */
 export function useLifetimePricePhrase(): string {
   const { label } = useCountryPrice();
   const lang = useSiteLang();
@@ -68,7 +68,7 @@ export function LifetimePrice({
   );
 }
 
-/** "Get Lifetime Access — Only $99" with a localized lead-in and a translated "Only". */
+/** "Get Lifetime Access — Only $49" with a localized lead-in and a translated "Only". */
 export function LifetimeAccessCta({
   leading = "Get Lifetime Access — ",
 }: {
