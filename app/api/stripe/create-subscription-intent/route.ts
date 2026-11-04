@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { stripe } from "@/lib/stripe";
+import { stripe, getOrCreateProductId } from "@/lib/stripe";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getUserAccessInfo, getActiveSubscription } from "@/lib/access";
@@ -15,10 +15,6 @@ export async function POST(request: NextRequest) {
       { status: 429, headers: { "Retry-After": String(rl.retryAfterSeconds) } }
     );
   }
-  // Support both old and new env var names for the individual monthly price.
-  const MONTHLY_PRICE_ID =
-    process.env.STRIPE_PRICE_INDIVIDUAL_MONTHLY ?? process.env.STRIPE_MONTHLY_PRICE_ID;
-
   let body: Record<string, string> = {};
   try { body = await request.json(); } catch { /* no body is fine */ }
   const { creator, source, utmSource, utmCampaign, utmMedium, utmContent } = body;
@@ -27,10 +23,6 @@ export async function POST(request: NextRequest) {
     const user = await getCurrentUser();
     if (!user) {
       return NextResponse.json({ error: "You must be logged in to subscribe" }, { status: 401 });
-    }
-    if (!MONTHLY_PRICE_ID) {
-      console.error("[CREATE-SUBSCRIPTION-INTENT] STRIPE_MONTHLY_PRICE_ID is not set");
-      return NextResponse.json({ error: "Monthly subscription is not configured" }, { status: 500 });
     }
 
     // Block lifetime users — they already have permanent access, no need to subscribe
@@ -112,9 +104,30 @@ export async function POST(request: NextRequest) {
 
     // Create subscription in incomplete state so we can confirm via Elements.
     // Must expand BOTH 'latest_invoice' AND 'latest_invoice.confirmation_secret' to get the client_secret.
+    //
+    // Price is created inline from PLANS.monthly.price rather than referencing a
+    // pre-made Stripe Dashboard Price object. This means the live monthly price is
+    // fully controlled by stripe-config.ts — bumping that constant changes what NEW
+    // subscribers are charged immediately, with no Stripe Dashboard step required.
+    // Existing subscriptions keep whatever price object they were created with, so
+    // this never retroactively changes an existing subscriber's bill. The Product
+    // itself (unlike the Price) stays fixed — Stripe requires an existing Product
+    // ID for subscription-item price_data, so we reuse one stable, lazily-created
+    // product rather than a Dashboard-managed Price.
+    const productId = await getOrCreateProductId(
+      "seerah_individual_membership",
+      "Seerah Individual Membership"
+    );
     const subscription = await stripe.subscriptions.create({
       customer: customerId,
-      items: [{ price: MONTHLY_PRICE_ID }],
+      items: [{
+        price_data: {
+          currency: "usd",
+          unit_amount: PLANS.monthly.price,
+          recurring: { interval: "month" },
+          product: productId,
+        },
+      }],
       payment_behavior: "default_incomplete",
       payment_settings: {
         // Card only — Link is excluded because Stripe.js injects
