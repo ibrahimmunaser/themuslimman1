@@ -198,19 +198,19 @@ function CheckoutForm({
 
     // ── Guard: full name required ──────────────────────────────────────────────
     if (!authFormRef.current?.fullName?.trim()) {
-      setError("Please enter your full name to continue.");
+      setError(siteT(lang, "ckEnterFullName"));
       return;
     }
 
     const email = (authFormRef.current?.email?.trim() || userEmail || "").trim();
     if (!email.includes("@")) {
-      setError("Please enter your email address to continue.");
+      setError(siteT(lang, "ckEnterEmailContinue"));
       return;
     }
 
     // ── Guard: amount must be positive ────────────────────────────────────────
     if (finalPrice <= 0) {
-      setError("Something went wrong with your order. Please refresh and try again.");
+      setError(siteT(lang, "ckOrderError"));
       return;
     }
 
@@ -251,7 +251,7 @@ function CheckoutForm({
         setProcessing(false);
         return;
       }
-      setError(msg || "Unable to prepare payment. Please try again.");
+      setError(msg || siteT(lang, "ckUnablePreparePayment"));
       setProcessing(false);
       return;
     }
@@ -260,7 +260,7 @@ function CheckoutForm({
     try {
       const sessionRes = await fetch("/api/stripe/check-access");
       if (sessionRes.status === 401) {
-        setError("Your session has expired. Please sign in again to complete your purchase.");
+        setError(siteT(lang, "ckSessionExpiredSignIn"));
         setProcessing(false);
         return;
       }
@@ -297,14 +297,14 @@ function CheckoutForm({
           const applyData = await applyRes.json().catch(() => ({}));
           console.error("[CHECKOUT] apply-saved-card rejected:", applyRes.status, applyData?.error);
           logStage("payment_failed", { errorCode: "saved_card_unavailable", method: "saved_card" });
-          setError(applyData?.error || "Your saved card could not be used. Please choose another or add a new card.");
+          setError(applyData?.error || siteT(lang, "ckSavedCardError"));
           setSavedPmId(null); // fall back to the new-card flow for the retry
           setProcessing(false);
           return;
         }
       } catch {
         logStage("payment_failed", { errorCode: "saved_card_unavailable_network", method: "saved_card" });
-        setError("Could not verify your saved card. Please try again or use a new card.");
+        setError(siteT(lang, "ckSavedCardVerifyError"));
         setSavedPmId(null);
         setProcessing(false);
         return;
@@ -323,7 +323,7 @@ function CheckoutForm({
           redirect: "if_required",
         });
         if (confirmError) {
-          setError(confirmError.message ?? "Card setup failed. Please try again.");
+          setError(confirmError.message ?? siteT(lang, "ckCardSetupFailed"));
           setProcessing(false);
         } else if (setupIntent?.status === "succeeded") {
           // Setup completed in-page — navigate to success
@@ -371,7 +371,7 @@ function CheckoutForm({
         } else if (paymentIntent) {
           // Stripe returned an unexpected status — unlock the UI so the user can retry.
           logStage("payment_failed", { errorCode: paymentIntent.status });
-          setError("Payment could not be completed. Please try again or use a different payment method.");
+          setError(siteT(lang, "ckPaymentFailedGeneric"));
           setProcessing(false);
         } else {
           // confirmPayment returned neither an error nor a paymentIntent.
@@ -386,7 +386,7 @@ function CheckoutForm({
         }
       }
     } catch {
-      setError("Connection lost. Please check your internet and try again.");
+      setError(siteT(lang, "ckConnectionLost"));
       setProcessing(false);
     }
   };
@@ -405,14 +405,14 @@ function CheckoutForm({
     if (!walletName) {
       event.paymentFailed({ reason: "fail" });
       setProcessing(false);
-      setError("Please enter your full name in the form above before using express checkout.");
+      setError(siteT(lang, "ckEnterNameExpress"));
       return;
     }
 
     if (!walletEmail.includes("@")) {
       event.paymentFailed({ reason: "fail" });
       setProcessing(false);
-      setError("Please enter your email address in the form above before using express checkout.");
+      setError(siteT(lang, "ckEnterEmailExpress"));
       return;
     }
 
@@ -428,9 +428,9 @@ function CheckoutForm({
       // Google Pay / Apple Pay may not provide an email in some setups.
       // Show a targeted message so the user knows what to do.
       if (msg.includes("email")) {
-        setError("Please enter your email address in the form above, then try again.");
+        setError(siteT(lang, "ckEnterEmailRetry"));
       } else {
-        setError(msg || "Unable to prepare payment. Please try again.");
+        setError(msg || siteT(lang, "ckUnablePreparePayment"));
       }
       return;
     }
@@ -441,7 +441,7 @@ function CheckoutForm({
       if (sessionRes.status === 401) {
         event.paymentFailed({ reason: "fail" });
         setProcessing(false);
-        setError("Your session has expired. Please refresh the page to continue.");
+        setError(siteT(lang, "ckSessionExpiredRefresh"));
         return;
       }
       if (sessionRes.ok) {
@@ -491,7 +491,7 @@ function CheckoutForm({
       } else if (paymentIntent) {
         event.paymentFailed({ reason: "fail" });
         logStage("payment_failed", { errorCode: paymentIntent.status, method: "express" });
-        setError("Payment could not be completed. Please try again or use a different card.");
+        setError(siteT(lang, "ckPaymentFailedGeneric"));
         setProcessing(false);
       } else {
         // No error, no paymentIntent — Stripe is likely redirecting (3DS / bank).
@@ -504,7 +504,7 @@ function CheckoutForm({
       }
     } catch {
       event.paymentFailed({ reason: "fail" });
-      setError("Connection lost. Please check your internet and try again.");
+      setError(siteT(lang, "ckConnectionLost"));
       setProcessing(false);
     }
   };
@@ -518,7 +518,7 @@ function CheckoutForm({
       : billing === "monthly"
       ? audience === "family"
         ? `Start Family Access — ${formatPrice(finalPrice)}/month`
-        : `Start Individual Access — ${formatPrice(finalPrice)}/month`
+        : siteT(lang, "ckButtonStartAccess").replace("{price}", formatPrice(finalPrice))
       : isAnnArborStudent
         ? `Get Student Lifetime Access — ${formatPrice(finalPrice)}`
         : audience === "family"
@@ -534,9 +534,9 @@ function CheckoutForm({
         ]
       : billing === "monthly"
       ? ([
-          `Due today: ${formatPrice(finalPrice)}`,
+          siteT(lang, "ckDueTodayPrice").replace("{price}", formatPrice(finalPrice)),
           siteT(lang, "ckStep1"),
-          "Cancel anytime.",
+          siteT(lang, "cancelAnytimeShort"),
           siteT(lang, "ckRefund"),
         ])
       : [
@@ -1025,7 +1025,7 @@ function CheckoutPageContent({
           else if (userPlanType === "family" || userPlanType === "individual") setActiveSubPlanType(userPlanType);
           return null;
         }
-        throw new Error(data.error || "Failed to initialize checkout");
+        throw new Error(data.error || siteT(lang, "ckFailedInitCheckout"));
       }
 
       // Subscription was upgraded in-place (individual → family monthly) — no payment form needed.
@@ -1051,7 +1051,7 @@ function CheckoutPageContent({
       return { finalPrice: price, clientSecret: data.clientSecret as string | undefined };
     } catch (err) {
       if (intentGen.current === gen) {
-        setError(err instanceof Error ? err.message : "An error occurred");
+        setError(err instanceof Error ? err.message : siteT(lang, "ckErrorOccurred"));
         // Fire checkout_load_failed with a safe category — raw error messages are not sent.
         const failCreator = initialSourceParam ?? "homepage";
         sendCheckoutLoadFailed(failCreator, "checkout_initialization_failed", {
@@ -1077,7 +1077,7 @@ function CheckoutPageContent({
     // Validate email before doing any network calls.
     if (!isAuthenticatedRef.current) {
       if (!email.includes("@"))
-        throw new Error("Please enter a valid email address to continue.");
+        throw new Error(siteT(lang, "ckValidEmailContinue"));
 
       // Name is optional — the API derives it from email if not provided.
       await runGuestCheckout(name || "", email);
@@ -1103,7 +1103,7 @@ function CheckoutPageContent({
       await new Promise((r) => setTimeout(r, 100));
     }
 
-    throw new Error("Unable to prepare payment. Please try again.");
+    throw new Error(siteT(lang, "ckUnablePreparePayment"));
   };
 
   // ── On mount / plan change: create intent (authenticated users) ────────────
@@ -1166,12 +1166,12 @@ function CheckoutPageContent({
             setAuthError("__existing_account__");
           } else {
             setAuthMode("login");
-            setAuthError("You already have an account with this email. Please sign in.");
+            setAuthError(siteT(lang, "ckExistingAccountSignIn"));
           }
           setAutoIntentStarted(false);
           return;
         }
-        setAuthError(data.error || "Failed to continue. Please try again.");
+        setAuthError(data.error || siteT(lang, "ckFailedToContinue"));
         setAutoIntentStarted(false);
         return;
       }
@@ -1180,7 +1180,7 @@ function CheckoutPageContent({
         // this email is its real owner, so a confirmation link was emailed
         // instead of granting a session outright. Don't proceed to payment.
         setAuthError(
-          `We sent a confirmation link to ${email}. Click it to continue your checkout (expires in 15 minutes).`
+          siteT(lang, "ckConfirmationSent").replace("{email}", email)
         );
         setAutoIntentStarted(false);
         return;
@@ -1197,7 +1197,7 @@ function CheckoutPageContent({
       });
     } catch (err) {
       if ((err as Error)?.name === "AbortError") return; // "Not you?" cancelled this
-      setAuthError("An error occurred. Please try again.");
+      setAuthError(siteT(lang, "ckGenericError"));
       setAutoIntentStarted(false);
     } finally {
       setAuthLoading(false);
@@ -1207,7 +1207,7 @@ function CheckoutPageContent({
   const handleGuestCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError("");
-    if (!authForm.email.includes("@")) { setAuthError("Please enter a valid email address"); return; }
+    if (!authForm.email.includes("@")) { setAuthError(siteT(lang, "ckValidEmail")); return; }
     if (autoIntentStarted) return; // already in progress from auto-trigger
     setAutoIntentStarted(true);
     await runGuestCheckout(authForm.fullName, authForm.email);
@@ -1269,8 +1269,8 @@ function CheckoutPageContent({
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError("");
-    if (!authForm.email.includes("@")) { setAuthError("Please enter a valid email address"); return; }
-    if (!authForm.password)            { setAuthError("Please enter your password"); return; }
+    if (!authForm.email.includes("@")) { setAuthError(siteT(lang, "ckValidEmail")); return; }
+    if (!authForm.password)            { setAuthError(siteT(lang, "ckEnterPassword")); return; }
 
     setAuthLoading(true);
     try {
@@ -1280,7 +1280,7 @@ function CheckoutPageContent({
         body: JSON.stringify({ email: authForm.email, password: authForm.password }),
       });
       const data = await res.json();
-      if (!res.ok) { setAuthError(data.error || "Invalid email or password"); return; }
+      if (!res.ok) { setAuthError(data.error || siteT(lang, "ckInvalidEmailOrPassword")); return; }
       setAuthEmail(authForm.email);
       isAuthenticatedRef.current = true; // sync update so getOrCreateClientSecret sees it immediately
       setIsAuthenticated(true);
@@ -1298,7 +1298,7 @@ function CheckoutPageContent({
         trigger: "login",
       });
     } catch {
-      setAuthError("An error occurred. Please try again.");
+      setAuthError(siteT(lang, "ckGenericError"));
     } finally {
       setAuthLoading(false);
     }
@@ -1325,7 +1325,7 @@ function CheckoutPageContent({
   // their access as-is). Only one option so the picker can't dead-end into
   // a blocked (410) endpoint.
   const allBillingOptions: { id: Billing; label: string; price: number; priceSuffix?: string; priceOverride?: string; sub: string; badge?: string }[] = [
-    { id: "monthly", label: "Monthly", price: PLANS.monthly.price, priceOverride: formatPrice(PLANS.monthly.price), priceSuffix: "/mo", sub: "Cancel anytime" },
+    { id: "monthly", label: "Monthly", price: PLANS.monthly.price, priceOverride: formatPrice(PLANS.monthly.price), priceSuffix: siteT(lang, "ckPerMo"), sub: siteT(lang, "cancelAnytimeShort") },
   ];
 
   const billingOptions = allBillingOptions;
@@ -1349,8 +1349,8 @@ function CheckoutPageContent({
               <p className="text-lg font-bold text-white leading-snug">
                 {isAnnArborStudent
                   ? "Ann Arbor Student Lifetime"
-                  : billing === "monthly"
-                    ? audience === "family" ? "Family Access" : "Individual Access"
+                    : billing === "monthly"
+                    ? audience === "family" ? "Family Access" : siteT(lang, "ckIndividualAccess")
                     : audience === "family" ? "Family Lifetime Access" : siteT(lang, "ckTitle")}
               </p>
               <p className="text-sm text-zinc-400 mt-0.5 leading-snug">
@@ -1366,13 +1366,13 @@ function CheckoutPageContent({
               <p className="text-2xl sm:text-3xl font-extrabold text-gold leading-none">
                 <span>{isLifetime && audience === "individual" ? formatWebsitePrice(displayPrice, siteT(lang, "only")) : formatPrice(displayPrice)}</span>
               </p>
-              {billing === "monthly" && <p className="text-xs text-zinc-500 mt-0.5">/month</p>}
+              {billing === "monthly" && <p className="text-xs text-zinc-500 mt-0.5">{siteT(lang, "ckPerMonth")}</p>}
             </div>
           </div>
 
           <div className="flex flex-wrap gap-x-4 gap-y-1.5 pt-3 border-t border-zinc-800/60">
             {(billing === "monthly"
-              ? ["Cancel anytime", siteT(lang, "ckInstant"), siteT(lang, "ckRefundShort")]
+              ? [siteT(lang, "cancelAnytimeShort"), siteT(lang, "ckInstant"), siteT(lang, "ckRefundShort")]
               : isLifetime
                 ? [siteT(lang, "ckOneTime"), siteT(lang, "ckNoSub"), siteT(lang, "ckRefundShort"), siteT(lang, "ckInstant")]
                 : ["No charge today", "Cancel anytime"]
@@ -1404,7 +1404,7 @@ function CheckoutPageContent({
               className="inline-flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
             >
               <ArrowLeft className="w-3 h-3" />
-              Back to your plan
+              {siteT(lang, "ckBackToPlan")}
             </button>
           </div>
 
@@ -1523,18 +1523,18 @@ function CheckoutPageContent({
           <p className="text-sm font-semibold text-white">{currentPlan.name}</p>
           <p className="text-xs text-zinc-500 mt-0.5">
             {audience === "family" ? "Up to 5 learner profiles · " : ""}
-            {isLifetime ? "Lifetime access" : "Monthly subscription"}
+            {isLifetime ? "Lifetime access" : siteT(lang, "ckMonthlySub")}
           </p>
         </div>
         <div className="text-right ml-4 flex-shrink-0">
           <p className="text-sm font-bold text-white whitespace-nowrap">
-            {isLifetime && audience === "individual" ? formatWebsitePrice(displayBase, siteT(lang, "only")) : formatPrice(displayBase)}{!isLifetime ? "/mo" : ""}
+            {isLifetime && audience === "individual" ? formatWebsitePrice(displayBase, siteT(lang, "only")) : formatPrice(displayBase)}{!isLifetime ? siteT(lang, "ckPerMo") : ""}
           </p>
         </div>
       </div>
       <div className="flex items-center justify-between pt-2 border-t border-zinc-800">
         <span className="text-sm font-semibold text-white">
-          {isLifetime ? "Total" : "Due today"}
+          {isLifetime ? "Total" : siteT(lang, "ckDueToday")}
         </span>
         <span className="text-lg font-bold text-gold">
           {isLifetime && audience === "individual" ? formatWebsitePrice(displayPrice, siteT(lang, "only")) : formatPrice(isLifetime ? displayPrice : displayBase)}
@@ -1542,7 +1542,7 @@ function CheckoutPageContent({
       </div>
       {!isLifetime && (
         <p className="text-xs text-zinc-500">
-          Then {formatPrice(displayBase)}/month. Cancel anytime.
+          {siteT(lang, "ckThenPriceLine").replace("{price}", formatPrice(displayBase))}
         </p>
       )}
     </div>
@@ -1592,15 +1592,15 @@ function CheckoutPageContent({
         <div className="max-w-[520px] mx-auto space-y-4">
           <div className="p-6 rounded-xl bg-gold/10 border border-gold/25 text-center space-y-3">
             <p className="text-lg font-bold text-white">
-              {isOnFamily ? "You already have Family Access" : "Free trial already used"}
+              {isOnFamily ? "You already have Family Access" : siteT(lang, "ckFreeTrialUsed")}
             </p>
             <p className="text-sm text-zinc-400">
               {isOnFamily
                 ? "Your Family plan already includes everything. Manage it from your billing page."
-                : "You've already used your free trial. Upgrade your plan below."}
+                : siteT(lang, "ckTrialUsedBody")}
             </p>
             <Link href="/seerah" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gold hover:bg-gold-light text-ink font-semibold text-sm transition-colors">
-              Go to Dashboard <ArrowRight className="w-4 h-4" />
+              {siteT(lang, "ckGoToDashboard")} <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
         </div>
@@ -1632,20 +1632,20 @@ function CheckoutPageContent({
           <div className="p-6 rounded-xl bg-gold/10 border border-gold/25 text-center space-y-4">
             <RefreshCw className="w-10 h-10 text-gold mx-auto" />
             <p className="text-lg font-bold text-white">
-              {isDowngrade || familyDuplicate ? "You already have Family Access" : "You already have this plan"}
+              {isDowngrade || familyDuplicate ? "You already have Family Access" : siteT(lang, "ckAlreadyHavePlan")}
             </p>
             <p className="text-sm text-zinc-400">
               {isDowngrade
                 ? "Your Family plan already includes everything in the Individual plan — plus up to 5 learner profiles. There's nothing to downgrade to."
                 : familyDuplicate
                   ? "You already have an active Family plan. Head to your dashboard to continue learning."
-                    : "Your account is already active. Head to your dashboard to continue learning."}
+                    : siteT(lang, "ckAccountActiveBody")}
             </p>
             <Link
               href="/seerah"
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gold hover:bg-gold-light text-ink font-semibold text-sm transition-colors"
             >
-              Go to Dashboard <ArrowRight className="w-4 h-4" />
+              {siteT(lang, "ckGoToDashboard")} <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
         </div>
@@ -1685,7 +1685,7 @@ function CheckoutPageContent({
                   <div className="flex items-center gap-2 min-w-0">
                     <Lock className="w-3.5 h-3.5 text-zinc-500 flex-shrink-0" />
                     <span className="text-white text-sm truncate">{authForm.email}</span>
-                    <span className="text-xs text-zinc-500 flex-shrink-0">(required)</span>
+                    <span className="text-xs text-zinc-500 flex-shrink-0">{siteT(lang, "ckRequired")}</span>
                   </div>
                   <button
                     type="button"
@@ -1805,7 +1805,7 @@ function CheckoutPageContent({
                   <Check className="w-3 h-3 text-green-400" />
                 </span>
                 <span className="text-sm text-zinc-300 truncate">{authEmail}</span>
-                <span className="text-xs text-zinc-500 flex-shrink-0">(required)</span>
+                <span className="text-xs text-zinc-500 flex-shrink-0">{siteT(lang, "ckRequired")}</span>
               </div>
               <button
                 type="button"
@@ -1842,7 +1842,7 @@ function CheckoutPageContent({
                 }}
                 className="flex-shrink-0 ml-3 text-xs text-zinc-500 hover:text-zinc-200 transition-colors cursor-pointer"
               >
-                Not you?
+                {siteT(lang, "ckNotYou")}
               </button>
             </div>
           )}
@@ -1883,7 +1883,7 @@ function CheckoutPageContent({
                     <div className="flex flex-col items-center justify-center py-10 gap-3">
                       <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
                       <p className="text-sm text-zinc-400 text-center">
-                        {loading ? "Setting up secure checkout…" : "Preparing payment form…"}
+                        {loading ? siteT(lang, "ckSettingUpCheckout") : siteT(lang, "ckPreparingPaymentForm")}
                       </p>
                     </div>
                   );
