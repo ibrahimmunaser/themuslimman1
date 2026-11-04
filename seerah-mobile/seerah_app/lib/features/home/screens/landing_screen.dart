@@ -45,8 +45,9 @@ class _Plan {
   });
 }
 
-// Monthly-only public offer — lifetime and family plans are no longer sold
-// going forward (existing purchasers keep their access/entitlements as-is).
+// Public offer — Individual Monthly ($4.99/mo) and Individual Lifetime
+// (one-time, country-priced). Family is no longer sold going forward
+// (existing purchasers keep their access/entitlements as-is).
 const _plans = [
   _Plan(
     id: PlanId.individualMonthly,
@@ -55,6 +56,15 @@ const _plans = [
     descriptionKey: 'oneLearnerCancelAnytime',
     periodKey: 'perMonth',
     badgeKey: 'mostPopular',
+    isRecommended: false,
+  ),
+  _Plan(
+    id: PlanId.individualLifetime,
+    iapId: AppConstants.iapLifetimeIndividual,
+    nameKey: 'planLifetime',
+    descriptionKey: 'oneLearnerPayOnce',
+    periodKey: 'only',
+    badgeKey: 'recommended',
     isRecommended: true,
   ),
 ];

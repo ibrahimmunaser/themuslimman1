@@ -41,14 +41,14 @@ export default async function CheckoutPage({ searchParams }: Props) {
     rawPlan === "family" ||
     rawPlan === "familymonthly";
 
-  // Family, the free trial, and the lifetime one-time plan are no longer sold
-  // publicly — redirect all of those links to the individual monthly plan,
-  // the only plan offered going forward. Existing holders keep their access;
-  // this only affects what a NEW purchase link resolves to.
+  // Family and the free trial are no longer sold publicly — redirect those
+  // links to the individual monthly plan. Individual Monthly and Individual
+  // Lifetime are both sold going forward and are NOT redirected. Existing
+  // holders keep their access; this only affects what a NEW purchase link
+  // resolves to.
   if (
     wantsFamily ||
-    normalizedPlan === "individual-trial" ||
-    normalizedPlan === "individual-lifetime"
+    normalizedPlan === "individual-trial"
   ) {
     const qs = new URLSearchParams();
     qs.set("plan", "individual-monthly");
@@ -71,9 +71,8 @@ export default async function CheckoutPage({ searchParams }: Props) {
   const planParam    = params.plan?.toLowerCase()    ?? "";
   const billingParam = params.billing?.toLowerCase() ?? "";
 
-  // Map plan IDs to audience + billing for the Elements flow. In practice only
-  // individual-monthly ever reaches here now — family/trial/lifetime redirect
-  // above — but the lifetime case is kept as a defensive no-op fallback.
+  // Map plan IDs to audience + billing for the Elements flow. Family/trial
+  // redirect above — individual-monthly and individual-lifetime both reach here.
   if      (normalizedPlan === "individual-lifetime") { initialAudience = "individual"; initialBilling = "lifetime"; }
   else if (normalizedPlan === "individual-monthly")  { initialAudience = "individual"; initialBilling = "monthly";  }
   // Legacy/unknown URL params — default to the individual monthly plan.
@@ -89,9 +88,8 @@ export default async function CheckoutPage({ searchParams }: Props) {
   const hdrs = await headers();
   const lifetimeQuote = quoteFromHeaderBag((name) => hdrs.get(name));
 
-  // Public checkout is individual-monthly by default — flat $4.99, not
-  // country-tiered. The lifetime quote is only still relevant for the
-  // defensive individual-lifetime fallback branch above.
+  // Individual Monthly is flat $4.99, not country-tiered. Individual Lifetime
+  // is priced by the visitor's country via lifetimeQuote.
   const initialBasePrice =
     initialAudience === "individual" && initialBilling === "monthly"
       ? PLANS.monthly.price

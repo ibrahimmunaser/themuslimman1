@@ -1324,8 +1324,12 @@ function CheckoutPageContent({
   // lifetime and family are no longer offered here (existing holders keep
   // their access as-is). Only one option so the picker can't dead-end into
   // a blocked (410) endpoint.
+  // Individual plans sold going forward: Lifetime (one-time, country-priced)
+  // and Monthly ($4.99/mo). Family and the free trial are no longer offered
+  // here (existing holders keep their access as-is).
   const allBillingOptions: { id: Billing; label: string; price: number; priceSuffix?: string; priceOverride?: string; sub: string; badge?: string }[] = [
-    { id: "monthly", label: "Monthly", price: PLANS.monthly.price, priceOverride: formatPrice(PLANS.monthly.price), priceSuffix: siteT(lang, "ckPerMo"), sub: siteT(lang, "cancelAnytimeShort") },
+    { id: "lifetime", label: siteT(lang, "lifetimePlanLabel"), price: individualLifetimeCents, sub: siteT(lang, "noSub"), badge: siteT(lang, "bestValue") },
+    { id: "monthly", label: siteT(lang, "monthlyPlanLabel"), price: PLANS.monthly.price, priceOverride: formatPrice(PLANS.monthly.price), priceSuffix: siteT(lang, "ckPerMo"), sub: siteT(lang, "cancelAnytimeShort") },
   ];
 
   const billingOptions = allBillingOptions;

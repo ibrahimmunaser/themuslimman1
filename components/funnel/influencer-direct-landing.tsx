@@ -76,7 +76,7 @@ export function InfluencerDirectLanding({ config, part1Preview, afterPart1Previe
   // Enriched checkout URL — updated on mount to include real landing-page UTMs
   const [checkoutUrl, setCheckoutUrl] = useState(config.checkoutUrl);
 
-  const price = `${formatPrice(PLANS.monthly.price)}/month`;
+  const price = `${formatPrice(PLANS.monthly.price)}/month or $49 one-time`;
 
   // Sticky only shown when user has scrolled past hero AND no CTA section is on screen
   const showSticky = scrolledPast && !anyCTAVisible;
@@ -296,7 +296,7 @@ export function InfluencerDirectLanding({ config, part1Preview, afterPart1Previe
 
           {/* Friction reducer */}
           <p className="text-xs text-text-muted">
-            The First Revelation is free · No app required · {price} · Cancel anytime
+            The First Revelation is free · No app required · {price} · 7-day refund guarantee
           </p>
         </div>
       </section>
@@ -352,6 +352,7 @@ export function InfluencerDirectLanding({ config, part1Preview, afterPart1Previe
 
           <PlanPicker
             checkoutBaseUrl={checkoutUrl}
+            recommendedPlan="individual-lifetime"
             onCtaClick={onCheckoutClick}
           />
         </div>
@@ -369,7 +370,7 @@ export function InfluencerDirectLanding({ config, part1Preview, afterPart1Previe
             <a
               href={checkoutUrl}
               data-track="checkout_clicked"
-              data-plan="individual-monthly"
+              data-plan="individual-lifetime"
               className="flex-shrink-0 py-3 px-6 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-sm transition-colors"
             >
               Start the Course

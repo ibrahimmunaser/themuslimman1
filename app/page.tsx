@@ -293,7 +293,8 @@ export default async function LandingPage() {
                   {item.a === "SUBSCRIPTION_PRICE" ? (
                     <>
                       {siteT(lang, "yesShort")} — <span dir="ltr">{formatPrice(PLANS.monthly.price)}</span>
-                      {siteT(lang, "perMonthShort")}, {siteT(lang, "cancelAnytimeShort")}.
+                      {siteT(lang, "perMonthShort")}, {siteT(lang, "cancelAnytimeShort")}.{" "}
+                      {siteT(lang, "orPayOnceAlt")}
                     </>
                   ) : (
                     item.a

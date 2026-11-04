@@ -152,7 +152,7 @@ export default async function PricingPage({ searchParams }: Props) {
             <p className="text-base sm:text-lg text-text-secondary leading-relaxed mb-4">
               {siteT(lang, "priceLead")}{" "}
               <span dir="ltr">{formatPrice(PLANS.monthly.price)}</span>
-              {siteT(lang, "perMonthShort")}.
+              {siteT(lang, "perMonthShort")} {siteT(lang, "orLifetimeShort")}.
             </p>
             <p className="text-xs text-text-muted">
               {siteT(lang, "priceFine")}
@@ -199,7 +199,7 @@ export default async function PricingPage({ searchParams }: Props) {
             </ul>
             <p className="text-center text-sm text-text-muted mt-6">
               <span dir="ltr">{formatPrice(PLANS.monthly.price)}</span>
-              {siteT(lang, "perMonthShort")} · {siteT(lang, "cancelAnytimeShort")}
+              {siteT(lang, "perMonthShort")} · {siteT(lang, "cancelAnytimeShort")} {siteT(lang, "orLifetimeShort")}
             </p>
           </FadeUp>
         </div>
@@ -242,7 +242,8 @@ export default async function PricingPage({ searchParams }: Props) {
                   {a === "SUBSCRIPTION_ANSWER" ? (
                     <>
                       {siteT(lang, "yesShort")} — <span dir="ltr">{formatPrice(PLANS.monthly.price)}</span>
-                      {siteT(lang, "perMonthShort")}, {siteT(lang, "cancelAnytimeShort")}.
+                      {siteT(lang, "perMonthShort")}, {siteT(lang, "cancelAnytimeShort")}.{" "}
+                      {siteT(lang, "orPayOnceAlt")}
                     </>
                   ) : (
                     a

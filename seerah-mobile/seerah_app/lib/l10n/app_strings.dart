@@ -995,10 +995,10 @@ const Map<String, Map<String, String>> _kStrings = {
   },
   'faqIsSubscriptionAPlain': {
     'en':
-        'Yes — it\'s \$4.99/month, and you can cancel anytime from your account settings.',
-    'ar': 'نعم — ٤٫٩٩ دولار شهريًا، ويمكنك الإلغاء في أي وقت من إعدادات حسابك.',
+        'Your choice — \$4.99/month (cancel anytime), or pay once for lifetime access with no subscription at all.',
+    'ar': 'الخيار لك — ٤٫٩٩ دولار شهريًا (ألغِ في أي وقت)، أو ادفع مرة واحدة للحصول على وصول مدى الحياة بلا أي اشتراك.',
     'fr':
-        'Oui — c\'est 4,99 \$/mois, et vous pouvez annuler à tout moment depuis les paramètres de votre compte.',
+        'À vous de choisir — 4,99 \$/mois (annulez à tout moment), ou payez une seule fois pour un accès à vie sans aucun abonnement.',
   },
 
   // ── Video tab ────────────────────────────────────────────────────────────

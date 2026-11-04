@@ -1,7 +1,7 @@
 "use client";
 
-import { ArrowRight } from "lucide-react";
 import { FadeUp } from "@/components/motion";
+import { PlanPicker } from "@/components/landing/plan-picker";
 import { useSiteLang } from "@/components/site-lang";
 import { siteT } from "@/lib/site-copy";
 import { PLANS, formatPrice } from "@/lib/stripe-config";
@@ -13,9 +13,9 @@ interface PricingSectionProps {
   /** Base checkout URL — preserves source/UTM params when provided. */
   checkoutBaseUrl?: string;
   /**
-   * Monthly ($4.99/mo) is the only plan sold going forward, regardless of
-   * variant — these values now only affect heading/layout, not which plan
-   * is offered. Kept so existing call sites don't need to change their props.
+   * Both Individual Monthly ($4.99/mo) and Individual Lifetime (one-time,
+   * country-priced) are sold going forward — these values now only affect
+   * heading/layout, not which plans are offered.
    */
   variant?: "full" | "plans-only" | "lifetime-only" | "comparison";
   /** Skip default intro + trust list when pricing sits after proof sections. */
@@ -32,85 +32,6 @@ interface PricingSectionProps {
   /** Skip the comparison variant's own heading — used alongside `bare` when the
    *  surrounding section already has its own title. */
   hideHeading?: boolean;
-}
-
-function buildMonthlyUrl(base: string): string {
-  try {
-    const u = new URL(base, "https://x.com");
-    u.searchParams.set("plan", "individual-monthly");
-    return u.pathname + u.search;
-  } catch {
-    return "/checkout?plan=individual-monthly";
-  }
-}
-
-/** The only plan sold going forward — $4.99/month, cancel anytime. Existing
- *  lifetime/family purchasers keep their access; this is just no longer offered. */
-function MonthlyOnlyCard({ checkoutBaseUrl }: { checkoutBaseUrl: string }) {
-  const checkoutUrl = buildMonthlyUrl(checkoutBaseUrl);
-  const lang = useSiteLang();
-
-  return (
-    <div className="mx-auto w-full max-w-md">
-      <a
-        href={checkoutUrl}
-        data-track="checkout_clicked"
-        data-plan="individual-monthly"
-        data-plan-type="individual"
-        data-billing="monthly"
-        data-price={PLANS.monthly.price}
-        className={[
-          "group relative flex flex-col items-center text-center",
-          "rounded-2xl border-2 border-gold",
-          "bg-gradient-to-b from-gold/[0.14] to-surface-high",
-          "shadow-xl shadow-gold/20 ring-1 ring-gold/15",
-          "px-6 py-8 sm:px-8 sm:py-10",
-          "transition-all duration-200",
-          "hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-gold/25",
-          "active:translate-y-0 active:scale-[0.99]",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-ink",
-        ].join(" ")}
-      >
-        <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold mb-3">
-          {siteT(lang, "mostPopular")}
-        </p>
-
-        <h3 className="text-xl sm:text-2xl font-bold text-text leading-snug mb-4">
-          {siteT(lang, "courseName")}
-        </h3>
-
-        <p className="text-4xl sm:text-5xl font-extrabold text-text leading-none tracking-tight">
-          <span dir="ltr">{formatPrice(PLANS.monthly.price)}</span>
-          <span className="ms-2 text-base sm:text-lg font-medium text-text-secondary">
-            {siteT(lang, "perMonthShort")}
-          </span>
-        </p>
-
-        <p className="mt-4 text-sm sm:text-base text-text-secondary leading-relaxed max-w-xs">
-          {siteT(lang, "cancelAnytimeShort")}
-        </p>
-
-        <span
-          className={[
-            "mt-7 inline-flex items-center justify-center gap-2",
-            "w-full max-w-xs rounded-xl",
-            "bg-gold hover:bg-gold-light text-ink",
-            "px-6 py-3.5",
-            "text-sm sm:text-base font-bold",
-            "shadow-lg shadow-gold/25",
-            "transition-colors",
-          ].join(" ")}
-        >
-          {siteT(lang, "startMonthly")}
-          <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 rtl:rotate-180" />
-        </span>
-      </a>
-
-      <p className="text-xs text-text-muted text-center mt-4">
-        {siteT(lang, "afterSub")}
-      </p>
-    </div>
-  );
 }
 
 export function PricingSection({
@@ -156,7 +77,7 @@ export function PricingSection({
             </h2>
             <p className="text-sm text-text-secondary">
               <span dir="ltr">{formatPrice(PLANS.monthly.price)}</span>
-              {siteT(lang, "perMonthShort")} · {siteT(lang, "cancelAnytimeShort")}
+              {siteT(lang, "perMonthShort")} {siteT(lang, "orLifetimeShort")}
             </p>
           </FadeUp>
         )}
@@ -165,7 +86,7 @@ export function PricingSection({
         {showIntro && !hasAnyAccess && (
           <div className="mb-5 rounded-xl border border-gold/20 bg-gold/[0.04] px-4 py-4 sm:px-5">
             <p className="text-xs font-bold text-gold uppercase tracking-widest text-center mb-3">
-              {siteT(lang, "recurringBilling")}
+              {siteT(lang, "lifetimeAccess")}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
               {[
@@ -191,7 +112,7 @@ export function PricingSection({
             </h2>
             <p className="text-sm text-text-secondary max-w-md mx-auto">
               <span dir="ltr">{formatPrice(PLANS.monthly.price)}</span>
-              {siteT(lang, "perMonthShort")} · {siteT(lang, "cancelAnytimeShort")}
+              {siteT(lang, "perMonthShort")} {siteT(lang, "orLifetimeShort")}
             </p>
           </div>
         )}
@@ -226,7 +147,7 @@ export function PricingSection({
             <a href="/seerah" className="text-sm text-gold hover:underline">{siteT(lang, "goCourse")}</a>
           </div>
         ) : (
-          <MonthlyOnlyCard checkoutBaseUrl={checkoutBaseUrl} />
+          <PlanPicker checkoutBaseUrl={checkoutBaseUrl} hasAccess={hasAnyAccess} />
         )}
 
       </div>
