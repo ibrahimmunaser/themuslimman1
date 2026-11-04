@@ -274,6 +274,11 @@ const Map<String, Map<String, String>> _kStrings = {
     'ar': 'الأكثر رواجًا',
     'fr': 'Le plus populaire',
   },
+  'recommended': {
+    'en': 'Recommended',
+    'ar': 'موصى به',
+    'fr': 'Recommandé',
+  },
   'oneLearnerPayOnce': {
     'en': '1 learner • pay once, own forever',
     'ar': 'متعلّم واحد • دفعة واحدة، امتلاك دائم',

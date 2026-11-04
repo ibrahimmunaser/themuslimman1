@@ -47,12 +47,21 @@ class _Plan {
 
 const _plans = [
   _Plan(
+    id: PlanId.individualMonthly,
+    iapId: AppConstants.iapMonthlyIndividual,
+    nameKey: 'planMonthly',
+    descriptionKey: 'oneLearnerCancelAnytime',
+    periodKey: 'perMonth',
+    badgeKey: 'mostPopular',
+    isRecommended: true,
+  ),
+  _Plan(
     id: PlanId.individualLifetime,
     iapId: AppConstants.iapLifetimeIndividual,
     nameKey: 'planLifetime',
     descriptionKey: 'oneLearnerPayOnce',
     periodKey: 'only',
-    badgeKey: 'mostPopular',
+    badgeKey: 'recommended',
     isRecommended: true,
   ),
 ];
@@ -418,11 +427,9 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                       const SizedBox(height: 16),
 
                       // ── Trust badges ───────────────────────────────────────
-                      // Previously one plain gray line that visually blended
-                      // straight into the legal disclaimer text right below it
-                      // ("Cancel anytime" didn't even apply — the only plan is
-                      // a one-time Lifetime purchase, not a subscription).
-                      // Distinct pills read as a trust row, not more fine print.
+                      // Kept to facts true for every plan on offer (refund,
+                      // instant access) — a blanket "One-time payment" pill
+                      // no longer belongs here now that Monthly is also sold.
                       Wrap(
                         alignment: WrapAlignment.center,
                         spacing: 8,
@@ -435,10 +442,6 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                           _TrustBadge(
                             icon: Icons.flash_on_rounded,
                             label: t(lang, 'instantAccess'),
-                          ),
-                          _TrustBadge(
-                            icon: Icons.check_circle_outline_rounded,
-                            label: t(lang, 'oneTimePayment'),
                           ),
                         ],
                       ),

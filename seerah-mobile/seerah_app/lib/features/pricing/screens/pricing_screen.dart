@@ -44,12 +44,21 @@ class _Plan {
 
 const _plans = [
   _Plan(
+    id: PlanId.individualMonthly,
+    iapId: AppConstants.iapMonthlyIndividual,
+    nameKey: 'planMonthly',
+    descriptionKey: 'oneLearnerCancelAnytime',
+    periodKey: 'perMonth',
+    badgeKey: 'mostPopular',
+    isRecommended: true,
+  ),
+  _Plan(
     id: PlanId.individualLifetime,
     iapId: AppConstants.iapLifetimeIndividual,
     nameKey: 'planLifetime',
     descriptionKey: 'oneLearnerPayOnce',
     periodKey: 'only',
-    badgeKey: 'mostPopular',
+    badgeKey: 'recommended',
     isRecommended: true,
   ),
 ];
@@ -398,10 +407,6 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
               _TrustBadge(
                 icon: Icons.flash_on_rounded,
                 label: t(lang, 'instantAccess'),
-              ),
-              _TrustBadge(
-                icon: Icons.check_circle_outline_rounded,
-                label: t(lang, 'oneTimePayment'),
               ),
             ],
           ),
