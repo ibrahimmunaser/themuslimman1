@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { LangToggle } from "@/components/part/lang-toggle";
+import type { ModeId } from "@/components/part/part-tabs";
 import type { Part } from "@/lib/types";
 import type { CourseLang } from "@/lib/course-lang";
 
@@ -17,6 +18,8 @@ interface Part1PreviewTabsProps {
   initialLang?: CourseLang;
   /** Hide the language toggle (e.g. when the parent already shows one). */
   hideLangToggle?: boolean;
+  excludeModes?: ModeId[];
+  forcedInitialMode?: ModeId;
 }
 
 const LazyPartTabs = dynamic(
@@ -41,6 +44,8 @@ export function Part1PreviewTabs({
   initialAssetUrls,
   initialLang = "en",
   hideLangToggle = false,
+  excludeModes,
+  forcedInitialMode,
 }: Part1PreviewTabsProps) {
   return (
     <div>
@@ -56,6 +61,8 @@ export function Part1PreviewTabs({
           previewMode={true}
           initialAssetUrls={initialAssetUrls}
           initialLang={initialLang}
+          excludeModes={excludeModes}
+          forcedInitialMode={forcedInitialMode}
         />
       </div>
     </div>

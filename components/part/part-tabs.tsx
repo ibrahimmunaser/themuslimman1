@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { clsx } from "clsx";
@@ -38,7 +38,7 @@ import { trackAssetOpened } from "@/app/actions/progress";
 
 type UserPlan = "essentials" | "complete";
 
-type ModeId = "watch" | "read" | "study" | "slides" | "mindmap" | "infographic" | "flashcards" | "quiz";
+export type ModeId = "watch" | "read" | "study" | "slides" | "mindmap" | "infographic" | "flashcards" | "quiz";
 
 type SubTabId =
   | "video"
@@ -377,24 +377,19 @@ export function InfographicPanel({ part, previewMode, lang = "en" }: { part: Par
 
   return (
     <div className="space-y-3">
-      {/* Contextual framing header */}
-      <div className="mb-1">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-gold/60 leading-none">{loc(lang, "Infographic", "إنفوجرافيك", "Infographie")}</p>
-        <p className="text-xs text-text-muted/50 mt-0.5 leading-snug" style={{ hyphens: "none" }}>{part.title}</p>
-      </div>
-
       {/* Style selector row — only when multiple styles available */}
       {styles.length > 1 && (
-        <div className="flex gap-1.5">
+        <div className="flex gap-1.5 overflow-x-auto scrollbar-hide rounded-xl border border-border bg-surface-raised/30 p-1.5">
           {styles.map((s) => (
             <button
               key={s.id}
               onClick={() => handleStyleChange(s.id)}
               className={clsx(
-                "px-3 rounded-lg text-xs font-medium transition-all duration-150 min-h-[44px] active:scale-95",
+                "px-3 rounded-lg text-xs font-medium transition-all duration-150 active:scale-95",
+                "flex-shrink-0 whitespace-nowrap min-h-[44px]",
                 activeStyle === s.id
-                  ? "bg-gold/12 text-gold ring-1 ring-gold/25"
-                  : "bg-surface-raised/50 text-text-muted/60 hover:text-text-secondary hover:bg-surface-raised"
+                  ? "bg-gold/12 text-gold ring-1 ring-gold/20"
+                  : "bg-surface-raised/50 text-text-muted/75 hover:text-text-secondary hover:bg-surface-raised"
               )}
             >
               {loc(lang, s.label, s.labelAr, s.labelFr)}
@@ -500,15 +495,16 @@ export function SlidesPanel({ part, previewMode, lang = "en", isRtl }: { part: P
   return (
     <div>
       {available.length > 1 && (
-        <div className="flex gap-2 mb-4 flex-wrap">
+        <div className="flex gap-1.5 overflow-x-auto scrollbar-hide rounded-xl border border-border bg-surface-raised/30 p-1.5 mb-4">
           {available.map((t) => (
             <button
               key={t.key} onClick={() => handleTypeChange(t.key)}
               className={clsx(
-                "px-3 min-h-[44px] rounded-lg text-xs font-medium border transition-colors",
+                "px-3 rounded-lg text-xs font-medium transition-all duration-150 active:scale-95",
+                "flex-shrink-0 whitespace-nowrap min-h-[44px]",
                 type === t.key
-                  ? "bg-gold/12 text-gold border-gold/25"
-                  : "bg-surface text-text-muted border-border hover:text-text-secondary"
+                  ? "bg-gold/12 text-gold ring-1 ring-gold/20"
+                  : "bg-surface-raised/50 text-text-muted/75 hover:text-text-secondary hover:bg-surface-raised"
               )}
             >{loc(lang, t.label, t.labelAr, t.labelFr)}</button>
           ))}
@@ -752,8 +748,8 @@ function ModeButton({
       {/* Subtitle — primary on mobile, all on desktop */}
       <span className={clsx(
         "leading-none truncate",
-        isPrimary ? "text-[9px] sm:text-[10px]" : "hidden sm:block text-[9px]",
-        isActive ? "text-gold/55" : isDisabled ? "opacity-20" : isPrimary ? "text-text-muted/40" : "text-text-muted/55",
+        isPrimary ? "text-[10px] sm:text-[11px]" : "hidden sm:block text-[10px]",
+        isActive ? "text-gold/70" : isDisabled ? "opacity-20" : isPrimary ? "text-text-muted/70" : "text-text-muted/75",
       )}>
         {modeSubtitle(mode, lang)}
       </span>
@@ -790,11 +786,14 @@ interface PartTabsProps {
   learnerProfileId?: string;
   /** Language the page was rendered in — drives EN/AR/FR chrome labels. */
   initialLang?: CourseLang;
+  /** Omit modes that would mount a second copy of something already on the page (homepage video). */
+  excludeModes?: ModeId[];
 }
 
-export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initialAssetUrls, initialVideoCompleted, initialVideoPercent, initialQuizBestScore, forcedInitialMode, hideTabNav = false, learnerProfileId, initialLang = "en" }: PartTabsProps) {
+export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initialAssetUrls, initialVideoCompleted, initialVideoPercent, initialQuizBestScore, forcedInitialMode, hideTabNav = false, learnerProfileId, initialLang = "en", excludeModes }: PartTabsProps) {
   // Mind maps exist only in English.
-  const modes = courseHasMindmaps(initialLang) ? MODES : MODES.filter((m) => m.id !== "mindmap");
+  const modes = (courseHasMindmaps(initialLang) ? MODES : MODES.filter((m) => m.id !== "mindmap"))
+    .filter((m) => !excludeModes?.includes(m.id));
   const availableModes = modes.filter((m) => getModeSubTabs(m, part).length > 0);
   const defaultMode = availableModes[0] ?? modes[0];
 
@@ -802,11 +801,17 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
   const router = useRouter();
 
   // Initialise from ?mode= URL param so deep links and browser back/fwd work.
-  // forcedInitialMode takes highest precedence (used by the free preview to default to Watch).
+  // The URL takes top precedence: if the visitor explicitly switched tabs (e.g.
+  // clicked "Watch"), that choice is reflected in ?mode= and must survive a
+  // refresh or a language switch (which re-renders this component with fresh
+  // server props). forcedInitialMode is only the *default* for a fresh visit
+  // with no ?mode= in the URL yet (used by the free preview to open on Read).
   const modeParam = searchParams.get("mode") as ModeId | null;
-  const resolvedInitialMode: ModeId = forcedInitialMode && availableModes.some((m) => m.id === forcedInitialMode)
-    ? forcedInitialMode
-    : modeParam && availableModes.some((m) => m.id === modeParam) ? modeParam : defaultMode.id;
+  const resolvedInitialMode: ModeId = modeParam && availableModes.some((m) => m.id === modeParam)
+    ? modeParam
+    : forcedInitialMode && availableModes.some((m) => m.id === forcedInitialMode)
+      ? forcedInitialMode
+      : defaultMode.id;
 
   const [activeMode, setActiveMode] = useState<ModeId>(resolvedInitialMode);
   const currentMode = modes.find((m) => m.id === activeMode) ?? defaultMode;
@@ -814,8 +819,19 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
 
   const [activeSubTab, setActiveSubTab] = useState<SubTabId>(subTabs[0]?.id ?? "video");
 
-  // Sync state when browser navigates (back/forward)
+  // Sync state when the URL's ?mode= actually changes (true browser back/forward
+  // navigation) — not on mount. The initial state above already resolved
+  // forcedInitialMode / the URL param / the default mode correctly; re-deriving
+  // from modeParam on every mount (including React Strict Mode's double-invoke)
+  // would clobber a forcedInitialMode whenever it differs from the first
+  // available mode. Comparing against the last-seen modeParam value (rather
+  // than a simple "has this run before" flag) makes the skip immune to
+  // Strict Mode's extra effect invocation, since modeParam doesn't change
+  // between those two calls.
+  const prevModeParamRef = useRef(modeParam);
   useEffect(() => {
+    if (prevModeParamRef.current === modeParam) return;
+    prevModeParamRef.current = modeParam;
     const incoming = modeParam && availableModes.some((m) => m.id === modeParam) ? modeParam : defaultMode.id;
     if (incoming !== activeMode) {
       setActiveMode(incoming);
@@ -860,6 +876,21 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
     params.set("mode", modeId);
     router.replace(`?${params.toString()}`, { scroll: false });
   }, [part, modes, searchParams, router]);
+
+  // Homepage "Watch the First Revelation — Free" buttons scroll to this preview's
+  // wrapper (id="hero-player") and dispatch this event instead of linking straight
+  // to a video element, since the video now lives behind the "Watch" tab here.
+  useEffect(() => {
+    if (!previewMode) return;
+    const hasWatchMode = availableModes.some((m) => m.id === "watch");
+    if (!hasWatchMode) return;
+    function onPlayRequest() {
+      handleModeChange("watch");
+    }
+    window.addEventListener("seerah-play-preview", onPlayRequest);
+    return () => window.removeEventListener("seerah-play-preview", onPlayRequest);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [previewMode]);
 
   const handleSubTabChange = (tabId: SubTabId) => {
     setActiveSubTab(tabId);
@@ -944,7 +975,7 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
 
           {/* Sub-tab bar (only when mode has multiple content items) */}
           {subTabs.length > 1 && (
-            <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
+            <div className="flex gap-1.5 overflow-x-auto scrollbar-hide rounded-xl border border-border bg-surface-raised/30 p-1.5">
               {subTabs.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = currentSubTab === tab.id;

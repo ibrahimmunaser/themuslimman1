@@ -171,6 +171,7 @@ export async function getUserAccessInfo(userId: string, sessionHasPaid?: boolean
         currentPeriodEnd: true,
         cancelAtPeriodEnd: true,
         stripeSubscriptionId: true,
+        stripePriceId: true,
         gracePeriodEndsAt: true,
         renewalAttemptCount: true,
         lastPaymentFailedAt: true,
