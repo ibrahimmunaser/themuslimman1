@@ -5,8 +5,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { Play, ChevronRight, ArrowRight, BarChart2, CheckCircle2 } from "lucide-react";
 import { Footer } from "@/components/landing/footer";
-import { LifetimeAccessCta } from "@/components/pricing/country-price";
+import { PLANS, formatPrice } from "@/lib/stripe-config";
 import dynamic from "next/dynamic";
+
+const MONTHLY_CTA_LABEL = `Subscribe — ${formatPrice(PLANS.monthly.price)}/mo`;
 
 // Lazy-load the inline Part 1 video only when the user expands it
 const InlinePart1Video = dynamic(
@@ -290,8 +292,8 @@ function getRecommendation(answers: Record<number, number>, urls: SeerahCheckupU
       primaryUrl: watchFreeUrl,
       primarySupport: "The free preview lesson — video, reading, slides, flashcards, quiz. No payment.",
       showFreePrimary: true,
-      secondaryUrl: urls.individualLifetime,
-      secondaryLabel: "Get Lifetime Access — Only $49",
+      secondaryUrl: urls.individualMonthly,
+      secondaryLabel: MONTHLY_CTA_LABEL,
       secondaryPreamble: "Ready to continue after the free preview?",
       bridgeCopy: "Because you want to see the quality first, start with the First Revelation free — full video, flashcards, and quiz included. No payment required.",
       trackEvent: `${eventPrefix}watch_free_click`,
@@ -305,8 +307,8 @@ function getRecommendation(answers: Record<number, number>, urls: SeerahCheckupU
       primaryUrl: watchFreeUrl,
       primarySupport: "The First Revelation is a free preview of the full path. No payment, no commitment.",
       showFreePrimary: true,
-      secondaryUrl: urls.individualLifetime,
-      secondaryLabel: "Get Lifetime Access — Only $49",
+      secondaryUrl: urls.individualMonthly,
+      secondaryLabel: MONTHLY_CTA_LABEL,
       secondaryPreamble: "Ready to continue after the free preview?",
       bridgeCopy: "The best move when you don't know where to start is to simply start with the free preview — free, in order, no commitment.",
       trackEvent: `${eventPrefix}watch_free_click`,
@@ -323,9 +325,9 @@ function getRecommendation(answers: Record<number, number>, urls: SeerahCheckupU
           : "Based on your answers, the best next step is to start from the beginning and follow one clear path in order.";
 
   return {
-    primaryLabel: "Get Lifetime Access — Only $49",
-    primaryUrl: urls.individualLifetime,
-    primarySupport: "One payment. Keep access forever.",
+    primaryLabel: MONTHLY_CTA_LABEL,
+    primaryUrl: urls.individualMonthly,
+    primarySupport: "Cancel anytime.",
     showFreePrimary: false,
     bridgeCopy,
     trackEvent: `${eventPrefix}recommended_plan_click`,
@@ -880,10 +882,11 @@ export function SeerahCheckupClient({
 
   // Helper: derive plan type from a checkout URL string.
   function planFromUrl(url: string): string {
-    if (url.includes("family-lifetime"))    return "family-lifetime";
+    if (url.includes("family-lifetime"))     return "family-lifetime";
     if (url.includes("individual-lifetime")) return "individual-lifetime";
-    if (url.includes("family-monthly"))     return "family-lifetime";
-    return "individual-lifetime";
+    if (url.includes("family-monthly"))      return "family-monthly";
+    if (url.includes("individual-monthly"))  return "individual-monthly";
+    return "individual-monthly";
   }
 
   const isResultPhase = phase === "result";
@@ -893,9 +896,9 @@ export function SeerahCheckupClient({
       ? {
           ...rec,
           showFreePrimary: false,
-          primaryUrl: rec.secondaryUrl ?? urls.individualLifetime,
-          primaryLabel: rec.secondaryLabel ?? "Get Lifetime Access — Only $49",
-          primarySupport: "One payment. Keep access forever.",
+          primaryUrl: rec.secondaryUrl ?? urls.individualMonthly,
+          primaryLabel: rec.secondaryLabel ?? MONTHLY_CTA_LABEL,
+          primarySupport: "Cancel anytime.",
           secondaryUrl: undefined,
           secondaryLabel: undefined,
           secondaryPreamble: undefined,
@@ -1146,7 +1149,7 @@ export function SeerahCheckupClient({
                     className="flex items-center justify-center gap-2 w-full py-5 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-xl transition-colors shadow-lg shadow-gold/30 mb-3"
                   >
                     <Play className="w-5 h-5 fill-current" />
-                    {displayRec.primaryLabel.includes("Only $49") ? <LifetimeAccessCta /> : displayRec.primaryLabel}
+                    {displayRec.primaryLabel}
                   </button>
                   {displayRec.primarySupport && (
                     <p className="text-sm text-center text-text-muted/65 mb-5">{displayRec.primarySupport}</p>
@@ -1165,7 +1168,7 @@ export function SeerahCheckupClient({
                           destination:      displayRec.secondaryUrl ?? "",
                         })}
                         className="block w-full py-4 rounded-xl border-2 border-gold/35 text-gold font-bold text-base text-center hover:border-gold/60 hover:bg-gold/5 transition-colors mb-2">
-                        {displayRec.secondaryLabel.includes("Only $49") ? <LifetimeAccessCta /> : displayRec.secondaryLabel}
+                        {displayRec.secondaryLabel}
                       </Link>
                       <p className="text-xs text-center text-text-muted/55 mb-4">Start today. Continue at your own pace.</p>
                     </>
@@ -1182,7 +1185,7 @@ export function SeerahCheckupClient({
                       destination:      displayRec.primaryUrl,
                     })}
                     className="block w-full py-5 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-xl text-center transition-colors shadow-lg shadow-gold/30 mb-2">
-                    {displayRec.primaryLabel.includes("Only $49") ? <LifetimeAccessCta /> : displayRec.primaryLabel}
+                    {displayRec.primaryLabel}
                   </Link>
                   <p className="text-xs text-center text-text-muted/55 mb-2">Start today. Continue at your own pace.</p>
                   {displayRec.primarySupport && (
@@ -1223,15 +1226,15 @@ export function SeerahCheckupClient({
             {!embedMode && showInlinePreview && (
               <div ref={inlineRef} className="scroll-mt-24">
                 <InlinePart1Video
-                  checkoutUrl={withUserParams(rec.secondaryUrl ?? urls.individualLifetime)}
+                  checkoutUrl={withUserParams(rec.secondaryUrl ?? urls.individualMonthly)}
                   checkoutLabel={rec.secondaryLabel}
                   onVideoStart={() => track("watch_part1_clicked")}
                   onUnlockClick={() => track("quiz_recommended_cta_clicked", {
                     score,
                     result_type:      resultType,
-                    recommended_plan: planFromUrl(rec.secondaryUrl ?? urls.individualLifetime),
-                    cta_label:        rec.secondaryLabel ?? "Get Lifetime Access — Only $49",
-                    destination:      rec.secondaryUrl ?? urls.individualLifetime,
+                    recommended_plan: planFromUrl(rec.secondaryUrl ?? urls.individualMonthly),
+                    cta_label:        rec.secondaryLabel ?? MONTHLY_CTA_LABEL,
+                    destination:      rec.secondaryUrl ?? urls.individualMonthly,
                   })}
                 />
               </div>
@@ -1363,16 +1366,16 @@ export function SeerahCheckupClient({
             </button>
           ) : rec.showFreePrimary && showInlinePreview ? (
             <Link
-              href={withUserParams(rec.secondaryUrl ?? urls.individualLifetime)}
+              href={withUserParams(rec.secondaryUrl ?? urls.individualMonthly)}
               onClick={() => track("quiz_recommended_cta_clicked", {
                 score,
                 result_type:      resultType,
-                recommended_plan: planFromUrl(rec.secondaryUrl ?? urls.individualLifetime),
-                cta_label:        "Get Lifetime Access — Only $49",
-                destination:      rec.secondaryUrl ?? urls.individualLifetime,
+                recommended_plan: planFromUrl(rec.secondaryUrl ?? urls.individualMonthly),
+                cta_label:        MONTHLY_CTA_LABEL,
+                destination:      rec.secondaryUrl ?? urls.individualMonthly,
               })}
               className="flex w-full items-center justify-center py-3 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-sm transition-colors shadow-lg shadow-gold/20">
-              <LifetimeAccessCta />
+              {MONTHLY_CTA_LABEL}
             </Link>
           ) : (
             <Link href={withUserParams(rec.primaryUrl)}
@@ -1380,11 +1383,11 @@ export function SeerahCheckupClient({
                 score,
                 result_type:      resultType,
                 recommended_plan: planFromUrl(rec.primaryUrl),
-                cta_label:        "Get Lifetime Access — Only $49",
+                cta_label:        MONTHLY_CTA_LABEL,
                 destination:      rec.primaryUrl,
               })}
               className="flex w-full items-center justify-center py-3 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-sm transition-colors shadow-lg shadow-gold/20">
-              <LifetimeAccessCta />
+              {MONTHLY_CTA_LABEL}
             </Link>
           )}
         </div>

@@ -117,7 +117,7 @@ export function Footer() {
           </div>
           <div className="flex items-center gap-2 text-xs text-text-muted">
             <CheckCircle2 className="w-3.5 h-3.5 text-success" />
-            <span>{siteT(lang, "footLifetime")}</span>
+            <span>{siteT(lang, "cancelAnytimeShort")}</span>
           </div>
         </div>
 
@@ -126,7 +126,7 @@ export function Footer() {
           <p className="text-sm text-text-muted">
             © {currentYear} TheMuslimMan. {siteT(lang, "footRights")}
           </p>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
             <Link
               href="/privacy"
               className="text-sm text-text-muted hover:text-text transition-colors"

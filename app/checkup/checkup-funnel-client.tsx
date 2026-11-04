@@ -11,10 +11,10 @@ export default function CheckupFunnelClient() {
       sourceBadge="Free Seerah Checkup"
       eventPrefix="homepage_"
       urls={{
-        individualMonthly:  `/checkout?plan=individual-lifetime&${SRC}`,
-        familyMonthly:      `/checkout?plan=individual-lifetime&${SRC}`,
-        individualLifetime: `/checkout?plan=individual-lifetime&${SRC}`,
-        familyLifetime:     `/checkout?plan=individual-lifetime&${SRC}`,
+        individualMonthly:  `/checkout?plan=individual-monthly&${SRC}`,
+        familyMonthly:      `/checkout?plan=individual-monthly&${SRC}`,
+        individualLifetime: `/checkout?plan=individual-monthly&${SRC}`,
+        familyLifetime:     `/checkout?plan=individual-monthly&${SRC}`,
         watchFree:          "/watch-free",
       }}
     />

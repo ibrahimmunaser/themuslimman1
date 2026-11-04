@@ -7,7 +7,7 @@ import {
   ArrowRight, BookOpen, Brain, BarChart2, Check, ChevronDown, Infinity, ShieldCheck,
 } from "lucide-react";
 import { trackEvent } from "@/lib/analytics";
-import { LifetimePrice, useLifetimePricePhrase } from "@/components/pricing/country-price";
+import { PLANS, formatPrice } from "@/lib/stripe-config";
 import type { InfluencerConfig } from "@/lib/influencer-configs";
 import type { Part } from "@/lib/types";
 import type { Part1AssetUrls } from "@/lib/part1-preview-data";
@@ -31,7 +31,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Is this a subscription?",
-    a: "No. Lifetime access is a one-time payment with no renewal. You keep access forever.",
+    a: "Yes — it's $4.99/month, and you can cancel anytime from your account settings.",
   },
   {
     q: "Is there a refund guarantee?",
@@ -68,7 +68,7 @@ export function InfluencerSalesPage({
     config.supportingCopy ??
     "A structured 100-part course with videos, quizzes, flashcards, summaries, mind maps, and progress tracking.";
 
-  const lifetimePrice = useLifetimePricePhrase();
+  const monthlyPrice = `${formatPrice(PLANS.monthly.price)}/month`;
 
   useEffect(() => {
     const modeParam = searchParams.get("mode");
@@ -109,10 +109,10 @@ export function InfluencerSalesPage({
     pricingRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  function goLifetime(trigger: string) {
+  function goMonthly(trigger: string) {
     trackEvent(
       "influencer_primary_cta_clicked",
-      { influencer_slug: config.slug, plan: "individual-lifetime", trigger },
+      { influencer_slug: config.slug, plan: "individual-monthly", trigger },
       { creator: config.slug },
     );
     onCheckout();
@@ -163,10 +163,10 @@ export function InfluencerSalesPage({
           <div className="space-y-2.5">
             <button
               type="button"
-              onClick={() => goLifetime("hero_lifetime")}
+              onClick={() => goMonthly("hero_monthly")}
               className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-gold hover:bg-gold-light active:scale-[0.98] text-ink font-bold text-base transition-all shadow-lg shadow-gold/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold min-h-[52px]"
             >
-              Get Lifetime Access — {lifetimePrice}
+              Get Full Access — {monthlyPrice}
               <ArrowRight className="w-4 h-4" aria-hidden="true" />
             </button>
             <button
@@ -177,7 +177,7 @@ export function InfluencerSalesPage({
               Preview the First Revelation Free
             </button>
             <p className="text-center text-xs text-zinc-500">
-              One payment · Keep access forever · 7-day refund
+              Cancel anytime · 7-day refund
             </p>
           </div>
         </div>
@@ -239,10 +239,10 @@ export function InfluencerSalesPage({
 
           <button
             type="button"
-            onClick={() => goLifetime("after_preview")}
+            onClick={() => goMonthly("after_preview")}
             className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-base transition-colors shadow-lg shadow-gold/25 min-h-[52px]"
           >
-            Continue with Lifetime — {lifetimePrice}
+            Continue — {monthlyPrice}
             <ArrowRight className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
@@ -298,25 +298,25 @@ export function InfluencerSalesPage({
           <div className="text-center">
             <h2 className="text-xl sm:text-2xl font-bold text-text mb-2">Simple pricing</h2>
             <p className="text-sm text-zinc-400">
-              One payment. Keep access forever.
+              Cancel anytime.
             </p>
           </div>
 
-          {/* Lifetime — primary */}
+          {/* Monthly — primary */}
           <div className="relative rounded-2xl border-2 border-gold bg-gradient-to-b from-gold/10 to-zinc-950 p-6 shadow-xl shadow-gold/10">
             <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-gold text-ink">
               Best Value
             </span>
             <div className="flex items-center gap-2 mb-1">
               <Infinity className="w-4 h-4 text-gold" aria-hidden="true" />
-              <p className="text-sm font-semibold text-gold">Lifetime Access</p>
+              <p className="text-sm font-semibold text-gold">Full Access</p>
             </div>
             <p className="text-4xl font-extrabold text-text tracking-tight mb-1">
-              <LifetimePrice prominent />
-              <span className="text-sm font-normal text-zinc-400 ml-1.5">one-time</span>
+              {formatPrice(PLANS.monthly.price)}
+              <span className="text-sm font-normal text-zinc-400 ml-1.5">/month</span>
             </p>
             <p className="text-sm text-zinc-400 mb-5">
-              One payment. Keep access forever. No renewal.
+              Cancel anytime. No long-term commitment.
             </p>
             <ul className="space-y-2 mb-6">
               {[
@@ -333,10 +333,10 @@ export function InfluencerSalesPage({
             </ul>
             <button
               type="button"
-              onClick={() => goLifetime("pricing_lifetime")}
+              onClick={() => goMonthly("pricing_monthly")}
               className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-base transition-colors shadow-lg shadow-gold/25 min-h-[52px]"
             >
-              Get Lifetime Access — {lifetimePrice}
+              Get Full Access — {monthlyPrice}
               <ArrowRight className="w-4 h-4" aria-hidden="true" />
             </button>
           </div>
@@ -388,10 +388,10 @@ export function InfluencerSalesPage({
           </p>
           <button
             type="button"
-            onClick={() => goLifetime("final_cta")}
+            onClick={() => goMonthly("final_cta")}
             className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-base transition-colors shadow-lg shadow-gold/25 min-h-[52px]"
           >
-            Get Lifetime Access — {lifetimePrice}
+            Get Full Access — {monthlyPrice}
             <ArrowRight className="w-4 h-4" aria-hidden="true" />
           </button>
           <button

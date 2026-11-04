@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, Play } from "lucide-react";
 import { Part1FullPreview } from "@/components/landing/part1-full-preview";
-import { LifetimeAccessCta } from "@/components/pricing/country-price";
+import { PLANS, formatPrice } from "@/lib/stripe-config";
 import { WatchFreeTracker } from "./watch-free-tracker";
 
 export const metadata: Metadata = {
@@ -30,7 +30,7 @@ export default async function WatchFreePage({ searchParams }: Props) {
   const params = await searchParams;
 
   // Build checkout URL preserving any source/UTM attribution from the landing URL
-  const checkoutBase = "/checkout?plan=individual-lifetime";
+  const checkoutBase = "/checkout?plan=individual-monthly";
   const extra: string[] = [];
   if (params.source)       extra.push(`source=${encodeURIComponent(params.source)}`);
   if (params.utm_source)   extra.push(`utm_source=${encodeURIComponent(params.utm_source)}`);
@@ -91,7 +91,7 @@ export default async function WatchFreePage({ searchParams }: Props) {
         >
           <Part1FullPreview
             checkoutHref={checkoutHref}
-            ctaLabel="Get Lifetime Access — Only $49"
+            ctaLabel={`Subscribe — ${formatPrice(PLANS.monthly.price)}/mo`}
           />
         </Suspense>
       </section>
@@ -110,11 +110,11 @@ export default async function WatchFreePage({ searchParams }: Props) {
             href={checkoutHref}
             className="inline-flex items-center gap-2 bg-gold text-ink font-bold px-8 py-4 rounded-xl hover:bg-gold-light active:scale-[0.97] transition-all shadow-lg shadow-gold/20"
           >
-            <LifetimeAccessCta />
+            Subscribe — {formatPrice(PLANS.monthly.price)}/mo
             <ArrowRight className="w-5 h-5" />
           </Link>
           <p className="mt-3 text-xs text-text-muted">
-            One-time payment · 7-day refund guarantee
+            Cancel anytime · 7-day refund guarantee
           </p>
           <p className="mt-4">
             <Link href="/pricing" className="text-xs text-text-muted hover:text-gold transition-colors underline underline-offset-2">

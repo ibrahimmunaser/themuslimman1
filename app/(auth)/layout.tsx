@@ -60,7 +60,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
             <div className="pt-5 border-t border-border/40">
               <p className="text-xs text-text-muted leading-relaxed">
-                Self-paced · All formats included · Lifetime option available
+                Self-paced · All formats included · Cancel anytime
               </p>
             </div>
           </div>

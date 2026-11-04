@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { requireStudent } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getUserAccessInfo } from "@/lib/access";
+import { getSubscriptionDisplayAmountCents } from "@/lib/stripe";
 import { StudentLayout } from "@/components/student/student-layout";
 import { PLANS } from "@/lib/stripe-config";
 import { CardManager } from "@/components/billing/card-manager";
@@ -15,15 +16,12 @@ import {
   Star,
   Lock,
   RefreshCw,
-  ArrowRight,
-  ArrowLeft,
   AlertTriangle,
 } from "lucide-react";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { parseLang, COURSE_LANG_COOKIE, COURSE_LANG_LOCALES, isRtlLang, type CourseLang } from "@/lib/course-lang";
 import { loc, locf } from "@/lib/loc";
-import { LifetimeAccessCta } from "@/components/pricing/country-price";
 
 export const metadata = { title: "Billing | Complete Seerah", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
@@ -107,7 +105,6 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
   const cookieStore = await cookies();
   const lang = parseLang(cookieStore.get(COURSE_LANG_COOKIE)?.value);
   const rtl = isRtlLang(lang);
-  const UpgradeIcon = rtl ? ArrowLeft : ArrowRight;
 
   const isFamily          = user.planType === "family";
   // Treat past_due/unpaid monthly subs as monthly even after grace expires —
@@ -126,6 +123,16 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
   const isFamilyMonthly   = isFamily && isMonthly;
   const sub               = accessInfo.subscription;
   const isPastDue         = sub?.status === "past_due" || sub?.status === "unpaid";
+
+  // Individual monthly's public price can change (stripe-config.ts) without
+  // touching an existing subscriber's actual Stripe subscription — so this
+  // page must show what THEIR subscription really charges, not the current
+  // public price. Family monthly isn't affected by this pricing change, so
+  // it keeps using the PLANS constant directly (see its usages below).
+  const individualMonthlyDisplayCents =
+    isMonthly && !isFamily && !isTrial
+      ? await getSubscriptionDisplayAmountCents(sub?.stripePriceId, PLANS.monthly.price)
+      : PLANS.monthly.price;
 
   const planName = isFamilyMonthly && isTrial
     ? loc(lang, PLANS.familyTrial.name, "تجربة العائلة", "Essai Famille")
@@ -365,7 +372,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
                 </>
               ) : isMonthly ? (
                 <>
-                  <p className="text-xs text-text-muted">${(PLANS.monthly.price / 100).toFixed(2)} / {loc(lang, "month", "شهر", "mois")}</p>
+                  <p className="text-xs text-text-muted">${(individualMonthlyDisplayCents / 100).toFixed(2)} / {loc(lang, "month", "شهر", "mois")}</p>
                   {sub && (
                     <p className="text-xs text-text-muted mt-0.5">
                       {sub.cancelAtPeriodEnd
@@ -442,40 +449,6 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
             ))}
           </div>
         </div>
-
-        {/* Individual Monthly/Trial → Individual Lifetime upgrade card */}
-        {!hideStripeBilling && !accessInfo.hasLifetime && !isFamily && isMonthly && !isPastDue && (
-          <div className="rounded-2xl border border-gold/20 bg-gold/5 p-6">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-gold/15">
-                <Star className="w-5 h-5 text-gold" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-text">{loc(lang, "Upgrade to Individual Lifetime", "الترقية إلى الوصول الفردي مدى الحياة", "Passer à Individuel à vie")}</p>
-                <p className="text-sm text-text-secondary mt-1 leading-relaxed">
-                  {loc(
-                    lang,
-                    "Stop paying monthly. Get permanent access to all 100 Seerah parts for a one-time payment — no more recurring charges, yours forever.",
-                    "توقّف عن الدفع الشهري. احصل على وصول دائم لجميع أجزاء السيرة الـ ١٠٠ بدفعة واحدة — بلا رسوم متكررة، لك إلى الأبد.",
-                    "Arrêtez de payer chaque mois. Obtenez un accès permanent aux 100 parties de la Sîra pour un paiement unique — plus de frais récurrents, à vous pour toujours.",
-                  )}
-                </p>
-                <div className="mt-4 flex flex-wrap items-center gap-3">
-                  <Link
-                    href="/checkout?plan=individual-lifetime"
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gold hover:bg-gold-light text-black font-bold text-sm transition-colors shadow-sm"
-                  >
-                    <LifetimeAccessCta leading={`${loc(lang, "Lifetime Access", "وصول مدى الحياة", "Accès à vie")} — `} />
-                    <UpgradeIcon className="w-4 h-4" />
-                  </Link>
-                  <span className="text-xs text-text-muted">
-                    {loc(lang, "One-time · Subscription cancelled automatically", "دفعة واحدة · يُلغى الاشتراك تلقائيًا", "Paiement unique · Abonnement annulé automatiquement")}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Card manager — Stripe saved cards only (not App Store / Play) */}
         {!hideStripeBilling && accessInfo.hasLifetime && !isTrial && <CardManager lang={lang} />}

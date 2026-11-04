@@ -4,7 +4,7 @@ import { useEffect, type ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { track } from "@vercel/analytics";
-import { LifetimePrice } from "@/components/pricing/country-price";
+import { PLANS, formatPrice } from "@/lib/stripe-config";
 import {
   Play, HelpCircle, Layers, TrendingUp, ChevronDown,
   Video, FileText, GitBranch, Users, List,
@@ -263,23 +263,23 @@ export function StartPage({ preview }: { preview?: ReactNode }) {
               Continue the full course
             </h2>
             <p className="text-text-muted text-sm text-center mb-10">
-              One-time payment available — no subscription required.
+              Just $4.99/month — cancel anytime.
             </p>
 
             <div className="max-w-sm mx-auto mb-8">
               <div className="rounded-2xl border border-gold/40 bg-gold-bg p-5">
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <p className="text-xs text-text-muted mb-0.5">Lifetime</p>
+                    <p className="text-xs text-text-muted mb-0.5">Monthly</p>
                     <p className="font-semibold text-text">Individual</p>
                   </div>
                   <span className="text-xs font-semibold text-gold bg-gold/10 border border-gold/25 px-2 py-0.5 rounded-full whitespace-nowrap">
-                    One time
+                    Cancel anytime
                   </span>
                 </div>
                 <p className="text-2xl font-bold text-text">
-                  <LifetimePrice />
-                  <span className="text-sm font-normal text-text-muted"> one time</span>
+                  {formatPrice(PLANS.monthly.price)}
+                  <span className="text-sm font-normal text-text-muted">/month</span>
                 </p>
               </div>
             </div>

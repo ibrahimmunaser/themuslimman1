@@ -13,10 +13,10 @@ export function OrthodoxCheckupEmbed() {
       sourceBadge="Free Seerah Checkup"
       eventPrefix="orthodox_"
       urls={{
-        individualMonthly:  `/checkout?plan=individual-lifetime&${SRC}&${UTM}`,
-        familyMonthly:      `/checkout?plan=individual-lifetime&${SRC}&${UTM}`,
-        individualLifetime: `/checkout?plan=individual-lifetime&${SRC}&${UTM}`,
-        familyLifetime:     `/checkout?plan=individual-lifetime&${SRC}&${UTM}`,
+        individualMonthly:  `/checkout?plan=individual-monthly&${SRC}&${UTM}`,
+        familyMonthly:      `/checkout?plan=individual-monthly&${SRC}&${UTM}`,
+        individualLifetime: `/checkout?plan=individual-monthly&${SRC}&${UTM}`,
+        familyLifetime:     `/checkout?plan=individual-monthly&${SRC}&${UTM}`,
         watchFree:          "/theorthodoxmuslim#part1",
       }}
     />

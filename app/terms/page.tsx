@@ -40,12 +40,15 @@ export default function TermsPage() {
             <section>
               <h2 className="text-base font-semibold text-text mb-2">2. Digital Course Access</h2>
               <p>
-                Upon successful payment, you receive personal, non-transferable, lifetime access to the Course content
-                available at the time of your purchase. All content is delivered digitally through this platform.
-                No physical materials are shipped.
+                Access to the Course is provided on a recurring monthly subscription basis. Upon successful payment,
+                you receive personal, non-transferable access to the Course content for the duration of your active
+                billing period. Your subscription automatically renews each month until you cancel. All content is
+                delivered digitally through this platform. No physical materials are shipped.
               </p>
               <p className="mt-3">
-                &quot;Lifetime access&quot; means access for as long as this platform operates. We reserve the right to
+                Customers who purchased a one-time, lifetime-access plan prior to its discontinuation keep the
+                lifetime access granted under the terms in effect at the time of that purchase. &quot;Lifetime access&quot;
+                for those customers means access for as long as this platform operates. We reserve the right to
                 discontinue the platform with reasonable notice if we are unable to maintain it.
               </p>
             </section>

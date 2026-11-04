@@ -21,7 +21,7 @@ export interface InfluencerDirectConfig {
   creatorAvatarUrl?: string;
   /** Hero headline, e.g. "Learn the life of the Prophet ﷺ in order." */
   heroHeadline: string;
-  /** Price shown in hero, e.g. "$49 one-time" */
+  /** Price shown in hero, e.g. "$4.99/month" */
   price?: string;
   /** Full checkout URL */
   checkoutUrl: string;

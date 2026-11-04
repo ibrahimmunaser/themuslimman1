@@ -24,16 +24,16 @@ import {
   type ReactNode,
 } from "react";
 import { Lock, X, ArrowRight, ArrowLeft } from "lucide-react";
-import { LifetimeAccessCta } from "@/components/pricing/country-price";
 import { type CourseLang, isRtlLang } from "@/lib/course-lang";
 import { loc } from "@/lib/loc";
 import { tf } from "@/lib/ui-strings";
 import { formatCourseNumber } from "@/lib/course-numbers";
 import { GUEST_SIGN_IN_HREF } from "@/lib/guest-access";
 import { PARTS } from "@/lib/content";
+import { PLANS, formatPrice } from "@/lib/stripe-config";
 
 /** Where the popup's buy button goes. `source` tags where the sale came from. */
-const CHECKOUT_HREF = "/checkout?plan=individual-lifetime&source=dashboard_locked_part";
+const MONTHLY_CHECKOUT_HREF = "/checkout?plan=individual-monthly&source=dashboard_locked_part";
 
 export interface LockedPartInfo {
   partNumber: number;
@@ -189,45 +189,48 @@ function UnlockDialog({
         <p className="mt-3 text-center text-sm leading-relaxed text-text-secondary">
           {locCount(
             lang,
-            "This lesson is part of the full course. Unlock all {n} parts with a one-time payment — videos, briefings, flashcards and quizzes for every lesson.",
-            "هذا الدرس جزء من الدورة الكاملة. افتح جميع الأجزاء الـ{n} بدفعة واحدة — فيديوهات وملخصات وبطاقات تعليمية واختبارات لكل درس.",
-            "Cette leçon fait partie du cours complet. Débloquez les {n} parties en un seul paiement — vidéos, briefings, flashcards et quiz pour chaque leçon.",
+            "Unlock all {n} parts — videos, briefings, flashcards and quizzes for every lesson.",
+            "افتح جميع الأجزاء الـ{n} — فيديوهات وملخصات وبطاقات تعليمية واختبارات لكل درس.",
+            "Débloquez les {n} parties — vidéos, briefings, flashcards et quiz pour chaque leçon.",
           )}
         </p>
 
         <div className="mt-6 flex flex-col gap-2.5">
-          <Link
-            href={CHECKOUT_HREF}
-            className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-gold px-5 py-3 text-sm font-bold text-ink shadow-lg shadow-gold/20 transition-colors hover:bg-gold-light"
-          >
-            <span>
-              <LifetimeAccessCta leading={`${loc(lang, "Unlock all parts", "افتح جميع الأجزاء", "Débloquer toutes les parties")} — `} />
-            </span>
-            <Arrow className="h-4 w-4 shrink-0" />
-          </Link>
+          <div className="flex flex-col items-stretch gap-1">
+            <Link
+              href={MONTHLY_CHECKOUT_HREF}
+              className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-gold px-5 py-3 text-sm font-bold text-ink shadow-lg shadow-gold/20 transition-colors hover:bg-gold-light"
+            >
+              {loc(lang, "Subscribe — ", "اشترك — ", "S'abonner — ")}
+              <span dir="ltr">{formatPrice(PLANS.monthly.price)}/month</span>
+              <Arrow className="h-4 w-4 shrink-0" />
+            </Link>
+            <p className="text-center text-[11px] text-text-muted">
+              {loc(lang, "Renews monthly. Cancel anytime.", "يتجدد شهريًا. يمكن الإلغاء في أي وقت.", "Renouvellement mensuel. Annulez à tout moment.")}
+            </p>
+          </div>
 
           <button
             onClick={onClose}
-            className="min-h-[44px] rounded-xl border border-border px-5 py-2.5 text-sm font-medium text-text-secondary transition-colors hover:border-gold/40 hover:text-text"
+            className="min-h-[44px] rounded-xl text-sm font-medium text-text-secondary transition-colors hover:text-text"
           >
             {loc(lang, "Maybe later", "ربما لاحقًا", "Plus tard")}
           </button>
         </div>
 
-        <p className="mt-4 text-center text-xs text-text-muted">
+        <p className="mt-4 text-center text-sm text-text-muted">
           {loc(lang, "7-day refund guarantee", "ضمان استرداد خلال ٧ أيام", "Garantie de remboursement de 7 jours")}
-          {isGuest && (
-            <>
-              {" · "}
-              <Link
-                href={GUEST_SIGN_IN_HREF}
-                className="underline underline-offset-2 hover:text-gold"
-              >
-                {loc(lang, "Already purchased? Sign in", "اشتريت الدورة؟ سجّل الدخول", "Déjà acheté ? Connectez-vous")}
-              </Link>
-            </>
-          )}
         </p>
+        {isGuest && (
+          <p className="mt-1.5 text-center text-sm">
+            <Link
+              href={GUEST_SIGN_IN_HREF}
+              className="underline underline-offset-2 text-text-muted hover:text-gold"
+            >
+              {loc(lang, "Already purchased? Sign in", "اشتريت الدورة؟ سجّل الدخول", "Déjà acheté ? Connectez-vous")}
+            </Link>
+          </p>
+        )}
       </div>
     </div>
   );
@@ -250,17 +253,18 @@ export function UnlockBar({ lang }: { lang: CourseLang }) {
         <p className="hidden min-w-0 flex-1 truncate text-sm text-text-secondary sm:block">
           {locCount(
             lang,
-            "The First Revelation is free. Unlock all {n} parts with a one-time payment.",
-            "الوحي الأول مجاني. افتح جميع الأجزاء الـ{n} بدفعة واحدة.",
-            "La Première Révélation est gratuite. Débloquez les {n} parties en un seul paiement.",
+            "The First Revelation is free. Unlock all {n} parts with a monthly subscription.",
+            "الوحي الأول مجاني. افتح جميع الأجزاء الـ{n} باشتراك شهري.",
+            "La Première Révélation est gratuite. Débloquez les {n} parties avec un abonnement mensuel.",
           )}
         </p>
         <Link
-          href={CHECKOUT_HREF.replace("dashboard_locked_part", "dashboard_unlock_bar")}
+          href={MONTHLY_CHECKOUT_HREF.replace("dashboard_locked_part", "dashboard_unlock_bar")}
           className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-lg bg-gold px-4 py-2 text-sm font-bold text-ink transition-colors hover:bg-gold-light sm:flex-none"
         >
           <span>
-            <LifetimeAccessCta leading={`${loc(lang, "Unlock all parts", "افتح جميع الأجزاء", "Débloquer toutes les parties")} — `} />
+            {loc(lang, "Unlock all parts — ", "افتح جميع الأجزاء — ", "Débloquer toutes les parties — ")}
+            <span dir="ltr">{formatPrice(PLANS.monthly.price)}/month</span>
           </span>
           <Arrow className="h-4 w-4 shrink-0" />
         </Link>

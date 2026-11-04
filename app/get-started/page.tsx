@@ -88,7 +88,7 @@ export default async function GetStartedPage({ searchParams }: GetStartedPagePro
                 // Logged in but no access yet → go to checkout
                 <>
                   <Link
-                    href="/checkout?plan=individual-lifetime"
+                    href="/checkout?plan=individual-monthly"
                     className={buttonClass("primary", "lg", "w-full justify-center")}
                   >
                     <LayoutDashboard className="w-4 h-4" />
@@ -106,7 +106,7 @@ export default async function GetStartedPage({ searchParams }: GetStartedPagePro
                 // Guest → normal signup flow
                 <>
                   <Link
-                    href="/checkout?plan=individual-lifetime"
+                    href="/checkout?plan=individual-monthly"
                     className={buttonClass("primary", "lg", "w-full justify-center")}
                   >
                     Create Account &amp; Start Learning

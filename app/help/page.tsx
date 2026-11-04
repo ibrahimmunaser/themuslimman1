@@ -6,7 +6,7 @@ import { StudentLayout } from "@/components/student/student-layout";
 import { HelpCircle, BookOpen, CreditCard, Lock } from "lucide-react";
 import { ContactSupportForm } from "@/components/help/contact-support-form";
 import { cookies } from "next/headers";
-import { LifetimePrice } from "@/components/pricing/country-price";
+import { PLANS, formatPrice } from "@/lib/stripe-config";
 import { parseLang, COURSE_LANG_COOKIE, type CourseLang, isRtlLang } from "@/lib/course-lang";
 import { loc } from "@/lib/loc";
 
@@ -18,7 +18,7 @@ export const dynamic = "force-dynamic";
  * wrapped in loc(lang, en, ar, fr) so Arabic and French get their existing,
  * hand-written text, and the other 12 course languages fall back to
  * data/i18n/shell/*.json phrase packs (see lib/loc.ts -> lib/phrases.ts).
- * The PRICE answer is rendered separately around <LifetimePrice />.
+ * The PRICE answer is rendered separately around the monthly price.
  */
 function faqsFor(lang: CourseLang) {
   return [
@@ -192,16 +192,16 @@ export default async function HelpPage() {
                             <>
                               {loc(
                                 lang,
-                                "Lifetime access is",
-                                "الدفع مرة واحدة: وصول مدى الحياة مقابل",
-                                "Paiement unique : accès à vie pour",
+                                "Full access is",
+                                "الاشتراك الشهري هو",
+                                "L'accès complet coûte",
                               )}{" "}
-                              <LifetimePrice />{" "}
+                              <span dir="ltr">{formatPrice(PLANS.monthly.price)}</span>{" "}
                               {loc(
                                 lang,
-                                "one-time — permanent access with no recurring charges. Pay once and keep the full course forever.",
-                                "— بدون اشتراك وبدون رسوم متكررة.",
-                                "— sans abonnement et sans frais récurrents.",
+                                "per month — cancel anytime from your account settings, no long-term commitment.",
+                                "شهريًا — يمكنك الإلغاء في أي وقت من إعدادات حسابك.",
+                                "par mois — annulez à tout moment depuis les paramètres de votre compte.",
                               )}
                             </>
                           ) : (

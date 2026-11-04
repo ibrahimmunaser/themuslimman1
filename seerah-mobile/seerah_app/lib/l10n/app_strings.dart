@@ -232,9 +232,9 @@ const Map<String, Map<String, String>> _kStrings = {
     'fr': 'Quiz et flashcards',
   },
   'includedLifetime': {
-    'en': 'Lifetime access option available',
-    'ar': 'يتوفر خيار الوصول مدى الحياة',
-    'fr': 'Option d\'accès à vie disponible',
+    'en': 'Cancel anytime',
+    'ar': 'يمكن الإلغاء في أي وقت',
+    'fr': 'Annulez à tout moment',
   },
   'includedProgress': {
     'en': 'Progress tracking',
@@ -755,11 +755,11 @@ const Map<String, Map<String, String>> _kStrings = {
   },
   'unlockAllPartsBody': {
     'en':
-        'Get lifetime access to the full Seerah course — videos, reading notes, flashcards, and quizzes for every part.',
+        'Get full access to the Seerah course — videos, reading notes, flashcards, and quizzes for every part.',
     'ar':
-        'احصل على وصول مدى الحياة لدورة السيرة الكاملة — فيديوهات، ملاحظات قراءة، بطاقات تعليمية، واختبارات لكل جزء.',
+        'احصل على وصول كامل لدورة السيرة — فيديوهات، ملاحظات قراءة، بطاقات تعليمية، واختبارات لكل جزء.',
     'fr':
-        'Get lifetime access to the full Seerah course — videos, reading notes, flashcards, and quizzes for every part.',
+        'Obtenez un accès complet au cours de la Sîra — vidéos, notes de lecture, flashcards et quiz pour chaque partie.',
   },
   'courseOverview': {
     'en': 'Course Overview',
@@ -942,19 +942,19 @@ const Map<String, Map<String, String>> _kStrings = {
   },
   'unlockFullAccessBody': {
     'en':
-        'You started the path. Unlock the full course for {only} {price} to continue the Seerah step by step.',
+        'You started the path. Unlock the full course for {only} {price}/month to continue the Seerah step by step.',
     'ar':
-        'لقد بدأت الطريق. افتح الدورة الكاملة مقابل {only} {price} لمواصلة السيرة خطوة بخطوة.',
+        'لقد بدأت الطريق. افتح الدورة الكاملة مقابل {only} {price} شهريًا لمواصلة السيرة خطوة بخطوة.',
     'fr':
-        'Vous avez commencé le chemin. Débloquez le cours complet pour {only} {price} afin de continuer la Sîra étape par étape.',
+        'Vous avez commencé le chemin. Débloquez le cours complet pour {only} {price}/mois afin de continuer la Sîra étape par étape.',
   },
   'unlockFullAccessBodyPlain': {
     'en':
-        'You started the path. Unlock the full course with a one-time purchase to continue the Seerah step by step.',
+        'You started the path. Unlock the full course with a monthly subscription to continue the Seerah step by step.',
     'ar':
-        'لقد بدأت الطريق. افتح الدورة الكاملة بدفعة واحدة لمواصلة السيرة خطوة بخطوة.',
+        'لقد بدأت الطريق. افتح الدورة الكاملة باشتراك شهري لمواصلة السيرة خطوة بخطوة.',
     'fr':
-        'Vous avez commencé le chemin. Débloquez le cours complet par un paiement unique pour continuer la Sîra étape par étape.',
+        'Vous avez commencé le chemin. Débloquez le cours complet avec un abonnement mensuel pour continuer la Sîra étape par étape.',
   },
   'unlockFullAccess': {
     'en': 'Unlock full access',
@@ -964,11 +964,11 @@ const Map<String, Map<String, String>> _kStrings = {
   'partN': {'en': 'Part {n}', 'ar': 'الجزء {n}', 'fr': 'Part {n}'},
   'requiresFullAccessBody': {
     'en':
-        'This part requires full access.\nUnlock all {n} parts of the Seerah course with lifetime access.',
+        'This part requires full access.\nUnlock all {n} parts of the Seerah course with a monthly subscription.',
     'ar':
-        'يتطلب هذا الجزء وصولًا كاملًا.\nافتح جميع أجزاء دورة السيرة ({n}) بوصول مدى الحياة.',
+        'يتطلب هذا الجزء وصولًا كاملًا.\nافتح جميع أجزاء دورة السيرة ({n}) باشتراك شهري.',
     'fr':
-        'This part requires full access.\nUnlock all {n} parts of the Seerah course with lifetime access.',
+        'Cette partie nécessite un accès complet.\nDébloquez les {n} parties du cours de la Sîra avec un abonnement mensuel.',
   },
   'lifetimeAccessTitle': {
     'en': 'Lifetime access',
@@ -1952,19 +1952,19 @@ const Map<String, Map<String, String>> _kStrings = {
   },
   'subLegalCompact': {
     'en':
-        'Monthly plans are auto-renewing subscriptions that renew unless cancelled 24h before the period ends. Lifetime plans are one-time purchases. Manage or cancel in your App Store or Google Play account settings. ',
+        'Monthly plans are auto-renewing subscriptions that renew unless cancelled 24h before the period ends. Manage or cancel in your App Store or Google Play account settings. ',
     'ar':
-        'الخطط الشهرية اشتراكات تتجدد تلقائيًا ما لم يتم إلغاؤها قبل ٢٤ ساعة من انتهاء الفترة. خطط مدى الحياة هي عمليات شراء لمرة واحدة. يمكنك إدارة أو إلغاء الاشتراك من إعدادات حسابك في متجر آبل أو متجر جوجل بلاي. ',
+        'الخطط الشهرية اشتراكات تتجدد تلقائيًا ما لم يتم إلغاؤها قبل ٢٤ ساعة من انتهاء الفترة. يمكنك إدارة أو إلغاء الاشتراك من إعدادات حسابك في متجر آبل أو متجر جوجل بلاي. ',
     'fr':
-        'Monthly plans are auto-renewing subscriptions that renew unless cancelled 24h before the period ends. Lifetime plans are one-time purchases. Manage or cancel in your App Store or Google Play account settings. ',
+        'Les abonnements mensuels se renouvellent automatiquement sauf annulation 24h avant la fin de la période. Gérez ou annulez dans les paramètres de votre compte App Store ou Google Play. ',
   },
   'subLegalFull': {
     'en':
-        'Monthly is an auto-renewing 1-month subscription that renews unless cancelled at least 24 hours before the end of the current period. Lifetime is a one-time, non-renewing purchase. Manage or cancel a subscription in your App Store or Google Play account settings. Payment will be charged to your store account upon purchase confirmation. ',
+        'Monthly is an auto-renewing 1-month subscription that renews unless cancelled at least 24 hours before the end of the current period. Manage or cancel a subscription in your App Store or Google Play account settings. Payment will be charged to your store account upon purchase confirmation. ',
     'ar':
-        'الخطة الشهرية اشتراك شهري يتجدد تلقائيًا ما لم يتم إلغاؤه قبل ٢٤ ساعة على الأقل من انتهاء الفترة الحالية. خطة مدى الحياة هي عملية شراء لمرة واحدة غير متجددة. يمكنك إدارة أو إلغاء الاشتراك من إعدادات حسابك في متجر آبل أو متجر جوجل بلاي. سيتم خصم الدفعة من حساب متجرك عند تأكيد الشراء. ',
+        'الخطة الشهرية اشتراك شهري يتجدد تلقائيًا ما لم يتم إلغاؤه قبل ٢٤ ساعة على الأقل من انتهاء الفترة الحالية. يمكنك إدارة أو إلغاء الاشتراك من إعدادات حسابك في متجر آبل أو متجر جوجل بلاي. سيتم خصم الدفعة من حساب متجرك عند تأكيد الشراء. ',
     'fr':
-        'Monthly is an auto-renewing 1-month subscription that renews unless cancelled at least 24 hours before the end of the current period. Lifetime is a one-time, non-renewing purchase. Manage or cancel a subscription in your App Store or Google Play account settings. Payment will be charged to your store account upon purchase confirmation. ',
+        'L’abonnement mensuel est une formule renouvelable automatiquement d’une durée d’un mois, qui se renouvelle sauf annulation au moins 24 heures avant la fin de la période en cours. Gérez ou annulez un abonnement dans les paramètres de votre compte App Store ou Google Play. Le paiement sera débité de votre compte de magasin à la confirmation de l’achat. ',
   },
   'pageNotFound': {
     'en': 'Page not found',

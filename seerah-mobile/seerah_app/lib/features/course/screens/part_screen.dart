@@ -1111,7 +1111,7 @@ class _ContinueCTA extends ConsumerWidget {
     final paywall = isLoggedIn ? '/pricing' : '/landing';
     final storePrice = ref
         .watch(iapProvider)
-        .productForPlan(AppConstants.iapLifetimeIndividual)
+        .productForPlan(AppConstants.iapMonthlyIndividual)
         ?.price;
     final body = storePrice == null
         ? t(lang, 'unlockFullAccessBodyPlain')

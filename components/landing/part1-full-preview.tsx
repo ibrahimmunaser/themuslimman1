@@ -3,16 +3,19 @@ import { isRtlLang } from "@/lib/course-lang";
 import { siteT } from "@/lib/site-copy";
 import { Part1PreviewTabs } from "@/components/landing/part1-preview-tabs";
 import { Badge } from "@/components/ui/badge";
-import { LifetimeAccessCta } from "@/components/pricing/country-price";
+import { PLANS, formatPrice } from "@/lib/stripe-config";
 
 export async function Part1FullPreview({
-  checkoutHref = "/checkout?plan=individual-lifetime",
+  checkoutHref = "/checkout?plan=individual-monthly",
   hideCta = false,
-  ctaLabel = "Get Lifetime Access — Only $49",
+  ctaLabel,
+  materialsOnly = false,
 }: {
   checkoutHref?: string;
   hideCta?: boolean;
   ctaLabel?: string;
+  /** Reading, slides, infographic, mind map, flashcards, and quiz — no second video player. */
+  materialsOnly?: boolean;
 } = {}) {
   const lang = await getPreviewLangFromCookies();
   const { part, initialAssetUrls } = await getPart1PreviewData(lang);
@@ -27,6 +30,20 @@ export async function Part1FullPreview({
             ? "معاينة الوحي الأول غير متاحة مؤقتًا. يرجى المحاولة لاحقًا."
             : "The free preview is temporarily unavailable. Please try again later."}
         </p>
+      </div>
+    );
+  }
+
+  if (materialsOnly) {
+    return (
+      <div id="hero-player" className="scroll-mt-24" dir={contentDir}>
+        <Part1PreviewTabs
+          part={part}
+          initialAssetUrls={initialAssetUrls}
+          initialLang={lang}
+          hideLangToggle
+          forcedInitialMode="read"
+        />
       </div>
     );
   }
@@ -85,10 +102,10 @@ export async function Part1FullPreview({
           <a
             href={checkoutHref}
             data-track="checkout_clicked"
-            data-plan="individual-lifetime"
+            data-plan="individual-monthly"
             className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-gold to-gold-light hover:from-gold-light hover:to-gold text-ink font-bold text-base shadow-lg shadow-gold/30 transition-all hover:shadow-gold/40 hover:scale-[1.02] active:scale-[0.99]"
           >
-            {ctaLabel.includes("$49") || ctaLabel.includes("49 $") || ctaLabel.includes("Only $99") ? <LifetimeAccessCta /> : ctaLabel}
+            {ctaLabel ?? `${isRtl ? "اشترك — " : "Subscribe — "}${formatPrice(PLANS.monthly.price)}/mo`}
           </a>
           <p className="text-xs text-text-muted mt-4">
             {isRtl
