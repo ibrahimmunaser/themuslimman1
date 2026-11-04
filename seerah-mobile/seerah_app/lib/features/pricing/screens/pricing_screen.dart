@@ -42,6 +42,8 @@ class _Plan {
   });
 }
 
+// Monthly-only public offer — lifetime and family plans are no longer sold
+// going forward (existing purchasers keep their access/entitlements as-is).
 const _plans = [
   _Plan(
     id: PlanId.individualMonthly,
@@ -52,24 +54,13 @@ const _plans = [
     badgeKey: 'mostPopular',
     isRecommended: true,
   ),
-  _Plan(
-    id: PlanId.individualLifetime,
-    iapId: AppConstants.iapLifetimeIndividual,
-    nameKey: 'planLifetime',
-    descriptionKey: 'oneLearnerPayOnce',
-    periodKey: 'only',
-    badgeKey: 'recommended',
-    isRecommended: true,
-  ),
 ];
 
-List<({String q, String a})> _faqItems(String lang, String? storePrice) => [
+List<({String q, String a})> _faqItems(String lang) => [
   (q: t(lang, 'faqWhatIncludedQ'), a: t(lang, 'faqWhatIncludedA')),
   (
     q: t(lang, 'faqIsSubscriptionQ'),
-    a: storePrice == null
-        ? t(lang, 'faqIsSubscriptionAPlain')
-        : tWithStorePrice(lang, 'faqIsSubscriptionA', storePrice),
+    a: t(lang, 'faqIsSubscriptionAPlain'),
   ),
   (q: t(lang, 'faqRefundGuaranteeQ'), a: refundGuaranteeAnswer(lang)),
   (q: t(lang, 'faqPart1FreeQ'), a: t(lang, 'faqPart1FreeA')),
@@ -284,9 +275,6 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
     final iap = ref.watch(iapProvider);
     final hasAccess = auth.hasAccess;
     final lang = ref.watch(courseLangProvider);
-    final storePrice = iap
-        .productForPlan(AppConstants.iapLifetimeIndividual)
-        ?.price;
 
     final busy =
         _buyTapInFlight ||
@@ -473,8 +461,8 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
                   (Icons.insights_rounded, t(lang, 'includedProgress8Eras')),
                   (Icons.map_outlined, t(lang, 'includedSlidesMindmaps')),
                   (
-                    Icons.all_inclusive_rounded,
-                    t(lang, 'includedLifetimeOption'),
+                    Icons.event_repeat_rounded,
+                    t(lang, 'includedCancelAnytime'),
                   ),
                 ].map(
                   (item) => Padding(
@@ -597,7 +585,6 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
           const SizedBox(height: 12),
           ..._faqItems(
             lang,
-            storePrice,
           ).map((item) => _FaqTile(question: item.q, answer: item.a)),
 
           const SizedBox(height: 16),

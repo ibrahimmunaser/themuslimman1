@@ -1,20 +1,10 @@
-import { getCurrentUser } from "@/lib/auth";
-import GiftCheckoutClient from "./page-client";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Gift Complete Seerah — TheMuslimMan",
-  description: "Give someone you love lifetime access to Complete Seerah.",
-};
-
+// Gifting was only ever offered for the lifetime plan, which is no longer
+// sold. A recurring monthly membership isn't meaningfully giftable, so this
+// option is disabled — send anyone who lands here to the normal pricing page.
 export default async function GiftCheckoutPage() {
-  const user = await getCurrentUser();
-
-  return (
-    <GiftCheckoutClient
-      purchaserEmail={user?.email ?? ""}
-      purchaserName={user?.fullName ?? ""}
-    />
-  );
+  redirect("/pricing");
 }

@@ -2,7 +2,9 @@
 
 import { ArrowRight } from "lucide-react";
 import { type PlanId } from "@/lib/plan-catalog";
-import { LifetimePrice, useCountryPrice } from "@/components/pricing/country-price";
+import { PLANS, formatPrice } from "@/lib/stripe-config";
+import { useSiteLang } from "@/components/site-lang";
+import { siteT } from "@/lib/site-copy";
 
 export type { PlanId };
 
@@ -18,19 +20,20 @@ function buildUrl(base: string, plan: PlanId): string {
 
 interface PlanPickerProps {
   checkoutBaseUrl?: string;
-  /** @deprecated Ignored — public purchase is lifetime-only. */
+  /** @deprecated Ignored — public purchase is monthly-only. */
   recommendedPlan?: PlanId;
   onCtaClick?: (plan: PlanId, url: string) => void;
   hasAccess?: boolean;
 }
 
-/** Public purchase picker — lifetime only. Monthly is no longer sold. */
+/** Public purchase picker — $4.99/month only. Lifetime and family plans are
+ *  no longer sold (existing purchasers keep their access as-is). */
 export function PlanPicker({
   checkoutBaseUrl = "/checkout",
   onCtaClick,
   hasAccess = false,
 }: PlanPickerProps) {
-  const countryPrice = useCountryPrice();
+  const lang = useSiteLang();
   if (hasAccess) {
     return (
       <div className="rounded-xl border border-green-500/30 bg-green-500/5 p-5 text-center">
@@ -40,7 +43,7 @@ export function PlanPicker({
     );
   }
 
-  const planId: PlanId = "individual-lifetime";
+  const planId: PlanId = "individual-monthly";
   const checkoutUrl = buildUrl(checkoutBaseUrl, planId);
 
   return (
@@ -50,8 +53,8 @@ export function PlanPicker({
         data-track="checkout_clicked"
         data-plan={planId}
         data-plan-type="individual"
-        data-billing="lifetime"
-        data-price={countryPrice.amountCents}
+        data-billing="monthly"
+        data-price={PLANS.monthly.price}
         onClick={() => onCtaClick?.(planId, checkoutUrl)}
         className={[
           "group relative flex flex-col items-center text-center",
@@ -66,22 +69,22 @@ export function PlanPicker({
         ].join(" ")}
       >
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold mb-3">
-          One-time purchase
+          {siteT(lang, "mostPopular")}
         </p>
 
         <h3 className="text-xl sm:text-2xl font-bold text-text leading-snug mb-4">
-          Complete Seerah Course
+          {siteT(lang, "courseName")}
         </h3>
 
         <p className="text-4xl sm:text-5xl font-extrabold text-text leading-none tracking-tight">
-          <LifetimePrice prominent />
+          <span dir="ltr">{formatPrice(PLANS.monthly.price)}</span>
           <span className="ml-2 text-base sm:text-lg font-medium text-text-secondary">
-            one-time
+            {siteT(lang, "perMonthShort")}
           </span>
         </p>
 
         <p className="mt-4 text-sm sm:text-base text-text-secondary leading-relaxed max-w-xs">
-          Lifetime access. No subscription. No recurring charges.
+          {siteT(lang, "cancelAnytimeShort")}
         </p>
 
         <span
@@ -95,13 +98,13 @@ export function PlanPicker({
             "transition-colors",
           ].join(" ")}
         >
-          Get Lifetime Access
+          {siteT(lang, "startMonthly")}
           <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
         </span>
       </a>
 
       <p className="text-xs text-text-muted text-center mt-4">
-        7-day refund guarantee · Instant access
+        {siteT(lang, "afterSub")}
       </p>
     </div>
   );

@@ -864,8 +864,10 @@ function CheckoutPageContent({
 
   // ── Audience + billing state ───────────────────────────────────────────────
   const [audience, setAudience] = useState<Audience>("individual");
-  // Public purchase is lifetime-only (legacy monthly URLs redirect server-side).
-  const [billing, setBilling] = useState<Billing>("lifetime");
+  // Public purchase offers two individual tiers: lifetime (primary) and
+  // monthly (secondary). Family and trial are not sold publicly — legacy
+  // URLs for those redirect server-side before this component ever mounts.
+  const [billing, setBilling] = useState<Billing>(initialBilling);
 
   // Ann Arbor student offer: customise labels in the offer panel and buttons
   const isAnnArborStudent = initialSourceParam === "annarbor" && billing === "lifetime" && audience === "individual";
@@ -1318,15 +1320,14 @@ function CheckoutPageContent({
     { id: "individual", Icon: User,  label: "Individual" },
   ];
 
-  const allBillingOptions: { id: Billing; label: string; price: number; priceSuffix?: string; priceOverride?: string; sub: string; badge?: string }[] = audience === "individual"
-    ? [
-        { id: "lifetime", label: "Lifetime", price: individualLifetimeCents,  sub: "Pay once, access forever", badge: "Best Value" },
-      ]
-    : [
-        { id: "lifetime", label: "Lifetime", price: PLANS.family.price,        sub: "Up to 5 profiles · pay once", badge: "Best Value" },
-      ];
+  // Individual monthly ($4.99/mo) is the only plan sold going forward —
+  // lifetime and family are no longer offered here (existing holders keep
+  // their access as-is). Only one option so the picker can't dead-end into
+  // a blocked (410) endpoint.
+  const allBillingOptions: { id: Billing; label: string; price: number; priceSuffix?: string; priceOverride?: string; sub: string; badge?: string }[] = [
+    { id: "monthly", label: "Monthly", price: PLANS.monthly.price, priceOverride: formatPrice(PLANS.monthly.price), priceSuffix: "/mo", sub: "Cancel anytime" },
+  ];
 
-  // Public purchase is lifetime-only.
   const billingOptions = allBillingOptions;
 
   const PlanSummary = (

@@ -15,7 +15,6 @@ import {
   User,
   Users,
   CreditCard,
-  Gift,
   LogOut,
   LogIn,
   ChevronRight,
@@ -202,7 +201,7 @@ export function StudentSidebar({
         { id: "settings", label: "Settings", labelAr: "الإعدادات", labelFr: "Paramètres", href: "/student/settings", icon: User },
         { id: "profiles", label: "Profiles", labelAr: "الملفات الشخصية", labelFr: "Profils", href: isFamily ? "/profiles" : "/student/profiles", icon: Users },
         { id: "billing", label: "Billing",  labelAr: "الفواتير",  labelFr: "Facturation", href: "/billing",  icon: CreditCard },
-        { id: "gift", label: "Gift course", labelAr: "إهداء الدورة", labelFr: "Offrir le cours", href: "/gift-checkout", icon: Gift },
+        // Gifting was only offered for the lifetime plan, which is no longer sold.
       ];
 
   const accessBadge = isGuest

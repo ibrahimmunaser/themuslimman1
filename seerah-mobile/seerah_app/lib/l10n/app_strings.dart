@@ -391,6 +391,11 @@ const Map<String, Map<String, String>> _kStrings = {
     'ar': 'خيار الوصول مدى الحياة متوفر',
     'fr': 'Lifetime access option available',
   },
+  'includedCancelAnytime': {
+    'en': 'Cancel anytime, no lock-in',
+    'ar': 'ألغِ في أي وقت، بلا التزام',
+    'fr': 'Annulez à tout moment, sans engagement',
+  },
   'monthlyVsLifetime': {
     'en': 'Monthly vs lifetime',
     'ar': 'شهري مقابل مدى الحياة',
@@ -990,10 +995,10 @@ const Map<String, Map<String, String>> _kStrings = {
   },
   'faqIsSubscriptionAPlain': {
     'en':
-        'No. Lifetime access is a one-time payment. You keep access forever with no renewal.',
-    'ar': 'لا. الوصول مدى الحياة دفعة واحدة. تحتفظ بالوصول للأبد دون تجديد.',
+        'Yes — it\'s \$4.99/month, and you can cancel anytime from your account settings.',
+    'ar': 'نعم — ٤٫٩٩ دولار شهريًا، ويمكنك الإلغاء في أي وقت من إعدادات حسابك.',
     'fr':
-        'Non. L’accès à vie est un paiement unique. Vous conservez l’accès pour toujours, sans renouvellement.',
+        'Oui — c\'est 4,99 \$/mois, et vous pouvez annuler à tout moment depuis les paramètres de votre compte.',
   },
 
   // ── Video tab ────────────────────────────────────────────────────────────

@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { getCachedCurrentUser } from "@/lib/auth-cache";
 import { getUserAccessInfo } from "@/lib/access";
 import CheckoutClientPage from "./page-client";
-import { stripe } from "@/lib/stripe";
+import { stripe, PLANS } from "@/lib/stripe";
 import { lifetimePriceMetadata, quoteFromHeaderBag } from "@/lib/request-country-price";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 const LEGACY_PLAN_ALIASES: Record<string, string> = {
   "complete":      "individual-lifetime",
   "family":        "family-lifetime",
-  "monthly":       "individual-lifetime",
+  "monthly":       "individual-monthly",
   "familymonthly": "family-lifetime",
 };
 
@@ -41,14 +41,17 @@ export default async function CheckoutPage({ searchParams }: Props) {
     rawPlan === "family" ||
     rawPlan === "familymonthly";
 
-  // Public purchase is lifetime-only. Old family links become the individual plan.
+  // Family, the free trial, and the lifetime one-time plan are no longer sold
+  // publicly — redirect all of those links to the individual monthly plan,
+  // the only plan offered going forward. Existing holders keep their access;
+  // this only affects what a NEW purchase link resolves to.
   if (
     wantsFamily ||
-    normalizedPlan === "individual-monthly" ||
-    normalizedPlan === "individual-trial"
+    normalizedPlan === "individual-trial" ||
+    normalizedPlan === "individual-lifetime"
   ) {
     const qs = new URLSearchParams();
-    qs.set("plan", "individual-lifetime");
+    qs.set("plan", "individual-monthly");
     if (params.source) qs.set("source", params.source);
     if (params.utm_source) qs.set("utm_source", params.utm_source);
     if (params.utm_medium) qs.set("utm_medium", params.utm_medium);
@@ -63,16 +66,19 @@ export default async function CheckoutPage({ searchParams }: Props) {
   type Billing  = "lifetime"  | "monthly" | "trial";
 
   let initialAudience: Audience = "individual";
-  let initialBilling:  Billing  = "lifetime";
+  let initialBilling:  Billing  = "monthly";
 
   const planParam    = params.plan?.toLowerCase()    ?? "";
   const billingParam = params.billing?.toLowerCase() ?? "";
 
-  // Map plan IDs to audience + billing for the Elements flow.
+  // Map plan IDs to audience + billing for the Elements flow. In practice only
+  // individual-monthly ever reaches here now — family/trial/lifetime redirect
+  // above — but the lifetime case is kept as a defensive no-op fallback.
   if      (normalizedPlan === "individual-lifetime") { initialAudience = "individual"; initialBilling = "lifetime"; }
-  // Legacy URL param fallbacks — monthly/trial billing params map to lifetime.
+  else if (normalizedPlan === "individual-monthly")  { initialAudience = "individual"; initialBilling = "monthly";  }
+  // Legacy/unknown URL params — default to the individual monthly plan.
   else {
-    initialBilling = "lifetime";
+    initialBilling = "monthly";
     const audienceParam = params.audience?.toLowerCase() ?? "";
     if (audienceParam === "individual" || planParam === "individual") initialAudience = "individual";
     void billingParam;
@@ -80,13 +86,16 @@ export default async function CheckoutPage({ searchParams }: Props) {
 
   // Base price for the selected plan — always sourced from PLANS so this stays
   // in sync with stripe-config.ts. Never hardcode prices here.
-  // For lifetime upgrades (individual → family), use the upgrade difference price
-  // so the correct amount is shown immediately without waiting for the API response.
   const hdrs = await headers();
   const lifetimeQuote = quoteFromHeaderBag((name) => hdrs.get(name));
 
-  // Public checkout is the country lifetime price, including /checkout with no plan param.
-  const initialBasePrice = lifetimeQuote.amountCents;
+  // Public checkout is individual-monthly by default — flat $4.99, not
+  // country-tiered. The lifetime quote is only still relevant for the
+  // defensive individual-lifetime fallback branch above.
+  const initialBasePrice =
+    initialAudience === "individual" && initialBilling === "monthly"
+      ? PLANS.monthly.price
+      : lifetimeQuote.amountCents;
   let initialClientSecret: string | null = null;
   let initialFinalPrice = initialBasePrice;
 

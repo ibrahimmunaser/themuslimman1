@@ -10,20 +10,21 @@ import {
 import { PricingSection } from "@/components/pricing/pricing-section";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
-import { StoreBadges } from "@/components/landing/store-badges";
 import { Part1FullPreview } from "@/components/landing/part1-full-preview";
+import { WatchPreviewButton } from "@/components/landing/watch-preview-button";
 import { HomepageTracker } from "@/components/landing/homepage-tracker";
 import { getCurrentUser } from "@/lib/auth";
-import { hasActiveCourseAccess } from "@/lib/access";
-import { LifetimePrice } from "@/components/pricing/country-price";
+import { FREE_PART_NUMBER, hasActiveCourseAccess } from "@/lib/access";
 import { getPreviewLangFromCookies } from "@/lib/part1-preview-data";
+import { getErasForLang, getPartsForLang } from "@/lib/content";
 import { siteT } from "@/lib/site-copy";
+import { PLANS, formatPrice } from "@/lib/stripe-config";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata() {
   const lang = await getPreviewLangFromCookies();
-  const title = `${siteT(lang, "courseName")} | ${siteT(lang, "heroLead")}`;
+  const title = `${siteT(lang, "courseName")} | ${siteT(lang, "heroLead")} ${siteT(lang, "heroGold")}`;
   const description = siteT(lang, "heroBody");
   return {
     title,
@@ -51,6 +52,9 @@ export default async function LandingPage() {
     if (hasAccess) redirect("/seerah");
   }
 
+  const parts = getPartsForLang(lang);
+  const eras = getErasForLang(lang);
+
   return (
     <div className="flex flex-col min-h-screen bg-ink text-text">
       <HomepageTracker />
@@ -69,85 +73,71 @@ export default async function LandingPage() {
           aria-hidden
         />
 
-        <div className="relative max-w-3xl mx-auto px-4 sm:px-6 text-center">
-          <FadeUp delay={0}>
-            <h1 className="text-[1.85rem] sm:text-5xl font-bold tracking-tight leading-[1.2] sm:leading-tight mb-4">
-              {siteT(lang, "heroLead")}{" "}
-              <span className="text-gradient-gold">{siteT(lang, "heroGold")}</span>
-            </h1>
-          </FadeUp>
+        <div className="relative max-w-3xl mx-auto px-4 sm:px-6">
+          <div className="text-center">
+              <FadeUp delay={0}>
+                <h1 className="text-[1.85rem] sm:text-5xl font-bold tracking-tight leading-[1.2] sm:leading-tight mb-4">
+                  {siteT(lang, "heroLead")}{" "}
+                  <span className="text-gradient-gold">{siteT(lang, "heroGold")}</span>
+                </h1>
+              </FadeUp>
 
-          <FadeUp delay={0.1}>
-            <p className="text-base sm:text-xl text-text-secondary max-w-2xl mx-auto mb-2 leading-relaxed">
-              {siteT(lang, "heroBody")}
-            </p>
-            <p className="text-sm sm:text-base text-text-secondary max-w-xl mx-auto mb-2">
-              {siteT(lang, "heroLangs")}
-            </p>
-            <p className="text-base sm:text-lg font-semibold text-gold mb-6">
-              <LifetimePrice suffix={` ${siteT(lang, "oneTime")}`} /> · {siteT(lang, "lifetimeAccess")}
-            </p>
-          </FadeUp>
+              <FadeUp delay={0.1}>
+                <p className="text-base sm:text-xl text-text-secondary max-w-2xl mx-auto mb-2 leading-relaxed">
+                  {siteT(lang, "heroBody")}
+                </p>
+                <p className="text-sm sm:text-base text-text-secondary max-w-xl mx-auto mb-6">
+                  {siteT(lang, "heroLangs")}
+                </p>
+              </FadeUp>
 
-          <FadeUp delay={0.2}>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <a
-                href="/checkout?plan=individual-lifetime"
-                data-track="hero_cta_checkout_click"
-                data-plan="individual-lifetime"
-                className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-10 py-4 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-lg transition-colors shadow-xl shadow-gold/25"
-              >
-                {siteT(lang, "getLifetime")}
-              </a>
-              <a
-                href="#preview"
-                data-track="hero_watch_free_click"
-                className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-4 rounded-xl bg-surface border border-border hover:border-gold/40 text-text font-semibold text-base transition-colors"
-              >
-                <Play className="w-4 h-4 text-gold fill-current" />
-                {siteT(lang, "watchFree")}
-              </a>
+              <FadeUp delay={0.2}>
+                <div className="flex justify-center">
+                  <WatchPreviewButton
+                    track="hero_watch_free_click"
+                    className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-base shadow-lg shadow-gold/30 transition-all hover:shadow-gold/40"
+                  >
+                    <Play className="w-4 h-4 fill-current" />
+                    {siteT(lang, "watchFree")}
+                  </WatchPreviewButton>
+                </div>
+
+                <p className="text-xs sm:text-sm text-text-muted text-center mt-3">
+                  {siteT(lang, "heroPreviewCaption")}
+                </p>
+              </FadeUp>
             </div>
-            <p className="text-xs sm:text-sm text-text-muted text-center mt-3">
-              {siteT(lang, "heroFine")}
-            </p>
-            <div className="flex justify-center mt-6">
-              <StoreBadges lang={lang} />
-            </div>
-          </FadeUp>
         </div>
       </section>
 
       {/* ============================================================
-          2. SHORT PROBLEM — trimmed, non-judgmental
+          1b. THE GAP — why this course exists, before showing more
       ============================================================ */}
-      <section className="border-t border-border bg-surface/40 px-4 sm:px-6 py-10">
-        <div className="max-w-2xl mx-auto space-y-4 text-base sm:text-lg leading-relaxed text-center">
-          <p className="text-text-secondary">
+      <section className="py-10 border-t border-border">
+        <div className="max-w-xl mx-auto px-4 sm:px-6 text-center">
+          <p className="text-base sm:text-lg text-text-secondary leading-relaxed">
             {siteT(lang, "problemBefore")}{" "}
-            <span className="text-text font-semibold">{siteT(lang, "problemEmph")}</span>
-            {" "}{siteT(lang, "problemAfter")}
+            <span className="font-semibold text-text">{siteT(lang, "problemEmph")}</span>
+            {" "}
+            {siteT(lang, "problemAfter")}
           </p>
-          <p className="text-text font-semibold">
+          <p className="mt-3 text-base sm:text-lg font-semibold text-gold">
             {siteT(lang, "problemClose")}
           </p>
         </div>
       </section>
 
       {/* ============================================================
-          3. PART 1 FREE PREVIEW — proof early
+          2. PART 15 MATERIALS — video + reading, slides, quiz, etc.
       ============================================================ */}
       <section id="preview" className="pt-8 pb-10 sm:pb-12 border-t border-border bg-surface/30">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <FadeUp className="text-center mb-8">
-            <p className="text-gold text-xs font-bold uppercase tracking-widest mb-2">
-              {siteT(lang, "previewKicker")}
-            </p>
             <h2 className="text-2xl sm:text-3xl font-bold mb-2">
-              {siteT(lang, "previewTitle")}
+              {siteT(lang, "materialsTitle")}
             </h2>
             <p className="text-text-secondary max-w-xl mx-auto text-sm sm:text-base">
-              {siteT(lang, "previewBody")}
+              {siteT(lang, "materialsBody")}
             </p>
           </FadeUp>
 
@@ -156,115 +146,71 @@ export default async function LandingPage() {
               <div className="space-y-4">
                 <div className="h-6 bg-surface-raised rounded w-1/3" />
                 <div className="h-4 bg-surface-raised rounded w-1/2" />
-                <div className="mt-6 aspect-video bg-surface-raised rounded-xl" />
+                <div className="mt-6 h-40 bg-surface-raised rounded-xl" />
               </div>
             </div>
           }>
-            <Part1FullPreview hideCta />
+            <Part1FullPreview hideCta materialsOnly />
           </Suspense>
-        </div>
-      </section>
 
-      {/* ============================================================
-          4. WHAT EVERY LESSON INCLUDES — real examples, not icons only
-      ============================================================ */}
-      <section className="py-12 border-t border-border">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl sm:text-3xl font-bold mb-2">
-              {siteT(lang, "includesTitle")}
-            </h2>
-            <p className="text-text-secondary text-sm sm:text-base max-w-xl mx-auto">
-              {siteT(lang, "includesBody")}
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-4 sm:gap-5">
-            {/* Slide example */}
-            <div className="rounded-2xl border border-border bg-surface overflow-hidden flex flex-col">
-              <div className="px-4 py-3 border-b border-border/60 flex items-center justify-between">
-                <p className="text-[11px] font-bold uppercase tracking-widest text-gold">{siteT(lang, "slides")}</p>
-                <p className="text-[10px] text-text-muted">{siteT(lang, "sample")}</p>
-              </div>
-              <div className="p-4 flex-1 flex flex-col justify-center bg-gradient-to-b from-surface-raised/80 to-surface min-h-[180px]">
-                <p className="text-[10px] text-text-muted uppercase tracking-wider mb-2">{siteT(lang, "keyIdea")}</p>
-                <p className="text-base sm:text-lg font-bold text-text leading-snug mb-3">
-                  {siteT(lang, "slideTitle")}
-                </p>
-                <ul className="space-y-1.5 text-xs sm:text-sm text-text-secondary">
-                  <li className="flex gap-2"><span className="text-gold">•</span> {siteT(lang, "slide1")}</li>
-                  <li className="flex gap-2"><span className="text-gold">•</span> {siteT(lang, "slide2")}</li>
-                  <li className="flex gap-2"><span className="text-gold">•</span> {siteT(lang, "slide3")}</li>
-                </ul>
-              </div>
-            </div>
-
-            {/* Flashcard example */}
-            <div className="rounded-2xl border border-border bg-surface overflow-hidden flex flex-col">
-              <div className="px-4 py-3 border-b border-border/60 flex items-center justify-between">
-                <p className="text-[11px] font-bold uppercase tracking-widest text-gold">{siteT(lang, "flashcards")}</p>
-                <p className="text-[10px] text-text-muted">{siteT(lang, "flipReview")}</p>
-              </div>
-              <div className="p-4 flex-1 flex flex-col gap-3 min-h-[180px]">
-                <div className="rounded-xl border border-gold/25 bg-gold/[0.06] p-4 text-center">
-                  <p className="text-[10px] text-gold font-semibold uppercase tracking-wider mb-2">{siteT(lang, "front")}</p>
-                  <p className="text-sm font-semibold text-text leading-snug">
-                    {siteT(lang, "flashQ")}
-                  </p>
-                </div>
-                <div className="rounded-xl border border-border bg-surface-raised p-4 text-center">
-                  <p className="text-[10px] text-text-muted font-semibold uppercase tracking-wider mb-2">{siteT(lang, "back")}</p>
-                  <p className="text-sm text-text-secondary leading-snug">
-                    {siteT(lang, "flashA")}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Quiz example */}
-            <div className="rounded-2xl border border-border bg-surface overflow-hidden flex flex-col">
-              <div className="px-4 py-3 border-b border-border/60 flex items-center justify-between">
-                <p className="text-[11px] font-bold uppercase tracking-widest text-gold">{siteT(lang, "quiz")}</p>
-                <p className="text-[10px] text-text-muted">{siteT(lang, "checkLabel")}</p>
-              </div>
-              <div className="p-4 flex-1 flex flex-col min-h-[180px]">
-                <p className="text-sm font-semibold text-text leading-snug mb-3">
-                  {siteT(lang, "quizQ")}
-                </p>
-                <div className="space-y-2">
-                  {[
-                    { label: "A", text: siteT(lang, "optA"), active: true },
-                    { label: "B", text: siteT(lang, "optB"), active: false },
-                    { label: "C", text: siteT(lang, "optC"), active: false },
-                  ].map((opt) => (
-                    <div
-                      key={opt.label}
-                      className={[
-                        "flex items-start gap-2.5 rounded-lg border px-3 py-2 text-xs sm:text-sm",
-                        opt.active
-                          ? "border-gold/40 bg-gold/10 text-text"
-                          : "border-border bg-surface-raised/50 text-text-secondary",
-                      ].join(" ")}
-                    >
-                      <span className={`font-bold ${opt.active ? "text-gold" : "text-text-muted"}`}>
-                        {opt.label}
-                      </span>
-                      <span>{opt.text}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <p className="text-center text-xs text-text-muted mt-5">
-            {siteT(lang, "plusFormats")}
+          {/* Compact link down to the merged Part 16 / pricing section below —
+              no repeated pricing card here. Names the free lesson as proof
+              of what every other part contains. */}
+          <p className="mt-6 text-center text-sm text-text-secondary">
+            {siteT(lang, "sameForAllParts")}{" "}
+            <a href="#pricing" className="font-semibold text-gold hover:text-gold-light underline underline-offset-2">
+              {siteT(lang, "unlockAllParts")} →
+            </a>
           </p>
         </div>
       </section>
 
       {/* ============================================================
-          5. TRUST — sources & methodology
+          3. CURRICULUM — existing lesson titles
+      ============================================================ */}
+      <section className="py-12 border-t border-border">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-2">{siteT(lang, "curriculumTitle")}</h2>
+            <p className="text-sm text-text-secondary">{siteT(lang, "curriculumBody")}</p>
+          </div>
+          <div className="space-y-2">
+            {eras.map((era) => {
+              const eraParts = parts.filter((part) => part.era === era.id);
+              return (
+                <details key={era.id} className="group rounded-xl border border-border bg-surface overflow-hidden">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 font-semibold text-text hover:bg-surface-raised">
+                    <span>{era.label}</span>
+                    <span className="text-xs font-medium text-text-muted">{eraParts.length}</span>
+                  </summary>
+                  <ol className="border-t border-border/50 px-5 py-3 space-y-1.5">
+                    {eraParts.map((part) => (
+                      <li key={part.id} className="flex items-baseline justify-between gap-3 text-sm">
+                        <span className="text-text-secondary">
+                          <span className="text-text-muted tabular-nums">{part.partNumber}.</span>{" "}
+                          {part.partNumber === FREE_PART_NUMBER ? (
+                            <WatchPreviewButton className="text-text hover:text-gold">{part.title}</WatchPreviewButton>
+                          ) : (
+                            part.title
+                          )}
+                        </span>
+                        {part.partNumber === FREE_PART_NUMBER && (
+                          <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-gold">
+                            {siteT(lang, "previewFree")}
+                          </span>
+                        )}
+                      </li>
+                    ))}
+                  </ol>
+                </details>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================
+          4. TRUST — sources & methodology
       ============================================================ */}
       <section className="py-10 border-t border-border bg-surface/30">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 text-center">
@@ -282,51 +228,21 @@ export default async function LandingPage() {
       </section>
 
       {/* ============================================================
-          6. PRICING — after proof
-      ============================================================ */}
-      <PricingSection
-        hasLifetime={!!(user?.hasPaid)}
-        hasMonthly={false}
-        hasFamily={user?.planType === "family"}
-        variant="lifetime-only"
-        compact
-      />
-
-      {/* ============================================================
-          7. WHAT HAPPENS AFTER YOU BUY — brief
+          5. WHAT HAPPENS AFTER YOU BUY — one concise explanation
       ============================================================ */}
       <section className="py-10 border-t border-border bg-surface/30">
-        <div className="max-w-xl mx-auto px-4 sm:px-6 text-center">
-          <h2 className="text-xl sm:text-2xl font-bold mb-1">
+        <div className="max-w-lg mx-auto px-4 sm:px-6 text-center">
+          <h2 className="text-xl sm:text-2xl font-bold mb-2">
             {siteT(lang, "afterTitle")}
           </h2>
-          <p className="text-text-secondary text-sm mb-6">
-            {siteT(lang, "afterSub")}
+          <p className="text-sm sm:text-base text-text-secondary leading-relaxed">
+            {siteT(lang, "afterOneLiner")}
           </p>
-
-          <div className="flex flex-col sm:flex-row items-stretch justify-center gap-3">
-            {[
-              { step: "1", title: siteT(lang, "s1t"), sub: siteT(lang, "s1s") },
-              { step: "2", title: siteT(lang, "s2t"), sub: siteT(lang, "s2s") },
-              { step: "3", title: siteT(lang, "s3t"), sub: siteT(lang, "s3s") },
-            ].map((item) => (
-              <div
-                key={item.step}
-                className="flex-1 flex flex-col items-center gap-1.5 p-4 rounded-xl border border-border bg-surface"
-              >
-                <div className="w-8 h-8 rounded-full bg-gold/10 border border-gold/25 flex items-center justify-center mb-0.5">
-                  <span className="text-gold font-bold text-sm">{item.step}</span>
-                </div>
-                <p className="text-sm font-bold text-text">{item.title}</p>
-                <p className="text-xs text-text-muted leading-relaxed">{item.sub}</p>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
       {/* ============================================================
-          8. FAQ
+          6. FAQ
       ============================================================ */}
       <section id="faq" className="py-12 border-t border-border">
         <div className="max-w-2xl mx-auto px-4 sm:px-6">
@@ -375,7 +291,10 @@ export default async function LandingPage() {
                 </summary>
                 <div className="px-5 pb-5 pt-1 text-sm text-text-secondary leading-relaxed border-t border-border/50">
                   {item.a === "SUBSCRIPTION_PRICE" ? (
-                    <>{siteT(lang, "a5pre")} <LifetimePrice /> {siteT(lang, "a5post")}</>
+                    <>
+                      {siteT(lang, "yesShort")} — <span dir="ltr">{formatPrice(PLANS.monthly.price)}</span>
+                      {siteT(lang, "perMonthShort")}, {siteT(lang, "cancelAnytimeShort")}.
+                    </>
                   ) : (
                     item.a
                   )}
@@ -395,9 +314,9 @@ export default async function LandingPage() {
       </section>
 
       {/* ============================================================
-          9. FINAL CTA
+          8. FINAL CTA — purchase action is primary, free preview is secondary
       ============================================================ */}
-      <section className="py-16 sm:py-24 border-t border-border relative overflow-hidden">
+      <section id="pricing" className="py-16 sm:py-24 border-t border-border relative overflow-hidden">
         <div className="absolute inset-0 geo-pattern opacity-30" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-gold/5 rounded-full blur-3xl" />
 
@@ -408,25 +327,26 @@ export default async function LandingPage() {
           <p className="text-sm sm:text-base text-text-secondary mb-2 max-w-lg mx-auto">
             {siteT(lang, "finalBody")}
           </p>
-          <p className="text-gold font-semibold text-base mb-7"><LifetimePrice suffix={` ${siteT(lang, "oneTime")}`} /> · {siteT(lang, "lifetimeAccess")}</p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link
-              href="/checkout?plan=individual-lifetime"
-              data-track="final_checkout_clicked"
-              data-plan="individual-lifetime"
-              className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-10 py-4 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-lg transition-colors shadow-xl shadow-gold/20"
+          <div className="mt-6">
+            <PricingSection
+              hasLifetime={!!(user?.hasPaid)}
+              hasMonthly={false}
+              hasFamily={user?.planType === "family"}
+              variant="plans-only"
+              bare
+              hideHeading
+            />
+          </div>
+
+          <div className="mt-5 flex justify-center">
+            <WatchPreviewButton
+              track="final_watch_part1_clicked"
+              className="inline-flex items-center justify-center gap-2 text-sm font-semibold text-text-secondary hover:text-gold transition-colors"
             >
-              {siteT(lang, "getLifetime")}
-            </Link>
-            <a
-              href="#preview"
-              data-track="final_watch_part1_clicked"
-              className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-4 rounded-xl bg-surface border border-border hover:border-gold/40 text-text font-semibold text-base transition-colors"
-            >
-              <Play className="w-4 h-4 text-gold fill-current" />
+              <Play className="w-3.5 h-3.5 fill-current" />
               {siteT(lang, "watchFree")}
-            </a>
+            </WatchPreviewButton>
           </div>
 
           <p className="text-xs text-text-muted/50 mt-4">

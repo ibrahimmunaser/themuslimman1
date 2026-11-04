@@ -8,7 +8,7 @@ import type { PlanId } from "@/components/landing/plan-picker";
 import { captureAttribution, attributionToProps } from "@/lib/attribution";
 import { trackEvent, captureAndTrack } from "@/lib/analytics";
 import { handleCanonicalFunnelClick } from "@/lib/funnel-click-analytics";
-import { useLifetimePricePhrase } from "@/components/pricing/country-price";
+import { PLANS, formatPrice } from "@/lib/stripe-config";
 
 // ── Config ─────────────────────────────────────────────────────────────────────
 
@@ -76,7 +76,7 @@ export function InfluencerDirectLanding({ config, part1Preview, afterPart1Previe
   // Enriched checkout URL — updated on mount to include real landing-page UTMs
   const [checkoutUrl, setCheckoutUrl] = useState(config.checkoutUrl);
 
-  const price = `${useLifetimePricePhrase()} one-time`;
+  const price = `${formatPrice(PLANS.monthly.price)}/month`;
 
   // Sticky only shown when user has scrolled past hero AND no CTA section is on screen
   const showSticky = scrolledPast && !anyCTAVisible;
@@ -296,7 +296,7 @@ export function InfluencerDirectLanding({ config, part1Preview, afterPart1Previe
 
           {/* Friction reducer */}
           <p className="text-xs text-text-muted">
-            The First Revelation is free · No app required · One-time payment · 7-day refund guarantee
+            The First Revelation is free · No app required · {price} · Cancel anytime
           </p>
         </div>
       </section>
@@ -352,7 +352,6 @@ export function InfluencerDirectLanding({ config, part1Preview, afterPart1Previe
 
           <PlanPicker
             checkoutBaseUrl={checkoutUrl}
-            recommendedPlan="individual-lifetime"
             onCtaClick={onCheckoutClick}
           />
         </div>
@@ -370,7 +369,7 @@ export function InfluencerDirectLanding({ config, part1Preview, afterPart1Previe
             <a
               href={checkoutUrl}
               data-track="checkout_clicked"
-              data-plan="individual-lifetime"
+              data-plan="individual-monthly"
               className="flex-shrink-0 py-3 px-6 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-sm transition-colors"
             >
               Start the Course

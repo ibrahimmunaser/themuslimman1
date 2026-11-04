@@ -1,6 +1,6 @@
 class AppConstants {
   // App version — keep in sync with pubspec.yaml version field
-  static const String appVersion = '1.0.67';
+  static const String appVersion = '1.0.68';
 
   /// The single free-preview part of the course. Every other part (1-14,
   /// 16-100) requires `hasAccess`. Mirrors the website's `FREE_PART_NUMBER`
@@ -75,18 +75,17 @@ class AppConstants {
   static const String iapLifetimeIndividualLegacy = 'com.themuslimman.seerah.lifetime.individual';
   static const String iapLifetimeFamilyLegacy     = 'com.themuslimman.seerah.lifetime.family';
 
-  /// Public plans offered in the paywall UI (Individual Monthly + Lifetime).
-  /// Family SKUs stay queryable for restore / existing accounts but are not
-  /// sold as a public purchase option.
+  /// Public plans offered in the paywall UI — Individual Monthly ($4.99) only.
+  /// Lifetime and Family SKUs stay queryable for restore / existing accounts
+  /// but are no longer sold as a public purchase option going forward.
   static const List<String> iapPublicPlanIds = [
     iapMonthlyIndividual,
-    iapLifetimeIndividual,
   ];
 
   /// Number of distinct plans on the public paywall (used for "X of Y plans
   /// loaded" UI messaging) — NOT the same as iapProductIds.length, which
   /// includes family + legacy candidate IDs for restore compatibility.
-  static const int iapPlanCount = 2;
+  static const int iapPlanCount = 1;
 
   /// Maps each canonical plan ID to every product ID that might represent it
   /// in the store. [IAPState.productForPlan] tries them in order.

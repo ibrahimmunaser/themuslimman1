@@ -9,9 +9,9 @@ import { FadeUp } from "@/components/motion";
 import { FunnelTracker } from "@/components/analytics/funnel-tracker";
 import { PortalButton } from "@/components/billing/portal-button";
 import { LanguagesLaunchGate } from "@/components/student/languages-launch-gate";
-import { LifetimePrice } from "@/components/pricing/country-price";
 import { getPreviewLangFromCookies } from "@/lib/part1-preview-data";
 import { siteT } from "@/lib/site-copy";
+import { PLANS, formatPrice } from "@/lib/stripe-config";
 
 export async function generateMetadata() {
   const lang = await getPreviewLangFromCookies();
@@ -74,7 +74,7 @@ export default async function PricingPage({ searchParams }: Props) {
   const faqItems = [
     { q: siteT(lang, "pq1"), a: siteT(lang, "pa1") },
     { q: siteT(lang, "pq2"), a: siteT(lang, "pa2") },
-    { q: siteT(lang, "q5"), a: "PRICE_ANSWER" },
+    { q: siteT(lang, "q5"), a: "SUBSCRIPTION_ANSWER" },
     { q: siteT(lang, "pq4"), a: siteT(lang, "pa4") },
     { q: siteT(lang, "pq5"), a: siteT(lang, "pa5") },
     { q: siteT(lang, "pq6"), a: siteT(lang, "pa6") },
@@ -150,7 +150,9 @@ export default async function PricingPage({ searchParams }: Props) {
               {siteT(lang, "priceH1")}
             </h1>
             <p className="text-base sm:text-lg text-text-secondary leading-relaxed mb-4">
-              {siteT(lang, "priceLead")} <LifetimePrice />.
+              {siteT(lang, "priceLead")}{" "}
+              <span dir="ltr">{formatPrice(PLANS.monthly.price)}</span>
+              {siteT(lang, "perMonthShort")}.
             </p>
             <p className="text-xs text-text-muted">
               {siteT(lang, "priceFine")}
@@ -165,7 +167,7 @@ export default async function PricingPage({ searchParams }: Props) {
         hasMonthly={hasMonthly}
         hasFamily={hasFamily}
         checkoutBaseUrl={checkoutBaseUrl}
-        variant="lifetime-only"
+        variant="full"
       />
 
       {/* 3. Named offer stack */}
@@ -196,7 +198,8 @@ export default async function PricingPage({ searchParams }: Props) {
               ))}
             </ul>
             <p className="text-center text-sm text-text-muted mt-6">
-              <LifetimePrice suffix={` ${siteT(lang, "oneTime")}`} /> · {siteT(lang, "stackForever")}
+              <span dir="ltr">{formatPrice(PLANS.monthly.price)}</span>
+              {siteT(lang, "perMonthShort")} · {siteT(lang, "cancelAnytimeShort")}
             </p>
           </FadeUp>
         </div>
@@ -236,8 +239,11 @@ export default async function PricingPage({ searchParams }: Props) {
                   />
                 </summary>
                 <div className="px-5 pb-5 pt-1 text-sm text-text-secondary leading-relaxed border-t border-border/50">
-                  {a === "PRICE_ANSWER" ? (
-                    <>{siteT(lang, "pa3pre")} <LifetimePrice /> {siteT(lang, "pa3post")}</>
+                  {a === "SUBSCRIPTION_ANSWER" ? (
+                    <>
+                      {siteT(lang, "yesShort")} — <span dir="ltr">{formatPrice(PLANS.monthly.price)}</span>
+                      {siteT(lang, "perMonthShort")}, {siteT(lang, "cancelAnytimeShort")}.
+                    </>
                   ) : (
                     a
                   )}

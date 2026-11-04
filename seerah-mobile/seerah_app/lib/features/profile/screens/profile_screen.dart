@@ -121,12 +121,9 @@ class ProfileScreen extends ConsumerWidget {
                 color: AppColors.gold,
                 onTap: () => _openBilling(context, auth, lang),
               ),
-              _SettingsDatum(
-                icon: Icons.card_giftcard_outlined,
-                label: t(lang, 'giftCourse'),
-                color: AppColors.gold,
-                onTap: () => _launch('${AppConstants.baseUrl}/gift-checkout', context, lang),
-              ),
+              // Gifting was only offered for the lifetime plan, which is no
+              // longer sold — removed from the menu rather than linking to a
+              // dead-end flow.
             ]).animate(delay: 70.ms).fadeIn(duration: 350.ms),
 
             const SizedBox(height: 20),
