@@ -64,6 +64,7 @@ export function PlanPicker({
     tagline: string;
     cta: string;
     recommended: boolean;
+    badge?: string;
   }[] = [
     {
       id: monthlyId,
@@ -74,7 +75,10 @@ export function PlanPicker({
       periodLabel: siteT(lang, "perMonthShort"),
       tagline: siteT(lang, "cancelAnytimeShort"),
       cta: siteT(lang, "startMonthly"),
-      recommended: recommendedPlan === monthlyId,
+      // Always highlighted with a gold border + "Most Popular" badge,
+      // independent of which plan is passed as `recommendedPlan`.
+      recommended: true,
+      badge: siteT(lang, "mostPopular"),
     },
     {
       id: lifetimeId,
@@ -86,6 +90,7 @@ export function PlanPicker({
       tagline: siteT(lang, "noSub"),
       cta: siteT(lang, "getLifetime"),
       recommended: recommendedPlan === lifetimeId,
+      badge: recommendedPlan === lifetimeId ? siteT(lang, "bestValue") : undefined,
     },
   ];
 
@@ -114,9 +119,9 @@ export function PlanPicker({
                 : "bg-gradient-to-b from-surface-high to-surface-raised border-gold/25 shadow-md shadow-black/40 hover:border-gold/50 hover:from-gold/[0.06] hover:-translate-y-0.5",
             ].join(" ")}
           >
-            {plan.recommended && (
+            {plan.badge && (
               <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-lg whitespace-nowrap bg-gold text-ink shadow-gold/30">
-                {siteT(lang, "bestValue")}
+                {plan.badge}
               </span>
             )}
 
