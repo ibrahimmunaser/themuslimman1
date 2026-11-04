@@ -18,9 +18,9 @@ class ReadTab extends ConsumerStatefulWidget {
 }
 
 class _ReadTabState extends ConsumerState<ReadTab> {
-  late int _activeSection = widget.initialSection.clamp(0, 2);
-  static const _sectionKeys = ['briefing', 'studyGuide', 'keyFacts'];
-  static const _assetIds = ['briefing', 'study_guide', 'statement-of-facts'];
+  late int _activeSection = widget.initialSection.clamp(0, 1);
+  static const _sectionKeys = ['briefing', 'keyFacts'];
+  static const _assetIds = ['briefing', 'statement-of-facts'];
 
   final ScrollController _scrollController = ScrollController();
   /// Sections already credited this mount (mirrors web TextViewer 10% gate).
@@ -235,16 +235,14 @@ class _ReadTabState extends ConsumerState<ReadTab> {
             data: (content) {
               final text = _activeSection == 0
                   ? content.briefingText
-                  : _activeSection == 1
-                      ? content.studyGuideText
-                      : content.statementOfFactsText;
+                  : content.statementOfFactsText;
 
               if (text == null || text.isEmpty) {
                 return _EmptySection(section: sections[_activeSection], lang: lang);
               }
 
               // Key Facts: plain newline-separated sentences → individual fact cards
-              if (_activeSection == 2) {
+              if (_activeSection == 1) {
                 return _KeyFactsList(
                   text: text,
                   controller: _scrollController,

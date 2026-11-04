@@ -96,7 +96,7 @@ class _PartScreenState extends ConsumerState<PartScreen> {
         _open(
           context,
           title: tv(lang, 'keyFactsPartN', {'n': partNumber}),
-          child: ReadTab(partNumber: partNumber, initialSection: 2),
+          child: ReadTab(partNumber: partNumber, initialSection: 1),
         );
       case 'read':
         _open(
