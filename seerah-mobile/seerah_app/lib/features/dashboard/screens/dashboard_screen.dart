@@ -15,6 +15,7 @@ import '../../../core/widgets/ui_kit.dart';
 import '../../../l10n/app_strings.dart';
 import '../../resources/screens/resources_screen.dart'
     show resourceTypeCountForLang;
+import '../../shell/app_shell.dart' show showLockedNavDialog;
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -262,7 +263,7 @@ class DashboardScreen extends ConsumerWidget {
                 SectionHeader(title: t(lang, 'quickAccess')),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: _QuickAccessGrid(lang: lang),
+                  child: _QuickAccessGrid(lang: lang, hasAccess: hasAccess),
                 ),
 
                 // ── Upgrade prompt ─────────────────────────────────────────────
@@ -568,12 +569,13 @@ String _eraName(String eraId, String lang) {
 
 // ── Quick access grid ─────────────────────────────────────────────────────────
 
-class _QuickAccessGrid extends StatelessWidget {
+class _QuickAccessGrid extends ConsumerWidget {
   final String lang;
-  const _QuickAccessGrid({required this.lang});
+  final bool hasAccess;
+  const _QuickAccessGrid({required this.lang, required this.hasAccess});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final items = [
       (Icons.menu_book_rounded, t(lang, 'lessons'), '/course', AppColors.gold),
       (
@@ -607,7 +609,17 @@ class _QuickAccessGrid extends StatelessWidget {
         return Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: () => context.go(item.$3),
+            // Quick Access leads to the exact same screens as the bottom
+            // nav's Lessons/Resources/Reference/Progress tabs, so it must be
+            // gated the same way — otherwise it'd be a silent bypass of the
+            // nav-bar lock for a no-access user.
+            onTap: () {
+              if (!hasAccess) {
+                showLockedNavDialog(context, ref, lang);
+                return;
+              }
+              context.go(item.$3);
+            },
             borderRadius: BorderRadius.circular(14),
             child: Ink(
               decoration: AppDecorations.card(

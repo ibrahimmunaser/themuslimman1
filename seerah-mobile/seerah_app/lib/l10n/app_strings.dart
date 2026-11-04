@@ -961,6 +961,16 @@ const Map<String, Map<String, String>> _kStrings = {
     'ar': 'افتح الوصول الكامل',
     'fr': 'Unlock full access',
   },
+  // ── Bottom nav lock dialog (Lessons/Resources/Reference/Progress gated
+  // behind a plan for guests/no-access users — Home and Part 15 stay free) ──
+  'lockedNavBody': {
+    'en':
+        'Pick a plan to unlock Lessons, Resources, Reference, and Progress — The First Revelation (Part 15) stays free either way.',
+    'ar':
+        'اختر خطة لفتح الدروس والموارد والمرجع والتقدم — الوحي الأول (الجزء 15) يبقى مجانيًا على أي حال.',
+    'fr':
+        'Choisissez une formule pour débloquer Leçons, Ressources, Référence et Progrès — La Première Révélation (Partie 15) reste gratuite.',
+  },
   'partN': {'en': 'Part {n}', 'ar': 'الجزء {n}', 'fr': 'Part {n}'},
   'requiresFullAccessBody': {
     'en':

@@ -1,6 +1,6 @@
 class AppConstants {
   // App version — keep in sync with pubspec.yaml version field
-  static const String appVersion = '1.0.71';
+  static const String appVersion = '1.0.72';
 
   /// The single free-preview part of the course. Every other part (1-14,
   /// 16-100) requires `hasAccess`. Mirrors the website's `FREE_PART_NUMBER`
