@@ -9,7 +9,14 @@
  * - Unlisted / ambiguous → DEFAULT_TIER (B / $29).
  *
  * Amounts are USD cents for Stripe; stores map to nearest local price points.
+ *
+ * ── COUNTRY_PRICING_ENABLED (currently OFF) ──────────────────────────────────
+ * Country/PPP-tiered lifetime pricing is disabled for now: every visitor,
+ * regardless of country, is quoted flat Tier A ($49). The COUNTRY_TIER table
+ * below is kept intact (not deleted) so tiered pricing can be re-enabled later
+ * by flipping this flag back to true — do not remove the table.
  */
+export const COUNTRY_PRICING_ENABLED = false;
 
 export type PriceTier = "A" | "B" | "C" | "D";
 
@@ -348,6 +355,8 @@ export function normalizeCountryCode(code: string | null | undefined): string | 
 }
 
 export function tierForCountry(countryCode: string | null | undefined): PriceTier {
+  // Flat worldwide pricing — see COUNTRY_PRICING_ENABLED above.
+  if (!COUNTRY_PRICING_ENABLED) return "A";
   const code = normalizeCountryCode(countryCode);
   if (!code) return DEFAULT_TIER;
   return COUNTRY_TIER[code] ?? DEFAULT_TIER;

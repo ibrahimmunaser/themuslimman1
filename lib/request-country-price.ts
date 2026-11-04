@@ -1,5 +1,4 @@
 import {
-  DEFAULT_TIER,
   priceUsdCentsForCountry,
   tierForCountry,
   type PriceTier,
@@ -7,7 +6,7 @@ import {
 
 /** One-time lifetime quote. Language never changes the amount — country does. */
 export type CountryPriceQuote = {
-  /** ISO country, or null when geo is missing (then tier B / $29). */
+  /** ISO country, or null when geo is missing (flat tier A / $49 either way). */
   country: string | null;
   tier: PriceTier;
   amountCents: number;
@@ -33,7 +32,9 @@ export function countryFromHeaderBag(
 
 export function quoteForCountryCode(code: string | null | undefined): CountryPriceQuote {
   const country = code && /^[A-Z]{2}$/.test(code) ? code : null;
-  const tier = country ? tierForCountry(country) : DEFAULT_TIER;
+  // Always route through tierForCountry (respects COUNTRY_PRICING_ENABLED)
+  // instead of special-casing "no country" to DEFAULT_TIER directly.
+  const tier = tierForCountry(country);
   const amountCents = priceUsdCentsForCountry(country);
   return {
     country,
