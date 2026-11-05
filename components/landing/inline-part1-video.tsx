@@ -8,7 +8,8 @@ import type { CourseLang } from "@/lib/course-lang";
 import { isRtlLang, parseLang } from "@/lib/course-lang";
 import { loc, locf } from "@/lib/loc";
 import { siteT } from "@/lib/site-copy";
-import { PLANS, formatPrice } from "@/lib/stripe-config";
+import { formatPrice } from "@/lib/stripe-config";
+import { useCountryPrice } from "@/components/pricing/country-price";
 import { FREE_PART_NUMBER } from "@/lib/free-part-number";
 
 interface Part1PreviewData {
@@ -41,6 +42,7 @@ export function InlinePart1Video({ checkoutUrl, checkoutLabel, hideCta = false, 
   const [started, setStarted]     = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const pendingPlay = useRef(false);
+  const countryPrice = useCountryPrice();
 
   useEffect(() => {
     setLang(readLangCookie());
@@ -229,7 +231,7 @@ export function InlinePart1Video({ checkoutUrl, checkoutLabel, hideCta = false, 
             className="flex items-center justify-center w-full py-5 rounded-xl bg-gold hover:bg-gold-light text-ink font-bold text-lg transition-colors shadow-lg shadow-gold/25 mb-2"
           >
             {!checkoutLabel || checkoutLabel.includes("$49") || checkoutLabel.includes("49 $") || checkoutLabel.includes("Only $99")
-              ? `${loc(lang, "Subscribe", "اشترك", "S'abonner")} — ${formatPrice(PLANS.monthly.price)}/mo`
+              ? `${loc(lang, "Subscribe", "اشترك", "S'abonner")} — ${formatPrice(countryPrice.monthlyAmountCents)}/mo`
               : checkoutLabel}
           </Link>
           <p className="text-xs text-text-muted/70">

@@ -1309,9 +1309,13 @@ function CheckoutPageContent({
   const countryPrice = useCountryPrice();
   const lang = useSiteLang();
   const individualLifetimeCents = countryPrice.amountCents;
-  const displayBase = audience === "individual" && isLifetime
-    ? individualLifetimeCents
-    : (!isAuthenticated ? currentPlan.price : basePrice);
+  const individualMonthlyCents  = countryPrice.monthlyAmountCents;
+  const displayBase =
+    audience === "individual" && isLifetime
+      ? individualLifetimeCents
+      : audience === "individual" && billing === "monthly" && !isAuthenticated
+        ? individualMonthlyCents
+        : (!isAuthenticated ? currentPlan.price : basePrice);
   const displayPrice    = displayBase;
 
   // ── Plan summary (top of single-column checkout) ──────────────────────────
@@ -1320,16 +1324,13 @@ function CheckoutPageContent({
     { id: "individual", Icon: User,  label: "Individual" },
   ];
 
-  // Individual monthly ($4.99/mo) is the only plan sold going forward —
-  // lifetime and family are no longer offered here (existing holders keep
-  // their access as-is). Only one option so the picker can't dead-end into
-  // a blocked (410) endpoint.
   // Individual plans sold going forward: Lifetime (one-time, country-priced)
-  // and Monthly ($4.99/mo). Family and the free trial are no longer offered
-  // here (existing holders keep their access as-is).
+  // and Monthly (recurring, also country-priced — see lib/country-pricing.ts).
+  // Family and the free trial are no longer offered here (existing holders
+  // keep their access as-is).
   const allBillingOptions: { id: Billing; label: string; price: number; priceSuffix?: string; priceOverride?: string; sub: string; badge?: string }[] = [
     { id: "lifetime", label: siteT(lang, "lifetimePlanLabel"), price: individualLifetimeCents, sub: siteT(lang, "noSub"), badge: siteT(lang, "bestValue") },
-    { id: "monthly", label: siteT(lang, "monthlyPlanLabel"), price: PLANS.monthly.price, priceOverride: formatPrice(PLANS.monthly.price), priceSuffix: siteT(lang, "ckPerMo"), sub: siteT(lang, "cancelAnytimeShort") },
+    { id: "monthly", label: siteT(lang, "monthlyPlanLabel"), price: individualMonthlyCents, priceOverride: formatPrice(individualMonthlyCents), priceSuffix: siteT(lang, "ckPerMo"), sub: siteT(lang, "cancelAnytimeShort") },
   ];
 
   const billingOptions = allBillingOptions;
@@ -1424,7 +1425,11 @@ function CheckoutPageContent({
                   clientSecretRef.current = null;
                   setClientSecret(null);
                   const newPlan = PLANS[toPlanKey(id, billing)];
-                  const snap = billing === "trial" ? (newPlan as typeof PLANS.individualTrial).trialFeeAmount ?? newPlan.price : newPlan.price;
+                  const snap =
+                    id === "individual" && billing === "lifetime" ? individualLifetimeCents
+                    : id === "individual" && billing === "monthly" ? individualMonthlyCents
+                    : billing === "trial" ? (newPlan as typeof PLANS.individualTrial).trialFeeAmount ?? newPlan.price
+                    : newPlan.price;
                   setBasePrice(snap); setFinalPrice(snap);
                 }}
                 className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
@@ -1452,7 +1457,9 @@ function CheckoutPageContent({
                   const newPlan = PLANS[toPlanKey(audience, id)];
                   const snap = audience === "individual" && id === "lifetime"
                     ? individualLifetimeCents
-                    : id === "trial" ? (newPlan as typeof PLANS.individualTrial).trialFeeAmount ?? newPlan.price : newPlan.price;
+                    : audience === "individual" && id === "monthly"
+                      ? individualMonthlyCents
+                      : id === "trial" ? (newPlan as typeof PLANS.individualTrial).trialFeeAmount ?? newPlan.price : newPlan.price;
                   setBasePrice(snap); setFinalPrice(snap);
                 }}
                 className={`w-full flex items-center p-4 rounded-xl border transition-all text-left ${

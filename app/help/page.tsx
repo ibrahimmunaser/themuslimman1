@@ -6,7 +6,9 @@ import { StudentLayout } from "@/components/student/student-layout";
 import { HelpCircle, BookOpen, CreditCard, Lock } from "lucide-react";
 import { ContactSupportForm } from "@/components/help/contact-support-form";
 import { cookies } from "next/headers";
-import { PLANS, formatPrice } from "@/lib/stripe-config";
+import { formatPrice } from "@/lib/stripe-config";
+import { headers } from "next/headers";
+import { quoteFromHeaderBag } from "@/lib/request-country-price";
 import { parseLang, COURSE_LANG_COOKIE, type CourseLang, isRtlLang } from "@/lib/course-lang";
 import { loc } from "@/lib/loc";
 
@@ -142,6 +144,8 @@ function faqsFor(lang: CourseLang) {
 
 export default async function HelpPage() {
   const user = await getCurrentUser();
+  const hdrs = await headers();
+  const countryPrice = quoteFromHeaderBag((name) => hdrs.get(name));
 
   if (!user) redirect("/contact");
   const hasAccess = await hasActiveCourseAccess(user.id, user.hasPaid);
@@ -196,7 +200,7 @@ export default async function HelpPage() {
                                 "الاشتراك الشهري هو",
                                 "L'accès complet coûte",
                               )}{" "}
-                              <span dir="ltr">{formatPrice(PLANS.monthly.price)}</span>{" "}
+                              <span dir="ltr">{formatPrice(countryPrice.monthlyAmountCents)}</span>{" "}
                               {loc(
                                 lang,
                                 "per month — cancel anytime from your account settings, no long-term commitment.",

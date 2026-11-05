@@ -4,7 +4,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, Play } from "lucide-react";
 import { Part1FullPreview } from "@/components/landing/part1-full-preview";
-import { PLANS, formatPrice } from "@/lib/stripe-config";
+import { formatPrice } from "@/lib/stripe-config";
+import { headers } from "next/headers";
+import { quoteFromHeaderBag } from "@/lib/request-country-price";
 import { WatchFreeTracker } from "./watch-free-tracker";
 
 export const metadata: Metadata = {
@@ -28,6 +30,8 @@ interface Props {
 
 export default async function WatchFreePage({ searchParams }: Props) {
   const params = await searchParams;
+  const hdrs = await headers();
+  const countryPrice = quoteFromHeaderBag((name) => hdrs.get(name));
 
   // Build checkout URL preserving any source/UTM attribution from the landing URL
   const checkoutBase = "/checkout?plan=individual-monthly";
@@ -91,7 +95,7 @@ export default async function WatchFreePage({ searchParams }: Props) {
         >
           <Part1FullPreview
             checkoutHref={checkoutHref}
-            ctaLabel={`Subscribe — ${formatPrice(PLANS.monthly.price)}/mo`}
+            ctaLabel={`Subscribe — ${formatPrice(countryPrice.monthlyAmountCents)}/mo`}
           />
         </Suspense>
       </section>
@@ -110,7 +114,7 @@ export default async function WatchFreePage({ searchParams }: Props) {
             href={checkoutHref}
             className="inline-flex items-center gap-2 bg-gold text-ink font-bold px-8 py-4 rounded-xl hover:bg-gold-light active:scale-[0.97] transition-all shadow-lg shadow-gold/20"
           >
-            Subscribe — {formatPrice(PLANS.monthly.price)}/mo
+            Subscribe — {formatPrice(countryPrice.monthlyAmountCents)}/mo
             <ArrowRight className="w-5 h-5" />
           </Link>
           <p className="mt-3 text-xs text-text-muted">

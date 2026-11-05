@@ -3,8 +3,8 @@ import { stripe, getOrCreateProductId } from "@/lib/stripe";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getUserAccessInfo, getActiveSubscription } from "@/lib/access";
-import { PLANS } from "@/lib/stripe-config";
 import { checkRateLimit, getIP } from "@/lib/rate-limit";
+import { lifetimePriceMetadata, quoteFromHeaderBag } from "@/lib/request-country-price";
 
 export async function POST(request: NextRequest) {
   const ip = getIP(request);
@@ -105,15 +105,19 @@ export async function POST(request: NextRequest) {
     // Create subscription in incomplete state so we can confirm via Elements.
     // Must expand BOTH 'latest_invoice' AND 'latest_invoice.confirmation_secret' to get the client_secret.
     //
-    // Price is created inline from PLANS.monthly.price rather than referencing a
-    // pre-made Stripe Dashboard Price object. This means the live monthly price is
-    // fully controlled by stripe-config.ts — bumping that constant changes what NEW
-    // subscribers are charged immediately, with no Stripe Dashboard step required.
-    // Existing subscriptions keep whatever price object they were created with, so
-    // this never retroactively changes an existing subscriber's bill. The Product
-    // itself (unlike the Price) stays fixed — Stripe requires an existing Product
-    // ID for subscription-item price_data, so we reuse one stable, lazily-created
-    // product rather than a Dashboard-managed Price.
+    // Price is created inline, country-tiered via request-country-price.ts,
+    // rather than referencing a pre-made Stripe Dashboard Price object. This
+    // means the live monthly price per country tier is fully controlled by
+    // lib/country-pricing.ts — bumping those constants changes what NEW
+    // subscribers in that tier are charged immediately, with no Stripe
+    // Dashboard step required. Existing subscriptions keep whatever price
+    // object they were created with, so this never retroactively changes an
+    // existing subscriber's bill. The Product itself (unlike the Price) stays
+    // fixed — Stripe requires an existing Product ID for subscription-item
+    // price_data, so we reuse one stable, lazily-created product rather than
+    // a Dashboard-managed Price.
+    const priceQuote = quoteFromHeaderBag((name) => request.headers.get(name));
+    const monthlyAmount = priceQuote.monthlyAmountCents;
     const productId = await getOrCreateProductId(
       "seerah_individual_membership",
       "Seerah Individual Membership"
@@ -123,7 +127,7 @@ export async function POST(request: NextRequest) {
       items: [{
         price_data: {
           currency: "usd",
-          unit_amount: PLANS.monthly.price,
+          unit_amount: monthlyAmount,
           recurring: { interval: "month" },
           product: productId,
         },
@@ -145,6 +149,7 @@ export async function POST(request: NextRequest) {
         type:      "subscription",
         planId:    "monthly",
         planType:  "individual",
+        ...lifetimePriceMetadata({ ...priceQuote, amountCents: monthlyAmount }),
         ...(creator    ? { creator }    : {}),
         ...(source     ? { source }     : {}),
         ...(utmSource  ? { utmSource }  : {}),
@@ -182,6 +187,7 @@ export async function POST(request: NextRequest) {
           planId:         "monthly",
           planType:       "individual",
           subscriptionId: subscription.id,
+          ...lifetimePriceMetadata({ ...priceQuote, amountCents: monthlyAmount }),
           ...(creator     ? { creator }     : {}),
           ...(source      ? { source }      : {}),
           ...(utmSource   ? { utmSource }   : {}),
@@ -195,7 +201,13 @@ export async function POST(request: NextRequest) {
       console.warn("[CREATE-SUBSCRIPTION-INTENT] Could not parse PI ID from client_secret:", clientSecret?.slice(0, 30));
     }
 
-    return NextResponse.json({ clientSecret, amount: PLANS.monthly.price, subscriptionId: subscription.id });
+    return NextResponse.json({
+      clientSecret,
+      amount: monthlyAmount,
+      baseAmount: monthlyAmount,
+      finalAmount: monthlyAmount,
+      subscriptionId: subscription.id,
+    });
   } catch (error) {
     console.error("[CREATE-SUBSCRIPTION-INTENT] Error:", error);
     return NextResponse.json(

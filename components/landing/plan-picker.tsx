@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { ArrowRight } from "lucide-react";
 import { type PlanId } from "@/lib/plan-catalog";
-import { PLANS, formatPrice } from "@/lib/stripe-config";
+import { formatPrice } from "@/lib/stripe-config";
 import { useCountryPrice } from "@/components/pricing/country-price";
 import { useSiteLang } from "@/components/site-lang";
 import { siteT } from "@/lib/site-copy";
@@ -70,8 +70,8 @@ export function PlanPicker({
       id: monthlyId,
       url: monthlyUrl,
       billing: "monthly",
-      price: PLANS.monthly.price,
-      priceLabel: <span dir="ltr">{formatPrice(PLANS.monthly.price)}</span>,
+      price: countryPrice.monthlyAmountCents,
+      priceLabel: <span dir="ltr">{formatPrice(countryPrice.monthlyAmountCents)}</span>,
       periodLabel: siteT(lang, "perMonthShort"),
       tagline: siteT(lang, "cancelAnytimeShort"),
       cta: siteT(lang, "startMonthly"),

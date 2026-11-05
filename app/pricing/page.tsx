@@ -11,7 +11,9 @@ import { PortalButton } from "@/components/billing/portal-button";
 import { LanguagesLaunchGate } from "@/components/student/languages-launch-gate";
 import { getPreviewLangFromCookies } from "@/lib/part1-preview-data";
 import { siteT } from "@/lib/site-copy";
-import { PLANS, formatPrice } from "@/lib/stripe-config";
+import { formatPrice } from "@/lib/stripe-config";
+import { headers } from "next/headers";
+import { quoteFromHeaderBag } from "@/lib/request-country-price";
 
 export async function generateMetadata() {
   const lang = await getPreviewLangFromCookies();
@@ -66,11 +68,13 @@ function buildWatchFreeUrl(params: {
 }
 
 export default async function PricingPage({ searchParams }: Props) {
-  const [user, params, lang] = await Promise.all([
+  const [user, params, lang, hdrs] = await Promise.all([
     getCurrentUser(),
     searchParams,
     getPreviewLangFromCookies(),
+    headers(),
   ]);
+  const countryPrice = quoteFromHeaderBag((name) => hdrs.get(name));
   const faqItems = [
     { q: siteT(lang, "pq1"), a: siteT(lang, "pa1") },
     { q: siteT(lang, "pq2"), a: siteT(lang, "pa2") },
@@ -151,7 +155,7 @@ export default async function PricingPage({ searchParams }: Props) {
             </h1>
             <p className="text-base sm:text-lg text-text-secondary leading-relaxed mb-4">
               {siteT(lang, "priceLead")}{" "}
-              <span dir="ltr">{formatPrice(PLANS.monthly.price)}</span>
+              <span dir="ltr">{formatPrice(countryPrice.monthlyAmountCents)}</span>
               {siteT(lang, "perMonthShort")} {siteT(lang, "orLifetimeShort")}.
             </p>
             <p className="text-xs text-text-muted">
@@ -198,7 +202,7 @@ export default async function PricingPage({ searchParams }: Props) {
               ))}
             </ul>
             <p className="text-center text-sm text-text-muted mt-6">
-              <span dir="ltr">{formatPrice(PLANS.monthly.price)}</span>
+              <span dir="ltr">{formatPrice(countryPrice.monthlyAmountCents)}</span>
               {siteT(lang, "perMonthShort")} · {siteT(lang, "cancelAnytimeShort")} {siteT(lang, "orLifetimeShort")}
             </p>
           </FadeUp>
@@ -241,7 +245,7 @@ export default async function PricingPage({ searchParams }: Props) {
                 <div className="px-5 pb-5 pt-1 text-sm text-text-secondary leading-relaxed border-t border-border/50">
                   {a === "SUBSCRIPTION_ANSWER" ? (
                     <>
-                      {siteT(lang, "yesShort")} — <span dir="ltr">{formatPrice(PLANS.monthly.price)}</span>
+                      {siteT(lang, "yesShort")} — <span dir="ltr">{formatPrice(countryPrice.monthlyAmountCents)}</span>
                       {siteT(lang, "perMonthShort")}, {siteT(lang, "cancelAnytimeShort")}.{" "}
                       {siteT(lang, "orPayOnceAlt")}
                     </>

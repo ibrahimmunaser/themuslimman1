@@ -4,7 +4,8 @@ import { useEffect, type ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { track } from "@vercel/analytics";
-import { PLANS, formatPrice } from "@/lib/stripe-config";
+import { formatPrice } from "@/lib/stripe-config";
+import { useCountryPrice } from "@/components/pricing/country-price";
 import {
   Play, HelpCircle, Layers, TrendingUp, ChevronDown,
   Video, FileText, GitBranch, Users, List,
@@ -76,6 +77,7 @@ function StickyBar() {
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 export function StartPage({ preview }: { preview?: ReactNode }) {
+  const countryPrice = useCountryPrice();
   useEffect(() => {
     safeTrack("start_page_view");
   }, []);
@@ -263,7 +265,7 @@ export function StartPage({ preview }: { preview?: ReactNode }) {
               Continue the full course
             </h2>
             <p className="text-text-muted text-sm text-center mb-10">
-              Just $4.99/month — cancel anytime.
+              Just {formatPrice(countryPrice.monthlyAmountCents)}/month — cancel anytime.
             </p>
 
             <div className="max-w-sm mx-auto mb-8">
@@ -278,7 +280,7 @@ export function StartPage({ preview }: { preview?: ReactNode }) {
                   </span>
                 </div>
                 <p className="text-2xl font-bold text-text">
-                  {formatPrice(PLANS.monthly.price)}
+                  {formatPrice(countryPrice.monthlyAmountCents)}
                   <span className="text-sm font-normal text-text-muted">/month</span>
                 </p>
               </div>

@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { getCachedCurrentUser } from "@/lib/auth-cache";
 import { getUserAccessInfo } from "@/lib/access";
 import CheckoutClientPage from "./page-client";
-import { stripe, PLANS } from "@/lib/stripe";
+import { stripe } from "@/lib/stripe";
 import { lifetimePriceMetadata, quoteFromHeaderBag } from "@/lib/request-country-price";
 
 export const dynamic = "force-dynamic";
@@ -83,16 +83,17 @@ export default async function CheckoutPage({ searchParams }: Props) {
     void billingParam;
   }
 
-  // Base price for the selected plan — always sourced from PLANS so this stays
-  // in sync with stripe-config.ts. Never hardcode prices here.
+  // Base price for the selected plan — always sourced from the country-aware
+  // quote (lib/country-pricing.ts) so this stays in sync server-side. Never
+  // hardcode prices here.
   const hdrs = await headers();
   const lifetimeQuote = quoteFromHeaderBag((name) => hdrs.get(name));
 
-  // Individual Monthly is flat $4.99, not country-tiered. Individual Lifetime
-  // is priced by the visitor's country via lifetimeQuote.
+  // Both Individual Monthly and Individual Lifetime are priced by the
+  // visitor's country — see lib/country-pricing.ts for the tier table.
   const initialBasePrice =
     initialAudience === "individual" && initialBilling === "monthly"
-      ? PLANS.monthly.price
+      ? lifetimeQuote.monthlyAmountCents
       : lifetimeQuote.amountCents;
   let initialClientSecret: string | null = null;
   let initialFinalPrice = initialBasePrice;

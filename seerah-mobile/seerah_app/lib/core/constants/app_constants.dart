@@ -48,13 +48,16 @@ class AppConstants {
     keyPurchasePlatform,
   ];
 
-  // US catalog anchors only. Do not show these in the app.
+  // US/Standard-tier catalog anchors only. Do not show these in the app.
   // The price on screen is ProductDetails.price from App Store or Play,
-  // which is already the user's storefront price. Pricing is flat worldwide
-  // right now (country/PPP tiering is disabled — see COUNTRY_PRICING_ENABLED
-  // in lib/country-pricing.ts on the website); the stores should have a
-  // single base price with standard currency conversion, not custom
-  // per-territory price points.
+  // which is already the user's storefront price — the app never computes
+  // or displays a price itself. Pricing is country-tiered (see
+  // COUNTRY_PRICING_ENABLED + COUNTRY_TIER in lib/country-pricing.ts on the
+  // website, which is the source of truth for which countries get which
+  // tier): App Store Connect and Google Play Console each have custom
+  // per-territory prices configured on seerah_monthly_individual and
+  // seerah_lifetime_individual so every storefront shows the matching
+  // Standard / Tier C / Tier D price automatically — no app code needed.
   static const String monthlyPrice        = '4.99';
   static const String familyMonthlyPrice  = '9.99';
   static const String lifetimePrice       = '49';

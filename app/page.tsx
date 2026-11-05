@@ -18,7 +18,9 @@ import { FREE_PART_NUMBER, hasActiveCourseAccess } from "@/lib/access";
 import { getPreviewLangFromCookies } from "@/lib/part1-preview-data";
 import { getErasForLang, getPartsForLang } from "@/lib/content";
 import { siteT } from "@/lib/site-copy";
-import { PLANS, formatPrice } from "@/lib/stripe-config";
+import { formatPrice } from "@/lib/stripe-config";
+import { headers } from "next/headers";
+import { quoteFromHeaderBag } from "@/lib/request-country-price";
 
 export const dynamic = "force-dynamic";
 
@@ -54,6 +56,8 @@ export default async function LandingPage() {
 
   const parts = getPartsForLang(lang);
   const eras = getErasForLang(lang);
+  const hdrs = await headers();
+  const countryPrice = quoteFromHeaderBag((name) => hdrs.get(name));
 
   return (
     <div className="flex flex-col min-h-screen bg-ink text-text">
@@ -292,7 +296,7 @@ export default async function LandingPage() {
                 <div className="px-5 pb-5 pt-1 text-sm text-text-secondary leading-relaxed border-t border-border/50">
                   {item.a === "SUBSCRIPTION_PRICE" ? (
                     <>
-                      {siteT(lang, "yesShort")} — <span dir="ltr">{formatPrice(PLANS.monthly.price)}</span>
+                      {siteT(lang, "yesShort")} — <span dir="ltr">{formatPrice(countryPrice.monthlyAmountCents)}</span>
                       {siteT(lang, "perMonthShort")}, {siteT(lang, "cancelAnytimeShort")}.{" "}
                       {siteT(lang, "orPayOnceAlt")}
                     </>

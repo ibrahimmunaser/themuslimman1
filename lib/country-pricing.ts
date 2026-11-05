@@ -1,36 +1,55 @@
 /**
- * Country → one-time lifetime price (PPP).
+ * Country → monthly + one-time lifetime price (PPP).
  *
  * Rules (product):
  * - One purchase unlocks the full course in ALL languages — never sold per language.
  * - Language groups = which markets we care about (skip JP/KR etc. for now).
  * - Price is always by COUNTRY (billing/storefront), never by selected UI language.
  * - If a country could sit between two tiers → use the LOWER tier.
- * - Unlisted / ambiguous → DEFAULT_TIER (B / $29).
+ * - Unlisted / ambiguous → DEFAULT_TIER (B, priced the same as A / "Standard").
  *
  * Amounts are USD cents for Stripe; stores map to nearest local price points.
  *
- * ── COUNTRY_PRICING_ENABLED (currently OFF) ──────────────────────────────────
- * Country/PPP-tiered lifetime pricing is disabled for now: every visitor,
- * regardless of country, is quoted flat Tier A ($49). The COUNTRY_TIER table
- * below is kept intact (not deleted) so tiered pricing can be re-enabled later
- * by flipping this flag back to true — do not remove the table.
+ * ── COUNTRY_PRICING_ENABLED (ON) ──────────────────────────────────────────────
+ * Country-tiered pricing is live, using 3 effective price points even though 4
+ * geographic tiers (A–D) are still tracked below for country classification:
+ *
+ *   Country group      Monthly   Lifetime
+ *   Standard (A + B)    $4.99      $49
+ *   Tier C               $2.99      $29
+ *   Tier D               $1.99      $19
+ *
+ * Tiers A and B share the same "Standard" price — the A/B split is kept in
+ * COUNTRY_TIER purely for documentation/marketing-priority purposes (see
+ * TIER_LABEL and LANG_PRIORITY_COUNTRIES below); it has no effect on price.
+ * Flip COUNTRY_PRICING_ENABLED back to false to return to flat worldwide
+ * Standard pricing for every visitor (e.g. for an emergency rollback).
  */
-export const COUNTRY_PRICING_ENABLED = false;
+export const COUNTRY_PRICING_ENABLED = true;
 
 export type PriceTier = "A" | "B" | "C" | "D";
 
+/** One-time lifetime price per tier. A and B are both "Standard" ($49). */
 export const TIER_PRICE_USD_CENTS: Record<PriceTier, number> = {
-  A: 4900, // $49 — website, Play, and the App Store.
-  B: 2900, // $29
-  C: 1500, // $15
-  D: 1000, // $10
+  A: 4900, // $49 — Standard
+  B: 4900, // $49 — Standard (merged with A)
+  C: 2900, // $29
+  D: 1900, // $19
+};
+
+/** Monthly subscription price per tier. A and B are both "Standard" ($4.99). */
+export const TIER_MONTHLY_PRICE_USD_CENTS: Record<PriceTier, number> = {
+  A: 499, // $4.99 — Standard
+  B: 499, // $4.99 — Standard (merged with A)
+  C: 299, // $2.99
+  D: 199, // $1.99
 };
 
 /** Safe global default when country is unknown or unlisted. */
 export const DEFAULT_TIER: PriceTier = "B";
 
 export const DEFAULT_PRICE_USD_CENTS = TIER_PRICE_USD_CENTS[DEFAULT_TIER];
+export const DEFAULT_MONTHLY_PRICE_USD_CENTS = TIER_MONTHLY_PRICE_USD_CENTS[DEFAULT_TIER];
 
 /** ISO 3166-1 alpha-2 → tier. */
 export const COUNTRY_TIER: Record<string, PriceTier> = {
@@ -189,10 +208,10 @@ export const COUNTRY_TIER: Record<string, PriceTier> = {
 
 /** Human-readable tier labels for admin / docs. */
 export const TIER_LABEL: Record<PriceTier, string> = {
-  A: "$49 — high-income / Gulf",
-  B: "$29 — mid-income",
-  C: "$15 — lower-mid",
-  D: "$10 — access",
+  A: "$4.99/mo · $49 lifetime — Standard (high-income / Gulf)",
+  B: "$4.99/mo · $49 lifetime — Standard (mid-income)",
+  C: "$2.99/mo · $29 lifetime — Tier C (lower-mid)",
+  D: "$1.99/mo · $19 lifetime — Tier D (access)",
 };
 
 /**
@@ -362,10 +381,20 @@ export function tierForCountry(countryCode: string | null | undefined): PriceTie
   return COUNTRY_TIER[code] ?? DEFAULT_TIER;
 }
 
+/** One-time lifetime price for a country, in USD cents. */
 export function priceUsdCentsForCountry(countryCode: string | null | undefined): number {
   return TIER_PRICE_USD_CENTS[tierForCountry(countryCode)];
 }
 
+/** Monthly subscription price for a country, in USD cents. */
+export function monthlyPriceUsdCentsForCountry(countryCode: string | null | undefined): number {
+  return TIER_MONTHLY_PRICE_USD_CENTS[tierForCountry(countryCode)];
+}
+
 export function formatTierPriceUsd(tier: PriceTier): string {
   return `$${TIER_PRICE_USD_CENTS[tier] / 100}`;
+}
+
+export function formatTierMonthlyPriceUsd(tier: PriceTier): string {
+  return `$${(TIER_MONTHLY_PRICE_USD_CENTS[tier] / 100).toFixed(2)}`;
 }

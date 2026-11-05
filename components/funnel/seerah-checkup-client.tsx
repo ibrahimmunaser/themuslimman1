@@ -5,10 +5,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { Play, ChevronRight, ArrowRight, BarChart2, CheckCircle2 } from "lucide-react";
 import { Footer } from "@/components/landing/footer";
-import { PLANS, formatPrice } from "@/lib/stripe-config";
+import { formatPrice } from "@/lib/stripe-config";
+import { useCountryPrice } from "@/components/pricing/country-price";
 import dynamic from "next/dynamic";
-
-const MONTHLY_CTA_LABEL = `Subscribe — ${formatPrice(PLANS.monthly.price)}/mo`;
 
 // Lazy-load the inline Part 1 video only when the user expands it
 const InlinePart1Video = dynamic(
@@ -280,7 +279,7 @@ interface Rec {
   trackEvent: string;
 }
 
-function getRecommendation(answers: Record<number, number>, urls: SeerahCheckupUrls, eventPrefix: string): Rec {
+function getRecommendation(answers: Record<number, number>, urls: SeerahCheckupUrls, eventPrefix: string, monthlyCtaLabel: string): Rec {
   const watchFreeUrl = urls.watchFree ?? "/watch-free";
   // Q9: what stops you (0=don't know where to start, 1=too long, 2=forget, 3=get busy, 4=quality first)
   const q9  = answers[9]  ?? 3;
@@ -293,7 +292,7 @@ function getRecommendation(answers: Record<number, number>, urls: SeerahCheckupU
       primarySupport: "The free preview lesson — video, reading, slides, flashcards, quiz. No payment.",
       showFreePrimary: true,
       secondaryUrl: urls.individualMonthly,
-      secondaryLabel: MONTHLY_CTA_LABEL,
+      secondaryLabel: monthlyCtaLabel,
       secondaryPreamble: "Ready to continue after the free preview?",
       bridgeCopy: "Because you want to see the quality first, start with the First Revelation free — full video, flashcards, and quiz included. No payment required.",
       trackEvent: `${eventPrefix}watch_free_click`,
@@ -308,7 +307,7 @@ function getRecommendation(answers: Record<number, number>, urls: SeerahCheckupU
       primarySupport: "The First Revelation is a free preview of the full path. No payment, no commitment.",
       showFreePrimary: true,
       secondaryUrl: urls.individualMonthly,
-      secondaryLabel: MONTHLY_CTA_LABEL,
+      secondaryLabel: monthlyCtaLabel,
       secondaryPreamble: "Ready to continue after the free preview?",
       bridgeCopy: "The best move when you don't know where to start is to simply start with the free preview — free, in order, no commitment.",
       trackEvent: `${eventPrefix}watch_free_click`,
@@ -325,7 +324,7 @@ function getRecommendation(answers: Record<number, number>, urls: SeerahCheckupU
           : "Based on your answers, the best next step is to start from the beginning and follow one clear path in order.";
 
   return {
-    primaryLabel: MONTHLY_CTA_LABEL,
+    primaryLabel: monthlyCtaLabel,
     primaryUrl: urls.individualMonthly,
     primarySupport: "Cancel anytime.",
     showFreePrimary: false,
@@ -495,6 +494,8 @@ export function SeerahCheckupClient({
   embedMode = false,
 }: SeerahCheckupClientProps) {
   const watchFreeUrl = urls.watchFree ?? "/watch-free";
+  const countryPrice = useCountryPrice();
+  const MONTHLY_CTA_LABEL = `Subscribe — ${formatPrice(countryPrice.monthlyAmountCents)}/mo`;
 
   // ── UI state ───────────────────────────────────────────────────────────────
 
@@ -743,7 +744,7 @@ export function SeerahCheckupClient({
 
     const score      = computeScore(answers);
     const resultType = getResultType(score);
-    const rec        = getRecommendation(answers, urls, eventPrefix);
+    const rec        = getRecommendation(answers, urls, eventPrefix, MONTHLY_CTA_LABEL);
     const params     = new URLSearchParams(window.location.search);
     // Derive recommended plan from the actual CTA URL so it's accurate for lifetime plans too
     const recommendedPlan = planFromUrl(rec.primaryUrl);
@@ -866,7 +867,7 @@ export function SeerahCheckupClient({
   const resultType = getResultType(score);
   const result     = RESULT_COPY[resultType];
   const insights   = getInsights(answers);
-  const rec        = getRecommendation(answers, urls, eventPrefix);
+  const rec        = getRecommendation(answers, urls, eventPrefix, MONTHLY_CTA_LABEL);
 
   // After the email gate, enrich checkout links with the collected email/name/score
   // so the checkout page can pre-fill, skip re-entry, and capture quiz context.

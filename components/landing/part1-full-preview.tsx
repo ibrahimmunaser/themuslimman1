@@ -3,7 +3,9 @@ import { isRtlLang } from "@/lib/course-lang";
 import { siteT } from "@/lib/site-copy";
 import { Part1PreviewTabs } from "@/components/landing/part1-preview-tabs";
 import { Badge } from "@/components/ui/badge";
-import { PLANS, formatPrice } from "@/lib/stripe-config";
+import { formatPrice } from "@/lib/stripe-config";
+import { headers } from "next/headers";
+import { quoteFromHeaderBag } from "@/lib/request-country-price";
 
 export async function Part1FullPreview({
   checkoutHref = "/checkout?plan=individual-monthly",
@@ -21,6 +23,8 @@ export async function Part1FullPreview({
   const { part, initialAssetUrls } = await getPart1PreviewData(lang);
   const isRtl = lang === "ar";
   const contentDir = isRtlLang(lang) ? "rtl" : undefined;
+  const hdrs = await headers();
+  const countryPrice = quoteFromHeaderBag((name) => hdrs.get(name));
 
   if (!part) {
     return (
@@ -105,7 +109,7 @@ export async function Part1FullPreview({
             data-plan="individual-monthly"
             className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-gold to-gold-light hover:from-gold-light hover:to-gold text-ink font-bold text-base shadow-lg shadow-gold/30 transition-all hover:shadow-gold/40 hover:scale-[1.02] active:scale-[0.99]"
           >
-            {ctaLabel ?? `${isRtl ? "اشترك — " : "Subscribe — "}${formatPrice(PLANS.monthly.price)}/mo`}
+            {ctaLabel ?? `${isRtl ? "اشترك — " : "Subscribe — "}${formatPrice(countryPrice.monthlyAmountCents)}/mo`}
           </a>
           <p className="text-xs text-text-muted mt-4">
             {isRtl

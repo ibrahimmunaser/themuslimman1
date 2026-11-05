@@ -4,7 +4,8 @@ import { FadeUp } from "@/components/motion";
 import { PlanPicker } from "@/components/landing/plan-picker";
 import { useSiteLang } from "@/components/site-lang";
 import { siteT } from "@/lib/site-copy";
-import { PLANS, formatPrice } from "@/lib/stripe-config";
+import { formatPrice } from "@/lib/stripe-config";
+import { useCountryPrice } from "@/components/pricing/country-price";
 
 interface PricingSectionProps {
   hasLifetime: boolean;
@@ -48,6 +49,7 @@ export function PricingSection({
   hideHeading = false,
 }: PricingSectionProps) {
   const lang = useSiteLang();
+  const countryPrice = useCountryPrice();
   const hasAnyAccess = hasLifetime || hasMonthly || hasFamily;
   const plansOnly = variant === "plans-only";
   const comparison = variant === "comparison";
@@ -76,7 +78,7 @@ export function PricingSection({
               {siteT(lang, "courseName")}
             </h2>
             <p className="text-sm text-text-secondary">
-              <span dir="ltr">{formatPrice(PLANS.monthly.price)}</span>
+              <span dir="ltr">{formatPrice(countryPrice.monthlyAmountCents)}</span>
               {siteT(lang, "perMonthShort")} {siteT(lang, "orLifetimeShort")}
             </p>
           </FadeUp>
@@ -111,7 +113,7 @@ export function PricingSection({
               {siteT(lang, "courseName")}
             </h2>
             <p className="text-sm text-text-secondary max-w-md mx-auto">
-              <span dir="ltr">{formatPrice(PLANS.monthly.price)}</span>
+              <span dir="ltr">{formatPrice(countryPrice.monthlyAmountCents)}</span>
               {siteT(lang, "perMonthShort")} {siteT(lang, "orLifetimeShort")}
             </p>
           </div>

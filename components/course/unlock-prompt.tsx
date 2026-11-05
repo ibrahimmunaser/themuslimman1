@@ -30,7 +30,8 @@ import { tf } from "@/lib/ui-strings";
 import { formatCourseNumber } from "@/lib/course-numbers";
 import { GUEST_SIGN_IN_HREF } from "@/lib/guest-access";
 import { PARTS } from "@/lib/content";
-import { PLANS, formatPrice } from "@/lib/stripe-config";
+import { formatPrice } from "@/lib/stripe-config";
+import { useCountryPrice } from "@/components/pricing/country-price";
 
 /** Where the popup's buy button goes. `source` tags where the sale came from. */
 const MONTHLY_CHECKOUT_HREF = "/checkout?plan=individual-monthly&source=dashboard_locked_part";
@@ -101,6 +102,7 @@ function UnlockDialog({
 }) {
   const closeRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
+  const countryPrice = useCountryPrice();
   const isRtl = isRtlLang(lang);
   const Arrow = isRtl ? ArrowLeft : ArrowRight;
 
@@ -202,7 +204,7 @@ function UnlockDialog({
               className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-gold px-5 py-3 text-sm font-bold text-ink shadow-lg shadow-gold/20 transition-colors hover:bg-gold-light"
             >
               {loc(lang, "Subscribe — ", "اشترك — ", "S'abonner — ")}
-              <span dir="ltr">{formatPrice(PLANS.monthly.price)}/month</span>
+              <span dir="ltr">{formatPrice(countryPrice.monthlyAmountCents)}/month</span>
               <Arrow className="h-4 w-4 shrink-0" />
             </Link>
             <p className="text-center text-[11px] text-text-muted">
@@ -242,6 +244,7 @@ function UnlockDialog({
  */
 export function UnlockBar({ lang }: { lang: CourseLang }) {
   const [dismissed, setDismissed] = useState(false);
+  const countryPrice = useCountryPrice();
   const isRtl = isRtlLang(lang);
   const Arrow = isRtl ? ArrowLeft : ArrowRight;
 
@@ -264,7 +267,7 @@ export function UnlockBar({ lang }: { lang: CourseLang }) {
         >
           <span>
             {loc(lang, "Unlock all parts — ", "افتح جميع الأجزاء — ", "Débloquer toutes les parties — ")}
-            <span dir="ltr">{formatPrice(PLANS.monthly.price)}/month</span>
+            <span dir="ltr">{formatPrice(countryPrice.monthlyAmountCents)}/month</span>
           </span>
           <Arrow className="h-4 w-4 shrink-0" />
         </Link>
