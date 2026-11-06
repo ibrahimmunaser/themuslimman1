@@ -192,7 +192,11 @@ export function StudentSidebar({
   const ACCOUNT_MENU: MenuItem[] = isGuest
     ? [
         // Guests have no account pages — just help and a way to buy.
-        { id: "help",    label: "Help",    labelAr: "المساعدة", labelFr: "Aide", href: "/help",    icon: HelpCircle },
+        // /help redirects signed-out/no-access visitors to /contact anyway
+        // (see app/help/page.tsx), so link straight there for guests —
+        // otherwise this is a dead-end redirect link on every guest-visible
+        // page (Ahrefs: "Page has links to redirect").
+        { id: "help",    label: "Help",    labelAr: "المساعدة", labelFr: "Aide", href: "/contact", icon: HelpCircle },
         { id: "pricing", label: "Plans & Pricing", labelAr: "الخطط والأسعار", labelFr: "Formules et tarifs", href: "/pricing", icon: CreditCard },
       ]
     : [
