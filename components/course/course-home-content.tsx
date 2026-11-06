@@ -482,7 +482,10 @@ export function CourseHomeContent({
           </div>
           <div className="flex gap-3 shrink-0 ps-14 sm:ps-0">
             <Link
-              href="/help"
+              // Guests (no active course access) get redirected server-side from
+              // /help to /contact anyway — link straight to /contact for them so
+              // crawlers (and guests) don't hit that redirect at all.
+              href={isGuest ? "/contact" : "/help"}
               className="inline-flex items-center gap-2 px-4 py-2 border border-border hover:border-gold/40 text-text-secondary hover:text-text rounded-lg text-sm font-medium transition-colors"
             >
               <Mail className="w-3.5 h-3.5" />

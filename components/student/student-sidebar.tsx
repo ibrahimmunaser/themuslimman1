@@ -256,7 +256,11 @@ export function StudentSidebar({
               className="w-8 h-8 rounded-lg flex-shrink-0"
               priority
             />
-            <h1 className="text-sm font-bold text-text truncate">Complete Seerah</h1>
+            {/* Sidebar branding — not a page heading, so this must not be an
+                <h1>. The real H1 for each route is rendered by that route's
+                own content component (e.g. CourseHomeContent). A second <h1>
+                here caused Ahrefs to flag "Multiple H1 tags" on /seerah. */}
+            <span className="text-sm font-bold text-text truncate">Complete Seerah</span>
           </Link>
           {/* Collapse button — lg+ only */}
           <button
