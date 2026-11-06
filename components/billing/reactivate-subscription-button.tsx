@@ -4,6 +4,7 @@ import { useState } from "react";
 import { RefreshCw, Loader2 } from "lucide-react";
 import type { CourseLang } from "@/lib/course-lang";
 import { t } from "@/lib/ui-strings";
+import { trackEvent } from "@/lib/analytics";
 
 interface Props {
   isTrial?: boolean;
@@ -27,8 +28,10 @@ export function ReactivateSubscriptionButton({ isTrial = false, lang = "en" }: P
       if (!res.ok) {
         setError(data.error ?? t(lang, "somethingWentWrong"));
         setStep("error");
+        trackEvent("subscription_reactivate_failed", { is_trial: isTrial }, { allowDuplicates: true });
         return;
       }
+      trackEvent("subscription_reactivated", { is_trial: isTrial }, { allowDuplicates: true });
       setStep("done");
       setTimeout(() => window.location.reload(), 1200);
     } catch {

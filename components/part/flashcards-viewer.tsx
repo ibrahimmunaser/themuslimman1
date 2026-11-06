@@ -3,11 +3,12 @@ import type { CourseLang } from "@/lib/course-lang";
 import { isRtlLang } from "@/lib/course-lang";
 import { loc } from "@/lib/loc";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { clsx } from "clsx";
 import { ChevronLeft, ChevronRight, RotateCcw, Shuffle } from "lucide-react";
 import type { FlashcardSet, FlashcardLevel, Flashcard } from "@/lib/types";
 import { trackFlashcardsReviewed } from "@/app/actions/progress";
+import { trackEvent } from "@/lib/analytics";
 
 interface FlashcardsViewerProps {
   flashcards: FlashcardSet;
@@ -167,6 +168,20 @@ export function FlashcardsViewer({ flashcards, partNumber, previewMode, isRtl, l
   const [shuffled, setShuffled] = useState(false);
   const trackedRef = useRef(false);
 
+  // Track the flashcards tab being opened (same cadence as lesson_subtab_viewed
+  // but scoped here so it captures the deck size at open time).
+  const openFiredRef = useRef(false);
+  useEffect(() => {
+    if (openFiredRef.current || previewMode || !partNumber) return;
+    openFiredRef.current = true;
+    trackEvent(
+      "flashcards_started",
+      { part_number: partNumber, card_count: flashcards.counts.easy ?? deck.length },
+      { allowDuplicates: true },
+    );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Track after the user flips/navigates a card (engagement), not on mount —
   // mirrors mobile flashcards_tab first-flip tracking.
   const markReviewed = useCallback(() => {
@@ -183,7 +198,10 @@ export function FlashcardsViewer({ flashcards, partNumber, previewMode, isRtl, l
     setIndex(0);
     setShuffled(false);
     setDeck(flashcards[newLevel]);
-  }, [flashcards]);
+    if (!previewMode && partNumber) {
+      trackEvent("flashcard_level_switched", { part_number: partNumber, level: newLevel }, { allowDuplicates: true });
+    }
+  }, [flashcards, previewMode, partNumber]);
 
   const handleShuffle = () => {
     markReviewed();
@@ -222,8 +240,8 @@ export function FlashcardsViewer({ flashcards, partNumber, previewMode, isRtl, l
   return (
     <div className="flex flex-col gap-8">
       {/* Level selector + controls */}
-      <div className="flex flex-wrap items-center gap-3 justify-between pb-4 border-b border-zinc-800">
-        <div className="flex gap-2">
+      <div className="flex flex-wrap items-center gap-3 justify-between rounded-xl border border-border bg-surface-raised/30 p-1.5">
+        <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
           {LEVELS.map((l) => {
             const count = flashcards.counts[l.id];
             return (
@@ -231,16 +249,17 @@ export function FlashcardsViewer({ flashcards, partNumber, previewMode, isRtl, l
                 key={l.id}
                 onClick={() => switchLevel(l.id)}
                 className={clsx(
-                  "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold border transition-all",
+                  "flex items-center gap-1.5 px-3 rounded-lg text-xs font-medium",
+                  "transition-all duration-150 active:scale-95 flex-shrink-0 whitespace-nowrap min-h-[44px]",
                   level === l.id
-                    ? "bg-amber-500/20 text-amber-400 border-amber-500/40 shadow-lg shadow-amber-500/10"
-                    : "bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-zinc-300 hover:border-zinc-700"
+                    ? "bg-gold/12 text-gold ring-1 ring-gold/20"
+                    : "bg-surface-raised/50 text-text-muted/75 hover:text-text-secondary hover:bg-surface-raised"
                 )}
               >
                 {loc(lang, l.label, l.labelAr, l.labelFr)}
                 <span className={clsx(
-                  "text-xs font-bold px-2 py-0.5 rounded-full",
-                  level === l.id ? "bg-amber-500/30 text-amber-300" : "bg-zinc-800 text-zinc-500"
+                  "text-[10px] font-bold px-1.5 py-0.5 rounded-full",
+                  level === l.id ? "bg-gold/20 text-gold" : "bg-surface text-text-muted"
                 )}>
                   {count}
                 </span>
@@ -249,11 +268,11 @@ export function FlashcardsViewer({ flashcards, partNumber, previewMode, isRtl, l
           })}
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 pr-0.5">
           {shuffled ? (
             <button
               onClick={handleReset}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-zinc-700 bg-zinc-800/50 text-zinc-300 hover:bg-zinc-800 hover:border-zinc-600 transition-all"
+              className="flex items-center gap-2 px-3 min-h-[44px] rounded-lg text-xs font-medium text-text-muted/75 hover:text-text-secondary hover:bg-surface-raised transition-all"
             >
               <RotateCcw className="w-4 h-4" />
               {loc(lang, "Reset Order", "إعادة الترتيب", "Réinitialiser l'ordre")}
@@ -261,7 +280,7 @@ export function FlashcardsViewer({ flashcards, partNumber, previewMode, isRtl, l
           ) : (
             <button
               onClick={handleShuffle}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-zinc-700 bg-zinc-800/50 text-zinc-300 hover:bg-zinc-800 hover:border-zinc-600 transition-all"
+              className="flex items-center gap-2 px-3 min-h-[44px] rounded-lg text-xs font-medium text-text-muted/75 hover:text-text-secondary hover:bg-surface-raised transition-all"
             >
               <Shuffle className="w-4 h-4" />
               {loc(lang, "Shuffle", "ترتيب عشوائي", "Mélanger")}

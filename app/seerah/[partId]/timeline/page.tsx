@@ -8,6 +8,7 @@ import { getPartById, PARTS } from "@/lib/content";
 import { ERA_MAP } from "@/lib/types";
 import { getTimelineForPart } from "@/lib/timeline-data";
 import { getEraVisual } from "@/lib/era-visuals";
+import { PageViewTracker } from "@/components/analytics/page-view-tracker";
 import { prisma } from "@/lib/db";
 import { ArrowLeft, ChevronRight, Lock, Play } from "lucide-react";
 
@@ -83,6 +84,7 @@ export default async function TimelinePage(props: Props) {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a]">
+      <PageViewTracker eventName="timeline_viewed" properties={{ part_number: partBase.partNumber }} />
 
         {/* ── Top bar ─────────────────────────────────────────────────────── */}
         <div className="sticky top-0 z-30 border-b border-white/10 bg-[#0a0a0a]/95 backdrop-blur-lg">

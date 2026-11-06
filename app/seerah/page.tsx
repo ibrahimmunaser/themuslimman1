@@ -27,6 +27,7 @@ import { QuizResourceContent } from "@/components/resources/quiz-resource-conten
 import { EmailVerificationBanner } from "@/components/auth/email-verification-banner";
 import { WelcomeTour } from "@/components/student/welcome-tour";
 import { ArabicAnnouncementBanner } from "@/components/student/arabic-announcement-banner";
+import { PageViewTracker } from "@/components/analytics/page-view-tracker";
 import { getDashboardOnboardingFlags } from "@/lib/onboarding";
 
 export const metadata = { title: "Complete Seerah" };
@@ -409,6 +410,18 @@ export default async function LearnIndexPage({
   // StudentLayout is provided by app/seerah/layout.tsx — no wrapper needed here.
   return (
     <>
+      <PageViewTracker
+        eventName="dashboard_viewed"
+        properties={{
+          is_guest: isGuest,
+          has_access: hasAccess,
+          completed_parts: completedCount,
+          total_parts: totalParts,
+          progress_percent: progressPercentage,
+          current_part: currentPart,
+          is_past_due: isPastDue,
+        }}
+      />
       {user && !user.emailVerified && (
         <EmailVerificationBanner email={user.email} isRtl={lang === "ar"} />
       )}

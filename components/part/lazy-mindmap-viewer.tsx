@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { MindmapViewer } from "./mindmap-viewer";
 import { trackAssetOpened } from "@/app/actions/progress";
+import { trackEvent } from "@/lib/analytics";
 import { fetchPartAssets } from "@/lib/part-asset-cache";
 
 interface LazyMindmapViewerProps {
@@ -24,6 +25,7 @@ export function LazyMindmapViewer({ partNumber, title, previewMode, mindmapUrl: 
       if (!previewMode) {
         trackAssetOpened(partNumber, "mindmap").catch(() => {});
         window.dispatchEvent(new CustomEvent("seerah:progressUpdate", { detail: { openedAssets: ["mindmap"] } }));
+        trackEvent("mindmap_viewed", { part_number: partNumber }, { allowDuplicates: true });
       }
       return;
     }
@@ -37,6 +39,7 @@ export function LazyMindmapViewer({ partNumber, title, previewMode, mindmapUrl: 
           if (!previewMode && data.mindmapUrl) {
             trackAssetOpened(partNumber, "mindmap").catch(() => {});
             window.dispatchEvent(new CustomEvent("seerah:progressUpdate", { detail: { openedAssets: ["mindmap"] } }));
+            trackEvent("mindmap_viewed", { part_number: partNumber }, { allowDuplicates: true });
           }
         }
       })

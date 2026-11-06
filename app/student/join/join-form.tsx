@@ -7,6 +7,7 @@ import { ArrowLeft, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { joinClassByCode } from "@/lib/actions/student";
+import { trackEvent } from "@/lib/analytics";
 
 export default function JoinForm() {
   const router = useRouter();
@@ -21,12 +22,15 @@ export default function JoinForm() {
     try {
       const result = await joinClassByCode(code);
       if (result.success && result.classId) {
+        trackEvent("class_joined", { class_id: result.classId }, { allowDuplicates: true });
         router.push(`/student/classes/${result.classId}`);
         router.refresh();
       } else {
+        trackEvent("class_join_failed", { reason: result.error ?? "unknown" }, { allowDuplicates: true });
         setError(result.error || "Could not join.");
       }
     } catch {
+      trackEvent("class_join_failed", { reason: "exception" }, { allowDuplicates: true });
       setError("Something went wrong.");
     } finally {
       setLoading(false);

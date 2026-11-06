@@ -10,6 +10,7 @@ import { ClipboardCheck, CheckCircle2, XCircle, ChevronRight, ChevronLeft, Troph
 import Link from "next/link";
 import { parseLang, COURSE_LANG_COOKIE } from "@/lib/course-lang";
 import { t, tf } from "@/lib/ui-strings";
+import { PageViewTracker } from "@/components/analytics/page-view-tracker";
 
 export const metadata = { title: "Quizzes | Complete Seerah" };
 export const dynamic = "force-dynamic";
@@ -65,6 +66,7 @@ export default async function QuizzesPage() {
 
   return (
     <StudentLayout userPlan={userPlan} userName={user.fullName} activeProfileName={user.activeProfileName} planType={user.planType}>
+      <PageViewTracker eventName="quizzes_list_viewed" />
       <div className="min-h-screen bg-[#0a0a0a]" dir={isRtl ? "rtl" : "ltr"}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="mb-8">

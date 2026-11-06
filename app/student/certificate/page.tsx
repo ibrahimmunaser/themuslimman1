@@ -8,6 +8,7 @@ import { prisma } from "@/lib/db";
 import { StudentLayout } from "@/components/student/student-layout";
 import { parseLang, COURSE_LANG_COOKIE } from "@/lib/course-lang";
 import { Award, Lock, CheckCircle2 } from "lucide-react";
+import { PageViewTracker } from "@/components/analytics/page-view-tracker";
 
 export const dynamic = "force-dynamic";
 
@@ -67,6 +68,7 @@ export default async function CertificatePage() {
 
   return (
     <StudentLayout userPlan={userPlan} userName={user.fullName}>
+      <PageViewTracker eventName="certificate_viewed" properties={{ is_earned: isEarned, studied_pct: studiedPct }} />
       <div className="min-h-screen bg-[#0a0a0a]" dir={isRtl ? "rtl" : undefined}>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="mb-8">

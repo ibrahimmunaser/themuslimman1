@@ -7,6 +7,7 @@ import { ChangePasswordForm } from "@/components/student/change-password-form";
 import { cookies } from "next/headers";
 import { parseLang, COURSE_LANG_COOKIE, isRtlLang } from "@/lib/course-lang";
 import { loc } from "@/lib/loc";
+import { PageViewTracker } from "@/components/analytics/page-view-tracker";
 
 export const metadata = { title: "Settings | Complete Seerah" };
 export const dynamic = "force-dynamic";
@@ -25,6 +26,7 @@ export default async function SettingsPage() {
 
   return (
     <StudentLayout userPlan={userPlan} userName={user.fullName}>
+      <PageViewTracker eventName="settings_viewed" />
       <div className="min-h-screen bg-[#0a0a0a]" dir={rtl ? "rtl" : "ltr"}>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="mb-8">

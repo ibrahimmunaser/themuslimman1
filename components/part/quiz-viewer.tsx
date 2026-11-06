@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { clsx } from "clsx";
 import { CheckCircle2, XCircle, ChevronRight, ChevronLeft, RotateCcw, Trophy, Loader2 } from "lucide-react";
 import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
 import type { Quiz, QuizQuestion } from "@/lib/types";
 import { submitQuizAnswers } from "@/app/actions/progress";
 import { checkQuizAnswer } from "@/app/actions/quiz";
+import { trackEvent } from "@/lib/analytics";
 import { AnimatedProgressBar } from "@/components/motion";
 import type { CourseLang } from "@/lib/course-lang";
 import { isRtlLang } from "@/lib/course-lang";
@@ -232,6 +233,19 @@ function ScoreScreen({
           detail: { quizPassed: passed || (initialBestScore ?? 0) >= 80, quizBestScore: bestScore },
         })
       );
+
+      trackEvent(
+        "lesson_quiz_completed",
+        {
+          part_number: partNumber,
+          score_percent: pct,
+          passed,
+          correct_count: score,
+          total_questions: total,
+          is_retake: (initialBestScore ?? 0) > 0,
+        },
+        { allowDuplicates: true },
+      );
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -386,6 +400,20 @@ export function QuizViewer({ quiz, partNumber, previewMode, initialBestScore, dr
   const [results, setResults] = useState<QuestionResult[]>(draft?.results ?? []);
   const [done, setDone] = useState(false);
 
+  // Fire once per mount — tracks quiz tab opened, distinguishing a fresh
+  // start from resuming mid-quiz after a tab switch.
+  const startFiredRef = useRef(false);
+  useEffect(() => {
+    if (startFiredRef.current || previewMode) return;
+    startFiredRef.current = true;
+    trackEvent(
+      "lesson_quiz_started",
+      { part_number: effectivePartNumber, total_questions: safeQuestions.length, resumed: !!draft },
+      { allowDuplicates: true },
+    );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // ── Per-question server check (no full answer map on the client) ───────────
   const handleAnswer = async (chosen: string) => {
     if (checking || currentFeedback) return;
@@ -405,6 +433,11 @@ export function QuizViewer({ quiz, partNumber, previewMode, initialBestScore, dr
       };
       setCurrentFeedback(feedback);
       onDraftChange?.({ current, results, currentFeedback: feedback });
+      trackEvent(
+        "lesson_quiz_question_answered",
+        { part_number: effectivePartNumber, question_index: current, correct: result.correct },
+        { allowDuplicates: true },
+      );
     } finally {
       setChecking(false);
     }

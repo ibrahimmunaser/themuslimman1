@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useRef } from "react";
 import { ChevronRight, ChevronLeft } from "lucide-react";
+import { trackEvent } from "@/lib/analytics";
 
 interface PrefetchPartLinkProps {
   partNumber: number;
@@ -36,6 +37,10 @@ export function PrefetchPartLink({ partNumber, label, className, children, isRtl
     fetch(`/api/part/${partNumber}/warm`, { method: "GET" }).catch(() => {});
   }, [partNumber, href]);
 
+  const handleClick = useCallback(() => {
+    trackEvent("lesson_nav_link_clicked", { part_number: partNumber, destination, is_override_href: !!href }, { allowDuplicates: true });
+  }, [partNumber, destination, href]);
+
   if (label !== undefined) {
     const Chevron = isRtl ? ChevronLeft : ChevronRight;
     return (
@@ -43,6 +48,7 @@ export function PrefetchPartLink({ partNumber, label, className, children, isRtl
         href={destination}
         className={className ?? "inline-flex items-center gap-1.5 text-xs font-medium text-gold hover:text-gold-light transition-colors"}
         onMouseEnter={handleMouseEnter}
+        onClick={handleClick}
       >
         {label}
         <Chevron className="w-3.5 h-3.5" />
@@ -55,6 +61,7 @@ export function PrefetchPartLink({ partNumber, label, className, children, isRtl
       href={destination}
       className={className}
       onMouseEnter={handleMouseEnter}
+      onClick={handleClick}
     >
       {children}
     </Link>

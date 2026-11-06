@@ -35,6 +35,7 @@ import type { CourseLang } from "@/lib/course-lang";
 import { isRtlLang } from "@/lib/course-lang";
 import { loc } from "@/lib/loc";
 import { t, type UiStringKey } from "@/lib/ui-strings";
+import { trackEvent } from "@/lib/analytics";
 
 // Lazy-load widget components so their bundled JSON data (facts, miracles, prophecies)
 // does not block the initial sidebar render. ssr:false avoids hydration mismatch
@@ -226,12 +227,14 @@ export function StudentSidebar({
     (pendingHref !== null && item.href === pendingHref) || isActive(item);
 
   const handleSignOut = () => {
+    trackEvent("sign_out_clicked", {}, { allowDuplicates: true });
     // Fire-and-forget: don't block navigation on the API round-trip.
     fetch("/api/auth/signout", { method: "POST" }).catch(() => {});
     window.location.href = "/login";
   };
 
   const handleTabSwitch = (tabId: string) => {
+    trackEvent("sidebar_nav_clicked", { target: tabId }, { allowDuplicates: true });
     window.dispatchEvent(new CustomEvent("seerah:switchTab", { detail: tabId }));
     closeDrawer();
   };
@@ -338,7 +341,7 @@ export function StudentSidebar({
                 );
               }
               return (
-                <Link key={item.id} href={item.href} onClick={() => setPendingHref(item.href)} className={cls}>
+                <Link key={item.id} href={item.href} onClick={() => { trackEvent("sidebar_nav_clicked", { target: item.id }, { allowDuplicates: true }); setPendingHref(item.href); }} className={cls}>
                   <Icon className="w-5 h-5 flex-shrink-0" />
                   {!collapsed && <span className="flex-1">{menuLabel(item, lang)}</span>}
                 </Link>
@@ -375,7 +378,7 @@ export function StudentSidebar({
                 <Link
                   key={item.id}
                   href={item.href}
-                  onClick={() => setPendingHref(item.href)}
+                  onClick={() => { trackEvent("sidebar_nav_clicked", { target: item.id }, { allowDuplicates: true }); setPendingHref(item.href); }}
                   className={clsx(
                     "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all border",
                     active
@@ -497,7 +500,7 @@ export function StudentSidebar({
                   <Link
                     key={item.id}
                     href={item.href}
-                    onClick={() => { setPendingHref(item.href); closeDrawer(); }}
+                    onClick={() => { trackEvent("sidebar_nav_clicked", { target: item.id }, { allowDuplicates: true }); setPendingHref(item.href); closeDrawer(); }}
                     className={clsx(
                       "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all min-h-[44px] border",
                       active
@@ -532,7 +535,7 @@ export function StudentSidebar({
                 <Link
                   key={item.id}
                   href={item.href}
-                  onClick={() => { setPendingHref(item.href); closeDrawer(); }}
+                  onClick={() => { trackEvent("sidebar_nav_clicked", { target: item.id }, { allowDuplicates: true }); setPendingHref(item.href); closeDrawer(); }}
                   className={clsx(
                     "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all min-h-[44px] border",
                     active

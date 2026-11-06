@@ -1,5 +1,8 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+# secrets (API keys, private keys — never commit)
+/secrets
+
 # dependencies
 /node_modules
 /.pnp
@@ -16,6 +19,17 @@
 # next.js
 /.next/
 /out/
+**/.next/
+
+# scratch / build / working files (not meant for version control)
+/scripts/fr-source/
+/scripts/ar-source/
+/scripts/i18n-work/
+/tmp/
+/stress/
+tmp_check.txt
+tmp-ar-sample.wav
+emulator_screenshot_small.jpg
 
 # production
 /build

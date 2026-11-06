@@ -5,6 +5,7 @@ import { Eye, EyeOff, Loader2, Check, X } from "lucide-react";
 import { isRtlLang } from "@/lib/course-lang";
 import type { CourseLang } from "@/lib/course-lang";
 import { t } from "@/lib/ui-strings";
+import { trackEvent } from "@/lib/analytics";
 
 export function ChangePasswordForm({ lang = "en" }: { lang?: CourseLang }) {
   const isRtl = isRtlLang(lang);
@@ -39,9 +40,11 @@ export function ChangePasswordForm({ lang = "en" }: { lang?: CourseLang }) {
 
     if (!res.ok) {
       setError(data.error ?? t(lang, "somethingWentWrong"));
+      trackEvent("password_change_failed", {}, { allowDuplicates: true });
       return;
     }
 
+    trackEvent("password_changed", {}, { allowDuplicates: true });
     setSuccess(true);
     setCurrent(""); setNext(""); setConfirm("");
     setTimeout(() => { setSuccess(false); setOpen(false); }, 2000);

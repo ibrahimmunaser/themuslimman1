@@ -22,6 +22,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { parseLang, COURSE_LANG_COOKIE, COURSE_LANG_LOCALES, isRtlLang, type CourseLang } from "@/lib/course-lang";
 import { loc, locf } from "@/lib/loc";
+import { PageViewTracker } from "@/components/analytics/page-view-tracker";
 
 export const metadata = { title: "Billing | Complete Seerah", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
@@ -221,6 +222,10 @@ export default async function BillingPage({ searchParams }: { searchParams: Sear
 
   return (
     <StudentLayout userPlan={userPlan} userName={user.fullName} planType={user.planType}>
+      <PageViewTracker
+        eventName="billing_viewed"
+        properties={{ is_monthly: isMonthly, is_family: isFamily, is_past_due: isPastDue, is_trial: isTrial }}
+      />
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 space-y-8" dir={rtl ? "rtl" : "ltr"}>
 
         {/* Header */}

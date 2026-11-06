@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { X, Heart, Copy, Check } from "lucide-react";
 import type { CourseLang } from "@/lib/course-lang";
+import { trackEvent } from "@/lib/analytics";
 
 const STORAGE_KEY = "seerah_share_popup_last_shown";
 // Show again after 14 days
@@ -24,13 +25,21 @@ export function SharePopup({ lang = "en" }: { lang?: CourseLang }) {
     const shouldShow = !last || Date.now() - Number(last) > COOLDOWN_MS;
     if (!shouldShow) return;
 
-    const timer = setTimeout(() => setVisible(true), SHOW_DELAY_MS);
+    const timer = setTimeout(() => {
+      setVisible(true);
+      trackEvent("share_popup_shown", {}, { allowDuplicates: true });
+    }, SHOW_DELAY_MS);
     return () => clearTimeout(timer);
   }, []);
 
   function dismiss() {
     localStorage.setItem(STORAGE_KEY, String(Date.now()));
+    trackEvent("share_popup_dismissed", {}, { allowDuplicates: true });
     setVisible(false);
+  }
+
+  function trackShareClick(channel: "whatsapp" | "facebook" | "x" | "instagram" | "copy_link") {
+    trackEvent("share_clicked", { channel }, { allowDuplicates: true });
   }
 
   async function copyText(text: string, id: "link" | "instagram") {
@@ -91,7 +100,7 @@ export function SharePopup({ lang = "en" }: { lang?: CourseLang }) {
             href={`https://wa.me/?text=${encodeURIComponent(SHARE_TEXT + " " + SHARE_URL)}`}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={dismiss}
+            onClick={() => { trackShareClick("whatsapp"); dismiss(); }}
             className="flex flex-col items-center gap-2 px-3 py-3 rounded-xl bg-[#25D366]/10 border border-[#25D366]/20 text-[#25D366] hover:bg-[#25D366]/15 transition-colors text-xs font-medium"
           >
             <WhatsAppIcon />
@@ -103,7 +112,7 @@ export function SharePopup({ lang = "en" }: { lang?: CourseLang }) {
             href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(SHARE_URL)}`}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={dismiss}
+            onClick={() => { trackShareClick("facebook"); dismiss(); }}
             className="flex flex-col items-center gap-2 px-3 py-3 rounded-xl bg-[#1877F2]/10 border border-[#1877F2]/20 text-[#1877F2] hover:bg-[#1877F2]/15 transition-colors text-xs font-medium"
           >
             <FacebookIcon />
@@ -115,7 +124,7 @@ export function SharePopup({ lang = "en" }: { lang?: CourseLang }) {
             href={`https://x.com/intent/tweet?text=${encodeURIComponent(SHARE_TEXT)}&url=${encodeURIComponent(SHARE_URL)}`}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={dismiss}
+            onClick={() => { trackShareClick("x"); dismiss(); }}
             className="flex flex-col items-center gap-2 px-3 py-3 rounded-xl bg-white/5 border border-border text-text hover:bg-white/8 transition-colors text-xs font-medium"
           >
             <XIcon />
@@ -124,7 +133,7 @@ export function SharePopup({ lang = "en" }: { lang?: CourseLang }) {
 
           {/* Instagram — copy caption */}
           <button
-            onClick={() => copyText(INSTAGRAM_CAPTION, "instagram")}
+            onClick={() => { trackShareClick("instagram"); copyText(INSTAGRAM_CAPTION, "instagram"); }}
             className="flex flex-col items-center gap-2 px-3 py-3 rounded-xl bg-[#E1306C]/10 border border-[#E1306C]/20 text-[#E1306C] hover:bg-[#E1306C]/15 transition-colors text-xs font-medium"
           >
             <InstagramIcon />
@@ -134,7 +143,7 @@ export function SharePopup({ lang = "en" }: { lang?: CourseLang }) {
 
         {/* Copy link row */}
         <button
-          onClick={() => copyText(SHARE_URL, "link")}
+          onClick={() => { trackShareClick("copy_link"); copyText(SHARE_URL, "link"); }}
           className="mt-2 flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-xl bg-white/5 border border-border text-text-secondary hover:text-text hover:bg-white/8 transition-colors text-sm font-medium"
         >
           {copiedId === "link"

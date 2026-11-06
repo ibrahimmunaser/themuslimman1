@@ -1,6 +1,12 @@
 import type { NextConfig } from "next";
 import path from "path";
 
+// React's dev overlay reconstructs call stacks with eval(). Production builds
+// never do that, so 'unsafe-eval' stays off the live policy. The Vercel
+// Analytics debug scripts are also dev-only.
+const devScriptSources =
+  process.env.NODE_ENV === "production" ? "" : " 'unsafe-eval' https://va.vercel-scripts.com";
+
 const securityHeaders = [
   { key: "X-Frame-Options",           value: "SAMEORIGIN" },
   { key: "X-Content-Type-Options",    value: "nosniff" },
@@ -15,8 +21,8 @@ const securityHeaders = [
     value: [
       "default-src 'self'",
       // Next.js and the Meta pixel inject inline scripts, so 'unsafe-inline'
-      // stays. 'unsafe-eval' does not — Stripe.js and the pixel do not need it.
-      "script-src 'self' 'unsafe-inline' https://js.stripe.com https://connect.facebook.net https://analytics.ahrefs.com",
+      // stays. Production does not allow eval.
+      `script-src 'self' 'unsafe-inline'${devScriptSources} https://js.stripe.com https://connect.facebook.net https://analytics.ahrefs.com`,
       // Stripe iframe
       "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
       // API calls: Stripe, R2, Vercel Analytics, Facebook, Ahrefs Web Analytics
@@ -37,6 +43,22 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      // Canonical domain is themuslimman.com (no www) — see NEXT_PUBLIC_APP_URL.
+      // www.themuslimman.com was being served as a second, fully-indexable
+      // copy of the entire site (same content, no canonical tag), which
+      // Ahrefs flagged as 18 duplicate pages. A permanent (308) redirect at
+      // the app level consolidates both into one canonical URL per page,
+      // preserving the path and query string.
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.themuslimman.com" }],
+        destination: "https://themuslimman.com/:path*",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {

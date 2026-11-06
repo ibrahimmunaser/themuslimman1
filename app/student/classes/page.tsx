@@ -7,6 +7,7 @@ import { getStudentDashboardData } from "@/lib/queries/student";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
+import { PageViewTracker } from "@/components/analytics/page-view-tracker";
 
 export const metadata = { title: "My Programs" };
 
@@ -22,6 +23,7 @@ export default async function StudentClassesPage() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto">
+      <PageViewTracker eventName="classes_viewed" properties={{ enrollment_count: enrollments.length }} />
       {isFamilyPlan(user.planType) && (
         <div className="mb-6 flex items-start gap-3 px-4 py-3 rounded-xl bg-gold/5 border border-gold/20 text-sm text-text-secondary">
           <Users className="w-4 h-4 text-gold/70 flex-shrink-0 mt-0.5" />

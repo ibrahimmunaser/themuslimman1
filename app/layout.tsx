@@ -62,6 +62,14 @@ export default async function RootLayout({
   return (
     <html lang={lang} dir={isRtlLang(lang) ? "rtl" : "ltr"} className={`${geist.variable} h-full`} data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
+        {/* Stop the browser's native scroll-restoration from re-scrolling to wherever
+            the user last was on reload / language switch — every page load should
+            start at the top. Must run synchronously, before paint. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `if ("scrollRestoration" in history) { history.scrollRestoration = "manual"; } window.scrollTo(0, 0);`,
+          }}
+        />
         <script
           src="https://analytics.ahrefs.com/analytics.js"
           data-key="iVk6R/S2Z9GS1ULZWA5LVQ"

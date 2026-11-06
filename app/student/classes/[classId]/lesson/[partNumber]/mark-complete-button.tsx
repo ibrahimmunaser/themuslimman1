@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { CheckCircle2, Circle } from "lucide-react";
 import { markItemComplete } from "@/lib/actions/student";
+import { trackEvent } from "@/lib/analytics";
 
 export function MarkCompleteButton({
   classId,
@@ -29,6 +30,11 @@ export function MarkCompleteButton({
       onClick={() =>
         startTransition(async () => {
           await markItemComplete(classId, classCourseItemId);
+          trackEvent(
+            "class_lesson_marked_complete",
+            { class_id: classId, class_course_item_id: classCourseItemId },
+            { allowDuplicates: true },
+          );
         })
       }
       disabled={isPending}

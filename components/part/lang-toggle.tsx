@@ -7,6 +7,7 @@ import { clsx } from "clsx";
 import { clearPartAssetsCache } from "@/lib/part-asset-cache";
 import { COURSE_LANG_OPTIONS, type CourseLang } from "@/lib/course-lang";
 import { t } from "@/lib/ui-strings";
+import { trackEvent } from "@/lib/analytics";
 
 interface LangToggleProps {
   current: CourseLang;
@@ -193,6 +194,7 @@ export function LangToggle({
 
   function switchLang(lang: CourseLang) {
     if (lang === selected) return;
+    trackEvent("course_language_changed", { from_lang: selected, to_lang: lang, part_number: partNumber }, { allowDuplicates: true });
     setSelected(lang);
     // Set the cookie (1 year expiry) then refresh the server component in-place
     document.cookie = `seerah_course_lang=${lang}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;

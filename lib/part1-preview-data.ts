@@ -93,6 +93,27 @@ export async function getPart1PreviewData(lang: CourseLang = "en"): Promise<Part
   }
 }
 
+/**
+ * Sentences in a lesson briefing that name the report they come from.
+ * Used to show the free lesson's actual citations, not a generic source list.
+ */
+export function lessonSourceCitations(briefingText: string | undefined): string[] {
+  if (!briefingText) return [];
+  const sentences = briefingText
+    .replace(/\r/g, "")
+    .split(/(?<=[.!?])\s+|\n+/)
+    .map((sentence) => sentence.replace(/^[\s>\-*#]+/, "").replace(/\s+/g, " ").trim())
+    .filter((sentence) => sentence.length > 40 && sentence.length < 340);
+  const hits = sentences.filter((sentence) =>
+    /according to|as related by|reports that|report of /i.test(sentence),
+  );
+  const unique: string[] = [];
+  for (const hit of hits) {
+    if (!unique.some((existing) => existing.slice(0, 48) === hit.slice(0, 48))) unique.push(hit);
+  }
+  return unique.slice(0, 5);
+}
+
 /** Resolve course language from the request cookie (defaults to English). */
 export async function getPreviewLangFromCookies(): Promise<CourseLang> {
   const cookieStore = await cookies();

@@ -33,6 +33,7 @@ import { courseHasMindmaps, isRtlLang, type CourseLang } from "@/lib/course-lang
 import { loc, locf } from "@/lib/loc";
 import { t } from "@/lib/ui-strings";
 import { trackAssetOpened } from "@/app/actions/progress";
+import { trackEvent } from "@/lib/analytics";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -871,11 +872,18 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
     const newSubTabId = newSubTabs[0]?.id ?? modes.find((m) => m.id === modeId)!.subTabs[0].id;
     setActiveSubTab(newSubTabId as SubTabId);
     if (modeId === "watch") setVideoMounted(true);
+    if (!previewMode) {
+      trackEvent(
+        "lesson_tab_viewed",
+        { part_number: part.partNumber, tab: modeId },
+        { allowDuplicates: true },
+      );
+    }
     // Persist in URL without full navigation
     const params = new URLSearchParams(searchParams.toString());
     params.set("mode", modeId);
     router.replace(`?${params.toString()}`, { scroll: false });
-  }, [part, modes, searchParams, router]);
+  }, [part, modes, searchParams, router, previewMode]);
 
   // Homepage "Watch the First Revelation — Free" buttons scroll to this preview's
   // wrapper (id="hero-player") and dispatch this event instead of linking straight
@@ -895,7 +903,28 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
   const handleSubTabChange = (tabId: SubTabId) => {
     setActiveSubTab(tabId);
     if (tabId === "video") setVideoMounted(true);
+    if (!previewMode) {
+      trackEvent(
+        "lesson_subtab_viewed",
+        { part_number: part.partNumber, mode: activeMode, sub_tab: tabId },
+        { allowDuplicates: true },
+      );
+    }
   };
+
+  // Fire a single lesson_viewed once per mount — captures the part number,
+  // era, and which tab the lesson opened on (deep link vs default "Watch").
+  const lessonViewedFiredRef = useRef(false);
+  useEffect(() => {
+    if (lessonViewedFiredRef.current || previewMode) return;
+    lessonViewedFiredRef.current = true;
+    trackEvent(
+      "lesson_viewed",
+      { part_number: part.partNumber, era: part.era, initial_tab: resolvedInitialMode },
+      { allowDuplicates: true },
+    );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
 
   const currentSubTab = subTabs.find((t) => t.id === activeSubTab)?.id ?? subTabs[0]?.id;

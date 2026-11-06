@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -17,6 +17,7 @@ import {
 } from "@/app/actions/profiles";
 import { COURSE_LANG_LOCALES, courseHasMindmaps, type CourseLang } from "@/lib/course-lang";
 import { loc, locf } from "@/lib/loc";
+import { trackEvent } from "@/lib/analytics";
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -95,6 +96,13 @@ export function ProfilesClient({
 
   const canAddMore = profiles.length < profileLimit;
 
+  const viewedFiredRef = useRef(false);
+  useEffect(() => {
+    if (viewedFiredRef.current) return;
+    viewedFiredRef.current = true;
+    trackEvent("profile_picker_viewed", { profile_count: profiles.length, is_family: isFamily }, { allowDuplicates: true });
+  }, [profiles.length, isFamily]);
+
   function showMessage(msg: string) {
     setActionMessage(msg);
     setTimeout(() => setActionMessage(null), 3000);
@@ -130,6 +138,7 @@ export function ProfilesClient({
       if (result.success) {
         setMode("list");
         showMessage(loc(lang, "Profile created.", "تم إنشاء الملف الشخصي.", "Profil créé."));
+        trackEvent("profile_created", { profile_count: profiles.length + 1 }, { allowDuplicates: true });
         router.refresh();
       } else {
         setFormError(result.error ?? (loc(lang, "Failed to create profile.", "فشل إنشاء الملف الشخصي.", "Échec de la création du profil.")));
@@ -171,6 +180,11 @@ export function ProfilesClient({
 
   async function handleSwitch(profileId: string) {
     setSwitchingId(profileId);
+    trackEvent(
+      "profile_switched",
+      { was_active_before: profileId === activeProfileId, profile_count: profiles.length },
+      { allowDuplicates: true },
+    );
     startTransition(async () => {
       await switchProfile(profileId);
       // Full reload clears stale client state; ?from=profiles bypasses the family redirect gate.

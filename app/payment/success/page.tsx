@@ -5,6 +5,10 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Check, ArrowRight, RefreshCw, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PARTS } from "@/lib/content";
+
+const part1Title = PARTS.find((part) => part.partNumber === 1)?.title ?? "Part 1";
+const part16Title = PARTS.find((part) => part.partNumber === 16)?.title ?? "Part 16";
 
 type SuccessType = "lifetime" | "subscription" | "family" | "family-subscription" | "family-lifetime";
 
@@ -376,20 +380,33 @@ function PaymentSuccessPageContent() {
                 </Button>
               </Link>
             )}
-            <Link href="/seerah" className="w-full block">
-              <Button
-                variant={isFamilyAny && !needsVerification ? "ghost" : "primary"}
-                size="lg"
-                className="w-full gap-2"
-              >
-                {needsVerification
-                  ? "Go to Dashboard (verify first)"
-                  : isFamilyAny
-                    ? "Go to Dashboard"
-                    : "Start Learning"}
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-            </Link>
+            {!isFamilyAny && !needsVerification ? (
+              <>
+                <Link href="/seerah/part-16" className="w-full block">
+                  <Button variant="primary" size="lg" className="w-full gap-2">
+                    Continue to Part 16: {part16Title}
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </Link>
+                <Link href="/seerah/part-1" className="w-full block">
+                  <Button variant="ghost" size="lg" className="w-full gap-2">
+                    Start from Part 1: {part1Title}
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              <Link href="/seerah" className="w-full block">
+                <Button
+                  variant={isFamilyAny && !needsVerification ? "ghost" : "primary"}
+                  size="lg"
+                  className="w-full gap-2"
+                >
+                  {needsVerification ? "Go to Dashboard (verify first)" : "Go to Dashboard"}
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
 

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { XCircle, Loader2, AlertTriangle } from "lucide-react";
 import { COURSE_LANG_LOCALES, type CourseLang } from "@/lib/course-lang";
 import { t, tf } from "@/lib/ui-strings";
+import { trackEvent } from "@/lib/analytics";
 
 interface Props {
   cancelDate: string; // ISO date string — when access ends if cancelled
@@ -33,8 +34,10 @@ export function CancelSubscriptionButton({ cancelDate, isTrial, lang = "en" }: P
       if (!res.ok) {
         setError(data.error ?? t(lang, "somethingWentWrong"));
         setStep("error");
+        trackEvent("subscription_cancel_failed", { is_trial: isTrial }, { allowDuplicates: true });
         return;
       }
+      trackEvent("subscription_cancelled", { is_trial: isTrial }, { allowDuplicates: true });
       setStep("done");
       // Reload to refresh the billing page state.
       setTimeout(() => window.location.reload(), 1500);
@@ -75,7 +78,7 @@ export function CancelSubscriptionButton({ cancelDate, isTrial, lang = "en" }: P
             {t(lang, "yesCancel")}
           </button>
           <button
-            onClick={() => setStep("idle")}
+            onClick={() => { trackEvent("subscription_cancel_abandoned", { is_trial: isTrial }, { allowDuplicates: true }); setStep("idle"); }}
             className="inline-flex items-center px-4 py-2 rounded-lg border border-border text-text-secondary hover:text-text text-sm transition-colors"
           >
             {t(lang, "keepMyPlan")}
@@ -97,7 +100,7 @@ export function CancelSubscriptionButton({ cancelDate, isTrial, lang = "en" }: P
   return (
     <div>
       <button
-        onClick={() => setStep("confirm")}
+        onClick={() => { trackEvent("subscription_cancel_initiated", { is_trial: isTrial }, { allowDuplicates: true }); setStep("confirm"); }}
         className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-red-500/20 hover:border-red-500/40 text-red-400/70 hover:text-red-400 text-sm transition-colors"
       >
         <XCircle className="w-4 h-4" />

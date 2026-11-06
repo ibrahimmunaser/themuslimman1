@@ -16,6 +16,7 @@ import {
   Send,
   ClipboardList,
   Languages,
+  Activity,
 } from "lucide-react";
 import { ROLES, type Role } from "./roles";
 
@@ -47,6 +48,7 @@ export const ADMIN_NAV: NavItem[] = [
   { href: "/admin/checkup-leads",       label: "Quiz Leads",         icon: ClipboardList },
   { href: "/admin/funnel-events",       label: "Funnel Events",      icon: BarChart2 },
   { href: "/admin/checkout-analytics",  label: "Checkout Analytics", icon: ShoppingCart },
+  { href: "/admin/engagement",          label: "Engagement",         icon: Activity },
   { href: "/admin/r2",         label: "R2 Storage",      icon: HardDrive },
   { href: "/admin/settings",   label: "Settings",        icon: ShieldCheck },
 ];

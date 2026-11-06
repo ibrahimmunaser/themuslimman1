@@ -11,6 +11,7 @@ import { AudioResourceContent } from "@/components/resources/audio-resource-cont
 import { TextResourceContent } from "@/components/resources/text-resource-content";
 import { SimpleResourceContent } from "@/components/resources/simple-resource-content";
 import { QuizResourceContent } from "@/components/resources/quiz-resource-content";
+import { PageViewTracker } from "@/components/analytics/page-view-tracker";
 import { PARTS } from "@/lib/content";
 import { getThumbnailUrls } from "@/lib/r2";
 import { parseLang, COURSE_LANG_COOKIE } from "@/lib/course-lang";
@@ -161,7 +162,9 @@ export default async function SeerahResourcesPage() {
   const factsCompletedCount = getAssetCompletedCount("statement-of-facts");
 
   return (
-    <ResourcesTabs
+    <>
+      <PageViewTracker eventName="resources_viewed" properties={{ has_access: hasAccess, is_guest: isGuest }} />
+      <ResourcesTabs
         videosContent={
           <VideoResourceContent
             progressMap={progressMap}
@@ -284,6 +287,7 @@ export default async function SeerahResourcesPage() {
           />
         }
         initialLang={lang}
-    />
+      />
+    </>
   );
 }

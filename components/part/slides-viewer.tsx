@@ -6,6 +6,7 @@ import { loc, locf } from "@/lib/loc";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { ChevronLeft, ChevronRight, Layers, Maximize2, X } from "lucide-react";
 import { trackAssetOpened } from "@/app/actions/progress";
+import { trackEvent } from "@/lib/analytics";
 import type { SlideFile } from "@/lib/types";
 
 /** Main slide image. Shows a spinner while loading, re-triggers on src change. */
@@ -83,6 +84,9 @@ export function SlidesViewer({ slides, title, type = "presented", partNumber, pr
   const enterFullscreen = useCallback(async () => {
     // Set CSS overlay immediately — reliable across all browsers
     setFullscreen(true);
+    if (partNumber && !previewMode) {
+      trackEvent("slides_fullscreen_opened", { part_number: partNumber, slide_type: type }, { allowDuplicates: true });
+    }
     // Also attempt native fullscreen as an enhancement (browser chrome disappears)
     if (containerRef.current?.requestFullscreen) {
       try {
@@ -91,7 +95,7 @@ export function SlidesViewer({ slides, title, type = "presented", partNumber, pr
         // Native fullscreen denied — CSS overlay is already shown, nothing to do
       }
     }
-  }, []);
+  }, [partNumber, previewMode, type]);
 
   const exitFullscreenMode = useCallback(() => {
     setFullscreen(false);
@@ -104,6 +108,7 @@ export function SlidesViewer({ slides, title, type = "presented", partNumber, pr
     if (!partNumber || previewMode || !slides.length) return;
     trackAssetOpened(partNumber, "slides").catch(() => {});
     window.dispatchEvent(new CustomEvent("seerah:progressUpdate", { detail: { openedAssets: ["slides"] } }));
+    trackEvent("slides_viewed", { part_number: partNumber, slide_type: type, slide_count: slides.length }, { allowDuplicates: true });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -113,6 +118,17 @@ export function SlidesViewer({ slides, title, type = "presented", partNumber, pr
     const thumb = strip.querySelectorAll("button")[current] as HTMLElement | undefined;
     thumb?.scrollIntoView({ behavior: "auto", block: "nearest", inline: "nearest" });
   }, [current]);
+
+  // Signal "viewed all slides" once the deck reaches its last slide — a
+  // lightweight completion proxy for this resource type.
+  const reachedEndRef = useRef(false);
+  useEffect(() => {
+    if (reachedEndRef.current || previewMode || !partNumber) return;
+    if (slides.length > 1 && current === slides.length - 1) {
+      reachedEndRef.current = true;
+      trackEvent("slides_completed", { part_number: partNumber, slide_type: type }, { allowDuplicates: true });
+    }
+  }, [current, slides.length, previewMode, partNumber, type]);
 
   useEffect(() => {
     if (!fullscreen) return;

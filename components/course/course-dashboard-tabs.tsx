@@ -6,6 +6,7 @@ import { LayoutDashboard, BookOpen, FolderOpen, TrendingUp, Library, CircleUser 
 import { clsx } from "clsx";
 import type { CourseLang } from "@/lib/course-lang";
 import { t } from "@/lib/ui-strings";
+import { trackEvent } from "@/lib/analytics";
 
 interface CourseDashboardTabsProps {
   homeContent: React.ReactNode;
@@ -69,6 +70,7 @@ export function CourseDashboardTabs({
     setEverMounted((prev) => { if (prev.has(id)) return prev; const n = new Set(prev); n.add(id); return n; });
     // 2. Highlight the tab bar immediately.
     setActiveTab(id);
+    trackEvent("dashboard_tab_viewed", { tab: id, trigger: "tab_bar" }, { allowDuplicates: true });
     // 3. Notify the sidebar so its active indicator also updates on this frame.
     isSelfDispatch.current = true;
     window.dispatchEvent(new CustomEvent("seerah:switchTab", { detail: id }));
@@ -89,11 +91,21 @@ export function CourseDashboardTabs({
       if (!TAB_DEFS.some((td) => td.id === tabId)) return;
       setEverMounted((prev) => { if (prev.has(tabId)) return prev; const n = new Set(prev); n.add(tabId); return n; });
       setActiveTab(tabId);
+      trackEvent("dashboard_tab_viewed", { tab: tabId, trigger: "sidebar" }, { allowDuplicates: true });
       const url = tabId === "home" ? "/seerah" : `/seerah?tab=${tabId}`;
       window.history.replaceState(null, "", url);
     };
     window.addEventListener("seerah:switchTab", handler);
     return () => window.removeEventListener("seerah:switchTab", handler);
+  }, []);
+
+  // Fire once for the tab active on initial page load (deep link or default "home").
+  const initialViewFiredRef = useRef(false);
+  useEffect(() => {
+    if (initialViewFiredRef.current) return;
+    initialViewFiredRef.current = true;
+    trackEvent("dashboard_tab_viewed", { tab: resolvedInitial, trigger: "page_load" }, { allowDuplicates: true });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const content: Record<TabId, React.ReactNode> = useMemo(() => ({

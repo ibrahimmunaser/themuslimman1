@@ -6,6 +6,7 @@ import { Video, Headphones, FileText, Image, Map, Layers, Brain, ClipboardCheck,
 import { clsx } from "clsx";
 import { courseHasMindmaps, type CourseLang } from "@/lib/course-lang";
 import { t } from "@/lib/ui-strings";
+import { trackEvent } from "@/lib/analytics";
 
 interface ResourcesTabsProps {
   videosContent: React.ReactNode;
@@ -58,6 +59,11 @@ export function ResourcesTabs({
   const [activeTab, setActiveTab] = useState<TabId>("videos");
   const selectedTab: TabId = TABS.some((tab) => tab.id === activeTab) ? activeTab : "videos";
 
+  const handleTabClick = (id: TabId) => {
+    setActiveTab(id);
+    trackEvent("resources_tab_switched", { resource_tab: id }, { allowDuplicates: true });
+  };
+
   return (
     <div className="w-full">
       {/* Header — compressed on mobile */}
@@ -105,7 +111,7 @@ export function ResourcesTabs({
                   key={tab.id}
                   role="tab"
                   aria-selected={isActive}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => handleTabClick(tab.id)}
                   className={clsx(
                     "flex items-center gap-1.5 flex-shrink-0 rounded-xl border",
                     "min-h-[44px] px-3 py-2 transition-all",
@@ -135,7 +141,7 @@ export function ResourcesTabs({
                   key={tab.id}
                   role="tab"
                   aria-selected={isActive}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => handleTabClick(tab.id)}
                   className={clsx(
                     "flex items-center gap-1.5 px-3 text-sm font-medium",
                     "transition-all rounded-lg whitespace-nowrap border flex-shrink-0 min-h-[40px]",

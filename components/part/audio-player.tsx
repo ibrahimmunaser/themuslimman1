@@ -7,6 +7,7 @@ import { t } from "@/lib/ui-strings";
 import { useState, useRef, useEffect } from "react";
 import { Play, Pause, Volume2, VolumeX, SkipBack, SkipForward, Headphones, Gauge } from "lucide-react";
 import { trackAssetOpened } from "@/app/actions/progress";
+import { trackEvent } from "@/lib/analytics";
 
 interface AudioPlayerProps {
   src?: string;
@@ -62,6 +63,7 @@ export function AudioPlayer({ src, title, partNumber, compact = false, previewMo
     if (playing && !hasTrackedPlay && partNumber && !previewMode) {
       trackAssetOpened(partNumber, "audio").catch(() => {});
       window.dispatchEvent(new CustomEvent("seerah:progressUpdate", { detail: { openedAssets: ["audio"] } }));
+      trackEvent("audio_started", { part_number: partNumber }, { allowDuplicates: true });
       setHasTrackedPlay(true);
     }
   }, [playing, hasTrackedPlay, partNumber, previewMode]);
@@ -160,7 +162,12 @@ export function AudioPlayer({ src, title, partNumber, compact = false, previewMo
         src={src}
         preload="none"
         onTimeUpdate={handleTimeUpdate}
-        onEnded={() => setPlaying(false)}
+        onEnded={() => {
+          setPlaying(false);
+          if (partNumber && !previewMode) {
+            trackEvent("audio_completed", { part_number: partNumber }, { allowDuplicates: true });
+          }
+        }}
         onPlay={() => { setPlaying(true); window.dispatchEvent(new CustomEvent("seerah:audioPlaying")); }}
         onPause={() => setPlaying(false)}
       />

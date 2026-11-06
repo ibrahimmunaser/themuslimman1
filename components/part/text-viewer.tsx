@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { BookOpen, Clock, Layers, ClipboardCheck } from "lucide-react";
 import { trackBriefingOpened, trackAssetOpened } from "@/app/actions/progress";
+import { trackEvent } from "@/lib/analytics";
 import { formatSeerahContent } from "@/lib/text-formatter";
 import { PARTS, localizePart } from "@/lib/content";
 import { ERA_MAP, eraLabel as eraLabelFor } from "@/lib/types";
@@ -77,6 +78,7 @@ export function TextViewer({
 
   // Reading progress (0–100)
   const [readProgress, setReadProgress] = useState(0);
+  const [expanded, setExpanded] = useState(false);
   const articleRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -121,21 +123,52 @@ export function TextViewer({
         new CustomEvent("seerah:progressUpdate", { detail: { openedAssets: [assetId] } })
       );
     }
+    trackEvent(
+      "content_read",
+      { part_number: partNumber, asset_id: assetId ?? "unknown" },
+      { allowDuplicates: true },
+    );
   }, [readProgress, partNumber, previewMode, assetId]);
 
+  // Reading completion — fires once when the user scrolls near the end of a
+  // long article (same 95% threshold language as the on-screen label below).
+  const readCompleteFiredRef = useRef(false);
+  useEffect(() => {
+    if (readCompleteFiredRef.current || previewMode || readProgress < 95) return;
+    readCompleteFiredRef.current = true;
+    trackEvent(
+      "content_read_completed",
+      { part_number: partNumber, asset_id: assetId ?? "unknown" },
+      { allowDuplicates: true },
+    );
+  }, [readProgress, previewMode, partNumber, assetId]);
+
   if (previewMode) {
+    // Part 15 is free in full — no signup is required to read it. Long notes
+    // collapse by default (for a tidier preview section) but every word stays
+    // in the DOM and a tap reveals the rest. Never imply the content is gated.
     return (
-      <div className="relative max-h-72 overflow-hidden rounded-lg">
-        <div className={`article-shell ${className ?? ""}`} ref={articleRef}>
+      <div className="relative">
+        <div
+          className={`article-shell ${className ?? ""} ${expanded ? "" : "max-h-72 overflow-hidden"}`}
+          ref={articleRef}
+        >
           <div className="article-container">
             <div className="formatted-text" dangerouslySetInnerHTML={{ __html: html }} />
           </div>
         </div>
-        {/* Fade-out overlay */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-surface to-transparent" />
-        <p className="absolute bottom-2 left-0 right-0 text-center text-xs text-text-muted/60">
-          {loc(lang, "Full lesson available after signup", "الدرس الكامل متاح بعد التسجيل", "La leçon complète est disponible après inscription")}
-        </p>
+        {!expanded && (
+          <>
+            <div className="pointer-events-none absolute inset-x-0 bottom-9 h-20 bg-gradient-to-t from-surface to-transparent" />
+            <button
+              type="button"
+              onClick={() => setExpanded(true)}
+              className="relative z-10 mt-1 w-full text-center text-xs font-semibold text-gold hover:text-gold-light py-2"
+            >
+              {loc(lang, "Show full lesson ↓", "عرض الدرس كاملاً ↓", "Afficher la leçon complète ↓")}
+            </button>
+          </>
+        )}
       </div>
     );
   }
@@ -270,7 +303,14 @@ export function TextViewer({
             {onSwitchToQuiz ? (
               <button
                 type="button"
-                onClick={onSwitchToQuiz}
+                onClick={() => {
+                  trackEvent(
+                    "quiz_cta_clicked",
+                    { part_number: partNumber, from_asset: assetId ?? "unknown" },
+                    { allowDuplicates: true },
+                  );
+                  onSwitchToQuiz();
+                }}
                 className="inline-flex items-center gap-2 px-6 py-3 min-h-[44px] bg-gold hover:bg-gold-light text-ink font-semibold rounded-xl text-sm transition-colors shadow-md shadow-gold/20"
               >
                 <ClipboardCheck className="w-4 h-4" />
@@ -279,6 +319,13 @@ export function TextViewer({
             ) : hasQuiz !== false && partNumber ? (
               <Link
                 href="?mode=quiz"
+                onClick={() => {
+                  trackEvent(
+                    "quiz_cta_clicked",
+                    { part_number: partNumber, from_asset: assetId ?? "unknown" },
+                    { allowDuplicates: true },
+                  );
+                }}
                 className="inline-flex items-center gap-2 px-6 py-3 min-h-[44px] bg-gold hover:bg-gold-light text-ink font-semibold rounded-xl text-sm transition-colors shadow-md shadow-gold/20"
               >
                 <ClipboardCheck className="w-4 h-4" />

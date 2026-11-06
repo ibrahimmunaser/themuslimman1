@@ -9,6 +9,7 @@ import { Play, Pause, Volume2, VolumeX, Maximize, RotateCcw, RotateCw, Gauge } f
 
 const VIDEO_PLAYBACK_SPEEDS = [0.75, 1, 1.25, 1.5, 2];
 import { trackVideoProgress } from "@/app/actions/progress";
+import { trackEvent } from "@/lib/analytics";
 
 // Report at these percent thresholds (once each per mount).
 // Starting at 10% (not 25%) means a user who watches 10–24% and returns will
@@ -70,6 +71,7 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
   // Tracks whether the player auto-muted due to a MUTED_SEGMENTS rule,
   // so we can restore audio without overriding a manual user mute.
   const autoMutedRef    = useRef<boolean>(false);
+  const startTrackedRef = useRef(false);
   // Track whether the overlay audio has been started for the current segment
   // pass-through, so we don't call .play() on every timeupdate tick.
   const overlayPlayingRef = useRef<boolean>(false);
@@ -148,6 +150,9 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
     if (companionAudioRef.current) companionAudioRef.current.playbackRate = rate;
     setPlaybackRate(rate);
     setShowSpeedMenu(false);
+    if (partNumber && !previewMode) {
+      trackEvent("video_playback_rate_changed", { part_number: partNumber, rate }, { allowDuplicates: true });
+    }
   };
 
   const showControlsTemporarily = useCallback(() => {
@@ -265,6 +270,11 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
           window.dispatchEvent(new CustomEvent("seerah:progressUpdate", {
             detail: { videoWatchPercent: rounded },
           }));
+          trackEvent(
+            "video_watch_progress",
+            { part_number: partNumber, progress_percent: threshold },
+            { allowDuplicates: true },
+          );
         }
       }
     }
@@ -483,11 +493,16 @@ export function VideoPlayer({ src, title, poster, partNumber, previewMode, initi
               window.dispatchEvent(new CustomEvent("seerah:progressUpdate", {
                 detail: { videoWatchPercent: 100 },
               }));
+              trackEvent("video_watch_completed", { part_number: partNumber }, { allowDuplicates: true });
             }
           }
         }}
         onPlay={() => {
           setPlaying(true);
+          if (partNumber && !previewMode && !startTrackedRef.current) {
+            startTrackedRef.current = true;
+            trackEvent("video_watch_started", { part_number: partNumber }, { allowDuplicates: true });
+          }
           if (useCompanionAudio) {
             const vid = videoRef.current;
             const audio = companionAudioRef.current;

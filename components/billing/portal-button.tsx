@@ -4,6 +4,7 @@ import { useState } from "react";
 import { CreditCard, Loader2 } from "lucide-react";
 import type { CourseLang } from "@/lib/course-lang";
 import { t } from "@/lib/ui-strings";
+import { trackEvent } from "@/lib/analytics";
 
 interface Props {
   /** Button text. Defaults to "Manage billing". */
@@ -21,6 +22,7 @@ export function PortalButton({ label, variant = "default", lang = "en" }: Props)
   const [error, setError] = useState<string | null>(null);
 
   async function openPortal() {
+    trackEvent("billing_portal_clicked", { variant }, { allowDuplicates: true });
     setLoading(true);
     setError(null);
     try {

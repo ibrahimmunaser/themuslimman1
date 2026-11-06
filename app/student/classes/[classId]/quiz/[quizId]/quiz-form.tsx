@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, XCircle, Brain } from "lucide-react";
 import { startOrResumeQuiz, submitQuizAttempt } from "@/lib/actions/student";
+import { trackEvent } from "@/lib/analytics";
 
 interface Question {
   id: string;
@@ -56,6 +57,11 @@ export function QuizForm({
       }
       setCurrentAttemptId(res.attemptId);
       setPhase("taking");
+      trackEvent(
+        "class_quiz_started",
+        { class_id: classId, quiz_id: quizId, question_count: questions.length, resumed: !!existingAttemptId },
+        { allowDuplicates: true },
+      );
     });
   }
 
@@ -78,6 +84,11 @@ export function QuizForm({
       }
       setResult({ score: res.score!, passed: res.passed!, total: res.total! });
       setPhase("result");
+      trackEvent(
+        "class_quiz_submitted",
+        { class_id: classId, quiz_id: quizId, score_percent: res.score, passed: res.passed, total_questions: res.total },
+        { allowDuplicates: true },
+      );
     });
   }
 
@@ -218,7 +229,14 @@ export function QuizForm({
 
       <div className="flex items-center justify-between pt-2">
         <button
-          onClick={() => router.push(`/student/classes/${classId}`)}
+          onClick={() => {
+            trackEvent(
+              "class_quiz_abandoned",
+              { class_id: classId, quiz_id: quizId, answered_count: answeredCount, total_questions: questions.length },
+              { allowDuplicates: true },
+            );
+            router.push(`/student/classes/${classId}`);
+          }}
           className="text-sm text-text-muted hover:text-text transition-colors"
         >
           Save and exit

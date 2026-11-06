@@ -5,6 +5,7 @@ import { loc, locf } from "@/lib/loc";
 
 import { useEffect } from "react";
 import { trackAssetOpened } from "@/app/actions/progress";
+import { trackEvent } from "@/lib/analytics";
 
 interface FactsViewerProps {
   content: string;
@@ -55,6 +56,7 @@ export function FactsViewer({ content, partNumber, previewMode, isRtl, lang: lan
   useEffect(() => {
     if (!partNumber || previewMode) return;
     trackAssetOpened(partNumber, "statement-of-facts").catch(() => {});
+    trackEvent("content_read", { part_number: partNumber, asset_id: "statement-of-facts" }, { allowDuplicates: true });
   // Run once on mount
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

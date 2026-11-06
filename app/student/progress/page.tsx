@@ -9,6 +9,7 @@ import { getActiveProfileId } from "@/app/actions/profiles";
 import { PARTS } from "@/lib/content";
 import { TrendingUp, Target, Clock, Award, ChevronRight } from "lucide-react";
 import { FadeUp, StaggerChildren, AnimatedCard } from "@/components/motion";
+import { PageViewTracker } from "@/components/analytics/page-view-tracker";
 import Link from "next/link";
 
 export const metadata = { title: "Progress | Complete Seerah" };
@@ -126,6 +127,7 @@ export default async function ProgressPage() {
 
   return (
     <StudentLayout userPlan={userPlan} userName={user.fullName} activeProfileName={user.activeProfileName} planType={user.planType}>
+      <PageViewTracker eventName="progress_viewed" />
       <div className="min-h-screen bg-[#0a0a0a]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <FadeUp className="mb-8">

@@ -7,6 +7,7 @@ import { X } from "lucide-react";
 import type { CourseLang } from "@/lib/course-lang";
 import { t, tf, type UiStringKey } from "@/lib/ui-strings";
 import { markWelcomeTourSeen } from "@/app/actions/onboarding";
+import { trackEvent } from "@/lib/analytics";
 
 interface TourStep {
   /** DOM id of the element to spotlight. Omitted for the intro/outro cards, which are centered. */
@@ -53,7 +54,10 @@ export function WelcomeTour({ show, lang = "en" }: { show: boolean; lang?: Cours
   // animations and the tab bar has settled into its sticky position.
   useEffect(() => {
     if (!show) return;
-    const timer = setTimeout(() => setActive(true), 900);
+    const timer = setTimeout(() => {
+      setActive(true);
+      trackEvent("welcome_tour_started", {}, { allowDuplicates: true });
+    }, 900);
     return () => clearTimeout(timer);
   }, [show]);
 
@@ -86,17 +90,22 @@ export function WelcomeTour({ show, lang = "en" }: { show: boolean; lang?: Cours
     };
   }, [active, measure]);
 
-  const finish = useCallback(() => {
+  const finish = useCallback((reason: "completed" | "skipped") => {
     setActive(false);
     if (finishedRef.current) return;
     finishedRef.current = true;
+    trackEvent(
+      reason === "completed" ? "welcome_tour_completed" : "welcome_tour_skipped",
+      { step_index: stepIndex, total_steps: STEPS.length },
+      { allowDuplicates: true }
+    );
     markWelcomeTourSeen().catch(() => {});
-  }, []);
+  }, [stepIndex]);
 
   useEffect(() => {
     if (!active) return;
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") finish();
+      if (e.key === "Escape") finish("skipped");
     };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
@@ -109,7 +118,7 @@ export function WelcomeTour({ show, lang = "en" }: { show: boolean; lang?: Cours
 
   const next = () => {
     if (isLast) {
-      finish();
+      finish("completed");
       return;
     }
     setStepIndex((i) => i + 1);
@@ -188,7 +197,7 @@ export function WelcomeTour({ show, lang = "en" }: { show: boolean; lang?: Cours
           className="z-[210] bg-surface border border-border rounded-2xl shadow-2xl p-5"
         >
           <button
-            onClick={finish}
+            onClick={() => finish("skipped")}
             className="absolute top-3 end-3 p-1 rounded-lg text-text-muted hover:text-text hover:bg-white/5 transition-colors"
             aria-label={isRtl ? "إغلاق" : "Close"}
           >
@@ -214,7 +223,7 @@ export function WelcomeTour({ show, lang = "en" }: { show: boolean; lang?: Cours
 
           <div className="flex items-center justify-between gap-2">
             <button
-              onClick={finish}
+              onClick={() => finish("skipped")}
               className="text-xs font-medium text-text-muted hover:text-text-secondary transition-colors px-1"
             >
               {t(lang, "tourSkip")}
