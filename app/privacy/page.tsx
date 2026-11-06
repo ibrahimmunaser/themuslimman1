@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Navbar } from "@/components/landing/navbar";
+import { StaticNavbar as Navbar } from "@/components/landing/static-navbar";
 import { Footer } from "@/components/landing/footer";
 import { Shield } from "lucide-react";
 import type { Metadata } from "next";
