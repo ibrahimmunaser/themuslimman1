@@ -62,6 +62,11 @@ export default async function RootLayout({
   return (
     <html lang={lang} dir={isRtlLang(lang) ? "rtl" : "ltr"} className={`${geist.variable} h-full`} data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
+        <script
+          src="https://analytics.ahrefs.com/analytics.js"
+          data-key="iVk6R/S2Z9GS1ULZWA5LVQ"
+          async
+        />
         <link rel="icon" type="image/png" href="/images/app-icon.png?v=1" />
         <link rel="shortcut icon" type="image/png" href="/images/app-icon.png?v=1" />
         <link rel="apple-touch-icon" type="image/png" href="/images/app-icon.png?v=1" />

@@ -16,11 +16,11 @@ const securityHeaders = [
       "default-src 'self'",
       // Next.js and the Meta pixel inject inline scripts, so 'unsafe-inline'
       // stays. 'unsafe-eval' does not — Stripe.js and the pixel do not need it.
-      "script-src 'self' 'unsafe-inline' https://js.stripe.com https://connect.facebook.net",
+      "script-src 'self' 'unsafe-inline' https://js.stripe.com https://connect.facebook.net https://analytics.ahrefs.com",
       // Stripe iframe
       "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
-      // API calls: Stripe, R2, Vercel Analytics, Facebook
-      "connect-src 'self' https://api.stripe.com https://*.r2.dev https://*.r2.cloudflarestorage.com https://vitals.vercel-insights.com https://www.facebook.com https://www.google-analytics.com",
+      // API calls: Stripe, R2, Vercel Analytics, Facebook, Ahrefs Web Analytics
+      "connect-src 'self' https://api.stripe.com https://*.r2.dev https://*.r2.cloudflarestorage.com https://vitals.vercel-insights.com https://www.facebook.com https://www.google-analytics.com https://analytics.ahrefs.com",
       // Inline styles (Tailwind), Google Fonts if used
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",

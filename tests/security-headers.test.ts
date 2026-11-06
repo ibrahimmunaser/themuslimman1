@@ -18,9 +18,9 @@ import { describe, it, expect } from "vitest";
 
 const CSP_DIRECTIVES = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://js.stripe.com https://connect.facebook.net",
+  "script-src 'self' 'unsafe-inline' https://js.stripe.com https://connect.facebook.net https://analytics.ahrefs.com",
   "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
-  "connect-src 'self' https://api.stripe.com https://*.r2.dev https://*.r2.cloudflarestorage.com https://vitals.vercel-insights.com https://www.facebook.com https://www.google-analytics.com",
+  "connect-src 'self' https://api.stripe.com https://*.r2.dev https://*.r2.cloudflarestorage.com https://vitals.vercel-insights.com https://www.facebook.com https://www.google-analytics.com https://analytics.ahrefs.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
   "img-src 'self' data: blob: https://*.r2.dev https://*.r2.cloudflarestorage.com https://img.stripe.com https://www.facebook.com",
@@ -50,6 +50,10 @@ describe("CSP — script-src", () => {
     expect(scriptSrc).toContain("https://connect.facebook.net");
   });
 
+  it("includes Ahrefs Web Analytics", () => {
+    expect(scriptSrc).toContain("https://analytics.ahrefs.com");
+  });
+
   it("does NOT have a wildcard * in script-src (would allow any script)", () => {
     const parts = scriptSrc?.split(" ") ?? [];
     expect(parts).not.toContain("*");
@@ -77,6 +81,10 @@ describe("CSP — connect-src", () => {
 
   it("includes Facebook tracking pixel connect domain", () => {
     expect(connectSrc).toContain("https://www.facebook.com");
+  });
+
+  it("includes Ahrefs Web Analytics beacons", () => {
+    expect(connectSrc).toContain("https://analytics.ahrefs.com");
   });
 });
 
