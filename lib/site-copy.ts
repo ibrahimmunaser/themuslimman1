@@ -871,7 +871,7 @@ const COPY = {
   ),
   pa3post: L("one-time. No renewal. No recurring charges.", "دفعة واحدة. بلا تجديد. بلا رسوم متكررة.", "en une fois. Pas de renouvellement. Pas de frais récurrents.", "sekali bayar. Tanpa perpanjangan. Tanpa biaya berulang.", "sekali bayar. Tanpa pembaharuan. Tanpa caj berulang.", "一次性付款。不续费。没有重复收费。", "разовый платёж. Без продления. Без повторных списаний.", "malipo ya mara moja. Bila kuhuisha. Bila malipo yanayorudiwa.", "un pago único. Sin renovación. Sin cargos recurrentes.", "einmalig. Keine Verlängerung. Keine wiederkehrenden Kosten.", "tek ödeme. Yenileme yok. Yinelenen ücret yok.", "एक बार। कोई नवीनीकरण नहीं। कोई बार-बार शुल्क नहीं।", "ایک بار۔ کوئی تجدید نہیں۔ کوئی بار بار فیس نہیں۔", "একবার। কোনো নবায়ন নেই। বারবার ফি নেই।", "یک‌بار. بدون تمدید. بدون هزینهٔ تکراری."),
   contactMetaDesc: L(
-    "Get in touch with the Complete Seerah team for support, refunds, or general questions.",
+    "Get in touch with the Complete Seerah support team for help with account access, billing, refund requests, and anything else along your Seerah journey.",
     "تواصل مع فريق Complete Seerah للدعم أو الاسترداد أو أي استفسار.",
     "Contactez l'équipe Complete Seerah pour le support, les remboursements ou toute question.",
     "Hubungi tim Complete Seerah untuk dukungan, refund, atau pertanyaan umum.",

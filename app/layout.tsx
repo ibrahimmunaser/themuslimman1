@@ -84,6 +84,25 @@ export default async function RootLayout({
         <link rel="dns-prefetch" href="https://js.stripe.com" />
         {/* Preconnect to R2 for signed media assets */}
         <link rel="dns-prefetch" href="https://themuslimman1.r2.cloudflarestorage.com" />
+        {/* Organization structured data — the site previously had no schema.org
+            markup at all, which Ahrefs flagged (and which also helps AI search
+            engines correctly identify and cite the business entity). */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              name: "TheMuslimMan",
+              alternateName: "Complete Seerah",
+              url: "https://themuslimman.com",
+              logo: "https://themuslimman.com/images/app-icon.png",
+              description:
+                "TheMuslimMan offers Complete Seerah, a structured 100-part video course on the life of the Prophet Muhammad ﷺ, with quizzes, flashcards, and guided progress tracking.",
+              sameAs: ["https://www.instagram.com/themuslimmann1/"],
+            }),
+          }}
+        />
       </head>
       <body className="min-h-full bg-ink text-text antialiased">
         <CountryPriceProvider quote={countryPrice}>

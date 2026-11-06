@@ -6,7 +6,8 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Terms of Service — Complete Seerah",
-  description: "Terms governing access to the Complete Seerah digital course.",
+  description:
+    "Read the Terms of Service governing access to the Complete Seerah digital course, including account use, billing, cancellations, and your license to the content.",
 };
 
 export default function TermsPage() {

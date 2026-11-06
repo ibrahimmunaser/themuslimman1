@@ -19,7 +19,11 @@ export async function generateMetadata() {
   const lang = await getPreviewLangFromCookies();
   return {
     title: siteT(lang, "priceKicker"),
-    description: siteT(lang, "priceH1"),
+    // A dedicated description, not the on-page H1 (siteT "priceH1" is a
+    // short punchy headline — reusing it here made this page's meta
+    // description too short and also duplicated the homepage's).
+    description:
+      "Compare Complete Seerah plans and pricing. Full access to all 100 parts — video, quizzes, flashcards, and progress tracking — with a 7-day money-back guarantee.",
   };
 }
 

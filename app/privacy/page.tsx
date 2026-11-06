@@ -6,7 +6,8 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Privacy Policy — Complete Seerah",
-  description: "How Complete Seerah collects, uses, and protects your personal data.",
+  description:
+    "Our Privacy Policy explains what personal data Complete Seerah collects, how it's used and stored, and your choices to access, correct, or delete it.",
 };
 
 export default function PrivacyPage() {

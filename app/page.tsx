@@ -27,11 +27,24 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata() {
   const lang = await getPreviewLangFromCookies();
   const title = `${siteT(lang, "courseName")} | ${siteT(lang, "heroLead")} ${siteT(lang, "heroGold")}`;
-  const description = siteT(lang, "heroBody");
+  // Intentionally no page-level description override: the root layout's
+  // description (app/layout.tsx) is already a well-sized, SEO-tuned summary
+  // written for this exact homepage, so this page inherits it. Reusing the
+  // short on-page hero copy (siteT heroBody, ~84 chars) here previously made
+  // the homepage's meta description too short for search engines. The same
+  // layout description is reused for Open Graph below so social previews
+  // stay consistent with the search snippet.
+  const description =
+    "Finally understand the full life of the Prophet ﷺ in one structured, complete system. 100+ parts with video, audio, briefings, guides, and more.";
   return {
     title,
-    description,
     openGraph: {
+      // This object fully replaces (not merges with) the root layout's
+      // openGraph, so type/locale must be re-specified here too — otherwise
+      // og:type goes missing on the homepage specifically (Ahrefs flagged
+      // this as part of "Open Graph tags incomplete").
+      type: "website",
+      locale: "en_US",
       title,
       description,
       url: process.env.NEXT_PUBLIC_APP_URL ?? "https://themuslimman.com",

@@ -6,7 +6,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "About — Complete Seerah",
   description:
-    "Why the Complete Seerah course was built, what it is, what it is not, and how it works.",
+    "Learn why Complete Seerah was built, what the 100-part course is and isn't, and how it helps you learn the Prophet's ﷺ life in order.",
 };
 
 export default function AboutPage() {

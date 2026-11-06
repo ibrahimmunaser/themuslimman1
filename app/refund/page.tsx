@@ -6,7 +6,8 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Refund Policy — Complete Seerah",
-  description: "Our 7-Day Clarity Guarantee and refund terms for Complete Seerah.",
+  description:
+    "Learn how the 7-Day Clarity Guarantee works: if Complete Seerah isn't what you expected, email us within 7 days of purchase for a full, no-questions-asked refund.",
 };
 
 export default function RefundPage() {
