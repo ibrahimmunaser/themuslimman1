@@ -46,5 +46,33 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "yearly",
       priority: 0.4,
     },
+    // /seerah is the public (guest-browsable) course dashboard — see
+    // middleware.ts's PUBLIC_EXACT_PATHS. /terms, /privacy, and /refund are
+    // indexable legal pages. All four were missing from the sitemap (Ahrefs:
+    // "Indexable page not in sitemap").
+    {
+      url: `${BASE_URL}/seerah`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/terms`,
+      lastModified: new Date(),
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
+    {
+      url: `${BASE_URL}/privacy`,
+      lastModified: new Date(),
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
+    {
+      url: `${BASE_URL}/refund`,
+      lastModified: new Date(),
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
   ];
 }
