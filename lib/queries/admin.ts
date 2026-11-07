@@ -1,6 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/db";
 import { ROLES } from "@/lib/roles";
+import { type AdminDateRange, createdAtWhere, sentAtWhere } from "@/lib/admin-date-range";
 
 export async function getAdminDashboardData() {
   const startTime = Date.now();
@@ -81,9 +82,17 @@ export async function getAdminDashboardData() {
   };
 }
 
-export async function getAdminAnalyticsData() {
+export async function getAdminAnalyticsData(dateRange?: AdminDateRange) {
   const ROLES_STUDENT = "student";
   const ACTIVE_SUB_STATUSES = ["active", "trialing", "past_due"] as const;
+
+  // Funnel (signups → checkout → purchase → abandoned) is scoped to the
+  // cohort of users who *signed up* within the selected date range.
+  // Revenue and subscriptions are scoped to when the purchase/subscription
+  // itself happened, since that's what "revenue in this period" means.
+  const userCreatedWhere = dateRange ? createdAtWhere(dateRange) : {};
+  const purchaseCreatedWhere = dateRange ? createdAtWhere(dateRange) : {};
+  const subCreatedWhere = dateRange ? createdAtWhere(dateRange) : {};
 
   const [
     totalSignups,
@@ -96,17 +105,18 @@ export async function getAdminAnalyticsData() {
     recentAbandoned,
   ] = await Promise.all([
     // Total student signups
-    prisma.user.count({ where: { role: ROLES_STUDENT } }),
+    prisma.user.count({ where: { role: ROLES_STUDENT, ...userCreatedWhere } }),
 
     // Started checkout = Stripe customer was created (checkout page was reached and form was initialized)
     prisma.user.count({
-      where: { role: ROLES_STUDENT, stripeCustomerId: { not: null } },
+      where: { role: ROLES_STUDENT, stripeCustomerId: { not: null }, ...userCreatedWhere },
     }),
 
     // Completed a purchase (lifetime or subscription)
     prisma.user.count({
       where: {
         role: ROLES_STUDENT,
+        ...userCreatedWhere,
         OR: [
           { hasPaid: true },
           { subscriptions: { some: { status: { in: [...ACTIVE_SUB_STATUSES] } } } },
@@ -117,7 +127,7 @@ export async function getAdminAnalyticsData() {
     // Revenue + count broken down by planId
     prisma.purchase.groupBy({
       by: ["planId"],
-      where: { status: "succeeded" },
+      where: { status: "succeeded", ...purchaseCreatedWhere },
       _sum: { amount: true },
       _count: { id: true },
       orderBy: { _sum: { amount: "desc" } },
@@ -126,6 +136,7 @@ export async function getAdminAnalyticsData() {
     // Subscription counts by status
     prisma.subscription.groupBy({
       by: ["status"],
+      where: subCreatedWhere,
       _count: { id: true },
     }),
 
@@ -136,13 +147,14 @@ export async function getAdminAnalyticsData() {
         stripeCustomerId: { not: null },
         hasPaid: false,
         subscriptions: { none: { status: { in: [...ACTIVE_SUB_STATUSES] } } },
+        ...userCreatedWhere,
       },
     }),
 
     // Revenue by plan with plan name for display
     prisma.purchase.groupBy({
       by: ["planId", "planName"],
-      where: { status: "succeeded" },
+      where: { status: "succeeded", ...purchaseCreatedWhere },
       _sum: { amount: true },
       _count: { id: true },
     }),
@@ -154,6 +166,7 @@ export async function getAdminAnalyticsData() {
         stripeCustomerId: { not: null },
         hasPaid: false,
         subscriptions: { none: { status: { in: [...ACTIVE_SUB_STATUSES] } } },
+        ...userCreatedWhere,
       },
       select: {
         id: true,
@@ -194,8 +207,12 @@ export async function getAdminAnalyticsData() {
   };
 }
 
-export async function getAdminEmailStats() {
+export async function getAdminEmailStats(dateRange?: AdminDateRange) {
   const ACTIVE_SUB = ["active", "trialing"] as const;
+  // "Non-purchasers" / "uncontacted" describe who to target *right now*, so
+  // they stay a live snapshot. Sent/failed counts are scoped to when the
+  // email actually went out (sentAt), so those do respect the date range.
+  const emailSentWhere = dateRange ? sentAtWhere(dateRange) : {};
 
   const [
     totalNonPurchasers,
@@ -228,11 +245,11 @@ export async function getAdminEmailStats() {
         emailOutreachLogs:     { none: {} },
       },
     }),
-    prisma.emailAutomationEvent.count({ where: { flowType: "NO_PLAN_RECOVERY", step: 1, status: "SENT" } }),
-    prisma.emailAutomationEvent.count({ where: { flowType: "NO_PLAN_RECOVERY", step: 2, status: "SENT" } }),
-    prisma.emailOutreachLog.count({ where: { status: "SENT" } }),
-    prisma.emailAutomationEvent.count({ where: { status: "FAILED" } }),
-    prisma.emailOutreachLog.count({ where: { status: "FAILED" } }),
+    prisma.emailAutomationEvent.count({ where: { flowType: "NO_PLAN_RECOVERY", step: 1, status: "SENT", ...emailSentWhere } }),
+    prisma.emailAutomationEvent.count({ where: { flowType: "NO_PLAN_RECOVERY", step: 2, status: "SENT", ...emailSentWhere } }),
+    prisma.emailOutreachLog.count({ where: { status: "SENT", ...emailSentWhere } }),
+    prisma.emailAutomationEvent.count({ where: { status: "FAILED", ...emailSentWhere } }),
+    prisma.emailOutreachLog.count({ where: { status: "FAILED", ...emailSentWhere } }),
   ]);
 
   const totalSent      = autoSentStep1 + autoSentStep2 + manualSent;

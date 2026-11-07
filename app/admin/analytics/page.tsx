@@ -18,9 +18,83 @@ import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { getAdminAnalyticsData, getAdminEmailStats } from "@/lib/queries/admin";
 import { formatAdminDate } from "@/lib/admin-datetime";
+import { resolveAdminDateRange, type AdminDateRange } from "@/lib/admin-date-range";
 
 export const metadata = { title: "Analytics | Admin", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
+
+const PRESETS: { key: string; label: string }[] = [
+  { key: "all", label: "All time" },
+  { key: "today", label: "Today" },
+  { key: "7d", label: "Last 7 days" },
+  { key: "30d", label: "Last 30 days" },
+  { key: "90d", label: "Last 90 days" },
+];
+
+function presetHref(key: string) {
+  return key === "all" ? "/admin/analytics" : `/admin/analytics?range=${key}`;
+}
+
+function DateRangeFilter({ dateRange }: { dateRange: AdminDateRange }) {
+  return (
+    <div className="rounded-xl border border-border bg-surface p-4 space-y-3">
+      <div className="flex items-center gap-2 flex-wrap">
+        {PRESETS.map(({ key, label }) => (
+          <Link
+            key={key}
+            href={presetHref(key)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
+              dateRange.preset === key
+                ? "bg-gold text-black"
+                : "bg-surface-raised text-text-secondary hover:text-text hover:bg-border"
+            }`}
+          >
+            {label}
+          </Link>
+        ))}
+
+        <form method="GET" className="flex items-center gap-2 ml-auto flex-wrap">
+          <input
+            type="date"
+            name="from"
+            defaultValue={dateRange.fromInput}
+            max={new Date().toISOString().slice(0, 10)}
+            className="px-2.5 py-1.5 rounded-lg bg-surface-raised border border-border text-xs text-text [color-scheme:dark]"
+          />
+          <span className="text-text-muted text-xs">to</span>
+          <input
+            type="date"
+            name="to"
+            defaultValue={dateRange.toInput}
+            max={new Date().toISOString().slice(0, 10)}
+            className="px-2.5 py-1.5 rounded-lg bg-surface-raised border border-border text-xs text-text [color-scheme:dark]"
+          />
+          <button
+            type="submit"
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
+              dateRange.preset === "custom"
+                ? "bg-gold text-black"
+                : "bg-surface-raised text-text-secondary hover:text-text hover:bg-border"
+            }`}
+          >
+            Apply
+          </button>
+        </form>
+      </div>
+
+      <p className="text-xs text-text-muted">
+        Showing: <span className="text-text font-medium">{dateRange.label}</span>
+        {(dateRange.from || dateRange.to) && (
+          <>
+            {" "}
+            ({dateRange.from ? formatAdminDate(dateRange.from) : "start"} – {dateRange.to ? formatAdminDate(dateRange.to) : "now"})
+          </>
+        )}
+        . Funnel, revenue, and email figures below are scoped to this window.
+      </p>
+    </div>
+  );
+}
 
 function fmt(cents: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0 }).format(cents / 100);
@@ -53,11 +127,18 @@ const PLAN_LABELS: Record<string, string> = {
   individualTrial: "Individual Trial",
 };
 
-export default async function AdminAnalyticsPage() {
+export default async function AdminAnalyticsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ range?: string; from?: string; to?: string }>;
+}) {
   await requireAdmin();
+  const sp = await searchParams;
+  const dateRange = resolveAdminDateRange(sp);
+
   const [data, emailStats] = await Promise.all([
-    getAdminAnalyticsData(),
-    getAdminEmailStats(),
+    getAdminAnalyticsData(dateRange),
+    getAdminEmailStats(dateRange),
   ]);
   const { funnel, planStats, subStats, recentAbandoned } = data;
 
@@ -78,6 +159,9 @@ export default async function AdminAnalyticsPage() {
           Conversion funnel, plan breakdown, and checkout abandonment from your database.
         </p>
       </div>
+
+      {/* Date range filter */}
+      <DateRangeFilter dateRange={dateRange} />
 
       {/* Vercel Analytics link */}
       <div className="rounded-xl border border-border bg-surface p-4 flex items-center justify-between gap-4">
@@ -316,6 +400,9 @@ export default async function AdminAnalyticsPage() {
             Go to Email Automation <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
+        <p className="text-xs text-text-muted -mt-2 mb-4">
+          Non-purchasers &amp; unreached are a live snapshot (who to target right now). Sent/failed counts below are scoped to the selected date range.
+        </p>
 
         {/* KPI cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
