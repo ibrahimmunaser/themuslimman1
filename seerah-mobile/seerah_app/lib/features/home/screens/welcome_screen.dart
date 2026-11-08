@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -8,6 +10,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/iap_provider.dart';
 import '../../../core/providers/part_provider.dart';
+import '../../../core/providers/welcome_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/system_insets.dart';
 import '../../../core/widgets/ui_kit.dart';
@@ -22,6 +25,18 @@ class WelcomeScreen extends ConsumerStatefulWidget {
 
 class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
   bool _restoring = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Fire-and-forget: once this screen has actually been shown once (first
+    // launch on a fresh install, or a manual "Welcome Tour" revisit from
+    // Profile — markWelcomeSeen() is already a no-op there since the flag
+    // is already true), app_router stops auto-routing '/' here, so it never
+    // becomes a forced repeat wall. The user can still always reach it
+    // manually from Profile.
+    unawaited(markWelcomeSeen(ref));
+  }
 
   void _onIAP(IAPState? prev, IAPState next) {
     // Bug fix: this handler never checked for IAPStatus.success, so a

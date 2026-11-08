@@ -121,6 +121,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     // safe regardless of whose progress was cached locally — it's tied to
     // the receipt/transaction, not the local progress cache.
     unawaited(ref.read(iapProvider.notifier).restorePurchases());
+
+    // Explicitly navigate rather than relying solely on app_router's
+    // redirect to notice the auth-state change: this screen is reached via
+    // context.push('/login') (see welcome/landing screens), and a
+    // refreshListenable-triggered redirect doesn't reliably unwind that
+    // imperatively-pushed page. Without this, the sign-in appeared to do
+    // nothing — the user had to trigger some OTHER navigation (back, or a
+    // tab tap) before the already-successful login was reflected. Mirrors
+    // signup_screen.dart's identical context.go('/dashboard') after a
+    // successful upgradeAccount().
+    if (!mounted) return;
+    context.go('/dashboard');
   }
 
   @override

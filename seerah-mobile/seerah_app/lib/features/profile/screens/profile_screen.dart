@@ -329,6 +329,13 @@ class ProfileScreen extends ConsumerWidget {
     );
     if (confirmed == true) {
       await ref.read(authProvider.notifier).logout();
+      // Explicitly navigate rather than relying solely on app_router's
+      // redirect to notice the auth-state change: this screen is reached
+      // via context.push('/profile') (see dashboard_screen.dart), and a
+      // refreshListenable-triggered redirect doesn't reliably unwind that
+      // imperatively-pushed page. Mirrors the identical fix applied to
+      // login_screen.dart's successful-login path.
+      if (context.mounted) context.go('/login');
     }
   }
 

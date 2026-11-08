@@ -715,30 +715,25 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> logout() async {
     _beginOp(); // invalidate any in-flight login/ensureSession so it can't resurrect this session
+
+    // Snapshot the current session cookie BEFORE any local clearing, so the
+    // background server-signout call below (fired after state is already
+    // cleared) still carries the right Cookie header explicitly rather than
+    // depending on the interceptor reading _mem at send time, which by then
+    // may already be empty.
+    final cookieSnapshot = cookies.getCurrentCookies();
     // NOTE: the correct endpoint is /api/auth/signout (there is no
     // /api/auth/logout on the server) — calling the wrong path silently
     // failed to invalidate the server-side session on every mobile logout.
-    //
-    // Local state is always cleared below regardless of outcome (a flaky
-    // network must never trap a user in "can't sign out" purgatory), but a
-    // couple of quick retries meaningfully shrinks the window where the
-    // client believes it's signed out while the server-side Session row
-    // (valid up to COOKIE_MAX_AGE, 30 days) is actually still live.
-    const maxAttempts = 2;
-    for (var attempt = 1; attempt <= maxAttempts; attempt++) {
-      try {
-        await ApiClient.instance.dio.post('/api/auth/signout');
-        break;
-      } catch (e) {
-        if (attempt == maxAttempts) {
-          debugPrint(
-            '[AuthNotifier] signout request failed after $maxAttempts attempts: $e',
-          );
-        } else {
-          await Future.delayed(const Duration(milliseconds: 300));
-        }
-      }
-    }
+    // Previously this was awaited (with up to 2 retries) BEFORE any local
+    // state was cleared — on a slow/flaky connection that's up to ~50s per
+    // attempt (Dio's connect/receive timeouts), during which the "Sign Out"
+    // tap appeared to just hang. Nothing the user can observe on-device
+    // depends on this round-trip succeeding or even finishing first — only
+    // the local cookie/prefs/progress clearing below does — so it's fired
+    // in the background and the user sees themself signed out immediately.
+    unawaited(_signOutServerSide(cookieSnapshot));
+
     await ApiClient.instance.clearCookies();
 
     // Remove only auth-specific keys instead of prefs.clear() to avoid
@@ -754,6 +749,36 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
     state = const AuthState(isLoggedIn: false, isLoading: false);
     _invalidatePartScopedProviders();
+  }
+
+  /// Best-effort server-side session invalidation for [logout], run in the
+  /// background so the user never waits on it (see logout()'s doc comment).
+  /// A couple of quick retries meaningfully shrinks the window where the
+  /// server-side Session row (valid up to COOKIE_MAX_AGE, 30 days) is still
+  /// live after the device itself has already signed out.
+  Future<void> _signOutServerSide(Map<String, String> cookieSnapshot) async {
+    if (cookieSnapshot.isEmpty) return;
+    final cookieHeader = cookieSnapshot.entries
+        .map((e) => '${e.key}=${e.value}')
+        .join('; ');
+    const maxAttempts = 2;
+    for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        await ApiClient.instance.dio.post(
+          '/api/auth/signout',
+          options: Options(headers: {'Cookie': cookieHeader}),
+        );
+        return;
+      } catch (e) {
+        if (attempt == maxAttempts) {
+          debugPrint(
+            '[AuthNotifier] signout request failed after $maxAttempts attempts: $e',
+          );
+        } else {
+          await Future.delayed(const Duration(milliseconds: 300));
+        }
+      }
+    }
   }
 
   Future<void> _saveUser(UserModel user) async {

@@ -11,6 +11,7 @@ import 'core/network/api_client.dart';
 import 'core/providers/auth_provider.dart';
 import 'core/providers/iap_provider.dart';
 import 'core/providers/part_provider.dart';
+import 'core/providers/welcome_provider.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_colors.dart';
 import 'core/theme/app_theme.dart';
@@ -60,13 +61,25 @@ Future<void> main() async {
   // Initialize Dio + restore secure cookies before any provider reads the API.
   // Wrapped in try-finally so the native splash is always removed even if
   // init throws — prevents an infinite splash hang on startup failure.
+  bool hasSeenWelcome = true;
   try {
     await ApiClient.instance.init();
+    // Read before FlutterNativeSplash.remove() so app_router's redirect can
+    // decide /welcome vs /dashboard on the very first frame — see
+    // welcome_provider.dart's doc comment.
+    hasSeenWelcome = await loadHasSeenWelcome();
   } finally {
     FlutterNativeSplash.remove();
   }
 
-  runApp(const ProviderScope(child: SeerahApp()));
+  runApp(
+    ProviderScope(
+      overrides: [
+        welcomeSeenProvider.overrideWith((ref) => hasSeenWelcome),
+      ],
+      child: const SeerahApp(),
+    ),
+  );
 }
 
 class SeerahApp extends ConsumerStatefulWidget {

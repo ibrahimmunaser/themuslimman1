@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
 import '../providers/part_provider.dart';
+import '../providers/welcome_provider.dart';
 import '../../l10n/app_strings.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/signup_screen.dart';
@@ -56,13 +57,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       // /landing, since /signup upgrades an *existing* guest session.
       if (loc == '/signup' && !isLoggedIn) return '/landing';
 
-      // Splash always lands straight on the dashboard — signed in or not,
-      // paid or not. Mirrors the website: a guest sees the full dashboard
+      // Splash lands on the dashboard — signed in or not, paid or not — on
+      // every launch except the very first one on a fresh install, which
+      // gets a single skippable WelcomeScreen first (see welcome_provider.dart).
+      // Mirrors the website otherwise: a guest sees the full dashboard
       // immediately (the free part unlocked, every other part shown locked)
-      // with no forced login/onboarding wall first; only opening locked
-      // content prompts a purchase (PartScreen's own paywall, or the
-      // Pricing/Landing screens).
-      if (loc == '/') return '/dashboard';
+      // with no forced login wall; only opening locked content prompts a
+      // purchase (PartScreen's own paywall, or the Pricing/Landing screens).
+      if (loc == '/') {
+        return ref.read(welcomeSeenProvider) ? '/dashboard' : '/welcome';
+      }
 
       // Account-only screens read/write personal data (profile, learner
       // profiles, quiz history, certificate), so they still need at least a

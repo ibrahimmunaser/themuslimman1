@@ -1,6 +1,6 @@
 class AppConstants {
   // App version — keep in sync with pubspec.yaml version field
-  static const String appVersion = '1.0.72';
+  static const String appVersion = '1.0.74';
 
   /// The single free-preview part of the course. Every other part (1-14,
   /// 16-100) requires `hasAccess`. Mirrors the website's `FREE_PART_NUMBER`
@@ -34,6 +34,12 @@ class AppConstants {
   /// another's. Kept out of [authPrefKeys] on purpose: progressProvider
   /// clears it explicitly (see ProgressNotifier.clearAll).
   static const String keyActiveProfileId = 'active_profile_id';
+
+  /// Whether this device has ever shown the first-launch WelcomeScreen.
+  /// Device-level, not account-level (set before any session even exists),
+  /// so deliberately kept out of [authPrefKeys] — signing out/in must never
+  /// bring the onboarding screen back on a device that's already seen it.
+  static const String keyHasSeenWelcome = 'has_seen_welcome';
 
   // All auth-related pref keys — used for selective clear on logout
   static const List<String> authPrefKeys = [
