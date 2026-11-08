@@ -45,27 +45,33 @@ class _Plan {
   });
 }
 
-// Public offer — Individual Monthly ($4.99/mo) and Individual Lifetime
-// (one-time, country-priced). Family is no longer sold going forward
+// Public offer — Individual Lifetime (one-time, country-priced) and
+// Individual Monthly ($4.99/mo). Family is no longer sold going forward
 // (existing purchasers keep their access/entitlements as-is).
+//
+// Lifetime is listed first and carries the only badge ("Recommended") —
+// a redesign choice to stop presenting two competing badges ("Most
+// Popular" on Monthly, "Recommended" on Lifetime) with no purchase data
+// backing either claim. Re-add "Most Popular" on Monthly only if that's
+// actually shown to be true.
 const _plans = [
-  _Plan(
-    id: PlanId.individualMonthly,
-    iapId: AppConstants.iapMonthlyIndividual,
-    nameKey: 'planMonthly',
-    descriptionKey: 'oneLearnerCancelAnytime',
-    periodKey: 'perMonth',
-    badgeKey: 'mostPopular',
-    isRecommended: false,
-  ),
   _Plan(
     id: PlanId.individualLifetime,
     iapId: AppConstants.iapLifetimeIndividual,
     nameKey: 'planLifetime',
-    descriptionKey: 'oneLearnerPayOnce',
-    periodKey: 'only',
+    descriptionKey: 'lifetimeAccessCaption',
+    periodKey: 'onceSuffix',
     badgeKey: 'recommended',
     isRecommended: true,
+  ),
+  _Plan(
+    id: PlanId.individualMonthly,
+    iapId: AppConstants.iapMonthlyIndividual,
+    nameKey: 'planMonthly',
+    descriptionKey: 'cancelAnytime',
+    periodKey: 'perMonth',
+    badgeKey: null,
+    isRecommended: false,
   ),
 ];
 
@@ -84,6 +90,15 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
   // for why this closes the pre-`purchasing`-status double-tap window.
   bool _buyTapInFlight = false;
   final _scrollCtrl = ScrollController();
+
+  // Which compact plan row is currently selected (radio-style) — the single
+  // CTA button below the two rows buys whichever one this points at.
+  // Defaults to the recommended plan.
+  PlanId _selectedPlanId = _plans
+      .firstWhere((p) => p.isRecommended, orElse: () => _plans.first)
+      .id;
+
+  _Plan get _selectedPlan => _plans.firstWhere((p) => p.id == _selectedPlanId);
 
   @override
   void initState() {
@@ -341,33 +356,53 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                         ),
                       ),
                     Expanded(
-                      child: Text(
-                        t(lang, 'choosePlan'),
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.3,
-                        ),
+                      // ── Headline + supporting line ───────────────────
+                      // Leads with what the learner gets ("Learn the
+                      // Prophet's ﷺ life, in order.") instead of the
+                      // generic "Choose your plan" label, and states the
+                      // product before the price/legal text below.
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            t(lang, 'planHeadline'),
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.3,
+                              height: 1.2,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            t(lang, 'planScreenSubtitle'),
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 13.5,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
 
-              // ── Value-proposition subtitle ─────────────────────────
-              // Leads with what the learner gets before they even reach the
-              // plan card, instead of jumping straight from the bare title
-              // into price/legal text.
+              // ── Three compact benefits ───────────────────────────────
+              // Shown above the plan rows so the value proposition is
+              // visible before the learner sees a single price.
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
-                child: Text(
-                  t(lang, 'planScreenSubtitle'),
-                  style: const TextStyle(
-                    color: AppColors.textMuted,
-                    fontSize: 13,
-                    height: 1.4,
-                  ),
+                padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _BenefitChip(icon: Icons.play_circle_outline_rounded, label: t(lang, 'benefitVideos')),
+                    _BenefitChip(icon: Icons.quiz_outlined, label: t(lang, 'benefitFlashcards')),
+                    _BenefitChip(icon: Icons.translate_rounded, label: t(lang, 'benefit15Languages')),
+                  ],
                 ),
               ),
 
@@ -413,19 +448,66 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                       ],
 
                       // ── Plans ─────────────────────────────────────────────
+                      // Two compact, closely-spaced selectable rows (radio
+                      // style) instead of two large cards each with its own
+                      // buy button — tapping a row only selects it; the one
+                      // gold button below actually starts the purchase for
+                      // whichever row is selected.
                       ...List.generate(_plans.length, (i) {
                         final plan = _plans[i];
-                        return _PlanTile(
+                        return _PlanSelectRow(
                           plan: plan,
                           lang: lang,
                           price: _price(iap, plan),
-                          isLoading: _purchasingPlanId == plan.id && busy,
+                          selected: _selectedPlanId == plan.id,
                           enabled: !busy && !hasAccess,
-                          onTap: () => _buyPlan(iap, plan),
-                          bottomMargin: i < _plans.length - 1 ? 10 : 0,
-                          isRecommended: plan.isRecommended,
+                          onTap: () =>
+                              setState(() => _selectedPlanId = plan.id),
+                          bottomMargin: i < _plans.length - 1 ? 8 : 0,
                         );
                       }),
+
+                      const SizedBox(height: 14),
+
+                      SizedBox(
+                        width: double.infinity,
+                        height: 52,
+                        child: ElevatedButton(
+                          onPressed: (!busy && !hasAccess)
+                              ? () => _buyPlan(iap, _selectedPlan)
+                              : null,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.gold,
+                            disabledBackgroundColor:
+                                AppColors.gold.withValues(alpha: 0.4),
+                            foregroundColor: Colors.black,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                          child: (_purchasingPlanId == _selectedPlanId && busy)
+                              ? const SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.4,
+                                    color: Colors.black,
+                                  ),
+                                )
+                              : Text(
+                                  _selectedPlanId == PlanId.individualLifetime
+                                      ? t(lang, 'getLifetimeAccessCta')
+                                      : t(lang, 'subscribeMonthlyCta'),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                        ),
+                      ),
 
                       const SizedBox(height: 16),
 
@@ -511,10 +593,10 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                                 Icons.insights_rounded,
                                 t(lang, 'includedProgress'),
                               ),
-                              (
-                                Icons.all_inclusive_rounded,
-                                t(lang, 'includedLifetime'),
-                              ),
+                              // "Cancel anytime" deliberately left out of this
+                              // shared list — it only applies to the Monthly
+                              // plan (shown on its own row above) and doesn't
+                              // apply to a one-time Lifetime purchase.
                             ].map(
                               (item) => Padding(
                                 padding: const EdgeInsets.only(bottom: 12),
@@ -663,9 +745,15 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
   }
 }
 
-// ── Plan tile ─────────────────────────────────────────────────────────────────
-
-class _PlanTile extends StatelessWidget {
+// ── Compact plan select row ───────────────────────────────────────────────
+//
+// Replaces the old full-size plan card: a single closely-spaced row per
+// plan with a radio-style selection indicator. Tapping a row only selects
+// it — the shared gold CTA button below the two rows is what actually
+// starts the purchase. This lets both plans, and the purchase button, sit
+// together on screen at normal text sizes instead of one giant card per
+// plan pushing everything else below the fold.
+class _PlanSelectRow extends StatelessWidget {
   final _Plan plan;
   final String lang;
 
@@ -673,20 +761,18 @@ class _PlanTile extends StatelessWidget {
   /// comment (audit M-fallback-price). Renders a neutral placeholder
   /// instead of a stale hardcoded price in that window.
   final String? price;
-  final bool isLoading;
+  final bool selected;
   final bool enabled;
-  final bool isRecommended;
   final VoidCallback onTap;
   final double bottomMargin;
 
-  const _PlanTile({
+  const _PlanSelectRow({
     required this.plan,
     required this.lang,
     required this.price,
-    required this.isLoading,
+    required this.selected,
     required this.enabled,
     required this.onTap,
-    this.isRecommended = false,
     this.bottomMargin = 0,
   });
 
@@ -696,224 +782,200 @@ class _PlanTile extends StatelessWidget {
       padding: EdgeInsets.only(bottom: bottomMargin),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         child: InkWell(
-          onTap: enabled && !isLoading
+          onTap: enabled
               ? () {
-                  HapticFeedback.mediumImpact();
+                  HapticFeedback.selectionClick();
                   onTap();
                 }
               : null,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(14),
           splashColor: AppColors.gold.withValues(alpha: 0.06),
           highlightColor: AppColors.gold.withValues(alpha: 0.03),
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.all(16),
+            duration: const Duration(milliseconds: 150),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              gradient: isRecommended
-                  ? LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        AppColors.gold.withValues(alpha: 0.14),
-                        AppColors.gold.withValues(alpha: 0.04),
-                      ],
-                    )
-                  : null,
-              color: isRecommended ? null : AppColors.card,
-              borderRadius: BorderRadius.circular(16),
+              // Flat charcoal card for both rows — gold is reserved for the
+              // selected row's border/radio and the CTA button, instead of
+              // a gold glow sitting on every card regardless of selection.
+              color: AppColors.card,
+              borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: isRecommended
-                    ? AppColors.gold.withValues(alpha: 0.6)
-                    : AppColors.border,
-                width: isRecommended ? 1.5 : 1,
+                color: selected ? AppColors.gold : AppColors.border,
+                width: selected ? 1.5 : 1,
               ),
-              boxShadow: isRecommended
-                  ? [
-                      BoxShadow(
-                        color: AppColors.gold.withValues(alpha: 0.12),
-                        blurRadius: 20,
-                        offset: const Offset(0, 6),
-                      ),
-                    ]
-                  : null,
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+            child: Row(
               children: [
-                Row(
-                  children: [
-                    // Left — badge (if any) + name + description
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (plan.badgeKey != null)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 6),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 3,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: isRecommended
-                                      ? AppColors.gold
-                                      : AppColors.goldFaded,
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  t(lang, plan.badgeKey!),
-                                  style: TextStyle(
-                                    color: isRecommended
-                                        ? Colors.black
-                                        : AppColors.gold,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 0.3,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          Text(
-                            t(lang, plan.nameKey),
-                            style: const TextStyle(
-                              color: AppColors.textPrimary,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            t(lang, plan.descriptionKey),
-                            style: TextStyle(
-                              color: isRecommended
-                                  ? AppColors.textSecondary
-                                  : AppColors.textMuted,
-                              fontSize: 12.5,
-                            ),
-                          ),
-                        ],
-                      ),
+                // Radio-style selection indicator.
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 150),
+                  width: 20,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: selected ? AppColors.gold : Colors.transparent,
+                    border: Border.all(
+                      color: selected ? AppColors.gold : AppColors.textMuted,
+                      width: 1.5,
                     ),
+                  ),
+                  child: selected
+                      ? const Icon(
+                          Icons.check_rounded,
+                          size: 13,
+                          color: Colors.black,
+                        )
+                      : null,
+                ),
+                const SizedBox(width: 12),
 
-                    const SizedBox(width: 12),
-
-                    // Right — price + loading
-                    if (isLoading)
-                      SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator.adaptive(
-                          strokeWidth: 2.5,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            isRecommended
-                                ? AppColors.gold
-                                : AppColors.textMuted,
-                          ),
-                        ),
-                      )
-                    else if (price == null)
-                      const PriceLoadingPlaceholder()
-                    else
-                      Flexible(
-                        fit: FlexFit.loose,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              t(lang, plan.periodKey),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: isRecommended
-                                    ? AppColors.gold.withValues(alpha: 0.7)
-                                    : AppColors.textMuted,
-                                fontSize: 11,
+                // Name + badge + description.
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          // Flexible (not a bare Text) — a long translation
+                          // of the plan name, combined with the badge next
+                          // to it, must shrink/wrap instead of overflowing
+                          // this inner Row horizontally (it sits inside the
+                          // Expanded above, which only bounds width, it
+                          // doesn't itself prevent a RenderFlex overflow).
+                          Flexible(
+                            child: Text(
+                              t(lang, plan.nameKey),
+                              style: const TextStyle(
+                                color: AppColors.textPrimary,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
-                            FittedBox(
-                              fit: BoxFit.scaleDown,
+                          ),
+                          if (plan.badgeKey != null) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 7,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.gold,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
                               child: Text(
-                                price!,
-                                maxLines: 1,
-                                textDirection: TextDirection.ltr,
-                                style: TextStyle(
-                                  color: isRecommended
-                                      ? AppColors.gold
-                                      : AppColors.textPrimary,
-                                  fontSize: 19,
-                                  fontWeight: FontWeight.w800,
+                                t(lang, plan.badgeKey!),
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.3,
                                 ),
                               ),
                             ),
                           ],
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        t(lang, plan.descriptionKey),
+                        // Caption can run to 2 lines in a longer translation
+                        // without erroring — it just makes the row a touch
+                        // taller, which is fine for two closely-spaced rows.
+                        maxLines: 2,
+                        style: const TextStyle(
+                          // Brighter than the old muted gray — legible body
+                          // text instead of a muddy caption.
+                          color: AppColors.textSecondary,
+                          fontSize: 12.5,
                         ),
                       ),
-                  ],
-                ),
-
-                const SizedBox(height: 14),
-                Container(
-                  height: 1,
-                  color: isRecommended
-                      ? AppColors.gold.withValues(alpha: 0.18)
-                      : AppColors.border,
-                ),
-                const SizedBox(height: 14),
-
-                // ── Explicit CTA button ───────────────────────────────
-                // The whole card stays tappable (see the outer InkWell) for
-                // a forgiving tap target, but a visible button — instead of
-                // just a small trailing chevron — removes any doubt about
-                // what tapping this card does.
-                SizedBox(
-                  width: double.infinity,
-                  height: 46,
-                  child: ElevatedButton(
-                    onPressed: enabled && !isLoading
-                        ? () {
-                            HapticFeedback.mediumImpact();
-                            onTap();
-                          }
-                        : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.gold,
-                      disabledBackgroundColor: AppColors.border,
-                      foregroundColor: Colors.black,
-                      disabledForegroundColor: AppColors.textMuted.withValues(
-                        alpha: 0.7,
-                      ),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: isLoading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator.adaptive(
-                              strokeWidth: 2.2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.black,
-                              ),
-                            ),
-                          )
-                        : Text(
-                            t(lang, 'getFullAccess'),
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
+                    ],
                   ),
                 ),
+
+                const SizedBox(width: 10),
+
+                // Price — capped at a shrinkable single line so a long
+                // currency/suffix combination (long country price string,
+                // or a verbose translated "once"/"/month" suffix) scales
+                // down instead of overflowing the row horizontally.
+                if (price == null)
+                  const PriceLoadingPlaceholder()
+                else
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 108),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerRight,
+                      child: Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(text: price),
+                            TextSpan(
+                              text: plan.periodKey == 'perMonth'
+                                  ? t(lang, 'perMonth')
+                                  : ' ${t(lang, plan.periodKey)}',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        maxLines: 1,
+                        textDirection: TextDirection.ltr,
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// One of the three compact benefit chips shown above the plan rows.
+class _BenefitChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _BenefitChip({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: AppColors.gold),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }

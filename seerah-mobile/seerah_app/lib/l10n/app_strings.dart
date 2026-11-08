@@ -274,10 +274,29 @@ const Map<String, Map<String, String>> _kStrings = {
     'ar': 'الأكثر رواجًا',
     'fr': 'Le plus populaire',
   },
+  // 'recommended' is missing from the ui map in every assets/i18n/*.json
+  // course pack (confirmed by inspecting the packs directly — a code
+  // comment claiming coverage isn't good enough) — only en/ar/fr had real
+  // translations here before. Now the only badge on the redesigned plan
+  // screen (Monthly's "Most Popular" badge was dropped), it's worth
+  // covering for all 15 course languages rather than silently showing
+  // English on the other 12.
   'recommended': {
     'en': 'Recommended',
     'ar': 'موصى به',
     'fr': 'Recommandé',
+    'id': 'Direkomendasikan',
+    'ms': 'Disyorkan',
+    'zh': '推荐',
+    'ru': 'Рекомендуется',
+    'sw': 'Inapendekezwa',
+    'es': 'Recomendado',
+    'de': 'Empfohlen',
+    'tr': 'Önerilen',
+    'hi': 'अनुशंसित',
+    'ur': 'تجویز کردہ',
+    'bn': 'প্রস্তাবিত',
+    'fa': 'پیشنهادی',
   },
   'oneLearnerPayOnce': {
     'en': '1 learner • pay once, own forever',
@@ -318,13 +337,180 @@ const Map<String, Map<String, String>> _kStrings = {
     'ar': 'احصل على الوصول الكامل',
     'fr': 'Obtenir l\'accès complet',
   },
-  // Short value-proposition line shown under the "Choose Your Plan" /
-  // "Choose your plan" title so the page leads with what the learner gets,
-  // not straight into the plan card.
+  // Headline the plan screens lead with — replaces the generic "Choose your
+  // plan" title so the page opens on the value proposition instead of a
+  // label. ﷺ is the Arabic honorific for the Prophet Muhammad.
+  // All 9 entries below are hand-translated for all 15 supported course
+  // languages (see kCourseLangOptions in course_langs.dart) rather than
+  // left to the auto-translation fallback in t(): these are brand-new
+  // strings (or, for planScreenSubtitle, a changed English source string)
+  // that cannot already exist in the generated assets/i18n/*.json phrase
+  // packs, which only translate English text that existed at generation
+  // time. Without an explicit entry here, t() would silently render these
+  // in English for every language below except ar/fr.
+  'planHeadline': {
+    'en': "Learn the Prophet's ﷺ life, in order.",
+    'ar': 'تعرّف على سيرة النبي ﷺ بالترتيب.',
+    'fr': "Découvrez la vie du Prophète ﷺ, dans l'ordre.",
+    'id': 'Pelajari kehidupan Nabi ﷺ secara berurutan.',
+    'ms': 'Pelajari kehidupan Nabi ﷺ secara tersusun.',
+    'zh': '按顺序学习先知ﷺ的生平。',
+    'ru': 'Изучайте жизнь Пророка ﷺ по порядку.',
+    'sw': 'Jifunze maisha ya Mtume ﷺ kwa mpangilio.',
+    'es': 'Aprende la vida del Profeta ﷺ en orden.',
+    'de': 'Lerne das Leben des Propheten ﷺ in der richtigen Reihenfolge.',
+    'tr': 'Peygamberimizin ﷺ hayatını sırasıyla öğrenin.',
+    'hi': 'पैगंबर ﷺ के जीवन को क्रम से सीखें।',
+    'ur': 'نبی ﷺ کی زندگی کو ترتیب سے سیکھیں۔',
+    'bn': 'নবী ﷺ-এর জীবন ক্রমানুসারে শিখুন।',
+    'fa': 'زندگی پیامبر ﷺ را به ترتیب بیاموزید.',
+  },
+  // Short value-proposition line shown under [planHeadline] so the page
+  // leads with what the learner gets, not straight into the plan rows.
   'planScreenSubtitle': {
-    'en': 'All 100 lessons, notes & quizzes — yours forever.',
-    'ar': 'جميع الدروس المئة والملاحظات والاختبارات — ملك لك للأبد.',
-    'fr': 'Les 100 leçons, notes et quiz — à vous pour toujours.',
+    'en': 'The complete 100-part Seerah course',
+    'ar': 'دورة السيرة الكاملة المكوّنة من ١٠٠ جزء',
+    'fr': 'Le cours complet de la Sira en 100 parties',
+    'id': 'Kursus Seerah lengkap, 100 bagian',
+    'ms': 'Kursus Seerah lengkap, 100 bahagian',
+    'zh': '完整的100集先知传记课程',
+    'ru': 'Полный курс Сиры из 100 частей',
+    'sw': 'Kozi kamili ya Seerah ya sehemu 100',
+    'es': 'El curso completo de la Seerah en 100 partes',
+    'de': 'Der komplette Seerah-Kurs mit 100 Teilen',
+    'tr': '100 bölümden oluşan eksiksiz Siyer kursu',
+    'hi': 'संपूर्ण 100-भागों वाला सीरह कोर्स',
+    'ur': 'مکمل 100 حصوں پر مشتمل سیرت کورس',
+    'bn': 'সম্পূর্ণ ১০০-পর্বের সীরাহ কোর্স',
+    'fa': 'دوره کامل سیره در ۱۰۰ بخش',
+  },
+  // Three compact benefit chips shown above the plan rows — the redesigned
+  // page states what the learner gets before the price, rather than after.
+  'benefitVideos': {
+    'en': 'Video lessons & visual summaries',
+    'ar': 'دروس فيديو وملخصات مرئية',
+    'fr': 'Leçons vidéo et résumés visuels',
+    'id': 'Pelajaran video & ringkasan visual',
+    'ms': 'Pelajaran video & ringkasan visual',
+    'zh': '视频课程与图文摘要',
+    'ru': 'Видеоуроки и наглядные сводки',
+    'sw': 'Masomo ya video na muhtasari wa picha',
+    'es': 'Lecciones en video y resúmenes visuales',
+    'de': 'Videolektionen & visuelle Zusammenfassungen',
+    'tr': 'Video dersler ve görsel özetler',
+    'hi': 'वीडियो पाठ और विज़ुअल सारांश',
+    'ur': 'ویڈیو اسباق اور تصویری خلاصے',
+    'bn': 'ভিডিও পাঠ এবং ভিজ্যুয়াল সারসংক্ষেপ',
+    'fa': 'درس‌های ویدیویی و خلاصه‌های تصویری',
+  },
+  'benefitFlashcards': {
+    'en': 'Flashcards & quizzes',
+    'ar': 'بطاقات تعليمية واختبارات',
+    'fr': 'Flashcards et quiz',
+    'id': 'Kartu hafalan & kuis',
+    'ms': 'Kad imbas & kuiz',
+    'zh': '闪卡与测验',
+    'ru': 'Карточки и тесты',
+    'sw': 'Kadi za kukariri na maswali',
+    'es': 'Tarjetas didácticas y cuestionarios',
+    'de': 'Lernkarten & Quizze',
+    'tr': 'Bilgi kartları ve testler',
+    'hi': 'फ्लैशकार्ड और क्विज़',
+    'ur': 'فلیش کارڈز اور کوئزز',
+    'bn': 'ফ্ল্যাশকার্ড এবং কুইজ',
+    'fa': 'فلش‌کارت‌ها و آزمون‌ها',
+  },
+  'benefit15Languages': {
+    'en': '15 languages',
+    'ar': '١٥ لغة',
+    'fr': '15 langues',
+    'id': '15 bahasa',
+    'ms': '15 bahasa',
+    'zh': '15种语言',
+    'ru': '15 языков',
+    'sw': 'Lugha 15',
+    'es': '15 idiomas',
+    'de': '15 Sprachen',
+    'tr': '15 dil',
+    'hi': '15 भाषाएं',
+    'ur': '15 زبانیں',
+    'bn': '১৫টি ভাষা',
+    'fa': '۱۵ زبان',
+  },
+  // Caption under the compact Lifetime plan row specifically — kept off the
+  // Monthly row, which uses the existing [cancelAnytime] string instead, so
+  // each plan's own promise isn't implied to apply to both.
+  'lifetimeAccessCaption': {
+    'en': 'Lifetime access',
+    'ar': 'وصول مدى الحياة',
+    'fr': 'Accès à vie',
+    'id': 'Akses selamanya',
+    'ms': 'Akses sepanjang hayat',
+    'zh': '终身访问',
+    'ru': 'Доступ навсегда',
+    'sw': 'Ufikiaji wa maisha yote',
+    'es': 'Acceso de por vida',
+    'de': 'Lebenslanger Zugang',
+    'tr': 'Ömür boyu erişim',
+    'hi': 'जीवनभर एक्सेस',
+    'ur': 'تاحیات رسائی',
+    'bn': 'লাইফটাইম অ্যাক্সেস',
+    'fa': 'دسترسی مادام‌العمر',
+  },
+  // Suffix appended directly after the store-formatted Lifetime price, e.g.
+  // "$48.99 once" — mirrors how [perMonth] suffixes the Monthly price.
+  'onceSuffix': {
+    'en': 'once',
+    'ar': 'دفعة واحدة',
+    'fr': 'une fois',
+    'id': 'sekali',
+    'ms': 'sekali',
+    'zh': '一次性',
+    'ru': 'единоразово',
+    'sw': 'mara moja',
+    'es': 'pago único',
+    'de': 'einmalig',
+    'tr': 'tek seferlik',
+    'hi': 'एकमुश्त',
+    'ur': 'یک بار',
+    'bn': 'একবার',
+    'fa': 'یک‌بار',
+  },
+  // Single shared CTA button below the two compact plan rows — its label
+  // switches with whichever row is currently selected.
+  'getLifetimeAccessCta': {
+    'en': 'Get Lifetime Access',
+    'ar': 'احصل على الوصول مدى الحياة',
+    'fr': "Obtenir l'accès à vie",
+    'id': 'Dapatkan Akses Selamanya',
+    'ms': 'Dapatkan Akses Sepanjang Hayat',
+    'zh': '获取终身访问权限',
+    'ru': 'Получить доступ навсегда',
+    'sw': 'Pata Ufikiaji wa Maisha Yote',
+    'es': 'Obtener acceso de por vida',
+    'de': 'Lebenslangen Zugang erhalten',
+    'tr': 'Ömür Boyu Erişim Al',
+    'hi': 'लाइफटाइम एक्सेस प्राप्त करें',
+    'ur': 'تاحیات رسائی حاصل کریں',
+    'bn': 'লাইফটাইম অ্যাক্সেস নিন',
+    'fa': 'دریافت دسترسی مادام‌العمر',
+  },
+  'subscribeMonthlyCta': {
+    'en': 'Subscribe Monthly',
+    'ar': 'اشترك شهريًا',
+    'fr': "S'abonner mensuellement",
+    'id': 'Berlangganan Bulanan',
+    'ms': 'Melanggan Bulanan',
+    'zh': '按月订阅',
+    'ru': 'Оформить подписку помесячно',
+    'sw': 'Jisajili kwa Mwezi',
+    'es': 'Suscribirse mensualmente',
+    'de': 'Monatlich abonnieren',
+    'tr': 'Aylık Abone Ol',
+    'hi': 'मासिक सब्सक्राइब करें',
+    'ur': 'ماہانہ سبسکرائب کریں',
+    'bn': 'মাসিক সাবস্ক্রাইব করুন',
+    'fa': 'اشتراک ماهانه',
   },
   'watchPart1': {
     'en': 'Watch the First Revelation',
@@ -344,7 +530,7 @@ const Map<String, Map<String, String>> _kStrings = {
   'chooseYourPlan': {
     'en': 'Choose Your Plan',
     'ar': 'اختر خطتك',
-    'fr': 'Choose Your Plan',
+    'fr': 'Choisissez votre formule',
   },
   'youHaveFullAccess': {
     'en': 'You have full access to the course',
