@@ -520,12 +520,18 @@ class _ContinueLearningCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      nextPart.localizedSubtitle(lang),
+                      isFirstVisit &&
+                              nextPart.partNumber == AppConstants.kFreePartNumber
+                          ? t(lang, 'freePartStartDescription')
+                          : nextPart.localizedSubtitle(lang),
                       style: const TextStyle(
                         color: AppColors.textSecondary,
                         fontSize: 12,
                       ),
-                      maxLines: 1,
+                      maxLines: isFirstVisit &&
+                              nextPart.partNumber == AppConstants.kFreePartNumber
+                          ? 3
+                          : 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],

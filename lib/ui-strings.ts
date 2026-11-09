@@ -24,7 +24,7 @@ const S = {
 
   // ─── Home content ─────────────────────────────────────────────────────────
   welcomeBack:       { en: "Welcome back", ar: "مرحبًا بعودتك", fr: "Bon retour" },
-  part1Free:         { en: "Part 1 is free — begin the Seerah today.", ar: "الجزء الأول مجاني — ابدأ السيرة النبوية اليوم.", fr: "La partie 1 est gratuite — commencez la Sîra dès aujourd'hui." },
+  part1Free:         { en: "Part 15, The First Revelation, is free — begin the Seerah today.", ar: "الجزء ١٥، الوحي الأول، مجاني — ابدأ السيرة النبوية اليوم.", fr: "La partie 15, la Première Révélation, est gratuite — commencez la Sîra dès aujourd'hui." },
   freeStartHere:     { en: "Free — Start Here", ar: "مجاني — ابدأ من هنا", fr: "Gratuit — Commencez ici" },
   startHere:         { en: "Start here", ar: "ابدأ من هنا", fr: "Commencez ici" },
   continueLearning:  { en: "Continue learning", ar: "استمر في التعلم", fr: "Continuer l'apprentissage" },

@@ -896,9 +896,14 @@ const Map<String, Map<String, String>> _kStrings = {
     'fr': 'Continue your journey through the life of the Prophet ﷺ.',
   },
   'dashboardFreeIntro': {
-    'en': 'The First Revelation is free — begin the Seerah today.',
-    'ar': 'الوحي الأول مجاني — ابدأ السيرة اليوم.',
-    'fr': 'La Première Révélation est gratuite — commencez la Sîra aujourd\'hui.',
+    'en': 'Part 15, The First Revelation, is free — begin the Seerah today.',
+    'ar': 'الجزء ١٥، الوحي الأول، مجاني — ابدأ السيرة النبوية اليوم.',
+    'fr': 'La partie 15, la Première Révélation, est gratuite — commencez la Sîra dès aujourd\'hui.',
+  },
+  'freePartStartDescription': {
+    'en': 'Begin with the First Revelation — the night in Cave Hira — then follow the Seerah as one connected story.',
+    'ar': 'ابدأ بالوحي الأول في غار حراء، ثم تابع السيرة النبوية كقصة متكاملة.',
+    'fr': 'Commencez par la Première Révélation, la nuit dans la grotte de Hira, puis suivez la Sîra comme un récit continu.',
   },
   'fullAccess': {'en': 'Full Access', 'ar': 'وصول كامل', 'fr': 'Full Access'},
   'eras': {'en': 'Eras', 'ar': 'العصور', 'fr': 'Eras'},

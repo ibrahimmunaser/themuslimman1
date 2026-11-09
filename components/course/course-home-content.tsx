@@ -13,6 +13,7 @@ import type { CourseLang } from "@/lib/course-lang";
 import { loc } from "@/lib/loc";
 import { t, tf } from "@/lib/ui-strings";
 import { guestPartHref, GUEST_SIGN_IN_HREF } from "@/lib/guest-access";
+import { FREE_PART_NUMBER } from "@/lib/free-part-number";
 
 export interface StageData {
   label: string;
@@ -116,12 +117,19 @@ export function CourseHomeContent({
 
               {isNewUser ? (
                 <p className="text-text-secondary text-sm leading-relaxed mb-4">
-                  {loc(
-                    lang,
-                    "Begin with the world the Prophet ﷺ was sent into, then follow the Seerah as one connected story.",
-                    "ابدأ بفهم العالم الذي بُعث فيه النبي ﷺ، ثم تابع السيرة النبوية كقصة متكاملة.",
-                    "Commencez par comprendre le monde dans lequel le Prophète ﷺ a été envoyé, puis suivez la Sîra comme un récit continu.",
-                  )}
+                  {currentPart === FREE_PART_NUMBER
+                    ? loc(
+                        lang,
+                        "Begin with the First Revelation — the night in Cave Hira — then follow the Seerah as one connected story.",
+                        "ابدأ بالوحي الأول في غار حراء، ثم تابع السيرة النبوية كقصة متكاملة.",
+                        "Commencez par la Première Révélation, la nuit dans la grotte de Hira, puis suivez la Sîra comme un récit continu.",
+                      )
+                    : loc(
+                        lang,
+                        "Begin with the world the Prophet ﷺ was sent into, then follow the Seerah as one connected story.",
+                        "ابدأ بفهم العالم الذي بُعث فيه النبي ﷺ، ثم تابع السيرة النبوية كقصة متكاملة.",
+                        "Commencez par comprendre le monde dans lequel le Prophète ﷺ a été envoyé, puis suivez la Sîra comme un récit continu.",
+                      )}
                 </p>
               ) : (
                 currentPartSubtitle && (
