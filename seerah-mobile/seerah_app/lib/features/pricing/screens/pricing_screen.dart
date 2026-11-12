@@ -43,13 +43,10 @@ class _Plan {
 }
 
 // Public offer — Individual Lifetime (one-time, country-priced) and
-// Individual Monthly ($4.99/mo). Family is no longer sold going forward
+// Individual Monthly ($1.99/mo). Family is no longer sold going forward
 // (existing purchasers keep their access/entitlements as-is).
 //
-// Lifetime is listed first and carries the only badge ("Recommended") —
-// see the matching comment in landing_screen.dart for why the old
-// competing "Most Popular" (Monthly) / "Recommended" (Lifetime) badges
-// were dropped to just one.
+// Lifetime is listed first ("Keep Forever"). Monthly carries "Popular".
 const _plans = [
   _Plan(
     id: PlanId.individualLifetime,
@@ -66,7 +63,7 @@ const _plans = [
     nameKey: 'planMonthly',
     descriptionKey: 'cancelAnytime',
     periodKey: 'perMonth',
-    badgeKey: null,
+    badgeKey: 'mostPopular',
     isRecommended: false,
   ),
 ];

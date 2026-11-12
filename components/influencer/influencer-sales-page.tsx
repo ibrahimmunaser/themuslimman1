@@ -32,7 +32,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Is this a subscription?",
-    a: "Yes — it's $4.99/month, and you can cancel anytime from your account settings.",
+    a: "Yes — it's $1.99/month, and you can cancel anytime from your account settings.",
   },
   {
     q: "Is there a refund guarantee?",

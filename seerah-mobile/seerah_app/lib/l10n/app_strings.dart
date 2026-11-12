@@ -270,33 +270,40 @@ const Map<String, Map<String, String>> _kStrings = {
   'planMonthly': {'en': 'Monthly', 'ar': 'شهري', 'fr': 'Mensuel'},
   'planLifetime': {'en': 'Lifetime', 'ar': 'مدى الحياة', 'fr': 'À vie'},
   'mostPopular': {
-    'en': 'Most Popular',
-    'ar': 'الأكثر رواجًا',
-    'fr': 'Le plus populaire',
+    'en': 'Popular',
+    'ar': 'رائج',
+    'fr': 'Populaire',
+    'id': 'Populer',
+    'ms': 'Popular',
+    'zh': '热门',
+    'ru': 'Популярно',
+    'sw': 'Maarufu',
+    'es': 'Popular',
+    'de': 'Beliebt',
+    'tr': 'Popüler',
+    'hi': 'लोकप्रिय',
+    'ur': 'مقبول',
+    'bn': 'জনপ্রিয়',
+    'fa': 'محبوب',
   },
-  // 'recommended' is missing from the ui map in every assets/i18n/*.json
-  // course pack (confirmed by inspecting the packs directly — a code
-  // comment claiming coverage isn't good enough) — only en/ar/fr had real
-  // translations here before. Now the only badge on the redesigned plan
-  // screen (Monthly's "Most Popular" badge was dropped), it's worth
-  // covering for all 15 course languages rather than silently showing
-  // English on the other 12.
+  // Lifetime plan badge. Kept in this map for every course language so the
+  // other 12 don't fall through to English.
   'recommended': {
-    'en': 'Recommended',
-    'ar': 'موصى به',
-    'fr': 'Recommandé',
-    'id': 'Direkomendasikan',
-    'ms': 'Disyorkan',
-    'zh': '推荐',
-    'ru': 'Рекомендуется',
-    'sw': 'Inapendekezwa',
-    'es': 'Recomendado',
-    'de': 'Empfohlen',
-    'tr': 'Önerilen',
-    'hi': 'अनुशंसित',
-    'ur': 'تجویز کردہ',
-    'bn': 'প্রস্তাবিত',
-    'fa': 'پیشنهادی',
+    'en': 'Keep Forever',
+    'ar': 'احتفظ به للأبد',
+    'fr': 'Gardez-le pour toujours',
+    'id': 'Simpan Selamanya',
+    'ms': 'Simpan Selamanya',
+    'zh': '永久保留',
+    'ru': 'Оставьте навсегда',
+    'sw': 'Weka Milele',
+    'es': 'Consérvalo para siempre',
+    'de': 'Für immer behalten',
+    'tr': 'Sonsuza Kadar Sakla',
+    'hi': 'हमेशा के लिए रखें',
+    'ur': 'ہمیشہ کے لیے رکھیں',
+    'bn': 'চিরকালের জন্য রাখুন',
+    'fa': 'برای همیشه نگه دارید',
   },
   'oneLearnerPayOnce': {
     'en': '1 learner • pay once, own forever',

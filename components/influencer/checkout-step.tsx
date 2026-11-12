@@ -65,7 +65,7 @@ const LIFETIME_PLAN: PlanDef = {
   sublabel:    "One payment. Keep access forever.",
   price:       PLANS.complete.price,
   unit:        "",
-  badge:       "Best Value",
+  badge:       "Own It Forever",
   icon:        Infinity,
   inline:      true,
   stripeMode:  "payment",
@@ -566,7 +566,7 @@ export function CheckoutStep({
           aria-pressed={selectedPlanId === "complete"}
         >
           <span className="absolute -top-2.5 left-4 text-[10px] font-bold bg-gold text-ink px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-            Best Value
+            Own It Forever
           </span>
           <div className="flex items-start justify-between gap-3 mt-1">
             <div>

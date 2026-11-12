@@ -39,8 +39,8 @@ const CHECKOUT_EVENT_TYPES = [
 ] as const;
 
 export const PLAN_LABELS: Record<string, string> = {
-  "individual-monthly": "Individual Monthly ($4.99/mo)",
-  "individual-lifetime": "Individual Lifetime (Only $49)",
+  "individual-monthly": "Individual Monthly ($1.99/mo)",
+  "individual-lifetime": "Individual Lifetime (Only $19.99)",
   "family-monthly": "Family Monthly ($9.99/mo)",
   "family-lifetime": "Family Lifetime ($79)",
   "individual-trial": "Individual Trial",

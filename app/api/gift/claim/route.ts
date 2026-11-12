@@ -169,7 +169,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  let paidAmount = isFamily ? 7900 : 4900;
+  let paidAmount = isFamily ? 7900 : 1999;
   let paidCurrency = "usd";
   try {
     const pi = await stripe.paymentIntents.retrieve(gift.stripePaymentIntentId);

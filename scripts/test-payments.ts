@@ -26,7 +26,7 @@
  * ──────────────────────────────────────────────────────────────────────────────
  * WHAT IT TESTS
  * ──────────────────────────────────────────────────────────────────────────────
- *   ✅ Individual Lifetime  ($49)   — PI confirmed, webhook delivered, DB verified
+ *   ✅ Individual Lifetime  ($19.99) — PI confirmed, webhook delivered, DB verified
  *   ✅ Individual Monthly   ($9.99) — Subscription created + activated, DB verified
  *   ✅ Family Monthly       ($9.99) — Subscription, planType=family, DB verified
  *   ✅ Family Lifetime      ($79)   — PI confirmed, planType=family, DB verified
@@ -217,7 +217,7 @@ async function testIndividualLifetime(): Promise<void> {
   await stripe.paymentMethods.attach(pm.id, { customer: customer.id });
 
   const pi = await stripe.paymentIntents.create({
-    amount:         4900,
+    amount:         1999,
     currency:       "usd",
     customer:       customer.id,
     payment_method: pm.id,
@@ -239,7 +239,7 @@ async function testIndividualLifetime(): Promise<void> {
   assert(purchase !== null, "No Purchase row created");
   assert(purchase!.status === "succeeded", `Purchase.status=${purchase!.status}`);
   assert(purchase!.planId === "complete", `Purchase.planId=${purchase!.planId}`);
-  assert(purchase!.amount === 4900, `Purchase.amount=${purchase!.amount} (expected 4900)`);
+  assert(purchase!.amount === 1999, `Purchase.amount=${purchase!.amount} (expected 1999)`);
 
   console.log(`${INFO}DB ✓ hasPaid=true, planType=${dbUser?.planType}, Purchase.status=succeeded`);
 
@@ -426,7 +426,7 @@ async function testDeclinedCard(): Promise<void> {
   let stripeRejected = false;
   try {
     await stripe.paymentIntents.create({
-      amount:         4900,
+      amount:         1999,
       currency:       "usd",
       customer:       customer.id,
       payment_method: pm.id,
@@ -487,7 +487,7 @@ async function main() {
 
   await checkServerRunning();
 
-  await runTest("Individual Lifetime  ($49 one-time)", testIndividualLifetime);
+  await runTest("Individual Lifetime  ($19.99 one-time)", testIndividualLifetime);
   await runTest("Individual Monthly   ($9.99/month)",  testIndividualMonthly);
   await runTest("Family Monthly       ($9.99/month)",  testFamilyMonthly);
   await runTest("Family Lifetime      ($79 one-time)", testFamilyLifetime);

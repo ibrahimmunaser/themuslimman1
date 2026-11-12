@@ -46,14 +46,10 @@ class _Plan {
 }
 
 // Public offer — Individual Lifetime (one-time, country-priced) and
-// Individual Monthly ($4.99/mo). Family is no longer sold going forward
+// Individual Monthly ($1.99/mo). Family is no longer sold going forward
 // (existing purchasers keep their access/entitlements as-is).
 //
-// Lifetime is listed first and carries the only badge ("Recommended") —
-// a redesign choice to stop presenting two competing badges ("Most
-// Popular" on Monthly, "Recommended" on Lifetime) with no purchase data
-// backing either claim. Re-add "Most Popular" on Monthly only if that's
-// actually shown to be true.
+// Lifetime is listed first ("Keep Forever"). Monthly carries "Popular".
 const _plans = [
   _Plan(
     id: PlanId.individualLifetime,
@@ -70,7 +66,7 @@ const _plans = [
     nameKey: 'planMonthly',
     descriptionKey: 'cancelAnytime',
     periodKey: 'perMonth',
-    badgeKey: null,
+    badgeKey: 'mostPopular',
     isRecommended: false,
   ),
 ];

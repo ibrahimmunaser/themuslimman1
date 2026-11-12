@@ -21,7 +21,7 @@ const PLAN_CATALOG: Record<PlanId, PlanAnalyticsFields> = {
     plan_id: "individual-monthly",
     plan_type: "individual",
     billing_interval: "monthly",
-    price: 499,
+    price: 199,
     currency: "usd",
   },
   "family-monthly": {
@@ -35,7 +35,7 @@ const PLAN_CATALOG: Record<PlanId, PlanAnalyticsFields> = {
     plan_id: "individual-lifetime",
     plan_type: "individual",
     billing_interval: "lifetime",
-    price: 4900,
+    price: 1999,
     currency: "usd",
   },
   "family-lifetime": {

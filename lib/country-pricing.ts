@@ -10,39 +10,38 @@
  *
  * Amounts are USD cents for Stripe; stores map to nearest local price points.
  *
- * ── COUNTRY_PRICING_ENABLED (ON) ──────────────────────────────────────────────
- * Country-tiered pricing is live, using 3 effective price points even though 4
- * geographic tiers (A–D) are still tracked below for country classification:
+ * ── COUNTRY_PRICING_ENABLED (ON, but flattened) ───────────────────────────────
+ * Country tiers (A–D) are still tracked below for classification/marketing
+ * purposes, but all four now resolve to the SAME flat worldwide price —
+ * there is no PPP discount tier anymore:
  *
- *   Country group      Monthly   Lifetime
- *   Standard (A + B)    $4.99      $49
- *   Tier C               $2.99      $29
- *   Tier D               $1.99      $19
+ *   Country group         Monthly   Lifetime
+ *   All countries (A–D)    $1.99     $19.99
  *
- * Tiers A and B share the same "Standard" price — the A/B split is kept in
+ * Tiers A, B, C, D all share the same price on purpose. The split is kept in
  * COUNTRY_TIER purely for documentation/marketing-priority purposes (see
  * TIER_LABEL and LANG_PRIORITY_COUNTRIES below); it has no effect on price.
- * Flip COUNTRY_PRICING_ENABLED back to false to return to flat worldwide
- * Standard pricing for every visitor (e.g. for an emergency rollback).
+ * Flip COUNTRY_PRICING_ENABLED back to false to force tier "A" (same price
+ * either way) for every visitor (e.g. for an emergency rollback).
  */
 export const COUNTRY_PRICING_ENABLED = true;
 
 export type PriceTier = "A" | "B" | "C" | "D";
 
-/** One-time lifetime price per tier. A and B are both "Standard" ($49). */
+/** One-time lifetime price per tier. Flat $19.99 for every tier — no PPP discount. */
 export const TIER_PRICE_USD_CENTS: Record<PriceTier, number> = {
-  A: 4900, // $49 — Standard
-  B: 4900, // $49 — Standard (merged with A)
-  C: 2900, // $29
-  D: 1900, // $19
+  A: 1999, // $19.99 — flat worldwide
+  B: 1999, // $19.99 — flat worldwide
+  C: 1999, // $19.99 — flat worldwide
+  D: 1999, // $19.99 — flat worldwide
 };
 
-/** Monthly subscription price per tier. A and B are both "Standard" ($4.99). */
+/** Monthly subscription price per tier. Flat $1.99 for every tier — no PPP discount. */
 export const TIER_MONTHLY_PRICE_USD_CENTS: Record<PriceTier, number> = {
-  A: 499, // $4.99 — Standard
-  B: 499, // $4.99 — Standard (merged with A)
-  C: 299, // $2.99
-  D: 199, // $1.99
+  A: 199, // $1.99 — flat worldwide
+  B: 199, // $1.99 — flat worldwide
+  C: 199, // $1.99 — flat worldwide
+  D: 199, // $1.99 — flat worldwide
 };
 
 /** Safe global default when country is unknown or unlisted. */
@@ -208,10 +207,10 @@ export const COUNTRY_TIER: Record<string, PriceTier> = {
 
 /** Human-readable tier labels for admin / docs. */
 export const TIER_LABEL: Record<PriceTier, string> = {
-  A: "$4.99/mo · $49 lifetime — Standard (high-income / Gulf)",
-  B: "$4.99/mo · $49 lifetime — Standard (mid-income)",
-  C: "$2.99/mo · $29 lifetime — Tier C (lower-mid)",
-  D: "$1.99/mo · $19 lifetime — Tier D (access)",
+  A: "$1.99/mo · $19.99 lifetime — flat worldwide (high-income / Gulf)",
+  B: "$1.99/mo · $19.99 lifetime — flat worldwide (mid-income)",
+  C: "$1.99/mo · $19.99 lifetime — flat worldwide (lower-mid)",
+  D: "$1.99/mo · $19.99 lifetime — flat worldwide (access)",
 };
 
 /**

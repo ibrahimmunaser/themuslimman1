@@ -64,9 +64,9 @@ class AppConstants {
   // per-territory prices configured on seerah_monthly_individual and
   // seerah_lifetime_individual so every storefront shows the matching
   // Standard / Tier C / Tier D price automatically — no app code needed.
-  static const String monthlyPrice        = '4.99';
+  static const String monthlyPrice        = '1.99';
   static const String familyMonthlyPrice  = '9.99';
-  static const String lifetimePrice       = '49';
+  static const String lifetimePrice       = '19.99';
   static const String familyLifetimePrice = '79';
 
   // In-App Purchase product IDs

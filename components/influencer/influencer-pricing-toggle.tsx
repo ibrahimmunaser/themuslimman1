@@ -69,7 +69,7 @@ export function InfluencerPricingToggle({
           <div className="relative min-h-[520px] sm:min-h-[640px] rounded-3xl border-2 border-gold bg-gradient-to-b from-gold/8 to-surface shadow-2xl shadow-gold/10 p-6 sm:p-9 flex flex-col gold-glow">
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap">
               <span className="px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-gold text-ink shadow-sm">
-                Most Popular
+                Own It Forever
               </span>
             </div>
             <p className="text-2xl font-bold text-text mb-1">For Me</p>

@@ -38,7 +38,7 @@ export function AlternatePlansModal({ config, isOpen, onClose }: AlternatePlansM
       id:           "individual-lifetime",
       label:        "Individual Lifetime",
       price:        pricePhrase,
-      badge:        "Best Value",
+      badge:        "Own It Forever",
       description:  "One-time payment · full access forever · all 100 parts",
       checkoutPath: buildCheckoutUrl("individual-lifetime", config),
     },

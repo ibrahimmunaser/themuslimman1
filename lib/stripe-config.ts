@@ -63,7 +63,7 @@ export const PLANS = {
     id: "monthly",
     name: "Individual Membership",
     subtitle: "Full access while subscribed",
-    price: 499, // $4.99/month
+    price: 199, // $1.99/month
     interval: "month" as const,
     features: [
       "Start today. Continue at your own pace.",
@@ -95,7 +95,7 @@ export const PLANS = {
       "Lifetime access to the full course",
     ],
     recommended: true,
-    badge: "Best Value",
+    badge: "Own It Forever",
   },
   family: {
     id: "family",
