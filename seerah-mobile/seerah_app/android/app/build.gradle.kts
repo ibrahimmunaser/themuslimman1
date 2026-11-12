@@ -60,10 +60,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
-    }
-
     signingConfigs {
         if (isCi || keystorePropertiesFile.exists()) {
             create("release") {
@@ -101,6 +97,12 @@ android {
             //   isShrinkResources = true
             // and supply a proguard-rules.pro file.
         }
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
     }
 }
 
