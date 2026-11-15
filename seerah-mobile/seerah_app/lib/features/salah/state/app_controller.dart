@@ -421,8 +421,49 @@ class AppController extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
+  /// Guards [recalculateAndReschedule] against overlapping executions.
+  ///
+  /// `rescheduleAll` is read-cancel-recompute-schedule: it loads the
+  /// currently persisted reminders, cancels them, then schedules a fresh
+  /// batch and persists it. Nothing serialized concurrent calls to it, so
+  /// e.g. rapidly tapping the Settings -> "Match my local masjid" +/-
+  /// stepper (each tap calls [setManualAdjustment] -> [updateSettings] ->
+  /// this method, fire-and-forget from the UI) fired N overlapping
+  /// `rescheduleAll` calls. Each one computed a *different* prayer time (one
+  /// per intermediate minute value, since the adjustment changed on every
+  /// tap) and raced to cancel/persist against the others — a later call's
+  /// `_cancelPersisted` could read a snapshot that didn't yet include an
+  /// earlier call's not-yet-saved notification, so that earlier call's OS
+  /// notification was scheduled but never cancelled. Net effect: one real,
+  /// live notification left behind for every intermediate minute between
+  /// the start and end adjustment, each firing at its own scheduled time —
+  /// reported as "a notification every 1 minute" leading up to the prayer.
+  ///
+  /// Serializing calls (and coalescing bursts into a single trailing run
+  /// against the latest settings, rather than queueing every call) makes
+  /// each `rescheduleAll` run to completion — including its cancellations —
+  /// before the next one starts, so no intermediate schedule can survive.
+  bool _rescheduling = false;
+  bool _rescheduleAgain = false;
+
   /// Recalculates today's times and reschedules the reminder window.
   Future<void> recalculateAndReschedule() async {
+    if (_rescheduling) {
+      _rescheduleAgain = true;
+      return;
+    }
+    _rescheduling = true;
+    try {
+      do {
+        _rescheduleAgain = false;
+        await _recalculateAndRescheduleOnce();
+      } while (_rescheduleAgain);
+    } finally {
+      _rescheduling = false;
+    }
+  }
+
+  Future<void> _recalculateAndRescheduleOnce() async {
     _cachedNextPrayer = null;
     if (_settings.hasLocation && _settings.timezone != null) {
       try {

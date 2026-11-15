@@ -373,22 +373,33 @@ class PrayerSchedulerService {
     var notificationCount = 0;
     final failedPrayers = <SalahPrayer>[];
     final failedIds = <int>{};
+    // Schedule every primary concurrently (see _cancelPersisted above for
+    // why this is safe: the cancel phase has already fully completed by
+    // this point, so no same-id cancel/schedule race is possible here —
+    // only cross-phase ordering mattered). Sequencing ~30+ of these one at
+    // a time, each paying for its own awaited native round-trips, is what
+    // made a single settings tweak visibly slow to apply.
+    final outcomes = await Future.wait(
+      primaries.map((r) async {
+        try {
+          return await notificationScheduler.schedulePrayerReminder(
+            id: r.notificationId,
+            prayer: r.prayer,
+            scheduledAt: tz.TZDateTime.from(r.scheduledAt, location),
+            callStyle: settings.callScreenEnabled,
+          );
+        } catch (e) {
+          // Defensive: NotificationScheduler implementations are
+          // contracted not to throw (see its docs), but a single bad
+          // primary must never be able to abort the rest of the batch
+          // regardless.
+          return PrimaryReminderOutcome.failed(e);
+        }
+      }),
+    );
     for (var i = 0; i < primaries.length; i++) {
       final r = primaries[i];
-      PrimaryReminderOutcome outcome;
-      try {
-        outcome = await notificationScheduler.schedulePrayerReminder(
-          id: r.notificationId,
-          prayer: r.prayer,
-          scheduledAt: tz.TZDateTime.from(r.scheduledAt, location),
-          callStyle: settings.callScreenEnabled,
-        );
-      } catch (e) {
-        // Defensive: NotificationScheduler implementations are contracted
-        // not to throw (see its docs), but a single bad primary must never
-        // be able to abort the rest of the batch regardless.
-        outcome = PrimaryReminderOutcome.failed(e);
-      }
+      final outcome = outcomes[i];
       switch (outcome.channel) {
         case PrimaryReminderChannel.alarmKit:
           alarmKitCount++;
@@ -424,14 +435,17 @@ class PrayerSchedulerService {
             : primaries
                 .where((r) => !failedIds.contains(r.notificationId))
                 .toList();
-    for (final r in followUps) {
-      await notificationScheduler.scheduleFollowUpReminder(
-        id: r.notificationId,
-        prayer: r.prayer,
-        scheduledAt: tz.TZDateTime.from(r.scheduledAt, location),
-        callStyle: true,
-      );
-    }
+    // Concurrent for the same reason as the primaries loop above.
+    await Future.wait(
+      followUps.map(
+        (r) => notificationScheduler.scheduleFollowUpReminder(
+          id: r.notificationId,
+          prayer: r.prayer,
+          scheduledAt: tz.TZDateTime.from(r.scheduledAt, location),
+          callStyle: true,
+        ),
+      ),
+    );
 
     // Safety net: if the user never opens the app again, tell them the
     // schedule is about to run out instead of going silent. Rescheduling
@@ -543,9 +557,7 @@ class PrayerSchedulerService {
       actualPendingIds: actualIds.toSet(),
       ignoredIds: const {LocalNotificationService.testNotificationId},
     );
-    for (final id in recon.orphanedInOs) {
-      await notificationScheduler.cancel(id);
-    }
+    await Future.wait(recon.orphanedInOs.map(notificationScheduler.cancel));
   }
 
   /// Cancels persisted reminders and returns the future snoozes that were
@@ -557,6 +569,7 @@ class PrayerSchedulerService {
     final old = repository.loadScheduledReminders();
     final nowMillis = now().millisecondsSinceEpoch;
     final kept = <ScheduledReminder>[];
+    final toCancel = <int>[];
     for (final reminder in old) {
       if (keepFutureSnoozes &&
           reminder.kind == ReminderKind.snooze &&
@@ -564,8 +577,19 @@ class PrayerSchedulerService {
         kept.add(reminder);
         continue;
       }
-      await notificationScheduler.cancel(reminder.notificationId);
+      toCancel.add(reminder.notificationId);
     }
+    // Cancel every id concurrently rather than one-at-a-time. Each
+    // individual cancel() already awaits its own native calls internally
+    // (guard window + direct-launch alarm + plugin), which is what fixes
+    // the same-id cancel/schedule ordering race (see cancel()'s doc). That
+    // guarantee only requires THIS WHOLE cancel phase to finish before the
+    // schedule phase below starts (enforced by awaiting Future.wait here) —
+    // it does not require cancelling id A to finish before cancelling
+    // unrelated id B starts. Dispatching them together turns what used to
+    // be dozens of sequential native round-trips (very noticeable as UI
+    // lag on every single settings change) into one concurrent batch.
+    await Future.wait(toCancel.map(notificationScheduler.cancel));
     await repository.saveScheduledReminders(kept);
     return kept;
   }

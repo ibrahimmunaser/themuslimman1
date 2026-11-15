@@ -431,12 +431,28 @@ class LocalNotificationService implements NotificationScheduler {
       // engine/app is even running when that moment arrives. Keyed by the
       // same deterministic [id] as this reminder so cancelling one cancels
       // both (see cancel() below).
-      unawaited(
-        _appGuard.scheduleGuardWindow(
-          id: id,
-          prayer: prayer.displayName,
-          triggerAt: scheduledAt,
-        ),
+      //
+      // Awaited (previously fire-and-forget `unawaited`): this call and the
+      // direct-launch alarm below both go out on their own native method
+      // channels, independent of the plugin notification scheduled above.
+      // A caller that doesn't wait for them to actually land natively
+      // before moving on can race a *later* `cancel(id)` for the very same
+      // id (e.g. from a second, overlapping `rescheduleAll` triggered by
+      // rapidly tapping the Settings "Match my local masjid" +/- stepper —
+      // see AppController.recalculateAndReschedule's serialization fix).
+      // If that cancel's native message reaches the platform side before
+      // this schedule's does, the alarm ends up cancelled despite this
+      // call "succeeding" — which surfaced as the ordinary notification
+      // firing (the plugin-scheduled one, overwritten safely by id) but the
+      // full-screen call UI never taking over (the direct-launch alarm,
+      // which has no such overwrite protection, silently lost the race).
+      // Awaiting here guarantees this call's native message is fully
+      // processed before the function returns, so a subsequent cancel for
+      // the same id can never be reordered ahead of it.
+      await _appGuard.scheduleGuardWindow(
+        id: id,
+        prayer: prayer.displayName,
+        triggerAt: scheduledAt,
       );
       // Direct-launch alarm (Android only; see IncomingCallAlarmService):
       // force-foregrounds the app at this same moment when overlay
@@ -446,12 +462,10 @@ class LocalNotificationService implements NotificationScheduler {
       // has turned the full-screen call UI off — there would be nothing for
       // it to force open to.
       if (callStyle) {
-        unawaited(
-          _incomingCallAlarm.schedule(
-            id: id,
-            prayer: prayer,
-            triggerAt: scheduledAt,
-          ),
+        await _incomingCallAlarm.schedule(
+          id: id,
+          prayer: prayer,
+          triggerAt: scheduledAt,
         );
       }
       return const PrimaryReminderOutcome.notification();
@@ -632,13 +646,19 @@ class LocalNotificationService implements NotificationScheduler {
   }
 
   @override
-  Future<void> cancel(int id) {
+  Future<void> cancel(int id) async {
     // Harmless no-op on non-Android/when no guard window or direct-launch
     // alarm was ever scheduled for this id (follow-ups, snoozes, the
     // refresh notification).
-    unawaited(_appGuard.cancelGuardWindow(id));
-    unawaited(_incomingCallAlarm.cancel(id));
-    return _plugin.cancel(id);
+    //
+    // Awaited (previously fire-and-forget `unawaited`) for the same reason
+    // as schedulePrayerReminder's matching native calls above: this must
+    // fully land before the caller can treat [id] as free to reuse for a
+    // fresh schedule, otherwise a cancel can be reordered to land *after*
+    // a same-id reschedule on the native side despite running first here.
+    await _appGuard.cancelGuardWindow(id);
+    await _incomingCallAlarm.cancel(id);
+    await _plugin.cancel(id);
   }
 
   Future<void> cancelAll() {
