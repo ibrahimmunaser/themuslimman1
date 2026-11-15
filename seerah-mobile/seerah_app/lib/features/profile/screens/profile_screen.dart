@@ -6,6 +6,7 @@ import 'package:seerah_app/core/widgets/localized_text.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../../../core/constants/app_constants.dart';
@@ -43,15 +44,22 @@ class ProfileScreen extends ConsumerWidget {
       appBar: AppBar(title: Text(t(lang, titleKey))),
       body: AppGradientBackground(
         child: ListView(
-          padding: EdgeInsets.fromLTRB(20, 0, 20, 40 + bottomSystemInset(context)),
+          padding: EdgeInsets.fromLTRB(
+            20,
+            0,
+            20,
+            40 + bottomSystemInset(context),
+          ),
           children: [
             const SizedBox(height: 28),
 
             // ── Avatar & identity ──────────────────────────────────────────
-            _AvatarSection(user: user, hasAccess: auth.hasAccess, isAnonymous: auth.isAnonymous, lang: lang)
-                .animate()
-                .fadeIn(duration: 450.ms)
-                .slideY(begin: -0.08, end: 0),
+            _AvatarSection(
+              user: user,
+              hasAccess: auth.hasAccess,
+              isAnonymous: auth.isAnonymous,
+              lang: lang,
+            ).animate().fadeIn(duration: 450.ms).slideY(begin: -0.08, end: 0),
 
             const SizedBox(height: 16),
 
@@ -59,9 +67,11 @@ class ProfileScreen extends ConsumerWidget {
             // be able to see which plan they're on and what it costs,
             // without digging into "Billing & Subscription" first.
             if (auth.hasAccess)
-              _CurrentPlanCard(user: user, isFamily: auth.isFamily, lang: lang)
-                  .animate(delay: 15.ms)
-                  .fadeIn(duration: 350.ms),
+              _CurrentPlanCard(
+                user: user,
+                isFamily: auth.isFamily,
+                lang: lang,
+              ).animate(delay: 15.ms).fadeIn(duration: 350.ms),
 
             const SizedBox(height: 8),
 
@@ -83,9 +93,10 @@ class ProfileScreen extends ConsumerWidget {
 
             // ── Guest upgrade nudge — fully optional, never required ───────
             if (auth.isAnonymous)
-              _GuestUpgradeCard(onTap: () => context.push('/signup'), lang: lang)
-                  .animate(delay: 20.ms)
-                  .fadeIn(duration: 350.ms),
+              _GuestUpgradeCard(
+                onTap: () => context.push('/signup'),
+                lang: lang,
+              ).animate(delay: 20.ms).fadeIn(duration: 350.ms),
 
             // ── Verify email nudge — real accounts only ─────────────────────
             // Audit H6 fix: this comment previously claimed mobile never
@@ -110,121 +121,139 @@ class ProfileScreen extends ConsumerWidget {
 
             // ── Learner profiles ───────────────────────────────────────────
             _GroupLabel(t(lang, 'learnerProfile')),
-            _SettingsGroup(items: [
-              _SettingsDatum(
-                icon: Icons.person_outline_rounded,
-                label: activeProfile?.displayName ?? t(lang, 'myProfile'),
-                subtitle: activeProfile != null && (profilesState?.hasMultipleProfiles ?? false)
-                    ? t(lang, 'tapToSwitchLearner')
-                    : null,
-                color: const Color(0xFF9A7AB8),
-                onTap: () => context.push('/profiles'),
-              ),
-              if (profilesState != null && (profilesState.canAddMore || profilesState.hasMultipleProfiles))
+            _SettingsGroup(
+              items: [
                 _SettingsDatum(
-                  icon: Icons.group_outlined,
-                  label: t(lang, 'manageProfiles'),
-                  color: AppColors.gold,
+                  icon: Icons.person_outline_rounded,
+                  label: activeProfile?.displayName ?? t(lang, 'myProfile'),
+                  subtitle:
+                      activeProfile != null &&
+                          (profilesState?.hasMultipleProfiles ?? false)
+                      ? t(lang, 'tapToSwitchLearner')
+                      : null,
+                  color: const Color(0xFF9A7AB8),
                   onTap: () => context.push('/profiles'),
                 ),
-            ]).animate(delay: 40.ms).fadeIn(duration: 350.ms),
+                if (profilesState != null &&
+                    (profilesState.canAddMore ||
+                        profilesState.hasMultipleProfiles))
+                  _SettingsDatum(
+                    icon: Icons.group_outlined,
+                    label: t(lang, 'manageProfiles'),
+                    color: AppColors.gold,
+                    onTap: () => context.push('/profiles'),
+                  ),
+              ],
+            ).animate(delay: 40.ms).fadeIn(duration: 350.ms),
 
             const SizedBox(height: 20),
 
             // ── Account ────────────────────────────────────────────────────
             _GroupLabel(t(lang, 'account')),
-            _SettingsGroup(items: [
-              if (!auth.isAnonymous)
+            _SettingsGroup(
+              items: [
+                if (!auth.isAnonymous)
+                  _SettingsDatum(
+                    icon: Icons.lock_outline_rounded,
+                    label: t(lang, 'changePassword'),
+                    color: const Color(0xFF5A90B0),
+                    // Was a WebView pointed at the website's /change-password
+                    // *page* — that page is actually a first-time "set a
+                    // password" flow for guest checkouts with no password
+                    // yet, and immediately redirects anyone who already has
+                    // one (i.e. almost every real mobile account) to their
+                    // dashboard instead of showing a form at all. This native
+                    // screen hits the website's own authenticated
+                    // change-password API directly — see
+                    // AuthNotifier.changePassword's doc comment.
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const ChangePasswordScreen(),
+                      ),
+                    ),
+                  ),
                 _SettingsDatum(
-                  icon: Icons.lock_outline_rounded,
-                  label: t(lang, 'changePassword'),
-                  color: const Color(0xFF5A90B0),
-                  // Was a WebView pointed at the website's /change-password
-                  // *page* — that page is actually a first-time "set a
-                  // password" flow for guest checkouts with no password
-                  // yet, and immediately redirects anyone who already has
-                  // one (i.e. almost every real mobile account) to their
-                  // dashboard instead of showing a form at all. This native
-                  // screen hits the website's own authenticated
-                  // change-password API directly — see
-                  // AuthNotifier.changePassword's doc comment.
-                  onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => const ChangePasswordScreen(),
-                  )),
+                  icon: Icons.receipt_long_outlined,
+                  label: t(lang, 'billingSubscription'),
+                  color: AppColors.gold,
+                  onTap: () => _openBilling(context, auth, lang),
                 ),
-              _SettingsDatum(
-                icon: Icons.receipt_long_outlined,
-                label: t(lang, 'billingSubscription'),
-                color: AppColors.gold,
-                onTap: () => _openBilling(context, auth, lang),
-              ),
-              // Gifting was only offered for the lifetime plan, which is no
-              // longer sold — removed from the menu rather than linking to a
-              // dead-end flow.
-            ]).animate(delay: 70.ms).fadeIn(duration: 350.ms),
+                // Gifting was only offered for the lifetime plan, which is no
+                // longer sold — removed from the menu rather than linking to a
+                // dead-end flow.
+              ],
+            ).animate(delay: 70.ms).fadeIn(duration: 350.ms),
 
             const SizedBox(height: 20),
 
             // ── Support ────────────────────────────────────────────────────
             _GroupLabel(t(lang, 'support')),
-            _SettingsGroup(items: [
-              // Manual replay of the one-time marketing intro — it no longer
-              // auto-shows on launch (see app_router.dart), so this is now
-              // its only standalone full-screen entry point.
-              _SettingsDatum(
-                icon: Icons.auto_awesome_outlined,
-                label: t(lang, 'welcomeTour'),
-                color: AppColors.gold,
-                onTap: () => context.push('/welcome'),
-              ),
-              _SettingsDatum(
-                icon: Icons.help_outline_rounded,
-                label: t(lang, 'helpAndFaq'),
-                color: const Color(0xFF4AA87E),
-                onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                  builder: (_) => const HelpFaqScreen(),
-                )),
-              ),
-              _SettingsDatum(
-                icon: Icons.chat_bubble_outline_rounded,
-                label: t(lang, 'contactUs'),
-                color: const Color(0xFF8A7AB0),
-                onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                  builder: (_) => const ContactUsScreen(),
-                )),
-              ),
-            ]).animate(delay: 120.ms).fadeIn(duration: 350.ms),
+            _SettingsGroup(
+              items: [
+                // Manual replay of the one-time marketing intro — it no longer
+                // auto-shows on launch (see app_router.dart), so this is now
+                // its only standalone full-screen entry point.
+                _SettingsDatum(
+                  icon: Icons.auto_awesome_outlined,
+                  label: t(lang, 'welcomeTour'),
+                  color: AppColors.gold,
+                  onTap: () => context.push('/welcome'),
+                ),
+                _SettingsDatum(
+                  icon: Icons.help_outline_rounded,
+                  label: t(lang, 'helpAndFaq'),
+                  color: const Color(0xFF4AA87E),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const HelpFaqScreen()),
+                  ),
+                ),
+                _SettingsDatum(
+                  icon: Icons.chat_bubble_outline_rounded,
+                  label: t(lang, 'contactUs'),
+                  color: const Color(0xFF8A7AB0),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const ContactUsScreen()),
+                  ),
+                ),
+              ],
+            ).animate(delay: 120.ms).fadeIn(duration: 350.ms),
 
             const SizedBox(height: 20),
 
             // ── Legal ──────────────────────────────────────────────────────
             _GroupLabel(t(lang, 'legal')),
-            _SettingsGroup(items: [
-              _SettingsDatum(
-                icon: Icons.shield_outlined,
-                label: t(lang, 'privacyPolicyTitle'),
-                color: AppColors.textMuted,
-                onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                  builder: (_) => LegalTextScreen(
-                    titleKey: 'privacyPolicyTitle',
-                    headerIcon: Icons.shield_outlined,
-                    sections: privacySections(),
+            _SettingsGroup(
+              items: [
+                _SettingsDatum(
+                  icon: Icons.shield_outlined,
+                  label: t(lang, 'privacyPolicyTitle'),
+                  color: AppColors.textMuted,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => LegalTextScreen(
+                        titleKey: 'privacyPolicyTitle',
+                        headerIcon: Icons.shield_outlined,
+                        sections: privacySections(),
+                      ),
+                    ),
                   ),
-                )),
-              ),
-              _SettingsDatum(
-                icon: Icons.gavel_outlined,
-                label: t(lang, 'termsOfUseTitle'),
-                color: AppColors.textMuted,
-                onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                  builder: (_) => LegalTextScreen(
-                    titleKey: 'termsOfUseTitle',
-                    headerIcon: Icons.gavel_outlined,
-                    sections: termsSections(),
+                ),
+                _SettingsDatum(
+                  icon: Icons.gavel_outlined,
+                  label: t(lang, 'termsOfUseTitle'),
+                  color: AppColors.textMuted,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => LegalTextScreen(
+                        titleKey: 'termsOfUseTitle',
+                        headerIcon: Icons.gavel_outlined,
+                        sections: termsSections(),
+                      ),
+                    ),
                   ),
-                )),
-              ),
-            ]).animate(delay: 170.ms).fadeIn(duration: 350.ms),
+                ),
+              ],
+            ).animate(delay: 170.ms).fadeIn(duration: 350.ms),
 
             const SizedBox(height: 32),
 
@@ -240,23 +269,32 @@ class ProfileScreen extends ConsumerWidget {
                   decoration: BoxDecoration(
                     color: AppColors.card,
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: AppColors.error.withValues(alpha: 0.35)),
+                    border: Border.all(
+                      color: AppColors.error.withValues(alpha: 0.35),
+                    ),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.logout_rounded, color: AppColors.error, size: 18),
+                      const Icon(
+                        Icons.logout_rounded,
+                        color: AppColors.error,
+                        size: 18,
+                      ),
                       const SizedBox(width: 8),
                       // A guest never actually "signed in" (no email/password —
                       // just a silent device-linked session), so labeling this
                       // "Sign Out" read as nonsensical to anyone who hasn't
                       // created an account. Same action (and the same loss-of-
                       // access warning below), clearer label for that case.
-                      Text(t(lang, auth.isAnonymous ? 'exitGuestMode' : 'signOut'),
-                          style: const TextStyle(
-                              color: AppColors.error,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600)),
+                      Text(
+                        t(lang, auth.isAnonymous ? 'exitGuestMode' : 'signOut'),
+                        style: const TextStyle(
+                          color: AppColors.error,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -269,17 +307,21 @@ class ProfileScreen extends ConsumerWidget {
             Center(
               child: TextButton(
                 onPressed: () => _confirmDelete(context, ref, auth.isAnonymous),
-                style: TextButton.styleFrom(foregroundColor: AppColors.textMuted),
-                child: Text(t(lang, 'deleteAccount'),
-                    style: const TextStyle(fontSize: 13, decoration: TextDecoration.underline)),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.textMuted,
+                ),
+                child: Text(
+                  t(lang, 'deleteAccount'),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
               ),
             ).animate(delay: 250.ms).fadeIn(duration: 350.ms),
 
             const SizedBox(height: 24),
-            Center(
-              child: Text(tv(lang, 'versionLabel', {'v': AppConstants.appVersion}),
-                  style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
-            ),
+            const Center(child: _LiveVersionLabel()),
           ],
         ),
       ),
@@ -333,12 +375,18 @@ class ProfileScreen extends ConsumerWidget {
     _launch('${AppConstants.baseUrl}/billing?app=1', context, lang);
   }
 
-  Future<void> _openPlayStoreSubscriptions(BuildContext context, String lang) async {
+  Future<void> _openPlayStoreSubscriptions(
+    BuildContext context,
+    String lang,
+  ) async {
     final uri = Uri.parse(
       'https://play.google.com/store/account/subscriptions?package=com.themuslimman.seerah',
     );
     try {
-      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      final launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
       if (launched) return;
     } catch (_) {}
     if (!context.mounted) return;
@@ -353,9 +401,11 @@ class ProfileScreen extends ConsumerWidget {
   void _launch(String url, BuildContext context, String lang) {
     if (!context.mounted) return;
     final title = _titleFor(url, lang);
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => _InAppWebScreen(url: url, title: title, lang: lang),
-    ));
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => _InAppWebScreen(url: url, title: title, lang: lang),
+      ),
+    );
   }
 
   String _titleFor(String url, String lang) {
@@ -376,7 +426,9 @@ class ProfileScreen extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surface,
-        title: Text(t(lang, isAnonymous ? 'exitGuestModeQuestion' : 'signOutQuestion')),
+        title: Text(
+          t(lang, isAnonymous ? 'exitGuestModeQuestion' : 'signOutQuestion'),
+        ),
         content: Text(
           isAnonymous
               ? t(lang, 'signOutGuestWarning')
@@ -384,12 +436,15 @@ class ProfileScreen extends ConsumerWidget {
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(t(lang, 'cancel'))),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(t(lang, 'cancel')),
+          ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text(t(lang, isAnonymous ? 'exitGuestMode' : 'signOut'),
-                style: const TextStyle(color: AppColors.error)),
+            child: Text(
+              t(lang, isAnonymous ? 'exitGuestMode' : 'signOut'),
+              style: const TextStyle(color: AppColors.error),
+            ),
           ),
         ],
       ),
@@ -406,7 +461,11 @@ class ProfileScreen extends ConsumerWidget {
     }
   }
 
-  Future<void> _confirmDelete(BuildContext context, WidgetRef ref, bool isAnonymous) async {
+  Future<void> _confirmDelete(
+    BuildContext context,
+    WidgetRef ref,
+    bool isAnonymous,
+  ) async {
     String? password;
     final lang = ref.read(courseLangProvider);
     final confirmed = await showDialog<bool>(
@@ -421,20 +480,22 @@ class ProfileScreen extends ConsumerWidget {
             children: [
               Text(
                 t(lang, 'deleteAccountWarning') +
-                // Apple provides no server-side subscription cancellation API
-                // (only the account/subscriber owns that, via Settings) — so
-                // unlike Stripe/Google Play, deleting here can't touch an
-                // active App Store subscription. Without this note, an iOS
-                // subscriber who deletes their account would keep being
-                // billed by Apple indefinitely with no record left anywhere
-                // in the app to even show them what's still charging them.
-                (Platform.isIOS ? t(lang, 'appStoreCancelNote') : ''),
+                    // Apple provides no server-side subscription cancellation API
+                    // (only the account/subscriber owns that, via Settings) — so
+                    // unlike Stripe/Google Play, deleting here can't touch an
+                    // active App Store subscription. Without this note, an iOS
+                    // subscriber who deletes their account would keep being
+                    // billed by Apple indefinitely with no record left anywhere
+                    // in the app to even show them what's still charging them.
+                    (Platform.isIOS ? t(lang, 'appStoreCancelNote') : ''),
               ),
               if (!isAnonymous) ...[
                 const SizedBox(height: 16),
                 TextField(
                   obscureText: true,
-                  decoration: InputDecoration(labelText: t(lang, 'confirmYourPassword')),
+                  decoration: InputDecoration(
+                    labelText: t(lang, 'confirmYourPassword'),
+                  ),
                   onChanged: (v) => setDialogState(() => password = v),
                 ),
               ],
@@ -442,12 +503,15 @@ class ProfileScreen extends ConsumerWidget {
           ),
           actions: [
             TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: Text(t(lang, 'cancel'))),
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(t(lang, 'cancel')),
+            ),
             TextButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: Text(t(lang, 'deleteAccount'),
-                  style: const TextStyle(color: AppColors.error)),
+              child: Text(
+                t(lang, 'deleteAccount'),
+                style: const TextStyle(color: AppColors.error),
+              ),
             ),
           ],
         ),
@@ -455,7 +519,9 @@ class ProfileScreen extends ConsumerWidget {
     );
     if (confirmed != true) return;
 
-    final error = await ref.read(authProvider.notifier).deleteAccount(password: password);
+    final error = await ref
+        .read(authProvider.notifier)
+        .deleteAccount(password: password);
     if (!context.mounted) return;
     if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -474,7 +540,12 @@ class _AvatarSection extends StatelessWidget {
   final bool hasAccess;
   final bool isAnonymous;
   final String lang;
-  const _AvatarSection({required this.user, required this.hasAccess, this.isAnonymous = false, required this.lang});
+  const _AvatarSection({
+    required this.user,
+    required this.hasAccess,
+    this.isAnonymous = false,
+    required this.lang,
+  });
 
   String _initials() {
     if (isAnonymous) return 'G';
@@ -482,7 +553,8 @@ class _AvatarSection extends StatelessWidget {
     final email = user?.email as String?;
     if (name != null && name.isNotEmpty) {
       final parts = name.trim().split(' ');
-      if (parts.length >= 2) return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+      if (parts.length >= 2)
+        return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
       return name[0].toUpperCase();
     }
     if (email != null && email.isNotEmpty) return email[0].toUpperCase();
@@ -503,7 +575,11 @@ class _AvatarSection extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [AppColors.goldLight, AppColors.gold, AppColors.goldDark],
+                colors: [
+                  AppColors.goldLight,
+                  AppColors.gold,
+                  AppColors.goldDark,
+                ],
               ),
               boxShadow: [
                 BoxShadow(
@@ -536,29 +612,37 @@ class _AvatarSection extends StatelessWidget {
           const SizedBox(height: 16),
 
           if (isAnonymous)
-            Text(t(lang, 'guest'),
-                style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.4,
-                ))
+            Text(
+              t(lang, 'guest'),
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.4,
+              ),
+            )
           else if (user?.name != null)
-            Text(user!.name!,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.4,
-                )),
-
-          const SizedBox(height: 4),
-          Text(isAnonymous ? t(lang, 'noAccountYet') : (user?.email ?? t(lang, 'student')),
+            Text(
+              user!.name!,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.4,
+              ),
+            ),
+
+          const SizedBox(height: 4),
+          Text(
+            isAnonymous
+                ? t(lang, 'noAccountYet')
+                : (user?.email ?? t(lang, 'student')),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+          ),
 
           const SizedBox(height: 12),
 
@@ -613,7 +697,11 @@ class _CurrentPlanCard extends StatelessWidget {
   final dynamic user;
   final bool isFamily;
   final String lang;
-  const _CurrentPlanCard({required this.user, required this.isFamily, required this.lang});
+  const _CurrentPlanCard({
+    required this.user,
+    required this.isFamily,
+    required this.lang,
+  });
 
   String? _amountLine() {
     final interval = user?.planInterval as String?;
@@ -635,7 +723,9 @@ class _CurrentPlanCard extends StatelessWidget {
     // Only USD is ever reported by the server today (Stripe prices here are
     // all USD-denominated) — a $ prefix is correct for that case and a safe
     // fallback (currency code suffix) for anything else added later.
-    return currency.toLowerCase() == 'usd' ? '\$$major' : '$major ${currency.toUpperCase()}';
+    return currency.toLowerCase() == 'usd'
+        ? '\$$major'
+        : '$major ${currency.toUpperCase()}';
   }
 
   String? _renewalLine() {
@@ -693,24 +783,51 @@ class _CurrentPlanCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(t(lang, 'currentPlan'),
-                    style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.6)),
+                Text(
+                  t(lang, 'currentPlan'),
+                  style: TextStyle(
+                    color: AppColors.textMuted,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.6,
+                  ),
+                ),
                 const SizedBox(height: 2),
                 Text(
                   isFamily ? t(lang, 'familyPlan') : t(lang, 'individualPlan'),
-                  style: TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.w700),
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 if (amountLine != null) ...[
                   const SizedBox(height: 4),
-                  Text(amountLine, style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                  Text(
+                    amountLine,
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 13,
+                    ),
+                  ),
                 ],
                 if (renewalLine != null) ...[
                   const SizedBox(height: 2),
-                  Text(renewalLine, style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                  Text(
+                    renewalLine,
+                    style: TextStyle(color: AppColors.textMuted, fontSize: 12),
+                  ),
                 ],
                 if (storeNote != null) ...[
                   const SizedBox(height: 6),
-                  Text(storeNote, style: TextStyle(color: AppColors.textMuted, fontSize: 11.5, height: 1.4)),
+                  Text(
+                    storeNote,
+                    style: TextStyle(
+                      color: AppColors.textMuted,
+                      fontSize: 11.5,
+                      height: 1.4,
+                    ),
+                  ),
                 ],
               ],
             ),
@@ -765,7 +882,11 @@ class _GuestUpgradeCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       t(lang, 'createAccountOptionalBody'),
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4),
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 12,
+                        height: 1.4,
+                      ),
                     ),
                   ],
                 ),
@@ -795,7 +916,9 @@ class _VerifyEmailBannerState extends ConsumerState<_VerifyEmailBanner> {
 
   Future<void> _resend() async {
     setState(() => _sending = true);
-    final error = await ref.read(authProvider.notifier).resendVerificationEmail();
+    final error = await ref
+        .read(authProvider.notifier)
+        .resendVerificationEmail();
     if (!mounted) return;
     setState(() => _sending = false);
     if (error != null) {
@@ -820,7 +943,11 @@ class _VerifyEmailBannerState extends ConsumerState<_VerifyEmailBanner> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.mark_email_unread_outlined, color: AppColors.gold, size: 22),
+          Icon(
+            Icons.mark_email_unread_outlined,
+            color: AppColors.gold,
+            size: 22,
+          ),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
@@ -839,7 +966,11 @@ class _VerifyEmailBannerState extends ConsumerState<_VerifyEmailBanner> {
                   _sent
                       ? t(lang, 'verificationEmailSent')
                       : t(lang, 'verifyEmailNeededBody'),
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4),
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                    height: 1.4,
+                  ),
                 ),
                 if (!_sent) ...[
                   const SizedBox(height: 10),
@@ -849,17 +980,30 @@ class _VerifyEmailBannerState extends ConsumerState<_VerifyEmailBanner> {
                       onPressed: _sending ? null : _resend,
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.gold,
-                        side: BorderSide(color: AppColors.gold.withValues(alpha: 0.5)),
+                        side: BorderSide(
+                          color: AppColors.gold.withValues(alpha: 0.5),
+                        ),
                         padding: const EdgeInsets.symmetric(horizontal: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                       child: _sending
                           ? SizedBox(
                               width: 14,
                               height: 14,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.gold),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.gold,
+                              ),
                             )
-                          : Text(t(lang, 'resendEmail'), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                          : Text(
+                              t(lang, 'resendEmail'),
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                     ),
                   ),
                 ],
@@ -932,7 +1076,9 @@ class _SettingsGroup extends StatelessWidget {
                   onTap: item.onTap,
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 14),
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
                     child: Row(
                       children: [
                         Container(
@@ -950,20 +1096,29 @@ class _SettingsGroup extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text(item.label,
-                                  style: TextStyle(
-                                    color: AppColors.textPrimary,
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w500,
-                                  )),
+                              Text(
+                                item.label,
+                                style: TextStyle(
+                                  color: AppColors.textPrimary,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
                               if (item.subtitle != null)
-                                Text(item.subtitle!,
-                                  style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                                Text(
+                                  item.subtitle!,
+                                  style: TextStyle(
+                                    color: AppColors.textMuted,
+                                    fontSize: 12,
+                                  ),
+                                ),
                             ],
                           ),
                         ),
                         ForwardChevronIcon(
-                            color: AppColors.textMuted, size: 18),
+                          color: AppColors.textMuted,
+                          size: 18,
+                        ),
                       ],
                     ),
                   ),
@@ -989,7 +1144,11 @@ class _InAppWebScreen extends StatefulWidget {
   final String url;
   final String title;
   final String lang;
-  const _InAppWebScreen({required this.url, required this.title, required this.lang});
+  const _InAppWebScreen({
+    required this.url,
+    required this.title,
+    required this.lang,
+  });
 
   @override
   State<_InAppWebScreen> createState() => _InAppWebScreenState();
@@ -1007,7 +1166,11 @@ class _InAppWebScreenState extends State<_InAppWebScreen> {
   void _armLoadTimeout() {
     _loadTimeout?.cancel();
     _loadTimeout = Timer(const Duration(seconds: 20), () {
-      if (mounted && _loading) setState(() { _loading = false; _hasError = true; });
+      if (mounted && _loading)
+        setState(() {
+          _loading = false;
+          _hasError = true;
+        });
     });
   }
 
@@ -1017,27 +1180,36 @@ class _InAppWebScreenState extends State<_InAppWebScreen> {
     _ctrl = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(AppColors.background)
-      ..setNavigationDelegate(NavigationDelegate(
-        onNavigationRequest: (request) {
-          if (shouldBlockInAppPurchaseNavigation(request.url)) {
-            return NavigationDecision.prevent;
-          }
-          return NavigationDecision.navigate;
-        },
-        onPageStarted: (_) {
-          if (mounted) setState(() { _loading = true; _hasError = false; });
-          _armLoadTimeout();
-        },
-        onWebResourceError: (error) {
-          if (error.isForMainFrame ?? true) {
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onNavigationRequest: (request) {
+            if (shouldBlockInAppPurchaseNavigation(request.url)) {
+              return NavigationDecision.prevent;
+            }
+            return NavigationDecision.navigate;
+          },
+          onPageStarted: (_) {
+            if (mounted)
+              setState(() {
+                _loading = true;
+                _hasError = false;
+              });
+            _armLoadTimeout();
+          },
+          onWebResourceError: (error) {
+            if (error.isForMainFrame ?? true) {
+              _loadTimeout?.cancel();
+              if (mounted)
+                setState(() {
+                  _loading = false;
+                  _hasError = true;
+                });
+            }
+          },
+          onPageFinished: (_) async {
             _loadTimeout?.cancel();
-            if (mounted) setState(() { _loading = false; _hasError = true; });
-          }
-        },
-        onPageFinished: (_) async {
-          _loadTimeout?.cancel();
-          if (mounted) setState(() => _loading = false);
-          await _ctrl.runJavaScript('''
+            if (mounted) setState(() => _loading = false);
+            await _ctrl.runJavaScript('''
             (function() {
               var s = document.createElement('style');
               s.textContent = [
@@ -1051,8 +1223,9 @@ class _InAppWebScreenState extends State<_InAppWebScreen> {
               document.head.appendChild(s);
             })();
           ''');
-        },
-      ));
+          },
+        ),
+      );
     _injectCookiesAndLoad();
   }
 
@@ -1061,12 +1234,14 @@ class _InAppWebScreenState extends State<_InAppWebScreen> {
     final cookieManager = WebViewCookieManager();
     final domain = Uri.parse(AppConstants.baseUrl).host;
     for (final entry in jar.entries) {
-      await cookieManager.setCookie(WebViewCookie(
-        name: entry.key,
-        value: entry.value,
-        domain: domain,
-        path: '/',
-      ));
+      await cookieManager.setCookie(
+        WebViewCookie(
+          name: entry.key,
+          value: entry.value,
+          domain: domain,
+          path: '/',
+        ),
+      );
     }
     await _ctrl.loadRequest(Uri.parse(widget.url));
     _armLoadTimeout();
@@ -1079,7 +1254,10 @@ class _InAppWebScreenState extends State<_InAppWebScreen> {
   }
 
   void _retry() {
-    setState(() { _hasError = false; _loading = true; });
+    setState(() {
+      _hasError = false;
+      _loading = true;
+    });
     _injectCookiesAndLoad();
   }
 
@@ -1104,37 +1282,77 @@ class _InAppWebScreenState extends State<_InAppWebScreen> {
         await _handleBack(context);
       },
       child: Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.surface,
-        leading: IconButton(
-          icon: const BackIcon(size: 20),
-          tooltip: t(widget.lang, 'back'),
-          onPressed: () => _handleBack(context),
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          backgroundColor: AppColors.surface,
+          leading: IconButton(
+            icon: const BackIcon(size: 20),
+            tooltip: t(widget.lang, 'back'),
+            onPressed: () => _handleBack(context),
+          ),
+          title: Text(
+            widget.title,
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+          ),
+          centerTitle: false,
+          elevation: 0,
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(1),
+            child: Container(height: 1, color: AppColors.border),
+          ),
         ),
-        title: Text(widget.title,
-            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-        centerTitle: false,
-        elevation: 0,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(height: 1, color: AppColors.border),
-        ),
-      ),
-      body: _hasError
-          ? WebViewErrorOverlay(onRetry: _retry)
-          : Stack(
-              children: [
-                WebViewWidget(controller: _ctrl),
-                if (_loading)
-                  Center(
-                    child: CircularProgressIndicator.adaptive(
-                      valueColor: AlwaysStoppedAnimation(AppColors.gold),
+        body: _hasError
+            ? WebViewErrorOverlay(onRetry: _retry)
+            : Stack(
+                children: [
+                  WebViewWidget(controller: _ctrl),
+                  if (_loading)
+                    Center(
+                      child: CircularProgressIndicator.adaptive(
+                        valueColor: AlwaysStoppedAnimation(AppColors.gold),
+                      ),
                     ),
-                  ),
-              ],
-            ),
+                ],
+              ),
       ),
+    );
+  }
+}
+
+/// App version shown on the Account page, read live from the installed
+/// package (same source as Settings' version tile) instead of a hardcoded
+/// string — a hardcoded value silently drifts out of date every release.
+class _LiveVersionLabel extends ConsumerStatefulWidget {
+  const _LiveVersionLabel();
+
+  @override
+  ConsumerState<_LiveVersionLabel> createState() => _LiveVersionLabelState();
+}
+
+class _LiveVersionLabelState extends ConsumerState<_LiveVersionLabel> {
+  String? _version;
+
+  @override
+  void initState() {
+    super.initState();
+    PackageInfo.fromPlatform()
+        .then((info) {
+          if (mounted) {
+            setState(() => _version = '${info.version} (${info.buildNumber})');
+          }
+        })
+        .catchError((Object _) {
+          if (mounted) setState(() => _version = '');
+        });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final lang = ref.watch(courseLangProvider);
+    if (_version == null) return const SizedBox.shrink();
+    return Text(
+      tv(lang, 'versionLabel', {'v': _version!}),
+      style: TextStyle(color: AppColors.textMuted, fontSize: 11),
     );
   }
 }

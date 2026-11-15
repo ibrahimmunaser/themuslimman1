@@ -1,7 +1,4 @@
 class AppConstants {
-  // App version — keep in sync with pubspec.yaml version field
-  static const String appVersion = '1.0.74';
-
   /// The single free-preview part of the course. Every other part (1-14,
   /// 16-100) requires `hasAccess`. Mirrors the website's `FREE_PART_NUMBER`
   /// in lib/free-part-number.ts — keep both in sync if this ever changes.
@@ -64,17 +61,17 @@ class AppConstants {
   // per-territory prices configured on seerah_monthly_individual and
   // seerah_lifetime_individual so every storefront shows the matching
   // Standard / Tier C / Tier D price automatically — no app code needed.
-  static const String monthlyPrice        = '1.99';
-  static const String familyMonthlyPrice  = '9.99';
-  static const String lifetimePrice       = '19.99';
+  static const String monthlyPrice = '1.99';
+  static const String familyMonthlyPrice = '9.99';
+  static const String lifetimePrice = '19.99';
   static const String familyLifetimePrice = '79';
 
   // In-App Purchase product IDs
   // These must match exactly what is registered in App Store Connect and Google Play Console.
-  static const String iapMonthlyIndividual  = 'seerah_monthly_individual';
-  static const String iapMonthlyFamily      = 'seerah_monthly_family';
+  static const String iapMonthlyIndividual = 'seerah_monthly_individual';
+  static const String iapMonthlyFamily = 'seerah_monthly_family';
   static const String iapLifetimeIndividual = 'seerah_lifetime_individual';
-  static const String iapLifetimeFamily     = 'seerah_lifetime_family';
+  static const String iapLifetimeFamily = 'seerah_lifetime_family';
 
   // Legacy reverse-DNS IDs — queried defensively alongside the seerah_* IDs.
   // A stale doc (STORE_RELEASE_CHECKLIST.md) suggested App Store Connect may
@@ -83,10 +80,14 @@ class AppConstants {
   // queryProductDetails would never find seerah_* there. Querying both sets
   // and using whichever one the store actually returns is a safe no-op if
   // the IDs already match.
-  static const String iapMonthlyIndividualLegacy  = 'com.themuslimman.seerah.monthly.individual';
-  static const String iapMonthlyFamilyLegacy      = 'com.themuslimman.seerah.monthly.family';
-  static const String iapLifetimeIndividualLegacy = 'com.themuslimman.seerah.lifetime.individual';
-  static const String iapLifetimeFamilyLegacy     = 'com.themuslimman.seerah.lifetime.family';
+  static const String iapMonthlyIndividualLegacy =
+      'com.themuslimman.seerah.monthly.individual';
+  static const String iapMonthlyFamilyLegacy =
+      'com.themuslimman.seerah.monthly.family';
+  static const String iapLifetimeIndividualLegacy =
+      'com.themuslimman.seerah.lifetime.individual';
+  static const String iapLifetimeFamilyLegacy =
+      'com.themuslimman.seerah.lifetime.family';
 
   /// Public plans offered in the paywall UI (Individual Monthly + Lifetime).
   /// Family SKUs stay queryable for restore / existing accounts but are not
