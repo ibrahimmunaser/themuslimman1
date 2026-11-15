@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { LangToggle } from "@/components/part/lang-toggle";
+import { ThemeToggle } from "@/components/theme-toggle";
 import type { CourseLang } from "@/lib/course-lang";
 import { siteT } from "@/lib/site-copy";
 
@@ -69,8 +70,9 @@ export function NavbarMobileMenu({ user, lang = "en" }: NavbarMobileMenuProps) {
             className="md:hidden fixed top-16 sm:top-20 left-0 right-0 border-t border-border bg-ink/98 backdrop-blur-xl z-50 flex flex-col"
           >
             <div className="flex flex-col py-2">
-              <div className="px-5 py-3">
+              <div className="px-5 py-3 space-y-2">
                 <LangToggle current={lang} nav />
+                <ThemeToggle lang={lang} nav />
               </div>
               <div className="mx-4 h-px bg-border/50" />
               <Link

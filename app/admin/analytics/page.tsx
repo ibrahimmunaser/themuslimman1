@@ -45,7 +45,7 @@ function DateRangeFilter({ dateRange }: { dateRange: AdminDateRange }) {
             href={presetHref(key)}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
               dateRange.preset === key
-                ? "bg-gold text-black"
+                ? "bg-gold text-on-gold"
                 : "bg-surface-raised text-text-secondary hover:text-text hover:bg-border"
             }`}
           >
@@ -73,7 +73,7 @@ function DateRangeFilter({ dateRange }: { dateRange: AdminDateRange }) {
             type="submit"
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
               dateRange.preset === "custom"
-                ? "bg-gold text-black"
+                ? "bg-gold text-on-gold"
                 : "bg-surface-raised text-text-secondary hover:text-text hover:bg-border"
             }`}
           >
@@ -178,7 +178,7 @@ export default async function AdminAnalyticsPage({
           href="https://vercel.com/dashboard"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gold hover:bg-gold-light text-black text-xs font-bold transition-colors flex-shrink-0"
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gold hover:bg-gold-light text-on-gold text-xs font-bold transition-colors flex-shrink-0"
         >
           Open Vercel Analytics <ExternalLink className="w-3.5 h-3.5" />
         </a>

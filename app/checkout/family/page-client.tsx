@@ -305,7 +305,7 @@ function FamilyCheckoutContent({
           <button
             onClick={() => setCycle("lifetime")}
             className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-              cycle === "lifetime" ? "bg-gold text-black shadow" : "text-zinc-400 hover:text-zinc-200"
+              cycle === "lifetime" ? "bg-gold text-on-gold shadow" : "text-zinc-400 hover:text-zinc-200"
             }`}
           >
             <Star className="w-3.5 h-3.5 inline mr-1.5" />
@@ -314,7 +314,7 @@ function FamilyCheckoutContent({
           <button
             onClick={() => setCycle("monthly")}
             className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-              cycle === "monthly" ? "bg-gold text-black shadow" : "text-zinc-400 hover:text-zinc-200"
+              cycle === "monthly" ? "bg-gold text-on-gold shadow" : "text-zinc-400 hover:text-zinc-200"
             }`}
           >
             <RefreshCw className="w-3.5 h-3.5 inline mr-1.5" />

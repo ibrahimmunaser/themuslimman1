@@ -31,6 +31,7 @@ import {
 import dynamic from "next/dynamic";
 import { WidgetCycleProvider } from "./widget-cycle-context";
 import { LangToggle } from "@/components/part/lang-toggle";
+import { ThemeToggle } from "@/components/theme-toggle";
 import type { CourseLang } from "@/lib/course-lang";
 import { isRtlLang } from "@/lib/course-lang";
 import { loc } from "@/lib/loc";
@@ -300,6 +301,10 @@ export function StudentSidebar({
               {t(lang, "languageWord")}
             </p>
             <LangToggle current={lang} compact className="w-full" />
+            <p className="px-0.5 pb-1.5 pt-2 text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+              {loc(lang, "Appearance", "المظهر", "Apparence")}
+            </p>
+            <ThemeToggle lang={lang} compact className="w-full" />
           </div>
         )}
 
@@ -455,6 +460,10 @@ export function StudentSidebar({
           {t(lang, "languageWord")}
         </p>
         <LangToggle current={lang} compact className="w-full" />
+        <p className="pb-1.5 pt-2 text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+          {loc(lang, "Appearance", "المظهر", "Apparence")}
+        </p>
+        <ThemeToggle lang={lang} compact className="w-full" />
       </div>
 
       {/* Scrollable content */}
@@ -686,6 +695,7 @@ export function StudentSidebar({
               {isRtl ? <PanelRightOpen className="w-4 h-4" /> : <PanelLeftOpen className="w-4 h-4" />}
             </button>
             <LangToggle current={lang} iconOnly />
+            <ThemeToggle lang={lang} iconOnly />
           </div>
         )}
 

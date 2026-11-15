@@ -7,6 +7,7 @@ import { NavbarUserMenu } from "./navbar-user-menu";
 import { NavbarMobileMenu } from "./navbar-mobile-menu";
 import { NavLinks } from "./nav-links";
 import { LangToggle } from "@/components/part/lang-toggle";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { getPreviewLangFromCookies } from "@/lib/part1-preview-data";
 import type { CourseLang } from "@/lib/course-lang";
 
@@ -52,6 +53,7 @@ async function NavbarDesktopAuth({ lang }: { lang: CourseLang }) {
     <>
       <NavLinks isLoggedIn={!!user} lang={lang} />
       <LangToggle current={lang} nav />
+      <ThemeToggle lang={lang} nav />
       <NavbarUserMenu user={user} firstName={firstName} hasPaid={hasPaid} lang={lang} />
     </>
   );
@@ -67,6 +69,7 @@ function NavbarDesktopFallback({ lang }: { lang: CourseLang }) {
     <>
       <NavLinks isLoggedIn={false} lang={lang} />
       <LangToggle current={lang} nav />
+      <ThemeToggle lang={lang} nav />
       <NavbarUserMenu user={null} firstName={null} hasPaid={false} lang={lang} />
     </>
   );

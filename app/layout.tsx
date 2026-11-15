@@ -10,6 +10,7 @@ import { CountryPriceProvider } from "@/components/pricing/country-price";
 import { SiteLangProvider } from "@/components/site-lang";
 import { quoteFromHeaderBag } from "@/lib/request-country-price";
 import { COURSE_LANG_COOKIE, isRtlLang, parseLang } from "@/lib/course-lang";
+import { SITE_THEME_ANTI_FLASH_SCRIPT } from "@/lib/site-theme";
 import "./globals.css";
 
 const geist = Geist({
@@ -69,6 +70,13 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `if ("scrollRestoration" in history) { history.scrollRestoration = "manual"; } window.scrollTo(0, 0);`,
           }}
+        />
+        {/* Apply the persisted appearance theme before first paint, so the
+            page never flashes the default theme before switching to the
+            user's saved choice. Mirrors the scroll-restoration script above:
+            synchronous, no dependency on React hydration. */}
+        <script
+          dangerouslySetInnerHTML={{ __html: SITE_THEME_ANTI_FLASH_SCRIPT }}
         />
         <script
           src="https://analytics.ahrefs.com/analytics.js"

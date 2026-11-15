@@ -77,7 +77,7 @@ export function ProfilePickerClient({
   }
 
   return (
-    <div dir={isRtl ? "rtl" : "ltr"} className="relative min-h-screen bg-zinc-950 flex flex-col items-center justify-center px-4 py-16 overflow-hidden">
+    <div dir={isRtl ? "rtl" : "ltr"} className="relative min-h-screen bg-ink flex flex-col items-center justify-center px-4 py-16 overflow-hidden">
       {/* Subtle Islamic pattern */}
       <IslamicPatternBackground className="absolute inset-0" opacity={0.03} />
 
@@ -99,16 +99,16 @@ export function ProfilePickerClient({
           height={40}
           className="rounded-xl mx-auto mb-6 opacity-80"
         />
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-text tracking-tight">
           {loc(lang, "Who is learning today?", "من يتعلّم اليوم؟", "Qui apprend aujourd'hui ?")}
         </h1>
         {switchError && (
-          <p className="mt-3 text-sm text-red-400 bg-red-950/40 border border-red-800/50 rounded-lg px-4 py-2">
+          <p className="mt-3 text-sm text-error bg-error/10 border border-error/30 rounded-lg px-4 py-2">
             {switchError}
           </p>
         )}
         {isFamily && (
-          <p className="text-zinc-500 text-sm mt-2">
+          <p className="text-text-muted text-sm mt-2">
             {loc(lang, "Select your learner profile — each one keeps its own progress.", "اختر ملفك الشخصي التعليمي — يحتفظ كل ملف بتقدمه الخاص.", "Choisissez votre profil d'apprenant — chacun conserve sa propre progression.")}
           </p>
         )}
@@ -155,16 +155,16 @@ export function ProfilePickerClient({
         {isFamily && (
           <a
             href="/student/profiles"
-            className="inline-flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-300 transition-colors px-4 py-2 rounded-lg hover:bg-zinc-800/60"
+            className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-text-secondary transition-colors px-4 py-2 rounded-lg hover:bg-surface-raised"
           >
             <Settings className="w-4 h-4" />
             {loc(lang, "Manage profiles", "إدارة الملفات الشخصية", "Gérer les profils")}
           </a>
         )}
-        {isFamily && <span className="text-zinc-700 text-xs">·</span>}
+        {isFamily && <span className="text-border text-xs">·</span>}
         <button
           onClick={handleSignOut}
-          className="inline-flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-300 transition-colors px-4 py-2 rounded-lg hover:bg-zinc-800/60"
+          className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-text-secondary transition-colors px-4 py-2 rounded-lg hover:bg-surface-raised"
         >
           <LogOut className="w-4 h-4" />
           {loc(lang, "Sign out", "تسجيل الخروج", "Se déconnecter")}
@@ -227,7 +227,7 @@ function ProfileSlot({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
               className="absolute -inset-[3px] rounded-full border-2 border-gold"
-              style={{ boxShadow: "0 0 18px rgba(200,169,110,0.45)" }}
+              style={{ boxShadow: "0 0 18px color-mix(in srgb, var(--color-gold) 45%, transparent)" }}
             />
           )}
         </AnimatePresence>
@@ -278,14 +278,14 @@ function ProfileSlot({
             isActive
               ? "text-gold"
               : hovered
-              ? "text-white"
-              : "text-zinc-300"
+              ? "text-text"
+              : "text-text-secondary"
           }`}
         >
           {profile.displayName}
         </p>
         {profile.isDefault && (
-          <span className="text-[10px] text-zinc-600 mt-0.5 block">{loc(lang, "Primary", "أساسي", "Principal")}</span>
+          <span className="text-[10px] text-text-faint mt-0.5 block">{loc(lang, "Primary", "أساسي", "Principal")}</span>
         )}
         {isSelecting && (
           <span className="text-[10px] text-gold mt-0.5 block font-medium">{loc(lang, "Loading…", "جارٍ التحميل…", "Chargement…")}</span>
@@ -308,10 +308,10 @@ function AddProfileSlot({ anySelecting, lang = "en" }: { anySelecting: boolean; 
       aria-label={loc(lang, "Add new profile", "إضافة ملف شخصي جديد", "Ajouter un nouveau profil")}
     >
       {/* Dashed circle */}
-      <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full border-2 border-dashed border-zinc-700 group-hover:border-gold/50 group-hover:bg-zinc-800/40 flex items-center justify-center transition-all">
-        <Plus className="w-8 h-8 text-zinc-600 group-hover:text-gold/70 transition-colors" />
+      <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full border-2 border-dashed border-border group-hover:border-gold/50 group-hover:bg-surface-raised flex items-center justify-center transition-all">
+        <Plus className="w-8 h-8 text-text-faint group-hover:text-gold/70 transition-colors" />
       </div>
-      <p className="text-sm font-medium text-zinc-600 group-hover:text-zinc-400 transition-colors max-w-[96px] truncate text-center">
+      <p className="text-sm font-medium text-text-faint group-hover:text-text-secondary transition-colors max-w-[96px] truncate text-center">
         {loc(lang, "Add Profile", "إضافة ملف شخصي", "Ajouter un profil")}
       </p>
     </motion.a>

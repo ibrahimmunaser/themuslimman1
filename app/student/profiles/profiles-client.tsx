@@ -203,14 +203,14 @@ export function ProfilesClient({
       { label: loc(lang, "Infographics", "الرسوم المعلوماتية", "Infographies"), value: s.infographicsViewed, icon: Image, color: "text-pink-400" },
       ...(courseHasMindmaps(lang) ? [{ label: loc(lang, "Mind Maps", "الخرائط الذهنية", "Cartes mentales"), value: s.mindmapsViewed, icon: Map, color: "text-teal-400" }] : []),
       { label: loc(lang, "Audio", "الصوت", "Audio"), value: s.audioCompleted, icon: FileText, color: "text-orange-400" },
-      { label: loc(lang, "Flashcards", "البطاقات التعليمية", "Flashcards"), value: s.flashcardsStudied, icon: Brain, color: "text-amber-400" },
+      { label: loc(lang, "Flashcards", "البطاقات التعليمية", "Flashcards"), value: s.flashcardsStudied, icon: Brain, color: "text-gold" },
       { label: loc(lang, "Quizzes", "الاختبارات", "Quiz"), value: s.quizzesPassed, icon: ClipboardCheck, color: "text-red-400" },
       { label: loc(lang, "Facts", "المعلومات", "Faits"), value: s.factsViewed, icon: FileText, color: "text-indigo-400" },
     ];
 
     return (
-      <div className="min-h-screen bg-zinc-950 px-4 py-8 max-w-2xl mx-auto" dir={isRtl ? "rtl" : undefined}>
-        <button onClick={() => setMode("list")} className="flex items-center gap-2 text-zinc-400 hover:text-white mb-6 transition-colors text-sm">
+      <div className="min-h-screen bg-ink px-4 py-8 max-w-2xl mx-auto" dir={isRtl ? "rtl" : undefined}>
+        <button onClick={() => setMode("list")} className="flex items-center gap-2 text-text-muted hover:text-text mb-6 transition-colors text-sm">
           <ArrowLeft className={`w-4 h-4 ${isRtl ? "rotate-180" : ""}`} />
           {loc(lang, "Back to profiles", "العودة إلى الملفات", "Retour aux profils")}
         </button>
@@ -218,14 +218,14 @@ export function ProfilesClient({
         <div className="flex items-center gap-4 mb-8">
           <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${TILE_COLORS[profiles.findIndex(p => p.id === selectedProfile.id) % TILE_COLORS.length]} flex items-center justify-center text-3xl border border-white/10`}>
             {selectedProfile.avatar ?? (
-              <span className="text-xl font-bold text-white/80">
+              <span className="text-xl font-bold text-text/80">
                 {selectedProfile.displayName.slice(0, 2).toUpperCase()}
               </span>
             )}
           </div>
           <div>
-            <h1 className="text-xl font-bold text-white">{selectedProfile.displayName}</h1>
-            <p className="text-xs text-zinc-500 mt-0.5">
+            <h1 className="text-xl font-bold text-text">{selectedProfile.displayName}</h1>
+            <p className="text-xs text-text-muted mt-0.5">
               {selectedProfile.isDefault
                 ? (loc(lang, "Primary profile", "الملف الرئيسي", "Profil principal"))
                 : (loc(lang, "Learner profile", "ملف متعلّم", "Profil d'apprenant"))}
@@ -233,21 +233,21 @@ export function ProfilesClient({
           </div>
         </div>
 
-        <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-5 mb-4">
-          <h2 className="text-xs font-semibold text-zinc-500 mb-3 uppercase tracking-wider">
+        <div className="bg-surface rounded-xl border border-border p-5 mb-4">
+          <h2 className="text-xs font-semibold text-text-muted mb-3 uppercase tracking-wider">
             {loc(lang, "Overall Progress", "التقدم العام", "Progression globale")}
           </h2>
           <div className="flex items-end gap-3 mb-3">
-            <span className="text-4xl font-bold text-amber-400">{s.completionPercent}%</span>
-            <span className="text-zinc-500 text-sm pb-1">
+            <span className="text-4xl font-bold text-gold">{s.completionPercent}%</span>
+            <span className="text-text-muted text-sm pb-1">
               {locf(lang, "{completed}/{total} lessons", "{completed}/{total} درس", "{completed}/{total} leçons", { completed: s.completedParts, total: s.totalParts })}
             </span>
           </div>
-          <div className="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
-            <div className="h-full bg-amber-500 rounded-full transition-all" style={{ width: `${s.completionPercent}%` }} />
+          <div className="w-full h-2 bg-surface-raised rounded-full overflow-hidden">
+            <div className="h-full bg-gold rounded-full transition-all" style={{ width: `${s.completionPercent}%` }} />
           </div>
           {s.lastActivity && (
-            <p className="text-xs text-zinc-600 mt-3">
+            <p className="text-xs text-text-faint mt-3">
               {loc(lang, "Last active: ", "آخر نشاط: ", "Dernière activité : ")}
               {new Date(s.lastActivity).toLocaleDateString(COURSE_LANG_LOCALES[lang])}
             </p>
@@ -256,24 +256,24 @@ export function ProfilesClient({
 
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {assetStats.map(({ label, value, icon: Icon, color }) => (
-            <div key={label} className="bg-zinc-900 rounded-xl border border-zinc-800 p-4 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center flex-shrink-0">
+            <div key={label} className="bg-surface rounded-xl border border-border p-4 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-surface-raised flex items-center justify-center flex-shrink-0">
                 <Icon className={`w-4 h-4 ${color}`} />
               </div>
               <div>
-                <p className="text-xs text-zinc-500">{label}</p>
-                <p className="text-sm font-bold text-white">{value}<span className="text-zinc-600 font-normal text-xs"> / {s.totalParts}</span></p>
+                <p className="text-xs text-text-muted">{label}</p>
+                <p className="text-sm font-bold text-text">{value}<span className="text-text-faint font-normal text-xs"> / {s.totalParts}</span></p>
               </div>
             </div>
           ))}
         </div>
 
         <div className="mt-6 flex gap-3">
-          <button onClick={() => openEditForm(selectedProfile)} className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white text-sm font-medium transition-colors">
+          <button onClick={() => openEditForm(selectedProfile)} className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-surface-raised hover:bg-surface-high text-text text-sm font-medium transition-colors">
             <Edit2 className="w-4 h-4" />
             {loc(lang, "Edit Profile", "تعديل الملف", "Modifier le profil")}
           </button>
-          <button onClick={() => handleSwitch(selectedProfile.id)} disabled={isPending} className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black text-sm font-bold transition-colors disabled:opacity-50">
+          <button onClick={() => handleSwitch(selectedProfile.id)} disabled={isPending} className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-gold hover:bg-gold-light text-on-gold text-sm font-bold transition-colors disabled:opacity-50">
             {locf(lang, "Learn as {name}", "تعلّم كـ {name}", "Apprendre en tant que {name}", { name: selectedProfile.displayName })}
           </button>
         </div>
@@ -286,20 +286,20 @@ export function ProfilesClient({
   if (mode === "new" || mode === "edit") {
     const isEdit = mode === "edit";
     return (
-      <div className="min-h-screen bg-zinc-950 px-4 py-8 max-w-lg mx-auto" dir={isRtl ? "rtl" : undefined}>
-        <button onClick={() => setMode("list")} className="flex items-center gap-2 text-zinc-400 hover:text-white mb-6 transition-colors text-sm">
+      <div className="min-h-screen bg-ink px-4 py-8 max-w-lg mx-auto" dir={isRtl ? "rtl" : undefined}>
+        <button onClick={() => setMode("list")} className="flex items-center gap-2 text-text-muted hover:text-text mb-6 transition-colors text-sm">
           <ArrowLeft className={`w-4 h-4 ${isRtl ? "rotate-180" : ""}`} />
           {loc(lang, "Back", "رجوع", "Retour")}
         </button>
 
-        <h1 className="text-xl font-bold text-white mb-6">
+        <h1 className="text-xl font-bold text-text mb-6">
           {isEdit
             ? (loc(lang, "Edit Profile", "تعديل الملف الشخصي", "Modifier le profil"))
             : (loc(lang, "Create New Profile", "إنشاء ملف شخصي جديد", "Créer un nouveau profil"))}
         </h1>
 
         <div className="mb-5">
-          <label className="block text-sm font-medium text-zinc-300 mb-1.5">
+          <label className="block text-sm font-medium text-text-secondary mb-1.5">
             {loc(lang, "Name", "الاسم", "Nom")} <span className="text-red-400">*</span>
           </label>
           <input
@@ -308,12 +308,12 @@ export function ProfilesClient({
             onChange={(e) => setFormName(e.target.value)}
             placeholder={loc(lang, "e.g. Ahmad, Maryam, Dad…", "مثال: أحمد، مريم، أبي…", "ex. Ahmad, Maryam, Papa…")}
             maxLength={50}
-            className="w-full px-4 py-2.5 bg-zinc-900 border border-zinc-700 focus:border-amber-500 rounded-lg text-white placeholder:text-zinc-600 outline-none transition-colors"
+            className="w-full px-4 py-2.5 bg-surface border border-border focus:border-gold rounded-lg text-text placeholder:text-text-faint outline-none transition-colors"
           />
         </div>
 
         <div className="mb-5">
-          <label className="block text-sm font-medium text-zinc-300 mb-1.5">
+          <label className="block text-sm font-medium text-text-secondary mb-1.5">
             {loc(lang, "Avatar (optional)", "الصورة الرمزية (اختياري)", "Avatar (facultatif)")}
           </label>
           <div className="grid grid-cols-9 gap-2">
@@ -324,8 +324,8 @@ export function ProfilesClient({
                 onClick={() => setFormAvatar(formAvatar === emoji ? null : emoji)}
                 className={`w-9 h-9 rounded-lg text-lg flex items-center justify-center transition-all ${
                   formAvatar === emoji
-                    ? "bg-amber-500/20 border-2 border-amber-500"
-                    : "bg-zinc-800 border border-zinc-700 hover:border-amber-500/50"
+                    ? "bg-gold/20 border-2 border-gold"
+                    : "bg-surface-raised border border-border hover:border-gold/50"
                 }`}
               >
                 {emoji}
@@ -333,7 +333,7 @@ export function ProfilesClient({
             ))}
           </div>
           {formAvatar && (
-            <button type="button" onClick={() => setFormAvatar(null)} className="mt-2 text-xs text-zinc-500 hover:text-zinc-300 transition-colors">
+            <button type="button" onClick={() => setFormAvatar(null)} className="mt-2 text-xs text-text-muted hover:text-text-secondary transition-colors">
               {loc(lang, "Clear avatar", "مسح الصورة الرمزية", "Effacer l'avatar")}
             </button>
           )}
@@ -344,10 +344,10 @@ export function ProfilesClient({
         )}
 
         <div className="flex gap-3">
-          <button type="button" onClick={() => setMode("list")} className="flex-1 px-4 py-2.5 rounded-lg border border-zinc-700 text-zinc-300 hover:text-white hover:border-zinc-500 text-sm font-medium transition-colors">
+          <button type="button" onClick={() => setMode("list")} className="flex-1 px-4 py-2.5 rounded-lg border border-border text-text-secondary hover:text-text hover:border-text-faint text-sm font-medium transition-colors">
             {loc(lang, "Cancel", "إلغاء", "Annuler")}
           </button>
-          <button type="button" onClick={isEdit ? handleUpdate : handleCreate} disabled={isPending || !formName.trim()} className="flex-1 px-4 py-2.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm transition-colors disabled:opacity-50">
+          <button type="button" onClick={isEdit ? handleUpdate : handleCreate} disabled={isPending || !formName.trim()} className="flex-1 px-4 py-2.5 rounded-lg bg-gold hover:bg-gold-light text-on-gold font-bold text-sm transition-colors disabled:opacity-50">
             {isPending
               ? (loc(lang, "Saving…", "جارٍ الحفظ…", "Enregistrement…"))
               : isEdit
@@ -357,17 +357,17 @@ export function ProfilesClient({
         </div>
 
         {isEdit && selectedProfile && !selectedProfile.isDefault && profiles.length > 1 && (
-          <div className="mt-8 pt-6 border-t border-zinc-800">
+          <div className="mt-8 pt-6 border-t border-border">
             {confirmDelete === selectedProfile.id ? (
               <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
                 <p className="text-sm text-red-400 mb-3">
                   {locf(lang, "Delete \"{name}\"? Their progress data will be permanently removed.", "حذف «{name}»؟ ستُحذف بيانات تقدّمه نهائيًا.", "Supprimer « {name} » ? Ses données de progression seront définitivement effacées.", { name: selectedProfile.displayName })}
                 </p>
                 <div className="flex gap-3">
-                  <button onClick={() => setConfirmDelete(null)} className="flex-1 px-3 py-2 rounded-lg border border-zinc-700 text-zinc-400 text-sm hover:text-white transition-colors">
+                  <button onClick={() => setConfirmDelete(null)} className="flex-1 px-3 py-2 rounded-lg border border-border text-text-muted text-sm hover:text-text transition-colors">
                     {loc(lang, "Cancel", "إلغاء", "Annuler")}
                   </button>
-                  <button onClick={() => handleDelete(selectedProfile.id)} disabled={isPending} className="flex-1 px-3 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-white text-sm font-medium transition-colors disabled:opacity-50">
+                  <button onClick={() => handleDelete(selectedProfile.id)} disabled={isPending} className="flex-1 px-3 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-text text-sm font-medium transition-colors disabled:opacity-50">
                     {isPending
                       ? (loc(lang, "Deleting…", "جارٍ الحذف…", "Suppression…"))
                       : (loc(lang, "Delete Profile", "حذف الملف", "Supprimer le profil"))}
@@ -389,15 +389,15 @@ export function ProfilesClient({
   // ── Netflix-style profile grid ─────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-start px-4 py-12" dir={isRtl ? "rtl" : undefined}>
+    <div className="min-h-screen bg-ink flex flex-col items-center justify-start px-4 py-12" dir={isRtl ? "rtl" : undefined}>
 
       {/* Header */}
       <div className="text-center mb-10">
-        <h1 className="text-3xl font-bold text-white tracking-tight">
+        <h1 className="text-3xl font-bold text-text tracking-tight">
           {loc(lang, "Who's learning?", "من يتعلّم؟", "Qui apprend ?")}
         </h1>
         {isFamily && (
-          <p className="text-zinc-500 text-sm mt-2">
+          <p className="text-text-muted text-sm mt-2">
             {locf(lang, "Family Access · up to {n} learner profiles", "وصول العائلة · حتى {n} ملفات متعلّمين", "Accès Famille · jusqu'à {n} profils d'apprenants", { n: profileLimit })}
           </p>
         )}
@@ -430,7 +430,7 @@ export function ProfilesClient({
                     flex items-center justify-center text-5xl
                     border-2 transition-all duration-200
                     ${isActive
-                      ? "border-amber-400 shadow-lg shadow-amber-500/30 scale-105"
+                      ? "border-gold shadow-lg shadow-gold/30 scale-105"
                       : "border-transparent hover:border-white/30 hover:scale-105 hover:brightness-125"
                     }
                     disabled:cursor-wait
@@ -442,13 +442,13 @@ export function ProfilesClient({
                   ) : profile.avatar ? (
                     profile.avatar
                   ) : (
-                    <span className="text-2xl font-bold text-white/80">{initials}</span>
+                    <span className="text-2xl font-bold text-text/80">{initials}</span>
                   )}
 
                   {/* Active checkmark badge */}
                   {isActive && !isSwitching && (
-                    <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-amber-400 flex items-center justify-center shadow-md">
-                      <Check className="w-3.5 h-3.5 text-black" strokeWidth={3} />
+                    <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-gold flex items-center justify-center shadow-md">
+                      <Check className="w-3.5 h-3.5 text-on-gold" strokeWidth={3} />
                     </div>
                   )}
                 </button>
@@ -457,14 +457,14 @@ export function ProfilesClient({
                 <div className="absolute inset-x-0 -bottom-1 flex items-center justify-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
                   <button
                     onClick={(e) => { e.stopPropagation(); openEditForm(profile); }}
-                    className="w-7 h-7 rounded-full bg-zinc-900 border border-zinc-700 hover:border-zinc-500 flex items-center justify-center text-zinc-400 hover:text-white transition-colors shadow-md"
+                    className="w-7 h-7 rounded-full bg-surface border border-border hover:border-text-faint flex items-center justify-center text-text-muted hover:text-text transition-colors shadow-md"
                     title={loc(lang, "Edit profile", "تعديل الملف", "Modifier le profil")}
                   >
                     <Edit2 className="w-3 h-3" />
                   </button>
                   <button
                     onClick={(e) => { e.stopPropagation(); openDetail(profile); }}
-                    className="w-7 h-7 rounded-full bg-zinc-900 border border-zinc-700 hover:border-zinc-500 flex items-center justify-center text-zinc-400 hover:text-white transition-colors shadow-md"
+                    className="w-7 h-7 rounded-full bg-surface border border-border hover:border-text-faint flex items-center justify-center text-text-muted hover:text-text transition-colors shadow-md"
                     title={loc(lang, "View progress", "عرض التقدم", "Voir la progression")}
                   >
                     <BarChart2 className="w-3 h-3" />
@@ -474,22 +474,22 @@ export function ProfilesClient({
 
               {/* Name + progress */}
               <div className="text-center">
-                <p className={`text-sm font-semibold transition-colors ${isActive ? "text-amber-400" : "text-zinc-200 group-hover:text-white"}`}>
+                <p className={`text-sm font-semibold transition-colors ${isActive ? "text-gold" : "text-text-secondary group-hover:text-text"}`}>
                   {profile.displayName}
                 </p>
                 <div className="flex items-center gap-1.5 mt-1 justify-center">
-                  <div className="w-16 h-1 bg-zinc-800 rounded-full overflow-hidden">
-                    <div className="h-full bg-amber-500 rounded-full" style={{ width: `${profile.stats.completionPercent}%` }} />
+                  <div className="w-16 h-1 bg-surface-raised rounded-full overflow-hidden">
+                    <div className="h-full bg-gold rounded-full" style={{ width: `${profile.stats.completionPercent}%` }} />
                   </div>
-                  <span className="text-[10px] text-zinc-600">{profile.stats.completionPercent}%</span>
+                  <span className="text-[10px] text-text-faint">{profile.stats.completionPercent}%</span>
                 </div>
                 {isActive && (
-                  <span className="inline-block mt-1 text-[10px] font-semibold text-amber-500 uppercase tracking-wider">
+                  <span className="inline-block mt-1 text-[10px] font-semibold text-gold uppercase tracking-wider">
                     {loc(lang, "Active", "نشط", "Actif")}
                   </span>
                 )}
                 {profile.isDefault && !isActive && (
-                  <span className="inline-block mt-1 text-[10px] text-zinc-600 uppercase tracking-wider">
+                  <span className="inline-block mt-1 text-[10px] text-text-faint uppercase tracking-wider">
                     {loc(lang, "Primary", "رئيسي", "Principal")}
                   </span>
                 )}
@@ -503,11 +503,11 @@ export function ProfilesClient({
           <div className="flex flex-col items-center gap-3 group">
             <button
               onClick={openNewForm}
-              className="w-32 h-32 rounded-xl border-2 border-dashed border-zinc-700 hover:border-amber-500/50 flex items-center justify-center transition-all duration-200 hover:scale-105 hover:bg-zinc-900/60"
+              className="w-32 h-32 rounded-xl border-2 border-dashed border-border hover:border-gold/50 flex items-center justify-center transition-all duration-200 hover:scale-105 hover:bg-surface/60"
             >
-              <Plus className="w-8 h-8 text-zinc-600 group-hover:text-amber-500 transition-colors" />
+              <Plus className="w-8 h-8 text-text-faint group-hover:text-gold transition-colors" />
             </button>
-            <p className="text-sm text-zinc-600 group-hover:text-zinc-400 transition-colors">
+            <p className="text-sm text-text-faint group-hover:text-text-muted transition-colors">
               {loc(lang, "Add Profile", "إضافة ملف", "Ajouter un profil")}
             </p>
           </div>
@@ -517,7 +517,7 @@ export function ProfilesClient({
       {/* Manage link */}
       <div className="mt-12 flex flex-col items-center gap-3">
         {isFamily && (
-          <p className="text-xs text-zinc-600">
+          <p className="text-xs text-text-faint">
             {loc(lang, "Click a profile to start learning · hover to edit or view progress", "انقر على ملف لبدء التعلم · مرّر للتعديل أو عرض التقدم", "Cliquez sur un profil pour commencer · survolez pour modifier ou voir la progression")}
           </p>
         )}

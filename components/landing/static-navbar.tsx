@@ -4,6 +4,7 @@ import { NavbarUserMenu } from "./navbar-user-menu";
 import { NavbarMobileMenu } from "./navbar-mobile-menu";
 import { NavLinks } from "./nav-links";
 import { LangToggle } from "@/components/part/lang-toggle";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 // A Navbar variant with zero dynamic APIs (no cookies(), no DB lookups), for
 // purely informational pages (Terms, Privacy, Refund, About) that don't need
@@ -36,6 +37,7 @@ export function StaticNavbar() {
           <div className="hidden md:flex items-center gap-6">
             <NavLinks isLoggedIn={false} lang="en" />
             <LangToggle current="en" nav />
+            <ThemeToggle lang="en" nav />
             <NavbarUserMenu user={null} firstName={null} hasPaid={false} lang="en" />
           </div>
 
