@@ -52,12 +52,18 @@ fun signingValue(ciEnvKey: String, localPropKey: String): String =
 android {
     namespace  = "com.themuslimman.seerah"
     compileSdk = flutter.compileSdkVersion
-    // Pinned to satisfy wakelock_plus and other NDK-dependent plugins.
-    ndkVersion = "27.0.12077973"
+    // Pinned to satisfy wakelock_plus and the Salah-feature plugins
+    // (audioplayers, device_info_plus, flutter_compass,
+    // flutter_local_notifications, geolocator, etc.), which all require
+    // 28.2.13676358.
+    ndkVersion = "28.2.13676358"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        // Required by flutter_local_notifications (java.time / core library
+        // desugaring on API < 26).
+        isCoreLibraryDesugaringEnabled = true
     }
 
     signingConfigs {
@@ -108,4 +114,9 @@ kotlin {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // Core library desugaring, required by flutter_local_notifications.
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }

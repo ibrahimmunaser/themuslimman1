@@ -1,5 +1,6 @@
 import 'dart:io';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:seerah_app/core/widgets/localized_text.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:path_provider/path_provider.dart';
@@ -115,7 +116,7 @@ class _CertificateScreenState extends ConsumerState<CertificateScreen> {
         ),
       ),
       body: progressAsync.when(
-        loading: () => const Center(
+        loading: () => Center(
           child: CircularProgressIndicator.adaptive(
             valueColor: AlwaysStoppedAnimation(AppColors.gold),
           ),
@@ -123,7 +124,7 @@ class _CertificateScreenState extends ConsumerState<CertificateScreen> {
         error: (_, __) => Center(
           child: Text(
             t(lang, 'failedToLoadProgress'),
-            style: const TextStyle(color: AppColors.textSecondary),
+            style: TextStyle(color: AppColors.textSecondary),
           ),
         ),
         data: (progress) {
@@ -221,7 +222,7 @@ class _CertificateScreenState extends ConsumerState<CertificateScreen> {
                       const SizedBox(height: 8),
                       Text(
                         t(lang, 'completeSeerahOfProphet'),
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 14,
                           height: 1.4,
@@ -230,11 +231,11 @@ class _CertificateScreenState extends ConsumerState<CertificateScreen> {
                       ),
                       if (isEarned) ...[
                         const SizedBox(height: 16),
-                        const Divider(color: AppColors.border),
+                        Divider(color: AppColors.border),
                         const SizedBox(height: 16),
                         Text(
                           activeProfile?.displayName ?? auth.user?.name ?? t(lang, 'student'),
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: AppColors.textPrimary,
                             fontSize: 22,
                             fontWeight: FontWeight.w700,
@@ -244,7 +245,7 @@ class _CertificateScreenState extends ConsumerState<CertificateScreen> {
                         const SizedBox(height: 6),
                         Text(
                           tv(lang, 'hasSuccessfullyCompleted', {'n': PARTS.length}),
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: AppColors.textSecondary,
                             fontSize: 13,
                             height: 1.5,
@@ -276,7 +277,7 @@ class _CertificateScreenState extends ConsumerState<CertificateScreen> {
                     label: Text(_sharing ? t(lang, 'preparingEllipsis') : t(lang, 'shareCertificate')),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.gold,
-                      side: const BorderSide(color: AppColors.gold),
+                      side: BorderSide(color: AppColors.gold),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -291,7 +292,7 @@ class _CertificateScreenState extends ConsumerState<CertificateScreen> {
               // Requirements
               Text(
                 t(lang, 'requirements'),
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.textPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -332,7 +333,7 @@ class _CertificateScreenState extends ConsumerState<CertificateScreen> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.info_outline_rounded,
                         color: AppColors.textMuted,
                         size: 20,
@@ -341,7 +342,7 @@ class _CertificateScreenState extends ConsumerState<CertificateScreen> {
                       Expanded(
                         child: Text(
                           t(lang, 'keepStudyingBody'),
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: AppColors.textSecondary,
                             fontSize: 13,
                             height: 1.4,
@@ -428,7 +429,7 @@ class _RequirementRow extends StatelessWidget {
               Expanded(
                 child: Text(
                   label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
@@ -447,7 +448,7 @@ class _RequirementRow extends StatelessWidget {
                     fit: BoxFit.scaleDown,
                     child: Text(
                       '$current / $required${suffix != null ? " $suffix" : ""}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.textMuted,
                         fontSize: 13,
                       ),

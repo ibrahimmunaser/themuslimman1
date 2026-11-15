@@ -1,5 +1,6 @@
 import 'package:chewie/chewie.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:seerah_app/core/widgets/localized_text.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:video_player/video_player.dart';
@@ -19,7 +20,7 @@ class VideoTab extends ConsumerWidget {
     final lang = ref.watch(courseLangProvider);
 
     return assetsAsync.when(
-      loading: () => const Center(
+      loading: () => Center(
         child: CircularProgressIndicator.adaptive(
           valueColor: AlwaysStoppedAnimation(AppColors.gold),
         ),
@@ -409,7 +410,7 @@ class _VideoPlayerState extends ConsumerState<_VideoPlayer> with WidgetsBindingO
   @override
   Widget build(BuildContext context) {
     if (_initializing) {
-      return const Center(
+      return Center(
         child: CircularProgressIndicator.adaptive(
           valueColor: AlwaysStoppedAnimation(AppColors.gold),
         ),
@@ -451,10 +452,10 @@ class _ErrorState extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.play_circle_outline, size: 64, color: AppColors.textMuted),
+            Icon(Icons.play_circle_outline, size: 64, color: AppColors.textMuted),
             const SizedBox(height: 16),
             Text(message,
-              style: const TextStyle(color: AppColors.textSecondary),
+              style: TextStyle(color: AppColors.textSecondary),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),

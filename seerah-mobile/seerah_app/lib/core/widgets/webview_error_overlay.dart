@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:seerah_app/core/widgets/localized_text.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/part_provider.dart';
 import '../theme/app_colors.dart';
@@ -31,12 +32,12 @@ class WebViewErrorOverlay extends ConsumerWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.wifi_off_rounded, size: 44, color: AppColors.textMuted),
+          Icon(Icons.wifi_off_rounded, size: 44, color: AppColors.textMuted),
           const SizedBox(height: 16),
           Text(
             message ?? t(lang, 'couldntLoadPage'),
             textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 14, height: 1.4),
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 14, height: 1.4),
           ),
           const SizedBox(height: 20),
           OutlinedButton.icon(

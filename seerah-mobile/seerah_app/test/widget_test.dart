@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:seerah_app/core/data/parts_data.dart';
@@ -9,30 +10,36 @@ import 'package:seerah_app/features/course/widgets/part_card.dart';
 import 'package:seerah_app/features/reference/data/reference_data.dart';
 import 'package:seerah_app/features/shell/app_shell.dart';
 
-Widget _wrapShell({Size size = const Size(390, 844), String location = '/dashboard'}) {
+Widget _wrapShell({Size size = const Size(390, 844), String location = '/course'}) {
   final router = GoRouter(
     initialLocation: location,
     routes: [
       ShellRoute(
         builder: (_, __, child) => AppShell(child: child),
         routes: [
-          GoRoute(path: '/dashboard', builder: (_, __) => const SizedBox(key: Key('dash'))),
+          GoRoute(path: '/account', builder: (_, __) => const SizedBox(key: Key('account'))),
           GoRoute(path: '/course', builder: (_, __) => const SizedBox(key: Key('course'))),
+          GoRoute(path: '/quran', builder: (_, __) => const SizedBox(key: Key('quran'))),
+          GoRoute(path: '/salah', builder: (_, __) => const SizedBox(key: Key('salah'))),
         ],
       ),
     ],
   );
 
-  return MediaQuery(
-    data: MediaQueryData(size: size),
-    child: MaterialApp.router(theme: AppTheme.dark, routerConfig: router),
+  return ProviderScope(
+    child: MediaQuery(
+      data: MediaQueryData(size: size),
+      child: MaterialApp.router(theme: AppTheme.dark, routerConfig: router),
+    ),
   );
 }
 
 Widget _wrap(Widget child, {Size size = const Size(390, 844)}) {
-  return MediaQuery(
-    data: MediaQueryData(size: size),
-    child: MaterialApp(theme: AppTheme.dark, home: child),
+  return ProviderScope(
+    child: MediaQuery(
+      data: MediaQueryData(size: size),
+      child: MaterialApp(theme: AppTheme.dark, home: child),
+    ),
   );
 }
 
@@ -129,16 +136,14 @@ void main() {
   });
 
   group('AppShell navigation', () {
-    testWidgets('renders 5 navigation destinations', (tester) async {
+    testWidgets('renders 4 navigation destinations', (tester) async {
       await tester.pumpWidget(_wrapShell());
       await tester.pumpAndSettle();
       expect(find.byType(NavigationBar), findsOneWidget);
-      // Dashboard is selected — home shows the filled variant.
-      expect(find.byIcon(Icons.home_rounded), findsOneWidget);
-      expect(find.byIcon(Icons.menu_book_outlined), findsOneWidget);
-      expect(find.byIcon(Icons.folder_outlined), findsOneWidget);
-      expect(find.byIcon(Icons.library_books_outlined), findsOneWidget);
-      expect(find.byIcon(Icons.insights_outlined), findsOneWidget);
+      expect(find.byIcon(Icons.menu_book_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.auto_stories_outlined), findsOneWidget);
+      expect(find.byIcon(Icons.mosque_outlined), findsOneWidget);
+      expect(find.byIcon(Icons.person_outline_rounded), findsOneWidget);
     });
   });
 }

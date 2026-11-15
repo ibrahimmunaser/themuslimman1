@@ -1,21 +1,24 @@
-import 'package:flutter/material.dart';
+import 'dart:async';
+
+import 'package:flutter/material.dart' hide Text;
+import 'package:seerah_app/core/widgets/localized_text.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart' as provider;
 import '../../../core/constants/app_constants.dart';
 import '../../../core/data/parts_data.dart';
 import '../../../core/models/part_model.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/part_provider.dart';
-import '../../../core/providers/profiles_provider.dart';
 import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/widgets/adaptive_icons.dart';
 import '../../../core/widgets/app_logo.dart';
+import '../../../core/widgets/profile_avatar_button.dart';
 import '../../../core/widgets/ui_kit.dart';
 import '../../../l10n/app_strings.dart';
-import '../../resources/screens/resources_screen.dart'
-    show resourceTypeCountForLang;
-import '../../shell/app_shell.dart' show showLockedNavDialog;
+import '../../salah/salah_section.dart';
+import '../../salah/state/app_controller.dart';
+import '../../salah/utils/formatting.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -24,25 +27,8 @@ class DashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final lang = ref.watch(courseLangProvider);
     final auth = ref.watch(authProvider);
-    final user = auth.user;
     final hasAccess = auth.hasAccess;
     final progressAsync = ref.watch(progressProvider);
-    final profilesState = ref.watch(profilesProvider).valueOrNull;
-    final activeProfile = profilesState?.activeProfile;
-    // On a family plan, `user.name` is the ACCOUNT holder (e.g. the parent
-    // who signed up/pays) — but the person actually using the app right now
-    // is whichever learner profile is active, which can be a different
-    // family member entirely. Greeting them by the account owner's name was
-    // confusing/wrong for every non-default profile. activeProfile.displayName
-    // is always populated (defaults to the account holder's name for the
-    // single-profile/individual-plan case — see lib/access.ts's
-    // ensureFamilyProfilesForUser and app/actions/profiles.ts's
-    // createDefaultProfileForUser), so it's a safe, always-correct source for
-    // BOTH individual and family plans.
-    final firstName = _firstName(
-      activeProfile?.displayName ?? user?.name,
-      lang,
-    );
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -64,223 +50,31 @@ class DashboardScreen extends ConsumerWidget {
             ),
           ],
         ),
-        actions: [
-          // Profile switcher — taps go directly to profile picker if multi-profile
-          Padding(
-            padding: const EdgeInsets.only(right: 10),
-            child: Semantics(
-              button: true,
-              label: t(lang, 'profile'),
-              child: InkResponse(
-                onTap: () {
-                  if (profilesState != null &&
-                      profilesState.hasMultipleProfiles) {
-                    context.push('/profiles');
-                  } else {
-                    context.push('/profile');
-                  }
-                },
-                radius: 24,
-                // Outer padding keeps the visual circle unchanged while giving a >=44dp tap target.
-                child: Padding(
-                  padding: const EdgeInsets.all(6),
-                  child: Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: AppColors.card,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child:
-                        activeProfile?.avatar != null &&
-                            activeProfile!.avatar!.isNotEmpty
-                        ? Text(
-                            activeProfile.avatar!,
-                            style: const TextStyle(fontSize: 16),
-                            textAlign: TextAlign.center,
-                          )
-                        : const Icon(
-                            Icons.person_outline_rounded,
-                            size: 20,
-                            color: AppColors.textPrimary,
-                          ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
+        actions: const [ProfileAvatarButton()],
       ),
       body: AppGradientBackground(
         child: SafeArea(
-          // The shell already owns the bottom edge. A second bottom inset
-          // here is the empty band above the tab bar.
           bottom: false,
-          // Previously the ONLY way to recover from a sync failure (offline,
-          // transient server error — see progress_provider.dart's syncFailed)
-          // was to force-quit and relaunch the app; there was no manual retry
-          // affordance anywhere. Pull-to-refresh re-runs the same awaited
-          // sync/push round-trip manualRefresh() exposes.
           child: RefreshIndicator(
             color: AppColors.gold,
             onRefresh: () =>
                 ref.read(progressProvider.notifier).manualRefresh(),
-            // Plain ListView — no Spacer / min-height Column. Those used to
-            // stretch an empty band between Quick Access and the tab bar.
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(0, 4, 0, 16),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
               children: [
                 if (progressAsync.valueOrNull?.syncFailed == true)
                   const Padding(
-                    padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    padding: EdgeInsets.only(bottom: 12),
                     child: OfflineBanner(),
                   ),
-                // ── Welcome hero ───────────────────────────────────────────────
-                // No entrance animation here: the shell's plain ShellRoute
-                // rebuilds this screen from scratch every time the Home tab
-                // is reopened, so a staggered fade-in replayed on every visit
-                // instead of just once — it read as a recurring flash of
-                // near-empty content right before the bottom nav bar.
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                  child: _WelcomeCard(
-                    firstName: firstName,
-                    hasAccess: hasAccess,
-                  ),
+                _HomeNextPrayerCard(lang: lang),
+                const SizedBox(height: 14),
+                _HomeContinueCard(
+                  hasAccess: hasAccess,
+                  progressAsync: progressAsync,
+                  lang: lang,
                 ),
-
-                // ── At-a-glance stats strip ────────────────────────────────────
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    decoration: BoxDecoration(
-                      color: AppColors.card,
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: progressAsync.when(
-                      loading: () => Row(
-                        children: [
-                          _InlineStat(
-                            value: '${PARTS.length}',
-                            label: t(lang, 'partsLabel'),
-                            color: AppColors.gold,
-                          ),
-                          _StatDivider(),
-                          _InlineStat(
-                            value: '${ERAS.length}',
-                            label: t(lang, 'eras'),
-                            color: AppColors.success,
-                          ),
-                          _StatDivider(),
-                          _InlineStat(
-                            value: '${resourceTypeCountForLang(lang)}',
-                            label: t(lang, 'resources'),
-                            color: const Color(0xFF5A90B0),
-                          ),
-                          _StatDivider(),
-                          _InlineStat(
-                            value: '∞',
-                            label: t(lang, 'reference'),
-                            color: const Color(0xFF4AA87E),
-                          ),
-                        ],
-                      ),
-                      error: (_, __) => Row(
-                        children: [
-                          _InlineStat(
-                            value: '${PARTS.length}',
-                            label: t(lang, 'partsLabel'),
-                            color: AppColors.gold,
-                          ),
-                          _StatDivider(),
-                          _InlineStat(
-                            value: '${ERAS.length}',
-                            label: t(lang, 'eras'),
-                            color: AppColors.success,
-                          ),
-                          _StatDivider(),
-                          _InlineStat(
-                            value: '${resourceTypeCountForLang(lang)}',
-                            label: t(lang, 'resources'),
-                            color: const Color(0xFF5A90B0),
-                          ),
-                          _StatDivider(),
-                          _InlineStat(
-                            value: '∞',
-                            label: t(lang, 'reference'),
-                            color: const Color(0xFF4AA87E),
-                          ),
-                        ],
-                      ),
-                      data: (progress) => Row(
-                        children: [
-                          _InlineStat(
-                            value: '${progress.totalViewed}',
-                            label: t(lang, 'studied'),
-                            color: AppColors.gold,
-                          ),
-                          _StatDivider(),
-                          _InlineStat(
-                            value: '${progress.totalCompleted}',
-                            label: t(lang, 'completed'),
-                            color: AppColors.success,
-                          ),
-                          _StatDivider(),
-                          _InlineStat(
-                            value: '${resourceTypeCountForLang(lang)}',
-                            label: t(lang, 'resources'),
-                            color: const Color(0xFF5A90B0),
-                          ),
-                          _StatDivider(),
-                          _InlineStat(
-                            value: '∞',
-                            label: t(lang, 'reference'),
-                            color: const Color(0xFF4AA87E),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-
-                // ── Continue learning ──────────────────────────────────────────
-                SectionHeader(
-                  title: t(lang, 'continueLearningTitle'),
-                  subtitle: t(lang, 'pickUpWhereLeftOff'),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: _ContinueLearningCard(
-                    hasAccess: hasAccess,
-                    progressAsync: progressAsync,
-                    lang: lang,
-                  ),
-                ),
-
-                // ── Quick access ───────────────────────────────────────────────
-                SectionHeader(title: t(lang, 'quickAccess')),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: _QuickAccessGrid(lang: lang, hasAccess: hasAccess),
-                ),
-
-                // ── Upgrade prompt ─────────────────────────────────────────────
-                if (!hasAccess) ...[
-                  const SizedBox(height: 16),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: _UpgradeBanner(lang: lang),
-                  ),
-                ],
-
-                // ── Era overview ───────────────────────────────────────────────
-                SectionHeader(
-                  title: t(lang, 'courseOverview'),
-                  subtitle: tv(lang, 'allErasOfSeerah', {'n': ERAS.length}),
-                ),
-                _EraOverviewList(hasAccess: hasAccess, lang: lang),
               ],
             ),
           ),
@@ -288,136 +82,178 @@ class DashboardScreen extends ConsumerWidget {
       ),
     );
   }
-
-  String _firstName(String? name, String lang) {
-    if (name == null || name.isEmpty) return t(lang, 'student');
-    return name.trim().split(' ').first;
-  }
 }
 
-// ── Welcome hero card ─────────────────────────────────────────────────────────
-
-class _WelcomeCard extends ConsumerWidget {
-  final String firstName;
-  final bool hasAccess;
-  const _WelcomeCard({required this.firstName, required this.hasAccess});
+/// Compact next-prayer row: "Dhuhr in 7 minutes". Taps through to Salah.
+class _HomeNextPrayerCard extends StatelessWidget {
+  final String lang;
+  const _HomeNextPrayerCard({required this.lang});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final lang = ref.watch(courseLangProvider);
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: AppDecorations.goldHero(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              GoldBadge(t(lang, 'welcomeTitleLine1')),
-              const Spacer(),
-              Text(
-                '✦',
-                style: TextStyle(
-                  color: AppColors.gold.withValues(alpha: 0.3),
-                  fontSize: 20,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            t(lang, 'assalamAlaykum'),
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            firstName,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 28,
-              fontWeight: FontWeight.w800,
-              height: 1.0,
-              letterSpacing: -0.6,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Expanded(
-                child: Text(
-                  hasAccess
-                      ? t(lang, 'dashboardIntro')
-                      : t(lang, 'dashboardFreeIntro'),
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 13,
-                    height: 1.45,
+  Widget build(BuildContext context) {
+    return FutureBuilder<AppController>(
+      future: SalahBootstrap.ensure(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return _DailyCard(
+            onTap: () => context.go('/salah'),
+            child: SizedBox(
+              height: 56,
+              child: Center(
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.gold,
                   ),
                 ),
               ),
-              if (hasAccess) ...[
-                const SizedBox(width: 12),
-                Flexible(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.success.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: AppColors.success.withValues(alpha: 0.3),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.check_circle_rounded,
-                          color: AppColors.success,
-                          size: 11,
-                        ),
-                        const SizedBox(width: 3),
-                        Flexible(
-                          child: Text(
-                            t(lang, 'fullAccess'),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: AppColors.success,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
+            ),
+          );
+        }
+        return provider.ChangeNotifierProvider<AppController>.value(
+          value: snapshot.data!,
+          child: provider.Consumer<AppController>(
+            builder: (context, controller, _) {
+              final next = controller.nextPrayer;
+              return _DailyCard(
+                onTap: () => context.go('/salah'),
+                child: next == null
+                    ? Row(
+                        children: [
+                          Icon(
+                            Icons.mosque_outlined,
+                            color: AppColors.gold,
+                            size: 28,
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Text(
+                              t(lang, 'prayerTimesUnavailable'),
+                              style: TextStyle(
+                                color: AppColors.textPrimary,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ],
+                          Icon(
+                            Icons.chevron_right_rounded,
+                            color: AppColors.gold,
+                          ),
+                        ],
+                      )
+                    : _NextPrayerCountdown(
+                        controller: controller,
+                        prayerName: next.key.displayName,
+                        target: next.value,
+                      ),
+              );
+            },
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
 
-// ── Continue learning card ────────────────────────────────────────────────────
+class _NextPrayerCountdown extends StatefulWidget {
+  final AppController controller;
+  final String prayerName;
+  final DateTime target;
+  const _NextPrayerCountdown({
+    required this.controller,
+    required this.prayerName,
+    required this.target,
+  });
 
-class _ContinueLearningCard extends StatelessWidget {
+  @override
+  State<_NextPrayerCountdown> createState() => _NextPrayerCountdownState();
+}
+
+class _NextPrayerCountdownState extends State<_NextPrayerCountdown> {
+  Timer? _ticker;
+
+  @override
+  void initState() {
+    super.initState();
+    _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+      setState(() {});
+      if (!widget.target.isAfter(widget.controller.nowInUserZone())) {
+        widget.controller.refreshNextPrayer();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _ticker?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final remaining = widget.target.difference(
+      widget.controller.nowInUserZone(),
+    );
+    return Row(
+      children: [
+        Icon(Icons.mosque_outlined, color: AppColors.gold, size: 28),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                widget.prayerName,
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                remaining.isNegative
+                    ? 'now'
+                    : 'in ${_friendlyCountdown(remaining)}',
+                style: TextStyle(
+                  color: AppColors.gold,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Icon(Icons.chevron_right_rounded, color: AppColors.gold),
+      ],
+    );
+  }
+}
+
+String _friendlyCountdown(Duration duration) {
+  if (duration.inHours > 0) {
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes % 60;
+    if (minutes == 0) return hours == 1 ? '1 hour' : '$hours hours';
+    return '${hours}h ${minutes}m';
+  }
+  if (duration.inMinutes > 0) {
+    final minutes = duration.inMinutes;
+    return minutes == 1 ? '1 minute' : '$minutes minutes';
+  }
+  return formatCountdown(duration);
+}
+
+/// "Continue Part 15: The First Revelation"
+class _HomeContinueCard extends StatelessWidget {
   final bool hasAccess;
   final AsyncValue<ProgressState> progressAsync;
   final String lang;
-  const _ContinueLearningCard({
+  const _HomeContinueCard({
     required this.hasAccess,
     required this.progressAsync,
     required this.lang,
@@ -425,12 +261,10 @@ class _ContinueLearningCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Use the last visited part from progress; fall back to the free part for new users.
     final lastPartNumber =
-        progressAsync.valueOrNull?.lastPartNumber ?? AppConstants.kFreePartNumber;
+        progressAsync.valueOrNull?.lastPartNumber ??
+        AppConstants.kFreePartNumber;
     final partNum = lastPartNumber.clamp(1, PARTS.length);
-    // Only advance to "Up next" once the current furthest part is completed
-    // (quiz passed) — don't skip past unfinished work just because it was opened.
     final isFirstVisit = progressAsync.valueOrNull?.totalViewed == 0;
     final completed =
         progressAsync.valueOrNull?.completedParts ?? const <int>{};
@@ -445,446 +279,59 @@ class _ContinueLearningCard extends StatelessWidget {
       (p) => p.partNumber == nextPartNum,
       orElse: () => PARTS.first,
     );
-    final nextEraColor = AppColors.forEra(nextPart.era);
 
-    // A previously-subscribed user whose access has since lapsed keeps their
-    // real (possibly > 1) lastPartNumber — without this check the card would
-    // silently promise "Continue" and then bounce them straight into the
-    // paywall on tap, with no indication anything had changed.
-    final locked = !hasAccess && nextPartNum != AppConstants.kFreePartNumber;
+    return _DailyCard(
+      onTap: () => context.push('/part/$nextPartNum'),
+      child: Row(
+        children: [
+          Icon(
+            Icons.menu_book_rounded,
+            color: AppColors.gold,
+            size: 28,
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Text(
+              tv(lang, 'continuePartNamed', {
+                'n': nextPartNum,
+                'title': nextPart.localizedTitle(lang),
+              }),
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                height: 1.3,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Icon(Icons.chevron_right_rounded, color: AppColors.gold),
+        ],
+      ),
+    );
+  }
+}
 
-    final label = isFirstVisit
-        ? (hasAccess ? t(lang, 'startHere') : t(lang, 'freeStartHere'))
-        : locked
-        ? t(lang, 'resumeUnlockContinue')
-        : (nextPartNum == partNum
-              ? t(lang, 'continueLabel')
-              : t(lang, 'upNext'));
+class _DailyCard extends StatelessWidget {
+  final VoidCallback onTap;
+  final Widget child;
+  const _DailyCard({required this.onTap, required this.child});
 
+  @override
+  Widget build(BuildContext context) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () => context.push('/part/$nextPartNum'),
+        onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: Ink(
-          padding: const EdgeInsets.all(16),
-          decoration: AppDecorations.eraAccent(nextEraColor),
-          child: Row(
-            children: [
-              Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  color: nextEraColor.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: nextEraColor.withValues(alpha: 0.4),
-                  ),
-                ),
-                child: Center(
-                  child: Text(
-                    '$nextPartNum',
-                    style: TextStyle(
-                      color: nextEraColor,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '$label — ${_eraName(nextPart.era, lang)}',
-                      style: const TextStyle(
-                        color: AppColors.gold,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      nextPart.localizedTitle(lang),
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      isFirstVisit &&
-                              nextPart.partNumber == AppConstants.kFreePartNumber
-                          ? t(lang, 'freePartStartDescription')
-                          : nextPart.localizedSubtitle(lang),
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 12,
-                      ),
-                      maxLines: isFirstVisit &&
-                              nextPart.partNumber == AppConstants.kFreePartNumber
-                          ? 3
-                          : 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: AppColors.gold.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: AppColors.gold.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Icon(
-                  locked
-                      ? Icons.lock_outline_rounded
-                      : Icons.play_arrow_rounded,
-                  color: AppColors.gold,
-                  size: 20,
-                ),
-              ),
-            ],
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
+          decoration: BoxDecoration(
+            color: AppColors.card,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.gold, width: 1),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Looks up an era's localized display name from its id (as stored on
-/// [PartModel.era]) — falls back to the raw id if a new era is ever added
-/// to PARTS without a matching ERAS entry.
-String _eraName(String eraId, String lang) {
-  for (final era in ERAS) {
-    if (era.id == eraId) return era.localizedName(lang);
-  }
-  return eraId;
-}
-
-// ── Quick access grid ─────────────────────────────────────────────────────────
-
-class _QuickAccessGrid extends ConsumerWidget {
-  final String lang;
-  final bool hasAccess;
-  const _QuickAccessGrid({required this.lang, required this.hasAccess});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final items = [
-      (Icons.menu_book_rounded, t(lang, 'lessons'), '/course', AppColors.gold),
-      (
-        Icons.folder_rounded,
-        t(lang, 'resources'),
-        '/resources',
-        const Color(0xFF5A90B0),
-      ),
-      (
-        Icons.library_books_rounded,
-        t(lang, 'reference'),
-        '/reference',
-        const Color(0xFF4AA87E),
-      ),
-      (
-        Icons.insights_rounded,
-        t(lang, 'myProgress'),
-        '/progress',
-        const Color(0xFFB08040),
-      ),
-    ];
-
-    return GridView.count(
-      crossAxisCount: 2,
-      crossAxisSpacing: 10,
-      mainAxisSpacing: 10,
-      childAspectRatio: 2.1,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      children: items.map((item) {
-        return Material(
-          color: Colors.transparent,
-          child: InkWell(
-            // Quick Access leads to the exact same screens as the bottom
-            // nav's Lessons/Resources/Reference/Progress tabs, so it must be
-            // gated the same way — otherwise it'd be a silent bypass of the
-            // nav-bar lock for a no-access user.
-            onTap: () {
-              if (!hasAccess) {
-                showLockedNavDialog(context, ref, lang);
-                return;
-              }
-              context.go(item.$3);
-            },
-            borderRadius: BorderRadius.circular(14),
-            child: Ink(
-              decoration: AppDecorations.card(
-                borderColor: item.$4.withValues(alpha: 0.25),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: item.$4.withValues(alpha: 0.14),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(item.$1, color: item.$4, size: 20),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      item.$2,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      maxLines: 2,
-                    ),
-                  ),
-                  ForwardChevronIcon(
-                    color: item.$4.withValues(alpha: 0.45),
-                    size: 11,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-}
-
-// ── Inline stat helpers ───────────────────────────────────────────────────────
-
-class _InlineStat extends StatelessWidget {
-  final String value;
-  final String label;
-  final Color color;
-  const _InlineStat({
-    required this.value,
-    required this.label,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Column(
-        children: [
-          Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: color,
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          const SizedBox(height: 3),
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: AppColors.textMuted,
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatDivider extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(width: 1, height: 30, color: AppColors.border);
-  }
-}
-
-// ── Upgrade banner ────────────────────────────────────────────────────────────
-
-class _UpgradeBanner extends StatelessWidget {
-  final String lang;
-  const _UpgradeBanner({required this.lang});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: AppDecorations.goldHero(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.gold.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(
-                  Icons.lock_open_rounded,
-                  color: AppColors.gold,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  tv(lang, 'unlockAllParts', {'n': PARTS.length}),
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(
-            t(lang, 'unlockAllPartsBody'),
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 13,
-              height: 1.4,
-            ),
-          ),
-          const SizedBox(height: 14),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              // push, not go — consistent with every other "View Plans" /
-              // paywall entry point in the app.
-              onPressed: () => context.push('/pricing'),
-              child: Text(t(lang, 'viewPlans')),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Era overview list ─────────────────────────────────────────────────────────
-
-class _EraOverviewList extends StatelessWidget {
-  final bool hasAccess;
-  final String lang;
-  const _EraOverviewList({required this.hasAccess, required this.lang});
-
-  @override
-  Widget build(BuildContext context) {
-    final groups = getEraGroups();
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(14),
-        child: Column(
-          children: groups.asMap().entries.map((entry) {
-            final i = entry.key;
-            final isLast = i == groups.length - 1;
-            final group = entry.value;
-            final era = group['era'] as EraModel;
-            final parts = group['parts'] as List;
-            final color = AppColors.forEra(era.id);
-            return Column(
-              children: [
-                Material(
-                  color: AppColors.card,
-                  child: InkWell(
-                    onTap: () => context.go('/course'),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 13,
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              color: color.withValues(alpha: 0.16),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Center(
-                              child: Text(
-                                '${i + 1}',
-                                style: TextStyle(
-                                  color: color,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  era.localizedName(lang),
-                                  style: const TextStyle(
-                                    color: AppColors.textPrimary,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                Text(
-                                  tv(lang, 'nPartsSuffix', {'n': parts.length}),
-                                  style: TextStyle(
-                                    color: color,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const ForwardChevronIcon(
-                            color: AppColors.textMuted,
-                            size: 18,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                if (!isLast)
-                  const Divider(
-                    height: 1,
-                    thickness: 1,
-                    color: AppColors.border,
-                    indent: 64,
-                  ),
-              ],
-            );
-          }).toList(),
+          child: child,
         ),
       ),
     );

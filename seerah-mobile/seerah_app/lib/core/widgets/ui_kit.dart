@@ -1,8 +1,11 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:seerah_app/core/widgets/localized_text.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/app_theme_provider.dart';
 import '../providers/part_provider.dart';
 import '../theme/app_colors.dart';
+import '../theme/theme_options.dart';
 import '../../l10n/app_strings.dart';
 
 /// Shared visual tokens and reusable UI building blocks.
@@ -54,13 +57,7 @@ class AppGradientBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        gradient: RadialGradient(
-          center: Alignment(0, -0.55),
-          radius: 1.4,
-          colors: [Color(0xFF141008), AppColors.background],
-        ),
-      ),
+      decoration: BoxDecoration(gradient: AppColors.backgroundGradient),
       child: child,
     );
   }
@@ -93,7 +90,7 @@ class SectionHeader extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 17,
                     fontWeight: FontWeight.w700,
@@ -104,7 +101,7 @@ class SectionHeader extends StatelessWidget {
                   const SizedBox(height: 3),
                   Text(
                     subtitle!,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 13,
                       height: 1.35,
@@ -163,7 +160,7 @@ class PageIntroCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   eyebrow.toUpperCase(),
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.gold,
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
@@ -176,7 +173,7 @@ class PageIntroCard extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.textPrimary,
               fontSize: 22,
               fontWeight: FontWeight.w800,
@@ -187,7 +184,7 @@ class PageIntroCard extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             description,
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.textSecondary,
               fontSize: 14,
               height: 1.45,
@@ -233,7 +230,7 @@ class StatTile extends StatelessWidget {
             Text(
               label,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.textMuted,
                 fontSize: 11,
                 fontWeight: FontWeight.w500,
@@ -322,7 +319,7 @@ class EmptyState extends StatelessWidget {
             Text(
               title,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.textPrimary,
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -334,7 +331,7 @@ class EmptyState extends StatelessWidget {
               Text(
                 subtitle!,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.textSecondary,
                   fontSize: 13,
                   height: 1.45,
@@ -368,17 +365,17 @@ class AppSearchField extends ConsumerWidget {
     return TextField(
       controller: controller,
       onChanged: onChanged,
-      style: const TextStyle(color: AppColors.textPrimary, fontSize: 15),
+      style: TextStyle(color: AppColors.textPrimary, fontSize: 15),
       decoration: InputDecoration(
         hintText: hint ?? t(lang, 'searchEllipsis'),
-        prefixIcon: const Icon(
+        prefixIcon: Icon(
           Icons.search_rounded,
           size: 22,
           color: AppColors.textMuted,
         ),
         suffixIcon: onClear != null
             ? IconButton(
-                icon: const Icon(
+                icon: Icon(
                   Icons.close_rounded,
                   size: 18,
                   color: AppColors.textMuted,
@@ -392,11 +389,11 @@ class AppSearchField extends ConsumerWidget {
         contentPadding: const EdgeInsets.symmetric(vertical: 12),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: BorderSide(color: AppColors.border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: BorderSide(color: AppColors.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
@@ -425,7 +422,7 @@ class GoldBadge extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: const TextStyle(
+        style: TextStyle(
           color: AppColors.gold,
           fontSize: 10,
           fontWeight: FontWeight.w700,
@@ -508,7 +505,7 @@ class VerifyingPurchaseBanner extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          const SizedBox(
+          SizedBox(
             width: 16,
             height: 16,
             child: CircularProgressIndicator.adaptive(
@@ -520,7 +517,7 @@ class VerifyingPurchaseBanner extends ConsumerWidget {
           Expanded(
             child: Text(
               t(lang, 'verifyingPurchaseBody'),
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.textSecondary,
                 fontSize: 12,
                 height: 1.3,
@@ -569,7 +566,7 @@ class PendingPurchaseRecoveryBanner extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          const Icon(
+          Icon(
             Icons.receipt_long_rounded,
             color: AppColors.gold,
             size: 20,
@@ -578,7 +575,7 @@ class PendingPurchaseRecoveryBanner extends ConsumerWidget {
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.textPrimary,
                 fontSize: 13,
                 height: 1.4,
@@ -595,7 +592,7 @@ class PendingPurchaseRecoveryBanner extends ConsumerWidget {
             ),
             child: Text(
               t(lang, 'claim'),
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.gold,
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
@@ -623,7 +620,7 @@ class OfflineBanner extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          const Icon(
+          Icon(
             Icons.cloud_off_rounded,
             size: 16,
             color: AppColors.textMuted,
@@ -632,7 +629,7 @@ class OfflineBanner extends ConsumerWidget {
           Expanded(
             child: Text(
               t(lang, 'offlineBannerBody'),
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.textSecondary,
                 fontSize: 12,
                 height: 1.3,
@@ -698,14 +695,14 @@ class AppLangToggle extends ConsumerWidget {
                       courseLangLabel(lang),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
                         color: AppColors.textPrimary,
                       ),
                     ),
                   ),
-                  const Icon(
+                  Icon(
                     Icons.expand_more_rounded,
                     color: AppColors.gold,
                     size: 16,
@@ -754,7 +751,7 @@ class AppLangToggle extends ConsumerWidget {
                   padding: const EdgeInsets.fromLTRB(20, 14, 20, 6),
                   child: Text(
                     t(lang, 'language'),
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.textPrimary,
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -779,7 +776,7 @@ class AppLangToggle extends ConsumerWidget {
                       ),
                     ),
                     trailing: option.code == lang
-                        ? const Icon(Icons.check_rounded, color: AppColors.gold)
+                        ? Icon(Icons.check_rounded, color: AppColors.gold)
                         : null,
                     onTap: () {
                       Navigator.of(sheetContext).pop();
@@ -822,7 +819,7 @@ class AppLangSwitcherRow extends ConsumerWidget {
               color: AppColors.gold.withValues(alpha: 0.14),
               borderRadius: BorderRadius.circular(9),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.language_rounded,
               color: AppColors.gold,
               size: 17,
@@ -832,7 +829,7 @@ class AppLangSwitcherRow extends ConsumerWidget {
           Expanded(
             child: Text(
               t(lang, 'language'),
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.textPrimary,
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
@@ -842,6 +839,207 @@ class AppLangSwitcherRow extends ConsumerWidget {
           const AppLangToggle(),
         ],
       ),
+    );
+  }
+}
+
+/// Self-contained app-wide theme switch. Reads/writes [appThemeProvider]
+/// directly so it can be dropped into any screen — placed on the Profile
+/// screen right below [AppLangSwitcherRow].
+class AppThemeSwitcherRow extends ConsumerWidget {
+  const AppThemeSwitcherRow({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(courseLangProvider);
+    final themeId = ref.watch(appThemeProvider);
+    final current = themeById(themeId);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: AppColors.gold.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(9),
+            ),
+            child: Icon(
+              Icons.palette_outlined,
+              color: AppColors.gold,
+              size: 17,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Text(
+              t(lang, 'appearance'),
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          InkWell(
+            borderRadius: BorderRadius.circular(20),
+            onTap: () => _openThemeSheet(context, ref, lang),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 16,
+                    height: 16,
+                    decoration: BoxDecoration(
+                      color: current.accent,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.border, width: 1),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    t(lang, current.labelKey),
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  Icon(
+                    Icons.expand_more_rounded,
+                    color: AppColors.gold,
+                    size: 16,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _openThemeSheet(
+    BuildContext context,
+    WidgetRef ref,
+    String lang,
+  ) {
+    return showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: ListView(
+            shrinkWrap: true,
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            children: [
+              const SizedBox(height: 8),
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.border,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(4, 14, 4, 12),
+                child: Text(
+                  t(lang, 'appearance'),
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              Consumer(
+                builder: (context, innerRef, _) {
+                  final selected = innerRef.watch(appThemeProvider);
+                  return GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: kAppThemeOptions.length,
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      childAspectRatio: 2.4,
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 10,
+                    ),
+                    itemBuilder: (context, i) {
+                      final option = kAppThemeOptions[i];
+                      final isSelected = option.id == selected;
+                      return InkWell(
+                        borderRadius: BorderRadius.circular(14),
+                        onTap: () {
+                          innerRef.read(appThemeProvider.notifier).setTheme(option.id);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: option.background,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: isSelected ? option.accent : option.cardNav,
+                              width: isSelected ? 2 : 1,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 22,
+                                height: 22,
+                                decoration: BoxDecoration(
+                                  color: option.accent,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: isSelected
+                                    ? Icon(
+                                        Icons.check_rounded,
+                                        size: 14,
+                                        color: option.accent.computeLuminance() > 0.5
+                                            ? Colors.black
+                                            : Colors.white,
+                                      )
+                                    : null,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  t(lang, option.labelKey),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: option.mainText,
+                                    fontSize: 12,
+                                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

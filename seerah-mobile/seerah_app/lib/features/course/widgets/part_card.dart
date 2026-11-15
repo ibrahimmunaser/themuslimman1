@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:seerah_app/core/widgets/localized_text.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../l10n/course_numbers.dart';
 import '../../../core/models/part_model.dart';
@@ -96,7 +97,7 @@ class PartCard extends ConsumerWidget {
                       const SizedBox(height: 2),
                       Text(
                         part.localizedSubtitle(lang),
-                        style: const TextStyle(
+                        style: TextStyle(
                             color: AppColors.textMuted, fontSize: 12),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -110,18 +111,18 @@ class PartCard extends ConsumerWidget {
                 else if (isViewed && !isLocked)
                   Container(
                     width: 8, height: 8,
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       color: AppColors.gold, shape: BoxShape.circle,
                     ),
                   )
                 else if (isLocked)
-                  const Icon(
+                  Icon(
                     Icons.lock_outline_rounded,
                     color: AppColors.textMuted,
                     size: 18,
                   )
                 else
-                  const ForwardChevronIcon(
+                  ForwardChevronIcon(
                     color: AppColors.textMuted,
                     size: 18,
                   ),
@@ -151,7 +152,7 @@ class PartCard extends ConsumerWidget {
           child: row,
         ),
         if (!isLast)
-          const Divider(
+          Divider(
               height: 1, thickness: 1, color: AppColors.border, indent: 66),
       ],
     );

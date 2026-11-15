@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:seerah_app/core/widgets/localized_text.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shimmer/shimmer.dart';
@@ -75,14 +76,14 @@ class _ReadTabState extends ConsumerState<ReadTab> {
   // Built once — the sheet only depends on static AppColors values.
   static final MarkdownStyleSheet _markdownStyleSheet = MarkdownStyleSheet(
     // Body text
-    p: const TextStyle(
+    p: TextStyle(
       color: AppColors.textPrimary,
       fontSize: 15,
       height: 1.75,
       letterSpacing: 0.1,
     ),
     // Headings
-    h1: const TextStyle(
+    h1: TextStyle(
       color: AppColors.textPrimary,
       fontSize: 22,
       fontWeight: FontWeight.w700,
@@ -94,24 +95,24 @@ class _ReadTabState extends ConsumerState<ReadTab> {
       fontWeight: FontWeight.w700,
       height: 1.4,
     ),
-    h3: const TextStyle(
+    h3: TextStyle(
       color: AppColors.textPrimary,
       fontSize: 16,
       fontWeight: FontWeight.w600,
       height: 1.4,
     ),
-    h4: const TextStyle(
+    h4: TextStyle(
       color: AppColors.textSecondary,
       fontSize: 14,
       fontWeight: FontWeight.w600,
       letterSpacing: 0.5,
     ),
     // Strong / em
-    strong: const TextStyle(
+    strong: TextStyle(
       color: AppColors.textPrimary,
       fontWeight: FontWeight.w700,
     ),
-    em: const TextStyle(
+    em: TextStyle(
       color: AppColors.textSecondary,
       fontStyle: FontStyle.italic,
     ),
@@ -128,7 +129,7 @@ class _ReadTabState extends ConsumerState<ReadTab> {
       border: Border.all(color: AppColors.border),
     ),
     // Blockquote
-    blockquote: const TextStyle(
+    blockquote: TextStyle(
       color: AppColors.textSecondary,
       fontSize: 15,
       fontStyle: FontStyle.italic,
@@ -143,14 +144,14 @@ class _ReadTabState extends ConsumerState<ReadTab> {
     ),
     blockquotePadding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
     // Lists
-    listBullet: const TextStyle(
+    listBullet: TextStyle(
       color: AppColors.gold,
       fontSize: 15,
     ),
     listBulletPadding: const EdgeInsets.only(right: 8),
     listIndent: 20,
     // Horizontal rule
-    horizontalRuleDecoration: const BoxDecoration(
+    horizontalRuleDecoration: BoxDecoration(
       border: Border(
         bottom: BorderSide(color: AppColors.border, width: 1),
       ),
@@ -174,7 +175,7 @@ class _ReadTabState extends ConsumerState<ReadTab> {
         // Section selector
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             border: Border(bottom: BorderSide(color: AppColors.border)),
           ),
           child: SingleChildScrollView(
@@ -306,10 +307,10 @@ class _ErrorView extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.error_outline, size: 48, color: AppColors.textMuted),
+          Icon(Icons.error_outline, size: 48, color: AppColors.textMuted),
           const SizedBox(height: 12),
           Text(t(lang, 'failedToLoadContent'),
-            style: const TextStyle(color: AppColors.textSecondary)),
+            style: TextStyle(color: AppColors.textSecondary)),
           const SizedBox(height: 16),
           OutlinedButton(onPressed: onRetry, child: Text(t(lang, 'retry'))),
         ],
@@ -381,7 +382,7 @@ class _KeyFactsList extends StatelessWidget {
                 Expanded(
                   child: Text(
                     facts[i],
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.textPrimary,
                       fontSize: 14,
                       height: 1.6,
@@ -408,10 +409,10 @@ class _EmptySection extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.article_outlined, size: 48, color: AppColors.textMuted),
+          Icon(Icons.article_outlined, size: 48, color: AppColors.textMuted),
           const SizedBox(height: 12),
           Text(tv(lang, 'sectionNotAvailable', {'section': section}),
-            style: const TextStyle(color: AppColors.textSecondary)),
+            style: TextStyle(color: AppColors.textSecondary)),
         ],
       ),
     );

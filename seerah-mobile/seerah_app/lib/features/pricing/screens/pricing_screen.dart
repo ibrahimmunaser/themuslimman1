@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:seerah_app/core/widgets/localized_text.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -245,7 +246,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
                 const SizedBox(height: 20),
                 Text(
                   t(lang, 'jazakAllahKhayran'),
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 22,
                     fontWeight: FontWeight.w800,
@@ -255,7 +256,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
                 Text(
                   t(lang, 'purchaseSuccessBody'),
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 15,
                     height: 1.5,
@@ -337,7 +338,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
           Text(
             t(lang, 'planHeadline'),
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.textPrimary,
               fontSize: 20,
               fontWeight: FontWeight.w800,
@@ -349,34 +350,13 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
           Text(
             t(lang, 'planScreenSubtitle'),
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.textSecondary,
               fontSize: 13.5,
               height: 1.4,
             ),
           ),
 
-          // ── Three compact benefits ───────────────────────────────
-          const SizedBox(height: 14),
-          Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _BenefitChip(
-                icon: Icons.play_circle_outline_rounded,
-                label: t(lang, 'benefitVideos'),
-              ),
-              _BenefitChip(
-                icon: Icons.quiz_outlined,
-                label: t(lang, 'benefitFlashcards'),
-              ),
-              _BenefitChip(
-                icon: Icons.translate_rounded,
-                label: t(lang, 'benefit15Languages'),
-              ),
-            ],
-          ),
           const SizedBox(height: 16),
 
           // ── Access banner ────────────────────────────────────────
@@ -531,14 +511,14 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
             decoration: BoxDecoration(
               color: AppColors.card,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.border),
+              border: Border.all(color: AppColors.gold, width: 1),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.auto_awesome_rounded,
                       color: AppColors.gold,
                       size: 17,
@@ -546,7 +526,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
                     const SizedBox(width: 8),
                     Text(
                       t(lang, 'whatsIncluded'),
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.textPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -576,7 +556,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
                         Container(
                           width: 28,
                           height: 28,
-                          decoration: const BoxDecoration(
+                          decoration: BoxDecoration(
                             color: AppColors.goldFaded,
                             shape: BoxShape.circle,
                           ),
@@ -586,7 +566,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
                         Expanded(
                           child: Text(
                             item.$2,
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: AppColors.textSecondary,
                               fontSize: 13.5,
                             ),
@@ -606,7 +586,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
           Text(
             t(lang, 'wantToPreviewFirst'),
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.textSecondary,
               fontSize: 13,
             ),
@@ -635,7 +615,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
                       color: AppColors.goldFaded,
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.play_circle_outline,
                       color: AppColors.gold,
                       size: 24,
@@ -648,7 +628,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
                       children: [
                         Text(
                           t(lang, 'part1AlwaysFree'),
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: AppColors.textPrimary,
                             fontWeight: FontWeight.w600,
                             fontSize: 14,
@@ -657,7 +637,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
                         const SizedBox(height: 2),
                         Text(
                           t(lang, 'watchPart1FreeNoPurchase'),
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: AppColors.textSecondary,
                             fontSize: 12.5,
                           ),
@@ -665,7 +645,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
                       ],
                     ),
                   ),
-                  const ForwardChevronIcon(
+                  ForwardChevronIcon(
                     color: AppColors.textMuted,
                     size: 14,
                   ),
@@ -680,7 +660,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
           Text(
             t(lang, 'pricingQuestions'),
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.textPrimary,
               fontSize: 17,
               fontWeight: FontWeight.w700,
@@ -716,14 +696,14 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
                       }
                       await ref.read(iapProvider.notifier).restorePurchases();
                     },
-              icon: const Icon(
+              icon: Icon(
                 Icons.restore_rounded,
                 size: 17,
                 color: AppColors.textMuted,
               ),
               label: Text(
                 t(lang, 'restorePurchases'),
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.textMuted,
                   fontSize: 13,
                 ),
@@ -836,7 +816,7 @@ class _PlanSelectRow extends StatelessWidget {
                           Flexible(
                             child: Text(
                               t(lang, plan.nameKey),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: AppColors.textPrimary,
                                 fontSize: 15,
                                 fontWeight: FontWeight.w700,
@@ -871,7 +851,7 @@ class _PlanSelectRow extends StatelessWidget {
                       Text(
                         t(lang, plan.descriptionKey),
                         maxLines: 2,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 12.5,
                         ),
@@ -898,7 +878,7 @@ class _PlanSelectRow extends StatelessWidget {
                               text: plan.periodKey == 'perMonth'
                                   ? t(lang, 'perMonth')
                                   : ' ${t(lang, plan.periodKey)}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
                                 color: AppColors.textSecondary,
@@ -908,7 +888,7 @@ class _PlanSelectRow extends StatelessWidget {
                         ),
                         maxLines: 1,
                         textDirection: TextDirection.ltr,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: AppColors.textPrimary,
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
@@ -920,41 +900,6 @@ class _PlanSelectRow extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-/// One of the three compact benefit chips shown above the plan rows.
-class _BenefitChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const _BenefitChip({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 13, color: AppColors.gold),
-          const SizedBox(width: 5),
-          Text(
-            label,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -1032,7 +977,7 @@ class _RetryBanner extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.warning_amber_rounded,
                 color: AppColors.textMuted,
                 size: 18,
@@ -1041,7 +986,7 @@ class _RetryBanner extends StatelessWidget {
               Expanded(
                 child: Text(
                   status,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 13,
                   ),
@@ -1055,7 +1000,7 @@ class _RetryBanner extends StatelessWidget {
                 ),
                 child: Text(
                   t(lang, 'retry'),
-                  style: const TextStyle(color: AppColors.gold, fontSize: 13),
+                  style: TextStyle(color: AppColors.gold, fontSize: 13),
                 ),
               ),
             ],
@@ -1066,7 +1011,7 @@ class _RetryBanner extends StatelessWidget {
           // customers hitting an ordinary transient load failure.
           Text(
             t(lang, 'checkConnectionRetrySupport'),
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.textMuted,
               fontSize: 11.5,
               height: 1.4,
@@ -1087,7 +1032,7 @@ class _GuaranteeRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Icon(Icons.shield_outlined, color: AppColors.gold, size: 18),
+        Icon(Icons.shield_outlined, color: AppColors.gold, size: 18),
         const SizedBox(width: 6),
         // Flexible + ellipsis: refundBadgeText() varies in length by platform
         // ("Refundable via Google Play" is notably longer than "7-day refund
@@ -1100,7 +1045,7 @@ class _GuaranteeRow extends StatelessWidget {
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.textSecondary,
               fontSize: 13,
             ),
@@ -1128,7 +1073,7 @@ class _TrustBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.gold, width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1137,7 +1082,7 @@ class _TrustBadge extends StatelessWidget {
           const SizedBox(width: 5),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.textSecondary,
               fontSize: 11.5,
               fontWeight: FontWeight.w600,
@@ -1186,7 +1131,7 @@ class _FaqTileState extends State<_FaqTile> {
                     Expanded(
                       child: Text(
                         widget.question,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: AppColors.textPrimary,
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -1206,7 +1151,7 @@ class _FaqTileState extends State<_FaqTile> {
                   const SizedBox(height: 8),
                   Text(
                     widget.answer,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 13,
                       height: 1.5,

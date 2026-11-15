@@ -1,7 +1,8 @@
 import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:seerah_app/core/widgets/localized_text.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers/part_provider.dart';
 import '../../../core/providers/progress_provider.dart';
@@ -54,7 +55,7 @@ class _InfographicsTabState extends ConsumerState<InfographicsTab> {
     final infographicsAsync = ref.watch(infographicsProvider(widget.partNumber));
 
     return infographicsAsync.when(
-      loading: () => const Center(
+      loading: () => Center(
         child: CircularProgressIndicator.adaptive(
           valueColor: AlwaysStoppedAnimation(AppColors.gold),
         ),
@@ -143,10 +144,10 @@ class _InfographicsTabState extends ConsumerState<InfographicsTab> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.pinch_rounded, color: AppColors.textMuted, size: 16),
+                  Icon(Icons.pinch_rounded, color: AppColors.textMuted, size: 16),
                   const SizedBox(width: 6),
                   Text(t(lang, 'pinchToZoom'),
-                      style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                      style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
                 ],
               ),
             ),
@@ -171,7 +172,7 @@ class _InfographicsTabState extends ConsumerState<InfographicsTab> {
                       });
                       return Image(image: provider, fit: BoxFit.contain);
                     },
-                    placeholder: (_, __) => const Center(
+                    placeholder: (_, __) => Center(
                       child: CircularProgressIndicator.adaptive(
                         valueColor: AlwaysStoppedAnimation(AppColors.gold),
                       ),
@@ -180,11 +181,11 @@ class _InfographicsTabState extends ConsumerState<InfographicsTab> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.image_not_supported_outlined,
+                          Icon(Icons.image_not_supported_outlined,
                               size: 48, color: AppColors.textMuted),
                           const SizedBox(height: 12),
                           Text(t(lang, 'infographicsUnavailable'),
-                              style: const TextStyle(color: AppColors.textSecondary)),
+                              style: TextStyle(color: AppColors.textSecondary)),
                           const SizedBox(height: 16),
                           OutlinedButton.icon(
                             onPressed: _retryImage,
@@ -216,11 +217,11 @@ class _Unavailable extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.auto_awesome_mosaic_outlined,
+          Icon(Icons.auto_awesome_mosaic_outlined,
               size: 48, color: AppColors.textMuted),
           const SizedBox(height: 12),
           Text(t(lang, 'infographicsUnavailable'),
-              style: const TextStyle(color: AppColors.textSecondary)),
+              style: TextStyle(color: AppColors.textSecondary)),
           if (onRetry != null) ...[
             const SizedBox(height: 16),
             OutlinedButton.icon(

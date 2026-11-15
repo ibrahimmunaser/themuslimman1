@@ -1,0 +1,1284 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:seerah_app/core/widgets/localized_text.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:provider/provider.dart';
+
+import '../navigation.dart';
+import '../models/prayer_day_times.dart';
+import '../models/prayer_settings.dart';
+import '../models/salah_prayer.dart';
+import '../models/scheduled_reminder.dart';
+import '../state/app_controller.dart';
+import '../utils/app_strings.dart';
+import '../../../core/theme/app_colors.dart';
+import '../utils/formatting.dart';
+import '../utils/system_ui.dart';
+import '../widgets/location_feedback.dart';
+import '../widgets/place_text.dart';
+import 'app_guard_screen.dart';
+import 'diagnostics_screen.dart';
+import 'incoming_salah_screen.dart';
+import 'manual_location_screen.dart';
+import 'privacy_policy_screen.dart';
+
+String _alarmKitSubtitle(String alarmKitAuthStatus) {
+  switch (alarmKitAuthStatus) {
+    case 'authorized':
+      return 'Prominent prayer alarms are enabled';
+    case 'denied':
+      return 'Permission denied — tap Open Settings below';
+    case 'notDetermined':
+      return 'Tap to allow prominent prayer alarms (iOS 26+)';
+    default:
+      return 'AlarmKit unavailable on this device';
+  }
+}
+
+class SettingsScreen extends StatefulWidget {
+  const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> with RouteAware {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route is PageRoute) {
+      salahRouteObserver.subscribe(this, route);
+    }
+  }
+
+  @override
+  void dispose() {
+    salahRouteObserver.unsubscribe(this);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    // Returning from Preview reminder (or any pushed route): force chrome
+    // back so ListView insets stay stable while scrolling.
+    restoreAppSystemUi();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Scoped selects instead of context.watch<AppController>(): this screen
+    // used to rebuild its entire ~900-line ListView on every single
+    // notifyListeners() call anywhere in the app (location refresh, AlarmKit
+    // polling, prayer-watch ticks, guard toggles elsewhere, etc.), even when
+    // none of those changes touched anything this screen renders. If one of
+    // those unrelated rebuilds landed while the user's finger was mid-drag,
+    // the whole children list got reconstructed and could visibly reflow —
+    // this was the root cause of "scroll up slowly, it glitches back down".
+    // Selecting only the specific fields actually read below means this
+    // screen now only rebuilds when one of them truly changes.
+    final controller = context.read<AppController>();
+    final settings = context.select<AppController, PrayerSettings>(
+      (c) => c.settings,
+    );
+    final notificationsPermitted = context.select<AppController, bool>(
+      (c) => c.notificationsPermitted,
+    );
+    final alarmKitAvailable = context.select<AppController, bool>(
+      (c) => c.alarmKitAvailable,
+    );
+    final alarmKitAuthorized = context.select<AppController, bool>(
+      (c) => c.alarmKitAuthorized,
+    );
+    final alarmKitAuthStatus = context.select<AppController, String>(
+      (c) => c.alarmKitAuthStatus,
+    );
+    final exactAlarmsAvailable = context.select<AppController, bool>(
+      (c) => c.exactAlarmsAvailable,
+    );
+    final guardSupported = context.select<AppController, bool>(
+      (c) => c.guardSupported,
+    );
+    final today = context.select<AppController, PrayerDayTimes?>(
+      (c) => c.today,
+    );
+    final nextReminder = context.select<AppController, ScheduledReminder?>(
+      (c) => c.nextReminder,
+    );
+
+    return Theme(
+      data: Theme.of(context).copyWith(
+        cardTheme: Theme.of(context).cardTheme.copyWith(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(color: AppColors.gold, width: 1),
+          ),
+        ),
+      ),
+      child: Scaffold(
+      appBar: AppBar(title: const Text('Settings')),
+      // SingleChildScrollView + Column, not a lazy ListView. The sliver
+      // list was recomputing maxScrollExtent by hundreds of pixels while a
+      // finger was dragging (children entering and leaving the cache), and
+      // that correction is what snapped the page back down mid-scroll.
+      body: SingleChildScrollView(
+        controller: _scrollController,
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: ClampingScrollPhysics(),
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+          _SectionHeader('Location'),
+          Card(
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.location_on_outlined),
+                  title: settings.locationLabel != null ? PlaceText(settings.locationLabel!) : const Text('Not set'),
+                  subtitle: Text(settings.locationSource.displayName),
+                ),
+                if (settings.hasLocation)
+                  ListTile(
+                    leading: const Icon(Icons.explore_outlined),
+                    title: Text(
+                      '${settings.latitude!.toStringAsFixed(4)}, ${settings.longitude!.toStringAsFixed(4)}',
+                    ),
+                    subtitle: const Text('Latitude, longitude'),
+                  ),
+                ListTile(
+                  leading: const Icon(Icons.public),
+                  title: Text(settings.timezone ?? 'Timezone not detected'),
+                  subtitle: const Text('Timezone'),
+                ),
+                const Divider(height: 1),
+                Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextButton.icon(
+                          onPressed: () async {
+                            final status =
+                                await controller.useCurrentLocation();
+                            if (!context.mounted) return;
+                            showLocationStatusFeedback(context, status);
+                          },
+                          icon: const Icon(Icons.my_location, size: 18),
+                          label: const Text('Use current location'),
+                        ),
+                      ),
+                      Expanded(
+                        child: TextButton.icon(
+                          onPressed:
+                              () => Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => const ManualLocationScreen(),
+                                ),
+                              ),
+                          icon: const Icon(
+                            Icons.edit_location_alt_outlined,
+                            size: 18,
+                          ),
+                          label: const Text('Set manually'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          _SectionHeader('Calculation'),
+          Card(
+            child: Column(
+              children: [
+                ListTile(
+                  title: const Text('Calculation Method'),
+                  subtitle: Text(settings.calculationMethod.displayName),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap:
+                      () => _pickEnum<CalculationMethodOption>(
+                        context: context,
+                        title: 'Calculation Method',
+                        values: CalculationMethodOption.values,
+                        selected: settings.calculationMethod,
+                        labelOf: (v) => v.displayName,
+                        onSelected:
+                            (v) => controller.updateSettings(
+                              settings.copyWith(calculationMethod: v),
+                            ),
+                      ),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  title: const Text('Asr Method'),
+                  subtitle: Text(settings.asrMethod.displayName),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap:
+                      () => _pickEnum<AsrMethod>(
+                        context: context,
+                        title: 'Asr Method',
+                        values: AsrMethod.values,
+                        selected: settings.asrMethod,
+                        labelOf: (v) => v.displayName,
+                        onSelected:
+                            (v) => controller.updateSettings(
+                              settings.copyWith(asrMethod: v),
+                            ),
+                      ),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  title: const Text('High-latitude rule'),
+                  subtitle: Text(settings.highLatitudeRule.displayName),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap:
+                      () => _pickEnum<HighLatitudeRuleOption>(
+                        context: context,
+                        title: 'High-latitude rule',
+                        values: HighLatitudeRuleOption.values,
+                        selected: settings.highLatitudeRule,
+                        labelOf: (v) => v.displayName,
+                        onSelected:
+                            (v) => controller.updateSettings(
+                              settings.copyWith(highLatitudeRule: v),
+                            ),
+                      ),
+                ),
+                const Divider(height: 1),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Prayer times may vary by local masjid. '
+                        'Use manual adjustments if needed.',
+                        style: TextStyle(fontSize: 13, color: Colors.grey),
+                      ),
+                      if (settings.calculationMethod ==
+                          CalculationMethodOption.ummAlQura) ...[
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Umm al-Qura note: during Ramadan, Isha is '
+                          'traditionally observed 90 min after Maghrib — '
+                          'add +30 min to Isha via "Match my local masjid" '
+                          'if your masjid follows this.',
+                          style: TextStyle(fontSize: 12, color: Colors.orange),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          _SectionHeader('Match my local masjid'),
+          Card(
+            child: Column(
+              children: [
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
+                  child: Text(
+                    'Masjids often adjust athan times by a few minutes. '
+                    'Compare with your masjid\'s timetable and offset each '
+                    'prayer here (in minutes).',
+                    style: TextStyle(fontSize: 13, color: Colors.grey),
+                  ),
+                ),
+                ...SalahPrayer.values.map((prayer) {
+                  final value = settings.adjustmentFor(prayer);
+                  return ListTile(
+                    title: Text(prayer.displayName),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.remove_circle_outline),
+                          onPressed:
+                              value <= -60
+                                  ? null
+                                  : () => controller.setManualAdjustment(
+                                    prayer,
+                                    value - 1,
+                                  ),
+                        ),
+                        SizedBox(
+                          width: 44,
+                          child: Text(
+                            value > 0 ? '+$value' : '$value',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.add_circle_outline),
+                          onPressed:
+                              value >= 60
+                                  ? null
+                                  : () => controller.setManualAdjustment(
+                                    prayer,
+                                    value + 1,
+                                  ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          _SectionHeader('Reminders'),
+          Card(
+            child: Column(
+              children: [
+                SwitchListTile(
+                  title: const Text('Prayer reminders'),
+                  subtitle: const Text(
+                    'Receive a reminder when each prayer enters',
+                  ),
+                  value: settings.notificationsEnabled,
+                  onChanged:
+                      (v) => controller.updateSettings(
+                        settings.copyWith(notificationsEnabled: v),
+                      ),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  title: const Text('Snooze duration'),
+                  subtitle: Text('${settings.snoozeMinutes} minutes'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap:
+                      () => _pickEnum<int>(
+                        context: context,
+                        title: 'Snooze duration',
+                        values: const [5, 10, 15, 20, 30],
+                        selected: settings.snoozeMinutes,
+                        labelOf: (v) => '$v minutes',
+                        onSelected:
+                            (v) => controller.updateSettings(
+                              settings.copyWith(snoozeMinutes: v),
+                            ),
+                      ),
+                ),
+                if (!notificationsPermitted) ...[
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(
+                      Icons.notifications_off_outlined,
+                      color: Colors.orange,
+                    ),
+                    title: const Text('Notifications are not permitted'),
+                    subtitle: const Text(
+                      'Tap to request notification permission',
+                    ),
+                    onTap: controller.requestNotificationPermission,
+                  ),
+                ],
+                if (alarmKitAvailable) ...[
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: Icon(
+                      alarmKitAuthorized
+                          ? Icons.alarm_on_outlined
+                          : Icons.alarm_off_outlined,
+                      color: alarmKitAuthorized ? null : Colors.orange,
+                    ),
+                    title: const Text('Prayer alarms (AlarmKit)'),
+                    subtitle: Text(_alarmKitSubtitle(alarmKitAuthStatus)),
+                    onTap: () async {
+                      final messenger = ScaffoldMessenger.of(context);
+                      if (controller.alarmKitAuthStatus == 'denied') {
+                        await controller.openAlarmKitSettings();
+                        return;
+                      }
+                      if (controller.alarmKitAuthorized) return;
+                      final status =
+                          await controller.requestAlarmKitPermission();
+                      messenger.showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            status == 'authorized'
+                                ? 'Prayer alarms enabled.'
+                                : status == 'denied'
+                                ? 'Alarm permission denied. Open Settings to enable.'
+                                : 'Alarm permission: $status',
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  if (alarmKitAuthStatus == 'denied') ...[
+                    const Divider(height: 1),
+                    ListTile(
+                      leading: const Icon(Icons.settings_outlined),
+                      title: const Text('Open Settings for alarm permission'),
+                      onTap: controller.openAlarmKitSettings,
+                    ),
+                  ],
+                ],
+                if (!exactAlarmsAvailable) ...[
+                  const Divider(height: 1),
+                  const ListTile(
+                    leading: Icon(
+                      Icons.schedule_outlined,
+                      color: Colors.orange,
+                    ),
+                    title: Text('Reminder timing is approximate'),
+                    subtitle: Text(
+                      'Exact alarms are unavailable on this device, so '
+                      'reminders may arrive a few minutes late. Allow '
+                      '"Alarms & reminders" in system settings for '
+                      'on-the-minute timing.',
+                    ),
+                  ),
+                ],
+                if (!kIsWeb && Platform.isAndroid) const _ReliableCallScreenTile(),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          if (guardSupported) ...[
+            const _AppGuardSection(),
+            const SizedBox(height: 16),
+          ],
+          if (!kIsWeb && Platform.isIOS) ...[
+            const _IosAppGuardSection(),
+            const SizedBox(height: 16),
+          ],
+          _SectionHeader('Display'),
+          Card(
+            child: ListTile(
+              title: const Text('Hijri Date Adjustment'),
+              subtitle: const Text(
+                'Adjust the displayed Hijri date to match your local '
+                'moon-sighting authority.',
+              ),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.remove_circle_outline),
+                    onPressed:
+                        settings.hijriAdjustmentDays <= -2
+                            ? null
+                            : () => controller.updateSettings(
+                              settings.copyWith(
+                                hijriAdjustmentDays:
+                                    settings.hijriAdjustmentDays - 1,
+                              ),
+                            ),
+                  ),
+                  SizedBox(
+                    width: 44,
+                    child: Text(
+                      settings.hijriAdjustmentDays > 0
+                          ? '+${settings.hijriAdjustmentDays}'
+                          : '${settings.hijriAdjustmentDays}',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.add_circle_outline),
+                    onPressed:
+                        settings.hijriAdjustmentDays >= 2
+                            ? null
+                            : () => controller.updateSettings(
+                              settings.copyWith(
+                                hijriAdjustmentDays:
+                                    settings.hijriAdjustmentDays + 1,
+                              ),
+                            ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          _SectionHeader('Today'),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child:
+                  today == null
+                      ? const Text('Prayer times unavailable.')
+                      : Column(
+                        children: [
+                          ...today.orderedEntries.map(
+                            (e) => Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(e.key.displayName),
+                                  Text(formatTime(e.value)),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const Divider(),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Next reminder',
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                              Text(
+                                nextReminder == null
+                                    ? 'None scheduled'
+                                    : '${nextReminder.prayer.displayName} • ${formatDateTime(nextReminder.scheduledAt.toLocal())}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          _SectionHeader('Actions'),
+          Card(
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.notifications_active_outlined),
+                  title: const Text('Test notification'),
+                  onTap: () async {
+                    final messenger = ScaffoldMessenger.of(context);
+                    await controller.sendTestNotification();
+                    messenger.showSnackBar(
+                      const SnackBar(content: Text('Test notification sent.')),
+                    );
+                  },
+                ),
+                if (kDebugMode && !kIsWeb && Platform.isAndroid) ...[
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.call_outlined),
+                    title: const Text('Test incoming call in ~10s'),
+                    subtitle: const Text(
+                      'Debug only — exercises the direct-launch alarm '
+                      '(background the app after tapping)',
+                    ),
+                    onTap: () async {
+                      final messenger = ScaffoldMessenger.of(context);
+                      await controller.notificationService
+                          .scheduleDebugIncomingCall(
+                            prayer: SalahPrayer.dhuhr,
+                          );
+                      messenger.showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Scheduled. Background the app now (Home/'
+                            'another tab) to verify the call screen '
+                            'auto-presents.',
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+                if (kDebugMode && alarmKitAvailable) ...[
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.alarm_add_outlined),
+                    title: const Text('Test AlarmKit in ~1 minute'),
+                    subtitle: const Text(
+                      'Debug only — schedules a prominent prayer alarm',
+                    ),
+                    onTap: () async {
+                      final messenger = ScaffoldMessenger.of(context);
+                      final ok =
+                          await controller.scheduleAlarmKitDebugInOneMinute();
+                      messenger.showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            ok
+                                ? 'AlarmKit test scheduled (~1 min). Lock the phone or switch apps to verify.'
+                                : 'Could not schedule AlarmKit test. Check alarm permission.',
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.refresh),
+                  title: const Text('Recalculate prayer times'),
+                  onTap: () async {
+                    final messenger = ScaffoldMessenger.of(context);
+                    await controller.recalculateAndReschedule();
+                    messenger.showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Prayer times recalculated and reminders rescheduled.',
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.phone_iphone),
+                  title: const Text('Preview reminder screen'),
+                  onTap: () async {
+                    final prayer =
+                        controller.nextPrayer?.key ?? SalahPrayer.dhuhr;
+                    final result = await Navigator.of(
+                      context,
+                    ).push<IncomingSalahResult>(
+                      MaterialPageRoute(
+                        builder: (_) => IncomingSalahScreen(prayer: prayer),
+                        fullscreenDialog: true,
+                      ),
+                    );
+                    // Answer records the intent to pray; completion is
+                    // confirmed later via the gentle home-screen prompt.
+                    if (result == IncomingSalahResult.prayNow) {
+                      await controller.markPrayerAnswered(prayer);
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          _SectionHeader('About'),
+          Card(
+            child: Column(
+              children: [
+                const _VersionTile(),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.privacy_tip_outlined),
+                  title: const Text('Privacy Policy'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap:
+                      () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const PrivacyPolicyScreen(),
+                        ),
+                      ),
+                ),
+                if (kDebugMode) ...[
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.bug_report_outlined),
+                    title: const Text('Diagnostics'),
+                    subtitle: const Text(
+                      'Copyable report for development — no location or '
+                      'prayer history included',
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap:
+                        () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const DiagnosticsScreen(),
+                          ),
+                        ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.goldLight.withValues(alpha: 0.25),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.gold.withValues(alpha: 0.5)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline, color: AppColors.textPrimary),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    AppStrings.disclaimer,
+                    style: TextStyle(color: AppColors.textPrimary),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Option picker in a draggable, scrollable bottom sheet so long lists
+
+  /// (e.g. the thirteen calculation methods) are fully reachable on small
+  /// screens.
+  Future<void> _pickEnum<T>({
+    required BuildContext context,
+    required String title,
+    required List<T> values,
+    required T selected,
+    required String Function(T) labelOf,
+    required void Function(T) onSelected,
+  }) async {
+    final choice = await showModalBottomSheet<T>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder:
+          (sheetContext) => SafeArea(
+            child: DraggableScrollableSheet(
+              expand: false,
+              initialChildSize: 0.5,
+              minChildSize: 0.3,
+              maxChildSize: 0.9,
+              builder:
+                  (context, scrollController) => Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Text(
+                          title,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: RadioGroup<T>(
+                          groupValue: selected,
+                          onChanged:
+                              (value) => Navigator.of(sheetContext).pop(value),
+                          child: ListView(
+                            controller: scrollController,
+                            children:
+                                values
+                                    .map(
+                                      (v) => RadioListTile<T>(
+                                        title: Text(labelOf(v)),
+                                        value: v,
+                                      ),
+                                    )
+                                    .toList(),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+            ),
+          ),
+    );
+    if (choice != null) onSelected(choice);
+  }
+}
+
+/// App name + live version from the platform package info,
+/// e.g. "Version 1.0.0 (1)". Never hardcoded.
+class _VersionTile extends StatefulWidget {
+  const _VersionTile();
+
+  @override
+  State<_VersionTile> createState() => _VersionTileState();
+}
+
+class _VersionTileState extends State<_VersionTile> {
+  String _version = '…';
+
+  @override
+  void initState() {
+    super.initState();
+    PackageInfo.fromPlatform()
+        .then((info) {
+          if (mounted) {
+            setState(
+              () => _version = 'Version ${info.version} (${info.buildNumber})',
+            );
+          }
+        })
+        .catchError((Object _) {
+          if (mounted) setState(() => _version = 'Version unavailable');
+        });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: const Icon(Icons.mosque_outlined),
+      title: const Text(AppStrings.appTitle),
+      subtitle: Text(_version),
+    );
+  }
+}
+
+/// "Guard apps during prayer time" — when on, any app the user chose shows
+/// the "Allah is calling" screen (Answer/Decline) every time they open it,
+/// for the 15 minutes after a prayer enters. Android only.
+class _AppGuardSection extends StatefulWidget {
+  const _AppGuardSection();
+
+  @override
+  State<_AppGuardSection> createState() => _AppGuardSectionState();
+}
+
+class _AppGuardSectionState extends State<_AppGuardSection>
+    with WidgetsBindingObserver {
+  bool? _hasUsageAccess;
+  bool? _hasOverlayPermission;
+
+  bool? get _hasPermissions =>
+      (_hasUsageAccess == null || _hasOverlayPermission == null)
+          ? null
+          : _hasUsageAccess! && _hasOverlayPermission!;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _refreshPermissions();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Re-check only when the app actually comes back to the foreground
+    // (e.g. returning from one of the two system settings pages below),
+    // since Android doesn't tell us when the user granted/denied a
+    // permission there. Deliberately NOT done in didChangeDependencies:
+    // that also fires on every unrelated AppController.notifyListeners()
+    // (prayer-time timers, etc.), which was re-running this async check —
+    // and the setState it triggers — mid-scroll, causing visible jank.
+    if (state == AppLifecycleState.resumed) {
+      _refreshPermissions();
+    }
+  }
+
+  Future<void> _refreshPermissions() async {
+    final controller = context.read<AppController>();
+    final usage = await controller.guardHasUsageAccess();
+    final overlay = await controller.guardHasOverlayPermission();
+    if (!mounted) return;
+    // Skip setState when nothing changed — a no-op refresh during an
+    // active scroll was still rebuilding this section (and shifting the
+    // surrounding ListView) and contributed to the Settings scroll jank.
+    if (_hasUsageAccess == usage && _hasOverlayPermission == overlay) return;
+    setState(() {
+      _hasUsageAccess = usage;
+      _hasOverlayPermission = overlay;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Scoped selects (see _SettingsScreenState.build for why): this section
+    // used to rebuild on any AppController change at all, which made its
+    // conditional permission/"Test guard now" blocks reflow mid-scroll.
+    final controller = context.read<AppController>();
+    final enabled = context.select<AppController, bool>(
+      (c) => c.guardEnabled,
+    );
+    final guardedCount = context.select<AppController, int>(
+      (c) => c.guardedPackages.length,
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionHeader('Guard apps during prayer time'),
+        Card(
+          child: Column(
+            children: [
+              const Padding(
+                padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
+                child: Text(
+                  'For the 15 minutes after each prayer enters, apps you '
+                  'choose stay blocked with a countdown until the window '
+                  'ends. Use quick picks (all except calls & messages, or '
+                  'social & entertainment) so you do not have to tick every '
+                  'app.',
+                  style: TextStyle(fontSize: 13, color: Colors.grey),
+                ),
+              ),
+              SwitchListTile(
+                title: const Text('Guard apps'),
+                subtitle: Text(
+                  guardedCount == 0
+                      ? 'No apps chosen yet'
+                      : '$guardedCount app${guardedCount == 1 ? '' : 's'} guarded',
+                ),
+                value: enabled,
+                onChanged: (v) async {
+                  final messenger = ScaffoldMessenger.of(context);
+                  if (v && _hasPermissions != true) {
+                    await _refreshPermissions();
+                  }
+                  if (v && _hasPermissions != true) {
+                    messenger.showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Grant both permissions below first, then turn '
+                          'this on.',
+                        ),
+                      ),
+                    );
+                    return;
+                  }
+                  await controller.setGuardEnabled(v);
+                },
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.apps_outlined),
+                title: const Text('Choose apps to guard'),
+                subtitle: const Text(
+                  'Quick picks: all except calls & messages, or social',
+                ),
+                trailing: const Icon(Icons.chevron_right),
+                onTap:
+                    () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const AppGuardScreen()),
+                    ),
+              ),
+              if (_hasPermissions != true) ...[
+                const Divider(height: 1),
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: Text(
+                    'Two permissions needed — grant each one below, then '
+                    'come back:',
+                    style: TextStyle(fontSize: 13, color: Colors.grey),
+                  ),
+                ),
+                _PermissionTile(
+                  granted: _hasUsageAccess,
+                  title: 'Usage access',
+                  subtitle: 'Lets App Guard see which app you just opened',
+                  onTap: () async {
+                    await context.read<AppController>().requestGuardUsageAccess();
+                    await _refreshPermissions();
+                  },
+                ),
+                _PermissionTile(
+                  granted: _hasOverlayPermission,
+                  title: 'Display over other apps',
+                  subtitle: 'Lets App Guard show the guard screen on top',
+                  onTap: () async {
+                    await context
+                        .read<AppController>()
+                        .requestGuardOverlayPermission();
+                    await _refreshPermissions();
+                  },
+                ),
+              ],
+              if (_hasPermissions == true && enabled && guardedCount > 0) ...[
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.bolt_outlined),
+                  title: const Text('Test guard now'),
+                  subtitle: const Text(
+                    'Starts a 15-minute guard window in 5 seconds, without '
+                    'waiting for a real prayer time — handy for recording '
+                    'a demo.',
+                  ),
+                  onTap: () async {
+                    final messenger = ScaffoldMessenger.of(context);
+                    final ok = await controller.triggerGuardWindowForTesting();
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          ok
+                              ? 'Guard window starts in 5 seconds — open a '
+                                  'guarded app now.'
+                              : 'Could not start the test window. Check '
+                                  'permissions and that guard is on with '
+                                  'apps chosen.',
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Nudges the user to grant "Display over other apps" so the primary call
+/// screen reliably takes over at prayer time — not just when the device is
+/// locked (Android's own behavior for the ordinary full-screen notification;
+/// see IncomingCallAlarmService). Independent of App Guard, which uses the
+/// same permission but is a separate, optional feature.
+class _ReliableCallScreenTile extends StatefulWidget {
+  const _ReliableCallScreenTile();
+
+  @override
+  State<_ReliableCallScreenTile> createState() =>
+      _ReliableCallScreenTileState();
+}
+
+class _ReliableCallScreenTileState extends State<_ReliableCallScreenTile>
+    with WidgetsBindingObserver {
+  bool? _granted;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _refresh();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _refresh();
+  }
+
+  Future<void> _refresh() async {
+    final granted =
+        await context.read<AppController>().hasReliableCallScreenPermission();
+    if (!mounted || _granted == granted) return;
+    setState(() => _granted = granted);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_granted == true) return const SizedBox.shrink();
+    return Column(
+      children: [
+        const Divider(height: 1),
+        ListTile(
+          leading: const Icon(
+            Icons.phone_in_talk_outlined,
+            color: Colors.orange,
+          ),
+          title: const Text('Make the call screen always take over'),
+          subtitle: const Text(
+            'Without "Display over other apps", the call screen only '
+            'covers the screen when your phone is locked — otherwise it is '
+            'just a notification you have to tap. Grant it for a reliable '
+            'takeover every time.',
+          ),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () async {
+            await context.read<AppController>().requestGuardOverlayPermission();
+            await _refresh();
+          },
+        ),
+      ],
+    );
+  }
+}
+
+/// One of the two App Guard permission rows — tapping it opens *only* that
+/// permission's own system settings page. Kept as two separate buttons
+/// (rather than firing both settings Intents back-to-back) because Android
+/// treats the app as no longer foreground the instant the first settings
+/// page opens, which silently blocks a second `startActivity` fired right
+/// after it on some OEM builds (observed on Samsung/One UI).
+class _PermissionTile extends StatelessWidget {
+  const _PermissionTile({
+    required this.granted,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final bool? granted;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final isGranted = granted == true;
+    return ListTile(
+      leading: Icon(
+        isGranted ? Icons.check_circle : Icons.warning_amber_outlined,
+        color: isGranted ? Colors.green : Colors.orange,
+      ),
+      title: Text(title),
+      subtitle: Text(isGranted ? 'Granted' : subtitle),
+      trailing: isGranted ? null : const Icon(Icons.chevron_right),
+      onTap: isGranted ? null : onTap,
+    );
+  }
+}
+
+/// iOS equivalent of [_AppGuardSection]. Renders nothing until confirmed
+/// supported (the Screen Time extensions ship disabled by default — see
+/// IOS_SCREEN_TIME_SETUP.md) — not just "not on iOS", but "not yet enabled
+/// in this build".
+class _IosAppGuardSection extends StatefulWidget {
+  const _IosAppGuardSection();
+
+  @override
+  State<_IosAppGuardSection> createState() => _IosAppGuardSectionState();
+}
+
+class _IosAppGuardSectionState extends State<_IosAppGuardSection> {
+  bool? _supported;
+  String _authStatus = 'notDetermined';
+  int? _appsCount;
+
+  @override
+  void initState() {
+    super.initState();
+    _refresh();
+  }
+
+  Future<void> _refresh() async {
+    final controller = context.read<AppController>();
+    final supported = await controller.iosGuardSupported();
+    final status =
+        supported ? await controller.iosGuardAuthorizationStatus() : 'unavailable';
+    if (mounted) {
+      setState(() {
+        _supported = supported;
+        _authStatus = status;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_supported != true) return const SizedBox.shrink();
+
+    final controller = context.read<AppController>();
+    final enabled = context.select<AppController, bool>(
+      (c) => c.guardEnabled,
+    );
+    final authorized = _authStatus == 'approved';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionHeader('Guard apps during prayer time'),
+        Card(
+          child: Column(
+            children: [
+              const Padding(
+                padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
+                child: Text(
+                  'For the 15 minutes after each prayer enters, the apps '
+                  'you choose will show "Allah Is Calling" with Answer and '
+                  'Decline every time you open them.',
+                  style: TextStyle(fontSize: 13, color: Colors.grey),
+                ),
+              ),
+              SwitchListTile(
+                title: const Text('Guard apps'),
+                subtitle: Text(
+                  !authorized
+                      ? 'Screen Time access needed'
+                      : _appsCount == null
+                      ? 'Tap "Choose apps to guard" to pick apps'
+                      : '$_appsCount app${_appsCount == 1 ? '' : 's'}/categories guarded',
+                ),
+                value: enabled,
+                onChanged: (v) async {
+                  final messenger = ScaffoldMessenger.of(context);
+                  if (v && !authorized) {
+                    final status = await controller.requestIosGuardAuthorization();
+                    if (mounted) setState(() => _authStatus = status);
+                    if (status != 'approved') {
+                      messenger.showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Screen Time access is required to turn on App Guard.',
+                          ),
+                        ),
+                      );
+                      return;
+                    }
+                  }
+                  await controller.setIosGuardEnabled(v);
+                },
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.apps_outlined),
+                title: const Text('Choose apps to guard'),
+                subtitle: const Text(
+                  "Apple's own picker — this app never learns which apps "
+                  'you chose, only how many.',
+                ),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () async {
+                  if (!authorized) {
+                    final status = await controller.requestIosGuardAuthorization();
+                    if (mounted) setState(() => _authStatus = status);
+                    if (status != 'approved') return;
+                  }
+                  final result = await controller.presentIosGuardPicker();
+                  if (result != null && mounted) {
+                    setState(
+                      () => _appsCount = result.appsCount + result.categoriesCount,
+                    );
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final String text;
+
+  const _SectionHeader(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 8),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w700,
+          color: AppColors.gold,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+}

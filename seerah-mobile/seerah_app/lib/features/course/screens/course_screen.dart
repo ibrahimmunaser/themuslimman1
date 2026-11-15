@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:seerah_app/core/widgets/localized_text.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_constants.dart';
@@ -9,8 +10,11 @@ import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/part_provider.dart';
 import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/adaptive_icons.dart';
+import '../../../core/widgets/profile_avatar_button.dart';
 import '../../../core/widgets/ui_kit.dart';
 import '../../../l10n/app_strings.dart';
+import '../widgets/continue_learning_card.dart';
 import '../widgets/part_card.dart';
 
 class CourseScreen extends ConsumerStatefulWidget {
@@ -34,13 +38,22 @@ class _CourseScreenState extends ConsumerState<CourseScreen> {
   Widget build(BuildContext context) {
     final lang = ref.watch(courseLangProvider);
     final hasAccess = ref.watch(authProvider).hasAccess;
-    final progress = ref.watch(progressProvider).valueOrNull;
+    final progressAsync = ref.watch(progressProvider);
+    final progress = progressAsync.valueOrNull;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
+        leading: context.canPop()
+            ? IconButton(
+                icon: const BackIcon(),
+                tooltip: t(lang, 'back'),
+                onPressed: () => context.pop(),
+              )
+            : null,
         title: Text(t(lang, 'lessons')),
+        actions: const [ProfileAvatarButton()],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(72),
           child: Padding(
@@ -64,25 +77,55 @@ class _CourseScreenState extends ConsumerState<CourseScreen> {
           bottom: false,
           child: _search.isNotEmpty
               ? _buildSearchResults(hasAccess, progress, lang)
-              : _buildEraList(hasAccess, progress, lang),
+              : _buildEraList(hasAccess, progress, progressAsync, lang),
         ),
       ),
     );
   }
 
-  Widget _buildEraList(bool hasAccess, ProgressState? progress, String lang) {
+  Widget _buildEraList(
+    bool hasAccess,
+    ProgressState? progress,
+    AsyncValue<ProgressState> progressAsync,
+    String lang,
+  ) {
     final groups = getEraGroups();
     return ListView.builder(
       padding: const EdgeInsets.only(bottom: 12),
-      itemCount: groups.length,
+      itemCount: groups.length + 1,
       itemBuilder: (ctx, i) {
-        final group = groups[i];
+        if (i == 0) {
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ContinueLearningCard(
+                  hasAccess: hasAccess,
+                  progressAsync: progressAsync,
+                  lang: lang,
+                ),
+                if (progress != null) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    tv(lang, 'nOfNCompleted', {
+                      'done': progress.totalCompleted,
+                      'total': PARTS.length,
+                    }),
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          );
+        }
+        final group = groups[i - 1];
         final era = group['era'] as EraModel;
         final parts = group['parts'] as List<PartModel>;
-        // No entrance animation: the shell's plain ShellRoute rebuilds this
-        // screen from scratch every time the Lessons tab is reopened, so a
-        // staggered per-item fade-in replayed on every visit instead of just
-        // once — it read as a recurring flash of near-empty content.
         return _EraSection(
           era: era,
           parts: parts,
@@ -188,7 +231,7 @@ class _EraSectionState extends State<_EraSection> {
             decoration: BoxDecoration(
               border: BorderDirectional(
                 start: BorderSide(color: color, width: 3),
-                bottom: const BorderSide(color: AppColors.border),
+                bottom: BorderSide(color: AppColors.border),
               ),
             ),
             child: Row(
@@ -201,7 +244,7 @@ class _EraSectionState extends State<_EraSection> {
                         widget.era.localizedName(widget.lang),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: AppColors.textPrimary,
                           fontSize: 16,
                           fontWeight: FontWeight.w700,

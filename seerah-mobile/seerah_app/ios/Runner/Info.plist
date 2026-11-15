@@ -76,5 +76,26 @@
 		<false/>
 		<key>UIStatusBarHidden</key>
 		<true/>
+
+		<!-- ── Salah features (merged from "Allah Is Calling") ──────────── -->
+		<!-- Only when-in-use location is requested; the app never asks for
+		     Always/background location. The Always key below is required by
+		     Apple's static analysis because the geolocator plugin
+		     references the always-authorization API, even though this app
+		     never calls it. -->
+		<key>NSLocationWhenInUseUsageDescription</key>
+		<string>Your location is used to calculate accurate prayer times for where you are. It never leaves your device.</string>
+		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+		<string>Your location is used to calculate accurate prayer times for where you are. It never leaves your device.</string>
+		<!-- AlarmKit (iOS 26+): required to schedule prominent prayer alarms. -->
+		<key>NSAlarmKitUsageDescription</key>
+		<string>The Muslim Man uses alarms to notify you when it is time for prayer.</string>
+		<!-- App Guard stays hidden until Family Controls is actually signed
+		     into this build. Flip to true only once
+		     ENABLE_SCREEN_TIME_EXTENSIONS=1 and the Screen Time entitlement
+		     is granted for this bundle ID — see IOS_PROPOSED_FIXES_FOR_APPROVAL.md
+		     ported from the standalone app. -->
+		<key>ScreenTimeGuardEnabled</key>
+		<false/>
 	</dict>
 </plist>

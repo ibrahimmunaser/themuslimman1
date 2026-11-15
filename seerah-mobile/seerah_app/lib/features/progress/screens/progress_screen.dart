@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:seerah_app/core/widgets/localized_text.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
@@ -9,6 +10,8 @@ import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/part_provider.dart';
 import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/adaptive_icons.dart';
+import '../../../core/widgets/profile_avatar_button.dart';
 import '../../../core/widgets/ui_kit.dart';
 import '../../../l10n/app_strings.dart';
 
@@ -26,7 +29,15 @@ class ProgressScreen extends ConsumerWidget {
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
+        leading: context.canPop()
+            ? IconButton(
+                icon: const BackIcon(),
+                tooltip: t(lang, 'back'),
+                onPressed: () => context.pop(),
+              )
+            : null,
         title: Text(t(lang, 'myProgressTitle')),
+        actions: const [ProfileAvatarButton()],
       ),
       body: AppGradientBackground(
         child: SafeArea(
@@ -166,7 +177,7 @@ class _OverviewStats extends StatelessWidget {
                         children: [
                           Text(
                             '$viewed',
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: AppColors.textPrimary,
                               fontSize: 30,
                               fontWeight: FontWeight.w800,
@@ -176,7 +187,7 @@ class _OverviewStats extends StatelessWidget {
                           ),
                           Text(
                             '/ $totalUnlocked',
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: AppColors.textMuted,
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
@@ -195,7 +206,7 @@ class _OverviewStats extends StatelessWidget {
                   children: [
                     Text(
                       t(lang, 'partsStudied'),
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.textSecondary,
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
@@ -206,7 +217,7 @@ class _OverviewStats extends StatelessWidget {
                       tv(lang, 'percentComplete', {
                         'n': (studiedPercent * 100).round(),
                       }),
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.gold,
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
@@ -253,7 +264,7 @@ class _OverviewStats extends StatelessWidget {
                 children: [
                   Text(
                     t(lang, 'partsStudied'),
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.textPrimary,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -261,7 +272,7 @@ class _OverviewStats extends StatelessWidget {
                   ),
                   Text(
                     '$viewed/$totalUnlocked',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.gold,
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
@@ -277,7 +288,7 @@ class _OverviewStats extends StatelessWidget {
                       ? 0
                       : (viewed / totalUnlocked).clamp(0.0, 1.0),
                   backgroundColor: AppColors.border,
-                  valueColor: const AlwaysStoppedAnimation<Color>(
+                  valueColor: AlwaysStoppedAnimation<Color>(
                     AppColors.gold,
                   ),
                   minHeight: 6,
@@ -290,7 +301,7 @@ class _OverviewStats extends StatelessWidget {
                   children: [
                     Text(
                       t(lang, 'quizzesPassed'),
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.textPrimary,
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -356,7 +367,7 @@ class _MiniStat extends StatelessWidget {
         const SizedBox(height: 2),
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             color: AppColors.textMuted,
             fontSize: 11,
             fontWeight: FontWeight.w500,
@@ -480,7 +491,7 @@ class _CourseMap extends StatelessWidget {
                 ),
               ),
               if (!isLast)
-                const Divider(
+                Divider(
                   height: 1,
                   thickness: 1,
                   color: AppColors.border,
@@ -520,7 +531,7 @@ class _UpgradeCta extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.lock_open_outlined,
                 color: AppColors.gold,
                 size: 20,
@@ -529,7 +540,7 @@ class _UpgradeCta extends StatelessWidget {
               Expanded(
                 child: Text(
                   t(lang, 'unlockFullProgress'),
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -544,7 +555,7 @@ class _UpgradeCta extends StatelessWidget {
               'parts': PARTS.length,
               'eras': ERAS.length,
             }),
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.textSecondary,
               fontSize: 13,
               height: 1.4,
@@ -653,7 +664,7 @@ class _QuickLinkCard extends StatelessWidget {
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
@@ -664,7 +675,7 @@ class _QuickLinkCard extends StatelessWidget {
                   subtitle,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.textMuted,
                     fontSize: 11,
                   ),
@@ -722,7 +733,7 @@ class _LearningTips extends StatelessWidget {
                 child: Center(
                   child: Text(
                     '${e.key + 1}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.gold,
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
@@ -737,7 +748,7 @@ class _LearningTips extends StatelessWidget {
                   children: [
                     Text(
                       tip[0],
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.textPrimary,
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
@@ -746,7 +757,7 @@ class _LearningTips extends StatelessWidget {
                     const SizedBox(height: 3),
                     Text(
                       tip[1],
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.textSecondary,
                         fontSize: 12,
                         height: 1.4,

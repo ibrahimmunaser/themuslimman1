@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:seerah_app/core/widgets/localized_text.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:video_player/video_player.dart';
 import '../../../core/providers/part_provider.dart';
@@ -199,7 +200,7 @@ class _AudioTabState extends ConsumerState<AudioTab> with WidgetsBindingObserver
   Widget build(BuildContext context) {
     final lang = ref.watch(courseLangProvider);
     if (_loading) {
-      return const Center(
+      return Center(
         child: CircularProgressIndicator.adaptive(
           valueColor: AlwaysStoppedAnimation(AppColors.gold),
         ),
@@ -212,10 +213,10 @@ class _AudioTabState extends ConsumerState<AudioTab> with WidgetsBindingObserver
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.headphones, size: 64, color: AppColors.textMuted),
+              Icon(Icons.headphones, size: 64, color: AppColors.textMuted),
               const SizedBox(height: 16),
               Text(_error ?? t(lang, 'audioUnavailable'),
-                style: const TextStyle(color: AppColors.textSecondary),
+                style: TextStyle(color: AppColors.textSecondary),
                 textAlign: TextAlign.center),
               const SizedBox(height: 24),
               OutlinedButton.icon(
@@ -258,7 +259,7 @@ class _AudioTabState extends ConsumerState<AudioTab> with WidgetsBindingObserver
                 ),
                 border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
               ),
-              child: const Icon(Icons.headphones_rounded, color: AppColors.gold, size: 72),
+              child: Icon(Icons.headphones_rounded, color: AppColors.gold, size: 72),
             ),
 
             const SizedBox(height: 32),
@@ -266,14 +267,14 @@ class _AudioTabState extends ConsumerState<AudioTab> with WidgetsBindingObserver
             // Title
             Text(
               widget.partTitle ?? t(lang, 'audioLessonTitle'),
-              style: const TextStyle(color: AppColors.textPrimary, fontSize: 20, fontWeight: FontWeight.w700),
+              style: TextStyle(color: AppColors.textPrimary, fontSize: 20, fontWeight: FontWeight.w700),
               textAlign: TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 4),
             Text(t(lang, 'audioLessonListenGo'),
-              style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
 
             const SizedBox(height: 32),
 
@@ -301,8 +302,8 @@ class _AudioTabState extends ConsumerState<AudioTab> with WidgetsBindingObserver
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(_fmt(pos), style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                      Text(_fmt(dur), style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                      Text(_fmt(pos), style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                      Text(_fmt(dur), style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
                     ],
                   ),
                 ),
@@ -318,7 +319,7 @@ class _AudioTabState extends ConsumerState<AudioTab> with WidgetsBindingObserver
                 // Rewind 15s
                 IconButton(
                   onPressed: () => ctrl.seekTo(pos - const Duration(seconds: 15)),
-                  icon: const Icon(Icons.replay_rounded, size: 32, color: AppColors.textSecondary),
+                  icon: Icon(Icons.replay_rounded, size: 32, color: AppColors.textSecondary),
                   tooltip: t(lang, 'rewind15'),
                 ),
                 const SizedBox(width: 16),
@@ -360,7 +361,7 @@ class _AudioTabState extends ConsumerState<AudioTab> with WidgetsBindingObserver
                 // Forward 15s
                 IconButton(
                   onPressed: () => ctrl.seekTo(pos + const Duration(seconds: 15)),
-                  icon: const Icon(Icons.fast_forward_rounded, size: 32, color: AppColors.textSecondary),
+                  icon: Icon(Icons.fast_forward_rounded, size: 32, color: AppColors.textSecondary),
                   tooltip: t(lang, 'forward15'),
                 ),
               ],

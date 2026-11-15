@@ -823,6 +823,43 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  /// Backs ChangePasswordScreen. Mirrors the website's own authenticated
+  /// change-password flow (components/student/change-password-form.tsx ->
+  /// /api/auth/change-password) rather than the website's /change-password
+  /// *page*: that page is a first-time "set a password" flow for guest
+  /// checkouts with no password yet and immediately redirects anyone who
+  /// already has one away to their dashboard — not a form at all for the
+  /// vast majority of accounts, which is why the account menu previously
+  /// linking there via a WebView never actually let a real account change
+  /// its password. This hits the same session-authenticated API endpoint
+  /// the website's own in-account form uses (cookie auth via ApiClient's
+  /// interceptor, same as every other authenticated mobile request), so no
+  /// WebView/cookie-injection is involved at all.
+  /// Returns null on success, or a message to show the user on failure —
+  /// either the server's own validation text (wrong current password, too
+  /// many attempts, password too short) passed through as-is, or a
+  /// localized generic fallback if the request failed outright.
+  Future<String?> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final response = await ApiClient.instance.dio.post(
+        '/api/auth/change-password',
+        data: {'currentPassword': currentPassword, 'newPassword': newPassword},
+      );
+      final data = response.data as Map<String, dynamic>;
+      if (data['success'] == true) return null;
+      return data['error'] as String? ?? t(_lang, 'couldNotUpdatePassword');
+    } on DioException catch (e) {
+      final data = e.response?.data;
+      final serverMsg = data is Map ? data['error'] as String? : null;
+      return serverMsg ?? _parseError(e);
+    } catch (e) {
+      return _parseError(e);
+    }
+  }
+
   String _parseError(dynamic e) {
     // Log structured fields (status code / message) instead of the raw
     // exception — a DioException's toString() can include the full request

@@ -1,0 +1,302 @@
+[
+  {
+    "id": 1,
+    "fact": "Le Prophète ﷺ a prédit que l’Islam se répandrait sur toute la terre.",
+    "fulfillment": "L'Islam a atteint tous les continents.",
+    "reference": "Muslim"
+  },
+  {
+    "id": 2,
+    "fact": "Le Prophète ﷺ a prédit que les musulmans conquériraient la Perse.",
+    "fulfillment": "L’empire perse tomba aux mains des musulmans.",
+    "reference": "Bukhari & Muslim"
+  },
+  {
+    "id": 3,
+    "fact": "Le Prophète ﷺ a prédit que les musulmans conquériraient les terres romaines.",
+    "fulfillment": "Les territoires byzantins tombèrent aux mains des musulmans.",
+    "reference": "Bukhari & Muslim"
+  },
+  {
+    "id": 4,
+    "fact": "Le Prophète ﷺ a prédit que Jérusalem serait conquise.",
+    "fulfillment": "Jérusalem a été conquise pendant le califat de ʿUmar ibn al-Khattab.",
+    "reference": "Bukhari"
+  },
+  {
+    "id": 5,
+    "fact": "Le Prophète ﷺ a prédit qu’une épidémie majeure surviendrait après la conquête de Jérusalem.",
+    "fulfillment": "La peste de ʿAmwas s'est produite en Syrie.",
+    "reference": "Bukhari"
+  },
+  {
+    "id": 6,
+    "fact": "Le Prophète ﷺ a prédit que la richesse deviendrait abondante parmi les musulmans.",
+    "fulfillment": "Cela s'est produit après les conquêtes de la Perse et de Rome.",
+    "reference": "Bukhari & Muslim"
+  },
+  {
+    "id": 7,
+    "fact": "Le Prophète ﷺ a prédit que les gens auraient du mal à trouver quelqu'un prêt à accepter la charité.",
+    "fulfillment": "Cela s'est produit pendant les périodes de grande prospérité musulmane.",
+    "reference": "Bukhari & Muslim"
+  },
+  {
+    "id": 8,
+    "fact": "Le Prophète ﷺ a prédit que le royaume de Kisra serait déchiré.",
+    "fulfillment": "L’empire perse sassanide s’effondre.",
+    "reference": "Bukhari"
+  },
+  {
+    "id": 9,
+    "fact": "Le Prophète ﷺ a prédit que les trésors de Kisra et de César seraient dépensés pour la cause d'Allah.",
+    "fulfillment": "Leurs richesses pénétrèrent dans les terres musulmanes après les conquêtes.",
+    "reference": "Bukhari & Muslim"
+  },
+  {
+    "id": 10,
+    "fact": "Le Prophète ﷺ a prédit que ʿAmmar ibn Yasir serait tué par un groupe rebelle.",
+    "fulfillment": "ʿAmmar a été tué à Siffin.",
+    "reference": "Bukhari & Muslim"
+  },
+  {
+    "id": 11,
+    "fact": "Le Prophète ﷺ a prédit qu'Hasan ibn ʿAli réconcilierait deux grands groupes de musulmans.",
+    "fulfillment": "Hasan a renoncé au pouvoir politique pour mettre fin au conflit entre musulmans.",
+    "reference": "Bukhari"
+  },
+  {
+    "id": 12,
+    "fact": "Le Prophète ﷺ a dit à Fatimah qu'elle serait la première de sa famille à le rejoindre après sa mort.",
+    "fulfillment": "Fatimah est décédée peu de temps après le Prophète ﷺ.",
+    "reference": "Bukhari & Muslim"
+  },
+  {
+    "id": 13,
+    "fact": "Le Prophète ﷺ a prédit l'apparition des Khawarij.",
+    "fulfillment": "Les Khawarij sont apparus à l’époque de ʿAli.",
+    "reference": "Bukhari & Muslim"
+  },
+  {
+    "id": 14,
+    "fact": "Le Prophète ﷺ a décrit les Khawarij avant leur apparition.",
+    "fulfillment": "Leurs traits correspondaient exactement à ce qu’il décrivait.",
+    "reference": "Bukhari & Muslim"
+  },
+  {
+    "id": 15,
+    "fact": "Le Prophète ﷺ a prédit que de faux prophètes apparaîtraient après lui.",
+    "fulfillment": "De nombreux faux prétendants à la prophétie sont apparus.",
+    "reference": "Bukhari & Muslim"
+  },
+  {
+    "id": 16,
+    "fact": "Le Prophète ﷺ a prédit que trente grands menteurs revendiqueraient le statut de prophète.",
+    "fulfillment": "De faux prophètes sont apparus tout au long de l’histoire islamique.",
+    "reference": "Bukhari & Muslim"
+  },
+  {
+    "id": 17,
+    "fact": "Le Prophète ﷺ a prédit que sa Oumma se diviserait.",
+    "fulfillment": "De nombreuses sectes et groupes apparurent après lui.",
+    "reference": "Abu Dawud · Tirmidhi · Ibn Majah"
+  },
+  {
+    "id": 18,
+    "fact": "Le Prophète ﷺ a prédit qu'un groupe de sa Oumma resterait fidèle à la vérité.",
+    "fulfillment": "Ahl al-Sunnah est resté à toutes les époques.",
+    "reference": "Bukhari & Muslim"
+  },
+  {
+    "id": 19,
+    "fact": "Le Prophète ﷺ a prédit que la confiance serait perdue.",
+    "fulfillment": "La trahison, la corruption et la malhonnêteté se sont généralisées.",
+    "reference": "Bukhari"
+  },
+  {
+    "id": 20,
+    "fact": "Le Prophète ﷺ a prédit que le leadership serait confié à des personnes non qualifiées.",
+    "fulfillment": "C’est visiblement courant dans la politique, les institutions et la société.",
+    "reference": "Bukhari"
+  },
+  {
+    "id": 21,
+    "fact": "Le Prophète ﷺ a prédit que les bergers aux pieds nus rivaliseraient dans la construction de grands bâtiments.",
+    "fulfillment": "Les anciennes régions désertiques rivalisent désormais de gratte-ciel et de tours de luxe.",
+    "reference": "Muslim"
+  },
+  {
+    "id": 22,
+    "fact": "Le Prophète ﷺ a prédit que les gens participeraient à la décoration des mosquées.",
+    "fulfillment": "De nombreuses mosquées sont devenues des lieux de concours architecturaux.",
+    "reference": "Abu Dawud · Ibn Majah"
+  },
+  {
+    "id": 23,
+    "fact": "Le Prophète ﷺ a prédit que le temps semblerait passer rapidement.",
+    "fulfillment": "Les gens ont généralement l’impression que les années, les mois et les jours passent rapidement.",
+    "reference": "Bukhari & Muslim"
+  },
+  {
+    "id": 24,
+    "fact": "Le Prophète ﷺ a prédit que la connaissance diminuerait.",
+    "fulfillment": "La véritable connaissance religieuse est devenue moins courante parmi les masses.",
+    "reference": "Bukhari & Muslim"
+  },
+  {
+    "id": 25,
+    "fact": "Le Prophète ﷺ a prédit que l’ignorance allait se généraliser.",
+    "fulfillment": "L’ignorance de la religion et de la vérité fondamentale est aujourd’hui largement répandue.",
+    "reference": "Bukhari & Muslim"
+  },
+  {
+    "id": 26,
+    "fact": "Le Prophète ﷺ a prédit que la consommation d’alcool se généraliserait.",
+    "fulfillment": "L’alcool est devenu globalement normalisé.",
+    "reference": "Bukhari & Muslim"
+  },
+  {
+    "id": 27,
+    "fact": "Le Prophète ﷺ a prédit que le zina se généraliserait.",
+    "fulfillment": "L’immoralité sexuelle est devenue publique, normalisée et commercialisée.",
+    "reference": "Bukhari & Muslim"
+  },
+  {
+    "id": 28,
+    "fact": "Le Prophète ﷺ a prédit que certaines personnes rendraient licites les instruments de musique.",
+    "fulfillment": "La musique est devenue normalisée même parmi de nombreux musulmans.",
+    "reference": "Bukhari"
+  },
+  {
+    "id": 29,
+    "fact": "Le Prophète ﷺ a prédit que le riba se généraliserait.",
+    "fulfillment": "La finance basée sur les intérêts domine l’économie mondiale.",
+    "reference": "Ahmad · Abu Dawud · Ibn Majah"
+  },
+  {
+    "id": 30,
+    "fact": "Le Prophète ﷺ a prédit que les gens consommeraient ouvertement du riba.",
+    "fulfillment": "Les intérêts sont intégrés aux prêts, aux opérations bancaires, aux hypothèques et aux systèmes de crédit.",
+    "reference": "Ahmad · Abu Dawud · Ibn Majah"
+  },
+  {
+    "id": 31,
+    "fact": "Le Prophète ﷺ a prédit que les massacres augmenteraient.",
+    "fulfillment": "Les massacres, les guerres, les meurtres et les effusions de sang sont devenus monnaie courante.",
+    "reference": "Bukhari & Muslim"
+  },
+  {
+    "id": 32,
+    "fact": "Le Prophète ﷺ a prédit que le tueur ne saurait pas pourquoi il a tué, et que celui qui est tué ne saura pas pourquoi il a été tué.",
+    "fulfillment": "La violence insensée et les meurtres chaotiques sont devenus monnaie courante.",
+    "reference": "Muslim"
+  },
+  {
+    "id": 33,
+    "fact": "Le Prophète ﷺ a prédit que les tremblements de terre augmenteraient.",
+    "fulfillment": "Les tremblements de terre restent un signe et une peur répétés à l’échelle mondiale.",
+    "reference": "Bukhari"
+  },
+  {
+    "id": 34,
+    "fact": "Le Prophète ﷺ a prédit que les épreuves apparaîtraient comme des morceaux d'une nuit noire.",
+    "fulfillment": "Les procès déroutants idéologiques, politiques et sociaux continuent de se multiplier.",
+    "reference": "Muslim"
+  },
+  {
+    "id": 35,
+    "fact": "Le Prophète ﷺ a prédit que les gens suivraient pas à pas les voies des nations précédentes.",
+    "fulfillment": "Les musulmans ont adopté de nombreuses pratiques et idéologies issues de civilisations non musulmanes.",
+    "reference": "Bukhari & Muslim"
+  },
+  {
+    "id": 36,
+    "fact": "Le Prophète ﷺ a prédit que les nations s'inviteraient les unes les autres contre les musulmans.",
+    "fulfillment": "Les terres musulmanes ont été envahies, divisées et exploitées à plusieurs reprises.",
+    "reference": "Abu Dawud · Ahmad"
+  },
+  {
+    "id": 37,
+    "fact": "Le Prophète ﷺ a prédit que les musulmans deviendraient nombreux mais faibles comme l'écume sur la mer.",
+    "fulfillment": "Les musulmans sont devenus nombreux mais faibles politiquement et militairement.",
+    "reference": "Abu Dawud · Ahmad"
+  },
+  {
+    "id": 38,
+    "fact": "Le Prophète ﷺ a prédit que l’amour du monde et la haine de la mort affaibliraient les musulmans.",
+    "fulfillment": "Le matérialisme et la peur du sacrifice se sont répandus.",
+    "reference": "Abu Dawud · Ahmad"
+  },
+  {
+    "id": 39,
+    "fact": "Le Prophète ﷺ a prédit que les femmes seraient habillées mais nues.",
+    "fulfillment": "La mode révélatrice s'est généralisée tout en étant encore appelée vêtement.",
+    "reference": "Muslim"
+  },
+  {
+    "id": 40,
+    "fact": "Le Prophète ﷺ a prédit que les femmes apparaîtraient avec des têtes semblables à des bosses de chameaux.",
+    "fulfillment": "Des coiffures hautes et exagérées et des styles de couvre-chef sont apparus.",
+    "reference": "Muslim"
+  },
+  {
+    "id": 41,
+    "fact": "Le Prophète ﷺ a prédit que les marchés se rapprocheraient.",
+    "fulfillment": "Le commerce et le shopping sont devenus connectés à l’échelle mondiale et instantanément accessibles.",
+    "reference": "Ahmad"
+  },
+  {
+    "id": 42,
+    "fact": "Le Prophète ﷺ a prédit que le commerce se généraliserait.",
+    "fulfillment": "L’achat, la vente, la stratégie de marque et les marchés dominent la vie moderne.",
+    "reference": "Ahmad"
+  },
+  {
+    "id": 43,
+    "fact": "Le Prophète ﷺ a prédit que l’écriture se généraliserait.",
+    "fulfillment": "L'alphabétisation, l'édition, l'envoi de SMS et l'écriture numérique se sont répandus dans le monde entier.",
+    "reference": "Ahmad"
+  },
+  {
+    "id": 44,
+    "fact": "Le Prophète ﷺ a prédit que la mort subite deviendrait courante.",
+    "fulfillment": "Les morts subites dues à la violence, aux accidents et aux événements médicaux sont courantes.",
+    "reference": "Tabarani"
+  },
+  {
+    "id": 45,
+    "fact": "Le Prophète ﷺ a prédit que les gens salueraient uniquement ceux qu'ils connaissent.",
+    "fulfillment": "La chaleur sociale a diminué et les salutations sont devenues sélectives.",
+    "reference": "Ahmad"
+  },
+  {
+    "id": 46,
+    "fact": "Le Prophète ﷺ a prédit que le mensonge se répandrait.",
+    "fulfillment": "La tromperie, la propagande, les fausses nouvelles et les faux témoignages se sont généralisés.",
+    "reference": "Bukhari & Muslim"
+  },
+  {
+    "id": 47,
+    "fact": "Le Prophète ﷺ a prédit que les faux témoignages deviendraient monnaie courante.",
+    "fulfillment": "Mentir devant les tribunaux, les affaires, les médias et la vie publique est devenu normal.",
+    "reference": "Bukhari"
+  },
+  {
+    "id": 48,
+    "fact": "Le Prophète ﷺ a prédit que les gens rompraient les liens familiaux.",
+    "fulfillment": "L'éclatement des familles et la négligence des proches se sont généralisés.",
+    "reference": "Ahmad"
+  },
+  {
+    "id": 49,
+    "fact": "Le Prophète ﷺ a prédit que l'avarice serait placée dans le cœur des gens.",
+    "fulfillment": "L’avidité et l’égoïsme extrêmes sont devenus monnaie courante.",
+    "reference": "Bukhari & Muslim"
+  },
+  {
+    "id": 50,
+    "fact": "Le Prophète ﷺ a prédit qu'un feu émergerait du pays du Hijaz et éclairerait le cou des chameaux à Busra.",
+    "fulfillment": "Un incendie volcanique majeur s'est produit près de Médine en 654 AH / 1256 CE.",
+    "reference": "Bukhari & Muslim"
+  }
+]

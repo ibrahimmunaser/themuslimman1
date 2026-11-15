@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:seerah_app/core/widgets/localized_text.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers/part_provider.dart';
 import '../../../core/providers/progress_provider.dart';
@@ -42,7 +43,7 @@ class _SlidesTabState extends ConsumerState<SlidesTab> {
     final slidesAsync = ref.watch(slidesProvider(widget.partNumber));
 
     return slidesAsync.when(
-      loading: () => const Center(
+      loading: () => Center(
         child: CircularProgressIndicator.adaptive(
           valueColor: AlwaysStoppedAnimation(AppColors.gold),
         ),
@@ -51,9 +52,9 @@ class _SlidesTabState extends ConsumerState<SlidesTab> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.slideshow_outlined, size: 48, color: AppColors.textMuted),
+            Icon(Icons.slideshow_outlined, size: 48, color: AppColors.textMuted),
             const SizedBox(height: 12),
-            Text(t(lang, 'slidesUnavailable'), style: const TextStyle(color: AppColors.textSecondary)),
+            Text(t(lang, 'slidesUnavailable'), style: TextStyle(color: AppColors.textSecondary)),
             const SizedBox(height: 16),
             OutlinedButton.icon(
               onPressed: () => ref.invalidate(slidesProvider(widget.partNumber)),
@@ -79,9 +80,9 @@ class _SlidesTabState extends ConsumerState<SlidesTab> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.slideshow_outlined, size: 48, color: AppColors.textMuted),
+                Icon(Icons.slideshow_outlined, size: 48, color: AppColors.textMuted),
                 const SizedBox(height: 12),
-                Text(t(lang, 'noSlidesForDeck'), style: const TextStyle(color: AppColors.textSecondary)),
+                Text(t(lang, 'noSlidesForDeck'), style: TextStyle(color: AppColors.textSecondary)),
               ],
             ),
           );
@@ -186,7 +187,7 @@ class _SlidesTabState extends ConsumerState<SlidesTab> {
                 children: [
                   Text(
                     '${_slideIndex + 1} / ${activeDeck.length}',
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                    style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -195,7 +196,7 @@ class _SlidesTabState extends ConsumerState<SlidesTab> {
                       child: LinearProgressIndicator(
                         value: (_slideIndex + 1) / activeDeck.length,
                         backgroundColor: AppColors.border,
-                        valueColor: const AlwaysStoppedAnimation<Color>(AppColors.gold),
+                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.gold),
                         minHeight: 3,
                       ),
                     ),
@@ -224,13 +225,13 @@ class _SlidesTabState extends ConsumerState<SlidesTab> {
                             .round(),
                         placeholder: (ctx, url) => Container(
                           color: AppColors.card,
-                          child: const Center(
+                          child: Center(
                             child: CircularProgressIndicator(color: AppColors.gold, strokeWidth: 2),
                           ),
                         ),
                         errorWidget: (ctx, url, err) => Container(
                           color: AppColors.card,
-                          child: const Center(
+                          child: Center(
                             child: Icon(Icons.broken_image_outlined, color: AppColors.textMuted, size: 32),
                           ),
                         ),
@@ -259,7 +260,7 @@ class _SlidesTabState extends ConsumerState<SlidesTab> {
                     child: Center(
                       child: Text(
                         t(lang, 'swipeToNavigate'),
-                        style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
+                        style: TextStyle(color: AppColors.textMuted, fontSize: 11),
                       ),
                     ),
                   ),

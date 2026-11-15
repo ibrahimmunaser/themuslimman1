@@ -1,7 +1,10 @@
+import 'package:seerah_app/l10n/salah_phrases.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../l10n/course_langs.dart';
 import '../../l10n/course_packs.dart';
+import '../../features/salah/services/tafsir_service.dart';
+import '../../features/salah/services/tafsir_translator.dart';
 import '../models/part_model.dart';
 import '../network/api_client.dart';
 
@@ -20,9 +23,35 @@ export '../../l10n/course_langs.dart'
 
 const _courseLangKey = 'seerah_course_lang';
 
+/// Loads the persisted course language straight into the [salahLang] global,
+/// independent of [CourseLangNotifier]'s own (lazy, Riverpod-provider-gated)
+/// lifecycle. Call this and await it before any eager startup work that
+/// schedules Salah notifications (see main.dart's `initState`) — those bake
+/// their title/body text in at schedule time using the [salahLang] global
+/// (no BuildContext exists there), so scheduling before this completes
+/// silently bakes in the wrong language (the 'en' default) until the next
+/// reschedule, with no user-visible sign anything is wrong until a
+/// notification actually fires.
+Future<void> loadSalahLangFromPrefs() async {
+  final prefs = await SharedPreferences.getInstance();
+  final saved = prefs.getString(_courseLangKey);
+  if (saved != null && kSupportedCourseLangs.contains(saved)) {
+    salahLang = saved;
+  }
+}
+
 class CourseLangNotifier extends StateNotifier<String> {
   CourseLangNotifier() : super('en') {
     _load();
+  }
+
+  /// Fixed language, no persistence/loading (used by the App Guard engine).
+  CourseLangNotifier.fixed(String lang) : super(lang);
+
+  void setFixed(String lang) {
+    if (lang == state) return;
+    state = lang;
+    salahLang = lang;
   }
 
   Future<void> _load() async {
@@ -33,6 +62,8 @@ class CourseLangNotifier extends StateNotifier<String> {
         state != saved) {
       await CoursePacks.ensure(saved);
       state = saved;
+      salahLang = saved;
+      _prewarmTafsirModels(saved);
     }
   }
 
@@ -40,8 +71,23 @@ class CourseLangNotifier extends StateNotifier<String> {
     if (!kSupportedCourseLangs.contains(lang) || lang == state) return;
     await CoursePacks.ensure(lang);
     state = lang;
+    salahLang = lang;
+    _prewarmTafsirModels(lang);
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_courseLangKey, lang);
+  }
+
+  /// For the handful of languages with no real tafsir edition (currently
+  /// German, Malay, Swahili — see TafsirService._nativeEditions), kick off
+  /// the on-device translation models' download now, in the background,
+  /// rather than leaving it to happen the first time the user actually taps
+  /// "Tafsir" on a verse. Fire-and-forget: never blocks the language
+  /// switch, and failures just mean translation falls back to downloading
+  /// on demand as before.
+  void _prewarmTafsirModels(String lang) {
+    if (TafsirService.needsOnDeviceTranslation(lang)) {
+      TafsirTranslator.instance.prewarmModels(lang);
+    }
   }
 }
 

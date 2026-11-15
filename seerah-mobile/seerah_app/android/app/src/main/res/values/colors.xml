@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#000000</color>
+
+    <!-- Used by the native GuardBlockActivity layout (App Guard feature,
+         merged from the standalone "Allah Is Calling" app). -->
+    <color name="guard_deep_green">#FF0E3B2E</color>
+    <color name="guard_soft_gold">#FFE5D3A1</color>
+    <color name="guard_ivory">#FFF7F4EC</color>
+    <color name="guard_ivory_dim">#E0F7F4EC</color>
 </resources>

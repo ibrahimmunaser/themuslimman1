@@ -1,5 +1,6 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:seerah_app/core/widgets/localized_text.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -155,15 +156,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   // here from Welcome/Landing had no way back except the OS
                   // swipe-back gesture — easy to miss, and Android has no
                   // equivalent gesture at all on some devices/OS versions.
-                  Align(
-                    alignment: Alignment.topLeft,
-                    child: IconButton(
-                      icon: const BackIcon(size: 20),
-                      tooltip: t(lang, 'back'),
-                      onPressed: () => context.canPop()
-                          ? context.pop()
-                          : context.go('/landing'),
-                    ),
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const BackIcon(size: 20),
+                        tooltip: t(lang, 'back'),
+                        onPressed: () => context.canPop()
+                            ? context.pop()
+                            : context.go('/landing'),
+                      ),
+                      const Spacer(),
+                      const Padding(
+                        padding: EdgeInsets.only(right: 8),
+                        child: AppLangToggle(),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 40),
                   // Logo / Brand
@@ -254,6 +261,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ),
                           )
                         : Text(t(lang, 'signIn')),
+                  ),
+
+                  const SizedBox(height: 12),
+                  OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.gold,
+                      side: BorderSide(color: AppColors.gold),
+                      minimumSize: const Size.fromHeight(50),
+                    ),
+                    onPressed: () => context.go('/signup'),
+                    child: Text(t(lang, 'createAccount')),
                   ),
 
                   const SizedBox(height: 24),
@@ -416,7 +434,7 @@ class _ForgotPasswordScreenState extends ConsumerState<_ForgotPasswordScreen> {
                 children: [
                   WebViewWidget(controller: _ctrl),
                   if (_loading)
-                    const Center(
+                    Center(
                       child: CircularProgressIndicator(color: AppColors.gold),
                     ),
                 ],

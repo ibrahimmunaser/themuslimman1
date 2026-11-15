@@ -29,4 +29,19 @@
     <style name="NormalTheme" parent="@android:style/Theme.Black.NoTitleBar">
         <item name="android:windowBackground">?android:colorBackground</item>
     </style>
+
+    <!-- Dedicated themes for GuardBlockActivity (App Guard feature, merged
+         from the standalone "Allah Is Calling" app). Always deep green —
+         never inherit the OS dark-mode black window that made the block
+         screen look empty before it painted. -->
+    <style name="GuardLaunchTheme" parent="@android:style/Theme.Light.NoTitleBar">
+        <item name="android:windowBackground">@drawable/guard_launch_background</item>
+        <item name="android:statusBarColor">@color/guard_deep_green</item>
+        <item name="android:navigationBarColor">@color/guard_deep_green</item>
+    </style>
+    <style name="GuardNormalTheme" parent="@android:style/Theme.Light.NoTitleBar">
+        <item name="android:windowBackground">@color/guard_deep_green</item>
+        <item name="android:statusBarColor">@color/guard_deep_green</item>
+        <item name="android:navigationBarColor">@color/guard_deep_green</item>
+    </style>
 </resources>

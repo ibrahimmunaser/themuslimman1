@@ -13,6 +13,7 @@ class AuthField extends ConsumerStatefulWidget {
   final TextInputAction textInputAction;
   final String? Function(String?)? validator;
   final void Function(String)? onFieldSubmitted;
+  final void Function(String)? onChanged;
 
   const AuthField({
     super.key,
@@ -24,6 +25,7 @@ class AuthField extends ConsumerStatefulWidget {
     this.textInputAction = TextInputAction.next,
     this.validator,
     this.onFieldSubmitted,
+    this.onChanged,
   });
 
   @override
@@ -43,7 +45,8 @@ class _AuthFieldState extends ConsumerState<AuthField> {
       textInputAction: widget.textInputAction,
       validator: widget.validator,
       onFieldSubmitted: widget.onFieldSubmitted,
-      style: const TextStyle(color: AppColors.textPrimary, fontSize: 15),
+      onChanged: widget.onChanged,
+      style: TextStyle(color: AppColors.textPrimary, fontSize: 15),
       decoration: InputDecoration(
         labelText: widget.label,
         hintText: widget.hint,

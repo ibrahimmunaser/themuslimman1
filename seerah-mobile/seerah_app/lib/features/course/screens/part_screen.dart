@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:seerah_app/core/widgets/localized_text.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/data/parts_data.dart';
@@ -9,6 +10,7 @@ import '../../../core/providers/part_provider.dart';
 import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/adaptive_icons.dart';
+import '../../../core/widgets/profile_avatar_button.dart';
 import '../widgets/video_tab.dart';
 import '../widgets/read_tab.dart';
 import '../../../core/utils/system_insets.dart';
@@ -249,7 +251,7 @@ class _PartScreenState extends ConsumerState<PartScreen> {
     // flashing the paywall at a legitimately-entitled user before `hasAccess`
     // has a real value to check.
     if (isPaidPart && authState.isLoading) {
-      return const Scaffold(
+      return Scaffold(
         backgroundColor: AppColors.background,
         body: Center(child: CircularProgressIndicator(color: AppColors.gold)),
       );
@@ -267,6 +269,7 @@ class _PartScreenState extends ConsumerState<PartScreen> {
     final assetsAsync = ref.watch(partAssetsProvider(partNumber));
     final infographicsAsync = ref.watch(infographicsProvider(partNumber));
     final isFreePart = partNumber == AppConstants.kFreePartNumber;
+    final isFreeSample = isFreePart && !hasAccess;
 
     // Returns true only once the API confirms the URL exists.
     // While loading: free parts show as available (tap triggers wait-and-open),
@@ -298,6 +301,7 @@ class _PartScreenState extends ConsumerState<PartScreen> {
                 tooltip: t(currentLang, 'back'),
                 onPressed: () => context.pop(),
               ),
+              actions: const [ProfileAvatarButton()],
               flexibleSpace: FlexibleSpaceBar(
                 collapseMode: CollapseMode.pin,
                 background: Container(
@@ -306,7 +310,7 @@ class _PartScreenState extends ConsumerState<PartScreen> {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        eraColor.withValues(alpha: 0.18),
+                        AppColors.gold.withValues(alpha: 0.18),
                         AppColors.background,
                       ],
                     ),
@@ -316,22 +320,25 @@ class _PartScreenState extends ConsumerState<PartScreen> {
                     mainAxisAlignment: MainAxisAlignment.end,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Era + part badge row
+                      // Era + part badge row. Free sample omits "Part 15"
+                      // so guests don't treat the preview as a numbered lesson.
                       Row(
                         children: [
-                          Flexible(
-                            child: _Pill(
-                              label: tv(currentLang, 'partN', {
-                                'n': partNumber,
-                              }),
-                              color: eraColor,
+                          if (!isFreeSample) ...[
+                            Flexible(
+                              child: _Pill(
+                                label: tv(currentLang, 'partN', {
+                                  'n': partNumber,
+                                }),
+                                color: AppColors.gold,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
+                            const SizedBox(width: 8),
+                          ],
                           Flexible(
                             child: _Pill(
                               label: _eraName(part.era, currentLang),
-                              color: eraColor,
+                              color: AppColors.gold,
                               faint: true,
                             ),
                           ),
@@ -340,7 +347,7 @@ class _PartScreenState extends ConsumerState<PartScreen> {
                       const SizedBox(height: 10),
                       Text(
                         part.localizedTitle(currentLang),
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: AppColors.textPrimary,
                           fontSize: 22,
                           fontWeight: FontWeight.w700,
@@ -352,7 +359,7 @@ class _PartScreenState extends ConsumerState<PartScreen> {
                       const SizedBox(height: 6),
                       Text(
                         part.localizedSubtitle(currentLang),
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 13,
                         ),
@@ -601,6 +608,7 @@ class _PartScreenState extends ConsumerState<PartScreen> {
         bottomNavigationBar: _PartNavBar(
           partNumber: partNumber,
           hasAccess: hasAccess,
+          isLoggedIn: authState.isLoggedIn,
           lang: currentLang,
         ),
       ),
@@ -612,7 +620,16 @@ class _PartScreenState extends ConsumerState<PartScreen> {
     required String title,
     required Widget child,
   }) {
-    Navigator.of(context).push(
+    // PartScreen now lives inside the bottom-tab ShellRoute, which gives it
+    // its own nested Navigator so the tabs can persist across tab-local
+    // pushes. A plain `Navigator.of(context).push` would resolve to that
+    // nested Navigator too, leaving the tabs visible underneath the asset
+    // viewer (video/read/slides/...) — but video playback and the other
+    // full-screen viewers should still cover the whole screen and hide the
+    // tabs. `rootNavigator: true` pushes on the app's root Navigator
+    // instead, above AppShell entirely, so the tabs correctly disappear
+    // here and reappear when this viewer is popped back to PartScreen.
+    Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute(
         builder: (_) => _AssetViewerScreen(title: title, child: child),
       ),
@@ -722,7 +739,7 @@ class _SectionLabel extends StatelessWidget {
         const SizedBox(width: 8),
         Text(
           text,
-          style: const TextStyle(
+          style: TextStyle(
             color: AppColors.textSecondary,
             fontSize: 11,
             fontWeight: FontWeight.w600,
@@ -770,7 +787,7 @@ class _AssetHero extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.border),
+              border: Border.all(color: AppColors.gold, width: 1),
             ),
             child: Stack(
               children: [
@@ -813,7 +830,7 @@ class _AssetHero extends StatelessWidget {
                           children: [
                             Text(
                               title,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: AppColors.textPrimary,
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
@@ -822,7 +839,7 @@ class _AssetHero extends StatelessWidget {
                             const SizedBox(height: 2),
                             Text(
                               subtitle,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: AppColors.textSecondary,
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
@@ -833,7 +850,7 @@ class _AssetHero extends StatelessWidget {
                               description,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: AppColors.textMuted,
                                 fontSize: 12,
                               ),
@@ -843,11 +860,11 @@ class _AssetHero extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       available
-                          ? const ForwardChevronIcon(
+                          ? ForwardChevronIcon(
                               color: AppColors.textMuted,
                               size: 22,
                             )
-                          : const Icon(
+                          : Icon(
                               Icons.lock_outline_rounded,
                               color: AppColors.textMuted,
                               size: 18,
@@ -899,7 +916,7 @@ class _AssetCard extends StatelessWidget {
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppColors.border),
+              border: Border.all(color: AppColors.gold, width: 1),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -920,11 +937,11 @@ class _AssetCard extends StatelessWidget {
                       child: Icon(icon, color: iconColor, size: 20),
                     ),
                     available
-                        ? const ForwardChevronIcon(
+                        ? ForwardChevronIcon(
                             color: AppColors.textMuted,
                             size: 18,
                           )
-                        : const Icon(
+                        : Icon(
                             Icons.lock_outline_rounded,
                             color: AppColors.textMuted,
                             size: 14,
@@ -934,7 +951,7 @@ class _AssetCard extends StatelessWidget {
                 const SizedBox(height: 12),
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
@@ -943,7 +960,7 @@ class _AssetCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.textMuted,
                     fontSize: 11,
                   ),
@@ -961,7 +978,7 @@ class _AssetCard extends StatelessWidget {
                     ),
                     child: Text(
                       notAvailableLabel,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.textMuted,
                         fontSize: 10,
                       ),
@@ -1002,6 +1019,7 @@ class _PaywallScreen extends StatelessWidget {
           onPressed: () => context.pop(),
         ),
         title: Text(tv(lang, 'partN', {'n': partNumber})),
+        actions: const [ProfileAvatarButton()],
       ),
       body: SafeArea(
         bottom: false,
@@ -1024,7 +1042,7 @@ class _PaywallScreen extends StatelessWidget {
                     color: AppColors.goldFaded,
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.lock_outline,
                     size: 40,
                     color: AppColors.gold,
@@ -1033,7 +1051,7 @@ class _PaywallScreen extends StatelessWidget {
                 const SizedBox(height: 24),
                 Text(
                   partTitle,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
@@ -1043,7 +1061,7 @@ class _PaywallScreen extends StatelessWidget {
                 const SizedBox(height: 12),
                 Text(
                   tv(lang, 'requiresFullAccessBody', {'n': PARTS.length}),
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 14,
                     height: 1.6,
@@ -1087,7 +1105,7 @@ class _PaywallScreen extends StatelessWidget {
                   onPressed: () => context.pop(),
                   child: Text(
                     t(lang, 'goBack'),
-                    style: const TextStyle(color: AppColors.textSecondary),
+                    style: TextStyle(color: AppColors.textSecondary),
                   ),
                 ),
               ],
@@ -1128,7 +1146,7 @@ class _ContinueCTA extends ConsumerWidget {
         children: [
           Text(
             tv(lang, 'continueFullCourse', {'n': PARTS.length}),
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.textPrimary,
               fontSize: 17,
               fontWeight: FontWeight.w700,
@@ -1139,7 +1157,7 @@ class _ContinueCTA extends ConsumerWidget {
           const SizedBox(height: 10),
           Text(
             body,
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.textSecondary,
               fontSize: 13,
               height: 1.55,
@@ -1228,7 +1246,7 @@ class _UpNextCard extends StatelessWidget {
                   children: [
                     Text(
                       t(lang, 'upNext'),
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.textMuted,
                         fontSize: 11,
                         letterSpacing: 0.5,
@@ -1237,7 +1255,7 @@ class _UpNextCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       next.localizedTitle(lang),
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.textPrimary,
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -1248,7 +1266,7 @@ class _UpNextCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       next.localizedSubtitle(lang),
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.textMuted,
                         fontSize: 12,
                       ),
@@ -1259,7 +1277,7 @@ class _UpNextCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              const ForwardChevronIcon(color: AppColors.gold, size: 16),
+              ForwardChevronIcon(color: AppColors.gold, size: 16),
             ],
           ),
         ),
@@ -1273,28 +1291,64 @@ class _UpNextCard extends StatelessWidget {
 class _PartNavBar extends StatelessWidget {
   final int partNumber;
   final bool hasAccess;
+  final bool isLoggedIn;
   final String lang;
   const _PartNavBar({
     required this.partNumber,
     required this.hasAccess,
+    required this.isLoggedIn,
     required this.lang,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isFreeSample = partNumber == AppConstants.kFreePartNumber && !hasAccess;
+    final paywall = isLoggedIn ? '/pricing' : '/landing';
+
     return Container(
       // Audit H10 fix: MediaQuery.padding.bottom alone can report 0 on some
       // Android devices even while the 3-button nav bar still overlaps this
       // bar — bottomSystemInset() is the shared helper with the fallback for
       // exactly that case; every other bottom-inset spot in the app uses it.
       padding: EdgeInsets.fromLTRB(16, 10, 16, bottomSystemInset(context) + 10),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surface,
         border: Border(top: BorderSide(color: AppColors.border)),
       ),
       child: Row(
         children: [
-          if (partNumber > 1)
+          if (isFreeSample)
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () => context.pushReplacement(paywall),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.gold,
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      t(lang, 'getTheFullCourse'),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                        color: Colors.black,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    const ForwardChevronIcon(size: 14, color: Colors.black),
+                  ],
+                ),
+              ),
+            )
+          else if (partNumber > 1)
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: () =>
@@ -1303,7 +1357,7 @@ class _PartNavBar extends StatelessWidget {
                 label: Text(tv(lang, 'partN', {'n': partNumber - 1})),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.textSecondary,
-                  side: const BorderSide(color: AppColors.border),
+                  side: BorderSide(color: AppColors.border),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -1311,12 +1365,11 @@ class _PartNavBar extends StatelessWidget {
                 ),
               ),
             ),
-          if (partNumber > 1 && partNumber < PARTS.length)
+          if (!isFreeSample && partNumber > 1 && partNumber < PARTS.length)
             const SizedBox(width: 12),
           // On the free part with no access the in-page CTA card already has
           // the "Unlock full access" button — hide the nav bar duplicate.
-          if (partNumber < PARTS.length &&
-              !(partNumber == AppConstants.kFreePartNumber && !hasAccess))
+          if (partNumber < PARTS.length && !isFreeSample)
             Expanded(
               // This button only ever renders when hasAccess is true (the
               // `partNumber == kFreePartNumber && !hasAccess` case is excluded above, and

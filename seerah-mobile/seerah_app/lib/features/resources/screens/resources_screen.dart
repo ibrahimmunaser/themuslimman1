@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:seerah_app/core/widgets/localized_text.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_constants.dart';
@@ -9,6 +10,7 @@ import '../../../core/providers/part_provider.dart';
 import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/adaptive_icons.dart';
+import '../../../core/widgets/profile_avatar_button.dart';
 import '../../../core/widgets/ui_kit.dart';
 import '../../../l10n/app_strings.dart';
 import '../../../l10n/course_numbers.dart';
@@ -152,7 +154,14 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
                 tooltip: t(lang, 'back'),
                 onPressed: () => setState(() => _activeType = null),
               )
-            : null,
+            : (context.canPop()
+                  ? IconButton(
+                      icon: const BackIcon(),
+                      tooltip: t(lang, 'back'),
+                      onPressed: () => context.pop(),
+                    )
+                  : null),
+        actions: const [ProfileAvatarButton()],
       ),
       body: AppGradientBackground(
         child: SafeArea(
@@ -168,150 +177,61 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
   // ── Index ─────────────────────────────────────────────────────────────────
 
   Widget _buildIndex(bool hasAccess, ProgressState? progress, String lang) {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-      children: [
-        // Stats strip
-        if (progress != null && progress.totalViewed > 0) ...[
-          _StatsStrip(progress: progress, lang: lang),
-          const SizedBox(height: 14),
-        ],
-
-        Padding(
-          padding: const EdgeInsets.only(bottom: 14),
-          child: Text(
+    final types = resourceTypesForLang(lang);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (progress != null && progress.totalViewed > 0) ...[
+            _StatsStrip(progress: progress, lang: lang),
+            const SizedBox(height: 14),
+          ],
+          Text(
             tv(lang, 'resourceTypesStat', {
               'n': resourceTypeCountForLang(lang),
               'parts': PARTS.length,
             }),
-            style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+            style: TextStyle(color: AppColors.textMuted, fontSize: 13),
           ),
-        ),
-
-        ClipRRect(
-          borderRadius: BorderRadius.circular(14),
-          child: Column(
-            children: resourceTypesForLang(lang).asMap().entries.map((entry) {
-              final i = entry.key;
-              final rt = entry.value;
-              final isLast = i == _resourceTypes.length - 1;
-              final locked = rt.requiresAccess && !hasAccess;
-
-              // Count completion for this resource type
-              final badge = _badgeForType(rt.id, progress, lang);
-
-              return Column(
+          const SizedBox(height: 14),
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: Column(
                 children: [
-                  Material(
-                    color: AppColors.card,
-                    child: InkWell(
-                      // push, not go — matches part_screen.dart's paywall
-                      // fix so Back returns to Resources instead of wiping
-                      // the back stack.
-                      onTap: locked
-                          ? () => context.push('/pricing')
-                          : () => setState(() => _activeType = rt.id),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 13,
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 38,
-                              height: 38,
-                              decoration: BoxDecoration(
-                                color: locked
-                                    ? AppColors.border.withValues(alpha: 0.3)
-                                    : rt.color.withValues(alpha: 0.18),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Icon(
-                                rt.icon,
-                                color: locked ? AppColors.textMuted : rt.color,
-                                size: 20,
-                              ),
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    rt.title(lang),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      color: locked
-                                          ? AppColors.textSecondary
-                                          : AppColors.textPrimary,
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  Text(
-                                    rt.description(lang),
-                                    style: const TextStyle(
-                                      color: AppColors.textMuted,
-                                      fontSize: 12,
-                                      height: 1.3,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            if (badge != null && !locked)
-                              Container(
-                                margin: const EdgeInsets.only(right: 8),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 7,
-                                  vertical: 3,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.goldFaded,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  badge,
-                                  style: const TextStyle(
-                                    color: AppColors.gold,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            locked
-                                ? const Icon(
-                                    Icons.lock_outline_rounded,
-                                    color: AppColors.textMuted,
-                                    size: 18,
-                                  )
-                                : const ForwardChevronIcon(
-                                    color: AppColors.textMuted,
-                                    size: 18,
-                                  ),
-                          ],
-                        ),
+                  for (var i = 0; i < types.length; i++) ...[
+                    Expanded(
+                      child: _ResourceTypeRow(
+                        type: types[i],
+                        lang: lang,
+                        hasAccess: hasAccess,
+                        badge: _badgeForType(types[i].id, progress, lang),
+                        onTap: () {
+                          final rt = types[i];
+                          final locked = rt.requiresAccess && !hasAccess;
+                          if (locked) {
+                            context.push('/pricing');
+                          } else {
+                            setState(() => _activeType = rt.id);
+                          }
+                        },
                       ),
                     ),
-                  ),
-                  if (!isLast)
-                    const Divider(
-                      height: 1,
-                      thickness: 1,
-                      color: AppColors.border,
-                      indent: 68,
-                    ),
+                    if (i < types.length - 1)
+                      Divider(
+                        height: 1,
+                        thickness: 1,
+                        color: AppColors.border,
+                        indent: 68,
+                      ),
+                  ],
                 ],
-              );
-            }).toList(),
+              ),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -346,7 +266,7 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
                 'n': PARTS.length,
                 'type': rt.title(lang).toLowerCase(),
               }),
-              style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+              style: TextStyle(color: AppColors.textMuted, fontSize: 13),
             ),
           );
         }
@@ -455,7 +375,7 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
                               ),
                               Text(
                                 part.localizedSubtitle(lang),
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: AppColors.textMuted,
                                   fontSize: 12,
                                 ),
@@ -478,7 +398,7 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
                             Container(
                               width: 7,
                               height: 7,
-                              decoration: const BoxDecoration(
+                              decoration: BoxDecoration(
                                 color: AppColors.gold,
                                 shape: BoxShape.circle,
                               ),
@@ -496,7 +416,7 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
                 ),
               ),
               if (!isLast)
-                const Divider(
+                Divider(
                   height: 1,
                   thickness: 1,
                   color: AppColors.border,
@@ -531,6 +451,117 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
 
   String _labelForType(String id, String lang) =>
       _resourceTypes.firstWhere((r) => r.id == id).title(lang);
+}
+
+class _ResourceTypeRow extends StatelessWidget {
+  const _ResourceTypeRow({
+    required this.type,
+    required this.lang,
+    required this.hasAccess,
+    required this.badge,
+    required this.onTap,
+  });
+
+  final _ResourceType type;
+  final String lang;
+  final bool hasAccess;
+  final String? badge;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final locked = type.requiresAccess && !hasAccess;
+    return Material(
+      color: AppColors.card,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: locked
+                      ? AppColors.border.withValues(alpha: 0.3)
+                      : type.color.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  type.icon,
+                  color: locked ? AppColors.textMuted : type.color,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      type.title(lang),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: locked
+                            ? AppColors.textSecondary
+                            : AppColors.textPrimary,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      type.description(lang),
+                      style: TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 12,
+                        height: 1.3,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              if (badge != null && !locked)
+                Container(
+                  margin: const EdgeInsets.only(right: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.goldFaded,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    badge!,
+                    style: TextStyle(
+                      color: AppColors.gold,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              locked
+                  ? Icon(
+                      Icons.lock_outline_rounded,
+                      color: AppColors.textMuted,
+                      size: 18,
+                    )
+                  : ForwardChevronIcon(
+                      color: AppColors.textMuted,
+                      size: 18,
+                    ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 // ── Stats strip ───────────────────────────────────────────────────────────────
@@ -582,7 +613,7 @@ class _Stat extends StatelessWidget {
         value,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: const TextStyle(
+        style: TextStyle(
           color: AppColors.gold,
           fontSize: 18,
           fontWeight: FontWeight.w800,
@@ -593,7 +624,7 @@ class _Stat extends StatelessWidget {
         label,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
+        style: TextStyle(color: AppColors.textMuted, fontSize: 11),
       ),
     ],
   );
@@ -656,7 +687,7 @@ class _ContinueWatchingCard extends StatelessWidget {
                   children: [
                     Text(
                       t(lang, 'continueWatching'),
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.textMuted,
                         fontSize: 11,
                         letterSpacing: 0.4,
@@ -665,7 +696,7 @@ class _ContinueWatchingCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       part.localizedTitle(lang) as String,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.textPrimary,
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -675,7 +706,7 @@ class _ContinueWatchingCard extends StatelessWidget {
                     ),
                     Text(
                       '${tv(lang, "partN", {"n": part.partNumber})}  •  ${part.localizedSubtitle(lang)}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.textMuted,
                         fontSize: 12,
                       ),

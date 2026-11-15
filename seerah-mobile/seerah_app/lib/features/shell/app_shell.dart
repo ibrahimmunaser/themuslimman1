@@ -1,7 +1,9 @@
+import 'package:seerah_app/l10n/salah_phrases.dart';
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:seerah_app/core/widgets/localized_text.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -17,23 +19,17 @@ class AppShell extends ConsumerWidget {
 
   int _currentIndex(BuildContext context) {
     final loc = GoRouterState.of(context).uri.path;
-    if (loc.startsWith('/dashboard')) return 0;
-    if (loc.startsWith('/course')) return 1;
-    if (loc.startsWith('/resources')) return 2;
-    if (loc.startsWith('/reference')) return 3;
-    if (loc.startsWith('/progress')) return 4;
-    // Pricing isn't one of the 5 primary tabs — it used to fall under
-    // "Lessons" (index 1), which wrongly implied the user was viewing course
-    // content while actually looking at a paywall/upsell screen. Fall
-    // through to the neutral Home tab instead of a misleading selection.
-    return 0;
+    if (loc.startsWith('/salah')) return 0;
+    if (loc.startsWith('/quran')) return 1;
+    if (loc.startsWith('/account')) return 3;
+    // Seerah (hub, lessons, resources, references, progress, pricing and
+    // any other non-tab shell route) is the default tab.
+    return 2;
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final lang = ref.watch(courseLangProvider);
-    final auth = ref.watch(authProvider);
-    final hasAccess = auth.hasAccess;
     final idx = _currentIndex(context);
     final width = MediaQuery.sizeOf(context).width;
     final compact = width < 380;
@@ -54,7 +50,7 @@ class AppShell extends ConsumerWidget {
             child: Container(
               decoration: BoxDecoration(
                 color: AppColors.surface.withValues(alpha: 0.88),
-                border: const Border(
+                border: Border(
                   top: BorderSide(color: AppColors.border, width: 0.5),
                 ),
               ),
@@ -102,42 +98,33 @@ class AppShell extends ConsumerWidget {
                               : AppColors.textMuted,
                         );
                       }),
-                      iconTheme: WidgetStateProperty.resolveWith((states) {
-                        final selected = states.contains(WidgetState.selected);
-                        return IconThemeData(
+                      iconTheme: WidgetStateProperty.all(
+                        IconThemeData(
                           size: compact ? 22 : 23,
-                          color: selected
-                              ? AppColors.gold
-                              : AppColors.textMuted,
-                        );
-                      }),
+                          color: AppColors.gold,
+                        ),
+                      ),
                     ),
                     child: NavigationBar(
                       selectedIndex: idx,
                       onDestinationSelected: (i) {
                         HapticFeedback.selectionClick();
-                        // Home (0) is always free — Part 15's "First
-                        // Revelation" CTA on the dashboard is enough for a
-                        // new user. Every other tab requires a plan.
-                        if (i != 0 && !hasAccess) {
-                          showLockedNavDialog(context, ref, lang);
-                          return;
-                        }
+                        // All four tabs are free to open. Seerah still
+                        // paywalls individual parts (except the sample);
+                        // Home / Quran / Salah stay fully usable without
+                        // a plan.
                         switch (i) {
                           case 0:
-                            context.go('/dashboard');
+                            context.go('/salah');
                             break;
                           case 1:
-                            context.go('/course');
+                            context.go('/quran');
                             break;
                           case 2:
-                            context.go('/resources');
+                            context.go('/course');
                             break;
                           case 3:
-                            context.go('/reference');
-                            break;
-                          case 4:
-                            context.go('/progress');
+                            context.go('/account');
                             break;
                         }
                       },
@@ -146,49 +133,40 @@ class AppShell extends ConsumerWidget {
                           : NavigationDestinationLabelBehavior.alwaysShow,
                       destinations: [
                         NavigationDestination(
-                          icon: const Icon(Icons.home_outlined),
-                          selectedIcon: const Icon(
-                            Icons.home_rounded,
+                          icon: const Icon(Icons.mosque_outlined),
+                          selectedIcon: Icon(
+                            Icons.mosque_rounded,
                             color: AppColors.gold,
                           ),
-                          label: t(lang, 'navHome'),
-                          tooltip: t(lang, 'navHome'),
+                          label: translateSalah(lang, t(lang, 'navSalah')),
+                          tooltip: translateSalah(lang, t(lang, 'navSalah')),
+                        ),
+                        NavigationDestination(
+                          icon: const Icon(Icons.auto_stories_outlined),
+                          selectedIcon: Icon(
+                            Icons.auto_stories_rounded,
+                            color: AppColors.gold,
+                          ),
+                          label: translateSalah(lang, t(lang, 'navQuran')),
+                          tooltip: translateSalah(lang, t(lang, 'navQuran')),
                         ),
                         NavigationDestination(
                           icon: const Icon(Icons.menu_book_outlined),
-                          selectedIcon: const Icon(
+                          selectedIcon: Icon(
                             Icons.menu_book_rounded,
                             color: AppColors.gold,
                           ),
-                          label: t(lang, 'navLessons'),
-                          tooltip: t(lang, 'navLessons'),
+                          label: t(lang, 'navSeerah'),
+                          tooltip: t(lang, 'navSeerah'),
                         ),
                         NavigationDestination(
-                          icon: const Icon(Icons.folder_outlined),
-                          selectedIcon: const Icon(
-                            Icons.folder_rounded,
+                          icon: const Icon(Icons.person_outline_rounded),
+                          selectedIcon: Icon(
+                            Icons.person_rounded,
                             color: AppColors.gold,
                           ),
-                          label: t(lang, 'navResources'),
-                          tooltip: t(lang, 'navResources'),
-                        ),
-                        NavigationDestination(
-                          icon: const Icon(Icons.library_books_outlined),
-                          selectedIcon: const Icon(
-                            Icons.library_books_rounded,
-                            color: AppColors.gold,
-                          ),
-                          label: t(lang, 'navReference'),
-                          tooltip: t(lang, 'navReference'),
-                        ),
-                        NavigationDestination(
-                          icon: const Icon(Icons.insights_outlined),
-                          selectedIcon: const Icon(
-                            Icons.insights_rounded,
-                            color: AppColors.gold,
-                          ),
-                          label: t(lang, 'navProgress'),
-                          tooltip: t(lang, 'navProgress'),
+                          label: t(lang, 'account'),
+                          tooltip: t(lang, 'account'),
                         ),
                       ],
                     ),
@@ -220,7 +198,10 @@ void showLockedNavDialog(BuildContext context, WidgetRef ref, String lang) {
     context: context,
     builder: (dialogContext) => AlertDialog(
       backgroundColor: AppColors.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: AppColors.gold, width: 1),
+      ),
       icon: Container(
         width: 48,
         height: 48,
@@ -228,12 +209,12 @@ void showLockedNavDialog(BuildContext context, WidgetRef ref, String lang) {
           color: AppColors.gold.withValues(alpha: 0.12),
           shape: BoxShape.circle,
         ),
-        child: const Icon(Icons.lock_outline_rounded, color: AppColors.gold),
+        child: Icon(Icons.lock_outline_rounded, color: AppColors.gold),
       ),
       title: Text(
         t(lang, 'unlockFullAccess'),
         textAlign: TextAlign.center,
-        style: const TextStyle(
+        style: TextStyle(
           color: AppColors.textPrimary,
           fontWeight: FontWeight.w700,
         ),
@@ -241,14 +222,14 @@ void showLockedNavDialog(BuildContext context, WidgetRef ref, String lang) {
       content: Text(
         t(lang, 'lockedNavBody'),
         textAlign: TextAlign.center,
-        style: const TextStyle(color: AppColors.textSecondary, height: 1.5),
+        style: TextStyle(color: AppColors.textSecondary, height: 1.5),
       ),
       actionsAlignment: MainAxisAlignment.center,
       actions: [
         TextButton(
           onPressed: () => Navigator.of(dialogContext).pop(),
           child: Text(t(lang, 'cancel'),
-              style: const TextStyle(color: AppColors.textMuted)),
+              style: TextStyle(color: AppColors.textMuted)),
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(

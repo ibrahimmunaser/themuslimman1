@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Time Sensitive Notifications: lets prayer reminders break through
+	     Focus modes and scheduled summaries. Required for
+	     InterruptionLevel.timeSensitive to take effect; without it iOS
+	     silently downgrades delivery to ordinary notifications.
+	     The provisioning profile / signing team must also support this
+	     capability (verify in Xcode: Runner > Signing & Capabilities). -->
+	<key>com.apple.developer.usernotifications.time-sensitive</key>
+	<true/>
+	<!-- App Guard (Screen Time shield) entitlements are DELIBERATELY NOT
+	     hardcoded here. com.apple.developer.family-controls and
+	     com.apple.security.application-groups both require a provisioning
+	     profile that supports them, and Apple won't let a profile support
+	     family-controls until the distribution entitlement is approved
+	     for THIS bundle ID (com.themuslimman.seerah) — a fresh request is
+	     needed; the standalone app's approval (if ever granted) does not
+	     carry over. Baking these keys in here before that approval breaks
+	     code signing for every ordinary release, not just this feature.
+	     Add both keys here only once that entitlement is approved and the
+	     provisioning profile is regenerated to include it. -->
+	<!-- AlarmKit: deliberately NOT added here. Apple's own AlarmKit docs
+	     (WWDC25, developer.apple.com/documentation/alarmkit) describe setup
+	     as ONLY NSAlarmKitUsageDescription (see Info.plist) + calling
+	     AlarmManager.requestAuthorization() — no entitlement is mentioned
+	     anywhere in Apple's official documentation. See the standalone
+	     app's IOS_ALARMKIT_ENTITLEMENT.md for the full evidence review
+	     before ever hand-adding a key here. IosHybridNotificationScheduler
+	     already falls back to local notifications on every iOS version, so
+	     the app builds, runs, and reliably delivers prayer alerts without
+	     this either way. -->
+</dict>
+</plist>

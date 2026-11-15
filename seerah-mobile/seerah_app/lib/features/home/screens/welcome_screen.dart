@@ -1,6 +1,7 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:seerah_app/core/widgets/localized_text.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -127,7 +128,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                       child: Text(
                         t(lang, 'welcomeTitleLine1'),
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: AppColors.textMuted,
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
@@ -143,7 +144,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                       },
                       child: Text(
                         t(lang, 'welcomeReturning'),
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: AppColors.textMuted,
                           fontSize: 13,
                         ),
@@ -182,7 +183,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                   ),
                                   child: Text(
                                     t(lang, 'welcomeCourseHeadline'),
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       color: AppColors.gold,
                                       fontSize: 12,
                                       fontWeight: FontWeight.w700,
@@ -200,7 +201,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                       Text(
                             t(lang, 'welcomeTagline'),
                             textAlign: TextAlign.center,
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: AppColors.textPrimary,
                               fontSize: 26,
                               fontWeight: FontWeight.w800,
@@ -217,7 +218,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                       Text(
                         t(lang, 'welcomeSubtext'),
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 14,
                           height: 1.55,
@@ -338,7 +339,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                         ),
                         child: Text(
                           t(lang, 'welcomeAlreadyAccess'),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
                             color: AppColors.textMuted,
                           ),
@@ -355,7 +356,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                           // VerifyingPurchaseBanner doc comment.
                           ? const VerifyingPurchaseBanner()
                           : busy
-                          ? const SizedBox(
+                          ? SizedBox(
                               width: 18,
                               height: 18,
                               child: CircularProgressIndicator.adaptive(
@@ -430,7 +431,7 @@ class _FeatureRow extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 13.5,
                     fontWeight: FontWeight.w600,
@@ -439,7 +440,7 @@ class _FeatureRow extends StatelessWidget {
                 const SizedBox(height: 1),
                 Text(
                   detail,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.textMuted,
                     fontSize: 11.5,
                   ),

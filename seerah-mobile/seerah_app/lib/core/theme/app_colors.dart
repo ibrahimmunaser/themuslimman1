@@ -1,41 +1,59 @@
 import 'package:flutter/material.dart';
 
-class AppColors {
-  // Base
-  static const background = Color(0xFF0A0A0A);
-  static const surface = Color(0xFF141414);
-  static const card = Color(0xFF1C1C1C);
-  static const border = Color(0xFF2A2A2A);
+import 'theme_options.dart';
 
-  // Gold
-  static const gold = Color(0xFFD4A017);
-  static const goldDark = Color(0xFFB8860B);
-  static const goldLight = Color(0xFFE8C040);
-  static const goldFaded = Color(0x33D4A017);
+/// App-wide chrome palette. These used to be `static const` (Black & Gold
+/// only, baked in at compile time). They're now plain mutable statics so
+/// [applyTheme] can repaint the whole app's chrome at runtime when the user
+/// picks a theme on the Account screen — every one of the ~1000 existing
+/// `AppColors.xxx` call sites across the app automatically follows, with no
+/// need to touch each call site individually. See [AppThemeController] for
+/// the Riverpod side (persistence + triggering a rebuild).
+class AppColors {
+  // Base — reassigned by [applyTheme]; defaults are Black & Gold.
+  static Color background = const Color(0xFF0A0A0A);
+  static Color surface = const Color(0xFF141414);
+  static Color card = const Color(0xFF1C1C1C);
+  static Color border = const Color(0xFF2A2A2A);
+  static Color surfaceRaised = const Color(0xFF1A1A1A);
+
+  // Accent ("gold" kept as the field name every screen already reads —
+  // it's simply "this theme's accent color" now, not literally gold).
+  static Color gold = const Color(0xFFD4A017);
+  static Color goldDark = const Color(0xFFB8860B);
+  static Color goldLight = const Color(0xFFE8C040);
+  static Color goldFaded = const Color(0x33D4A017);
+
+  /// Text/icon color to put on top of a solid [gold]-filled surface (e.g.
+  /// the "Next" button) — black on a light accent, white on a dark one.
+  static Color onGold = Colors.black;
 
   // Text
-  static const textPrimary = Color(0xFFFFFFFF);
-  static const textSecondary = Color(0xFF9A9A9A);
-  // 0x808080 keeps >= 4.5:1 contrast against `background`/`surface`/`card`
-  // (WCAG AA for normal text); the previous 0x5A5A5A only hit ~2.9:1.
-  static const textMuted = Color(0xFF808080);
+  static Color textPrimary = const Color(0xFFFFFFFF);
+  static Color textSecondary = const Color(0xFF9A9A9A);
+  static Color textMuted = const Color(0xFF808080);
 
-  // Surfaces
-  static const surfaceRaised = Color(0xFF1A1A1A);
+  /// True for a dark-background theme (5 of the 8 themes); false for a
+  /// light one (Ivory & Forest, Soft Sage, Sand & Terracotta). Drives
+  /// status bar / system nav bar icon brightness.
+  static bool isDark = true;
 
-  // Gradients
-  static const backgroundGradient = RadialGradient(
-    center: Alignment(0, -0.5),
+  // Gradient — a getter, not a stored const, since it embeds [background].
+  static RadialGradient get backgroundGradient => RadialGradient(
+    center: const Alignment(0, -0.5),
     radius: 1.3,
-    colors: [Color(0xFF141008), background],
+    colors: [Color.lerp(background, gold, 0.06) ?? background, background],
   );
 
-  // Status
+  // Status — intentionally theme-invariant: these are universal semantic
+  // signals (success/error/warning), not brand colors, so they stay
+  // recognizable no matter which of the 8 themes is active.
   static const success = Color(0xFF4CAF50);
   static const error = Color(0xFFEF5350);
   static const warning = Color(0xFFFFA726);
 
-  // Era colors (colorA)
+  // Era colors (colorA) — Seerah timeline. Deliberately fixed per era,
+  // regardless of the active chrome theme (see AppThemeController doc).
   static const eraPreIslamic = Color(0xFFA07840);
   static const eraBirthEarlyLife = Color(0xFF8A7AB0);
   static const eraEarlyRevelation = Color(0xFF4AA87E);
@@ -57,5 +75,39 @@ class AppColors {
       case 'final-years': return eraFinalYears;
       default: return gold;
     }
+  }
+
+  /// Repaints every chrome field above from a 4-color [AppThemeOption]
+  /// (page background, cards/navigation, accent, main text — the only 4
+  /// values each theme actually specifies). Everything else (secondary/
+  /// muted text, borders, the lighter/darker accent shades, the
+  /// on-accent text color, dark-vs-light status bar) is derived from
+  /// those 4 with one consistent formula, so it looks right for all 8
+  /// themes without per-theme tuning:
+  ///  - secondary text = main text blended 30% toward the page background
+  ///  - muted text = main text blended 50% toward the page background
+  ///  - border = cards/nav blended 12% toward main text (a touch lighter
+  ///    than the card on a dark theme; a touch darker on a light one)
+  ///  - accent dark/light = accent blended 25% toward background/text
+  ///  - on-accent text = black if the accent is light, white if it's dark
+  ///  - isDark = estimated from the page background's own brightness
+  static void applyTheme(AppThemeOption theme) {
+    background = theme.background;
+    surface = theme.cardNav;
+    card = theme.cardNav;
+    surfaceRaised = Color.lerp(theme.cardNav, theme.mainText, 0.05)!;
+    border = Color.lerp(theme.cardNav, theme.mainText, 0.12)!;
+
+    gold = theme.accent;
+    goldDark = Color.lerp(theme.accent, theme.background, 0.25)!;
+    goldLight = Color.lerp(theme.accent, theme.mainText, 0.25)!;
+    goldFaded = theme.accent.withValues(alpha: 0.2);
+    onGold = theme.accent.computeLuminance() > 0.5 ? Colors.black : Colors.white;
+
+    textPrimary = theme.mainText;
+    textSecondary = Color.lerp(theme.mainText, theme.background, 0.3)!;
+    textMuted = Color.lerp(theme.mainText, theme.background, 0.5)!;
+
+    isDark = ThemeData.estimateBrightnessForColor(theme.background) == Brightness.dark;
   }
 }

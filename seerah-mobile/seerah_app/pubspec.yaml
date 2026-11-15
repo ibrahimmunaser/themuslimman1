@@ -42,7 +42,7 @@ dependencies:
   in_app_purchase_android: ^0.5.0
 
   # Utils
-  shared_preferences: ^2.3.4
+  shared_preferences: ^2.5.3
 
   # Splash (runtime: main.dart calls FlutterNativeSplash.preserve/remove)
   flutter_native_splash: ^2.4.3
@@ -52,13 +52,35 @@ dependencies:
   screenshot: ^3.0.0
   path_provider: ^2.1.6
   crypto: ^3.0.7
-  url_launcher: ^6.3.1
+  url_launcher: ^6.3.2
+  intl: ^0.20.2
+  package_info_plus: ^9.0.1
+
+  # ── Salah (prayer times, reminders, App Guard, Quran, Qibla) ──────────────
+  # Merged from the standalone "Allah Is Calling" app.
+  provider: ^6.1.5+1
+  adhan_dart: ^2.0.1
+  flutter_local_notifications: ^19.5.0
+  timezone: ^0.10.1
+  flutter_timezone: ^5.1.0
+  geolocator: ^14.0.2
+  lat_lng_to_timezone: ^0.2.0
+  geocoding: ^4.0.0
+  device_info_plus: ^12.4.0
+  vibration: ^3.1.8
+  hijri: ^3.0.1
+  flutter_compass: ^0.8.1
+  http: ^1.6.0
+  audioplayers: ^6.6.0
+  scrollable_positioned_list: ^0.3.8
+  confetti: ^0.8.0
+  google_mlkit_translation: ^1.0.3
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
-  flutter_launcher_icons: ^0.14.3
+  flutter_launcher_icons: ^0.14.4
 
 # ── App icon configuration ────────────────────────────────────────────────────
 # Run: dart run flutter_launcher_icons
@@ -103,3 +125,13 @@ flutter:
   assets:
     - assets/images/
     - assets/i18n/
+    - assets/facts/
+    - assets/facts/i18n/
+    # Salah features merged from the standalone "Allah Is Calling" app.
+    # Offline city database built from GeoNames (CC BY 4.0, geonames.org).
+    - assets/geonames/cities.tsv.gz
+    # Locally bundled tafsir: one small text file per verse.
+    - assets/tafsir/surah_001/
+    # Guard-screen backdrops (native Android GuardBlockActivity reads these
+    # directly from the Flutter asset bundle — see its loadHero()).
+    - assets/incoming_call/

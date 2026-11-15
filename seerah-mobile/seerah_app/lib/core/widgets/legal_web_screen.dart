@@ -1,5 +1,6 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:seerah_app/core/widgets/localized_text.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../providers/part_provider.dart';
@@ -141,7 +142,7 @@ class _LegalWebScreenState extends ConsumerState<LegalWebScreen> {
                 children: [
                   WebViewWidget(controller: _ctrl),
                   if (_loading)
-                    const Center(child: CircularProgressIndicator(color: AppColors.gold)),
+                    Center(child: CircularProgressIndicator(color: AppColors.gold)),
                 ],
               ),
       ),

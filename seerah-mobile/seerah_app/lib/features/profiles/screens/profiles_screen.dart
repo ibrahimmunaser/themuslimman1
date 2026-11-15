@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:seerah_app/core/widgets/localized_text.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -39,7 +40,7 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
             onPressed: () => setState(() => _managing = !_managing),
             child: Text(
               _managing ? t(lang, 'done') : t(lang, 'edit'),
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.gold,
                 fontWeight: FontWeight.w600,
               ),
@@ -62,10 +63,10 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.error_outline, color: AppColors.textMuted, size: 40),
+                  Icon(Icons.error_outline, color: AppColors.textMuted, size: 40),
                   const SizedBox(height: 12),
                   Text(t(lang, 'couldNotLoadProfiles'),
-                      style: const TextStyle(color: AppColors.textSecondary)),
+                      style: TextStyle(color: AppColors.textSecondary)),
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () => ref.invalidate(profilesProvider),
@@ -94,7 +95,7 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
             padding: const EdgeInsets.fromLTRB(24, 4, 24, 0),
             child: Text(
               t(lang, 'tapProfileToRenameRemove'),
-              style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+              style: TextStyle(color: AppColors.textMuted, fontSize: 13),
               textAlign: TextAlign.center,
             ),
           ),
@@ -184,7 +185,7 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
         builder: (ctx, setState) => AlertDialog(
           backgroundColor: AppColors.card,
           title: Text(t(lang, 'newLearnerProfile'),
-            style: const TextStyle(color: AppColors.textPrimary, fontSize: 17, fontWeight: FontWeight.w700)),
+            style: TextStyle(color: AppColors.textPrimary, fontSize: 17, fontWeight: FontWeight.w700)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -237,17 +238,17 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
                 controller: controller,
                 autofocus: true,
                 maxLength: 50,
-                style: const TextStyle(color: AppColors.textPrimary),
+                style: TextStyle(color: AppColors.textPrimary),
                 decoration: InputDecoration(
                   hintText: t(lang, 'learnerName'),
-                  hintStyle: const TextStyle(color: AppColors.textMuted),
+                  hintStyle: TextStyle(color: AppColors.textMuted),
                   filled: true,
                   fillColor: AppColors.border.withValues(alpha: 0.3),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                     borderSide: BorderSide.none,
                   ),
-                  counterStyle: const TextStyle(color: AppColors.textMuted),
+                  counterStyle: TextStyle(color: AppColors.textMuted),
                 ),
               ),
             ],
@@ -255,11 +256,11 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: Text(t(lang, 'cancel'), style: const TextStyle(color: AppColors.textSecondary)),
+              child: Text(t(lang, 'cancel'), style: TextStyle(color: AppColors.textSecondary)),
             ),
             TextButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: Text(t(lang, 'add'), style: const TextStyle(color: AppColors.gold, fontWeight: FontWeight.w700)),
+              child: Text(t(lang, 'add'), style: TextStyle(color: AppColors.gold, fontWeight: FontWeight.w700)),
             ),
           ],
         ),
@@ -336,7 +337,7 @@ class _ProfileTile extends StatelessWidget {
                           profile.displayName.isNotEmpty
                               ? profile.displayName[0].toUpperCase()
                               : '?',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 32, color: AppColors.textPrimary, fontWeight: FontWeight.w700),
                         ),
                 ),
@@ -351,7 +352,7 @@ class _ProfileTile extends StatelessWidget {
                       shape: BoxShape.circle,
                       border: Border.all(color: AppColors.border),
                     ),
-                    child: const Icon(Icons.edit_rounded, size: 12, color: AppColors.gold),
+                    child: Icon(Icons.edit_rounded, size: 12, color: AppColors.gold),
                   ),
                 )
               else if (profile.isActive)
@@ -359,7 +360,7 @@ class _ProfileTile extends StatelessWidget {
                   right: 4, bottom: 4,
                   child: Container(
                     width: 18, height: 18,
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       color: AppColors.gold,
                       shape: BoxShape.circle,
                     ),
@@ -383,7 +384,7 @@ class _ProfileTile extends StatelessWidget {
           if (profile.partsStudied > 0)
             Text(
               tv(lang, 'nPartsSuffix', {'n': profile.partsStudied}),
-              style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
+              style: TextStyle(color: AppColors.textMuted, fontSize: 11),
             ),
         ],
         ),
@@ -417,13 +418,13 @@ class _AddProfileTile extends StatelessWidget {
                   strokeAlign: BorderSide.strokeAlignInside,
                 ),
               ),
-              child: const Center(
+              child: Center(
                 child: Icon(Icons.add_rounded, color: AppColors.textMuted, size: 32),
               ),
             ),
             const SizedBox(height: 8),
             Text(t(lang, 'addProfile'),
-              style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+              style: TextStyle(color: AppColors.textMuted, fontSize: 13),
               textAlign: TextAlign.center,
             ),
           ],
@@ -486,22 +487,22 @@ class _ProfileEditSheetState extends ConsumerState<_ProfileEditSheet> {
           ),
           const SizedBox(height: 18),
           Text(t(lang, 'editProfile'),
-            style: const TextStyle(color: AppColors.textPrimary, fontSize: 17, fontWeight: FontWeight.w700)),
+            style: TextStyle(color: AppColors.textPrimary, fontSize: 17, fontWeight: FontWeight.w700)),
           const SizedBox(height: 16),
           TextField(
             controller: _nameCtrl,
             maxLength: 50,
-            style: const TextStyle(color: AppColors.textPrimary),
+            style: TextStyle(color: AppColors.textPrimary),
             decoration: InputDecoration(
               labelText: t(lang, 'name'),
-              labelStyle: const TextStyle(color: AppColors.textMuted),
+              labelStyle: TextStyle(color: AppColors.textMuted),
               filled: true,
               fillColor: AppColors.border.withValues(alpha: 0.2),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
                 borderSide: BorderSide.none,
               ),
-              counterStyle: const TextStyle(color: AppColors.textMuted),
+              counterStyle: TextStyle(color: AppColors.textMuted),
             ),
           ),
           const SizedBox(height: 12),
@@ -567,14 +568,14 @@ class _ProfileEditSheetState extends ConsumerState<_ProfileEditSheet> {
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.card,
         title: Text(t(lang, 'deleteProfileQuestion'),
-          style: const TextStyle(color: AppColors.textPrimary)),
+          style: TextStyle(color: AppColors.textPrimary)),
         content: Text(
           tv(lang, 'deleteProfileWarning', {'name': widget.profile.displayName}),
-          style: const TextStyle(color: AppColors.textSecondary)),
+          style: TextStyle(color: AppColors.textSecondary)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(t(lang, 'cancel'), style: const TextStyle(color: AppColors.textSecondary)),
+            child: Text(t(lang, 'cancel'), style: TextStyle(color: AppColors.textSecondary)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),

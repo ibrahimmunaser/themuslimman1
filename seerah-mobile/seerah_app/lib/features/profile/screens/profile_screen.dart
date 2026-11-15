@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'dart:io' show Platform;
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:seerah_app/core/widgets/localized_text.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -19,9 +20,15 @@ import '../../../core/providers/part_provider.dart';
 import '../../../core/widgets/ui_kit.dart';
 import '../../../core/widgets/webview_error_overlay.dart';
 import '../../../l10n/app_strings.dart';
+import 'change_password_screen.dart';
+import 'contact_us_screen.dart';
+import 'help_faq_screen.dart';
+import 'legal_text_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
-  const ProfileScreen({super.key});
+  const ProfileScreen({super.key, this.titleKey = 'myProfile'});
+
+  final String titleKey;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -32,7 +39,7 @@ class ProfileScreen extends ConsumerWidget {
     final lang = ref.watch(courseLangProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(t(lang, 'myProfile'))),
+      appBar: AppBar(title: Text(t(lang, titleKey))),
       body: AppGradientBackground(
         child: ListView(
           padding: EdgeInsets.fromLTRB(20, 0, 20, 40 + bottomSystemInset(context)),
@@ -51,6 +58,14 @@ class ProfileScreen extends ConsumerWidget {
             const ClipRRect(
               borderRadius: BorderRadius.all(Radius.circular(14)),
               child: AppLangSwitcherRow(),
+            ).animate(delay: 10.ms).fadeIn(duration: 350.ms),
+
+            const SizedBox(height: 10),
+
+            // ── App theme ────────────────────────────────────────────────────
+            const ClipRRect(
+              borderRadius: BorderRadius.all(Radius.circular(14)),
+              child: AppThemeSwitcherRow(),
             ).animate(delay: 10.ms).fadeIn(duration: 350.ms),
 
             const SizedBox(height: 20),
@@ -113,7 +128,18 @@ class ProfileScreen extends ConsumerWidget {
                   icon: Icons.lock_outline_rounded,
                   label: t(lang, 'changePassword'),
                   color: const Color(0xFF5A90B0),
-                  onTap: () => _launch('${AppConstants.baseUrl}/change-password', context, lang),
+                  // Was a WebView pointed at the website's /change-password
+                  // *page* — that page is actually a first-time "set a
+                  // password" flow for guest checkouts with no password
+                  // yet, and immediately redirects anyone who already has
+                  // one (i.e. almost every real mobile account) to their
+                  // dashboard instead of showing a form at all. This native
+                  // screen hits the website's own authenticated
+                  // change-password API directly — see
+                  // AuthNotifier.changePassword's doc comment.
+                  onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => const ChangePasswordScreen(),
+                  )),
                 ),
               _SettingsDatum(
                 icon: Icons.receipt_long_outlined,
@@ -131,17 +157,30 @@ class ProfileScreen extends ConsumerWidget {
             // ── Support ────────────────────────────────────────────────────
             _GroupLabel(t(lang, 'support')),
             _SettingsGroup(items: [
+              // Manual replay of the one-time marketing intro — it no longer
+              // auto-shows on launch (see app_router.dart), so this is now
+              // its only standalone full-screen entry point.
+              _SettingsDatum(
+                icon: Icons.auto_awesome_outlined,
+                label: t(lang, 'welcomeTour'),
+                color: AppColors.gold,
+                onTap: () => context.push('/welcome'),
+              ),
               _SettingsDatum(
                 icon: Icons.help_outline_rounded,
                 label: t(lang, 'helpAndFaq'),
                 color: const Color(0xFF4AA87E),
-                onTap: () => _launch('${AppConstants.baseUrl}/help', context, lang),
+                onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => const HelpFaqScreen(),
+                )),
               ),
               _SettingsDatum(
                 icon: Icons.chat_bubble_outline_rounded,
                 label: t(lang, 'contactUs'),
                 color: const Color(0xFF8A7AB0),
-                onTap: () => _launch('${AppConstants.baseUrl}/contact', context, lang),
+                onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => const ContactUsScreen(),
+                )),
               ),
             ]).animate(delay: 120.ms).fadeIn(duration: 350.ms),
 
@@ -154,13 +193,25 @@ class ProfileScreen extends ConsumerWidget {
                 icon: Icons.shield_outlined,
                 label: t(lang, 'privacyPolicyTitle'),
                 color: AppColors.textMuted,
-                onTap: () => _launch('${AppConstants.baseUrl}/privacy', context, lang),
+                onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => LegalTextScreen(
+                    titleKey: 'privacyPolicyTitle',
+                    headerIcon: Icons.shield_outlined,
+                    sections: privacySections(),
+                  ),
+                )),
               ),
               _SettingsDatum(
                 icon: Icons.gavel_outlined,
                 label: t(lang, 'termsOfUseTitle'),
                 color: AppColors.textMuted,
-                onTap: () => _launch('${AppConstants.baseUrl}/terms', context, lang),
+                onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => LegalTextScreen(
+                    titleKey: 'termsOfUseTitle',
+                    headerIcon: Icons.gavel_outlined,
+                    sections: termsSections(),
+                  ),
+                )),
               ),
             ]).animate(delay: 170.ms).fadeIn(duration: 350.ms),
 
@@ -211,7 +262,7 @@ class ProfileScreen extends ConsumerWidget {
             const SizedBox(height: 24),
             Center(
               child: Text(tv(lang, 'versionLabel', {'v': AppConstants.appVersion}),
-                  style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                  style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
             ),
           ],
         ),
@@ -433,7 +484,7 @@ class _AvatarSection extends StatelessWidget {
             height: 92,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              gradient: const LinearGradient(
+              gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [AppColors.goldLight, AppColors.gold, AppColors.goldDark],
@@ -448,14 +499,14 @@ class _AvatarSection extends StatelessWidget {
             ),
             padding: const EdgeInsets.all(2.5),
             child: Container(
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: AppColors.surface,
               ),
               child: Center(
                 child: Text(
                   _initials(),
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.gold,
                     fontSize: 30,
                     fontWeight: FontWeight.w700,
@@ -470,7 +521,7 @@ class _AvatarSection extends StatelessWidget {
 
           if (isAnonymous)
             Text(t(lang, 'guest'),
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.textPrimary,
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
@@ -480,7 +531,7 @@ class _AvatarSection extends StatelessWidget {
             Text(user!.name!,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.textPrimary,
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
@@ -491,7 +542,7 @@ class _AvatarSection extends StatelessWidget {
           Text(isAnonymous ? t(lang, 'noAccountYet') : (user?.email ?? t(lang, 'student')),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 14)),
 
           const SizedBox(height: 12),
 
@@ -561,7 +612,7 @@ class _GuestUpgradeCard extends StatelessWidget {
           ),
           child: Row(
             children: [
-              const Icon(Icons.sync_rounded, color: AppColors.gold, size: 22),
+              Icon(Icons.sync_rounded, color: AppColors.gold, size: 22),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(
@@ -569,7 +620,7 @@ class _GuestUpgradeCard extends StatelessWidget {
                   children: [
                     Text(
                       t(lang, 'createAccountOptional'),
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.textPrimary,
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
@@ -578,12 +629,12 @@ class _GuestUpgradeCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       t(lang, 'createAccountOptionalBody'),
-                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4),
+                      style: TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4),
                     ),
                   ],
                 ),
               ),
-              const ForwardChevronIcon(color: AppColors.gold, size: 14),
+              ForwardChevronIcon(color: AppColors.gold, size: 14),
             ],
           ),
         ),
@@ -633,7 +684,7 @@ class _VerifyEmailBannerState extends ConsumerState<_VerifyEmailBanner> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.mark_email_unread_outlined, color: AppColors.gold, size: 22),
+          Icon(Icons.mark_email_unread_outlined, color: AppColors.gold, size: 22),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
@@ -641,7 +692,7 @@ class _VerifyEmailBannerState extends ConsumerState<_VerifyEmailBanner> {
               children: [
                 Text(
                   t(lang, 'verifyYourEmail'),
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
@@ -652,7 +703,7 @@ class _VerifyEmailBannerState extends ConsumerState<_VerifyEmailBanner> {
                   _sent
                       ? t(lang, 'verificationEmailSent')
                       : t(lang, 'verifyEmailNeededBody'),
-                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4),
+                  style: TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4),
                 ),
                 if (!_sent) ...[
                   const SizedBox(height: 10),
@@ -667,7 +718,7 @@ class _VerifyEmailBannerState extends ConsumerState<_VerifyEmailBanner> {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       ),
                       child: _sending
-                          ? const SizedBox(
+                          ? SizedBox(
                               width: 14,
                               height: 14,
                               child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.gold),
@@ -697,7 +748,7 @@ class _GroupLabel extends StatelessWidget {
       padding: const EdgeInsets.only(left: 4, bottom: 8),
       child: Text(
         text.toUpperCase(),
-        style: const TextStyle(
+        style: TextStyle(
           color: AppColors.textMuted,
           fontSize: 11,
           fontWeight: FontWeight.w700,
@@ -764,18 +815,18 @@ class _SettingsGroup extends StatelessWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(item.label,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     color: AppColors.textPrimary,
                                     fontSize: 15,
                                     fontWeight: FontWeight.w500,
                                   )),
                               if (item.subtitle != null)
                                 Text(item.subtitle!,
-                                  style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                                  style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
                             ],
                           ),
                         ),
-                        const ForwardChevronIcon(
+                        ForwardChevronIcon(
                             color: AppColors.textMuted, size: 18),
                       ],
                     ),
@@ -940,7 +991,7 @@ class _InAppWebScreenState extends State<_InAppWebScreen> {
               children: [
                 WebViewWidget(controller: _ctrl),
                 if (_loading)
-                  const Center(
+                  Center(
                     child: CircularProgressIndicator.adaptive(
                       valueColor: AlwaysStoppedAnimation(AppColors.gold),
                     ),

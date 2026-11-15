@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:seerah_app/core/widgets/localized_text.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -225,7 +226,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                                     '/login?email=${Uri.encodeComponent(_emailCtrl.text.trim())}'),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: AppColors.gold,
-                              side: const BorderSide(color: AppColors.gold),
+                              side: BorderSide(color: AppColors.gold),
                               minimumSize: const Size(48, 44),
                             ),
                             child: Text(t(lang, 'signInInstead')),

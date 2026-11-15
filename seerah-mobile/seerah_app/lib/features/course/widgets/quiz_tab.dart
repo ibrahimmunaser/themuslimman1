@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:seerah_app/core/widgets/localized_text.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/part_model.dart';
@@ -106,7 +107,7 @@ class _QuizTabState extends ConsumerState<QuizTab> {
     final quizAsync = ref.watch(quizProvider(widget.partNumber));
 
     return quizAsync.when(
-      loading: () => const Center(
+      loading: () => Center(
         child: CircularProgressIndicator.adaptive(
           valueColor: AlwaysStoppedAnimation(AppColors.gold),
         ),
@@ -115,9 +116,9 @@ class _QuizTabState extends ConsumerState<QuizTab> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.quiz_outlined, size: 48, color: AppColors.textMuted),
+            Icon(Icons.quiz_outlined, size: 48, color: AppColors.textMuted),
             const SizedBox(height: 12),
-            Text(t(lang, 'quizUnavailable'), style: const TextStyle(color: AppColors.textSecondary)),
+            Text(t(lang, 'quizUnavailable'), style: TextStyle(color: AppColors.textSecondary)),
             const SizedBox(height: 16),
             OutlinedButton(
               onPressed: () => ref.invalidate(quizProvider(widget.partNumber)),
@@ -132,9 +133,9 @@ class _QuizTabState extends ConsumerState<QuizTab> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.quiz_outlined, size: 48, color: AppColors.textMuted),
+                Icon(Icons.quiz_outlined, size: 48, color: AppColors.textMuted),
                 const SizedBox(height: 12),
-                Text(t(lang, 'noQuizForPartYet'), style: const TextStyle(color: AppColors.textSecondary)),
+                Text(t(lang, 'noQuizForPartYet'), style: TextStyle(color: AppColors.textSecondary)),
               ],
             ),
           );
@@ -159,12 +160,12 @@ class _QuizTabState extends ConsumerState<QuizTab> {
                 children: [
                   Text(
                     tv(lang, 'questionXofY', {'x': _currentQ + 1, 'y': questions.length}),
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                    style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
                   ),
                   const Spacer(),
                   Text(
                     tv(lang, 'scoreLabel', {'n': _score}),
-                    style: const TextStyle(color: AppColors.gold, fontSize: 13, fontWeight: FontWeight.w600),
+                    style: TextStyle(color: AppColors.gold, fontSize: 13, fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
@@ -176,7 +177,7 @@ class _QuizTabState extends ConsumerState<QuizTab> {
                 child: LinearProgressIndicator(
                   value: (_currentQ + 1) / questions.length,
                   backgroundColor: AppColors.border,
-                  valueColor: const AlwaysStoppedAnimation<Color>(AppColors.gold),
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.gold),
                   minHeight: 4,
                 ),
               ),
@@ -192,7 +193,7 @@ class _QuizTabState extends ConsumerState<QuizTab> {
                     // Question
                     Text(
                       q.question,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.textPrimary,
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
@@ -293,11 +294,11 @@ class _QuizTabState extends ConsumerState<QuizTab> {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(Icons.lightbulb_outline, color: AppColors.gold, size: 18),
+                            Icon(Icons.lightbulb_outline, color: AppColors.gold, size: 18),
                             const SizedBox(width: 10),
                             Expanded(
                               child: Text(q.explanation!,
-                                style: const TextStyle(color: AppColors.textPrimary, fontSize: 13, height: 1.5)),
+                                style: TextStyle(color: AppColors.textPrimary, fontSize: 13, height: 1.5)),
                             ),
                           ],
                         ),
@@ -381,12 +382,12 @@ class _ResultsScreen extends StatelessWidget {
             const SizedBox(height: 24),
             Text(
               passed ? t(lang, 'wellDone') : t(lang, 'keepGoing'),
-              style: const TextStyle(color: AppColors.textPrimary, fontSize: 24, fontWeight: FontWeight.w700),
+              style: TextStyle(color: AppColors.textPrimary, fontSize: 24, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 8),
             Text(
               tv(lang, 'scoreOutOfCorrect', {'score': score, 'total': total}),
-              style: const TextStyle(color: AppColors.textSecondary, fontSize: 16),
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
             ),
             const SizedBox(height: 8),
             Text(

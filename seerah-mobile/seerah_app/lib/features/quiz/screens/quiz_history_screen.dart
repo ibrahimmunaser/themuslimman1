@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:seerah_app/core/widgets/localized_text.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_constants.dart';
@@ -41,13 +42,13 @@ class QuizHistoryScreen extends ConsumerWidget {
         ),
       ),
       body: progressAsync.when(
-        loading: () => const Center(
+        loading: () => Center(
           child: CircularProgressIndicator.adaptive(
             valueColor: AlwaysStoppedAnimation(AppColors.gold),
           ),
         ),
         error: (e, _) => Center(
-          child: Text(t(lang, 'failedToLoadProgress'), style: const TextStyle(color: AppColors.textSecondary)),
+          child: Text(t(lang, 'failedToLoadProgress'), style: TextStyle(color: AppColors.textSecondary)),
         ),
         data: (progress) {
           // Pre-index parts so each row does an O(1) lookup instead of firstWhere.
@@ -69,13 +70,13 @@ class QuizHistoryScreen extends ConsumerWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.quiz_outlined, size: 56, color: AppColors.textMuted),
+                  Icon(Icons.quiz_outlined, size: 56, color: AppColors.textMuted),
                   const SizedBox(height: 16),
                   Text(t(lang, 'noQuizzesTakenYet'),
-                    style: const TextStyle(color: AppColors.textPrimary, fontSize: 17, fontWeight: FontWeight.w600)),
+                    style: TextStyle(color: AppColors.textPrimary, fontSize: 17, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 8),
                   Text(t(lang, 'completePartQuizToSee'),
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                    style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
                     textAlign: TextAlign.center),
                 ],
               ),
@@ -159,14 +160,14 @@ class QuizHistoryScreen extends ConsumerWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(part.localizedTitle(lang),
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     color: AppColors.textPrimary,
                                     fontSize: 14, fontWeight: FontWeight.w600),
                                   maxLines: 1, overflow: TextOverflow.ellipsis,
                                 ),
                                 const SizedBox(height: 2),
                                 Text(part.localizedSubtitle(lang),
-                                  style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                                  style: TextStyle(color: AppColors.textMuted, fontSize: 12),
                                   maxLines: 1, overflow: TextOverflow.ellipsis,
                                 ),
                               ],
@@ -174,7 +175,7 @@ class QuizHistoryScreen extends ConsumerWidget {
                           ),
                           const SizedBox(width: 12),
                           if (locked)
-                            const Icon(Icons.lock_outline_rounded,
+                            Icon(Icons.lock_outline_rounded,
                                 color: AppColors.textMuted, size: 18)
                           else
                             FittedBox(
@@ -218,12 +219,12 @@ class QuizHistoryScreen extends ConsumerWidget {
 class _StatCard extends StatelessWidget {
   final String value;
   final String label;
-  final Color color;
+  final Color? color;
 
   const _StatCard({
     required this.value,
     required this.label,
-    this.color = AppColors.textPrimary,
+    this.color,
   });
 
   @override
@@ -240,14 +241,14 @@ class _StatCard extends StatelessWidget {
           children: [
             Text(value,
               style: TextStyle(
-                color: color,
+                color: color ?? AppColors.textPrimary,
                 fontSize: 22,
                 fontWeight: FontWeight.w800,
               ),
             ),
             const SizedBox(height: 4),
             Text(label,
-              style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
+              style: TextStyle(color: AppColors.textMuted, fontSize: 11),
             ),
           ],
         ),

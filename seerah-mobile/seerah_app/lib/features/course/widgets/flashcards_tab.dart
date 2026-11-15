@@ -1,5 +1,6 @@
 import 'dart:math' as math;
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:seerah_app/core/widgets/localized_text.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/part_model.dart';
 import '../../../core/providers/part_provider.dart';
@@ -65,9 +66,9 @@ class _FlashcardsTabState extends ConsumerState<FlashcardsTab> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.style_outlined, size: 48, color: AppColors.textMuted),
+            Icon(Icons.style_outlined, size: 48, color: AppColors.textMuted),
             const SizedBox(height: 12),
-            Text(t(lang, 'flashcardsUnavailable'), style: const TextStyle(color: AppColors.textSecondary)),
+            Text(t(lang, 'flashcardsUnavailable'), style: TextStyle(color: AppColors.textSecondary)),
             const SizedBox(height: 16),
             OutlinedButton(
               onPressed: () => ref.invalidate(flashcardSetProvider(widget.partNumber)),
@@ -82,9 +83,9 @@ class _FlashcardsTabState extends ConsumerState<FlashcardsTab> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.style_outlined, size: 48, color: AppColors.textMuted),
+                Icon(Icons.style_outlined, size: 48, color: AppColors.textMuted),
                 const SizedBox(height: 12),
-                Text(t(lang, 'noFlashcardsForPart'), style: const TextStyle(color: AppColors.textSecondary)),
+                Text(t(lang, 'noFlashcardsForPart'), style: TextStyle(color: AppColors.textSecondary)),
               ],
             ),
           );
@@ -97,12 +98,12 @@ class _FlashcardsTabState extends ConsumerState<FlashcardsTab> {
             // Difficulty selector
             Container(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 border: Border(bottom: BorderSide(color: AppColors.border)),
               ),
               child: Row(
                 children: [
-                  Text(t(lang, 'levelLabel'), style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                  Text(t(lang, 'levelLabel'), style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
                   const SizedBox(width: 10),
                   ...[
                     (FlashcardLevel.easy, t(lang, 'easy')),
@@ -144,7 +145,7 @@ class _FlashcardsTabState extends ConsumerState<FlashcardsTab> {
                       return Text(tv(lang, 'countCards', {'n': count}),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(color: AppColors.textMuted, fontSize: 11));
+                        style: TextStyle(color: AppColors.textMuted, fontSize: 11));
                     }) ?? const SizedBox.shrink(),
                   ),
                 ],
@@ -158,7 +159,7 @@ class _FlashcardsTabState extends ConsumerState<FlashcardsTab> {
                 children: [
                   Text(
                     '${_currentIndex + 1} / ${cards.length}',
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                    style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -167,7 +168,7 @@ class _FlashcardsTabState extends ConsumerState<FlashcardsTab> {
                       child: LinearProgressIndicator(
                         value: (_currentIndex + 1) / cards.length,
                         backgroundColor: AppColors.border,
-                        valueColor: const AlwaysStoppedAnimation<Color>(AppColors.gold),
+                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.gold),
                         minHeight: 4,
                       ),
                     ),
@@ -175,7 +176,7 @@ class _FlashcardsTabState extends ConsumerState<FlashcardsTab> {
                   const SizedBox(width: 12),
                   IconButton(
                     onPressed: _reset,
-                    icon: const Icon(Icons.refresh, size: 18, color: AppColors.textMuted),
+                    icon: Icon(Icons.refresh, size: 18, color: AppColors.textMuted),
                     tooltip: t(lang, 'restart'),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
@@ -366,7 +367,7 @@ class _CardFace extends StatelessWidget {
                 const SizedBox(height: 20),
                 Text(
                   text,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 18,
                     fontWeight: FontWeight.w500,
@@ -377,7 +378,7 @@ class _CardFace extends StatelessWidget {
                 const SizedBox(height: 20),
                 Text(
                   isQuestion ? t(lang, 'tapToRevealAnswer') : '',
-                  style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                  style: TextStyle(color: AppColors.textMuted, fontSize: 12),
                 ),
               ],
             ),

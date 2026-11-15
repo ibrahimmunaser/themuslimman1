@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:seerah_app/core/widgets/localized_text.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -253,7 +254,7 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                 const SizedBox(height: 20),
                 Text(
                   t(lang, 'jazakAllahKhayran'),
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 22,
                     fontWeight: FontWeight.w800,
@@ -263,7 +264,7 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                 Text(
                   t(lang, 'purchaseSuccessBody'),
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 15,
                     height: 1.5,
@@ -362,7 +363,7 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                         children: [
                           Text(
                             t(lang, 'planHeadline'),
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: AppColors.textPrimary,
                               fontSize: 20,
                               fontWeight: FontWeight.w800,
@@ -373,7 +374,7 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                           const SizedBox(height: 4),
                           Text(
                             t(lang, 'planScreenSubtitle'),
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: AppColors.textSecondary,
                               fontSize: 13.5,
                               height: 1.4,
@@ -382,22 +383,6 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                         ],
                       ),
                     ),
-                  ],
-                ),
-              ),
-
-              // ── Three compact benefits ───────────────────────────────
-              // Shown above the plan rows so the value proposition is
-              // visible before the learner sees a single price.
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
-                child: Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    _BenefitChip(icon: Icons.play_circle_outline_rounded, label: t(lang, 'benefitVideos')),
-                    _BenefitChip(icon: Icons.quiz_outlined, label: t(lang, 'benefitFlashcards')),
-                    _BenefitChip(icon: Icons.translate_rounded, label: t(lang, 'benefit15Languages')),
                   ],
                 ),
               ),
@@ -551,14 +536,14 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                         decoration: BoxDecoration(
                           color: AppColors.card,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: AppColors.border),
+                          border: Border.all(color: AppColors.gold, width: 1),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
                               children: [
-                                const Icon(
+                                Icon(
                                   Icons.auto_awesome_rounded,
                                   color: AppColors.gold,
                                   size: 17,
@@ -566,7 +551,7 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                                 const SizedBox(width: 8),
                                 Text(
                                   t(lang, 'whatsIncluded'),
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     color: AppColors.textPrimary,
                                     fontSize: 16,
                                     fontWeight: FontWeight.w700,
@@ -601,7 +586,7 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                                     Container(
                                       width: 28,
                                       height: 28,
-                                      decoration: const BoxDecoration(
+                                      decoration: BoxDecoration(
                                         color: AppColors.goldFaded,
                                         shape: BoxShape.circle,
                                       ),
@@ -615,7 +600,7 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                                     Expanded(
                                       child: Text(
                                         item.$2,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           color: AppColors.textSecondary,
                                           fontSize: 13.5,
                                         ),
@@ -646,10 +631,18 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                       const SizedBox(height: 20),
 
                       // ── Bottom actions ────────────────────────────────────
+                      Container(
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: AppColors.gold, width: 1),
+                        ),
+                        child: Column(
+                          children: [
                       Text(
                         t(lang, 'noAccountRequired'),
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: AppColors.textMuted,
                           fontSize: 12.5,
                           height: 1.4,
@@ -705,12 +698,27 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                             style: TextButton.styleFrom(
                               foregroundColor: AppColors.textMuted,
                             ),
-                            child: Text(
-                              t(lang, 'alreadyLearningSignIn'),
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: AppColors.textMuted,
+                            child: Text.rich(
+                              TextSpan(
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.textMuted,
+                                ),
+                                children: [
+                                  TextSpan(
+                                    text:
+                                        '${t(lang, 'alreadyLearningPrompt')} ',
+                                  ),
+                                  TextSpan(
+                                    text: t(lang, 'signIn'),
+                                    style: TextStyle(
+                                      color: AppColors.gold,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
                               ),
+                              textAlign: TextAlign.center,
                             ),
                           ),
                         ],
@@ -726,6 +734,9 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                             ),
                           );
                         },
+                      ),
+                          ],
+                        ),
                       ),
 
                       const SizedBox(height: 8),
@@ -844,7 +855,7 @@ class _PlanSelectRow extends StatelessWidget {
                           Flexible(
                             child: Text(
                               t(lang, plan.nameKey),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: AppColors.textPrimary,
                                 fontSize: 15,
                                 fontWeight: FontWeight.w700,
@@ -882,7 +893,7 @@ class _PlanSelectRow extends StatelessWidget {
                         // without erroring — it just makes the row a touch
                         // taller, which is fine for two closely-spaced rows.
                         maxLines: 2,
-                        style: const TextStyle(
+                        style: TextStyle(
                           // Brighter than the old muted gray — legible body
                           // text instead of a muddy caption.
                           color: AppColors.textSecondary,
@@ -915,7 +926,7 @@ class _PlanSelectRow extends StatelessWidget {
                               text: plan.periodKey == 'perMonth'
                                   ? t(lang, 'perMonth')
                                   : ' ${t(lang, plan.periodKey)}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
                                 color: AppColors.textSecondary,
@@ -925,7 +936,7 @@ class _PlanSelectRow extends StatelessWidget {
                         ),
                         maxLines: 1,
                         textDirection: TextDirection.ltr,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: AppColors.textPrimary,
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
@@ -937,41 +948,6 @@ class _PlanSelectRow extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-/// One of the three compact benefit chips shown above the plan rows.
-class _BenefitChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const _BenefitChip({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 13, color: AppColors.gold),
-          const SizedBox(width: 5),
-          Text(
-            label,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -994,7 +970,7 @@ class _TrustBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.gold, width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1003,7 +979,7 @@ class _TrustBadge extends StatelessWidget {
           const SizedBox(width: 5),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.textSecondary,
               fontSize: 11.5,
               fontWeight: FontWeight.w600,
@@ -1053,7 +1029,7 @@ class _Part1PreviewSection extends StatelessWidget {
                     color: AppColors.gold.withValues(alpha: 0.25),
                   ),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.play_circle_outline_rounded,
                   color: AppColors.gold,
                   size: 26,
@@ -1066,7 +1042,7 @@ class _Part1PreviewSection extends StatelessWidget {
                   children: [
                     Text(
                       t(lang, 'part1AlwaysFree'),
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.textPrimary,
                         fontWeight: FontWeight.w700,
                         fontSize: 15,
@@ -1075,7 +1051,7 @@ class _Part1PreviewSection extends StatelessWidget {
                     const SizedBox(height: 3),
                     Text(
                       t(lang, 'part1NoAccountNeeded'),
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.textSecondary,
                         fontSize: 12.5,
                         height: 1.4,
@@ -1085,7 +1061,7 @@ class _Part1PreviewSection extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              const ForwardChevronIcon(color: AppColors.textMuted, size: 14),
+              ForwardChevronIcon(color: AppColors.textMuted, size: 14),
             ],
           ),
         ),
@@ -1118,7 +1094,7 @@ class _ProductRetryBanner extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.warning_amber_rounded,
                 color: AppColors.textMuted,
                 size: 18,
@@ -1127,7 +1103,7 @@ class _ProductRetryBanner extends StatelessWidget {
               Expanded(
                 child: Text(
                   status,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 13,
                   ),
@@ -1141,7 +1117,7 @@ class _ProductRetryBanner extends StatelessWidget {
                 ),
                 child: Text(
                   t(lang, 'retry'),
-                  style: const TextStyle(color: AppColors.gold, fontSize: 13),
+                  style: TextStyle(color: AppColors.gold, fontSize: 13),
                 ),
               ),
             ],
@@ -1156,7 +1132,7 @@ class _ProductRetryBanner extends StatelessWidget {
           // advice since they can't act on it from a real store install.
           Text(
             t(lang, 'checkConnectionRetry'),
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.textMuted,
               fontSize: 11.5,
               height: 1.4,

@@ -1,9 +1,11 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:seerah_app/core/widgets/localized_text.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers/part_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/system_insets.dart';
+import '../../../core/widgets/profile_avatar_button.dart';
 import '../../../core/widgets/ui_kit.dart';
 import '../../../l10n/app_strings.dart';
 import '../../../l10n/course_packs.dart';
@@ -26,6 +28,7 @@ class ReferenceDetailScreen extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         title: Text(section.localizedTitle(lang)),
+        actions: const [ProfileAvatarButton()],
       ),
       body: AppGradientBackground(
         child: SafeArea(
@@ -51,7 +54,7 @@ class ReferenceDetailScreen extends ConsumerWidget {
       case 'tribes-lineage':    return _TribesContent(lang: lang);
       default:
         return Center(
-          child: Text(t(lang, 'sectionNotYetAvailable'), style: const TextStyle(color: AppColors.textSecondary)));
+          child: Text(t(lang, 'sectionNotYetAvailable'), style: TextStyle(color: AppColors.textSecondary)));
     }
   }
 }
@@ -71,17 +74,17 @@ class _SectionHeader extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.gold),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(title,
-            style: const TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.w700)),
+            style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.w700)),
           if (subtitle != null) ...[
             const SizedBox(height: 4),
             Text(subtitle!,
-              style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.4)),
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.4)),
           ],
         ],
       ),
@@ -97,7 +100,7 @@ class _SubTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      child: Text(text, style: const TextStyle(
+      child: Text(text, style: TextStyle(
         color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.w700)),
     );
   }
@@ -233,19 +236,19 @@ class _TimelineItem extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: AppColors.card,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.border),
+                  border: Border.all(color: AppColors.gold),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(event.date,
-                      style: const TextStyle(color: AppColors.gold, fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
+                      style: TextStyle(color: AppColors.gold, fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
                     const SizedBox(height: 3),
                     Text(event.localizedTitle(lang),
-                      style: const TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w700)),
+                      style: TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w700)),
                     const SizedBox(height: 4),
                     Text(event.localizedDescription(lang),
-                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4)),
+                      style: TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4)),
                   ],
                 ),
               ),
@@ -309,10 +312,10 @@ class _KeyPeopleContentState extends State<_KeyPeopleContent> {
             onChanged: (v) => setState(() => _search = v.toLowerCase()),
             decoration: InputDecoration(
               hintText: t(lang, 'searchPeopleEllipsis'),
-              prefixIcon: const Icon(Icons.search, size: 20, color: AppColors.textMuted),
+              prefixIcon: Icon(Icons.search, size: 20, color: AppColors.textMuted),
               suffixIcon: _search.isNotEmpty
                   ? IconButton(
-                      icon: const Icon(Icons.close, size: 18, color: AppColors.textMuted),
+                      icon: Icon(Icons.close, size: 18, color: AppColors.textMuted),
                       tooltip: t(lang, 'clearSearch'),
                       onPressed: () { _ctrl.clear(); setState(() => _search = ''); })
                   : null,
@@ -343,7 +346,7 @@ class _KeyPeopleContentState extends State<_KeyPeopleContent> {
                   onSelected: (_) => setState(() => _filter = cat),
                   backgroundColor: AppColors.card,
                   selectedColor: AppColors.gold,
-                  side: BorderSide(color: _filter == cat ? AppColors.gold : AppColors.border),
+                  side: BorderSide(color: AppColors.gold),
                   padding: const EdgeInsets.symmetric(horizontal: 4),
                 ),
               );
@@ -354,7 +357,7 @@ class _KeyPeopleContentState extends State<_KeyPeopleContent> {
         // Results
         Expanded(
           child: people.isEmpty
-              ? Center(child: Text(t(lang, 'noResultsFound'), style: const TextStyle(color: AppColors.textSecondary)))
+              ? Center(child: Text(t(lang, 'noResultsFound'), style: TextStyle(color: AppColors.textSecondary)))
               : ListView.builder(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
                   itemCount: people.length,
@@ -398,7 +401,7 @@ class _BattlesContent extends StatelessWidget {
               decoration: BoxDecoration(
                 color: AppColors.card,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.border),
+                border: Border.all(color: AppColors.gold),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -407,7 +410,7 @@ class _BattlesContent extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(b.localizedName(lang),
-                          style: const TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.w700)),
+                          style: TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.w700)),
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -417,30 +420,30 @@ class _BattlesContent extends StatelessWidget {
                           border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
                         ),
                         child: Text(b.localizedType(lang),
-                          style: const TextStyle(color: AppColors.gold, fontSize: 10, fontWeight: FontWeight.w600)),
+                          style: TextStyle(color: AppColors.gold, fontSize: 10, fontWeight: FontWeight.w600)),
                       ),
                     ],
                   ),
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(Icons.calendar_today_outlined, size: 12, color: AppColors.textMuted),
+                      Icon(Icons.calendar_today_outlined, size: 12, color: AppColors.textMuted),
                       const SizedBox(width: 4),
-                      Text(b.date, style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                      Text(b.date, style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
                       const SizedBox(width: 12),
-                      const Icon(Icons.flag_outlined, size: 12, color: AppColors.textMuted),
+                      Icon(Icons.flag_outlined, size: 12, color: AppColors.textMuted),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(b.localizedOutcome(lang),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+                          style: TextStyle(color: AppColors.textSecondary, fontSize: 11)),
                       ),
                     ],
                   ),
                   const SizedBox(height: 8),
                   Text(b.localizedSignificance(lang),
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4)),
+                    style: TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4)),
                 ],
               ),
             ).animate(delay: (e.key * 50).ms).fadeIn(duration: 300.ms),
@@ -482,7 +485,7 @@ class _MiraclesContent extends StatelessWidget {
               decoration: BoxDecoration(
                 color: AppColors.card,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.border),
+                border: Border.all(color: AppColors.gold),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -491,7 +494,7 @@ class _MiraclesContent extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(m.localizedTitle(lang),
-                          style: const TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w700)),
+                          style: TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w700)),
                       ),
                       Flexible(
                         child: Container(
@@ -515,7 +518,7 @@ class _MiraclesContent extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(m.localizedDescription(lang),
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4)),
+                    style: TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4)),
                 ],
               ),
             ).animate(delay: (e.key * 50).ms).fadeIn(duration: 300.ms),
@@ -574,7 +577,7 @@ class _TermsContentState extends State<_TermsContent> {
             onChanged: (v) => setState(() => _search = v.toLowerCase()),
             decoration: InputDecoration(
               hintText: t(lang, 'searchTermsEllipsis'),
-              prefixIcon: const Icon(Icons.search, size: 20, color: AppColors.textMuted),
+              prefixIcon: Icon(Icons.search, size: 20, color: AppColors.textMuted),
               suffixIcon: _search.isNotEmpty
                   ? IconButton(
                       icon: const Icon(Icons.close, size: 18),
@@ -607,7 +610,7 @@ class _TermsContentState extends State<_TermsContent> {
                   onSelected: (_) => setState(() => _filter = cat),
                   backgroundColor: AppColors.card,
                   selectedColor: AppColors.gold,
-                  side: BorderSide(color: _filter == cat ? AppColors.gold : AppColors.border),
+                  side: BorderSide(color: AppColors.gold),
                   padding: const EdgeInsets.symmetric(horizontal: 4),
                 ),
               );
@@ -617,7 +620,7 @@ class _TermsContentState extends State<_TermsContent> {
         const SizedBox(height: 8),
         Expanded(
           child: terms.isEmpty
-              ? Center(child: Text(t(lang, 'noResultsFound'), style: const TextStyle(color: AppColors.textSecondary)))
+              ? Center(child: Text(t(lang, 'noResultsFound'), style: TextStyle(color: AppColors.textSecondary)))
               : ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
             itemCount: terms.length,
@@ -629,7 +632,7 @@ class _TermsContentState extends State<_TermsContent> {
                 decoration: BoxDecoration(
                   color: AppColors.card,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.border),
+                  border: Border.all(color: AppColors.gold),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -643,7 +646,7 @@ class _TermsContentState extends State<_TermsContent> {
                             fit: BoxFit.scaleDown,
                             child: Text(term.arabic,
                               textAlign: TextAlign.right,
-                              style: const TextStyle(color: AppColors.gold, fontSize: 18, fontWeight: FontWeight.w600)),
+                              style: TextStyle(color: AppColors.gold, fontSize: 18, fontWeight: FontWeight.w600)),
                           ),
                         ],
                       ),
@@ -659,7 +662,7 @@ class _TermsContentState extends State<_TermsContent> {
                                 child: Text(term.transliteration,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w700)),
+                                  style: TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w700)),
                               ),
                               const SizedBox(width: 8),
                               Container(
@@ -669,13 +672,13 @@ class _TermsContentState extends State<_TermsContent> {
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(term.localizedCategory(lang),
-                                  style: const TextStyle(color: AppColors.textMuted, fontSize: 10)),
+                                  style: TextStyle(color: AppColors.textMuted, fontSize: 10)),
                               ),
                             ],
                           ),
                           const SizedBox(height: 4),
                           Text(term.localizedDefinition(lang),
-                            style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4)),
+                            style: TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4)),
                         ],
                       ),
                     ),
@@ -831,7 +834,7 @@ class _LineageCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
+        border: Border.all(color: AppColors.gold),
       ),
       child: Column(
         children: chain.asMap().entries.map((e) {
@@ -898,7 +901,7 @@ class _InfoCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.gold),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -907,7 +910,7 @@ class _InfoCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w700)),
               ),
               if (tag != null)
@@ -917,7 +920,7 @@ class _InfoCard extends StatelessWidget {
                     color: AppColors.border,
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: Text(tag!, style: const TextStyle(color: AppColors.textMuted, fontSize: 10)),
+                  child: Text(tag!, style: TextStyle(color: AppColors.textMuted, fontSize: 10)),
                 ),
             ],
           ),
@@ -933,7 +936,7 @@ class _InfoCard extends StatelessWidget {
           if (body != null) ...[
             const SizedBox(height: 6),
             Text(body!,
-              style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4)),
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4)),
           ],
         ],
       ),
@@ -954,22 +957,22 @@ class _NoteCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.goldFaded,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.gold.withValues(alpha: 0.25)),
+        border: Border.all(color: AppColors.gold),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.info_outline, color: AppColors.gold, size: 16),
+          Icon(Icons.info_outline, color: AppColors.gold, size: 16),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(title,
-                  style: const TextStyle(color: AppColors.gold, fontSize: 12, fontWeight: FontWeight.w700)),
+                  style: TextStyle(color: AppColors.gold, fontSize: 12, fontWeight: FontWeight.w700)),
                 const SizedBox(height: 4),
                 Text(body,
-                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4)),
+                  style: TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4)),
               ],
             ),
           ),
