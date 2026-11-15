@@ -78,13 +78,14 @@ workflows:
       google_play:
         credentials: $GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS
         track: production
-        # Uploaded as a draft: Play Console currently requires a one-time
-        # Foreground Service permission declaration (with a demo video) before
-        # a production release can be rolled out, which can't be completed
-        # from CI. Draft releases upload fine without hitting that gate.
-        # Once the declaration is completed in Play Console, this can be
-        # switched back to submit_as_draft: false for full auto-publish.
-        submit_as_draft: true
+        # Auto-publish (2026-11-15): App Guard (and its specialUse
+        # Foreground Service declaration requirement) is temporarily
+        # disabled for this build — see AndroidManifest.xml and
+        # GuardFeature.kt — so the Play Console Foreground Service
+        # declaration gate that required draft uploads no longer applies.
+        # If App Guard is re-enabled before that declaration is approved,
+        # switch this back to submit_as_draft: true.
+        submit_as_draft: false
         # This app can be auto-sent for review, so changes_not_sent_for_review
         # must NOT be set (Google rejects the request if it's present at all).
 
