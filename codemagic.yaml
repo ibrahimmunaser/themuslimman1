@@ -38,11 +38,30 @@ workflows:
         working_directory: seerah-mobile/seerah_app
 
       - name: Build release AAB
-        script: flutter build appbundle --release
+        script: |
+          set -euo pipefail
+          # Play rejects a version code that was already uploaded. Use whichever
+          # is higher: the pubspec code, or one past the latest code on Play.
+          LATEST=$(google-play get-latest-build-number --package-name "$PACKAGE_NAME" -s | tr -cd '0-9')
+          PUBSPEC_CODE=$(sed -n 's/^version: *[0-9.]*+\([0-9][0-9]*\).*/\1/p' pubspec.yaml)
+          if [ -z "$LATEST" ] || [ -z "$PUBSPEC_CODE" ]; then
+            echo "Could not resolve version code (Play='$LATEST', pubspec='$PUBSPEC_CODE')"
+            exit 1
+          fi
+          if [ "$PUBSPEC_CODE" -gt "$LATEST" ]; then
+            NEW_CODE=$PUBSPEC_CODE
+          else
+            NEW_CODE=$((LATEST + 1))
+          fi
+          echo "Play latest version code: $LATEST"
+          echo "pubspec version code: $PUBSPEC_CODE"
+          echo "Building version code: $NEW_CODE"
+          echo "NEW_BUILD_NUMBER=$NEW_CODE" >> "$CM_ENV"
+          flutter build appbundle --release --build-number="$NEW_CODE"
         working_directory: seerah-mobile/seerah_app
 
       - name: Build release APK (for direct phone install)
-        script: flutter build apk --release --split-per-abi
+        script: flutter build apk --release --split-per-abi --build-number="$NEW_BUILD_NUMBER"
         working_directory: seerah-mobile/seerah_app
 
     artifacts:

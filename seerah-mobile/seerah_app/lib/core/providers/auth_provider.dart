@@ -294,13 +294,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
           (response.data['planType'] as String?) == 'family';
       final hadAccess = state.user?.hasAccess ?? false;
       final purchasePlatform = response.data['purchasePlatform'] as String?;
-      final user = state.user?.copyWith(
-        hasAccess: hasAccess,
-        isFamily: isFamily,
-        emailVerified: response.data['emailVerified'] as bool?,
-        purchasePlatform: purchasePlatform,
-        clearPurchasePlatform: purchasePlatform == null,
-      );
+      final user = state.user
+          ?.copyWith(
+            hasAccess: hasAccess,
+            isFamily: isFamily,
+            emailVerified: response.data['emailVerified'] as bool?,
+            purchasePlatform: purchasePlatform,
+            clearPurchasePlatform: purchasePlatform == null,
+          )
+          .withPlanJson(response.data['plan'] as Map<String, dynamic>?);
       if (user != null) {
         state = state.copyWith(user: user);
         await _saveUser(user);
@@ -363,6 +365,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
           bool hasAccess = data['hasPurchase'] as bool? ?? false;
           bool isFamily = data['isFamily'] as bool? ?? false;
           String? purchasePlatform;
+          Map<String, dynamic>? planJson;
           try {
             final accessRes = await ApiClient.instance.dio.get(
               '/api/access/check',
@@ -372,6 +375,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
                 accessRes.data['isFamily'] as bool? ??
                 ((accessRes.data['planType'] as String?) == 'family') || isFamily;
             purchasePlatform = accessRes.data['purchasePlatform'] as String?;
+            planJson = accessRes.data['plan'] as Map<String, dynamic>?;
           } catch (_) {}
 
           final user = UserModel(
@@ -388,7 +392,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
             role: data['role'] as String? ?? 'student',
             emailVerified: data['emailVerified'] as bool? ?? false,
             purchasePlatform: purchasePlatform,
-          );
+          ).withPlanJson(planJson);
           // A newer auth op already committed more recent state while this
           // request was in flight — don't persist this now-stale result.
           // Deliberately checked BEFORE _saveUser(): persisting
@@ -606,6 +610,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
           bool hasAccess = current.hasAccess;
           bool isFamily = current.isFamily;
           String? purchasePlatform = current.purchasePlatform;
+          Map<String, dynamic>? planJson;
           try {
             final accessRes = await ApiClient.instance.dio.get(
               '/api/access/check',
@@ -615,20 +620,23 @@ class AuthNotifier extends StateNotifier<AuthState> {
                 accessRes.data['isFamily'] as bool? ??
                 ((accessRes.data['planType'] as String?) == 'family') || isFamily;
             purchasePlatform = accessRes.data['purchasePlatform'] as String?;
+            planJson = accessRes.data['plan'] as Map<String, dynamic>?;
           } catch (_) {}
           final requiresVerification = data['requiresVerification'] as bool? ?? false;
-          final user = current.copyWith(
-            email: email.trim(),
-            name: name.trim(),
-            isAnonymous: false,
-            hasAccess: hasAccess,
-            isFamily: isFamily,
-            purchasePlatform: purchasePlatform,
-            clearPurchasePlatform: purchasePlatform == null,
-            // Trust server emailVerified. Content gates on hasAccess, not
-            // emailVerified (Apple 5.1.1(v)); soft verify stays on profile.
-            emailVerified: data['emailVerified'] as bool? ?? false,
-          );
+          final user = current
+              .copyWith(
+                email: email.trim(),
+                name: name.trim(),
+                isAnonymous: false,
+                hasAccess: hasAccess,
+                isFamily: isFamily,
+                purchasePlatform: purchasePlatform,
+                clearPurchasePlatform: purchasePlatform == null,
+                // Trust server emailVerified. Content gates on hasAccess, not
+                // emailVerified (Apple 5.1.1(v)); soft verify stays on profile.
+                emailVerified: data['emailVerified'] as bool? ?? false,
+              )
+              .withPlanJson(planJson);
           if (_isCurrentOp(gen)) {
             if (!cookies.hasSessionCookie()) {
               final msg = t(_lang, 'accountCreatedSessionFail');

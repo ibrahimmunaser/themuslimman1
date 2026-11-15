@@ -11,6 +11,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/system_insets.dart';
 import '../../../core/widgets/ui_kit.dart';
 import '../../../l10n/app_strings.dart';
+import '../../profile/screens/profile_screen.dart';
 
 // ── Profile picker (Netflix-style) ────────────────────────────────────────────
 
@@ -36,6 +37,21 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
         backgroundColor: Colors.transparent,
         title: Text(_managing ? t(lang, 'manageProfiles') : t(lang, 'whosLearning')),
         actions: [
+          // This screen is reached mid-flow from the Account tab's "Learner
+          // Profile" row (see profile_screen.dart) and only ever shows the
+          // profile picker — it has no sign-out, billing, or settings of its
+          // own by design. Without this, a family-plan user who landed here
+          // had no obvious way back to Account short of the plain back
+          // arrow, which on a full-screen route with no bottom nav visible
+          // reads as a dead end (see user report: "no way to sign out when
+          // you're in the family section").
+          IconButton(
+            icon: const Icon(Icons.manage_accounts_outlined),
+            tooltip: t(lang, 'accountSettings'),
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => const ProfileScreen(),
+            )),
+          ),
           TextButton(
             onPressed: () => setState(() => _managing = !_managing),
             child: Text(

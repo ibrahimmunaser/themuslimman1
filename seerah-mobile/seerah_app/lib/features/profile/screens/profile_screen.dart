@@ -19,6 +19,7 @@ import '../../../core/widgets/adaptive_icons.dart';
 import '../../../core/providers/part_provider.dart';
 import '../../../core/widgets/ui_kit.dart';
 import '../../../core/widgets/webview_error_overlay.dart';
+import '../../../features/salah/utils/formatting.dart' show formatDate;
 import '../../../l10n/app_strings.dart';
 import 'change_password_screen.dart';
 import 'contact_us_screen.dart';
@@ -52,7 +53,17 @@ class ProfileScreen extends ConsumerWidget {
                 .fadeIn(duration: 450.ms)
                 .slideY(begin: -0.08, end: 0),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
+
+            // ── Current plan — individual and family customers alike should
+            // be able to see which plan they're on and what it costs,
+            // without digging into "Billing & Subscription" first.
+            if (auth.hasAccess)
+              _CurrentPlanCard(user: user, isFamily: auth.isFamily, lang: lang)
+                  .animate(delay: 15.ms)
+                  .fadeIn(duration: 350.ms),
+
+            const SizedBox(height: 8),
 
             // ── App language ────────────────────────────────────────────────
             const ClipRRect(
@@ -236,7 +247,12 @@ class ProfileScreen extends ConsumerWidget {
                     children: [
                       const Icon(Icons.logout_rounded, color: AppColors.error, size: 18),
                       const SizedBox(width: 8),
-                      Text(t(lang, 'signOut'),
+                      // A guest never actually "signed in" (no email/password —
+                      // just a silent device-linked session), so labeling this
+                      // "Sign Out" read as nonsensical to anyone who hasn't
+                      // created an account. Same action (and the same loss-of-
+                      // access warning below), clearer label for that case.
+                      Text(t(lang, auth.isAnonymous ? 'exitGuestMode' : 'signOut'),
                           style: const TextStyle(
                               color: AppColors.error,
                               fontSize: 15,
@@ -360,7 +376,7 @@ class ProfileScreen extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surface,
-        title: Text(t(lang, 'signOutQuestion')),
+        title: Text(t(lang, isAnonymous ? 'exitGuestModeQuestion' : 'signOutQuestion')),
         content: Text(
           isAnonymous
               ? t(lang, 'signOutGuestWarning')
@@ -372,7 +388,7 @@ class ProfileScreen extends ConsumerWidget {
               child: Text(t(lang, 'cancel'))),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text(t(lang, 'signOut'),
+            child: Text(t(lang, isAnonymous ? 'exitGuestMode' : 'signOut'),
                 style: const TextStyle(color: AppColors.error)),
           ),
         ],
@@ -576,6 +592,126 @@ class _AvatarSection extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Current plan card ────────────────────────────────────────────────────────────
+
+/// Shows the plan type (Individual/Family) and — when the figure is actually
+/// knowable on this server — what it costs, for anyone with active access.
+/// Separate from the "Billing & Subscription" row below, which deep-links
+/// into managing it (Stripe portal / App Store / Play Store); this card is
+/// pure at-a-glance info so the user doesn't have to tap through just to see
+/// what plan they're on.
+class _CurrentPlanCard extends StatelessWidget {
+  final dynamic user;
+  final bool isFamily;
+  final String lang;
+  const _CurrentPlanCard({required this.user, required this.isFamily, required this.lang});
+
+  String? _amountLine() {
+    final interval = user?.planInterval as String?;
+    final cents = user?.planAmountCents as int?;
+    final currency = user?.planCurrency as String?;
+    if (interval == 'lifetime') {
+      return cents != null && currency != null
+          ? '${_formatAmount(cents, currency)} · ${t(lang, 'lifetimeAccess')}'
+          : t(lang, 'lifetimeAccess');
+    }
+    if (interval == 'monthly' && cents != null && currency != null) {
+      return '${_formatAmount(cents, currency)}${t(lang, 'perMonth')}';
+    }
+    return null;
+  }
+
+  String _formatAmount(int cents, String currency) {
+    final major = (cents / 100).toStringAsFixed(2);
+    // Only USD is ever reported by the server today (Stripe prices here are
+    // all USD-denominated) — a $ prefix is correct for that case and a safe
+    // fallback (currency code suffix) for anything else added later.
+    return currency.toLowerCase() == 'usd' ? '\$$major' : '$major ${currency.toUpperCase()}';
+  }
+
+  String? _renewalLine() {
+    final interval = user?.planInterval as String?;
+    if (interval != 'monthly') return null;
+    final renewsAt = user?.planRenewsAt as String?;
+    if (renewsAt == null) return null;
+    final date = DateTime.tryParse(renewsAt);
+    if (date == null) return null;
+    final dateStr = formatDate(date);
+    final cancels = user?.planCancelAtPeriodEnd as bool?;
+    return cancels == true
+        ? tv(lang, 'cancelsOn', {'date': dateStr})
+        : tv(lang, 'renewsOn', {'date': dateStr});
+  }
+
+  String? _storeNote() {
+    final platform = user?.purchasePlatform as String?;
+    if (platform == 'apple') return t(lang, 'billedViaAppStore');
+    if (platform == 'google') return t(lang, 'billedViaPlayStore');
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final amountLine = _amountLine();
+    final renewalLine = _renewalLine();
+    final storeNote = _storeNote();
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: AppColors.gold.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(9),
+            ),
+            child: Icon(
+              isFamily ? Icons.family_restroom_rounded : Icons.verified_rounded,
+              color: AppColors.gold,
+              size: 17,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(t(lang, 'currentPlan'),
+                    style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.6)),
+                const SizedBox(height: 2),
+                Text(
+                  isFamily ? t(lang, 'familyPlan') : t(lang, 'individualPlan'),
+                  style: TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.w700),
+                ),
+                if (amountLine != null) ...[
+                  const SizedBox(height: 4),
+                  Text(amountLine, style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                ],
+                if (renewalLine != null) ...[
+                  const SizedBox(height: 2),
+                  Text(renewalLine, style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                ],
+                if (storeNote != null) ...[
+                  const SizedBox(height: 6),
+                  Text(storeNote, style: TextStyle(color: AppColors.textMuted, fontSize: 11.5, height: 1.4)),
+                ],
               ],
             ),
           ),

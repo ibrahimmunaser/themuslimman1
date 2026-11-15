@@ -25,6 +25,31 @@ class UserModel {
   /// platform to (e.g. anonymous guest, or a lapsed subscription).
   final String? purchasePlatform;
 
+  /// "lifetime" | "monthly" | null — null when there's no active access.
+  /// Mirrors app/api/access/check's `plan.interval`.
+  final String? planInterval;
+
+  /// What the plan actually costs, in cents — only populated for Stripe
+  /// purchases (lifetime Purchase row, or a live subscription price lookup).
+  /// Deliberately null for Apple/Google IAP: the receipt never reports the
+  /// exact amount charged (and regional store pricing can differ from the US
+  /// price), so the UI must not guess — see access/check route's doc comment.
+  final int? planAmountCents;
+
+  /// Lowercase ISO currency code (e.g. "usd") paired with [planAmountCents].
+  /// Null whenever [planAmountCents] is null.
+  final String? planCurrency;
+
+  /// ISO 8601 timestamp of the next renewal (or, if [planCancelAtPeriodEnd]
+  /// is true, the date access ends) for a monthly plan. Null for lifetime
+  /// plans or when unknown (e.g. Apple IAP with no stored period end yet).
+  final String? planRenewsAt;
+
+  /// True if a Stripe monthly subscription is set to cancel at
+  /// [planRenewsAt] instead of renewing. Null when not applicable/unknown
+  /// (lifetime plans, or Apple/Google IAP where this isn't tracked here).
+  final bool? planCancelAtPeriodEnd;
+
   const UserModel({
     this.email,
     this.name,
@@ -34,6 +59,11 @@ class UserModel {
     this.isAnonymous = false,
     this.emailVerified = false,
     this.purchasePlatform,
+    this.planInterval,
+    this.planAmountCents,
+    this.planCurrency,
+    this.planRenewsAt,
+    this.planCancelAtPeriodEnd,
   });
 
   UserModel copyWith({
@@ -46,6 +76,12 @@ class UserModel {
     bool? emailVerified,
     String? purchasePlatform,
     bool clearPurchasePlatform = false,
+    String? planInterval,
+    int? planAmountCents,
+    String? planCurrency,
+    String? planRenewsAt,
+    bool? planCancelAtPeriodEnd,
+    bool clearPlan = false,
   }) {
     return UserModel(
       email: email ?? this.email,
@@ -58,10 +94,33 @@ class UserModel {
       purchasePlatform: clearPurchasePlatform
           ? null
           : (purchasePlatform ?? this.purchasePlatform),
+      planInterval: clearPlan ? null : (planInterval ?? this.planInterval),
+      planAmountCents: clearPlan ? null : (planAmountCents ?? this.planAmountCents),
+      planCurrency: clearPlan ? null : (planCurrency ?? this.planCurrency),
+      planRenewsAt: clearPlan ? null : (planRenewsAt ?? this.planRenewsAt),
+      planCancelAtPeriodEnd: clearPlan ? null : (planCancelAtPeriodEnd ?? this.planCancelAtPeriodEnd),
+    );
+  }
+
+  /// Applies the `plan` object from an /api/access/check response. Separate
+  /// from the constructor/copyWith's individual plan fields so every call
+  /// site that already parses that response (login, ensureSession,
+  /// upgradeAccount, _verifySession) can apply it identically in one line
+  /// instead of repeating the same four-field extraction each time.
+  UserModel withPlanJson(Map<String, dynamic>? planJson) {
+    if (planJson == null) return copyWith(clearPlan: true);
+    return copyWith(
+      clearPlan: true,
+      planInterval: planJson['interval'] as String?,
+      planAmountCents: planJson['amountCents'] as int?,
+      planCurrency: planJson['currency'] as String?,
+      planRenewsAt: planJson['renewsAt'] as String?,
+      planCancelAtPeriodEnd: planJson['cancelAtPeriodEnd'] as bool?,
     );
   }
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    final planJson = json['plan'] as Map<String, dynamic>?;
     return UserModel(
       email: json['email'] as String?,
       name: json['name'] as String?,
@@ -71,6 +130,11 @@ class UserModel {
       isAnonymous: json['isAnonymous'] as bool? ?? false,
       emailVerified: json['emailVerified'] as bool? ?? false,
       purchasePlatform: json['purchasePlatform'] as String?,
+      planInterval: planJson?['interval'] as String?,
+      planAmountCents: planJson?['amountCents'] as int?,
+      planCurrency: planJson?['currency'] as String?,
+      planRenewsAt: planJson?['renewsAt'] as String?,
+      planCancelAtPeriodEnd: planJson?['cancelAtPeriodEnd'] as bool?,
     );
   }
 }

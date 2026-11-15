@@ -160,7 +160,7 @@ export async function getUserAccessInfo(userId: string, sessionHasPaid?: boolean
       : prisma.user.findUnique({ where: { id: userId }, select: { hasPaid: true } }),
     prisma.purchase.findFirst({
       where: { userId, status: "succeeded" },
-      select: { id: true, planId: true, createdAt: true },
+      select: { id: true, planId: true, planName: true, amount: true, currency: true, createdAt: true },
     }),
     prisma.subscription.findFirst({
       where: { userId, status: { not: "canceled" } },

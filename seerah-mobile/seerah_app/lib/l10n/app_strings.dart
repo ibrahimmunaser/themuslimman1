@@ -2088,6 +2088,61 @@ const Map<String, Map<String, String>> _kStrings = {
     'ar': 'الفواتير والاشتراك',
     'fr': 'Billing & Subscription',
   },
+  'currentPlan': {
+    'en': 'Current Plan',
+    'ar': 'خطتك الحالية',
+    'fr': 'Plan actuel',
+  },
+  'individualPlan': {
+    'en': 'Individual Plan',
+    'ar': 'الخطة الفردية',
+    'fr': 'Plan Individuel',
+  },
+  'familyPlan': {
+    'en': 'Family Plan',
+    'ar': 'خطة العائلة',
+    'fr': 'Plan Famille',
+  },
+  'lifetimeAccess': {
+    'en': 'Lifetime access',
+    'ar': 'وصول مدى الحياة',
+    'fr': 'Accès à vie',
+  },
+  'renewsOn': {
+    'en': 'Renews {date}',
+    'ar': 'يُجدَّد: {date}',
+    'fr': 'Se renouvelle le {date}',
+  },
+  'cancelsOn': {
+    'en': 'Cancels {date}',
+    'ar': 'ينتهي: {date}',
+    'fr': 'Se termine le {date}',
+  },
+  'billedViaAppStore': {
+    'en': 'Billed through the App Store — see Settings for the exact amount.',
+    'ar': 'تتم الفوترة عبر App Store — راجع الإعدادات لمعرفة المبلغ بالضبط.',
+    'fr': "Facturé via l'App Store — voir Réglages pour le montant exact.",
+  },
+  'billedViaPlayStore': {
+    'en': 'Billed through Google Play — see your subscriptions for the exact amount.',
+    'ar': 'تتم الفوترة عبر Google Play — راجع اشتراكاتك لمعرفة المبلغ بالضبط.',
+    'fr': 'Facturé via Google Play — voir vos abonnements pour le montant exact.',
+  },
+  'accountSettings': {
+    'en': 'Account settings',
+    'ar': 'إعدادات الحساب',
+    'fr': 'Paramètres du compte',
+  },
+  'exitGuestMode': {
+    'en': 'Exit Guest Mode',
+    'ar': 'الخروج من وضع الضيف',
+    'fr': 'Quitter le mode invité',
+  },
+  'exitGuestModeQuestion': {
+    'en': 'Exit Guest Mode?',
+    'ar': 'الخروج من وضع الضيف؟',
+    'fr': 'Quitter le mode invité ?',
+  },
   'giftCourse': {
     'en': 'Gift the course',
     'ar': 'إهداء الدورة',
