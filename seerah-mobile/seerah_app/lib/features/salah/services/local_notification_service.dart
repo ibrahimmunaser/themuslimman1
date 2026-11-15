@@ -442,14 +442,18 @@ class LocalNotificationService implements NotificationScheduler {
       // force-foregrounds the app at this same moment when overlay
       // permission is granted, so the call screen takes over even while
       // the notification above would only show as a tappable heads-up
-      // banner (device unlocked and in another app).
-      unawaited(
-        _incomingCallAlarm.schedule(
-          id: id,
-          prayer: prayer,
-          triggerAt: scheduledAt,
-        ),
-      );
+      // banner (device unlocked and in another app). Skipped when the user
+      // has turned the full-screen call UI off — there would be nothing for
+      // it to force open to.
+      if (callStyle) {
+        unawaited(
+          _incomingCallAlarm.schedule(
+            id: id,
+            prayer: prayer,
+            triggerAt: scheduledAt,
+          ),
+        );
+      }
       return const PrimaryReminderOutcome.notification();
     } catch (e) {
       // _zonedSchedule already retries inexact on a PlatformException; this

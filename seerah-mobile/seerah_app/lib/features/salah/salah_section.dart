@@ -124,6 +124,12 @@ class SalahBootstrap {
       DateTime? scheduledAt,
       String? alarmId,
     }) async {
+      // The user has turned the full-screen call UI off in Settings. The
+      // ordinary notification (with its own Pray Now / Decline actions)
+      // still fired independently of this call chain — see
+      // LocalNotificationService.schedulePrayerReminder — so there is
+      // nothing further to do here.
+      if (!controller.settings.callScreenEnabled) return;
       if (incomingScreenOpen) return;
       incomingScreenOpen = true;
       try {
@@ -171,9 +177,12 @@ class SalahBootstrap {
       final prayer = payload.prayer ?? SalahPrayer.dhuhr;
       if (payload.type == SalahNotificationPayload.typeRefresh) return;
       if (actionId == LocalNotificationService.actionPrayNow) {
-        if (defaultTargetPlatform == TargetPlatform.iOS) {
+        if (defaultTargetPlatform == TargetPlatform.iOS &&
+            controller.settings.callScreenEnabled) {
           await presentIncomingScreen(prayer);
         } else {
+          // Android always answers directly from the notification action;
+          // iOS does the same when the full-screen call UI is turned off.
           await controller.markPrayerAnswered(prayer);
         }
         return;

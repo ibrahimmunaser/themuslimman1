@@ -357,6 +357,20 @@ class _SettingsScreenState extends State<SettingsScreen> with RouteAware {
                       ),
                 ),
                 const Divider(height: 1),
+                SwitchListTile(
+                  title: const Text('Full-screen call UI'),
+                  subtitle: const Text(
+                    'Show the full-screen "Allah is calling" Answer/Decline '
+                    'screen when a prayer enters. The notification itself '
+                    'always appears either way.',
+                  ),
+                  value: settings.callScreenEnabled,
+                  onChanged:
+                      (v) => controller.updateSettings(
+                        settings.copyWith(callScreenEnabled: v),
+                      ),
+                ),
+                const Divider(height: 1),
                 ListTile(
                   title: const Text('Snooze duration'),
                   subtitle: Text('${settings.snoozeMinutes} minutes'),
@@ -446,7 +460,8 @@ class _SettingsScreenState extends State<SettingsScreen> with RouteAware {
                     ),
                   ),
                 ],
-                if (!kIsWeb && Platform.isAndroid) const _ReliableCallScreenTile(),
+                if (settings.callScreenEnabled && !kIsWeb && Platform.isAndroid)
+                  const _ReliableCallScreenTile(),
               ],
             ),
           ),

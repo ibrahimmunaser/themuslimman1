@@ -83,6 +83,14 @@ class PrayerSettings {
 
   final bool notificationsEnabled;
 
+  /// Whether the full-screen "incoming call" presentation (the in-app
+  /// Answer/Decline screen, plus the Android full-screen-intent/direct-launch
+  /// takeover that leads to it) is shown when a prayer enters. When false,
+  /// the ordinary prayer notification still fires exactly as before — only
+  /// the full-screen takeover is suppressed; Pray Now / Decline remain
+  /// available as actions on that notification.
+  final bool callScreenEnabled;
+
   /// Snooze duration in minutes.
   final int snoozeMinutes;
 
@@ -103,6 +111,7 @@ class PrayerSettings {
     this.customIshaAngle = 17.0,
     this.manualAdjustments = const {},
     this.notificationsEnabled = true,
+    this.callScreenEnabled = true,
     this.snoozeMinutes = 10,
     this.hijriAdjustmentDays = 0,
   });
@@ -124,6 +133,7 @@ class PrayerSettings {
     double? customIshaAngle,
     Map<SalahPrayer, int>? manualAdjustments,
     bool? notificationsEnabled,
+    bool? callScreenEnabled,
     int? snoozeMinutes,
     int? hijriAdjustmentDays,
   }) {
@@ -140,6 +150,7 @@ class PrayerSettings {
       customIshaAngle: customIshaAngle ?? this.customIshaAngle,
       manualAdjustments: manualAdjustments ?? this.manualAdjustments,
       notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
+      callScreenEnabled: callScreenEnabled ?? this.callScreenEnabled,
       snoozeMinutes: snoozeMinutes ?? this.snoozeMinutes,
       hijriAdjustmentDays: hijriAdjustmentDays ?? this.hijriAdjustmentDays,
     );
@@ -161,6 +172,7 @@ class PrayerSettings {
         (prayer, minutes) => MapEntry(prayer.name, minutes),
       ),
       'notificationsEnabled': notificationsEnabled,
+      'callScreenEnabled': callScreenEnabled,
       'snoozeMinutes': snoozeMinutes,
       'hijriAdjustmentDays': hijriAdjustmentDays,
     };
@@ -215,8 +227,8 @@ class PrayerSettings {
       manualAdjustments: adjustments,
       notificationsEnabled: json['notificationsEnabled'] as bool? ?? true,
       // Note: a legacy 'reminderStyle' key may exist in stored settings from
-      // older builds; it is intentionally ignored. The call-style incoming
-      // experience is the single, consistent experience for every user.
+      // older builds; it is intentionally ignored.
+      callScreenEnabled: json['callScreenEnabled'] as bool? ?? true,
       snoozeMinutes: (json['snoozeMinutes'] as num?)?.toInt() ?? 10,
       hijriAdjustmentDays: ((json['hijriAdjustmentDays'] as num?)?.toInt() ?? 0)
           .clamp(-2, 2),

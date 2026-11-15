@@ -381,7 +381,7 @@ class PrayerSchedulerService {
           id: r.notificationId,
           prayer: r.prayer,
           scheduledAt: tz.TZDateTime.from(r.scheduledAt, location),
-          callStyle: true,
+          callStyle: settings.callScreenEnabled,
         );
       } catch (e) {
         // Defensive: NotificationScheduler implementations are contracted

@@ -175,12 +175,14 @@ Future<void> performDecline({
 
   // Read the user's snooze preferences straight from stored settings.
   var snoozeMinutes = 10;
+  var callScreenEnabled = true;
   String? timezone;
   final rawSettings = prefs.getString(PrayerSettingsRepository.settingsKey);
   if (rawSettings != null) {
     try {
       final map = jsonDecode(rawSettings) as Map<String, dynamic>;
       snoozeMinutes = (map['snoozeMinutes'] as num?)?.toInt() ?? 10;
+      callScreenEnabled = map['callScreenEnabled'] as bool? ?? true;
       timezone = map['timezone'] as String?;
     } catch (_) {}
   }
@@ -239,7 +241,7 @@ Future<void> performDecline({
           () => notificationService.scheduleSnooze(
             prayer: prayer,
             minutes: snoozeMinutes,
-            callStyle: true,
+            callStyle: callScreenEnabled,
             userTimezone: timezone,
             windowStillOpen: plan.windowStillOpen,
             fireAt: plan.snoozeFireAt,
