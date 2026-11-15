@@ -25,19 +25,31 @@ class CityDatabase {
   bool get isLoaded => _cities != null;
 
   /// Loads and parses the asset off the UI thread. Safe to call repeatedly.
+  /// If loading previously failed, this retries rather than replaying the
+  /// old failure forever (see [_load]).
   Future<void> ensureLoaded() {
     if (_cities != null) return Future.value();
     return _loading ??= _load();
   }
 
   Future<void> _load() async {
-    final data = await rootBundle.load('assets/geonames/cities.tsv.gz');
-    final bytes = data.buffer.asUint8List(
-      data.offsetInBytes,
-      data.lengthInBytes,
-    );
-    _cities = await compute(_parseCityDatabase, bytes);
-    _loading = null;
+    try {
+      final data = await rootBundle.load('assets/geonames/cities.tsv.gz');
+      final bytes = data.buffer.asUint8List(
+        data.offsetInBytes,
+        data.lengthInBytes,
+      );
+      _cities = await compute(_parseCityDatabase, bytes);
+    } finally {
+      // Always clear the in-flight future, success or failure. Otherwise a
+      // single failed load (a transient asset-read glitch, a background
+      // isolate that failed to spawn, ...) would permanently cache that
+      // failure: every later ensureLoaded() call -- from this screen on
+      // reopen, or from AppController's GPS-labeling code -- would just
+      // replay the same error forever instead of retrying, leaving any UI
+      // that gates on isLoaded stuck indefinitely.
+      _loading = null;
+    }
   }
 
   /// Ranked search. Returns up to [limit] cities.
@@ -56,9 +68,10 @@ class CityDatabase {
     final namePart = commaParts.isEmpty ? q : commaParts.first;
     final qualifiers = commaParts.skip(1).toList();
     final nameTokens = namePart.split(' ').where((t) => t.isNotEmpty).toList();
+    final spacedNamePart = ' $namePart';
 
     for (final city in cities) {
-      double score = _scoreName(city, namePart);
+      double score = _scoreName(city, namePart, spacedNamePart);
 
       // No comma: allow trailing tokens to act as region/country qualifiers,
       // e.g. "springfield illinois" or "detroit usa".
@@ -66,7 +79,7 @@ class CityDatabase {
         for (var split = nameTokens.length - 1; split >= 1; split--) {
           final head = nameTokens.sublist(0, split).join(' ');
           final tail = nameTokens.sublist(split);
-          final headScore = _scoreName(city, head);
+          final headScore = _scoreName(city, head, ' $head');
           if (headScore > 0 && tail.every((t) => _matchesPlace(city, t))) {
             score = headScore;
             break;
@@ -167,12 +180,14 @@ class CityDatabase {
 
   // ---------------------------------------------------------------- scoring
 
-  double _scoreName(_IndexedCity city, String query) {
+  /// [spaced] must be ' $query' — passed in so the scan over ~170k cities
+  /// doesn't allocate a new string per city per keystroke.
+  double _scoreName(_IndexedCity city, String query, String spaced) {
     final name = city.nameFolded;
     if (name == query) return 1000;
     if (name.startsWith(query)) return 800;
     // Word-boundary prefix: "york" matches "New York".
-    if (name.contains(' $query')) return 700;
+    if (name.contains(spaced)) return 700;
     for (final alt in city.altFolded) {
       if (alt == query) return 650;
       if (alt.startsWith(query)) return 550;

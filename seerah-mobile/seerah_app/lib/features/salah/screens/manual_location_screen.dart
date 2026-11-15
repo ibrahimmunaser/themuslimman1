@@ -39,6 +39,7 @@ class _ManualLocationScreenState extends State<ManualLocationScreen> {
   bool _searchedOnline = false;
   bool _onlineSearching = false;
   bool _databaseReady = false;
+  bool _databaseFailed = false;
 
   @override
   void initState() {
@@ -47,7 +48,17 @@ class _ManualLocationScreenState extends State<ManualLocationScreen> {
   }
 
   Future<void> _prepareDatabase() async {
-    await CityDatabase.instance.ensureLoaded();
+    setState(() => _databaseFailed = false);
+    try {
+      await CityDatabase.instance.ensureLoaded().timeout(
+        const Duration(seconds: 20),
+      );
+    } catch (e) {
+      debugPrint('City database failed to load: $e');
+      if (!mounted) return;
+      setState(() => _databaseFailed = true);
+      return;
+    }
     if (!mounted) return;
     setState(() => _databaseReady = true);
     _loadNearby();
@@ -219,6 +230,32 @@ class _ManualLocationScreenState extends State<ManualLocationScreen> {
   }
 
   Widget _buildCityResults() {
+    if (_databaseFailed) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.error_outline, color: Colors.grey, size: 32),
+              const SizedBox(height: 12),
+              const Text(
+                "Couldn't load the city database. You can try again, or "
+                'enter coordinates manually on the other tab.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton(
+                onPressed: _prepareDatabase,
+                child: const Text('Try again'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     if (!_databaseReady) {
       return const Center(
         child: Column(

@@ -169,7 +169,8 @@ class _CourseScreenState extends ConsumerState<CourseScreen> {
       itemCount: results.length,
       itemBuilder: (ctx, i) {
         final p = results[i];
-        final locked = p.partNumber != AppConstants.kFreePartNumber && !hasAccess;
+        final locked =
+            p.partNumber != AppConstants.kFreePartNumber && !hasAccess;
         return Padding(
           padding: const EdgeInsets.only(bottom: 1),
           child: PartCard(
@@ -279,37 +280,46 @@ class _EraSectionState extends State<_EraSection> {
         ),
 
         // Parts list
-        AnimatedCrossFade(
-          firstChild: const SizedBox.shrink(),
-          secondChild: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-            child: Column(
-              children: widget.parts.asMap().entries.map((e) {
-                final i = e.key;
-                final p = e.value;
-                final locked = p.partNumber != AppConstants.kFreePartNumber && !widget.hasAccess;
-                return PartCard(
-                  part: p,
-                  isLocked: locked,
-                  grouped: true,
-                  isFirst: i == 0,
-                  isLast: i == widget.parts.length - 1,
-                  isViewed:
-                      widget.progress?.viewedParts.contains(p.partNumber) ??
-                      false,
-                  isCompleted:
-                      widget.progress?.completedParts.contains(p.partNumber) ??
-                      false,
-                  onTap: () => context.push('/part/${p.partNumber}'),
-                );
-              }).toList(),
-            ),
-          ),
-          crossFadeState: _expanded
-              ? CrossFadeState.showSecond
-              : CrossFadeState.showFirst,
-          duration: const Duration(milliseconds: 300),
-          sizeCurve: Curves.easeOut,
+        // AnimatedSize + conditional child (instead of AnimatedCrossFade):
+        // CrossFade builds BOTH children permanently, so every collapsed era
+        // was still building all of its PartCards (~100 rows on first paint).
+        // Here the rows only exist while the era is open.
+        AnimatedSize(
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOut,
+          alignment: Alignment.topCenter,
+          child: !_expanded
+              ? const SizedBox(width: double.infinity)
+              : Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                  child: Column(
+                    children: widget.parts.asMap().entries.map((e) {
+                      final i = e.key;
+                      final p = e.value;
+                      final locked =
+                          p.partNumber != AppConstants.kFreePartNumber &&
+                          !widget.hasAccess;
+                      return PartCard(
+                        part: p,
+                        isLocked: locked,
+                        grouped: true,
+                        isFirst: i == 0,
+                        isLast: i == widget.parts.length - 1,
+                        isViewed:
+                            widget.progress?.viewedParts.contains(
+                              p.partNumber,
+                            ) ??
+                            false,
+                        isCompleted:
+                            widget.progress?.completedParts.contains(
+                              p.partNumber,
+                            ) ??
+                            false,
+                        onTap: () => context.push('/part/${p.partNumber}'),
+                      );
+                    }).toList(),
+                  ),
+                ),
         ),
       ],
     );

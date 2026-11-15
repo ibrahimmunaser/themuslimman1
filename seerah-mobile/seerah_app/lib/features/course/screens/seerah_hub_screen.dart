@@ -106,15 +106,23 @@ class SeerahHubScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 18),
                 ],
-                for (var i = 0; i < items.length; i++) ...[
-                  if (i > 0) const SizedBox(height: 12),
-                  SizedBox(
-                    height: 76,
-                    child: _HubTile(item: items[i], highlight: i == 0),
-                  ),
+                // Lessons/Resources/References/Progress (and the facts
+                // section below) are course navigation — meaningless without
+                // an account, and would otherwise sit right under the
+                // welcome intro's own "Already have access? Sign in" link as
+                // if they were already unlocked. Signed-in accounts (with or
+                // without purchased access) still see them as before.
+                if (!showWelcomeIntro) ...[
+                  for (var i = 0; i < items.length; i++) ...[
+                    if (i > 0) const SizedBox(height: 12),
+                    SizedBox(
+                      height: 76,
+                      child: _HubTile(item: items[i], highlight: i == 0),
+                    ),
+                  ],
+                  const SizedBox(height: 20),
+                  ProphetFactsSection(lang: lang),
                 ],
-                const SizedBox(height: 20),
-                ProphetFactsSection(lang: lang),
               ],
             ),
           ),

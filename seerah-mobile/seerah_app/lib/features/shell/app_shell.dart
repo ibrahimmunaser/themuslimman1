@@ -1,6 +1,4 @@
 import 'package:seerah_app/l10n/salah_phrases.dart';
-import 'dart:ui';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide Text;
 import 'package:seerah_app/core/widgets/localized_text.dart';
@@ -43,134 +41,131 @@ class AppShell extends ConsumerWidget {
 
     return Scaffold(
       body: child,
+      // No BackdropFilter blur here on purpose: this is a Scaffold
+      // bottomNavigationBar, so the body is laid out *above* it and never
+      // extends underneath. The only thing behind the bar is the flat
+      // scaffold background, so a sigma-24 blur changed nothing visually
+      // while still costing a full-width GPU backdrop-blur pass on every
+      // frame — most noticeable on mid/low-end Android while scrolling.
       bottomNavigationBar: RepaintBoundary(
-        child: ClipRect(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.surface.withValues(alpha: 0.88),
-                border: Border(
-                  top: BorderSide(color: AppColors.border, width: 0.5),
-                ),
-              ),
-              // iPhone has no software buttons, only a thin home indicator drawn
-              // over the bar. Lifting the tabs there leaves an empty band.
-              // Android's 3-button bar covers the labels, so only Android
-              // gets the inset. NavigationBar's own SafeArea stays removed
-              // so it cannot add a second gap.
-              //
-              // NavigationBar's `build()` wraps its content in a bare
-              // `SafeArea(...)` that protects ALL FOUR sides by default, not
-              // just the bottom. Only ever stripping `removeBottom` here left
-              // the ambient status-bar `MediaQuery.padding.top` (~24-55dp
-              // depending on device) intact, so that SafeArea kept inserting
-              // it as blank space ABOVE the icon row every time — this was
-              // the actual, long-recurring "empty space above the tab bar"
-              // bug (confirmed live via Flutter's debugPaint on a Pixel 9
-              // emulator: the gap's height matched the status bar exactly).
-              // Stripping all four sides removes every such reservation.
-              child: Padding(
-                padding: EdgeInsets.only(bottom: _androidNavInset(context)),
-                child: MediaQuery.removePadding(
-                  context: context,
-                  removeTop: true,
-                  removeBottom: true,
-                  removeLeft: true,
-                  removeRight: true,
-                  child: NavigationBarTheme(
-                    data: NavigationBarThemeData(
-                      height: navHeight,
-                      backgroundColor: Colors.transparent,
-                      indicatorColor: AppColors.gold.withValues(alpha: 0.14),
-                      indicatorShape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      labelTextStyle: WidgetStateProperty.resolveWith((states) {
-                        final selected = states.contains(WidgetState.selected);
-                        return TextStyle(
-                          fontSize: compact ? 10 : 10.5,
-                          fontWeight: selected
-                              ? FontWeight.w700
-                              : FontWeight.w500,
-                          color: selected
-                              ? AppColors.gold
-                              : AppColors.textMuted,
-                        );
-                      }),
-                      iconTheme: WidgetStateProperty.all(
-                        IconThemeData(
-                          size: compact ? 22 : 23,
-                          color: AppColors.gold,
-                        ),
-                      ),
-                    ),
-                    child: NavigationBar(
-                      selectedIndex: idx,
-                      onDestinationSelected: (i) {
-                        HapticFeedback.selectionClick();
-                        // All four tabs are free to open. Seerah still
-                        // paywalls individual parts (except the sample);
-                        // Home / Quran / Salah stay fully usable without
-                        // a plan.
-                        switch (i) {
-                          case 0:
-                            context.go('/salah');
-                            break;
-                          case 1:
-                            context.go('/quran');
-                            break;
-                          case 2:
-                            context.go('/course');
-                            break;
-                          case 3:
-                            context.go('/account');
-                            break;
-                        }
-                      },
-                      labelBehavior: compact
-                          ? NavigationDestinationLabelBehavior.alwaysHide
-                          : NavigationDestinationLabelBehavior.alwaysShow,
-                      destinations: [
-                        NavigationDestination(
-                          icon: const Icon(Icons.mosque_outlined),
-                          selectedIcon: Icon(
-                            Icons.mosque_rounded,
-                            color: AppColors.gold,
-                          ),
-                          label: translateSalah(lang, t(lang, 'navSalah')),
-                          tooltip: translateSalah(lang, t(lang, 'navSalah')),
-                        ),
-                        NavigationDestination(
-                          icon: const Icon(Icons.auto_stories_outlined),
-                          selectedIcon: Icon(
-                            Icons.auto_stories_rounded,
-                            color: AppColors.gold,
-                          ),
-                          label: translateSalah(lang, t(lang, 'navQuran')),
-                          tooltip: translateSalah(lang, t(lang, 'navQuran')),
-                        ),
-                        NavigationDestination(
-                          icon: const Icon(Icons.menu_book_outlined),
-                          selectedIcon: Icon(
-                            Icons.menu_book_rounded,
-                            color: AppColors.gold,
-                          ),
-                          label: t(lang, 'navSeerah'),
-                          tooltip: t(lang, 'navSeerah'),
-                        ),
-                        NavigationDestination(
-                          icon: const Icon(Icons.person_outline_rounded),
-                          selectedIcon: Icon(
-                            Icons.person_rounded,
-                            color: AppColors.gold,
-                          ),
-                          label: t(lang, 'account'),
-                          tooltip: t(lang, 'account'),
-                        ),
-                      ],
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.surface.withValues(alpha: 0.88),
+            border: Border(
+              top: BorderSide(color: AppColors.border, width: 0.5),
+            ),
+          ),
+          // iPhone has no software buttons, only a thin home indicator drawn
+          // over the bar. Lifting the tabs there leaves an empty band.
+          // Android's 3-button bar covers the labels, so only Android
+          // gets the inset. NavigationBar's own SafeArea stays removed
+          // so it cannot add a second gap.
+          //
+          // NavigationBar's `build()` wraps its content in a bare
+          // `SafeArea(...)` that protects ALL FOUR sides by default, not
+          // just the bottom. Only ever stripping `removeBottom` here left
+          // the ambient status-bar `MediaQuery.padding.top` (~24-55dp
+          // depending on device) intact, so that SafeArea kept inserting
+          // it as blank space ABOVE the icon row every time — this was
+          // the actual, long-recurring "empty space above the tab bar"
+          // bug (confirmed live via Flutter's debugPaint on a Pixel 9
+          // emulator: the gap's height matched the status bar exactly).
+          // Stripping all four sides removes every such reservation.
+          child: Padding(
+            padding: EdgeInsets.only(bottom: _androidNavInset(context)),
+            child: MediaQuery.removePadding(
+              context: context,
+              removeTop: true,
+              removeBottom: true,
+              removeLeft: true,
+              removeRight: true,
+              child: NavigationBarTheme(
+                data: NavigationBarThemeData(
+                  height: navHeight,
+                  backgroundColor: Colors.transparent,
+                  indicatorColor: AppColors.gold.withValues(alpha: 0.14),
+                  indicatorShape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  labelTextStyle: WidgetStateProperty.resolveWith((states) {
+                    final selected = states.contains(WidgetState.selected);
+                    return TextStyle(
+                      fontSize: compact ? 10 : 10.5,
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                      color: selected ? AppColors.gold : AppColors.textMuted,
+                    );
+                  }),
+                  iconTheme: WidgetStateProperty.all(
+                    IconThemeData(
+                      size: compact ? 22 : 23,
+                      color: AppColors.gold,
                     ),
                   ),
+                ),
+                child: NavigationBar(
+                  selectedIndex: idx,
+                  onDestinationSelected: (i) {
+                    HapticFeedback.selectionClick();
+                    // All four tabs are free to open. Seerah still
+                    // paywalls individual parts (except the sample);
+                    // Home / Quran / Salah stay fully usable without
+                    // a plan.
+                    switch (i) {
+                      case 0:
+                        context.go('/salah');
+                        break;
+                      case 1:
+                        context.go('/quran');
+                        break;
+                      case 2:
+                        context.go('/course');
+                        break;
+                      case 3:
+                        context.go('/account');
+                        break;
+                    }
+                  },
+                  labelBehavior: compact
+                      ? NavigationDestinationLabelBehavior.alwaysHide
+                      : NavigationDestinationLabelBehavior.alwaysShow,
+                  destinations: [
+                    NavigationDestination(
+                      icon: const Icon(Icons.mosque_outlined),
+                      selectedIcon: Icon(
+                        Icons.mosque_rounded,
+                        color: AppColors.gold,
+                      ),
+                      label: translateSalah(lang, t(lang, 'navSalah')),
+                      tooltip: translateSalah(lang, t(lang, 'navSalah')),
+                    ),
+                    NavigationDestination(
+                      icon: const Icon(Icons.auto_stories_outlined),
+                      selectedIcon: Icon(
+                        Icons.auto_stories_rounded,
+                        color: AppColors.gold,
+                      ),
+                      label: translateSalah(lang, t(lang, 'navQuran')),
+                      tooltip: translateSalah(lang, t(lang, 'navQuran')),
+                    ),
+                    NavigationDestination(
+                      icon: const Icon(Icons.menu_book_outlined),
+                      selectedIcon: Icon(
+                        Icons.menu_book_rounded,
+                        color: AppColors.gold,
+                      ),
+                      label: t(lang, 'navSeerah'),
+                      tooltip: t(lang, 'navSeerah'),
+                    ),
+                    NavigationDestination(
+                      icon: const Icon(Icons.person_outline_rounded),
+                      selectedIcon: Icon(
+                        Icons.person_rounded,
+                        color: AppColors.gold,
+                      ),
+                      label: t(lang, 'account'),
+                      tooltip: t(lang, 'account'),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -228,8 +223,10 @@ void showLockedNavDialog(BuildContext context, WidgetRef ref, String lang) {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(dialogContext).pop(),
-          child: Text(t(lang, 'cancel'),
-              style: TextStyle(color: AppColors.textMuted)),
+          child: Text(
+            t(lang, 'cancel'),
+            style: TextStyle(color: AppColors.textMuted),
+          ),
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(

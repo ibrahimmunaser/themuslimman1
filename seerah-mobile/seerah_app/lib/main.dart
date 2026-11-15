@@ -23,73 +23,85 @@ import 'core/theme/app_theme.dart';
 import 'features/salah/salah_section.dart';
 import 'features/salah/state/app_controller.dart';
 
+/// Prefer StoreKit 1 receipts while the backend still accepts classic
+/// verifyReceipt payloads. StoreKit 2 (plugin default) sends a JWS that our
+/// server also handles, but SK1 is the safer path for App Review. A no-op
+/// off iOS; never throws.
+Future<void> _enableStoreKit1IfNeeded() async {
+  if (kIsWeb || !Platform.isIOS) return;
+  try {
+    await InAppPurchaseStoreKitPlatform.enableStoreKit1();
+  } catch (e) {
+    debugPrint('[IAP] enableStoreKit1 failed (continuing with StoreKit 2): $e');
+  }
+}
+
 Future<void> main() async {
   // Preserve the native splash until init is complete.
   final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
-  await initializeDateFormatting();
-
-  // Prefer StoreKit 1 receipts while the backend still accepts classic
-  // verifyReceipt payloads. StoreKit 2 (plugin default) sends a JWS that
-  // our server also handles, but SK1 is the safer path for App Review.
-  if (!kIsWeb && Platform.isIOS) {
-    try {
-      await InAppPurchaseStoreKitPlatform.enableStoreKit1();
-    } catch (e) {
-      debugPrint(
-        '[IAP] enableStoreKit1 failed (continuing with StoreKit 2): $e',
-      );
-    }
-  }
-
-  // AppTheme.dark's appBarTheme.systemOverlayStyle only takes effect once a
-  // screen with an AppBar builds — any screen with no AppBar (e.g. a
-  // full-bleed tab body, a bottom-sheet-only screen, or simply whatever
-  // renders first before the first AppBar mounts) previously fell back to
-  // Android's OS default system navigation bar (typically light/white with
-  // dark icons), clashing hard with this app's permanently-dark theme —
-  // Android's persistent on-screen nav bar makes this visible on far more
-  // screens than iOS's home indicator (which has no color of its own to
-  // mismatch). Setting it once here at startup gives every screen a
-  // correctly-themed baseline; AppBarTheme's own systemOverlayStyle still
-  // takes over (harmlessly re-asserting the same values) on any screen that
-  // has an AppBar.
-  // Load the persisted theme choice into AppColors before anything (this
-  // call included) reads it, so the startup system bars and first frame
-  // already reflect it instead of flashing Black & Gold first.
-  await loadAppThemeFromPrefs();
-
-  SystemChrome.setSystemUIOverlayStyle(
-    SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: AppColors.isDark ? Brightness.light : Brightness.dark,
-      statusBarBrightness: AppColors.isDark ? Brightness.dark : Brightness.light,
-      systemNavigationBarColor: AppColors.surface,
-      systemNavigationBarIconBrightness: AppColors.isDark ? Brightness.light : Brightness.dark,
-    ),
-  );
-
-  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-
-  // Initialize Dio + restore secure cookies before any provider reads the API.
-  // Wrapped in try-finally so the native splash is always removed even if
-  // init throws — prevents an infinite splash hang on startup failure.
+  // Startup work that doesn't depend on each other runs concurrently instead
+  // of as a chain of awaits. Previously date-symbol init, the StoreKit
+  // switch, the theme-prefs read, the orientation lock, the secure-storage
+  // cookie load (EncryptedSharedPreferences + Keystore init, easily the
+  // slowest on Android) and the welcome-flag read each waited on the one
+  // before it, all while the native splash was still up. Total time is now
+  // the slowest single step rather than the sum of all of them.
   bool hasSeenWelcome = true;
   try {
-    await ApiClient.instance.init();
-    // Read before FlutterNativeSplash.remove() so app_router's redirect can
-    // decide /welcome vs /dashboard on the very first frame — see
-    // welcome_provider.dart's doc comment.
-    hasSeenWelcome = await loadHasSeenWelcome();
+    final results = await Future.wait<Object?>([
+      initializeDateFormatting(),
+      _enableStoreKit1IfNeeded(),
+      // Loads the persisted theme choice into AppColors before anything
+      // (the system-bar style below included) reads it, so the startup
+      // system bars and first frame already reflect it instead of flashing
+      // Black & Gold first.
+      loadAppThemeFromPrefs(),
+      SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]),
+      // Initialize Dio + restore secure cookies before any provider reads
+      // the API.
+      ApiClient.instance.init(),
+      // Read before FlutterNativeSplash.remove() so app_router's redirect
+      // can decide /welcome vs /dashboard on the very first frame — see
+      // welcome_provider.dart's doc comment.
+      loadHasSeenWelcome(),
+    ]);
+    hasSeenWelcome = results.last as bool;
+
+    // AppTheme.dark's appBarTheme.systemOverlayStyle only takes effect once
+    // a screen with an AppBar builds — any screen with no AppBar (e.g. a
+    // full-bleed tab body, a bottom-sheet-only screen, or simply whatever
+    // renders first before the first AppBar mounts) previously fell back to
+    // Android's OS default system navigation bar (typically light/white
+    // with dark icons), clashing hard with this app's permanently-dark
+    // theme. Setting it once here at startup (after the persisted theme has
+    // been applied to AppColors above) gives every screen a correctly-
+    // themed baseline; AppBarTheme's own systemOverlayStyle still takes
+    // over on any screen that has an AppBar.
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: AppColors.isDark
+            ? Brightness.light
+            : Brightness.dark,
+        statusBarBrightness: AppColors.isDark
+            ? Brightness.dark
+            : Brightness.light,
+        systemNavigationBarColor: AppColors.surface,
+        systemNavigationBarIconBrightness: AppColors.isDark
+            ? Brightness.light
+            : Brightness.dark,
+      ),
+    );
   } finally {
+    // Always remove the splash, even if init throws — prevents an infinite
+    // splash hang on startup failure.
     FlutterNativeSplash.remove();
   }
 
   runApp(
     ProviderScope(
-      overrides: [
-        welcomeSeenProvider.overrideWith((ref) => hasSeenWelcome),
-      ],
+      overrides: [welcomeSeenProvider.overrideWith((ref) => hasSeenWelcome)],
       child: const SeerahApp(),
     ),
   );
@@ -163,6 +175,16 @@ class _SeerahAppState extends ConsumerState<SeerahApp>
   }
 
   final _scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
+
+  /// Keeps the routed content (the whole Navigator + every mounted screen)
+  /// alive when the widget tree above it changes shape. Once the Salah
+  /// controller finishes initializing, `builder:` below starts wrapping the
+  /// content in a ChangeNotifierProvider. Without a GlobalKey on it, that
+  /// one-level change made Flutter dispose and rebuild every screen on
+  /// screen right after launch (a ValueKey only matches siblings, not a
+  /// re-parented subtree). The GlobalKey lets the existing elements be
+  /// reparented intact instead.
+  final _routedContentKey = GlobalKey(debugLabel: 'routed-content');
 
   @override
   Widget build(BuildContext context) {
@@ -250,22 +272,21 @@ class _SeerahAppState extends ConsumerState<SeerahApp>
         // repaint the whole app's chrome, given how many screens read
         // AppColors.xxx directly instead of via Theme.of(context).
         final themed = KeyedSubtree(
-          key: ValueKey('theme-$themeId'),
-          child: child!,
+          key: _routedContentKey,
+          child: KeyedSubtree(key: ValueKey('theme-$themeId'), child: child!),
         );
-        final wrapped =
-            controller == null
-                ? themed
-                : provider_pkg.ChangeNotifierProvider<AppController>.value(
-                  value: controller,
-                  // Root-level so the "Allah is calling" screen (pushed on
-                  // rootNavigatorKey — see navigation.dart) can always read
-                  // the controller, regardless of which bottom-nav tab's
-                  // subtree is mounted underneath. SalahSection's own
-                  // (redundant but harmless) local provider still wraps the
-                  // same single instance for its subtree.
-                  child: themed,
-                );
+        final wrapped = controller == null
+            ? themed
+            : provider_pkg.ChangeNotifierProvider<AppController>.value(
+                value: controller,
+                // Root-level so the "Allah is calling" screen (pushed on
+                // rootNavigatorKey — see navigation.dart) can always read
+                // the controller, regardless of which bottom-nav tab's
+                // subtree is mounted underneath. SalahSection's own
+                // (redundant but harmless) local provider still wraps the
+                // same single instance for its subtree.
+                child: themed,
+              );
         return MediaQuery(
           data: mq.copyWith(
             textScaler: mq.textScaler.clamp(

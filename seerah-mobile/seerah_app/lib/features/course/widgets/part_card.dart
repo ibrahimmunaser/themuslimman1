@@ -11,13 +11,16 @@ class PartCard extends ConsumerWidget {
   final PartModel part;
   final VoidCallback onTap;
   final bool isLocked;
+
   /// When true, renders as a grouped-list row (no standalone card border).
   /// Pass isFirst/isLast to round the appropriate corners.
   final bool grouped;
   final bool isFirst;
   final bool isLast;
+
   /// Whether the user has opened this part at least once.
   final bool isViewed;
+
   /// Whether the user has passed the quiz for this part.
   final bool isCompleted;
 
@@ -37,6 +40,10 @@ class PartCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final lang = ref.watch(courseLangProvider);
     final color = AppColors.forEra(part.era);
+    // Locked rows are dimmed by fading each colour instead of wrapping the
+    // row in Opacity(0.72): Opacity forces an offscreen saveLayer per row,
+    // which adds up across a long scrolling list. Same look, no layer.
+    Color dim(Color c) => isLocked ? c.withValues(alpha: c.a * 0.72) : c;
 
     final row = Material(
       color: AppColors.card,
@@ -48,86 +55,92 @@ class PartCard extends ConsumerWidget {
                 bottom: isLast ? const Radius.circular(14) : Radius.zero,
               )
             : BorderRadius.circular(14),
-        child: Opacity(
-          opacity: isLocked ? 0.72 : 1.0,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              children: [
-                Container(
-                  width: 38, height: 38,
-                  decoration: BoxDecoration(
-                    color: isLocked
-                        ? AppColors.border.withValues(alpha: 0.2)
-                        : color.withValues(alpha: 0.18),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Center(
-                    child: isLocked
-                        ? Icon(Icons.lock_rounded,
-                            color: color.withValues(alpha: 0.6), size: 16)
-                        : Text(
-                            formatCourseNumber(lang, part.partNumber),
-                            style: TextStyle(
-                              color: color,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w800,
-                            ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: isLocked
+                      ? dim(AppColors.border.withValues(alpha: 0.2))
+                      : dim(color.withValues(alpha: 0.18)),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Center(
+                  child: isLocked
+                      ? Icon(
+                          Icons.lock_rounded,
+                          color: dim(color.withValues(alpha: 0.6)),
+                          size: 16,
+                        )
+                      : Text(
+                          formatCourseNumber(lang, part.partNumber),
+                          style: TextStyle(
+                            color: dim(color),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
                           ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        part.localizedTitle(lang),
-                        style: TextStyle(
-                          color: isLocked
-                              ? AppColors.textSecondary
-                              : AppColors.textPrimary,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          height: 1.3,
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        part.localizedSubtitle(lang),
-                        style: TextStyle(
-                            color: AppColors.textMuted, fontSize: 12),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
                 ),
-                const SizedBox(width: 8),
-                if (isCompleted)
-                  const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 18)
-                else if (isViewed && !isLocked)
-                  Container(
-                    width: 8, height: 8,
-                    decoration: BoxDecoration(
-                      color: AppColors.gold, shape: BoxShape.circle,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      part.localizedTitle(lang),
+                      style: TextStyle(
+                        color: isLocked
+                            ? dim(AppColors.textSecondary)
+                            : AppColors.textPrimary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        height: 1.3,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  )
-                else if (isLocked)
-                  Icon(
-                    Icons.lock_outline_rounded,
-                    color: AppColors.textMuted,
-                    size: 18,
-                  )
-                else
-                  ForwardChevronIcon(
-                    color: AppColors.textMuted,
-                    size: 18,
+                    const SizedBox(height: 2),
+                    Text(
+                      part.localizedSubtitle(lang),
+                      style: TextStyle(
+                        color: dim(AppColors.textMuted),
+                        fontSize: 12,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              if (isCompleted)
+                const Icon(
+                  Icons.check_circle_rounded,
+                  color: AppColors.success,
+                  size: 18,
+                )
+              else if (isViewed && !isLocked)
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: AppColors.gold,
+                    shape: BoxShape.circle,
                   ),
-              ],
-            ),
+                )
+              else if (isLocked)
+                Icon(
+                  Icons.lock_outline_rounded,
+                  color: dim(AppColors.textMuted),
+                  size: 18,
+                )
+              else
+                ForwardChevronIcon(color: AppColors.textMuted, size: 18),
+            ],
           ),
         ),
       ),
@@ -135,10 +148,7 @@ class PartCard extends ConsumerWidget {
 
     if (!grouped) {
       // Standalone card (search results)
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(14),
-        child: row,
-      );
+      return ClipRRect(borderRadius: BorderRadius.circular(14), child: row);
     }
 
     // Grouped row — caller wraps in ClipRRect for the group container
@@ -152,8 +162,7 @@ class PartCard extends ConsumerWidget {
           child: row,
         ),
         if (!isLast)
-          Divider(
-              height: 1, thickness: 1, color: AppColors.border, indent: 66),
+          Divider(height: 1, thickness: 1, color: AppColors.border, indent: 66),
       ],
     );
   }
