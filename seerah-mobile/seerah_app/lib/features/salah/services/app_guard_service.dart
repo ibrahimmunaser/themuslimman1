@@ -39,7 +39,19 @@ class AppGuardService {
     'com.themuslimman.seerah/app_guard',
   );
 
-  bool get isSupported => !kIsWeb && Platform.isAndroid;
+  /// Temporary kill switch (2026-11-15): Google Play's "Policy and programs
+  /// → Foreground services" declaration for the FOREGROUND_SERVICE_SPECIAL_USE
+  /// subtype App Guard's foreground service uses is pending review. The
+  /// matching Android-side permission + service declaration are
+  /// commented out in AndroidManifest.xml, and the native
+  /// GuardFeature.ENABLED flag mirrors this. Flip both back to true
+  /// together once Google approves the declaration — nothing else needs to
+  /// change, since already-enabled users' saved preferences are left
+  /// untouched the whole time and the feature resumes automatically.
+  static const bool _androidAppGuardEnabled = false;
+
+  bool get isSupported =>
+      !kIsWeb && Platform.isAndroid && _androidAppGuardEnabled;
 
   Future<bool> hasUsageAccess() async {
     if (!isSupported) return false;

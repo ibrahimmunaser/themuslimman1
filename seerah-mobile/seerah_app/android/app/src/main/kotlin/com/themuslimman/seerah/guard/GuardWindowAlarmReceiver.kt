@@ -18,6 +18,14 @@ class GuardWindowAlarmReceiver : BroadcastReceiver() {
         val prayer = intent.getStringExtra(AppGuardForegroundService.EXTRA_PRAYER) ?: "Prayer"
         GuardPrefs.removePendingWindow(context, windowId)
 
+        // GuardFeature.ENABLED == false means AppGuardForegroundService is
+        // NOT declared in the manifest right now (see AndroidManifest.xml).
+        // This check must come before any reference to that service,
+        // including for an alarm scheduled by a previous app version that
+        // survived this update — starting an undeclared service would
+        // crash this receiver.
+        if (!GuardFeature.ENABLED) return
+
         if (!GuardPrefs.isEnabled(context) || GuardPrefs.guardedPackages(context).isEmpty()) {
             return
         }

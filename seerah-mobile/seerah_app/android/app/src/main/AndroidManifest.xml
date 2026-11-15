@@ -42,8 +42,18 @@
          guard screen can cover an app it did not launch. -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <!-- TEMPORARILY DISABLED (2026-11-15): Google Play's "Policy and
+         programs → Foreground services" declaration for this specialUse
+         subtype is pending review. Shipping a release that still declares
+         this permission + the service below (uncommented) is undeclared
+         and can get the listing's foreground-service type flagged / block
+         production rollout. Restore both this permission and the <service>
+         block below together once Google approves the declaration — see
+         git history on this commit, and GuardFeature.kt which is the
+         matching runtime kill switch.
     <uses-permission
         android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
+    -->
 
     <application
         android:label="The Muslim Man"
@@ -142,7 +152,9 @@
             android:hardwareAccelerated="true"/>
 
         <!-- Foreground service that watches for guarded apps coming to the
-             foreground during a prayer's 15-minute guard window. -->
+             foreground during a prayer's 15-minute guard window.
+             TEMPORARILY DISABLED (2026-11-15): see the matching comment
+             above FOREGROUND_SERVICE_SPECIAL_USE. Restore together.
         <service
             android:name=".guard.AppGuardForegroundService"
             android:exported="false"
@@ -151,6 +163,7 @@
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="Watches the foreground app so a chosen app can be covered with a prayer-time reminder screen"/>
         </service>
+        -->
 
         <!-- Fires at prayer time (scheduled alongside the prayer
              notification) and starts the 15-minute guard window. A plain

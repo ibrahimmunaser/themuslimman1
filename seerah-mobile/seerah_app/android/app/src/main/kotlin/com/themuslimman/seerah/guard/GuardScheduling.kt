@@ -25,6 +25,10 @@ object GuardScheduling {
     }
 
     fun schedule(context: Context, id: Int, prayer: String, triggerAtMillis: Long) {
+        // See GuardFeature — do not even arm an alarm while App Guard is
+        // temporarily disabled (the alarm would just fire into a no-op
+        // receiver, wasting the exact-alarm budget for nothing).
+        if (!GuardFeature.ENABLED) return
         val intent = Intent(context, GuardWindowAlarmReceiver::class.java).apply {
             putExtra(AppGuardForegroundService.EXTRA_WINDOW_ID, id)
             putExtra(AppGuardForegroundService.EXTRA_PRAYER, prayer)

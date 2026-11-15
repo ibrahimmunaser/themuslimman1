@@ -50,6 +50,10 @@ class AppGuardPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
         try {
             when (call.method) {
+                // See GuardFeature for why this can be false even on
+                // Android — temporarily, while Google's Foreground Service
+                // declaration review is pending.
+                "isAvailable" -> result.success(GuardFeature.ENABLED)
                 "hasUsageAccess" -> result.success(hasUsageAccess())
                 "requestUsageAccess" -> {
                     appContext.startActivity(
