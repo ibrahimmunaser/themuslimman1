@@ -7,9 +7,19 @@
 	     InterruptionLevel.timeSensitive to take effect; without it iOS
 	     silently downgrades delivery to ordinary notifications.
 	     The provisioning profile / signing team must also support this
-	     capability (verify in Xcode: Runner > Signing & Capabilities). -->
+	     capability (verify in Xcode: Runner > Signing & Capabilities).
+	     DELIBERATELY DISABLED for now: the "TheMuslimMan App Store"
+	     provisioning profile does not yet have this capability enabled on
+	     the App ID in the Apple Developer Portal, which makes every CI
+	     build fail at "Build IPA" with "could not code sign the
+	     application". To re-enable: in developer.apple.com → Certificates,
+	     Identifiers & Profiles → Identifiers → com.themuslimman.seerah,
+	     turn on "Time Sensitive Notifications", regenerate the
+	     "TheMuslimMan App Store" profile, re-fetch it in Codemagic
+	     (Code signing → iOS provisioning profiles), then uncomment below.
 	<key>com.apple.developer.usernotifications.time-sensitive</key>
 	<true/>
+	-->
 	<!-- App Guard (Screen Time shield) entitlements are DELIBERATELY NOT
 	     hardcoded here. com.apple.developer.family-controls and
 	     com.apple.security.application-groups both require a provisioning
