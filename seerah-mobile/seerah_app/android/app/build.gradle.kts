@@ -66,18 +66,29 @@ android {
         isCoreLibraryDesugaringEnabled = true
     }
 
-    // ``.gz`` isn't in AAPT's default no-compress list (unlike jpg/mp3/mp4/zip/
-    // etc.), so the already gzip-compressed city database
-    // (assets/geonames/cities.tsv.gz, ~3.7MB) was getting re-deflated into the
-    // APK as a *compressed* zip entry. Android's AssetManager can fail to open
-    // compressed asset entries over ~1MB on-device (a long-standing platform
-    // limitation — see Flutter issue flutter/flutter#23644 and AOSP's own
-    // 1MB mmap-compressed-asset ceiling), which surfaces at runtime as
-    // rootBundle.load() throwing, 100% reproducibly, regardless of device.
-    // Storing it uncompressed sidesteps the limitation entirely (and costs
-    // nothing extra since the data was already gzip-compressed).
+    // ``.gzdat`` isn't in AAPT's default no-compress list (unlike jpg/mp3/mp4/
+    // zip/etc.), so the already gzip-compressed city database
+    // (assets/geonames/cities.tsv.gzdat, ~3.7MB) was getting re-deflated into
+    // the APK as a *compressed* zip entry. Android's AssetManager can fail to
+    // open compressed asset entries over ~1MB on-device (a long-standing
+    // platform limitation — see Flutter issue flutter/flutter#23644 and
+    // AOSP's own 1MB mmap-compressed-asset ceiling), which surfaces at
+    // runtime as rootBundle.load() throwing, 100% reproducibly, regardless
+    // of device. Storing it uncompressed sidesteps the limitation entirely
+    // (and costs nothing extra since the data was already gzip-compressed).
+    //
+    // IMPORTANT: this file must NOT use a ".gz" extension. Google Play's app
+    // bundle serving pipeline silently strips ".gz" extensions and
+    // decompresses/re-deflates any asset named that way before generating
+    // the installable split APKs -- it assumes a ".gz"-named asset is meant
+    // to be auto-decompressed, not an opaque blob to preserve byte-for-byte.
+    // That broke rootBundle.load('assets/geonames/cities.tsv.gz') for every
+    // Play Store install (file silently became "cities.tsv", no ".gz") while
+    // directly-built/sideloaded APKs -- never touched by Play's pipeline --
+    // kept working, which is why the bug only reproduced for Play installs.
+    // Renamed to ".gzdat" so Play's special-casing no longer applies.
     androidResources {
-        noCompress += "gz"
+        noCompress += "gzdat"
     }
 
     signingConfigs {

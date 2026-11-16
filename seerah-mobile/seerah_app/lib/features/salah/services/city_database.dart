@@ -34,7 +34,7 @@ class CityDatabase {
 
   Future<void> _load() async {
     try {
-      final data = await rootBundle.load('assets/geonames/cities.tsv.gz');
+      final data = await rootBundle.load('assets/geonames/cities.tsv.gzdat');
       final bytes = data.buffer.asUint8List(
         data.offsetInBytes,
         data.lengthInBytes,

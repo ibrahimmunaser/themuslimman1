@@ -1,7 +1,7 @@
 name: seerah_app
 description: "The Muslim Man — Seerah Course Mobile App"
 publish_to: 'none'
-version: 1.0.86+86
+version: 1.0.87+91
 
 environment:
   sdk: ^3.12.0
@@ -129,7 +129,14 @@ flutter:
     - assets/facts/i18n/
     # Salah features merged from the standalone "Allah Is Calling" app.
     # Offline city database built from GeoNames (CC BY 4.0, geonames.org).
-    - assets/geonames/cities.tsv.gz
+    # NOTE: extension is deliberately NOT ".gz" -- Google Play's app bundle
+    # serving pipeline silently strips the ".gz" extension and
+    # decompresses/re-deflates any asset ending in ".gz" (a longstanding
+    # AAPT/Play packaging special-case for gzip-named assets), which broke
+    # the hardcoded rootBundle.load() path for every Play Store install
+    # while sideloaded APKs (never touched by Play's pipeline) kept working.
+    # The bytes are still gzip-compressed; CityDatabase gunzips them itself.
+    - assets/geonames/cities.tsv.gzdat
     # Locally bundled tafsir: one small text file per verse.
     - assets/tafsir/surah_001/
     # Guard-screen backdrops (native Android GuardBlockActivity reads these
