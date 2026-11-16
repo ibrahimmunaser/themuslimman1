@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide Text;
 import 'package:seerah_app/core/widgets/localized_text.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 
 import '../navigation.dart';
@@ -684,8 +683,6 @@ class _SettingsScreenState extends State<SettingsScreen> with RouteAware {
           Card(
             child: Column(
               children: [
-                const _VersionTile(),
-                const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.privacy_tip_outlined),
                   title: const Text('Privacy Policy'),
@@ -808,44 +805,6 @@ class _SettingsScreenState extends State<SettingsScreen> with RouteAware {
           ),
     );
     if (choice != null) onSelected(choice);
-  }
-}
-
-/// App name + live version from the platform package info,
-/// e.g. "Version 1.0.0 (1)". Never hardcoded.
-class _VersionTile extends StatefulWidget {
-  const _VersionTile();
-
-  @override
-  State<_VersionTile> createState() => _VersionTileState();
-}
-
-class _VersionTileState extends State<_VersionTile> {
-  String _version = '…';
-
-  @override
-  void initState() {
-    super.initState();
-    PackageInfo.fromPlatform()
-        .then((info) {
-          if (mounted) {
-            setState(
-              () => _version = 'Version ${info.version} (${info.buildNumber})',
-            );
-          }
-        })
-        .catchError((Object _) {
-          if (mounted) setState(() => _version = 'Version unavailable');
-        });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: const Icon(Icons.mosque_outlined),
-      title: const Text(AppStrings.appTitle),
-      subtitle: Text(_version),
-    );
   }
 }
 

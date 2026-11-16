@@ -15,6 +15,11 @@ class AppStrings {
 
   static const String appTitle = 'Allah Is Calling';
 
+  // Salah tab's home screen app bar title. Distinct from [appTitle] -- the
+  // "Allah Is Calling" name stays everywhere else (incoming-call screen,
+  // notifications, etc.), it's just not what this tab's header shows.
+  static const String homeTitle = 'Salah';
+
   // Incoming call screen permanent title.
   static const String incomingCallTitle = 'Allah Is Calling';
 

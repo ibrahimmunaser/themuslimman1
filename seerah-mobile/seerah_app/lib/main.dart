@@ -15,6 +15,7 @@ import 'core/network/api_client.dart';
 import 'core/providers/app_theme_provider.dart';
 import 'core/providers/auth_provider.dart';
 import 'core/providers/iap_provider.dart';
+import 'core/providers/onboarding_provider.dart';
 import 'core/providers/part_provider.dart';
 import 'core/providers/welcome_provider.dart';
 import 'core/router/app_router.dart';
@@ -48,6 +49,8 @@ Future<void> main() async {
   // before it, all while the native splash was still up. Total time is now
   // the slowest single step rather than the sum of all of them.
   bool hasSeenWelcome = true;
+  bool needsOnboarding = false;
+  bool onboardingIsNewInstall = true;
   try {
     final results = await Future.wait<Object?>([
       initializeDateFormatting(),
@@ -65,8 +68,16 @@ Future<void> main() async {
       // can decide /welcome vs /dashboard on the very first frame — see
       // welcome_provider.dart's doc comment.
       loadHasSeenWelcome(),
+      // Same reasoning as loadHasSeenWelcome() above, for the forced
+      // intro/"what's new" + theme-picker funnel — see
+      // onboarding_provider.dart.
+      loadOnboardingStartupInfo(),
     ]);
-    hasSeenWelcome = results.last as bool;
+    hasSeenWelcome = results[results.length - 2] as bool;
+    final onboardingInfo =
+        results.last as ({bool needsOnboarding, bool isNewInstall});
+    needsOnboarding = onboardingInfo.needsOnboarding;
+    onboardingIsNewInstall = onboardingInfo.isNewInstall;
 
     // AppTheme.dark's appBarTheme.systemOverlayStyle only takes effect once
     // a screen with an AppBar builds — any screen with no AppBar (e.g. a
@@ -101,7 +112,13 @@ Future<void> main() async {
 
   runApp(
     ProviderScope(
-      overrides: [welcomeSeenProvider.overrideWith((ref) => hasSeenWelcome)],
+      overrides: [
+        welcomeSeenProvider.overrideWith((ref) => hasSeenWelcome),
+        onboardingPendingProvider.overrideWith((ref) => needsOnboarding),
+        onboardingIsNewInstallProvider.overrideWith(
+          (ref) => onboardingIsNewInstall,
+        ),
+      ],
       child: const SeerahApp(),
     ),
   );

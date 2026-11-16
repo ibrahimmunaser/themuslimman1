@@ -38,6 +38,24 @@ class AppConstants {
   /// bring the onboarding screen back on a device that's already seen it.
   static const String keyHasSeenWelcome = 'has_seen_welcome';
 
+  /// Whether this device has ever launched the app at all, checked once at
+  /// startup BEFORE it's set, to tell a genuinely fresh install apart from
+  /// an existing device updating into a new version (see
+  /// onboarding_provider.dart — [keyMajorUpdateIntroSeen] uses this to pick
+  /// "Welcome" vs "What's new" framing for the forced intro/theme funnel).
+  /// Device-level, kept out of [authPrefKeys] for the same reason as
+  /// [keyHasSeenWelcome].
+  static const String keyAppEverLaunched = 'app_ever_launched';
+
+  /// One-time flag for the forced intro/"what's new" + theme-picker funnel
+  /// introduced alongside the Salah/Quran/Seerah merge + 15 languages +
+  /// color themes. Shown exactly once to every device — new installs get
+  /// "Welcome" framing, existing devices updating into this build get
+  /// "What's new" framing (decided via [keyAppEverLaunched]) — then never
+  /// shown again. Device-level, kept out of [authPrefKeys]: signing out/in
+  /// must never bring it back.
+  static const String keyMajorUpdateIntroSeen = 'major_update_intro_v1_seen';
+
   // All auth-related pref keys — used for selective clear on logout
   static const List<String> authPrefKeys = [
     keyIsLoggedIn,

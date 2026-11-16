@@ -3,10 +3,12 @@ import 'package:seerah_app/core/widgets/localized_text.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
+import '../providers/onboarding_provider.dart';
 import '../providers/part_provider.dart';
 import '../../l10n/app_strings.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/signup_screen.dart';
+import '../../features/onboarding/screens/intro_screen.dart';
 import '../../features/shell/app_shell.dart';
 import '../../features/home/screens/landing_screen.dart';
 import '../../features/home/screens/welcome_screen.dart';
@@ -46,13 +48,27 @@ final routerProvider = Provider<GoRouter>((ref) {
     initialLocation: '/',
     refreshListenable: notifier,
     redirect: (context, state) {
+      final loc = state.uri.path;
+
+      // Forced one-time intro/"what's new" + theme-picker funnel — see
+      // onboarding_provider.dart. Checked before auth even loads (it has
+      // nothing to do with login state) and takes priority over every
+      // other redirect below, so a brand-new install or a device updating
+      // into this build can't land anywhere else — including /login or
+      // /signup via a stale deep link — until it's completed. IntroScreen
+      // itself calls markOnboardingIntroSeen() + context.go() to leave,
+      // which flips the provider and makes this check fall through on the
+      // very next navigation with no extra listener wiring needed.
+      if (ref.read(onboardingPendingProvider) && loc != '/intro') {
+        return '/intro';
+      }
+
       final authState = ref.read(authProvider);
 
       if (authState.isLoading) return null;
 
       final isLoggedIn = authState.isLoggedIn;
       final isAnonymous = authState.isAnonymous;
-      final loc = state.uri.path;
 
       // /signup upgrades an anonymous guest to a real email/password account
       // (same user id, so any purchase already made — or made later — stays
@@ -119,6 +135,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/welcome',
         builder: (ctx, state) => const WelcomeScreen(),
+      ),
+      GoRoute(
+        path: '/intro',
+        builder: (ctx, state) => const IntroScreen(),
       ),
       GoRoute(
         path: '/landing',

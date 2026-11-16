@@ -175,7 +175,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          AppStrings.appTitle,
+          AppStrings.homeTitle,
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
         ),
         actions: [
