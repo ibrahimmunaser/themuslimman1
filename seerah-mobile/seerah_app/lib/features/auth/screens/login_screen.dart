@@ -165,11 +165,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ? context.pop()
                             : context.go('/landing'),
                       ),
-                      const Spacer(),
-                      const Padding(
-                        padding: EdgeInsets.only(right: 8),
-                        child: AppLangToggle(),
-                      ),
                     ],
                   ),
                   const SizedBox(height: 40),
