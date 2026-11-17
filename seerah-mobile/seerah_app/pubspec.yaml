@@ -1,7 +1,7 @@
 name: seerah_app
 description: "The Muslim Man — Seerah Course Mobile App"
 publish_to: 'none'
-version: 1.0.89+93
+version: 1.0.90+94
 
 environment:
   sdk: ^3.12.0

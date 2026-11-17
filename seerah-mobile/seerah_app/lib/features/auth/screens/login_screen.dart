@@ -11,7 +11,6 @@ import '../../../core/providers/iap_provider.dart';
 import '../../../core/providers/part_provider.dart';
 import '../../../core/providers/progress_provider.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/utils/system_insets.dart';
 import '../../../core/utils/webview_nav_policy.dart';
 import '../../../core/widgets/adaptive_icons.dart';
 import '../../../core/widgets/app_logo.dart';
@@ -142,9 +141,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return Scaffold(
       body: AppGradientBackground(
         child: SafeArea(
-          bottom: false,
+          // This screen now lives inside the bottom-nav shell (AppShell),
+          // which already reserves the home-indicator/nav-bar inset for its
+          // own bottomNavigationBar and strips that padding back out of the
+          // body's MediaQuery — adding bottomSystemInset() here on top of
+          // that would double the gap. Plain SafeArea defaults handle it.
           child: SingleChildScrollView(
-            padding: EdgeInsets.fromLTRB(24, 0, 24, 24 + bottomSystemInset(context)),
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
             child: Form(
               key: _formKey,
               child: Column(

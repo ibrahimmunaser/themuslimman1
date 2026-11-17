@@ -144,21 +144,26 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/landing',
         builder: (ctx, state) => const LandingScreen(),
       ),
-      GoRoute(
-        path: '/login',
-        builder: (ctx, state) =>
-            LoginScreen(prefillEmail: state.uri.queryParameters['email']),
-      ),
-      GoRoute(
-        path: '/signup',
-        builder: (ctx, state) => const SignupScreen(),
-      ),
 
       // ── Shell with bottom nav ──────────────────────────────────────────────
       ShellRoute(
         builder: (ctx, state, child) =>
             _ShellBackHandler(child: AppShell(child: child)),
         routes: [
+          // Sign in / create account need to stay reachable without ever
+          // dropping the bottom tabs — same as every other shell screen —
+          // so they live here rather than as full-screen routes. (They used
+          // to be full-screen, which hid the tabs the whole time a guest
+          // was signing in/up; nothing about auth itself needs that.)
+          GoRoute(
+            path: '/login',
+            builder: (ctx, state) =>
+                LoginScreen(prefillEmail: state.uri.queryParameters['email']),
+          ),
+          GoRoute(
+            path: '/signup',
+            builder: (ctx, state) => const SignupScreen(),
+          ),
           GoRoute(
             path: '/account',
             builder: (ctx, state) => const AccountScreen(),
