@@ -819,6 +819,11 @@ const Map<String, Map<String, String>> _kStrings = {
     'ar': 'إنشاء حساب',
     'fr': 'Create Account',
   },
+  'createAccountSyncDevices': {
+    'en': 'Create account to sync across devices (optional)',
+    'ar': 'إنشاء حساب للمزامنة عبر الأجهزة (اختياري)',
+    'fr': 'Créer un compte pour synchroniser entre appareils (facultatif)',
+  },
   'wantToPurchaseNoAccount': {
     'en': 'Want to purchase? No account needed — view plans',
     'ar': 'تريد الشراء؟ لا حاجة لحساب — عرض الخطط',

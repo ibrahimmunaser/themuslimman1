@@ -250,13 +250,21 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 ),
 
                 const SizedBox(height: 12),
-                if (!hasAccess)
-                  Center(
-                    child: TextButton(
-                      onPressed: _loading ? null : () => context.go('/dashboard'),
-                      child: Text(t(lang, 'skipForNow')),
-                    ),
+                // Apple Guideline 5.1.1(v): registration must stay optional
+                // even for a guest who already has access from a purchase —
+                // this used to hide Skip entirely whenever hasAccess was
+                // true, which (combined with landing/pricing force-routing
+                // straight here right after checkout) made registration
+                // look mandatory to use a non-account-based purchase. Always
+                // show it; the account-only content it skips past (quiz
+                // history, certificate, multi-profile) is still gated the
+                // same as before, just never forced.
+                Center(
+                  child: TextButton(
+                    onPressed: _loading ? null : () => context.go('/dashboard'),
+                    child: Text(t(lang, 'skipForNow')),
                   ),
+                ),
 
                 const SizedBox(height: 16),
                 _LegalText(onOpenUrl: _openLegal),

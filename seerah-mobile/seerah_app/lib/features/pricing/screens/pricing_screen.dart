@@ -203,12 +203,14 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
     if (!mounted) return;
     final lang = ref.read(courseLangProvider);
 
-    // Guests must create an account after purchase so access syncs across
-    // Android, iOS, and web. Skip is intentionally not offered.
-    if (ref.read(authProvider).isAnonymous) {
-      context.go('/signup');
-      return;
-    }
+    // Apple Guideline 5.1.1(v): registration must stay OPTIONAL even right
+    // after a non-account-based purchase — forcing a guest straight to
+    // /signup with no way to just use what they bought (this used to say
+    // "Skip is intentionally not offered") is exactly what got 1.0.88
+    // rejected. Guests now see the same success sheet as everyone else,
+    // with account creation offered as a secondary, clearly skippable CTA
+    // (see the extra "Create Account to sync across devices" button below).
+    final isAnonymous = ref.read(authProvider).isAnonymous;
 
     showModalBottomSheet<void>(
       context: context,
@@ -284,6 +286,26 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
                     ),
                   ),
                 ),
+                if (isAnonymous) ...[
+                  const SizedBox(height: 10),
+                  // Optional, clearly skippable — see doc comment above.
+                  // Purely for cross-device sync; tapping "Start Learning"
+                  // above already grants full access to what was just
+                  // bought with zero extra steps.
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      context.go('/signup');
+                    },
+                    child: Text(
+                      t(lang, 'createAccountSyncDevices'),
+                      style: TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
