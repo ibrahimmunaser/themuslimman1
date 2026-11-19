@@ -17,6 +17,9 @@ const PROTECTED_PREFIXES = [
   "/upgrade",
   "/profiles",
   "/help",
+  // Second-screen half of the TV app's device-linking sign-in (see
+  // app/activate/page.tsx) — must be signed in to link a TV to this account.
+  "/activate",
   // Legacy member routes kept for backwards compatibility
   "/dashboard",
   "/parts",
@@ -87,6 +90,7 @@ export const config = {
     "/upgrade",
     "/profiles",
     "/help",
+    "/activate",
     "/dashboard/:path*",
     "/parts/:path*",
     "/conclusion/:path*",

@@ -534,6 +534,35 @@ model Session {
   @@index([userId])
 }
 
+// Netflix/YouTube-TV-style device-linking code: a TV with no comfortable
+// way to type a password shows a short human-enterable `code`; the user
+// opens /activate on their phone/laptop (where they're already signed in)
+// and enters it. No userId/row ownership is known for the TV side of this
+// until that happens, so the TV instead holds `deviceToken` — a long,
+// unguessable secret returned only to it by /api/tv/link/start — and uses
+// it (never `code`) to poll /api/tv/link/poll. This keeps the two
+// "credentials" separate: `code` only needs to resist a human blindly
+// guessing within the ~10-minute window (checked with a tight rate limit
+// on /complete), while `deviceToken` is what actually protects the
+// linked session token in transit to the right device.
+model TvLinkCode {
+  id           String   @id @default(cuid())
+  code         String   @unique
+  deviceToken  String   @unique
+  status       String   @default("pending") // pending | linked
+  // Raw (unhashed) Session token for the account that completed the link —
+  // same value createSession() would otherwise have put straight into the
+  // browser's own httpOnly cookie. Cleared once the TV has successfully
+  // retrieved it via /poll so a leaked/replayed poll request after that
+  // point gets nothing.
+  sessionToken String?
+  userId       String?
+  createdAt    DateTime @default(now())
+  expiresAt    DateTime
+
+  @@index([expiresAt])
+}
+
 model StudentProfile {
   id                      String                   @id
   userId                  String                   @unique
