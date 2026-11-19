@@ -15,6 +15,7 @@ const _keys = [
   'cancel', 'save', 'verses', 'hasanat', 'time', 'pages', 'surahs',
   'sessions', 'verse', 'versesCount', 'juz', 'startsAt', 'previous', 'next',
   'scrollMode', 'verseMode', 'play', 'bookmark', 'favorite',
+  'tapNumberToCount', 'hasanatCounted',
 ];
 
 const _tr = <String, List<String>>{
@@ -32,7 +33,8 @@ const _tr = <String, List<String>>{
     'Save', 'Verses', 'Hasanat', 'Time', 'Pages', 'Surahs', 'Sessions',
     'Verse', '{n} verses', 'Juz', 'Starts at {s}, verse {v}', 'Previous',
     'Next', 'Scroll mode', 'Verse-by-verse mode', 'Play recitation',
-    'Bookmark', 'Favorite',
+    'Bookmark', 'Favorite', 'Tap the verse number to count hasanat',
+    'Counted',
   ],
   'ar': [
     'القرآن', 'الهدف اليومي', 'حدد الهدف اليومي', 'آيات في اليوم',
@@ -47,6 +49,7 @@ const _tr = <String, List<String>>{
     'الآيات', 'الحسنات', 'الوقت', 'الصفحات', 'السور', 'الجلسات', 'آية',
     '{n} آية', 'جزء', 'تبدأ من {s}، الآية {v}', 'السابق', 'التالي',
     'وضع التمرير', 'وضع آية بآية', 'تشغيل التلاوة', 'علامة', 'مفضلة',
+    'انقر على رقم الآية لاحتساب الحسنات', 'تم الاحتساب',
   ],
   'fr': [
     'Coran', 'Objectif quotidien', "Définir l'objectif", 'Versets par jour',
@@ -64,6 +67,7 @@ const _tr = <String, List<String>>{
     'Sourates', 'Séances', 'Verset', '{n} versets', 'Juz',
     'Commence à {s}, verset {v}', 'Précédent', 'Suivant', 'Mode défilement',
     'Mode verset par verset', 'Écouter la récitation', 'Favori', 'Préféré',
+    'Touchez le numéro du verset pour compter les hasanat', 'Comptabilisé',
   ],
   'es': [
     'Corán', 'Meta diaria', 'Fijar meta diaria', 'Versículos por día',
@@ -79,7 +83,8 @@ const _tr = <String, List<String>>{
     'Suras', 'Sesiones', 'Versículo', '{n} versículos', 'Yuz',
     'Empieza en {s}, versículo {v}', 'Anterior', 'Siguiente',
     'Modo desplazamiento', 'Modo versículo a versículo', 'Reproducir recitación',
-    'Marcador', 'Favorito',
+    'Marcador', 'Favorito', 'Toca el número del versículo para contar hasanat',
+    'Contado',
   ],
   'de': [
     'Koran', 'Tagesziel', 'Tagesziel festlegen', 'Verse pro Tag',
@@ -96,6 +101,7 @@ const _tr = <String, List<String>>{
     'Sitzungen', 'Vers', '{n} Verse', 'Dschuz', 'Beginnt bei {s}, Vers {v}',
     'Zurück', 'Weiter', 'Scroll-Modus', 'Vers-für-Vers-Modus',
     'Rezitation abspielen', 'Lesezeichen', 'Favorit',
+    'Tippe auf die Versnummer, um Hasanat zu zählen', 'Gezählt',
   ],
   'tr': [
     'Kur’an', 'Günlük hedef', 'Günlük hedef belirle', 'Günlük ayet',
@@ -110,6 +116,7 @@ const _tr = <String, List<String>>{
     'Sayfa', 'Sure', 'Oturum', 'Ayet', '{n} ayet', 'Cüz',
     '{s} suresinden, ayet {v} ile başlar', 'Önceki', 'Sonraki',
     'Kaydırma modu', 'Ayet ayet modu', 'Tilaveti oynat', 'Yer imi', 'Favori',
+    'Sevap saymak için ayet numarasına dokunun', 'Sayıldı',
   ],
   'ur': [
     'قرآن', 'روزانہ ہدف', 'روزانہ ہدف مقرر کریں', 'روزانہ آیات',
@@ -124,6 +131,7 @@ const _tr = <String, List<String>>{
     'وقت', 'صفحات', 'سورتیں', 'سیشنز', 'آیت', '{n} آیات', 'پارہ',
     '{s} سے شروع، آیت {v}', 'پچھلا', 'اگلا', 'اسکرول موڈ', 'آیت بہ آیت موڈ',
     'تلاوت چلائیں', 'بک مارک', 'پسندیدہ',
+    'حسنات شمار کرنے کے لیے آیت نمبر پر ٹیپ کریں', 'شمار ہو گیا',
   ],
   'id': [
     'Al-Qur’an', 'Target harian', 'Atur target harian', 'Ayat per hari',
@@ -138,7 +146,8 @@ const _tr = <String, List<String>>{
     'Simpan', 'Ayat', 'Hasanat', 'Waktu', 'Halaman', 'Surah', 'Sesi', 'Ayat',
     '{n} ayat', 'Juz', 'Dimulai dari {s}, ayat {v}', 'Sebelumnya',
     'Berikutnya', 'Mode gulir', 'Mode ayat per ayat', 'Putar bacaan',
-    'Penanda', 'Favorit',
+    'Penanda', 'Favorit', 'Ketuk nomor ayat untuk menghitung hasanat',
+    'Terhitung',
   ],
   'ms': [
     'Al-Quran', 'Sasaran harian', 'Tetapkan sasaran harian', 'Ayat sehari',
@@ -153,7 +162,7 @@ const _tr = <String, List<String>>{
     'Batal', 'Simpan', 'Ayat', 'Hasanat', 'Masa', 'Halaman', 'Surah', 'Sesi',
     'Ayat', '{n} ayat', 'Juzuk', 'Bermula di {s}, ayat {v}', 'Sebelum',
     'Seterusnya', 'Mod tatal', 'Mod ayat demi ayat', 'Main bacaan', 'Penanda',
-    'Kegemaran',
+    'Kegemaran', 'Ketik nombor ayat untuk mengira hasanat', 'Dikira',
   ],
   'hi': [
     'क़ुरआन', 'दैनिक लक्ष्य', 'दैनिक लक्ष्य सेट करें', 'प्रतिदिन आयतें',
@@ -168,6 +177,7 @@ const _tr = <String, List<String>>{
     'समय', 'पृष्ठ', 'सूरह', 'सत्र', 'आयत', '{n} आयतें', 'पारा',
     '{s} से शुरू, आयत {v}', 'पिछला', 'अगला', 'स्क्रोल मोड', 'आयत-दर-आयत मोड',
     'तिलावत चलाएँ', 'बुकमार्क', 'पसंदीदा',
+    'हसनात गिनने के लिए आयत संख्या पर टैप करें', 'गिन लिया गया',
   ],
   'bn': [
     'কুরআন', 'দৈনিক লক্ষ্য', 'দৈনিক লক্ষ্য ঠিক করুন', 'প্রতিদিন আয়াত',
@@ -182,6 +192,7 @@ const _tr = <String, List<String>>{
     'সময়', 'পৃষ্ঠা', 'সূরা', 'সেশন', 'আয়াত', '{n}টি আয়াত', 'পারা',
     '{s} থেকে শুরু, আয়াত {v}', 'আগের', 'পরের', 'স্ক্রল মোড',
     'আয়াত-by-আয়াত মোড', 'তিলাওয়াত চালান', 'বুকমার্ক', 'পছন্দের',
+    'হাসানাত গণনা করতে আয়াত নম্বরে ট্যাপ করুন', 'গণনা হয়েছে',
   ],
   'fa': [
     'قرآن', 'هدف روزانه', 'تنظیم هدف روزانه', 'آیه در روز',
@@ -195,7 +206,7 @@ const _tr = <String, List<String>>{
     '+{n} حسنه، ان‌شاءالله', 'لغو', 'ذخیره', 'آیات', 'حسنات', 'زمان', 'صفحات',
     'سوره‌ها', 'نشست‌ها', 'آیه', '{n} آیه', 'جزء', 'شروع از {s}، آیه {v}',
     'قبلی', 'بعدی', 'حالت پیمایش', 'حالت آیه‌به‌آیه', 'پخش تلاوت', 'نشانک',
-    'علاقه‌مندی',
+    'علاقه‌مندی', 'برای شمارش حسنات روی شماره آیه ضربه بزنید', 'شمارش شد',
   ],
   'ru': [
     'Коран', 'Дневная цель', 'Задать дневную цель', 'Аятов в день',
@@ -211,6 +222,7 @@ const _tr = <String, List<String>>{
     'Аят', '{n} аятов', 'Джуз', 'Начинается с {s}, аят {v}', 'Назад',
     'Далее', 'Режим прокрутки', 'Режим аят за аятом', 'Воспроизвести чтение',
     'Закладка', 'Избранное',
+    'Нажмите на номер аята, чтобы засчитать хасанат', 'Засчитано',
   ],
   'zh': [
     '古兰经', '每日目标', '设置每日目标', '每日节数', '继续阅读', '快速访问',
@@ -221,6 +233,7 @@ const _tr = <String, List<String>>{
     '+{n} 善报，如果真主意欲', '取消', '保存', '节数', '善报', '时间', '页数',
     '章数', '次数', '节', '{n} 节', '卷', '从 {s} 第 {v} 节开始', '上一个',
     '下一个', '滚动模式', '逐节模式', '播放诵读', '书签', '收藏',
+    '点击经文编号以计入善报', '已计入',
   ],
   'sw': [
     'Qur’ani', 'Lengo la kila siku', 'Weka lengo la kila siku', 'Aya kwa siku',
@@ -235,7 +248,7 @@ const _tr = <String, List<String>>{
     'Hifadhi', 'Aya', 'Hasanati', 'Muda', 'Kurasa', 'Sura', 'Vipindi', 'Aya',
     'Aya {n}', 'Juzuu', 'Inaanza {s}, aya {v}', 'Iliyotangulia', 'Inayofuata',
     'Hali ya kusogeza', 'Hali ya aya kwa aya', 'Cheza qiraa', 'Alamisho',
-    'Kipendwa',
+    'Kipendwa', 'Gusa namba ya aya kuhesabu hasanati', 'Imehesabiwa',
   ],
 };
 

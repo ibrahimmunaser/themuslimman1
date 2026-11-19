@@ -193,10 +193,20 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
     }
   }
 
+  /// Verse-by-verse (swipe) mode: each verse is counted automatically as
+  /// it comes into view, same as always.
   Future<void> _onVerseSeen(SurahContent content, QuranVerse verse) async {
     _prefetchUpcomingTafsir(content, verse);
+    await _recordVerseRead(content, verse);
+  }
+
+  /// Records a verse as read (hasanat, last-read position, recents, daily
+  /// goal, surah-finished). In scroll mode this only runs when the reader
+  /// taps the verse number; in swipe mode it runs automatically for the
+  /// verse currently shown (see [_onVerseSeen]).
+  Future<void> _recordVerseRead(SurahContent content, QuranVerse verse) async {
     if (_readThisSession.contains(verse.numberInSurah)) return;
-    _readThisSession.add(verse.numberInSurah);
+    setState(() => _readThisSession.add(verse.numberInSurah));
 
     final position = QuranPosition(
       surah: _surahNumber,
@@ -349,12 +359,15 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
           );
         }
         final verse = content.verses[index - 1];
+        // Scroll mode doesn't auto-count hasanat just by scrolling a verse
+        // into view — only warm the tafsir cache here. Counting happens
+        // when the reader taps the verse number (see _buildVerseCard).
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          _onVerseSeen(content, verse);
+          _prefetchUpcomingTafsir(content, verse);
         });
         return Padding(
           padding: const EdgeInsets.only(bottom: 12),
-          child: _buildVerseCard(content, verse),
+          child: _buildVerseCard(content, verse, tapToCount: true),
         );
       },
     );
@@ -400,7 +413,7 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
                     _SurahHeader(meta: content.meta),
                     if (verse.numberInSurah == 1 && _showsBismillah)
                       _buildBismillahLine(),
-                    _buildVerseCard(content, verse),
+                    _buildVerseCard(content, verse, tapToCount: false),
                   ],
                 ),
               );
@@ -516,11 +529,41 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
     });
   }
 
-  Widget _buildVerseCard(SurahContent content, QuranVerse verse) {
+  Widget _buildVerseCard(
+    SurahContent content,
+    QuranVerse verse, {
+    required bool tapToCount,
+  }) {
     final playing = _playingVerse == verse.numberInSurah;
     final bookmarked = _bookmarked.contains(verse.numberInSurah);
     final favorited = _favorited.contains(verse.numberInSurah);
     final hasanat = QuranProgressService.hasanatForText(verse.arabic);
+    // In scroll mode, hasanat are only counted once the reader taps the
+    // verse number below; in swipe mode they're already counted by the
+    // time this builds (see _onVerseSeen), so `counted` is always true.
+    final counted = !tapToCount || _readThisSession.contains(verse.numberInSurah);
+
+    final numberBadge = Container(
+      width: 32,
+      height: 32,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: counted ? AppColors.gold : AppColors.surface,
+        border: Border.all(color: AppColors.gold, width: 1),
+      ),
+      child:
+          counted && tapToCount
+              ? Icon(Icons.check, size: 16, color: AppColors.onGold)
+              : Text(
+                '${verse.numberInSurah}',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+    );
 
     return Card(
       shape: RoundedRectangleBorder(
@@ -534,30 +577,31 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
           children: [
             Row(
               children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.surface,
-                    border: Border.all(color: AppColors.gold, width: 1),
-                  ),
-                  child: Text(
-                    '${verse.numberInSurah}',
-                    style: TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
+                tapToCount
+                    ? Tooltip(
+                      message: qc(context, 'tapNumberToCount'),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(16),
+                        onTap:
+                            counted
+                                ? null
+                                : () => _recordVerseRead(content, verse),
+                        child: numberBadge,
+                      ),
+                    )
+                    : numberBadge,
                 const Spacer(),
                 Text(
-                  qc(context, 'hasanatNote', {'n': hasanat}),
+                  counted
+                      ? qc(context, 'hasanatNote', {'n': hasanat})
+                      : qc(context, 'tapNumberToCount'),
+                  textAlign: TextAlign.right,
                   style: TextStyle(
                     fontSize: 11,
-                    color: AppColors.gold,
+                    color:
+                        counted
+                            ? AppColors.gold
+                            : AppColors.textPrimary.withValues(alpha: 0.45),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
