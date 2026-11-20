@@ -47,6 +47,32 @@ enum HighLatitudeRuleOption {
   const HighLatitudeRuleOption(this.displayName);
 }
 
+/// Arabic typeface used for Quran verse text (Full Quran reader + Surah
+/// reader + verse popups). Purely cosmetic — never affects verse content.
+enum QuranFontOption {
+  amiriQuran(
+    'Amiri Quran',
+    'Traditional Uthmani mushaf calligraphy',
+  ),
+  scheherazadeNew(
+    'Scheherazade New',
+    'Classic Naskh style, very readable',
+  ),
+  lateef(
+    'Lateef',
+    'Simpler, more modern Naskh',
+  ),
+  notoNaskhArabic(
+    'Noto Naskh Arabic',
+    'Clean, widely used for Quran apps',
+  );
+
+  final String displayName;
+  final String description;
+
+  const QuranFontOption(this.displayName, this.description);
+}
+
 /// How the location was chosen.
 enum LocationSource {
   device('Device location'),
@@ -98,6 +124,9 @@ class PrayerSettings {
   /// moon-sighting authority. Display only — never affects salah times.
   final int hijriAdjustmentDays;
 
+  /// Arabic typeface for Quran verse text. Display only.
+  final QuranFontOption quranFont;
+
   const PrayerSettings({
     this.latitude,
     this.longitude,
@@ -114,6 +143,7 @@ class PrayerSettings {
     this.callScreenEnabled = true,
     this.snoozeMinutes = 10,
     this.hijriAdjustmentDays = 0,
+    this.quranFont = QuranFontOption.amiriQuran,
   });
 
   bool get hasLocation => latitude != null && longitude != null;
@@ -136,6 +166,7 @@ class PrayerSettings {
     bool? callScreenEnabled,
     int? snoozeMinutes,
     int? hijriAdjustmentDays,
+    QuranFontOption? quranFont,
   }) {
     return PrayerSettings(
       latitude: latitude ?? this.latitude,
@@ -153,6 +184,7 @@ class PrayerSettings {
       callScreenEnabled: callScreenEnabled ?? this.callScreenEnabled,
       snoozeMinutes: snoozeMinutes ?? this.snoozeMinutes,
       hijriAdjustmentDays: hijriAdjustmentDays ?? this.hijriAdjustmentDays,
+      quranFont: quranFont ?? this.quranFont,
     );
   }
 
@@ -175,6 +207,7 @@ class PrayerSettings {
       'callScreenEnabled': callScreenEnabled,
       'snoozeMinutes': snoozeMinutes,
       'hijriAdjustmentDays': hijriAdjustmentDays,
+      'quranFont': quranFont.name,
     };
   }
 
@@ -232,6 +265,11 @@ class PrayerSettings {
       snoozeMinutes: (json['snoozeMinutes'] as num?)?.toInt() ?? 10,
       hijriAdjustmentDays: ((json['hijriAdjustmentDays'] as num?)?.toInt() ?? 0)
           .clamp(-2, 2),
+      quranFont: enumByName(
+        QuranFontOption.values,
+        json['quranFont'],
+        QuranFontOption.amiriQuran,
+      ),
     );
   }
 

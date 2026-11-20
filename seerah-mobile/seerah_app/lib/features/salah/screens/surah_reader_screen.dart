@@ -3,12 +3,16 @@ import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart' hide Text;
+import 'package:provider/provider.dart';
 import 'package:seerah_app/core/widgets/localized_text.dart';
 
+import '../models/prayer_settings.dart';
 import '../models/quran_models.dart';
 import '../services/quran_api_service.dart';
 import '../services/quran_progress_service.dart';
 import '../services/tafsir_service.dart';
+import '../state/app_controller.dart';
+import '../utils/quran_fonts.dart';
 import '../utils/quran_l10n.dart';
 import '../../../core/theme/app_colors.dart';
 
@@ -123,17 +127,23 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
   }
 
   Widget _buildBismillahLine() {
+    final quranFont = context.select<AppController, QuranFontOption>(
+      (c) => c.settings.quranFont,
+    );
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Text(
         _bismillah!,
         textAlign: TextAlign.center,
         textDirection: TextDirection.rtl,
-        style: TextStyle(
-          fontSize: 24,
-          height: 1.8,
-          color: AppColors.textPrimary,
-          fontWeight: FontWeight.w600,
+        style: quranTextStyle(
+          quranFont,
+          TextStyle(
+            fontSize: 24,
+            height: 1.8,
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );
@@ -612,11 +622,16 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
               _displayArabic(verse),
               textAlign: TextAlign.right,
               textDirection: TextDirection.rtl,
-              style: TextStyle(
-                fontSize: 24,
-                height: 1.9,
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w500,
+              style: quranTextStyle(
+                context.select<AppController, QuranFontOption>(
+                  (c) => c.settings.quranFont,
+                ),
+                TextStyle(
+                  fontSize: 24,
+                  height: 1.9,
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
             if (verse.transliteration.isNotEmpty) ...[

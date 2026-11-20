@@ -3,12 +3,16 @@ import 'dart:async';
 import 'package:confetti/confetti.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart' hide Text;
+import 'package:provider/provider.dart';
 import 'package:seerah_app/core/widgets/localized_text.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
+import '../models/prayer_settings.dart';
 import '../models/quran_models.dart';
 import '../services/quran_api_service.dart';
 import '../services/quran_progress_service.dart';
+import '../state/app_controller.dart';
+import '../utils/quran_fonts.dart';
 import '../utils/quran_l10n.dart';
 import '../../../core/theme/app_colors.dart';
 
@@ -458,11 +462,16 @@ class _FullQuranScreenState extends State<FullQuranScreen> {
                 _bismillah!,
                 textAlign: TextAlign.center,
                 textDirection: TextDirection.rtl,
-                style: TextStyle(
-                  fontSize: 24,
-                  height: 1.8,
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w600,
+                style: quranTextStyle(
+                  context.select<AppController, QuranFontOption>(
+                    (c) => c.settings.quranFont,
+                  ),
+                  TextStyle(
+                    fontSize: 24,
+                    height: 1.8,
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
@@ -541,11 +550,16 @@ class _FullQuranScreenState extends State<FullQuranScreen> {
             ],
           ),
           textAlign: TextAlign.justify,
-          style: TextStyle(
-            fontSize: 26,
-            height: 2.0,
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w500,
+          style: quranTextStyle(
+            context.select<AppController, QuranFontOption>(
+              (c) => c.settings.quranFont,
+            ),
+            TextStyle(
+              fontSize: 26,
+              height: 2.0,
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
       ),
@@ -673,6 +687,9 @@ class _VersePopupState extends State<_VersePopup> {
   Widget build(BuildContext context) {
     final meta = _content.meta;
     final verse = _content.verses[_index];
+    final quranFont = context.select<AppController, QuranFontOption>(
+      (c) => c.settings.quranFont,
+    );
     final isQuranStart = meta.number == 1 && _index == 0;
     final isQuranEnd =
         meta.number == _lastSurah && _index == _content.verses.length - 1;
@@ -746,11 +763,14 @@ class _VersePopupState extends State<_VersePopup> {
                           _bismillah!,
                           textAlign: TextAlign.center,
                           textDirection: TextDirection.rtl,
-                          style: TextStyle(
-                            fontSize: 22,
-                            height: 1.8,
-                            color: AppColors.surface,
-                            fontWeight: FontWeight.w600,
+                          style: quranTextStyle(
+                            quranFont,
+                            TextStyle(
+                              fontSize: 22,
+                              height: 1.8,
+                              color: AppColors.surface,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 12),
@@ -759,11 +779,14 @@ class _VersePopupState extends State<_VersePopup> {
                         _displayArabic(verse),
                         textAlign: TextAlign.right,
                         textDirection: TextDirection.rtl,
-                        style: TextStyle(
-                          fontSize: 24,
-                          height: 1.9,
-                          color: AppColors.surface,
-                          fontWeight: FontWeight.w500,
+                        style: quranTextStyle(
+                          quranFont,
+                          TextStyle(
+                            fontSize: 24,
+                            height: 1.9,
+                            color: AppColors.surface,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
                       if (verse.transliteration.isNotEmpty) ...[
