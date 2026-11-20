@@ -11,6 +11,26 @@ import '../utils/app_strings.dart';
 import '../widgets/place_text.dart';
 import '../../../core/theme/app_colors.dart';
 
+/// Web screen-capture builds (`--dart-define=CAPTURE_DEMO=true`) have no
+/// magnetometer, so they simulate a phone being turned until it faces Qibla.
+const bool _kCaptureDemo = bool.fromEnvironment('CAPTURE_DEMO');
+
+Stream<double?> _demoHeading(double qibla) async* {
+  const frames = 150; // ~5s at 30fps
+  final start = (qibla + 140) % 360;
+  for (var i = 0; i <= frames; i++) {
+    final p = i / frames;
+    final ease = 1 - math.pow(1 - p, 3).toDouble();
+    final wobble = math.sin(p * math.pi * 3) * 12 * (1 - p);
+    yield (start - 140 * ease + wobble + 360) % 360;
+    await Future<void>.delayed(const Duration(milliseconds: 33));
+  }
+  while (true) {
+    yield qibla;
+    await Future<void>.delayed(const Duration(seconds: 1));
+  }
+}
+
 /// Compass screen pointing toward the Kaaba in Makkah.
 ///
 /// Combines the device magnetometer heading (via flutter_compass) with the
@@ -105,10 +125,12 @@ class _QiblaScreenState extends State<QiblaScreen> {
     final qibla = _qiblaBearing(lat, lng);
     final distanceKm = _distanceToKaabaKm(lat, lng).round();
 
-    return StreamBuilder<CompassEvent>(
-      stream: FlutterCompass.events,
+    return StreamBuilder<double?>(
+      stream: _kCaptureDemo
+          ? _demoHeading(qibla)
+          : FlutterCompass.events?.map((e) => e.heading),
       builder: (context, snapshot) {
-        final heading = snapshot.data?.heading;
+        final heading = snapshot.data;
 
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());

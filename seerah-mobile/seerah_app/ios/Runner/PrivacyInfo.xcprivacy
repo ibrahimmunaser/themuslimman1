@@ -23,6 +23,26 @@
 			</array>
 		</dict>
 		<!--
+		  NSUserDefaults(suiteName:) via the group.com.themuslimman.seerah App
+		  Group — used by GuardShared.swift to share the App Guard selection
+		  and current prayer name between Runner and its Screen Time
+		  extensions (see IOS_SCREEN_TIME_SETUP.md). Distinct reason code
+		  from the standard-container access above: 1C8F.1 is specifically
+		  for data shared between an app and extensions/widgets from the
+		  same developer via an App Group container, not CA92.1 (own
+		  container only). Compiled into the app regardless of
+		  ScreenTimeGuardEnabled, so this stays declared even while the
+		  feature is off.
+		-->
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>1C8F.1</string>
+			</array>
+		</dict>
+		<!--
 		  File timestamp APIs — accessed indirectly by Flutter engine internals
 		  and the video_player plugin.
 		  Reason C617.1: Inside an app or app extension, accessed to manage

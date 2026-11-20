@@ -262,6 +262,14 @@ class IAPNotifier extends StateNotifier<IAPState> {
   }
 
   Future<void> _init() async {
+    // in_app_purchase has no web implementation — accessing purchaseStream
+    // throws LateInitializationError. Skip billing entirely on web so the
+    // app can run in Chrome for demos / screen capture.
+    if (kIsWeb) {
+      state = const IAPState(status: IAPStatus.idle, isAvailable: false);
+      return;
+    }
+
     // Attach purchase stream before anything else — OS may deliver pending
     // purchases (e.g. subscription renewals, unacknowledged prior purchases)
     // as soon as the billing client connects.

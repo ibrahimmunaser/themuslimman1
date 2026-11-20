@@ -135,29 +135,30 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final needsAlarmKitGuidance = await controller.needsAlarmKitGuidance();
     if (needsAlarmKitGuidance && mounted) {
-      final turnOn = await showDialog<bool>(
+      // Apple Guideline 5.1.1(iv): a custom pre-permission message must
+      // always lead into the real system permission request — no button
+      // wording that implies the permission is already granted (like "Turn
+      // On"), and no way to dismiss the message without being taken to the
+      // actual prompt. So this is a single non-dismissible "Continue" button
+      // rather than a Turn On / Not Now choice; declining now still works
+      // fine via the system dialog's own "Don't Allow", and the persistent
+      // _AlarmKitBanner below offers another chance later regardless.
+      await showDialog<void>(
         context: context,
+        barrierDismissible: false,
         builder:
             (dialogContext) => AlertDialog(
               title: const Text(AppStrings.alarmKitGuidanceTitle),
               content: const Text(AppStrings.alarmKitGuidanceBody),
               actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(false),
-                  child: const Text('Not now'),
-                ),
                 FilledButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(true),
-                  child: const Text('Turn On'),
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Continue'),
                 ),
               ],
             ),
       );
-      if (turnOn == true) {
-        await controller.acceptAlarmKitGuidance();
-      } else {
-        await controller.dismissAlarmKitGuidance();
-      }
+      await controller.acceptAlarmKitGuidance();
     }
   }
 

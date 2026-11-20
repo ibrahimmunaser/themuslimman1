@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Requires the Family Controls (Distribution) entitlement to be
+	     approved by Apple for THIS bundle ID
+	     (com.themuslimman.seerah.DeviceActivityMonitorExtension) before a
+	     provisioning profile can include it — see IOS_SCREEN_TIME_SETUP.md.
+	     Harmless to ship before approval as long as
+	     ENABLE_SCREEN_TIME_EXTENSIONS stays unset, since these targets are
+	     only added to the Xcode project by
+	     ios/scripts/setup_screen_time_targets.rb when that flag is set. -->
+	<key>com.apple.developer.family-controls</key>
+	<true/>
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.com.themuslimman.seerah</string>
+	</array>
+</dict>
+</plist>

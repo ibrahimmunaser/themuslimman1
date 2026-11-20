@@ -886,9 +886,6 @@ class AppController extends ChangeNotifier with WidgetsBindingObserver {
     await requestAlarmKitPermission();
   }
 
-  Future<void> dismissAlarmKitGuidance() =>
-      repository.setFlag(PrayerSettingsRepository.alarmKitGuidanceFlag);
-
   /// Whether the persistent "Prayer Alarms are off" banner should appear on
   /// Home. Unlike the one-time dialog above, this is intentionally NOT
   /// dismissible and keeps showing on every launch until AlarmKit is

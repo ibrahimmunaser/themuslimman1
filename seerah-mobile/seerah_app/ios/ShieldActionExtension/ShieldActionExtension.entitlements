@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- See DeviceActivityMonitorExtension.entitlements for why this is
+	     safe to ship before Apple's approval. Bundle ID for this request:
+	     com.themuslimman.seerah.ShieldActionExtension -->
+	<key>com.apple.developer.family-controls</key>
+	<true/>
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.com.themuslimman.seerah</string>
+	</array>
+</dict>
+</plist>

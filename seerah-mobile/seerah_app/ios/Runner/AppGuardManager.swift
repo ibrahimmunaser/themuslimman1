@@ -1,7 +1,20 @@
 import Flutter
 import UIKit
 
-#if canImport(FamilyControls)
+// SCREEN_TIME_GUARD_ENABLED is a custom Swift compilation condition, only
+// ever set (via SWIFT_ACTIVE_COMPILATION_CONDITIONS) by
+// setup_screen_time_targets.rb, which itself only runs when
+// ENABLE_SCREEN_TIME_EXTENSIONS=1 — i.e. only once Apple has approved the
+// Family Controls distribution entitlement for this bundle ID (see
+// IOS_SCREEN_TIME_SETUP.md). `canImport(FamilyControls)` alone is NOT
+// enough to gate this: it's true on every iOS 16+ SDK regardless of
+// entitlement approval, so without this extra flag an ordinary App Store
+// build (no entitlement yet) would still link FamilyControls/
+// DeviceActivity/ManagedSettings — Apple's Guideline 2.5.1 rejected exactly
+// this: "includes ScreenTime APIs, but it does not include any features
+// that require it", because screenTimeGuardEnabled() always reports false
+// without the entitlement, making the feature permanently unreachable.
+#if canImport(FamilyControls) && SCREEN_TIME_GUARD_ENABLED
 import DeviceActivity
 import FamilyControls
 import ManagedSettings
@@ -15,7 +28,10 @@ import SwiftUI
 /// Requires Apple's Family Controls distribution entitlement to actually
 /// work on a real build — see IOS_SCREEN_TIME_SETUP.md. Every method
 /// degrades gracefully ("unsupported"/false) when the entitlement/SDK/OS
-/// version isn't available, so the rest of the app is never affected.
+/// version isn't available, so the rest of the app is never affected. The
+/// FamilyControls/DeviceActivity/ManagedSettings frameworks themselves are
+/// only compiled in at all when SCREEN_TIME_GUARD_ENABLED is set (see
+/// above) — an ordinary App Store build ships none of those API references.
 class AppGuardManager: NSObject {
     static let channelName = "com.themuslimman.seerah/app_guard_ios"
 
@@ -26,7 +42,7 @@ class AppGuardManager: NSObject {
     }
 
     func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        #if canImport(FamilyControls)
+        #if canImport(FamilyControls) && SCREEN_TIME_GUARD_ENABLED
         if #available(iOS 16.0, *) {
             switch call.method {
             case "isSupported":
@@ -83,7 +99,7 @@ class AppGuardManager: NSObject {
         Bundle.main.object(forInfoDictionaryKey: "ScreenTimeGuardEnabled") as? Bool ?? false
     }
 
-    #if canImport(FamilyControls)
+    #if canImport(FamilyControls) && SCREEN_TIME_GUARD_ENABLED
     @available(iOS 16.0, *)
     private func authorizationStatusString() -> String {
         switch AuthorizationCenter.shared.authorizationStatus {
@@ -188,7 +204,7 @@ class AppGuardManager: NSObject {
     #endif
 }
 
-#if canImport(FamilyControls)
+#if canImport(FamilyControls) && SCREEN_TIME_GUARD_ENABLED
 @available(iOS 16.0, *)
 private class GuardPickerModel: ObservableObject {
     @Published var selection = FamilyActivitySelection()

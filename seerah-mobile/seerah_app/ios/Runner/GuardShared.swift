@@ -1,5 +1,10 @@
 import Foundation
-#if canImport(FamilyControls)
+// See AppGuardManager.swift for why SCREEN_TIME_GUARD_ENABLED (not just
+// canImport) is required here too — this file compiles into the main
+// Runner target unconditionally, so without this extra flag an ordinary
+// App Store build (entitlement not yet approved) would still link
+// FamilyControls, tripping the same Guideline 2.5.1 "unused API" rejection.
+#if canImport(FamilyControls) && SCREEN_TIME_GUARD_ENABLED
 import FamilyControls
 #endif
 
@@ -39,7 +44,7 @@ enum GuardShared {
         set { defaults?.set(newValue, forKey: currentPrayerKey) }
     }
 
-    #if canImport(FamilyControls)
+    #if canImport(FamilyControls) && SCREEN_TIME_GUARD_ENABLED
     @available(iOS 16.0, *)
     static func saveSelection(_ selection: FamilyActivitySelection) {
         guard let data = try? PropertyListEncoder().encode(selection) else { return }

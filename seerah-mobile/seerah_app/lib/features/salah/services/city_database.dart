@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 
+import 'package:archive/archive.dart' show GZipDecoder;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
@@ -305,7 +306,9 @@ final Map<int, String> _diacriticMap = () {
 
 /// Runs in a background isolate: gunzip + parse the TSV asset.
 List<_IndexedCity> _parseCityDatabase(Uint8List bytes) {
-  final text = utf8.decode(gzip.decode(bytes));
+  // dart:io's gzip is unavailable on web.
+  final text = utf8.decode(
+      kIsWeb ? GZipDecoder().decodeBytes(bytes) : gzip.decode(bytes));
   final lines = const LineSplitter().convert(text);
   final result = <_IndexedCity>[];
   for (final line in lines) {

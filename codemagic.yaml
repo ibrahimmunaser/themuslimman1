@@ -198,6 +198,12 @@ workflows:
       cocoapods: default
       vars:
         BUNDLE_ID: com.themuslimman.seerah
+        # Set to "1" only after Apple has approved Family Controls
+        # (Distribution) for Runner + all 3 Screen Time extension bundle IDs
+        # and the provisioning profile has been regenerated to include them
+        # — see seerah-mobile/seerah_app/IOS_SCREEN_TIME_SETUP.md. Left unset,
+        # this build is completely unaffected (App Guard stays iOS-disabled).
+        ENABLE_SCREEN_TIME_EXTENSIONS: ""
       ios_signing:
         provisioning_profiles:
           - themuslimman_appstore
@@ -220,6 +226,16 @@ workflows:
     scripts:
       - name: Get Flutter packages
         script: flutter pub get
+        working_directory: seerah-mobile/seerah_app
+
+      - name: Add Screen Time extension targets (App Guard, opt-in)
+        script: |
+          set -euo pipefail
+          if [ "${ENABLE_SCREEN_TIME_EXTENSIONS:-}" = "1" ]; then
+            ruby ios/scripts/setup_screen_time_targets.rb
+          else
+            echo "ENABLE_SCREEN_TIME_EXTENSIONS not set to 1 — skipping (App Guard stays iOS-disabled)."
+          fi
         working_directory: seerah-mobile/seerah_app
 
       - name: Install CocoaPods
