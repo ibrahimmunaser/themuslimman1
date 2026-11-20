@@ -38,6 +38,7 @@ class PrayerSettingsRepository {
   static const fullScreenGuidanceFlag = 'fsi_guidance_shown_v1';
   static const batteryGuidanceFlag = 'oem_battery_guidance_shown_v1';
   static const alarmKitGuidanceFlag = 'alarmkit_guidance_shown_v1';
+  static const overlayGuidanceFlag = 'overlay_guidance_shown_v1';
 
   final SharedPreferences _prefs;
 

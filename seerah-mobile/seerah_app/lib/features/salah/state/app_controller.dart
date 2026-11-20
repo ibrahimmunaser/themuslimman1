@@ -995,6 +995,30 @@ class AppController extends ChangeNotifier with WidgetsBindingObserver {
       _settings.callScreenEnabled &&
       !_reliableCallScreenPermission;
 
+  /// Whether the one-time "Display over other apps" onboarding dialog
+  /// should be shown on this launch — for a new install, and once for
+  /// existing installs updating into this feature. Android only, and only
+  /// before the user has acted on it once; [shouldShowCallScreenOverlayBanner]
+  /// (non-dismissible) keeps nudging afterwards for as long as it's
+  /// actually still not granted.
+  Future<bool> needsOverlayGuidance() async {
+    if (kIsWeb || !Platform.isAndroid) return false;
+    if (repository.flagSet(PrayerSettingsRepository.overlayGuidanceFlag)) {
+      return false;
+    }
+    return !_reliableCallScreenPermission;
+  }
+
+  /// User accepted the guidance: mark shown and route to system settings.
+  Future<void> acceptOverlayGuidance() async {
+    await repository.setFlag(PrayerSettingsRepository.overlayGuidanceFlag);
+    await requestGuardOverlayPermission();
+    await refreshReliableCallScreenPermission();
+  }
+
+  Future<void> dismissOverlayGuidance() =>
+      repository.setFlag(PrayerSettingsRepository.overlayGuidanceFlag);
+
   Future<void> requestGuardUsageAccess() =>
       appGuardService.requestUsageAccess();
 

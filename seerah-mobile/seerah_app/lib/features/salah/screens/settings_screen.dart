@@ -1021,10 +1021,12 @@ class _AppGuardSectionState extends State<_AppGuardSection>
   }
 }
 
-/// Nudges the user to grant "Display over other apps" so the primary call
-/// screen reliably takes over at prayer time — not just when the device is
+/// Always-visible status row for "Display over other apps" — shows whether
+/// it's granted and lets the user open system settings to turn it on (or
+/// revisit/turn it off) at any time, not just while it's missing. Without
+/// it, the primary call screen only reliably takes over while the device is
 /// locked (Android's own behavior for the ordinary full-screen notification;
-/// see IncomingCallAlarmService). Independent of App Guard, which uses the
+/// see IncomingCallAlarmReceiver). Independent of App Guard, which uses the
 /// same permission but is a separate, optional feature.
 class _ReliableCallScreenTile extends StatefulWidget {
   const _ReliableCallScreenTile();
@@ -1065,25 +1067,32 @@ class _ReliableCallScreenTileState extends State<_ReliableCallScreenTile>
 
   @override
   Widget build(BuildContext context) {
-    if (_granted == true) return const SizedBox.shrink();
+    final granted = _granted == true;
     return Column(
       children: [
         const Divider(height: 1),
         ListTile(
-          leading: const Icon(
-            Icons.phone_in_talk_outlined,
-            color: Colors.orange,
+          leading: Icon(
+            granted
+                ? Icons.phone_in_talk_outlined
+                : Icons.phone_disabled_outlined,
+            color: granted ? Colors.green : Colors.orange,
           ),
-          title: const Text('Make the call screen always take over'),
-          subtitle: const Text(
-            'Without "Display over other apps", the call screen only '
-            'covers the screen when your phone is locked — otherwise it is '
-            'just a notification you have to tap. Grant it for a reliable '
-            'takeover every time.',
+          title: const Text('Display over other apps'),
+          subtitle: Text(
+            granted
+                ? 'On — "Allah is calling" takes over automatically when a '
+                    'prayer enters. Tap to review in system settings.'
+                : 'Off — the call screen only covers the screen when your '
+                    'phone is locked; otherwise it\'s just a notification '
+                    'you have to tap. Turn this on for a reliable takeover '
+                    'every time.',
           ),
           trailing: const Icon(Icons.chevron_right),
           onTap: () async {
-            await context.read<AppController>().requestGuardOverlayPermission();
+            final controller = context.read<AppController>();
+            await controller.requestGuardOverlayPermission();
+            await controller.refreshReliableCallScreenPermission();
             await _refresh();
           },
         ),

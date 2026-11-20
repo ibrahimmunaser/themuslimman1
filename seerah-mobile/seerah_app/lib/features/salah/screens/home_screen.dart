@@ -61,6 +61,38 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     }
 
+    final needsOverlayGuidance = await controller.needsOverlayGuidance();
+    if (needsOverlayGuidance && mounted) {
+      final proceed = await showDialog<bool>(
+        context: context,
+        builder:
+            (dialogContext) => AlertDialog(
+              title: const Text('Make prayer alerts pop up automatically'),
+              content: const Text(
+                'Right now, "Allah is calling" only shows as a notification '
+                'you have to tap when a prayer enters — unless your phone is '
+                'locked. Turning on "Display over other apps" makes it pop '
+                'up by itself every time, no tap needed.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(false),
+                  child: const Text('Not now'),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(true),
+                  child: const Text('Turn on'),
+                ),
+              ],
+            ),
+      );
+      if (proceed == true) {
+        await controller.acceptOverlayGuidance();
+      } else {
+        await controller.dismissOverlayGuidance();
+      }
+    }
+
     final manufacturer = await controller.pendingBatteryGuidance();
     if (manufacturer != null && mounted) {
       await showModalBottomSheet<void>(
