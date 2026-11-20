@@ -204,6 +204,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       _AlarmKitBanner(controller: controller),
                       const SizedBox(height: 16),
                     ],
+                    if (controller.shouldShowCallScreenOverlayBanner) ...[
+                      _CallScreenOverlayBanner(controller: controller),
+                      const SizedBox(height: 16),
+                    ],
                     _NextPrayerCard(controller: controller),
                     const SizedBox(height: 16),
                     if (controller.pendingCompletionPrayer != null) ...[
@@ -571,6 +575,77 @@ class _AlarmKitBanner extends StatelessWidget {
                         );
                       },
                       child: Text(denied ? 'Open Settings' : 'Enable'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Persistent (non-dismissible) nudge shown on Home (Android) when
+/// "Display over other apps" isn't granted. Without it, Android only
+/// auto-presents the full-screen "Allah is calling" call UI while the
+/// device is locked — otherwise it silently downgrades to a heads-up
+/// notification the user has to tap, which looks exactly like a bug.
+/// Surfacing it here, not just in Settings, is deliberate: it's otherwise
+/// invisible until the moment a prayer enters and it doesn't work.
+class _CallScreenOverlayBanner extends StatelessWidget {
+  final AppController controller;
+
+  const _CallScreenOverlayBanner({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      color: Colors.orange.shade50,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.orange.shade200),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.phone_in_talk_outlined, color: Colors.orange.shade800),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'One more step for prayer alerts',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                      color: Colors.orange.shade900,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Without "Display over other apps", the call screen only '
+                    'pops up by itself while your phone is locked — otherwise '
+                    'it\'s just a notification you have to tap. Grant it so '
+                    '"Allah is calling" always shows automatically.',
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+                  ),
+                  const SizedBox(height: 10),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: FilledButton(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Colors.orange.shade800,
+                      ),
+                      onPressed: () async {
+                        await controller.requestGuardOverlayPermission();
+                        await controller.refreshReliableCallScreenPermission();
+                      },
+                      child: const Text('Enable'),
                     ),
                   ),
                 ],

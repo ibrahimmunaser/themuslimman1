@@ -95,6 +95,13 @@ class AppController extends ChangeNotifier with WidgetsBindingObserver {
   bool _alarmKitAvailable = false;
   String _alarmKitAuthStatus = 'unavailable';
 
+  /// Cached "Display over other apps" state (Android only) — see
+  /// [hasReliableCallScreenPermission] for what it's for. Refreshed at
+  /// init and on every app resume so [shouldShowCallScreenOverlayBanner]
+  /// stays accurate without every Home rebuild hitting the platform
+  /// channel.
+  bool _reliableCallScreenPermission = true;
+
   /// Memoized next prayer so the per-second countdown never triggers a full
   /// astronomical recalculation. Invalidated when the cached prayer's time
   /// passes or when settings/location/timezone change.
@@ -211,6 +218,11 @@ class AppController extends ChangeNotifier with WidgetsBindingObserver {
       _alarmKitAuthStatus = await alarmKit.authorizationStatus();
     }
 
+    if (!kIsWeb && Platform.isAndroid) {
+      _reliableCallScreenPermission =
+          await notificationService.hasIncomingCallOverlayPermission();
+    }
+
     // Detect timezone (handles first run and timezone changes while closed).
     final detectedTimezone = await timezoneService.detectTimezone();
     final isFirstRun = _settings.timezone == null;
@@ -291,6 +303,11 @@ class AppController extends ChangeNotifier with WidgetsBindingObserver {
     // resumed — check before anything else so the call screen appears
     // immediately rather than after the recalculation work below.
     unawaited(_checkPendingIncomingCall());
+
+    // Picks up a grant/revoke of "Display over other apps" made while the
+    // app was backgrounded (e.g. the user just came back from Settings),
+    // so the Home banner below clears itself without needing a restart.
+    unawaited(refreshReliableCallScreenPermission());
 
     // Timezone may have changed while the app was backgrounded (travel/DST
     // zone updates), and the day may have rolled over.
@@ -952,6 +969,31 @@ class AppController extends ChangeNotifier with WidgetsBindingObserver {
   /// same system permission either feature uses.
   Future<bool> hasReliableCallScreenPermission() =>
       notificationService.hasIncomingCallOverlayPermission();
+
+  /// Re-checks "Display over other apps" and caches the result for
+  /// [shouldShowCallScreenOverlayBanner]. Call after the user returns from
+  /// granting it in system Settings.
+  Future<void> refreshReliableCallScreenPermission() async {
+    if (kIsWeb || !Platform.isAndroid) return;
+    final granted = await hasReliableCallScreenPermission();
+    if (granted == _reliableCallScreenPermission) return;
+    _reliableCallScreenPermission = granted;
+    notifyListeners();
+  }
+
+  /// Whether the persistent "Prayer alarms need one more permission" banner
+  /// should appear on Home. Android only. Without "Display over other
+  /// apps", Android only auto-presents the call screen's full-screen
+  /// notification while the device is locked — otherwise (unlocked, in
+  /// another app) it downgrades to a heads-up banner the user must tap,
+  /// which is exactly the confusing behavior this banner heads off. Not
+  /// dismissible, for the same reason [shouldShowAlarmKitBanner] isn't:
+  /// easy to miss once and then never revisit.
+  bool get shouldShowCallScreenOverlayBanner =>
+      !kIsWeb &&
+      Platform.isAndroid &&
+      _settings.callScreenEnabled &&
+      !_reliableCallScreenPermission;
 
   Future<void> requestGuardUsageAccess() =>
       appGuardService.requestUsageAccess();
