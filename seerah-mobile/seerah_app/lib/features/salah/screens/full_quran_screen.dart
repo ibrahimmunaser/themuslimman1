@@ -357,6 +357,13 @@ class _FullQuranScreenState extends State<FullQuranScreen> {
         metas != null && _currentSurah <= metas.length
             ? surahTitle(metas[_currentSurah - 1], quranLang(context))
             : '';
+    // Resolved here (inside this widget's real build) and passed down to
+    // _buildHeader/_buildChunk, since they run from ScrollablePositionedList's
+    // lazy itemBuilder using this State's context — calling context.select
+    // from inside them directly trips Provider's "outside of build" assertion.
+    final quranFont = context.select<AppController, QuranFontOption>(
+      (c) => c.settings.quranFont,
+    );
     return Scaffold(
       appBar: AppBar(
         title: Column(
@@ -411,8 +418,8 @@ class _FullQuranScreenState extends State<FullQuranScreen> {
             itemBuilder: (context, index) {
               final item = items[index];
               return item.isHeader
-                  ? _buildHeader(metas[item.surah - 1])
-                  : _buildChunk(item);
+                  ? _buildHeader(metas[item.surah - 1], quranFont)
+                  : _buildChunk(item, quranFont);
             },
           );
         },
@@ -420,7 +427,7 @@ class _FullQuranScreenState extends State<FullQuranScreen> {
     );
   }
 
-  Widget _buildHeader(SurahMeta meta) {
+  Widget _buildHeader(SurahMeta meta, QuranFontOption quranFont) {
     final showBismillah = meta.number != 1 && meta.number != _atTawbah;
     return Padding(
       padding: const EdgeInsets.only(top: 18, bottom: 10),
@@ -468,9 +475,7 @@ class _FullQuranScreenState extends State<FullQuranScreen> {
                 textAlign: TextAlign.center,
                 textDirection: TextDirection.rtl,
                 style: quranTextStyle(
-                  context.select<AppController, QuranFontOption>(
-                    (c) => c.settings.quranFont,
-                  ),
+                  quranFont,
                   TextStyle(
                     fontSize: 24,
                     height: 1.8,
@@ -485,7 +490,7 @@ class _FullQuranScreenState extends State<FullQuranScreen> {
     );
   }
 
-  Widget _buildChunk(_QuranItem item) {
+  Widget _buildChunk(_QuranItem item, QuranFontOption quranFont) {
     final content = _loaded[item.surah];
     if (content == null) {
       if (_failed.contains(item.surah)) {
@@ -556,9 +561,7 @@ class _FullQuranScreenState extends State<FullQuranScreen> {
           ),
           textAlign: TextAlign.justify,
           style: quranTextStyle(
-            context.select<AppController, QuranFontOption>(
-              (c) => c.settings.quranFont,
-            ),
+            quranFont,
             TextStyle(
               fontSize: 26,
               height: 2.0,

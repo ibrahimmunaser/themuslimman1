@@ -674,7 +674,7 @@ class _CallScreenOverlayBanner extends StatelessWidget {
                         backgroundColor: Colors.orange.shade800,
                       ),
                       onPressed: () async {
-                        await controller.requestGuardOverlayPermission();
+                        await controller.requestCallScreenOverlayPermission();
                         await controller.refreshReliableCallScreenPermission();
                       },
                       child: const Text('Enable'),

@@ -1,7 +1,7 @@
 name: seerah_app
 description: "The Muslim Man — Seerah Course Mobile App"
 publish_to: 'none'
-version: 1.0.93+97
+version: 1.0.94+98
 
 environment:
   sdk: ^3.12.0
@@ -143,3 +143,16 @@ flutter:
     # Guard-screen backdrops (native Android GuardBlockActivity reads these
     # directly from the Flutter asset bundle — see its loadHero()).
     - assets/incoming_call/
+
+  fonts:
+    # "Amiri Quran" re-themed: upstream (aliftype/amiri, also what
+    # google_fonts serves) is the COLR/CPAL-colored AmiriQuranColored.ttf,
+    # which bakes its tajweed-style diacritic/ayah-marker colors directly
+    # into the font's color palette table — not overridable via TextStyle.
+    # This is that same font with CPAL palette 0 entries 0 (diacritics,
+    # was red) and 1 (ayah-end ornament, was green) patched to
+    # AppColors.gold's default (#D4A017); entries 2/3 (orange/blue, other
+    # annotation marks) are untouched. See quran_fonts.dart.
+    - family: Amiri Quran Gold
+      fonts:
+        - asset: assets/fonts/AmiriQuranGold.ttf

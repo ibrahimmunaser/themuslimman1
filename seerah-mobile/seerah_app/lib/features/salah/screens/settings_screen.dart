@@ -1091,7 +1091,7 @@ class _ReliableCallScreenTileState extends State<_ReliableCallScreenTile>
           trailing: const Icon(Icons.chevron_right),
           onTap: () async {
             final controller = context.read<AppController>();
-            await controller.requestGuardOverlayPermission();
+            await controller.requestCallScreenOverlayPermission();
             await controller.refreshReliableCallScreenPermission();
             await _refresh();
           },

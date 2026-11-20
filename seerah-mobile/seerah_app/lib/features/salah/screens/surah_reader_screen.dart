@@ -126,10 +126,7 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
     return verse.arabic;
   }
 
-  Widget _buildBismillahLine() {
-    final quranFont = context.select<AppController, QuranFontOption>(
-      (c) => c.settings.quranFont,
-    );
+  Widget _buildBismillahLine(QuranFontOption quranFont) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Text(
@@ -295,6 +292,14 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Resolved here (this State's real build) and threaded down through
+    // _buildScrollMode/_buildSwipeMode/_buildBismillahLine/_buildVerseCard,
+    // since those run from ListView/PageView's lazy itemBuilder — calling
+    // context.select from inside them directly trips Provider's "outside
+    // of build" assertion.
+    final quranFont = context.select<AppController, QuranFontOption>(
+      (c) => c.settings.quranFont,
+    );
     return FutureBuilder<SurahContent>(
       future: _future,
       builder: (context, snapshot) {
@@ -331,8 +336,8 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
                 ),
                 _ =>
                   _swipeMode
-                      ? _buildSwipeMode(content)
-                      : _buildScrollMode(content),
+                      ? _buildSwipeMode(content, quranFont)
+                      : _buildScrollMode(content, quranFont),
               },
               Align(
                 alignment: Alignment.topCenter,
@@ -360,7 +365,7 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
     );
   }
 
-  Widget _buildScrollMode(SurahContent content) {
+  Widget _buildScrollMode(SurahContent content, QuranFontOption quranFont) {
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       itemCount: content.verses.length + 1,
@@ -369,7 +374,7 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
           return Column(
             children: [
               _SurahHeader(meta: content.meta),
-              if (_showsBismillah) _buildBismillahLine(),
+              if (_showsBismillah) _buildBismillahLine(quranFont),
             ],
           );
         }
@@ -382,13 +387,18 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
         });
         return Padding(
           padding: const EdgeInsets.only(bottom: 12),
-          child: _buildVerseCard(content, verse, tapToCount: true),
+          child: _buildVerseCard(
+            content,
+            verse,
+            quranFont,
+            tapToCount: true,
+          ),
         );
       },
     );
   }
 
-  Widget _buildSwipeMode(SurahContent content) {
+  Widget _buildSwipeMode(SurahContent content, QuranFontOption quranFont) {
     final lastPage = content.verses.length - 1;
     final page = _currentPage.clamp(0, lastPage);
     _pageController ??= PageController(initialPage: page);
@@ -427,8 +437,13 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
                   children: [
                     _SurahHeader(meta: content.meta),
                     if (verse.numberInSurah == 1 && _showsBismillah)
-                      _buildBismillahLine(),
-                    _buildVerseCard(content, verse, tapToCount: false),
+                      _buildBismillahLine(quranFont),
+                    _buildVerseCard(
+                      content,
+                      verse,
+                      quranFont,
+                      tapToCount: false,
+                    ),
                   ],
                 ),
               );
@@ -546,7 +561,8 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
 
   Widget _buildVerseCard(
     SurahContent content,
-    QuranVerse verse, {
+    QuranVerse verse,
+    QuranFontOption quranFont, {
     required bool tapToCount,
   }) {
     final playing = _playingVerse == verse.numberInSurah;
@@ -628,9 +644,7 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
               textAlign: TextAlign.right,
               textDirection: TextDirection.rtl,
               style: quranTextStyle(
-                context.select<AppController, QuranFontOption>(
-                  (c) => c.settings.quranFont,
-                ),
+                quranFont,
                 TextStyle(
                   fontSize: 24,
                   height: 1.9,

@@ -12,7 +12,13 @@ import '../state/app_controller.dart';
 TextStyle quranTextStyle(QuranFontOption font, TextStyle base) {
   switch (font) {
     case QuranFontOption.amiriQuran:
-      return GoogleFonts.amiriQuran(textStyle: base);
+      // Not GoogleFonts.amiriQuran(): upstream ships the COLR/CPAL-colored
+      // AmiriQuranColored.ttf, which bakes its diacritic/ayah-marker colors
+      // directly into the font's palette table, ignoring TextStyle.color.
+      // "Amiri Quran Gold" is a locally bundled copy with that palette
+      // patched to this app's gold instead of the original red/green — see
+      // assets/fonts/AmiriQuranGold.ttf and the pubspec `fonts:` entry.
+      return base.copyWith(fontFamily: 'Amiri Quran Gold');
     case QuranFontOption.scheherazadeNew:
       return GoogleFonts.scheherazadeNew(textStyle: base);
     case QuranFontOption.lateef:

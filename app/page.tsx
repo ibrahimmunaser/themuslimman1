@@ -185,7 +185,7 @@ export default async function LandingPage() {
       {/* ============================================================
           3. CURRICULUM — existing lesson titles
       ============================================================ */}
-      <section className="py-12 border-t border-border">
+      <section className="py-12 border-t border-gold/15">
         <div className="max-w-3xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-6">
             <h2 className="text-2xl sm:text-3xl font-bold mb-2">{siteT(lang, "curriculumTitle")}</h2>
@@ -195,12 +195,12 @@ export default async function LandingPage() {
             {eras.map((era) => {
               const eraParts = parts.filter((part) => part.era === era.id);
               return (
-                <details key={era.id} className="group rounded-xl border border-border bg-surface overflow-hidden">
+                <details key={era.id} className="group rounded-xl border border-gold/20 bg-surface overflow-hidden">
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 font-semibold text-text hover:bg-surface-raised">
                     <span>{era.label}</span>
                     <span className="text-xs font-medium text-text-muted">{eraParts.length}</span>
                   </summary>
-                  <ol className="border-t border-border/50 px-5 py-3 space-y-1.5">
+                  <ol className="border-t border-gold/15 px-5 py-3 space-y-1.5">
                     {eraParts.map((part) => (
                       <li key={part.id} className="flex items-baseline justify-between gap-3 text-sm">
                         <span className="text-text-secondary">
@@ -261,7 +261,7 @@ export default async function LandingPage() {
       {/* ============================================================
           6. FAQ
       ============================================================ */}
-      <section id="faq" className="py-12 border-t border-border">
+      <section id="faq" className="py-12 border-t border-gold/15">
         <div className="max-w-2xl mx-auto px-4 sm:px-6">
           <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-center">{siteT(lang, "faqTitle")}</h2>
 
@@ -296,7 +296,7 @@ export default async function LandingPage() {
             ].map((item) => (
               <details
                 key={item.q}
-                className="group rounded-xl border border-border bg-surface overflow-hidden"
+                className="group rounded-xl border border-gold/20 bg-surface overflow-hidden"
                 open={item.open}
               >
                 <summary className="flex items-center justify-between gap-4 px-5 py-4 cursor-pointer list-none font-semibold text-text hover:bg-surface-raised transition-colors">
@@ -306,7 +306,7 @@ export default async function LandingPage() {
                     aria-hidden
                   />
                 </summary>
-                <div className="px-5 pb-5 pt-1 text-sm text-text-secondary leading-relaxed border-t border-border/50">
+                <div className="px-5 pb-5 pt-1 text-sm text-text-secondary leading-relaxed border-t border-gold/15">
                   {item.a === "SUBSCRIPTION_PRICE" ? (
                     <>
                       {siteT(lang, "yesShort")} — <span dir="ltr">{formatPrice(countryPrice.monthlyAmountCents)}</span>

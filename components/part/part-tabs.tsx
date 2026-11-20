@@ -715,14 +715,14 @@ function ModeButton({
         isActive
           ? "border-gold/30 bg-gold/8 text-gold shadow-sm shadow-gold/10"
           : isDisabled
-          ? "border-border/15 bg-surface/20 text-text-muted/25 cursor-not-allowed pointer-events-none"
+          ? "border-gold/10 bg-surface/20 text-text-muted/25 cursor-not-allowed pointer-events-none"
           : isAvailable
           ? isPrimary
             // Primary inactive — clearer, more prominent
-            ? "border-border/60 bg-surface-raised/70 text-text-secondary hover:border-gold/20 hover:bg-surface-high hover:text-text cursor-pointer"
+            ? "border-gold/25 bg-surface-raised/70 text-text-secondary hover:border-gold/40 hover:bg-surface-high hover:text-text cursor-pointer"
             // Secondary inactive — brighter than before, still quieter than primary
-            : "border-border/50 bg-surface-raised/50 text-text-secondary/75 hover:border-border/70 hover:bg-surface-raised hover:text-text-secondary cursor-pointer"
-          : "border-border/30 bg-surface/40 text-text-muted/60 hover:border-gold/15 hover:bg-surface-raised/50 cursor-pointer"
+            : "border-gold/20 bg-surface-raised/50 text-text-secondary/75 hover:border-gold/35 hover:bg-surface-raised hover:text-text-secondary cursor-pointer"
+          : "border-gold/15 bg-surface/40 text-text-muted/60 hover:border-gold/25 hover:bg-surface-raised/50 cursor-pointer"
       )}
     >
       {/* Icon */}
@@ -1004,7 +1004,7 @@ export function PartTabs({ part, userPlan: _userPlan, previewMode = false, initi
 
           {/* Sub-tab bar (only when mode has multiple content items) */}
           {subTabs.length > 1 && (
-            <div className="flex gap-1.5 overflow-x-auto scrollbar-hide rounded-xl border border-border bg-surface-raised/30 p-1.5">
+            <div className="flex gap-1.5 overflow-x-auto scrollbar-hide rounded-xl border border-gold/20 bg-surface-raised/30 p-1.5">
               {subTabs.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = currentSubTab === tab.id;

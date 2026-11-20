@@ -73,6 +73,18 @@ class IncomingCallAlarmService {
     }
   }
 
+  /// Opens Android's "Display over other apps" system settings screen for
+  /// this app, so the user can grant the permission [hasOverlayPermission]
+  /// checks for.
+  Future<void> requestOverlayPermission() async {
+    if (!isSupported) return;
+    try {
+      await _channel.invokeMethod('requestOverlayPermission');
+    } catch (e) {
+      debugPrint('IncomingCallAlarm requestOverlayPermission failed: $e');
+    }
+  }
+
   /// Consumes (reads and clears) a pending direct-launch prayer recorded by
   /// the native alarm, if any. Call at cold start and on every app resume —
   /// whichever observes it first wins; the native side clears it so it is

@@ -1,6 +1,8 @@
 package com.themuslimman.seerah
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.provider.Settings
 import androidx.annotation.NonNull
 import io.flutter.embedding.engine.plugins.FlutterPlugin
@@ -55,6 +57,14 @@ class IncomingCallPlugin : FlutterPlugin, MethodCallHandler {
                 }
                 "consumePending" -> result.success(IncomingCallPrefs.consumePendingPrayer(appContext))
                 "hasOverlayPermission" -> result.success(Settings.canDrawOverlays(appContext))
+                "requestOverlayPermission" -> {
+                    val intent = Intent(
+                        Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        Uri.parse("package:${appContext.packageName}"),
+                    ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    appContext.startActivity(intent)
+                    result.success(null)
+                }
                 else -> result.notImplemented()
             }
         } catch (e: Exception) {

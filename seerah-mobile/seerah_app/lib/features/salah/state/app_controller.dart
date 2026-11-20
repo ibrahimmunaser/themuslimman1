@@ -1012,7 +1012,7 @@ class AppController extends ChangeNotifier with WidgetsBindingObserver {
   /// User accepted the guidance: mark shown and route to system settings.
   Future<void> acceptOverlayGuidance() async {
     await repository.setFlag(PrayerSettingsRepository.overlayGuidanceFlag);
-    await requestGuardOverlayPermission();
+    await requestCallScreenOverlayPermission();
     await refreshReliableCallScreenPermission();
   }
 
@@ -1024,6 +1024,14 @@ class AppController extends ChangeNotifier with WidgetsBindingObserver {
 
   Future<void> requestGuardOverlayPermission() =>
       appGuardService.requestOverlayPermission();
+
+  /// Opens the "Display over other apps" system settings screen so the
+  /// primary prayer alert can force-launch the "Allah is calling" screen
+  /// reliably. Distinct from [requestGuardOverlayPermission], which is for
+  /// the separate (currently disabled) App Guard feature's own overlay
+  /// permission grant.
+  Future<void> requestCallScreenOverlayPermission() =>
+      notificationService.requestIncomingCallOverlayPermission();
 
   Future<List<GuardableApp>> guardableApps() =>
       appGuardService.getInstalledApps();

@@ -143,7 +143,7 @@ class PrayerSettings {
     this.callScreenEnabled = true,
     this.snoozeMinutes = 10,
     this.hijriAdjustmentDays = 0,
-    this.quranFont = QuranFontOption.amiriQuran,
+    this.quranFont = QuranFontOption.notoNaskhArabic,
   });
 
   bool get hasLocation => latitude != null && longitude != null;
@@ -268,7 +268,7 @@ class PrayerSettings {
       quranFont: enumByName(
         QuranFontOption.values,
         json['quranFont'],
-        QuranFontOption.amiriQuran,
+        QuranFontOption.notoNaskhArabic,
       ),
     );
   }

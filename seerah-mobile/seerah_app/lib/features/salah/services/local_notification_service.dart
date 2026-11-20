@@ -182,6 +182,11 @@ class LocalNotificationService implements NotificationScheduler {
   Future<bool> hasIncomingCallOverlayPermission() =>
       _incomingCallAlarm.hasOverlayPermission();
 
+  /// Opens the system "Display over other apps" settings screen so the user
+  /// can grant [hasIncomingCallOverlayPermission].
+  Future<void> requestIncomingCallOverlayPermission() =>
+      _incomingCallAlarm.requestOverlayPermission();
+
   /// Consumes a pending prayer recorded by the native direct-launch alarm,
   /// if the app was just force-foregrounded (or is cold-starting into) one.
   /// Call once at startup and on every app resume.
