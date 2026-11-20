@@ -376,6 +376,11 @@ class _FullQuranScreenState extends State<FullQuranScreen> {
         ),
         actions: [
           IconButton(
+            icon: const Icon(Icons.text_fields),
+            tooltip: 'Quran Font',
+            onPressed: () => showQuranFontPicker(context),
+          ),
+          IconButton(
             icon: const Icon(Icons.format_list_numbered),
             tooltip: qc(context, 'jumpToSurah'),
             onPressed: _openSurahSelector,

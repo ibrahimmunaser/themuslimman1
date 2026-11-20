@@ -535,24 +535,7 @@ class _SettingsScreenState extends State<SettingsScreen> with RouteAware {
                 '${settings.quranFont.description}',
               ),
               trailing: const Icon(Icons.chevron_right),
-              onTap:
-                  () => _pickEnum<QuranFontOption>(
-                    context: context,
-                    title: 'Quran Font',
-                    values: QuranFontOption.values,
-                    selected: settings.quranFont,
-                    labelOf: (v) => v.displayName,
-                    descriptionOf: (v) => v.description,
-                    fontFamilyOf:
-                        (v) => quranTextStyle(
-                          v,
-                          TextStyle(fontSize: 20, color: AppColors.gold),
-                        ),
-                    onSelected:
-                        (v) => controller.updateSettings(
-                          settings.copyWith(quranFont: v),
-                        ),
-                  ),
+              onTap: () => showQuranFontPicker(context),
             ),
           ),
           const SizedBox(height: 16),
@@ -785,8 +768,6 @@ class _SettingsScreenState extends State<SettingsScreen> with RouteAware {
     required T selected,
     required String Function(T) labelOf,
     required void Function(T) onSelected,
-    String Function(T)? descriptionOf,
-    TextStyle Function(T)? fontFamilyOf,
   }) async {
     final choice = await showModalBottomSheet<T>(
       context: context,
@@ -824,29 +805,6 @@ class _SettingsScreenState extends State<SettingsScreen> with RouteAware {
                                     .map(
                                       (v) => RadioListTile<T>(
                                         title: Text(labelOf(v)),
-                                        subtitle:
-                                            descriptionOf == null
-                                                ? null
-                                                : Row(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    Expanded(
-                                                      child: Text(
-                                                        descriptionOf(v),
-                                                      ),
-                                                    ),
-                                                    if (fontFamilyOf != null) ...[
-                                                      const SizedBox(width: 8),
-                                                      Text(
-                                                        '\u0628\u0650\u0633\u0652\u0645\u0650',
-                                                        textDirection:
-                                                            TextDirection.rtl,
-                                                        style: fontFamilyOf(v),
-                                                      ),
-                                                    ],
-                                                  ],
-                                                ),
                                         value: v,
                                       ),
                                     )

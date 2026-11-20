@@ -304,6 +304,11 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
             title: Text(content != null ? surahTitle(content.meta, quranLang(context)) : '${qc(context, 'bySurah')} $_surahNumber'),
             actions: [
               IconButton(
+                icon: const Icon(Icons.text_fields),
+                tooltip: 'Quran Font',
+                onPressed: () => showQuranFontPicker(context),
+              ),
+              IconButton(
                 icon: Icon(
                   _swipeMode ? Icons.view_agenda_outlined : Icons.swipe,
                 ),
