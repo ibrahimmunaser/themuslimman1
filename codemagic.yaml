@@ -201,9 +201,11 @@ workflows:
         # Set to "1" only after Apple has approved Family Controls
         # (Distribution) for Runner + all 3 Screen Time extension bundle IDs
         # and the provisioning profile has been regenerated to include them
-        # — see seerah-mobile/seerah_app/IOS_SCREEN_TIME_SETUP.md. Left unset,
-        # this build is completely unaffected (App Guard stays iOS-disabled).
-        ENABLE_SCREEN_TIME_EXTENSIONS: ""
+        # — see seerah-mobile/seerah_app/IOS_SCREEN_TIME_SETUP.md. Left at
+        # "0", this build is completely unaffected (App Guard stays
+        # iOS-disabled). Codemagic's schema rejects an empty string here, so
+        # this must always be a non-empty value, never "".
+        ENABLE_SCREEN_TIME_EXTENSIONS: "0"
       ios_signing:
         provisioning_profiles:
           - themuslimman_appstore
