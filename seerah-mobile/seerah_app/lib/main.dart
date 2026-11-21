@@ -11,6 +11,8 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:in_app_purchase_storekit/in_app_purchase_storekit.dart';
 import 'package:provider/provider.dart' as provider_pkg;
+import 'core/crash_guard.dart';
+import 'core/error_reporter.dart';
 import 'core/network/api_client.dart';
 import 'core/providers/app_theme_provider.dart';
 import 'core/providers/auth_provider.dart';
@@ -31,6 +33,10 @@ import 'features/salah/state/app_controller.dart';
 Future<void> _enableStoreKit1IfNeeded() async {
   if (kIsWeb || !Platform.isIOS) return;
   try {
+    // Deliberate: the backend verifies classic SK1 receipts. The plugin
+    // marks this deprecated ("will be removed in the future"); when it
+    // is removed, migrate verification to StoreKit 2 JWS instead.
+    // ignore: deprecated_member_use
     await InAppPurchaseStoreKitPlatform.enableStoreKit1();
   } catch (e) {
     debugPrint('[IAP] enableStoreKit1 failed (continuing with StoreKit 2): $e');
@@ -41,6 +47,19 @@ Future<void> main() async {
   // Preserve the native splash until init is complete.
   final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+
+  // First thing: catch every uncaught error (framework, async, platform
+  // channel) so none of them can silently kill the app — see ErrorReporter.
+  ErrorReporter.install();
+
+  // Must finish before anything reads courseLangProvider (lazily created on
+  // first read, during SeerahApp's first build — see CrashGuard's doc
+  // comment) so a reset here is already in place by the time it loads.
+  await ErrorReporter.guard(
+    'crash_guard',
+    CrashGuard.checkAndMarkPending,
+    null,
+  );
   // Startup work that doesn't depend on each other runs concurrently instead
   // of as a chain of awaits. Previously date-symbol init, the StoreKit
   // switch, the theme-prefs read, the orientation lock, the secure-storage
@@ -52,26 +71,40 @@ Future<void> main() async {
   bool needsOnboarding = false;
   bool onboardingIsNewInstall = true;
   try {
+    // Every step is individually guarded: a failure in one (e.g. secure
+    // storage on a quirky device) is recorded and replaced by a safe
+    // default instead of aborting main() before runApp, which used to
+    // leave the user with a dead, never-rendering app.
     final results = await Future.wait<Object?>([
-      initializeDateFormatting(),
-      _enableStoreKit1IfNeeded(),
+      ErrorReporter.guard('date_formatting', initializeDateFormatting, null),
+      ErrorReporter.guard('storekit1', _enableStoreKit1IfNeeded, null),
       // Loads the persisted theme choice into AppColors before anything
       // (the system-bar style below included) reads it, so the startup
       // system bars and first frame already reflect it instead of flashing
       // Black & Gold first.
-      loadAppThemeFromPrefs(),
-      SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]),
+      ErrorReporter.guard('theme', loadAppThemeFromPrefs, null),
+      ErrorReporter.guard(
+        'orientation',
+        () => SystemChrome.setPreferredOrientations([
+          DeviceOrientation.portraitUp,
+        ]),
+        null,
+      ),
       // Initialize Dio + restore secure cookies before any provider reads
       // the API.
-      ApiClient.instance.init(),
+      ErrorReporter.guard('api_client', ApiClient.instance.init, null),
       // Read before FlutterNativeSplash.remove() so app_router's redirect
       // can decide /welcome vs /dashboard on the very first frame — see
       // welcome_provider.dart's doc comment.
-      loadHasSeenWelcome(),
+      ErrorReporter.guard<bool>('welcome', loadHasSeenWelcome, true),
       // Same reasoning as loadHasSeenWelcome() above, for the forced
       // intro/"what's new" + theme-picker funnel — see
       // onboarding_provider.dart.
-      loadOnboardingStartupInfo(),
+      ErrorReporter.guard<({bool needsOnboarding, bool isNewInstall})>(
+        'onboarding',
+        loadOnboardingStartupInfo,
+        (needsOnboarding: false, isNewInstall: true),
+      ),
     ]);
     hasSeenWelcome = results[results.length - 2] as bool;
     final onboardingInfo =
@@ -141,6 +174,28 @@ class _SeerahAppState extends ConsumerState<SeerahApp>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // The first frame actually rendering is the strongest "this launch
+    // didn't crash at startup" signal we have with no crash-reporting SDK
+    // wired up — see CrashGuard's doc comment.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(CrashGuard.markSucceeded());
+      if (CrashGuard.justRecoveredLanguage) {
+        CrashGuard.justRecoveredLanguage = false;
+        final messenger = _scaffoldMessengerKey.currentState;
+        messenger
+          ?..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(
+              duration: Duration(seconds: 6),
+              content: Text(
+                'We reset the app language to English after it had '
+                'trouble starting up. Please try changing the language '
+                'again — if it keeps happening, let us know.',
+              ),
+            ),
+          );
+      }
+    });
     // B5 fix: eagerly initialise IAPNotifier at app startup so the purchase
     // stream is attached before any screen opens. This ensures iOS subscription
     // renewal transactions and Android pending purchases delivered on launch

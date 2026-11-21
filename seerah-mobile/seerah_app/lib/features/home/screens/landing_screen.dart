@@ -692,8 +692,9 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                                         .ensureSession();
                                     if (!ready ||
                                         !ref.read(authProvider).isLoggedIn ||
-                                        !mounted)
+                                        !mounted) {
                                       return;
+                                    }
                                     ref
                                         .read(iapProvider.notifier)
                                         .restorePurchases();

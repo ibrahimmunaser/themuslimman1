@@ -20,8 +20,12 @@ class TafsirService {
 
   static final TafsirService instance = TafsirService._();
 
-  static const _networkBase =
-      'https://cdn.jsdelivr.net/gh/spa5k/tafsir_api@main/tafsir/en-tafisr-ibn-kathir';
+  /// Pinned to an exact commit of the dataset (not `@main`) so upstream
+  /// edits/renames can never change or break what users see without an app
+  /// update. Bump deliberately after checking the new commit.
+  static const _datasetBase =
+      'https://cdn.jsdelivr.net/gh/spa5k/tafsir_api@311a038bf532fa84566ca1bb2cdbeb210da3d5ed/tafsir';
+  static const _networkBase = '$_datasetBase/en-tafisr-ibn-kathir';
 
   final Map<String, String> _memory = {};
 
@@ -94,8 +98,7 @@ class TafsirService {
         if (t.isNotEmpty) return _memory[key] = t;
       }
       final response = await http
-          .get(Uri.parse(
-              'https://cdn.jsdelivr.net/gh/spa5k/tafsir_api@main/tafsir/$edition/$surah/$verse.json'))
+          .get(Uri.parse('$_datasetBase/$edition/$surah/$verse.json'))
           .timeout(const Duration(seconds: 15));
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body) as Map<String, dynamic>;

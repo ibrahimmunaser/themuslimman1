@@ -48,6 +48,8 @@ class AccountScreen extends ConsumerWidget {
                 child: Text(t(lang, 'signIn')),
               ),
             ),
+            const SizedBox(height: 24),
+            const Center(child: LiveVersionLabel()),
           ],
         ),
       ),

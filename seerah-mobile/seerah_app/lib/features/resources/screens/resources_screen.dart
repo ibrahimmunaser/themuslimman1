@@ -116,6 +116,7 @@ final int kResourceTypeCount = _resourceTypes.length;
 int resourceTypeCountForLang(String lang) =>
     lang == 'en' ? kResourceTypeCount : kResourceTypeCount - 1;
 
+// ignore: library_private_types_in_public_api
 List<_ResourceType> resourceTypesForLang(String lang) => lang == 'en'
     ? _resourceTypes
     : _resourceTypes.where((r) => r.id != 'mindmap').toList();

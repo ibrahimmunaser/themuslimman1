@@ -116,16 +116,20 @@ void main() {
     });
 
     testWidgets('PageIntroCard survives large text scale', (tester) async {
+      // PageIntroCard uses the app's translating Text widget, which reads
+      // the course-language provider, so it needs a ProviderScope.
       await tester.pumpWidget(
-        MediaQuery(
-          data: const MediaQueryData(size: Size(390, 844), textScaler: TextScaler.linear(1.4)),
-          child: MaterialApp(
-            theme: AppTheme.dark,
-            home: const Scaffold(
-              body: PageIntroCard(
-                eyebrow: 'Test',
-                title: 'Large text scale header',
-                description: 'Description should remain readable at 1.4x text scale.',
+        ProviderScope(
+          child: MediaQuery(
+            data: const MediaQueryData(size: Size(390, 844), textScaler: TextScaler.linear(1.4)),
+            child: MaterialApp(
+              theme: AppTheme.dark,
+              home: const Scaffold(
+                body: PageIntroCard(
+                  eyebrow: 'Test',
+                  title: 'Large text scale header',
+                  description: 'Description should remain readable at 1.4x text scale.',
+                ),
               ),
             ),
           ),

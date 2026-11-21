@@ -207,6 +207,10 @@ final class AlarmKitPlugin: NSObject, FlutterPlugin {
     // AlarmKit's alert UI exposes a single title string; include the prayer
     // name so both required pieces of copy appear on the system alert.
     let alertTitle = "\(title) — \(prayerDisplayName) Prayer"
+    // Translated by the Dart side (same phrase table every other Salah
+    // screen uses) so the system alert's buttons aren't English-only.
+    let dismissLabel = (args["dismissLabel"] as? String) ?? "Dismiss"
+    let answerLabel = (args["answerLabel"] as? String) ?? "Answer"
     let scheduledAtISO =
       (args["scheduledAtISO"] as? String)
       ?? ISO8601DateFormatter().string(
@@ -224,12 +228,12 @@ final class AlarmKitPlugin: NSObject, FlutterPlugin {
     // secondaryButtonBehavior:) overload and supply our own Dismiss stop button,
     // matching Apple's WWDC25 "Wake up to the AlarmKit API" sample exactly.
     let stopButton = AlarmButton(
-      text: "Dismiss",
+      text: LocalizedStringResource(stringLiteral: dismissLabel),
       textColor: .white,
       systemImageName: "stop.circle"
     )
     let answerButton = AlarmButton(
-      text: "Answer",
+      text: LocalizedStringResource(stringLiteral: answerLabel),
       textColor: .white,
       systemImageName: "phone.fill"
     )

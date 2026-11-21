@@ -3,6 +3,7 @@ import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart' hide Text;
 import 'package:seerah_app/core/widgets/localized_text.dart';
+import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,6 +11,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/error_reporter.dart';
 import '../../../core/network/cookie_helper.dart' as cookies;
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/profiles_provider.dart';
@@ -321,7 +323,7 @@ class ProfileScreen extends ConsumerWidget {
             ).animate(delay: 250.ms).fadeIn(duration: 350.ms),
 
             const SizedBox(height: 24),
-            const Center(child: _LiveVersionLabel()),
+            const Center(child: LiveVersionLabel()),
           ],
         ),
       ),
@@ -553,8 +555,9 @@ class _AvatarSection extends StatelessWidget {
     final email = user?.email as String?;
     if (name != null && name.isNotEmpty) {
       final parts = name.trim().split(' ');
-      if (parts.length >= 2)
+      if (parts.length >= 2) {
         return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+      }
       return name[0].toUpperCase();
     }
     if (email != null && email.isNotEmpty) return email[0].toUpperCase();
@@ -1166,11 +1169,12 @@ class _InAppWebScreenState extends State<_InAppWebScreen> {
   void _armLoadTimeout() {
     _loadTimeout?.cancel();
     _loadTimeout = Timer(const Duration(seconds: 20), () {
-      if (mounted && _loading)
+      if (mounted && _loading) {
         setState(() {
           _loading = false;
           _hasError = true;
         });
+      }
     });
   }
 
@@ -1189,21 +1193,23 @@ class _InAppWebScreenState extends State<_InAppWebScreen> {
             return NavigationDecision.navigate;
           },
           onPageStarted: (_) {
-            if (mounted)
+            if (mounted) {
               setState(() {
                 _loading = true;
                 _hasError = false;
               });
+            }
             _armLoadTimeout();
           },
           onWebResourceError: (error) {
             if (error.isForMainFrame ?? true) {
               _loadTimeout?.cancel();
-              if (mounted)
+              if (mounted) {
                 setState(() {
                   _loading = false;
                   _hasError = true;
                 });
+              }
             }
           },
           onPageFinished: (_) async {
@@ -1322,14 +1328,17 @@ class _InAppWebScreenState extends State<_InAppWebScreen> {
 /// App version shown on the Account page, read live from the installed
 /// package (same source as Settings' version tile) instead of a hardcoded
 /// string — a hardcoded value silently drifts out of date every release.
-class _LiveVersionLabel extends ConsumerStatefulWidget {
-  const _LiveVersionLabel();
+///
+/// Public (not `_`-prefixed): also used by [AccountScreen]'s signed-out
+/// view, which previously showed no version at all — see that file.
+class LiveVersionLabel extends ConsumerStatefulWidget {
+  const LiveVersionLabel({super.key});
 
   @override
-  ConsumerState<_LiveVersionLabel> createState() => _LiveVersionLabelState();
+  ConsumerState<LiveVersionLabel> createState() => _LiveVersionLabelState();
 }
 
-class _LiveVersionLabelState extends ConsumerState<_LiveVersionLabel> {
+class _LiveVersionLabelState extends ConsumerState<LiveVersionLabel> {
   String? _version;
 
   @override
@@ -1350,9 +1359,22 @@ class _LiveVersionLabelState extends ConsumerState<_LiveVersionLabel> {
   Widget build(BuildContext context) {
     final lang = ref.watch(courseLangProvider);
     if (_version == null) return const SizedBox.shrink();
-    return Text(
-      tv(lang, 'versionLabel', {'v': _version!}),
-      style: TextStyle(color: AppColors.textMuted, fontSize: 11),
+    // Long-press copies the recorded uncaught-error report so a user whose
+    // app misbehaves can paste it into a support message — there is no
+    // crash-reporting service yet (see ErrorReporter).
+    return GestureDetector(
+      onLongPress: () async {
+        final messenger = ScaffoldMessenger.maybeOf(context);
+        final report = await ErrorReporter.formatReport(appVersion: _version);
+        await Clipboard.setData(ClipboardData(text: report));
+        messenger?.showSnackBar(
+          const SnackBar(content: Text('Error report copied to clipboard.')),
+        );
+      },
+      child: Text(
+        tv(lang, 'versionLabel', {'v': _version!}),
+        style: TextStyle(color: AppColors.textMuted, fontSize: 11),
+      ),
     );
   }
 }

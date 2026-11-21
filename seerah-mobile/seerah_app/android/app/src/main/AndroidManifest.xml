@@ -33,9 +33,14 @@
          PACKAGE_USAGE_STATS is a special AppOps permission — declaring it
          here does not grant it; the user must grant it from
          Settings.ACTION_USAGE_ACCESS_SETTINGS (see AppGuardPlugin). -->
+    <!-- TEMPORARILY DISABLED together with the guard (GuardFeature.ENABLED =
+    false): declaring a sensitive permission for a feature that is not
+    shipping is a Play policy risk. Restore with the foreground-service
+    block below when App Guard is re-enabled.
     <uses-permission
         android:name="android.permission.PACKAGE_USAGE_STATS"
         tools:ignore="ProtectedPermissions"/>
+    -->
     <!-- SYSTEM_ALERT_WINDOW ("Display over other apps") is also a special
          AppOps permission the user must grant separately; it exempts this
          app from Android 10+'s background-activity-start restriction so the
@@ -68,8 +73,6 @@
             android:exported="true"
             android:launchMode="singleTop"
             android:taskAffinity=""
-            android:showWhenLocked="true"
-            android:turnScreenOn="true"
             android:theme="@style/LaunchTheme"
             android:screenOrientation="portrait"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"

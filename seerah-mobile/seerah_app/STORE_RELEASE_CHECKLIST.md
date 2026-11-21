@@ -144,6 +144,31 @@ Fill out the **Data Safety** section in Play Console:
 
 ## Part 4 — App Store Submission Checklist
 
+### ⚠️ Known recurring build warning — iOS SDK deadline (ITMS-90725)
+
+Every `ios-release` build currently triggers this email from Apple after a
+successful upload (seen on builds #96, #97, #98, ... — it is NOT a one-off):
+
+> ITMS-90725: SDK version issue - This app was built with the iOS 26.5 SDK.
+> Starting April 2027, iOS and iPadOS apps must be built with the iOS 27 SDK
+> or later, included in Xcode 27 or later, in order to be uploaded to App
+> Store Connect or submitted for distribution.
+
+This is expected, not a bug: `codemagic.yaml`'s `ios-release` workflow
+deliberately pins `xcode: 26.6` (see the comment above it) because a prior
+attempt at `xcode: latest` moved to Xcode 27 / iOS 27 SDK, which requires
+this project's iOS app to adopt the `UIScene`-based app lifecycle (instead
+of the classic `UIApplicationDelegate`-only lifecycle Flutter's default iOS
+template still uses here) — the IPA failed to even reach App Store Connect
+when that happened.
+
+**Action needed before April 2027**: migrate `ios/Runner` to the UIScene
+lifecycle (`SceneDelegate` + `UIApplicationSceneManifest` in `Info.plist`),
+verify on a real Mac/Xcode (this repo's primary dev machine has none), then
+flip `xcode: 26.6` → `xcode: latest` (or a pinned 27.x) in `codemagic.yaml`.
+Do this with real device/TestFlight testing available — don't flip it blind
+again. Until then, this warning email on every build is safe to ignore.
+
 ### App Store Connect setup
 - [ ] App record created at [appstoreconnect.apple.com](https://appstoreconnect.apple.com)
 - [ ] Bundle ID: `com.themuslimman.seerah`

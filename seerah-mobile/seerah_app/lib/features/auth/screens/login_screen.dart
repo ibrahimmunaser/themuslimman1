@@ -337,11 +337,12 @@ class _ForgotPasswordScreenState extends ConsumerState<_ForgotPasswordScreen> {
             return NavigationDecision.navigate;
           },
           onPageStarted: (_) {
-            if (mounted)
+            if (mounted) {
               setState(() {
                 _loading = true;
                 _hasError = false;
               });
+            }
             _armLoadTimeout();
           },
           onPageFinished: (_) async {
@@ -358,11 +359,12 @@ class _ForgotPasswordScreenState extends ConsumerState<_ForgotPasswordScreen> {
           onWebResourceError: (error) {
             if (error.isForMainFrame ?? true) {
               _loadTimeout?.cancel();
-              if (mounted)
+              if (mounted) {
                 setState(() {
                   _loading = false;
                   _hasError = true;
                 });
+              }
             }
           },
         ),

@@ -96,7 +96,8 @@
 	  Data collected by this app:
 	  - Email address: used to authenticate the user's account (not for tracking).
 	  - Name: displayed in the profile screen (not shared, not used for tracking).
-	  - Purchase history: checked server-side via Stripe to unlock paid content.
+	  - Purchase history: App Store / Google Play receipts are verified server-side to unlock paid content.
+	  Location is used only on-device to compute prayer times and is never sent to our servers.
 	  No data is collected for analytics, advertising, or third-party sharing.
 	-->
 	<key>NSPrivacyCollectedDataTypes</key>

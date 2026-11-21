@@ -16,11 +16,15 @@ const _keys = [
   'sessions', 'verse', 'versesCount', 'juz', 'startsAt', 'previous', 'next',
   'scrollMode', 'verseMode', 'play', 'bookmark', 'favorite',
   'tapNumberToCount', 'hasanatCounted',
+  // Appended at the end on purpose: tq() falls back to the English value
+  // by index when a language's list is shorter, so new keys are always
+  // safe to add here without having to translate every language at once.
+  'playSurah',
 ];
 
 const _tr = <String, List<String>>{
   'en': [
-    'Quran', 'Daily Goal', 'Set daily goal', 'Verses per day',
+    'The Holy Quran', 'Daily Goal', 'Set daily goal', 'Verses per day',
     'Continue Reading', 'Quick Access', 'Recently Read', 'All Surahs',
     'Surah', 'Juz', 'Today', 'This Week', 'All Time', 'Bookmarks',
     'Favorites', 'No bookmarks yet.', 'No favorites yet.', 'Tafsir',
@@ -34,7 +38,7 @@ const _tr = <String, List<String>>{
     'Verse', '{n} verses', 'Juz', 'Starts at {s}, verse {v}', 'Previous',
     'Next', 'Scroll mode', 'Verse-by-verse mode', 'Play recitation',
     'Bookmark', 'Favorite', 'Tap the verse number to count hasanat',
-    'Counted',
+    'Counted', 'Play Surah',
   ],
   'ar': [
     'القرآن', 'الهدف اليومي', 'حدد الهدف اليومي', 'آيات في اليوم',

@@ -4,7 +4,9 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
+import '../../../l10n/salah_phrases.dart';
 import '../models/salah_prayer.dart';
+import '../utils/app_strings.dart';
 
 /// Pending Answer payload delivered from the native AlarmKit App Intent.
 class AlarmKitAnswer {
@@ -208,7 +210,13 @@ class IosAlarmKitService implements AlarmKitClient {
         'alarmId': alarmId,
         'prayerName': prayer.name,
         'prayerDisplayName': prayer.displayName,
-        'title': 'Allah Is Calling',
+        'title': AppStrings.incomingCallTitle,
+        // The system alert's buttons were always hardcoded in English on
+        // the native side regardless of the user's chosen app language —
+        // translate them here using the same phrase table every other
+        // Salah screen uses.
+        'dismissLabel': translateSalah(salahLang, AppStrings.dismiss),
+        'answerLabel': translateSalah(salahLang, AppStrings.answer),
         'scheduledAtMs': scheduledAt.millisecondsSinceEpoch,
         'scheduledAtISO': scheduledAt.toUtc().toIso8601String(),
         if (soundName != null) 'soundName': soundName,

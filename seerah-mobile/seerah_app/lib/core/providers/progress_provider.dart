@@ -515,8 +515,9 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
   Future<void> _pushToServer(ProgressState current) async {
     if (current.viewedParts.isEmpty &&
         current.quizScores.isEmpty &&
-        current.videoWatchPercents.isEmpty)
+        current.videoWatchPercents.isEmpty) {
       return;
+    }
     try {
       await ApiClient.instance.dio.post(
         '/api/mobile-progress/bulk-sync',

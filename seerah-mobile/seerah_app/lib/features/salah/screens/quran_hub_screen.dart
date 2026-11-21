@@ -179,6 +179,7 @@ class _QuranHubScreenState extends State<QuranHubScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        centerTitle: true,
         title: Text(qc(context, 'title')),
         actions: [
           IconButton(

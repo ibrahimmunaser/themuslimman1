@@ -23,6 +23,11 @@ export '../../l10n/course_langs.dart'
 
 const _courseLangKey = 'seerah_course_lang';
 
+/// Public alias of [_courseLangKey] for code outside this file that needs
+/// to read/clear the persisted language pref directly (e.g. [CrashGuard]'s
+/// last-resort recovery, which runs before any provider exists).
+const courseLangPrefsKey = _courseLangKey;
+
 /// Loads the persisted course language straight into the [salahLang] global,
 /// independent of [CourseLangNotifier]'s own (lazy, Riverpod-provider-gated)
 /// lifecycle. Call this and await it before any eager startup work that
@@ -46,7 +51,7 @@ class CourseLangNotifier extends StateNotifier<String> {
   }
 
   /// Fixed language, no persistence/loading (used by the App Guard engine).
-  CourseLangNotifier.fixed(String lang) : super(lang);
+  CourseLangNotifier.fixed(super.lang);
 
   void setFixed(String lang) {
     if (lang == state) return;

@@ -57,6 +57,16 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
   PageController? _pageController;
   int _currentPage = 0;
 
+  /// Resolved content for [_future], kept in sync so the audio-completion
+  /// listener (which runs outside of build) can look up "the next verse"
+  /// without re-awaiting the future itself.
+  SurahContent? _loadedContent;
+
+  /// True while verses are being played back-to-back (either "Play Surah"
+  /// or a chain started from a single verse tap continuing automatically).
+  /// When true, finishing one verse's audio smoothly starts the next.
+  bool _continuousPlayback = false;
+
   /// Blocks the nav buttons while the confetti celebration runs.
   bool _celebrating = false;
 
@@ -90,11 +100,26 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
     _surahNumber = widget.surahNumber;
     _swipeMode = widget.initialVerse > 1;
     _currentPage = (widget.initialVerse - 1).clamp(0, 9999);
-    _future = QuranApiService.instance.fetchSurah(_surahNumber, lang: quranLang(context));
+    _setFuture(QuranApiService.instance.fetchSurah(_surahNumber, lang: quranLang(context)));
     _loadState();
     _loadBismillah();
     _player.onPlayerComplete.listen((_) {
-      if (mounted) setState(() => _playingVerse = null);
+      if (!mounted) return;
+      final finished = _playingVerse;
+      setState(() => _playingVerse = null);
+      if (_continuousPlayback && finished != null) {
+        unawaited(_playNextInSequence(finished));
+      }
+    });
+  }
+
+  /// Assigns [_future] and keeps [_loadedContent] in sync once it
+  /// resolves, so audio autoplay always has the current verse list handy.
+  void _setFuture(Future<SurahContent> future) {
+    _future = future;
+    _loadedContent = null;
+    future.then((content) {
+      if (mounted) setState(() => _loadedContent = content);
     });
   }
 
@@ -243,19 +268,92 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
     }
   }
 
+  /// Tapping a verse's play button starts listening from there and
+  /// autoplays smoothly into the following ayat (so playing any verse
+  /// doubles as "listen to the rest of the surah from here"). Tapping the
+  /// button again while that verse is playing stops playback entirely
+  /// rather than just skipping ahead.
   Future<void> _toggleAudio(QuranVerse verse) async {
     if (_playingVerse == verse.numberInSurah) {
       await _player.stop();
-      setState(() => _playingVerse = null);
+      setState(() {
+        _playingVerse = null;
+        _continuousPlayback = false;
+      });
       return;
     }
-    setState(() => _playingVerse = verse.numberInSurah);
+    await _playVerseAudio(verse, continuous: true);
+  }
+
+  Future<void> _playVerseAudio(QuranVerse verse, {required bool continuous}) async {
+    setState(() {
+      _playingVerse = verse.numberInSurah;
+      _continuousPlayback = continuous;
+    });
     try {
       await _player.stop();
       await _player.play(UrlSource(verse.audioUrl));
     } catch (_) {
       if (mounted) setState(() => _playingVerse = null);
     }
+  }
+
+  /// Called when a verse finishes while [_continuousPlayback] is on: moves
+  /// to the next verse with a short, smooth gap (a clean breath between
+  /// ayahs rather than an abrupt instant cut), keeps reading progress in
+  /// sync, and — in swipe mode — animates the card to follow the narration.
+  /// Reaching the surah's last verse simply stops; it doesn't auto-advance
+  /// into the next surah, so "listen to the whole surah" ends cleanly.
+  Future<void> _playNextInSequence(int finishedVerseNumber) async {
+    final content = _loadedContent;
+    if (content == null) {
+      if (mounted) setState(() => _continuousPlayback = false);
+      return;
+    }
+    final idx = content.verses.indexWhere((v) => v.numberInSurah == finishedVerseNumber);
+    if (idx < 0 || idx + 1 >= content.verses.length) {
+      if (mounted) setState(() => _continuousPlayback = false);
+      return;
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    if (!mounted || !_continuousPlayback) return;
+    final next = content.verses[idx + 1];
+    await _playVerseAudio(next, continuous: true);
+    unawaited(_recordVerseRead(content, next));
+    if (_swipeMode && mounted) {
+      final nextPage = content.verses.indexOf(next);
+      final controller = _pageController;
+      if (nextPage >= 0 && controller != null && controller.hasClients) {
+        setState(() => _currentPage = nextPage);
+        unawaited(
+          controller.animateToPage(
+            nextPage,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          ),
+        );
+      }
+    }
+  }
+
+  /// "Listen to the whole surah": starts (or stops) continuous playback.
+  /// In swipe mode it starts from the verse currently on screen; in scroll
+  /// mode it starts from the beginning of the surah.
+  Future<void> _toggleSurahPlayback(SurahContent content) async {
+    if (_continuousPlayback) {
+      await _player.stop();
+      setState(() {
+        _playingVerse = null;
+        _continuousPlayback = false;
+      });
+      return;
+    }
+    if (content.verses.isEmpty) return;
+    final startVerse = _swipeMode
+        ? content.verses[_currentPage.clamp(0, content.verses.length - 1)]
+        : content.verses.first;
+    await _playVerseAudio(startVerse, continuous: true);
+    unawaited(_recordVerseRead(content, startVerse));
   }
 
   Future<void> _toggleBookmark(SurahContent content, QuranVerse verse) async {
@@ -308,6 +406,16 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
           appBar: AppBar(
             title: Text(content != null ? surahTitle(content.meta, quranLang(context)) : '${qc(context, 'bySurah')} $_surahNumber'),
             actions: [
+              if (content != null)
+                IconButton(
+                  icon: Icon(
+                    _continuousPlayback
+                        ? Icons.stop_circle_outlined
+                        : Icons.headphones_outlined,
+                  ),
+                  tooltip: qc(context, 'playSurah'),
+                  onPressed: () => _toggleSurahPlayback(content),
+                ),
               IconButton(
                 icon: const Icon(Icons.text_fields),
                 tooltip: 'Quran Font',
@@ -331,7 +439,7 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
                 _ when snapshot.hasError || content == null => _ErrorView(
                   onRetry:
                       () => setState(() {
-                        _future = QuranApiService.instance.fetchSurah(_surahNumber, lang: quranLang(context));
+                        _setFuture(QuranApiService.instance.fetchSurah(_surahNumber, lang: quranLang(context)));
                       }),
                 ),
                 _ =>
@@ -539,7 +647,7 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
   void _goToSurah(int surah, {required int page}) {
     setState(() {
       _surahNumber = surah;
-      _future = QuranApiService.instance.fetchSurah(surah, lang: quranLang(context));
+      _setFuture(QuranApiService.instance.fetchSurah(surah, lang: quranLang(context)));
       _pageController?.dispose();
       _pageController = null;
       _currentPage = page;

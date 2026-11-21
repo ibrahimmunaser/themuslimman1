@@ -194,6 +194,13 @@ workflows:
       # 1.0.45 was the last build Apple received. Later builds used xcode: latest,
       # which now tracks Xcode 27. That SDK requires the UIScene lifecycle this
       # project has not adopted, so the IPA never reached App Store Connect.
+      #
+      # Staying on 26.6 means every build gets an "ITMS-90725: SDK version
+      # issue" email from Apple ("built with iOS 26.5 SDK ... must use iOS 27
+      # SDK by April 2027"). That's expected and currently harmless — do NOT
+      # "fix" it by just bumping this to `latest` again without first doing
+      # the UIScene migration (see STORE_RELEASE_CHECKLIST.md's "Known
+      # recurring build warning" section) and testing on real Xcode/a device.
       xcode: 26.6
       cocoapods: default
       vars:

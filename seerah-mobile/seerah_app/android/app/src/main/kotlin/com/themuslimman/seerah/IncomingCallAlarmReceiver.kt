@@ -36,7 +36,18 @@ class IncomingCallAlarmReceiver : BroadcastReceiver() {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or
                 Intent.FLAG_ACTIVITY_CLEAR_TOP or
                 Intent.FLAG_ACTIVITY_SINGLE_TOP
+            // Lets MainActivity show over the lock screen for this launch
+            // only (it no longer does so unconditionally).
+            putExtra(MainActivity.EXTRA_INCOMING_CALL, true)
         }
-        context.startActivity(launch)
+        // Android 15+ can refuse a background activity start even with the
+        // overlay permission. That must never crash the receiver: the
+        // pending prayer is already recorded above and the ordinary call
+        // notification (full-screen intent / heads-up) is the fallback.
+        try {
+            context.startActivity(launch)
+        } catch (e: Exception) {
+            android.util.Log.w("IncomingCallAlarm", "Direct launch blocked", e)
+        }
     }
 }

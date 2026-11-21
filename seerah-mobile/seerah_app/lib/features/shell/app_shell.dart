@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:seerah_app/l10n/salah_phrases.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide Text;
@@ -55,11 +57,14 @@ class AppShell extends ConsumerWidget {
               top: BorderSide(color: AppColors.border, width: 0.5),
             ),
           ),
-          // iPhone has no software buttons, only a thin home indicator drawn
-          // over the bar. Lifting the tabs there leaves an empty band.
-          // Android's 3-button bar covers the labels, so only Android
-          // gets the inset. NavigationBar's own SafeArea stays removed
-          // so it cannot add a second gap.
+          // iPhone has no software buttons, just a thin home indicator
+          // drawn over the bar — but it still needs its own lift so the
+          // icons/labels float clearly above it (matching native iOS tab
+          // bars, e.g. Books/App Store) instead of sitting flush against
+          // the physical bottom edge, right where the indicator's swipe
+          // gesture lives. Android's 3-button/gesture bar is handled by
+          // its own inset below. NavigationBar's own SafeArea stays
+          // removed so neither inset can be applied twice.
           //
           // NavigationBar's `build()` wraps its content in a bare
           // `SafeArea(...)` that protects ALL FOUR sides by default, not
@@ -72,7 +77,9 @@ class AppShell extends ConsumerWidget {
           // emulator: the gap's height matched the status bar exactly).
           // Stripping all four sides removes every such reservation.
           child: Padding(
-            padding: EdgeInsets.only(bottom: _androidNavInset(context)),
+            padding: EdgeInsets.only(
+              bottom: _androidNavInset(context) + _iosNavInset(context),
+            ),
             child: MediaQuery.removePadding(
               context: context,
               removeTop: true,
@@ -177,10 +184,26 @@ class AppShell extends ConsumerWidget {
 }
 
 /// Space the tab labels need to clear Android's system navigation buttons.
-/// iOS returns 0 so the bar stays on the screen edge.
+/// iOS returns 0 here — its lift is computed separately by [_iosNavInset]
+/// so the two platforms' insets never fight each other.
 double _androidNavInset(BuildContext context) {
   if (defaultTargetPlatform != TargetPlatform.android) return 0;
   return bottomSystemInset(context);
+}
+
+/// Space the tab bar needs to float above iOS's home-indicator gesture
+/// area, matching native iOS tab bars (Books, App Store, Instagram, …)
+/// instead of sitting flush against the physical bottom edge where it
+/// gets visually clipped by the indicator. Reads the live safe-area inset
+/// from [MediaQuery] rather than any hardcoded per-model value, so it
+/// adapts automatically across every iPhone size — SE (no indicator, 0),
+/// standard/Pro/Pro Max and Dynamic Island models (~34pt) — without
+/// needing device-specific lookups that would need updating every time a
+/// new iPhone ships. Android returns 0: its own inset is [_androidNavInset].
+double _iosNavInset(BuildContext context) {
+  if (defaultTargetPlatform != TargetPlatform.iOS) return 0;
+  final media = MediaQuery.of(context);
+  return math.max(media.viewPadding.bottom, media.padding.bottom);
 }
 
 /// Shown when a user with no active plan taps Lessons/Resources/Reference/

@@ -1,3 +1,7 @@
+// ERAS / PARTS are referenced across the app; the SCREAMING_CASE names are
+// kept on purpose rather than churning every call site.
+// ignore_for_file: constant_identifier_names
+
 import '../models/part_model.dart';
 
 const List<EraModel> ERAS = [

@@ -160,8 +160,11 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
       BuildContext context, WidgetRef ref, ProfileModel profile) async {
     if (profile.isActive) {
       // Already active — just go back
-      if (context.canPop()) context.pop();
-      else context.go('/dashboard');
+      if (context.canPop()) {
+        context.pop();
+      } else {
+        context.go('/dashboard');
+      }
       return;
     }
 
@@ -178,8 +181,11 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
     await ref.read(progressProvider.notifier).reset();
 
     if (!context.mounted) return;
-    if (context.canPop()) context.pop();
-    else context.go('/dashboard');
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/dashboard');
+    }
   }
 
   Future<void> _showAddDialog(BuildContext context, WidgetRef ref, String lang) async {

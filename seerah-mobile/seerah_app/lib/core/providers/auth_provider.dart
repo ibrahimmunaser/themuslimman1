@@ -792,10 +792,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> _saveUser(UserModel user) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(AppConstants.keyIsLoggedIn, true);
-    if (user.email != null)
+    if (user.email != null) {
       await prefs.setString(AppConstants.keyUserEmail, user.email!);
-    if (user.name != null)
+    }
+    if (user.name != null) {
       await prefs.setString(AppConstants.keyUserName, user.name!);
+    }
     await prefs.setBool(AppConstants.keyHasAccess, user.hasAccess);
     await prefs.setBool(AppConstants.keyIsFamily, user.isFamily);
     await prefs.setString(AppConstants.keyUserRole, user.role);
@@ -882,8 +884,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
     try {
       final data = (e as dynamic).response?.data;
-      if (data is Map)
+      if (data is Map) {
         return data['error'] as String? ?? t(_lang, 'somethingWentWrong');
+      }
     } catch (_) {}
     return t(_lang, 'somethingWentWrongRetry');
   }

@@ -8,6 +8,8 @@ import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 
+import 'package:seerah_app/core/error_reporter.dart';
+
 import '../services/diagnostics_log.dart';
 import '../state/app_controller.dart';
 
@@ -134,6 +136,26 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
       lines.add('Recent errors (${errors.length}, oldest first):');
       for (final e in errors) {
         lines.add('  [${e['at']}] ${e['source']}: ${e['error']}');
+      }
+    }
+    lines.add('');
+
+    // Uncaught app-wide errors captured by ErrorReporter (framework, async,
+    // platform channel, startup steps). Error text + top stack frames only.
+    final uncaught = await ErrorReporter.recent();
+    if (uncaught.isEmpty) {
+      lines.add('Uncaught app errors: none recorded');
+    } else {
+      lines.add('Uncaught app errors (${uncaught.length}, oldest first):');
+      for (final e in uncaught) {
+        lines.add('  [${e['time']}] ${e['source']}: ${e['error']}');
+        final stack = (e['stack'] as String? ?? '')
+            .split('\n')
+            .where((l) => l.trim().isNotEmpty)
+            .take(3);
+        for (final frame in stack) {
+          lines.add('      $frame');
+        }
       }
     }
     lines.add('');
