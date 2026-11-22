@@ -27,12 +27,23 @@ class TafsirTranslator {
     'sw': TranslateLanguage.swahili,
   };
 
+  /// ML Kit is deliberately never touched on iOS. Its bundled telemetry
+  /// uploader (MLKITx_CCTLogContext / CCTClearcutUploader) throws an
+  /// uncaught `NSInvalidArgumentException` ("unrecognized selector
+  /// hashForFilePath") on a background thread on current iOS versions
+  /// (known upstream ML Kit bug), which kills the whole app natively — it
+  /// can't be caught from Dart. Merely using the translator (even for a
+  /// short place name on the Salah home screen) triggers it, so on iOS we
+  /// skip on-device translation entirely and show the original text.
+  static final bool _mlKitSupported = !Platform.isIOS;
+
   final _placeCache = <String, String>{};
 
   /// Short text (e.g. "Dearborn, Michigan, United States") translated into
   /// [lang]; falls back to the original on any failure. Results are cached
   /// in memory.
   Future<String> translatePlace(String text, String lang) async {
+    if (!_mlKitSupported) return text;
     final target = _langs[lang];
     if (target == null || text.trim().isEmpty) return text;
     final key = '$lang|$text';
@@ -80,6 +91,7 @@ class TafsirTranslator {
   /// present, and [_prewarming] stops duplicate concurrent attempts for the
   /// same language within one app session.
   void prewarmModels(String lang) {
+    if (!_mlKitSupported) return;
     final target = _langs[lang];
     if (target == null || !_prewarming.add(lang)) return;
     () async {
@@ -103,6 +115,9 @@ class TafsirTranslator {
     String lang, {
     required File cacheFile,
   }) async {
+    // iOS: no on-device translation (see [_mlKitSupported]); show the
+    // English tafsir rather than nothing.
+    if (!_mlKitSupported) return english;
     final target = _langs[lang];
     if (target == null) return english;
     try {
