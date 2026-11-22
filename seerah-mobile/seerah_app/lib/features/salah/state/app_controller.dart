@@ -12,6 +12,7 @@ import '../models/prayer_response.dart';
 import '../models/prayer_settings.dart';
 import '../models/salah_prayer.dart';
 import '../models/scheduled_reminder.dart';
+import '../models/voluntary_prayer_times.dart';
 import '../repositories/prayer_settings_repository.dart';
 import '../services/app_guard_service.dart';
 import '../services/city_database.dart';
@@ -164,6 +165,35 @@ class AppController extends ChangeNotifier with WidgetsBindingObserver {
     try {
       _cachedNextPrayer = prayerTimeService.nextPrayer(_settings);
       return _cachedNextPrayer;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  PrayerSettings? _voluntarySettings;
+  DateTime? _voluntaryDay;
+  VoluntaryPrayerTimes? _cachedVoluntary;
+
+  /// Duha (today) and Qiyam (the coming/current night) windows, or null when
+  /// no location is set. Memoized like [nextPrayer]: recomputed only when
+  /// settings change, the calendar day rolls over, or the cached Qiyam
+  /// window has ended — so the per-second countdown rebuilds stay cheap.
+  VoluntaryPrayerTimes? get voluntaryTimes {
+    if (!_settings.hasLocation || _settings.timezone == null) return null;
+    final now = nowInUserZone();
+    final day = DateTime(now.year, now.month, now.day);
+    final cached = _cachedVoluntary;
+    if (cached != null &&
+        identical(_voluntarySettings, _settings) &&
+        _voluntaryDay == day &&
+        (cached.qiyamEnd == null || cached.qiyamEnd!.isAfter(now))) {
+      return cached;
+    }
+    try {
+      _cachedVoluntary = prayerTimeService.voluntaryTimes(_settings, now: now);
+      _voluntarySettings = _settings;
+      _voluntaryDay = day;
+      return _cachedVoluntary;
     } catch (_) {
       return null;
     }
@@ -838,6 +868,7 @@ class AppController extends ChangeNotifier with WidgetsBindingObserver {
         case ReminderKind.snooze:
           snoozes++;
         case ReminderKind.refresh:
+        case ReminderKind.voluntary:
           break;
       }
     }

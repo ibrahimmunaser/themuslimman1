@@ -175,7 +175,12 @@ class SalahBootstrap {
 
     controller.onOpenReminder = (payload, actionId) async {
       final prayer = payload.prayer ?? SalahPrayer.dhuhr;
-      if (payload.type == SalahNotificationPayload.typeRefresh) return;
+      // Refresh and Duha/Qiyam reminders just open the app — never the
+      // Answer/Decline call screen.
+      if (payload.type == SalahNotificationPayload.typeRefresh ||
+          payload.type == SalahNotificationPayload.typeVoluntary) {
+        return;
+      }
       if (actionId == LocalNotificationService.actionPrayNow) {
         if (defaultTargetPlatform == TargetPlatform.iOS &&
             controller.settings.callScreenEnabled) {

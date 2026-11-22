@@ -2,6 +2,7 @@ import 'package:timezone/timezone.dart' as tz;
 
 import '../models/salah_prayer.dart';
 import '../models/scheduled_reminder.dart';
+import '../models/voluntary_prayer_times.dart';
 import 'ios_alarmkit_service.dart';
 import 'local_notification_service.dart';
 
@@ -136,6 +137,20 @@ class IosHybridNotificationScheduler implements NotificationScheduler {
   }) {
     return notifications.scheduleRefreshReminder(
       id: id,
+      scheduledAt: scheduledAt,
+    );
+  }
+
+  @override
+  Future<void> scheduleVoluntaryReminder({
+    required int id,
+    required VoluntaryPrayer prayer,
+    required tz.TZDateTime scheduledAt,
+  }) {
+    // Always a plain local notification — voluntary prayers never use AlarmKit.
+    return notifications.scheduleVoluntaryReminder(
+      id: id,
+      prayer: prayer,
       scheduledAt: scheduledAt,
     );
   }

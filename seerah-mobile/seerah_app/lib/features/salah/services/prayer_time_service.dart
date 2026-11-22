@@ -4,6 +4,7 @@ import 'package:timezone/timezone.dart' as tz;
 import '../models/prayer_day_times.dart';
 import '../models/prayer_settings.dart';
 import '../models/salah_prayer.dart';
+import '../models/voluntary_prayer_times.dart';
 
 /// Thrown when a chronologically valid five-prayer sequence cannot be
 /// established for a date/location, even after the high-latitude recovery
@@ -265,6 +266,152 @@ class PrayerTimeService {
       if (next != null) return next;
     }
     return null;
+  }
+
+  // ------------------------------------------------------- voluntary prayers
+
+  /// Duha begins once the sun is a spear's length above the horizon
+  /// (~4–5° altitude), which is roughly 15–25 minutes after sunrise
+  /// depending on latitude and season. 20 minutes is the conservative
+  /// midpoint that always clears the forbidden time right after sunrise.
+  static const Duration duhaStartAfterSunrise = Duration(minutes: 20);
+
+  /// Duha ends shortly before Dhuhr: the sun is at its zenith (zawal), when
+  /// voluntary prayer is disliked, for several minutes before the Dhuhr
+  /// time. 10 minutes keeps the window safely clear of it.
+  static const Duration duhaEndBeforeDhuhr = Duration(minutes: 10);
+
+  /// A night shorter or longer than this is treated as a failed/degenerate
+  /// computation (extreme latitudes) rather than shown as a bogus window.
+  static const Duration _minNight = Duration(minutes: 30);
+  static const Duration _maxNight = Duration(hours: 22);
+
+  /// Duha window for [day] (the five-prayer times already computed and
+  /// validated for that date), or null when sunrise cannot be established
+  /// reliably — e.g. polar day/night, where adhan_dart can return a
+  /// divergent sunrise just like the five-prayer case documented above.
+  ({DateTime start, DateTime end})? duhaFor(
+    PrayerSettings settings,
+    PrayerDayTimes day,
+  ) {
+    try {
+      final location = tz.getLocation(settings.timezone!);
+      final coordinates = adhan.Coordinates(
+        settings.latitude!,
+        settings.longitude!,
+      );
+      final params = buildCalculationParameters(settings);
+      final date = day.date;
+      final raw = adhan.PrayerTimes(
+        date: DateTime.utc(date.year, date.month, date.day),
+        coordinates: coordinates,
+        calculationParameters: params,
+      );
+      final sunrise = tz.TZDateTime.from(raw.sunrise.toUtc(), location);
+
+      final fajr = day.timeFor(SalahPrayer.fajr);
+      final dhuhr = day.timeFor(SalahPrayer.dhuhr);
+      final anchorUtc = DateTime.utc(date.year, date.month, date.day);
+
+      // Sunrise must sit between Fajr and Dhuhr, close to Fajr, and inside
+      // the same sanity window the five prayers use; otherwise the
+      // astronomical result is not trustworthy for this date.
+      final sane =
+          sunrise.isAfter(fajr) &&
+          sunrise.isBefore(dhuhr) &&
+          sunrise.difference(fajr) <= const Duration(hours: 6) &&
+          sunrise.toUtc().difference(anchorUtc).abs() <= _sanityWindow;
+      if (!sane) return null;
+
+      final start = sunrise.add(duhaStartAfterSunrise);
+      final end = dhuhr.subtract(duhaEndBeforeDhuhr);
+      if (!start.isBefore(end)) return null;
+      return (start: start, end: end);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// The Qiyam (night prayer) window for the night that begins at Maghrib
+  /// on [nightStartDate] and ends at the next day's Fajr: the last third of
+  /// that night (the sunnah-preferred time) through Fajr, plus the Islamic
+  /// midnight. Uses the same validated, adjustment-aware Maghrib/Fajr the
+  /// five-prayer list shows, so it can never disagree with it. Null when
+  /// either day cannot be computed or the night length is implausible.
+  ({DateTime start, DateTime midnight, DateTime end})? qiyamForNight(
+    PrayerSettings settings,
+    DateTime nightStartDate,
+  ) {
+    try {
+      final location = tz.getLocation(settings.timezone!);
+      final d = DateTime(
+        nightStartDate.year,
+        nightStartDate.month,
+        nightStartDate.day,
+      );
+      final today = calculateForDate(settings, d);
+      final tomorrow = calculateForDate(
+        settings,
+        DateTime(d.year, d.month, d.day + 1),
+      );
+      final maghrib = today.timeFor(SalahPrayer.maghrib);
+      final fajrNext = tomorrow.timeFor(SalahPrayer.fajr);
+      final night = fajrNext.difference(maghrib);
+      if (night < _minNight || night > _maxNight) return null;
+
+      tz.TZDateTime roundToMinute(Duration offset) {
+        final ms = maghrib.add(offset).millisecondsSinceEpoch;
+        return tz.TZDateTime.fromMillisecondsSinceEpoch(
+          location,
+          (ms / 60000).round() * 60000,
+        );
+      }
+
+      final seconds = night.inSeconds;
+      return (
+        start: roundToMinute(Duration(seconds: (seconds * 2 / 3).floor())),
+        midnight: roundToMinute(Duration(seconds: (seconds / 2).floor())),
+        end: tz.TZDateTime.from(fajrNext, location),
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Duha for today plus the Qiyam window of the night whose Fajr is next
+  /// after [now] (so after midnight it is still tonight's window, until
+  /// Fajr, and after Fajr it rolls over to the coming night).
+  VoluntaryPrayerTimes voluntaryTimes(PrayerSettings settings, {DateTime? now}) {
+    final location = tz.getLocation(settings.timezone!);
+    final reference = now ?? tz.TZDateTime.now(location);
+    final today = DateTime(reference.year, reference.month, reference.day);
+
+    ({DateTime start, DateTime end})? duha;
+    try {
+      duha = duhaFor(settings, calculateForDate(settings, today));
+    } catch (_) {
+      duha = null;
+    }
+
+    ({DateTime start, DateTime midnight, DateTime end})? qiyam;
+    for (final startDate in [
+      DateTime(today.year, today.month, today.day - 1),
+      today,
+    ]) {
+      final candidate = qiyamForNight(settings, startDate);
+      if (candidate != null && candidate.end.isAfter(reference)) {
+        qiyam = candidate;
+        break;
+      }
+    }
+
+    return VoluntaryPrayerTimes(
+      duhaStart: duha?.start,
+      duhaEnd: duha?.end,
+      qiyamStart: qiyam?.start,
+      islamicMidnight: qiyam?.midnight,
+      qiyamEnd: qiyam?.end,
+    );
   }
 
   /// Maps app settings to adhan_dart calculation parameters, including

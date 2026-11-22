@@ -3,9 +3,11 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:timezone/timezone.dart' as tz;
 
+import '../models/prayer_day_times.dart';
 import '../models/prayer_settings.dart';
 import '../models/salah_prayer.dart';
 import '../models/scheduled_reminder.dart';
+import '../models/voluntary_prayer_times.dart';
 import '../repositories/prayer_settings_repository.dart';
 import 'diagnostics_log.dart';
 import 'ios_app_guard_service.dart';
@@ -82,12 +84,18 @@ class SchedulingPolicy {
   /// (Android).
   final int? maxPending;
 
+  /// How many days ahead the opt-in Duha/Qiyam reminders are scheduled
+  /// (each at most one per day, so two per day when both are on).
+  final int voluntaryDays;
+
   const SchedulingPolicy({
     required this.daysToSchedule,
     int? baselineDays,
     this.followUpHorizon,
     this.maxPending,
-  }) : baselineDays = baselineDays ?? daysToSchedule;
+    int? voluntaryDays,
+  }) : baselineDays = baselineDays ?? daysToSchedule,
+       voluntaryDays = voluntaryDays ?? daysToSchedule;
 
   /// Android: no OS pending limit; schedule the full week of everything.
   const SchedulingPolicy.android() : this(daysToSchedule: 7);
@@ -103,6 +111,9 @@ class SchedulingPolicy {
         baselineDays: 7,
         followUpHorizon: const Duration(hours: 48),
         maxPending: 60,
+        // Up to 6-8 slots reserved for Duha/Qiyam (3 days x 2 prayers, plus
+        // the early-night one); baseline primaries are never displaced.
+        voluntaryDays: 3,
       );
 
   /// The policy for the current platform.
@@ -318,9 +329,20 @@ class PrayerSchedulerService {
       );
     }
 
+    // ---- Opt-in voluntary-prayer reminders (Duha / Qiyam). ----
+    // Plain notifications only. Their slots are reserved up front below, so
+    // they can never displace a baseline primary.
+    final voluntary = _voluntaryReminders(
+      settings,
+      days: days,
+      current: current,
+      location: location,
+      usedIds: usedIds,
+    );
+
     // Enforce the pending cap dynamically:
     //   reserved slots = carried snoozes (actual count) + one refresh
-    //   warning + the short-horizon follow-ups;
+    //   warning + voluntary reminders + the short-horizon follow-ups;
     //   guaranteed     = baseline primaries (policy.baselineDays);
     //   remainder      = filled with further primaries, chronologically.
     // Coverage is therefore as many days as safely fit under the cap, not a
@@ -329,7 +351,11 @@ class PrayerSchedulerService {
     // to make room for an automatic follow-up.
     if (policy.maxPending != null) {
       const refreshSlot = 1;
-      final slots = policy.maxPending! - carriedSnoozes.length - refreshSlot;
+      final slots =
+          policy.maxPending! -
+          carriedSnoozes.length -
+          refreshSlot -
+          voluntary.length;
 
       final baselineCutoffMillis =
           current
@@ -447,6 +473,28 @@ class PrayerSchedulerService {
       ),
     );
 
+    // Voluntary reminders: each independent and best-effort — a failure is
+    // logged and that one reminder is simply not persisted/claimed.
+    final persistedVoluntary = <ScheduledReminder>[];
+    final voluntaryResults = await Future.wait(
+      voluntary.map((r) async {
+        try {
+          await notificationScheduler.scheduleVoluntaryReminder(
+            id: r.notificationId,
+            prayer: r.voluntary!,
+            scheduledAt: tz.TZDateTime.from(r.scheduledAt, location),
+          );
+          return true;
+        } catch (e) {
+          debugPrint('Voluntary reminder ${r.voluntary} failed: $e');
+          return false;
+        }
+      }),
+    );
+    for (var i = 0; i < voluntary.length; i++) {
+      if (voluntaryResults[i]) persistedVoluntary.add(voluntary[i]);
+    }
+
     // Safety net: if the user never opens the app again, tell them the
     // schedule is about to run out instead of going silent. Rescheduling
     // (which happens on every launch/resume/settings change) pushes this
@@ -454,6 +502,7 @@ class PrayerSchedulerService {
     final scheduled = <ScheduledReminder>[
       ...persistedPrimaries,
       ...carriedSnoozes,
+      ...persistedVoluntary,
       ...followUps,
     ];
     if (persistedPrimaries.isNotEmpty) {
@@ -496,6 +545,69 @@ class PrayerSchedulerService {
     );
 
     return scheduled;
+  }
+
+  /// Builds the upcoming Duha and Qiyam reminders for the opted-in prayers.
+  ///
+  /// Duha fires when its window opens ([PrayerTimeService.duhaFor]); Qiyam
+  /// when the last third of the night begins
+  /// ([PrayerTimeService.qiyamForNight]). Anything unavailable at this
+  /// latitude/date, or already past, is skipped — never a guessed time.
+  /// Limited to [SchedulingPolicy.voluntaryDays] days so capped platforms
+  /// keep their budget.
+  List<ScheduledReminder> _voluntaryReminders(
+    PrayerSettings settings, {
+    required List<PrayerDayTimes> days,
+    required tz.TZDateTime current,
+    required tz.Location location,
+    required Set<int> usedIds,
+  }) {
+    if (!settings.duhaReminderEnabled && !settings.qiyamReminderEnabled) {
+      return const [];
+    }
+    final horizon = current.add(Duration(days: policy.voluntaryDays));
+    final out = <ScheduledReminder>[];
+
+    void add(VoluntaryPrayer prayer, DateTime at) {
+      final time = tz.TZDateTime.from(at, location);
+      if (!time.isAfter(current) || time.isAfter(horizon)) return;
+      final id = LocalNotificationService.voluntaryNotificationIdFor(
+        prayer,
+        time,
+      );
+      if (!usedIds.add(id)) return;
+      out.add(
+        ScheduledReminder(
+          notificationId: id,
+          // Placeholder — a voluntary reminder has no obligatory prayer.
+          prayer: SalahPrayer.fajr,
+          scheduledAtMillis: time.millisecondsSinceEpoch,
+          kind: ReminderKind.voluntary,
+          voluntary: prayer,
+        ),
+      );
+    }
+
+    if (settings.duhaReminderEnabled) {
+      for (final day in days) {
+        final duha = prayerTimeService.duhaFor(settings, day);
+        if (duha != null) add(VoluntaryPrayer.duha, duha.start);
+      }
+    }
+    if (settings.qiyamReminderEnabled) {
+      // Start one night early: last night's final third may still be ahead
+      // (e.g. it is 00:30 now and the last third begins at 01:10).
+      final firstDay = DateTime(current.year, current.month, current.day - 1);
+      for (var i = 0; i <= policy.voluntaryDays; i++) {
+        final night = prayerTimeService.qiyamForNight(
+          settings,
+          DateTime(firstDay.year, firstDay.month, firstDay.day + i),
+        );
+        if (night != null) add(VoluntaryPrayer.qiyam, night.start);
+      }
+    }
+    out.sort((a, b) => a.scheduledAtMillis.compareTo(b.scheduledAtMillis));
+    return out;
   }
 
   /// The next main prayer reminder that has not fired yet, from the

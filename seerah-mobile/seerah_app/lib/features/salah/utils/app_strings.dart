@@ -84,6 +84,14 @@ class AppStrings {
   static const String refreshReminderBody =
       'Your upcoming salah reminders need to be refreshed.';
 
+  // Opt-in gentle reminders for the voluntary prayers.
+  static const String duhaReminderTitle = 'Duha time';
+  static const String duhaReminderBody =
+      'The Duha window is open until just before Dhuhr.';
+  static const String qiyamReminderTitle = 'Qiyam time';
+  static const String qiyamReminderBody =
+      'The last third of the night has begun — a blessed time to pray and make dua.';
+
   // Buttons. Answer and Decline are used on the incoming call screen and as
   // notification action buttons in the system shade. "Pray Now" is the
   // notification equivalent of Answer.

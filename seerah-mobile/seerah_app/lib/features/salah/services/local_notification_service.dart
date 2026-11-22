@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 import '../models/salah_prayer.dart';
+import '../models/voluntary_prayer_times.dart';
 import '../utils/app_strings.dart';
 import 'app_guard_service.dart';
 import 'decline_flow.dart';
@@ -26,6 +27,7 @@ class SalahNotificationPayload {
   static const typeSnooze = 'snooze';
   static const typeTest = 'test';
   static const typeRefresh = 'refresh';
+  static const typeVoluntary = 'voluntary';
 
   final String type;
   final SalahPrayer? prayer;
@@ -127,6 +129,15 @@ abstract class NotificationScheduler {
     required tz.TZDateTime scheduledAt,
   });
 
+  /// Opt-in, gentle reminder that a voluntary prayer's window (Duha) or time
+  /// (Qiyam) has begun. A plain, quiet notification: never call-style, no
+  /// Answer/Decline actions, no follow-up, never AlarmKit.
+  Future<void> scheduleVoluntaryReminder({
+    required int id,
+    required VoluntaryPrayer prayer,
+    required tz.TZDateTime scheduledAt,
+  });
+
   Future<void> cancel(int id);
 
   /// Notification IDs the OS actually still has pending right now. Used to
@@ -144,6 +155,11 @@ class LocalNotificationService implements NotificationScheduler {
   static const String prayerChannelName = 'Salah Reminders';
   static const String prayerChannelDescription =
       'Reminders when prayer time enters';
+
+  static const String voluntaryChannelId = 'salah_voluntary';
+  static const String voluntaryChannelName = 'Duha & Qiyam';
+  static const String voluntaryChannelDescription =
+      'Optional gentle reminders for the Duha and Qiyam prayers';
 
   /// Notification action identifiers (Android actions / iOS category actions).
   static const String actionPrayNow = 'pray_now';
@@ -196,7 +212,8 @@ class LocalNotificationService implements NotificationScheduler {
   /// Deterministic ID per prayer occurrence: identical inputs always produce
   /// the same ID, so rescheduling replaces instead of duplicating.
   /// Layout: (minutes since epoch, cyclic) * 20 + slot.
-  /// Slots 0-4 = prayer reminders, 5-9 = snoozes, 10-14 = follow-ups.
+  /// Slots 0-4 = prayer reminders, 5-9 = snoozes, 10-14 = follow-ups,
+  /// 15 = Duha, 16 = Qiyam (see [voluntaryNotificationIdFor]).
   static int notificationIdFor(
     SalahPrayer prayer,
     DateTime scheduledAt, {
@@ -207,6 +224,17 @@ class LocalNotificationService implements NotificationScheduler {
     final minutes = scheduledAt.toUtc().millisecondsSinceEpoch ~/ 60000;
     final slot = prayer.index + (snooze ? 5 : (followUp ? 10 : 0));
     return (minutes % 100000000) * 20 + slot;
+  }
+
+  /// Deterministic ID for a voluntary-prayer reminder, in the unused slots
+  /// 15/16 of the same layout as [notificationIdFor] so it can never collide
+  /// with a prayer, snooze or follow-up ID.
+  static int voluntaryNotificationIdFor(
+    VoluntaryPrayer prayer,
+    DateTime scheduledAt,
+  ) {
+    final minutes = scheduledAt.toUtc().millisecondsSinceEpoch ~/ 60000;
+    return (minutes % 100000000) * 20 + 15 + prayer.index;
   }
 
   Future<void> initialize() async {
@@ -523,6 +551,56 @@ class LocalNotificationService implements NotificationScheduler {
           const SalahNotificationPayload(
             type: SalahNotificationPayload.typeRefresh,
           ).encode(),
+    );
+  }
+
+  @override
+  Future<void> scheduleVoluntaryReminder({
+    required int id,
+    required VoluntaryPrayer prayer,
+    required tz.TZDateTime scheduledAt,
+  }) async {
+    final isDuha = prayer == VoluntaryPrayer.duha;
+    await _zonedSchedule(
+      id: id,
+      title: translateSalah(
+        salahLang,
+        isDuha ? AppStrings.duhaReminderTitle : AppStrings.qiyamReminderTitle,
+      ),
+      body: translateSalah(
+        salahLang,
+        isDuha ? AppStrings.duhaReminderBody : AppStrings.qiyamReminderBody,
+      ),
+      scheduledAt: scheduledAt,
+      details: _voluntaryDetails(),
+      payload:
+          const SalahNotificationPayload(
+            type: SalahNotificationPayload.typeVoluntary,
+          ).encode(),
+    );
+  }
+
+  /// Quiet presentation for voluntary-prayer reminders: its own channel so
+  /// the user can silence it independently in system settings, default
+  /// importance (no ringtone, no heads-up takeover), and — on iOS — an
+  /// ordinary (not time-sensitive) interruption level.
+  NotificationDetails _voluntaryDetails() {
+    return const NotificationDetails(
+      android: AndroidNotificationDetails(
+        voluntaryChannelId,
+        voluntaryChannelName,
+        channelDescription: voluntaryChannelDescription,
+        importance: Importance.defaultImportance,
+        priority: Priority.defaultPriority,
+        category: AndroidNotificationCategory.reminder,
+        visibility: NotificationVisibility.public,
+      ),
+      iOS: DarwinNotificationDetails(
+        presentAlert: true,
+        presentSound: true,
+        presentBanner: true,
+        interruptionLevel: InterruptionLevel.active,
+      ),
     );
   }
 

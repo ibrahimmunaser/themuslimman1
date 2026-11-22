@@ -15,6 +15,7 @@ import '../utils/formatting.dart';
 import '../widgets/location_feedback.dart';
 import '../widgets/place_text.dart';
 import '../widgets/prayer_times_list.dart';
+import '../widgets/voluntary_prayers_section.dart';
 import 'manual_location_screen.dart';
 import 'qibla_screen.dart';
 import 'settings_screen.dart';
@@ -316,6 +317,10 @@ class _HomeScreenState extends State<HomeScreen> {
                               PrayerTimesList(
                                 day: controller.today!,
                                 highlighted: controller.nextPrayer?.key,
+                              ),
+                              VoluntaryPrayersSection(
+                                times: controller.voluntaryTimes,
+                                now: controller.nowInUserZone(),
                               ),
                             ],
                           ),

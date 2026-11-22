@@ -117,6 +117,13 @@ class PrayerSettings {
   /// available as actions on that notification.
   final bool callScreenEnabled;
 
+  /// Opt-in gentle notifications when the Duha window opens / the last third
+  /// of the night begins. Off by default; plain notifications only — never
+  /// the call screen, snooze or follow-ups. Only effective while
+  /// [notificationsEnabled] is on.
+  final bool duhaReminderEnabled;
+  final bool qiyamReminderEnabled;
+
   /// Snooze duration in minutes.
   final int snoozeMinutes;
 
@@ -141,6 +148,8 @@ class PrayerSettings {
     this.manualAdjustments = const {},
     this.notificationsEnabled = true,
     this.callScreenEnabled = true,
+    this.duhaReminderEnabled = false,
+    this.qiyamReminderEnabled = false,
     this.snoozeMinutes = 10,
     this.hijriAdjustmentDays = 0,
     this.quranFont = QuranFontOption.notoNaskhArabic,
@@ -164,6 +173,8 @@ class PrayerSettings {
     Map<SalahPrayer, int>? manualAdjustments,
     bool? notificationsEnabled,
     bool? callScreenEnabled,
+    bool? duhaReminderEnabled,
+    bool? qiyamReminderEnabled,
     int? snoozeMinutes,
     int? hijriAdjustmentDays,
     QuranFontOption? quranFont,
@@ -182,6 +193,8 @@ class PrayerSettings {
       manualAdjustments: manualAdjustments ?? this.manualAdjustments,
       notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
       callScreenEnabled: callScreenEnabled ?? this.callScreenEnabled,
+      duhaReminderEnabled: duhaReminderEnabled ?? this.duhaReminderEnabled,
+      qiyamReminderEnabled: qiyamReminderEnabled ?? this.qiyamReminderEnabled,
       snoozeMinutes: snoozeMinutes ?? this.snoozeMinutes,
       hijriAdjustmentDays: hijriAdjustmentDays ?? this.hijriAdjustmentDays,
       quranFont: quranFont ?? this.quranFont,
@@ -205,6 +218,8 @@ class PrayerSettings {
       ),
       'notificationsEnabled': notificationsEnabled,
       'callScreenEnabled': callScreenEnabled,
+      'duhaReminderEnabled': duhaReminderEnabled,
+      'qiyamReminderEnabled': qiyamReminderEnabled,
       'snoozeMinutes': snoozeMinutes,
       'hijriAdjustmentDays': hijriAdjustmentDays,
       'quranFont': quranFont.name,
@@ -262,6 +277,8 @@ class PrayerSettings {
       // Note: a legacy 'reminderStyle' key may exist in stored settings from
       // older builds; it is intentionally ignored.
       callScreenEnabled: json['callScreenEnabled'] as bool? ?? true,
+      duhaReminderEnabled: json['duhaReminderEnabled'] as bool? ?? false,
+      qiyamReminderEnabled: json['qiyamReminderEnabled'] as bool? ?? false,
       snoozeMinutes: (json['snoozeMinutes'] as num?)?.toInt() ?? 10,
       hijriAdjustmentDays: ((json['hijriAdjustmentDays'] as num?)?.toInt() ?? 0)
           .clamp(-2, 2),

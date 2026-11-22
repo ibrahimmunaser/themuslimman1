@@ -45,9 +45,11 @@ class AdmissionPlan {
 ///   1. Automatic follow-ups, furthest-in-the-future first.
 ///   2. The schedule-refresh safety warning (it is recreated correctly on
 ///      the next successful reschedule, so losing it temporarily is safe).
-///   3. User-requested snoozes, furthest-out first — preserved wherever
-///      reasonably possible; only touched once every follow-up and the
-///      refresh warning are already gone.
+///   3. Opt-in Duha/Qiyam reminders, furthest-out first (also recreated on
+///      the next reschedule).
+///   4. User-requested snoozes, furthest-out first — preserved wherever
+///      reasonably possible; only touched once every follow-up, the
+///      refresh warning and the voluntary reminders are already gone.
 /// Primary prayer reminders are never evicted by this function.
 AdmissionPlan planAdmission({
   required List<ScheduledReminder> reconciled,
@@ -96,6 +98,7 @@ AdmissionPlan planAdmission({
 
   evictFrom(ReminderKind.followUp);
   evictFrom(ReminderKind.refresh);
+  evictFrom(ReminderKind.voluntary);
   evictFrom(ReminderKind.snooze);
   // Deliberately no evictFrom(ReminderKind.prayer): primaries are never
   // sacrificed to admit another notification.

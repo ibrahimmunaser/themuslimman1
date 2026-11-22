@@ -371,6 +371,40 @@ class _SettingsScreenState extends State<SettingsScreen> with RouteAware {
                       ),
                 ),
                 const Divider(height: 1),
+                SwitchListTile(
+                  title: const Text('Duha reminder'),
+                  subtitle: const Text(
+                    'A gentle notification when the Duha window opens. '
+                    'No call screen.',
+                  ),
+                  value:
+                      settings.notificationsEnabled &&
+                      settings.duhaReminderEnabled,
+                  onChanged:
+                      settings.notificationsEnabled
+                          ? (v) => controller.updateSettings(
+                            settings.copyWith(duhaReminderEnabled: v),
+                          )
+                          : null,
+                ),
+                const Divider(height: 1),
+                SwitchListTile(
+                  title: const Text('Qiyam reminder'),
+                  subtitle: const Text(
+                    'A gentle notification when the last third of the night '
+                    'begins. No call screen.',
+                  ),
+                  value:
+                      settings.notificationsEnabled &&
+                      settings.qiyamReminderEnabled,
+                  onChanged:
+                      settings.notificationsEnabled
+                          ? (v) => controller.updateSettings(
+                            settings.copyWith(qiyamReminderEnabled: v),
+                          )
+                          : null,
+                ),
+                const Divider(height: 1),
                 ListTile(
                   title: const Text('Snooze duration'),
                   subtitle: Text('${settings.snoozeMinutes} minutes'),
