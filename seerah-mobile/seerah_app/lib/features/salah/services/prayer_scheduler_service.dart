@@ -3,6 +3,9 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:timezone/timezone.dart' as tz;
 
+import 'package:seerah_app/l10n/salah_phrases.dart';
+
+import '../models/dua.dart';
 import '../models/prayer_day_times.dart';
 import '../models/prayer_settings.dart';
 import '../models/salah_prayer.dart';
@@ -88,14 +91,23 @@ class SchedulingPolicy {
   /// (each at most one per day, so two per day when both are on).
   final int voluntaryDays;
 
+  /// How many days ahead the opt-in du'a-for-loved-ones reminders are
+  /// scheduled (one per selected window per day), and the most of them that
+  /// may be pending at once. [maxDuaReminders] null means uncapped.
+  final int duaDays;
+  final int? maxDuaReminders;
+
   const SchedulingPolicy({
     required this.daysToSchedule,
     int? baselineDays,
     this.followUpHorizon,
     this.maxPending,
     int? voluntaryDays,
+    int? duaDays,
+    this.maxDuaReminders,
   }) : baselineDays = baselineDays ?? daysToSchedule,
-       voluntaryDays = voluntaryDays ?? daysToSchedule;
+       voluntaryDays = voluntaryDays ?? daysToSchedule,
+       duaDays = duaDays ?? daysToSchedule;
 
   /// Android: no OS pending limit; schedule the full week of everything.
   const SchedulingPolicy.android() : this(daysToSchedule: 7);
@@ -114,6 +126,12 @@ class SchedulingPolicy {
         // Up to 6-8 slots reserved for Duha/Qiyam (3 days x 2 prayers, plus
         // the early-night one); baseline primaries are never displaced.
         voluntaryDays: 3,
+        // Du'a reminders: at most 6 pending (e.g. 3 windows x 2 days), so
+        // together with Duha/Qiyam the reserved slots stay small and the
+        // baseline primaries are never displaced. The schedule refreshes on
+        // every launch/resume, so the horizon keeps rolling forward.
+        duaDays: 2,
+        maxDuaReminders: 6,
       );
 
   /// The policy for the current platform.
@@ -340,6 +358,16 @@ class PrayerSchedulerService {
       usedIds: usedIds,
     );
 
+    // ---- Opt-in du'a-for-loved-ones reminders. ----
+    // Plain notifications; slots reserved up front like the voluntary ones.
+    final dua = _duaReminders(
+      settings,
+      days: days,
+      current: current,
+      location: location,
+      usedIds: usedIds,
+    );
+
     // Enforce the pending cap dynamically:
     //   reserved slots = carried snoozes (actual count) + one refresh
     //   warning + voluntary reminders + the short-horizon follow-ups;
@@ -355,7 +383,8 @@ class PrayerSchedulerService {
           policy.maxPending! -
           carriedSnoozes.length -
           refreshSlot -
-          voluntary.length;
+          voluntary.length -
+          dua.length;
 
       final baselineCutoffMillis =
           current
@@ -495,6 +524,41 @@ class PrayerSchedulerService {
       if (voluntaryResults[i]) persistedVoluntary.add(voluntary[i]);
     }
 
+    // Du'a reminders: same best-effort handling. The person (and so the
+    // notification wording) is chosen here at schedule time; the card the
+    // tap opens looks the person up again by id.
+    final people = repository.loadDuaPeople();
+    final persistedDua = <ScheduledReminder>[];
+    final duaResults = await Future.wait(
+      dua.map((entry) async {
+        final r = entry.reminder;
+        try {
+          final person = entry.personId == null
+              ? null
+              : people.where((p) => p.id == entry.personId).firstOrNull;
+          await notificationScheduler.scheduleDuaReminder(
+            id: r.notificationId,
+            scheduledAt: tz.TZDateTime.from(r.scheduledAt, location),
+            title: translateSalah(salahLang, "Du'a for your loved ones"),
+            body: translateSalah(
+              salahLang,
+              person == null
+                  ? "Take a moment to make du'a for the people you love."
+                  : "Take a moment to make du'a for ${person.displayName}.",
+            ),
+            personId: person?.id,
+          );
+          return true;
+        } catch (e) {
+          debugPrint('Dua reminder failed: $e');
+          return false;
+        }
+      }),
+    );
+    for (var i = 0; i < dua.length; i++) {
+      if (duaResults[i]) persistedDua.add(dua[i].reminder);
+    }
+
     // Safety net: if the user never opens the app again, tell them the
     // schedule is about to run out instead of going silent. Rescheduling
     // (which happens on every launch/resume/settings change) pushes this
@@ -503,6 +567,7 @@ class PrayerSchedulerService {
       ...persistedPrimaries,
       ...carriedSnoozes,
       ...persistedVoluntary,
+      ...persistedDua,
       ...followUps,
     ];
     if (persistedPrimaries.isNotEmpty) {
@@ -607,6 +672,137 @@ class PrayerSchedulerService {
       }
     }
     out.sort((a, b) => a.scheduledAtMillis.compareTo(b.scheduledAtMillis));
+    return out;
+  }
+
+  /// Builds the upcoming du'a-for-loved-ones reminders: one per selected
+  /// [DuaWindow] per day, for [SchedulingPolicy.duaDays] days (and at most
+  /// [SchedulingPolicy.maxDuaReminders] in total on capped platforms,
+  /// earliest first).
+  ///
+  /// Each reminder is assigned a person by rotating through the user's list
+  /// (deterministic per day + window, so the same person is not always
+  /// first). Anything already past, or unavailable at this latitude/date, is
+  /// skipped — never a guessed time.
+  List<({ScheduledReminder reminder, String? personId})> _duaReminders(
+    PrayerSettings settings, {
+    required List<PrayerDayTimes> days,
+    required tz.TZDateTime current,
+    required tz.Location location,
+    required Set<int> usedIds,
+  }) {
+    if (!settings.duaReminderEnabled || settings.duaWindows.isEmpty) {
+      return const [];
+    }
+    final people = repository.loadDuaPeople();
+    final horizon = current.add(Duration(days: policy.duaDays));
+    final windows = [...settings.duaWindows]
+      ..sort((a, b) => a.index.compareTo(b.index));
+    final out = <({ScheduledReminder reminder, String? personId})>[];
+
+    void add(DateTime at, DateTime dayDate, int windowIndex) {
+      final time = tz.TZDateTime.from(at, location);
+      if (!time.isAfter(current) || time.isAfter(horizon)) return;
+      final id = LocalNotificationService.duaNotificationIdFor(time);
+      if (!usedIds.add(id)) return;
+      final epochDay =
+          DateTime.utc(dayDate.year, dayDate.month, dayDate.day)
+              .millisecondsSinceEpoch ~/
+          Duration.millisecondsPerDay;
+      final String? personId =
+          people.isEmpty
+              ? null
+              : people[(epochDay + windowIndex) % people.length].id;
+      out.add((
+        reminder: ScheduledReminder(
+          notificationId: id,
+          // Placeholder — a du'a reminder has no obligatory prayer.
+          prayer: SalahPrayer.fajr,
+          scheduledAtMillis: time.millisecondsSinceEpoch,
+          kind: ReminderKind.dua,
+        ),
+        personId: personId,
+      ));
+    }
+
+    DateTime midpoint(DateTime a, DateTime b) =>
+        a.add(Duration(milliseconds: b.difference(a).inMilliseconds ~/ 2));
+
+    for (var w = 0; w < windows.length; w++) {
+      final window = windows[w];
+      switch (window) {
+        case DuaWindow.morning:
+          for (final day in days) {
+            add(
+              midpoint(
+                day.timeFor(SalahPrayer.fajr),
+                day.timeFor(SalahPrayer.dhuhr),
+              ),
+              day.date,
+              w,
+            );
+          }
+        case DuaWindow.afternoon:
+          for (final day in days) {
+            add(
+              midpoint(
+                day.timeFor(SalahPrayer.dhuhr),
+                day.timeFor(SalahPrayer.asr),
+              ),
+              day.date,
+              w,
+            );
+          }
+        case DuaWindow.beforeMaghrib:
+          for (final day in days) {
+            add(
+              day
+                  .timeFor(SalahPrayer.maghrib)
+                  .subtract(const Duration(minutes: 40)),
+              day.date,
+              w,
+            );
+          }
+        case DuaWindow.evening:
+          for (final day in days) {
+            add(
+              midpoint(
+                day.timeFor(SalahPrayer.maghrib),
+                day.timeFor(SalahPrayer.isha),
+              ),
+              day.date,
+              w,
+            );
+          }
+        case DuaWindow.lastThird:
+          // Start one night early: last night's final third may still be
+          // ahead (e.g. it is 00:30 now and the last third begins 01:10).
+          final firstDay = DateTime(
+            current.year,
+            current.month,
+            current.day - 1,
+          );
+          for (var i = 0; i <= policy.duaDays; i++) {
+            final date = DateTime(
+              firstDay.year,
+              firstDay.month,
+              firstDay.day + i,
+            );
+            final night = prayerTimeService.qiyamForNight(settings, date);
+            if (night != null) add(night.start, date, w);
+          }
+      }
+    }
+
+    out.sort(
+      (a, b) => a.reminder.scheduledAtMillis.compareTo(
+        b.reminder.scheduledAtMillis,
+      ),
+    );
+    final cap = policy.maxDuaReminders;
+    if (cap != null && out.length > cap) {
+      out.removeRange(cap, out.length);
+    }
     return out;
   }
 

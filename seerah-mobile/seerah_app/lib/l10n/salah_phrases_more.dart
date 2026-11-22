@@ -138,6 +138,11 @@ const _guardedTpl = ['{n} تطبيقات محروسة','{n} applis protégées',
 const _selectedTpl = ['تم تحديد {n} — الاختيار السريع يستبدل القائمة','{n} sélectionnées — le choix rapide remplace la liste','{n} seleccionadas: la selección rápida reemplaza la lista','{n} ausgewählt – die Schnellauswahl ersetzt die Liste','{n} seçildi — hızlı seçim listeyi değiştirir','{n} منتخب — فوری انتخاب فہرست بدل دیتا ہے','{n} dipilih — pilihan cepat mengganti daftar','{n} dipilih — pilihan pantas menggantikan senarai','{n} चुने गए — क्विक पिक सूची बदल देता है','{n}টি বাছাই — দ্রুত বাছাই তালিকা বদলে দেয়','{n} انتخاب شده — انتخاب سریع فهرست را جایگزین می‌کند','Выбрано: {n} — быстрый выбор заменяет список','已选 {n} 个——快速选择会替换列表','{n} zimechaguliwa — chaguo la haraka hubadilisha orodha'];
 const _snoozeTpl = ['سنذكّرك مرة أخرى بعد {n} دقيقة، إن شاء الله.','Nous vous le rappellerons dans {n} minutes, in shaa Allah.','Te lo recordaremos de nuevo en {n} minutos, in shaa Allah.','Wir erinnern dich in {n} Minuten erneut, in schā\u2019 Allah.','{n} dakika sonra tekrar hatırlatacağız, inşallah.','ہم {n} منٹ بعد دوبارہ یاد دلائیں گے، ان شاء اللہ۔','Kami akan mengingatkan lagi dalam {n} menit, insyaAllah.','Kami akan mengingatkan lagi dalam {n} minit, insya-Allah.','हम {n} मिनट में फिर याद दिलाएँगे, इन शा अल्लाह।','আমরা {n} মিনিট পরে আবার মনে করিয়ে দেব, ইনশা আল্লাহ।','{n} دقیقه دیگر دوباره یادآوری می‌کنیم، ان‌شاءالله.','Мы напомним снова через {n} мин., ин ша Аллах.','我们将在 {n} 分钟后再次提醒您，如果真主意欲。','Tutakukumbusha tena baada ya dakika {n}, in shaa Allah.'];
 
+// Du'a-for-loved-ones templates: {p} is a free-text person name (not
+// translated) and {n} is a plain person count.
+const _duaForTpl = ['خذ لحظة للدعاء لـ{p}.','Prenez un instant pour invoquer pour {p}.','Tómate un momento para hacer dua por {p}.','Nimm dir einen Moment Zeit, um für {p} zu beten.','{p} için dua etmek üzere bir an ayırın.','{p} کے لیے دعا کرنے کے لیے ایک لمحہ نکالیں۔','Luangkan waktu sejenak untuk mendoakan {p}.','Luangkan masa sebentar untuk mendoakan {p}.','{p} के लिए दुआ करने के लिए एक पल निकालें।','{p}-এর জন্য দোয়া করার জন্য এক মুহূর্ত সময় নিন।','لحظه‌ای وقت بگذارید و برای {p} دعا کنید.','Уделите минуту, чтобы помолиться за {p}.','花一点时间为{p}祈祷。','Chukua muda kumwombea dua {p}.'];
+const _duaCountTpl = ['مفعّل — {n} شخص','Activé — {n} personnes','Activado — {n} personas','Ein — {n} Personen','Açık — {n} kişi','آن — {n} افراد','Aktif — {n} orang','Hidup — {n} orang','चालू — {n} लोग','চালু — {n} জন','روشن — {n} نفر','Включено — {n} чел.','已开启 — {n} 人','Imewashwa — watu {n}'];
+
 String translateSalahDynamic(String lang, String text) {
   final i = _langOrder.indexOf(lang);
   if (i < 0) return text;
@@ -170,6 +175,10 @@ String translateSalahDynamic(String lang, String text) {
   if (m != null) return _selectedTpl[i].replaceAll('{n}', m.group(1)!);
   m = RegExp(r'^We will remind you again in (\d+) minutes, in shaa Allah\.$').firstMatch(text);
   if (m != null) return _snoozeTpl[i].replaceAll('{n}', m.group(1)!);
+  m = RegExp(r"^Take a moment to make du'a for (.+)\.$").firstMatch(text);
+  if (m != null) return _duaForTpl[i].replaceAll('{p}', m.group(1)!);
+  m = RegExp(r'^On — (\d+) (?:person|people)$').firstMatch(text);
+  if (m != null) return _duaCountTpl[i].replaceAll('{n}', m.group(1)!);
   final nt = translateNotifDynamic(lang, text);
   if (nt != text) return nt;
   return translateExtraDynamic(lang, text);

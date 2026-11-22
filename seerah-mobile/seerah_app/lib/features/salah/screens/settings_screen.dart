@@ -20,6 +20,7 @@ import '../widgets/location_feedback.dart';
 import '../widgets/place_text.dart';
 import 'app_guard_screen.dart';
 import 'diagnostics_screen.dart';
+import 'dua_reminders_screen.dart';
 import 'incoming_salah_screen.dart';
 import 'manual_location_screen.dart';
 import 'privacy_policy_screen.dart';
@@ -403,6 +404,24 @@ class _SettingsScreenState extends State<SettingsScreen> with RouteAware {
                             settings.copyWith(qiyamReminderEnabled: v),
                           )
                           : null,
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  title: const Text('Du\'a for loved ones'),
+                  subtitle: Text(
+                    settings.duaReminderEnabled
+                        ? 'On — ${controller.duaPeople.length} '
+                            '${controller.duaPeople.length == 1 ? 'person' : 'people'}'
+                        : 'Get a reminder to make du\'a for your parents and '
+                            'loved ones',
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap:
+                      () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const DuaRemindersScreen(),
+                        ),
+                      ),
                 ),
                 const Divider(height: 1),
                 ListTile(

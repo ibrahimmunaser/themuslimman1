@@ -23,6 +23,7 @@ import 'guard_main.dart';
 import 'models/salah_prayer.dart';
 import 'navigation.dart';
 import 'repositories/prayer_settings_repository.dart';
+import 'screens/dua_card_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/incoming_salah_screen.dart';
 import 'services/geocoding_service.dart';
@@ -173,7 +174,41 @@ class SalahBootstrap {
       );
     }
 
+    // Du'a for loved ones: the tap opens a calm, timed card for the person
+    // the reminder named. Pushed on the root navigator like the call screen,
+    // so it shows whichever tab the app is on (or cold-started into).
+    var duaCardOpen = false;
+    Future<void> presentDuaCard(SalahNotificationPayload payload) async {
+      if (duaCardOpen) return;
+      duaCardOpen = true;
+      try {
+        final nav = await waitForNavigator();
+        if (nav == null || !nav.mounted) return;
+        final id = payload.duaPersonId;
+        final person =
+            id == null
+                ? null
+                : controller.duaPeople.where((p) => p.id == id).firstOrNull;
+        await nav.push<void>(
+          MaterialPageRoute(
+            builder:
+                (_) => DuaCardScreen(
+                  person: person,
+                  seconds: controller.settings.duaCardSeconds,
+                ),
+            fullscreenDialog: true,
+          ),
+        );
+      } finally {
+        duaCardOpen = false;
+      }
+    }
+
     controller.onOpenReminder = (payload, actionId) async {
+      if (payload.type == SalahNotificationPayload.typeDua) {
+        await presentDuaCard(payload);
+        return;
+      }
       final prayer = payload.prayer ?? SalahPrayer.dhuhr;
       // Refresh and Duha/Qiyam reminders just open the app — never the
       // Answer/Decline call screen.

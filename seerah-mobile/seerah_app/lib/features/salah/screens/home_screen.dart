@@ -15,6 +15,7 @@ import '../utils/formatting.dart';
 import '../widgets/location_feedback.dart';
 import '../widgets/place_text.dart';
 import '../widgets/prayer_times_list.dart';
+import 'dua_reminders_screen.dart';
 import 'manual_location_screen.dart';
 import 'qibla_screen.dart';
 import 'settings_screen.dart';
@@ -323,6 +324,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                       ),
+                      const SizedBox(height: 16),
+                      _DuaEntryCard(controller: controller),
                     ] else
                       _LocationNeededCard(controller: controller),
                   ],
@@ -687,6 +690,69 @@ class _CallScreenOverlayBanner extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Entry point to "Du'a for loved ones" (the righteous-child reminder): a
+/// quiet card under today's prayer times. Taps through to the setup screen.
+class _DuaEntryCard extends StatelessWidget {
+  final AppController controller;
+
+  const _DuaEntryCard({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    final on = controller.settings.duaReminderEnabled;
+    final count = controller.duaPeople.length;
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: AppColors.gold.withValues(alpha: 0.5)),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap:
+            () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const DuaRemindersScreen()),
+            ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Icon(Icons.favorite_border, color: AppColors.gold),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Du\'a for loved ones',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      on
+                          ? 'On — $count ${count == 1 ? 'person' : 'people'}'
+                          : 'Never forget to pray for your parents and the '
+                              'people you love',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, color: AppColors.textMuted),
+            ],
+          ),
         ),
       ),
     );

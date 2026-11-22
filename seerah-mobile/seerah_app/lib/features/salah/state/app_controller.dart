@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 import '../models/city.dart';
+import '../models/dua.dart';
 import '../models/prayer_day_times.dart';
 import '../models/prayer_response.dart';
 import '../models/prayer_settings.dart';
@@ -645,6 +646,19 @@ class AppController extends ChangeNotifier with WidgetsBindingObserver {
     await recalculateAndReschedule();
   }
 
+  // ---------------------------------------------------- du'a for loved ones
+
+  /// The people the user wants to be reminded to make du'a for (stored on
+  /// this device only).
+  List<DuaPerson> get duaPeople => repository.loadDuaPeople();
+
+  /// Saves the people list, then reschedules so the du'a reminders pick up
+  /// the new names straight away.
+  Future<void> setDuaPeople(List<DuaPerson> people) async {
+    await repository.saveDuaPeople(people);
+    await recalculateAndReschedule();
+  }
+
   Future<void> setManualAdjustment(SalahPrayer prayer, int minutes) async {
     final adjustments = Map<SalahPrayer, int>.from(_settings.manualAdjustments)
       ..[prayer] = minutes;
@@ -869,6 +883,7 @@ class AppController extends ChangeNotifier with WidgetsBindingObserver {
           snoozes++;
         case ReminderKind.refresh:
         case ReminderKind.voluntary:
+        case ReminderKind.dua:
           break;
       }
     }

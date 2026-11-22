@@ -23,6 +23,11 @@ enum ReminderKind {
   /// notification: no call screen, no snooze, no follow-up. Declared last so
   /// persisted indexes/names of the older kinds are unaffected.
   voluntary,
+
+  /// Opt-in "du'a for loved ones" reminder. A plain notification whose tap
+  /// opens the timed du'a card. Placeholder [ScheduledReminder.prayer] like
+  /// [voluntary]. Declared last so older persisted kinds are unaffected.
+  dua,
 }
 
 /// A scheduled local notification, persisted so it can be cancelled later.

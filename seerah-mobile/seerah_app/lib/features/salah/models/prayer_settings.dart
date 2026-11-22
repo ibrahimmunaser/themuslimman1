@@ -1,3 +1,4 @@
+import 'dua.dart';
 import 'salah_prayer.dart';
 
 /// Supported calculation methods (app-level, mapped to adhan_dart in the
@@ -124,6 +125,17 @@ class PrayerSettings {
   final bool duhaReminderEnabled;
   final bool qiyamReminderEnabled;
 
+  /// Opt-in "du'a for loved ones" reminders (the righteous-child reminder).
+  /// Off by default. A plain notification at each selected [duaWindows]
+  /// time; tapping it opens a calm timed card (never the call screen) that
+  /// stays up for [duaCardSeconds]. Only effective while
+  /// [notificationsEnabled] is on.
+  final bool duaReminderEnabled;
+  final List<DuaWindow> duaWindows;
+
+  /// How long the du'a card stays up: 30 or 60 seconds.
+  final int duaCardSeconds;
+
   /// Snooze duration in minutes.
   final int snoozeMinutes;
 
@@ -150,6 +162,9 @@ class PrayerSettings {
     this.callScreenEnabled = true,
     this.duhaReminderEnabled = false,
     this.qiyamReminderEnabled = false,
+    this.duaReminderEnabled = false,
+    this.duaWindows = const [DuaWindow.beforeMaghrib],
+    this.duaCardSeconds = 30,
     this.snoozeMinutes = 10,
     this.hijriAdjustmentDays = 0,
     this.quranFont = QuranFontOption.notoNaskhArabic,
@@ -175,6 +190,9 @@ class PrayerSettings {
     bool? callScreenEnabled,
     bool? duhaReminderEnabled,
     bool? qiyamReminderEnabled,
+    bool? duaReminderEnabled,
+    List<DuaWindow>? duaWindows,
+    int? duaCardSeconds,
     int? snoozeMinutes,
     int? hijriAdjustmentDays,
     QuranFontOption? quranFont,
@@ -195,6 +213,9 @@ class PrayerSettings {
       callScreenEnabled: callScreenEnabled ?? this.callScreenEnabled,
       duhaReminderEnabled: duhaReminderEnabled ?? this.duhaReminderEnabled,
       qiyamReminderEnabled: qiyamReminderEnabled ?? this.qiyamReminderEnabled,
+      duaReminderEnabled: duaReminderEnabled ?? this.duaReminderEnabled,
+      duaWindows: duaWindows ?? this.duaWindows,
+      duaCardSeconds: duaCardSeconds ?? this.duaCardSeconds,
       snoozeMinutes: snoozeMinutes ?? this.snoozeMinutes,
       hijriAdjustmentDays: hijriAdjustmentDays ?? this.hijriAdjustmentDays,
       quranFont: quranFont ?? this.quranFont,
@@ -220,6 +241,9 @@ class PrayerSettings {
       'callScreenEnabled': callScreenEnabled,
       'duhaReminderEnabled': duhaReminderEnabled,
       'qiyamReminderEnabled': qiyamReminderEnabled,
+      'duaReminderEnabled': duaReminderEnabled,
+      'duaWindows': duaWindows.map((w) => w.name).toList(),
+      'duaCardSeconds': duaCardSeconds,
       'snoozeMinutes': snoozeMinutes,
       'hijriAdjustmentDays': hijriAdjustmentDays,
       'quranFont': quranFont.name,
@@ -279,6 +303,17 @@ class PrayerSettings {
       callScreenEnabled: json['callScreenEnabled'] as bool? ?? true,
       duhaReminderEnabled: json['duhaReminderEnabled'] as bool? ?? false,
       qiyamReminderEnabled: json['qiyamReminderEnabled'] as bool? ?? false,
+      duaReminderEnabled: json['duaReminderEnabled'] as bool? ?? false,
+      duaWindows: () {
+        final parsed = <DuaWindow>[
+          for (final n in (json['duaWindows'] as List?) ?? const [])
+            if (DuaWindow.fromName(n as String?) != null)
+              DuaWindow.fromName(n)!,
+        ];
+        return parsed.isEmpty ? const [DuaWindow.beforeMaghrib] : parsed;
+      }(),
+      duaCardSeconds:
+          (json['duaCardSeconds'] as num?)?.toInt() == 60 ? 60 : 30,
       snoozeMinutes: (json['snoozeMinutes'] as num?)?.toInt() ?? 10,
       hijriAdjustmentDays: ((json['hijriAdjustmentDays'] as num?)?.toInt() ?? 0)
           .clamp(-2, 2),

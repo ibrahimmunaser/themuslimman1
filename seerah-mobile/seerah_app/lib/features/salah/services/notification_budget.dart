@@ -98,6 +98,7 @@ AdmissionPlan planAdmission({
 
   evictFrom(ReminderKind.followUp);
   evictFrom(ReminderKind.refresh);
+  evictFrom(ReminderKind.dua);
   evictFrom(ReminderKind.voluntary);
   evictFrom(ReminderKind.snooze);
   // Deliberately no evictFrom(ReminderKind.prayer): primaries are never

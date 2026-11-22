@@ -28,13 +28,26 @@ class SalahNotificationPayload {
   static const typeTest = 'test';
   static const typeRefresh = 'refresh';
   static const typeVoluntary = 'voluntary';
+  static const typeDua = 'dua';
 
   final String type;
   final SalahPrayer? prayer;
 
-  const SalahNotificationPayload({required this.type, this.prayer});
+  /// Only for [typeDua]: the [DuaPerson.id] this reminder is for (null =
+  /// a general du'a for loved ones).
+  final String? duaPersonId;
 
-  String encode() => jsonEncode({'type': type, 'prayer': prayer?.name});
+  const SalahNotificationPayload({
+    required this.type,
+    this.prayer,
+    this.duaPersonId,
+  });
+
+  String encode() => jsonEncode({
+    'type': type,
+    'prayer': prayer?.name,
+    if (duaPersonId != null) 'duaPersonId': duaPersonId,
+  });
 
   static SalahNotificationPayload? decode(String? raw) {
     if (raw == null || raw.isEmpty) return null;
@@ -46,6 +59,7 @@ class SalahNotificationPayload {
             map['prayer'] == null
                 ? null
                 : SalahPrayer.fromName(map['prayer'] as String),
+        duaPersonId: map['duaPersonId'] as String?,
       );
     } catch (_) {
       return null;
@@ -138,6 +152,20 @@ abstract class NotificationScheduler {
     required tz.TZDateTime scheduledAt,
   });
 
+  /// Opt-in "du'a for loved ones" reminder. A plain, quiet notification
+  /// (never call-style, never AlarmKit); tapping it opens the timed du'a
+  /// card for [personId] (null = a general reminder).
+  ///
+  /// Has a no-op default so schedulers that predate this feature (test
+  /// fakes) keep compiling; the real implementations override it.
+  Future<void> scheduleDuaReminder({
+    required int id,
+    required tz.TZDateTime scheduledAt,
+    required String title,
+    required String body,
+    String? personId,
+  }) async {}
+
   Future<void> cancel(int id);
 
   /// Notification IDs the OS actually still has pending right now. Used to
@@ -160,6 +188,11 @@ class LocalNotificationService implements NotificationScheduler {
   static const String voluntaryChannelName = 'Duha & Qiyam';
   static const String voluntaryChannelDescription =
       'Optional gentle reminders for the Duha and Qiyam prayers';
+
+  static const String duaChannelId = 'salah_dua';
+  static const String duaChannelName = 'Du\'a for loved ones';
+  static const String duaChannelDescription =
+      'Optional reminders to make du\'a for the people you love';
 
   /// Notification action identifiers (Android actions / iOS category actions).
   static const String actionPrayNow = 'pray_now';
@@ -235,6 +268,14 @@ class LocalNotificationService implements NotificationScheduler {
   ) {
     final minutes = scheduledAt.toUtc().millisecondsSinceEpoch ~/ 60000;
     return (minutes % 100000000) * 20 + 15 + prayer.index;
+  }
+
+  /// Deterministic ID for a du'a-for-loved-ones reminder, in slot 17 of the
+  /// same layout (slots 15/16 are Duha/Qiyam), so it can never collide with
+  /// any other reminder kind.
+  static int duaNotificationIdFor(DateTime scheduledAt) {
+    final minutes = scheduledAt.toUtc().millisecondsSinceEpoch ~/ 60000;
+    return (minutes % 100000000) * 20 + 17;
   }
 
   Future<void> initialize() async {
@@ -577,6 +618,51 @@ class LocalNotificationService implements NotificationScheduler {
           const SalahNotificationPayload(
             type: SalahNotificationPayload.typeVoluntary,
           ).encode(),
+    );
+  }
+
+  @override
+  Future<void> scheduleDuaReminder({
+    required int id,
+    required tz.TZDateTime scheduledAt,
+    required String title,
+    required String body,
+    String? personId,
+  }) async {
+    await _zonedSchedule(
+      id: id,
+      title: title,
+      body: body,
+      scheduledAt: scheduledAt,
+      details: _duaDetails(),
+      payload:
+          SalahNotificationPayload(
+            type: SalahNotificationPayload.typeDua,
+            duaPersonId: personId,
+          ).encode(),
+    );
+  }
+
+  /// Gentle presentation for du'a reminders: its own channel (so it can be
+  /// silenced independently in system settings), default importance, no
+  /// full-screen takeover, ordinary iOS interruption level.
+  NotificationDetails _duaDetails() {
+    return const NotificationDetails(
+      android: AndroidNotificationDetails(
+        duaChannelId,
+        duaChannelName,
+        channelDescription: duaChannelDescription,
+        importance: Importance.defaultImportance,
+        priority: Priority.defaultPriority,
+        category: AndroidNotificationCategory.reminder,
+        visibility: NotificationVisibility.public,
+      ),
+      iOS: DarwinNotificationDetails(
+        presentAlert: true,
+        presentSound: true,
+        presentBanner: true,
+        interruptionLevel: InterruptionLevel.active,
+      ),
     );
   }
 

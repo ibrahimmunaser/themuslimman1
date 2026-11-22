@@ -156,6 +156,24 @@ class IosHybridNotificationScheduler implements NotificationScheduler {
   }
 
   @override
+  Future<void> scheduleDuaReminder({
+    required int id,
+    required tz.TZDateTime scheduledAt,
+    required String title,
+    required String body,
+    String? personId,
+  }) {
+    // Always a plain local notification — never AlarmKit.
+    return notifications.scheduleDuaReminder(
+      id: id,
+      scheduledAt: scheduledAt,
+      title: title,
+      body: body,
+      personId: personId,
+    );
+  }
+
+  @override
   Future<void> cancel(int id) async {
     final alarmId = _alarmIdsByNotificationId.remove(id);
     if (alarmId != null) {

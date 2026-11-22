@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../models/dua.dart';
 import '../models/prayer_response.dart';
 import '../models/prayer_settings.dart';
 import '../models/salah_prayer.dart';
@@ -66,6 +67,31 @@ class PrayerSettingsRepository {
 
   Future<void> saveSettings(PrayerSettings settings) async {
     await _prefs.setString(_settingsKey, jsonEncode(settings.toJson()));
+  }
+
+  // ------------------------------------------------------------ du'a people
+
+  static const _duaPeopleKey = 'dua_people_v1';
+
+  /// The people the user wants to be reminded to make du'a for. Stored on
+  /// this device only.
+  List<DuaPerson> loadDuaPeople() {
+    final raw = _prefs.getString(_duaPeopleKey);
+    if (raw == null) return [];
+    try {
+      return (jsonDecode(raw) as List<dynamic>)
+          .map((e) => DuaPerson.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<void> saveDuaPeople(List<DuaPerson> people) async {
+    await _prefs.setString(
+      _duaPeopleKey,
+      jsonEncode(people.map((p) => p.toJson()).toList()),
+    );
   }
 
   // ---------------------------------------------------- scheduled reminders

@@ -55,6 +55,15 @@ class _FakeScheduler implements NotificationScheduler {
   }
 
   @override
+  Future<void> scheduleDuaReminder({
+    required int id,
+    required tz.TZDateTime scheduledAt,
+    required String title,
+    required String body,
+    String? personId,
+  }) async {}
+
+  @override
   Future<void> cancel(int id) async => cancelled.add(id);
 
   @override
