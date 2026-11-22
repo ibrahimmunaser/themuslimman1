@@ -14,9 +14,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// launch via [recent]), and — importantly — never rethrows, so one bad
 /// callback can no longer take the whole app down.
 ///
-/// This is deliberately local-only: no third-party SDK or network call is
-/// involved. [onReport] is the single seam to forward entries to a crash
-/// service (Sentry, Crashlytics, an own endpoint) once one is chosen.
+/// The local buffer still exists so [recent]/[formatReport] work even if
+/// the Sentry SDK itself failed to initialize or a report never reaches the
+/// network; [onReport] forwards every entry to Sentry too (wired in
+/// main.dart) so we finally get real stack traces instead of static-code
+/// guesswork.
 class ErrorReporter {
   ErrorReporter._();
 
@@ -24,9 +26,12 @@ class ErrorReporter {
   static const maxEntries = 20;
   static const _maxFieldLength = 1500;
 
-  /// Optional sink for a future crash-reporting backend. Must not throw;
-  /// any exception it raises is swallowed.
-  static void Function(Map<String, Object?> entry)? onReport;
+  /// Optional sink for a crash-reporting backend (Sentry — see main.dart).
+  /// Receives the original error/stack (for real symbolication) plus the
+  /// same formatted [entry] already buffered locally. Must not throw; any
+  /// exception it raises is swallowed.
+  static void Function(Object error, StackTrace? stack, Map<String, Object?> entry)?
+  onReport;
 
   static bool _installed = false;
   static final List<Map<String, Object?>> _buffer = [];
@@ -75,7 +80,7 @@ class ErrorReporter {
         _buffer.removeRange(0, _buffer.length - maxEntries);
       }
       try {
-        onReport?.call(entry);
+        onReport?.call(error, stack, entry);
       } catch (_) {}
       _persist();
     } catch (_) {

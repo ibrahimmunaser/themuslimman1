@@ -11,6 +11,7 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:in_app_purchase_storekit/in_app_purchase_storekit.dart';
 import 'package:provider/provider.dart' as provider_pkg;
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'core/crash_guard.dart';
 import 'core/error_reporter.dart';
 import 'core/network/api_client.dart';
@@ -50,7 +51,40 @@ Future<void> main() async {
 
   // First thing: catch every uncaught error (framework, async, platform
   // channel) so none of them can silently kill the app — see ErrorReporter.
+  // This runs before SentryFlutter.init below so Sentry's own handlers wrap
+  // (and still call) these, instead of replacing them.
   ErrorReporter.install();
+
+  // Wraps the rest of startup + runApp. Besides reporting Dart-level
+  // exceptions, this installs the native iOS/Android Sentry SDKs, which is
+  // the main reason it's here: a crash before the Dart VM even starts, or
+  // one the engine itself can't recover from (the unexplained "app closes
+  // right after opening" reports), produces nothing in ErrorReporter's
+  // local buffer because Dart never gets a chance to run — but the native
+  // SDK still captures and uploads it on the next launch.
+  await SentryFlutter.init((options) {
+    options.dsn =
+        'https://138e32c9d9df4fdbda362c6015692c47@o4512346187169792.ingest.us.sentry.io/4512473504088064';
+    // Recommended default; lower this (e.g. 0.2) later if trace volume
+    // becomes a cost concern once real users are on this build.
+    options.tracesSampleRate = 1.0;
+  }, appRunner: _runApp);
+}
+
+Future<void> _runApp() async {
+  // Forward every error ErrorReporter already buffers (framework errors,
+  // platform-channel errors, and every guard() failure below) to Sentry
+  // too, with the real error/stack for proper symbolication — rather than
+  // only the stringified copy in the local buffer.
+  ErrorReporter.onReport = (error, stack, entry) {
+    unawaited(
+      Sentry.captureException(
+        error,
+        stackTrace: stack,
+        hint: Hint.withMap({'source': entry['source']}),
+      ),
+    );
+  };
 
   // Must finish before anything reads courseLangProvider (lazily created on
   // first read, during SeerahApp's first build — see CrashGuard's doc
@@ -174,9 +208,11 @@ class _SeerahAppState extends ConsumerState<SeerahApp>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    // The first frame actually rendering is the strongest "this launch
-    // didn't crash at startup" signal we have with no crash-reporting SDK
-    // wired up — see CrashGuard's doc comment.
+    // The first frame actually rendering is still the strongest "this
+    // launch didn't crash at startup" signal for the in-app language-reset
+    // recovery below — Sentry (see main.dart) now gives us real crash data
+    // too, but doesn't replace this local recovery mechanism.
+    // See CrashGuard's doc comment.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(CrashGuard.markSucceeded());
       if (CrashGuard.justRecoveredLanguage) {

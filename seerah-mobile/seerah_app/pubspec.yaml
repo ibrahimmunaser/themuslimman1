@@ -1,7 +1,7 @@
 name: seerah_app
 description: "The Muslim Man — Seerah Course Mobile App"
 publish_to: 'none'
-version: 1.0.96+100
+version: 1.0.97+101
 
 environment:
   sdk: ^3.12.0
@@ -59,6 +59,12 @@ dependencies:
   url_launcher: ^6.3.2
   intl: ^0.20.2
   package_info_plus: ^9.0.1
+
+  # Crash reporting (errors + native iOS/Android crash capture). See
+  # ErrorReporter's doc comment for why this exists: the unexplained
+  # "closes right after opening" reports had no real diagnostic data
+  # before this, only static-code guesswork.
+  sentry_flutter: ^10.6.0
 
   # ── Salah (prayer times, reminders, App Guard, Quran, Qibla) ──────────────
   # Merged from the standalone "Allah Is Calling" app.

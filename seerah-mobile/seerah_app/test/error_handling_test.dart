@@ -27,8 +27,8 @@ void main() {
 
     test('forwards failures to onReport and never rethrows from it', () async {
       final seen = <Map<String, Object?>>[];
-      ErrorReporter.onReport = (e) {
-        seen.add(e);
+      ErrorReporter.onReport = (error, stack, entry) {
+        seen.add(entry);
         throw StateError('sink is broken');
       };
       addTearDown(() => ErrorReporter.onReport = null);
