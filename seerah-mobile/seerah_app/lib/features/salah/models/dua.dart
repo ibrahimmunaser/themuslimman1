@@ -194,7 +194,7 @@ List<DuaText> _livingDuas(bool she) => [
             : 'O Allah, grant him good in this world and good in the '
                 'Hereafter, and protect him from the punishment of the '
                 'Fire.',
-    source: 'Qur\'an 2:201 (adapted)',
+    source: 'Qur\'an 2:201',
   ),
   DuaText(
     arabic:
@@ -213,7 +213,7 @@ List<DuaText> _livingDuas(bool she) => [
                 'Hereafter.'
             : 'O Allah, I ask You for his well-being in this world and the '
                 'Hereafter.',
-    source: 'Sunan Ibn Majah (adapted)',
+    source: 'Sunan Ibn Majah',
   ),
   DuaText(
     arabic:
@@ -230,7 +230,7 @@ List<DuaText> _livingDuas(bool she) => [
                 'the righteous.'
             : 'O Allah, make him a comfort to the eyes, and make him among '
                 'the righteous.',
-    source: 'Qur\'an 25:74 (adapted)',
+    source: 'Qur\'an 25:74',
   ),
 ];
 
@@ -247,56 +247,56 @@ DuaText _personalizedForgiveness(DuaRelation relation, bool she) {
         arabic: 'اللَّهُمَّ اغْفِرْ لِأُمِّي وَارْحَمْهَا',
         transliteration: 'Allāhumma ighfir li-ummī wa-rḥamhā.',
         translation: 'O Allah, forgive my mother and have mercy on her.',
-        source: 'Sahih Muslim 963a (adapted)',
+        source: 'Sahih Muslim 963a',
       );
     case DuaRelation.father:
       return const DuaText(
         arabic: 'اللَّهُمَّ اغْفِرْ لِأَبِي وَارْحَمْهُ',
         transliteration: 'Allāhumma ighfir li-abī wa-rḥamhu.',
         translation: 'O Allah, forgive my father and have mercy on him.',
-        source: 'Sahih Muslim 963a (adapted)',
+        source: 'Sahih Muslim 963a',
       );
     case DuaRelation.brother:
       return const DuaText(
         arabic: 'اللَّهُمَّ اغْفِرْ لِأَخِي وَارْحَمْهُ',
         transliteration: 'Allāhumma ighfir li-akhī wa-rḥamhu.',
         translation: 'O Allah, forgive my brother and have mercy on him.',
-        source: 'Sahih Muslim 963a (adapted)',
+        source: 'Sahih Muslim 963a',
       );
     case DuaRelation.sister:
       return const DuaText(
         arabic: 'اللَّهُمَّ اغْفِرْ لِأُخْتِي وَارْحَمْهَا',
         transliteration: 'Allāhumma ighfir li-ukhtī wa-rḥamhā.',
         translation: 'O Allah, forgive my sister and have mercy on her.',
-        source: 'Sahih Muslim 963a (adapted)',
+        source: 'Sahih Muslim 963a',
       );
     case DuaRelation.husband:
       return const DuaText(
         arabic: 'اللَّهُمَّ اغْفِرْ لِزَوْجِي وَارْحَمْهُ',
         transliteration: 'Allāhumma ighfir li-zawjī wa-rḥamhu.',
         translation: 'O Allah, forgive my husband and have mercy on him.',
-        source: 'Sahih Muslim 963a (adapted)',
+        source: 'Sahih Muslim 963a',
       );
     case DuaRelation.wife:
       return const DuaText(
         arabic: 'اللَّهُمَّ اغْفِرْ لِزَوْجَتِي وَارْحَمْهَا',
         transliteration: 'Allāhumma ighfir li-zawjatī wa-rḥamhā.',
         translation: 'O Allah, forgive my wife and have mercy on her.',
-        source: 'Sahih Muslim 963a (adapted)',
+        source: 'Sahih Muslim 963a',
       );
     case DuaRelation.son:
       return const DuaText(
         arabic: 'اللَّهُمَّ اغْفِرْ لِابْنِي وَارْحَمْهُ',
         transliteration: 'Allāhumma ighfir li-ibnī wa-rḥamhu.',
         translation: 'O Allah, forgive my son and have mercy on him.',
-        source: 'Sahih Muslim 963a (adapted)',
+        source: 'Sahih Muslim 963a',
       );
     case DuaRelation.daughter:
       return const DuaText(
         arabic: 'اللَّهُمَّ اغْفِرْ لِابْنَتِي وَارْحَمْهَا',
         transliteration: 'Allāhumma ighfir li-ibnatī wa-rḥamhā.',
         translation: 'O Allah, forgive my daughter and have mercy on her.',
-        source: 'Sahih Muslim 963a (adapted)',
+        source: 'Sahih Muslim 963a',
       );
     case DuaRelation.grandfather:
       return const DuaText(
@@ -304,7 +304,7 @@ DuaText _personalizedForgiveness(DuaRelation relation, bool she) {
         transliteration: 'Allāhumma ighfir li-jaddī wa-rḥamhu.',
         translation: 'O Allah, forgive my grandfather and have mercy on '
             'him.',
-        source: 'Sahih Muslim 963a (adapted)',
+        source: 'Sahih Muslim 963a',
       );
     case DuaRelation.grandmother:
       return const DuaText(
@@ -312,7 +312,7 @@ DuaText _personalizedForgiveness(DuaRelation relation, bool she) {
         transliteration: 'Allāhumma ighfir li-jaddatī wa-rḥamhā.',
         translation: 'O Allah, forgive my grandmother and have mercy on '
             'her.',
-        source: 'Sahih Muslim 963a (adapted)',
+        source: 'Sahih Muslim 963a',
       );
     case DuaRelation.friend:
       return she
@@ -320,13 +320,13 @@ DuaText _personalizedForgiveness(DuaRelation relation, bool she) {
             arabic: 'اللَّهُمَّ اغْفِرْ لِصَدِيقَتِي وَارْحَمْهَا',
             transliteration: 'Allāhumma ighfir li-ṣadīqatī wa-rḥamhā.',
             translation: 'O Allah, forgive my friend and have mercy on her.',
-            source: 'Sahih Muslim 963a (adapted)',
+            source: 'Sahih Muslim 963a',
           )
           : const DuaText(
             arabic: 'اللَّهُمَّ اغْفِرْ لِصَدِيقِي وَارْحَمْهُ',
             transliteration: 'Allāhumma ighfir li-ṣadīqī wa-rḥamhu.',
             translation: 'O Allah, forgive my friend and have mercy on him.',
-            source: 'Sahih Muslim 963a (adapted)',
+            source: 'Sahih Muslim 963a',
           );
     case DuaRelation.other:
       return she
@@ -386,7 +386,7 @@ List<DuaText> _deceasedDuas(DuaRelation relation, bool she) => [
         she
             ? 'O Allah, make her grave spacious and illuminate it for her.'
             : 'O Allah, make his grave spacious and illuminate it for him.',
-    source: 'Sahih Muslim 920a (adapted)',
+    source: 'Sahih Muslim 920a',
   ),
   DuaText(
     arabic:
@@ -401,7 +401,7 @@ List<DuaText> _deceasedDuas(DuaRelation relation, bool she) => [
         she
             ? 'O Allah, raise her rank among the rightly guided.'
             : 'O Allah, raise his rank among the rightly guided.',
-    source: 'Sahih Muslim 920a (adapted)',
+    source: 'Sahih Muslim 920a',
   ),
 ];
 
