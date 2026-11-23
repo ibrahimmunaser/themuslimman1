@@ -547,6 +547,7 @@ class PrayerSchedulerService {
                   : "Take a moment to make du'a for ${person.displayName}.",
             ),
             personId: person?.id,
+            fullScreen: settings.duaFullScreenEnabled,
           );
           return true;
         } catch (e) {

@@ -162,6 +162,7 @@ class IosHybridNotificationScheduler implements NotificationScheduler {
     required String title,
     required String body,
     String? personId,
+    bool fullScreen = false,
   }) {
     // Always a plain local notification — never AlarmKit.
     return notifications.scheduleDuaReminder(
@@ -170,6 +171,7 @@ class IosHybridNotificationScheduler implements NotificationScheduler {
       title: title,
       body: body,
       personId: personId,
+      fullScreen: fullScreen,
     );
   }
 

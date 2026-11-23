@@ -15,7 +15,14 @@ import 'package:timezone/timezone.dart' as tz;
 
 class _FakeScheduler implements NotificationScheduler {
   final dua =
-      <({int id, DateTime at, String title, String body, String? personId})>[];
+      <({
+        int id,
+        DateTime at,
+        String title,
+        String body,
+        String? personId,
+        bool fullScreen,
+      })>[];
   final primaries = <int>[];
 
   @override
@@ -57,6 +64,7 @@ class _FakeScheduler implements NotificationScheduler {
     required String title,
     required String body,
     String? personId,
+    bool fullScreen = false,
   }) async {
     dua.add((
       id: id,
@@ -64,6 +72,7 @@ class _FakeScheduler implements NotificationScheduler {
       title: title,
       body: body,
       personId: personId,
+      fullScreen: fullScreen,
     ));
   }
 
@@ -156,6 +165,32 @@ void main() {
     expect(ids.toSet().length, ids.length);
   });
 
+  test('full-screen toggle is off by default and flows through when on', () async {
+    final (service, fakeOff) = await _build(
+      const SchedulingPolicy.android(),
+      people: [_mom],
+    );
+    await service.rescheduleAll(
+      _nyc.copyWith(duaReminderEnabled: true, duaWindows: [DuaWindow.morning]),
+    );
+    expect(fakeOff.dua, isNotEmpty);
+    expect(fakeOff.dua.every((d) => d.fullScreen == false), isTrue);
+
+    final (service2, fakeOn) = await _build(
+      const SchedulingPolicy.android(),
+      people: [_mom],
+    );
+    await service2.rescheduleAll(
+      _nyc.copyWith(
+        duaReminderEnabled: true,
+        duaWindows: [DuaWindow.morning],
+        duaFullScreenEnabled: true,
+      ),
+    );
+    expect(fakeOn.dua, isNotEmpty);
+    expect(fakeOn.dua.every((d) => d.fullScreen == true), isTrue);
+  });
+
   test('people rotate and their names appear in the notification', () async {
     final (service, fake) = await _build(
       const SchedulingPolicy.android(),
@@ -225,21 +260,25 @@ void main() {
     final s = _nyc.copyWith(
       duaReminderEnabled: true,
       duaWindows: [DuaWindow.lastThird, DuaWindow.morning],
+      duaFullScreenEnabled: true,
       duaCardSeconds: 60,
     );
     final back = PrayerSettings.fromJson(s.toJson());
     expect(back.duaReminderEnabled, isTrue);
     expect(back.duaWindows, [DuaWindow.lastThird, DuaWindow.morning]);
+    expect(back.duaFullScreenEnabled, isTrue);
     expect(back.duaCardSeconds, 60);
 
     // Legacy JSON without the keys: off, one sensible window, 30 seconds.
     final legacy = Map<String, dynamic>.from(_nyc.toJson())
       ..remove('duaReminderEnabled')
       ..remove('duaWindows')
+      ..remove('duaFullScreenEnabled')
       ..remove('duaCardSeconds');
     final old = PrayerSettings.fromJson(legacy);
     expect(old.duaReminderEnabled, isFalse);
     expect(old.duaWindows, [DuaWindow.beforeMaghrib]);
+    expect(old.duaFullScreenEnabled, isFalse);
     expect(old.duaCardSeconds, 30);
 
     // Garbage: unknown windows dropped, odd durations fall back to 30.

@@ -152,9 +152,13 @@ abstract class NotificationScheduler {
     required tz.TZDateTime scheduledAt,
   });
 
-  /// Opt-in "du'a for loved ones" reminder. A plain, quiet notification
-  /// (never call-style, never AlarmKit); tapping it opens the timed du'a
-  /// card for [personId] (null = a general reminder).
+  /// Opt-in "du'a for loved ones" reminder; tapping it opens the timed du'a
+  /// card for [personId] (null = a general reminder). Never AlarmKit.
+  ///
+  /// By default a plain, quiet notification the user taps to open the card.
+  /// When [fullScreen] is true it instead uses a call-style presentation
+  /// (like the prayer call screen) so the card can open automatically
+  /// without a tap, while the device is locked.
   ///
   /// Has a no-op default so schedulers that predate this feature (test
   /// fakes) keep compiling; the real implementations override it.
@@ -164,6 +168,7 @@ abstract class NotificationScheduler {
     required String title,
     required String body,
     String? personId,
+    bool fullScreen = false,
   }) async {}
 
   Future<void> cancel(int id);
@@ -628,13 +633,14 @@ class LocalNotificationService implements NotificationScheduler {
     required String title,
     required String body,
     String? personId,
+    bool fullScreen = false,
   }) async {
     await _zonedSchedule(
       id: id,
       title: title,
       body: body,
       scheduledAt: scheduledAt,
-      details: _duaDetails(),
+      details: _duaDetails(fullScreen: fullScreen),
       payload:
           SalahNotificationPayload(
             type: SalahNotificationPayload.typeDua,
@@ -643,25 +649,40 @@ class LocalNotificationService implements NotificationScheduler {
     );
   }
 
-  /// Gentle presentation for du'a reminders: its own channel (so it can be
-  /// silenced independently in system settings), default importance, no
-  /// full-screen takeover, ordinary iOS interruption level.
-  NotificationDetails _duaDetails() {
-    return const NotificationDetails(
+  /// Presentation for du'a reminders: its own channel (so it can be
+  /// silenced independently in system settings).
+  ///
+  /// Default ([fullScreen] false): default importance, no full-screen
+  /// takeover — a plain top-of-screen notification the user taps to open
+  /// the card, ordinary iOS interruption level.
+  ///
+  /// [fullScreen] true: call-style presentation (same mechanism as the
+  /// prayer call screen) — shows over the lock screen automatically where
+  /// the OS allows it, and degrades to a heads-up banner otherwise; never
+  /// silently dropped.
+  NotificationDetails _duaDetails({required bool fullScreen}) {
+    return NotificationDetails(
       android: AndroidNotificationDetails(
         duaChannelId,
         duaChannelName,
         channelDescription: duaChannelDescription,
-        importance: Importance.defaultImportance,
-        priority: Priority.defaultPriority,
-        category: AndroidNotificationCategory.reminder,
+        importance: fullScreen ? Importance.max : Importance.defaultImportance,
+        priority: fullScreen ? Priority.high : Priority.defaultPriority,
+        category:
+            fullScreen
+                ? AndroidNotificationCategory.call
+                : AndroidNotificationCategory.reminder,
+        fullScreenIntent: fullScreen,
         visibility: NotificationVisibility.public,
       ),
       iOS: DarwinNotificationDetails(
         presentAlert: true,
         presentSound: true,
         presentBanner: true,
-        interruptionLevel: InterruptionLevel.active,
+        interruptionLevel:
+            fullScreen
+                ? InterruptionLevel.timeSensitive
+                : InterruptionLevel.active,
       ),
     );
   }

@@ -20,7 +20,10 @@ enum DuaWindow {
 
   /// 40 minutes before Maghrib — the last hour of the day is a blessed time
   /// for du'a (especially on Friday).
-  beforeMaghrib('Before Maghrib', 'A blessed time for du\'a'),
+  beforeMaghrib(
+    'Before Maghrib',
+    '40 minutes before Maghrib — a blessed time for du\'a',
+  ),
 
   /// Midway between Maghrib and Isha.
   evening('Evening', 'Between Maghrib and Isha'),

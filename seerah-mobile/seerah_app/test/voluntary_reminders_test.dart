@@ -61,6 +61,7 @@ class _FakeScheduler implements NotificationScheduler {
     required String title,
     required String body,
     String? personId,
+    bool fullScreen = false,
   }) async {}
 
   @override

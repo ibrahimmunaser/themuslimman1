@@ -5,7 +5,9 @@ import 'package:seerah_app/core/widgets/localized_text.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../l10n/salah_phrases.dart';
 import '../models/dua.dart';
+import '../models/scheduled_reminder.dart';
 import '../state/app_controller.dart';
+import '../utils/formatting.dart';
 import 'dua_card_screen.dart';
 
 /// Set up "Du'a for loved ones": the righteous-child reminder.
@@ -22,6 +24,16 @@ class DuaRemindersScreen extends StatelessWidget {
     final people = controller.duaPeople;
     final enabled = settings.duaReminderEnabled;
     final notificationsOn = settings.notificationsEnabled;
+    final nextDua =
+        controller.scheduledReminders
+            .where((r) => r.kind == ReminderKind.dua)
+            .fold<ScheduledReminder?>(
+              null,
+              (best, r) =>
+                  best == null || r.scheduledAtMillis < best.scheduledAtMillis
+                      ? r
+                      : best,
+            );
 
     return Scaffold(
       appBar: AppBar(title: const Text('Du\'a for loved ones')),
@@ -62,6 +74,24 @@ class DuaRemindersScreen extends StatelessWidget {
                     title: const Text('Notifications are not permitted'),
                     subtitle: const Text('Tap to request permission'),
                     onTap: controller.requestNotificationPermission,
+                  ),
+                ],
+                if (enabled && notificationsOn) ...[
+                  const Divider(height: 1),
+                  SwitchListTile(
+                    title: const Text('Open the card automatically'),
+                    subtitle: Text(
+                      settings.duaFullScreenEnabled
+                          ? 'Opens full screen on its own, like the prayer '
+                              'call screen, even while the phone is locked.'
+                          : 'Off: a plain notification at the top of the '
+                              'screen — tap it to open the card.',
+                    ),
+                    value: settings.duaFullScreenEnabled,
+                    onChanged:
+                        (v) => controller.updateSettings(
+                          settings.copyWith(duaFullScreenEnabled: v),
+                        ),
                   ),
                 ],
               ],
@@ -108,6 +138,22 @@ class DuaRemindersScreen extends StatelessWidget {
                           );
                         },
                       ),
+                    const Divider(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Next reminder',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        Text(
+                          nextDua == null
+                              ? 'None scheduled'
+                              : formatDateTime(nextDua.scheduledAt.toLocal()),
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),

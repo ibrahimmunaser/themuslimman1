@@ -133,6 +133,13 @@ class PrayerSettings {
   final bool duaReminderEnabled;
   final List<DuaWindow> duaWindows;
 
+  /// Whether the du'a reminder opens automatically as a full-screen card
+  /// (like the prayer call screen) instead of a plain notification the user
+  /// must tap. Off by default — a plain top-of-screen notification is the
+  /// default presentation. Only effective while [duaReminderEnabled] (and
+  /// [notificationsEnabled]) are on.
+  final bool duaFullScreenEnabled;
+
   /// How long the du'a card stays up: 30 or 60 seconds.
   final int duaCardSeconds;
 
@@ -164,6 +171,7 @@ class PrayerSettings {
     this.qiyamReminderEnabled = false,
     this.duaReminderEnabled = false,
     this.duaWindows = const [DuaWindow.beforeMaghrib],
+    this.duaFullScreenEnabled = false,
     this.duaCardSeconds = 30,
     this.snoozeMinutes = 10,
     this.hijriAdjustmentDays = 0,
@@ -192,6 +200,7 @@ class PrayerSettings {
     bool? qiyamReminderEnabled,
     bool? duaReminderEnabled,
     List<DuaWindow>? duaWindows,
+    bool? duaFullScreenEnabled,
     int? duaCardSeconds,
     int? snoozeMinutes,
     int? hijriAdjustmentDays,
@@ -215,6 +224,7 @@ class PrayerSettings {
       qiyamReminderEnabled: qiyamReminderEnabled ?? this.qiyamReminderEnabled,
       duaReminderEnabled: duaReminderEnabled ?? this.duaReminderEnabled,
       duaWindows: duaWindows ?? this.duaWindows,
+      duaFullScreenEnabled: duaFullScreenEnabled ?? this.duaFullScreenEnabled,
       duaCardSeconds: duaCardSeconds ?? this.duaCardSeconds,
       snoozeMinutes: snoozeMinutes ?? this.snoozeMinutes,
       hijriAdjustmentDays: hijriAdjustmentDays ?? this.hijriAdjustmentDays,
@@ -243,6 +253,7 @@ class PrayerSettings {
       'qiyamReminderEnabled': qiyamReminderEnabled,
       'duaReminderEnabled': duaReminderEnabled,
       'duaWindows': duaWindows.map((w) => w.name).toList(),
+      'duaFullScreenEnabled': duaFullScreenEnabled,
       'duaCardSeconds': duaCardSeconds,
       'snoozeMinutes': snoozeMinutes,
       'hijriAdjustmentDays': hijriAdjustmentDays,
@@ -312,6 +323,7 @@ class PrayerSettings {
         ];
         return parsed.isEmpty ? const [DuaWindow.beforeMaghrib] : parsed;
       }(),
+      duaFullScreenEnabled: json['duaFullScreenEnabled'] as bool? ?? false,
       duaCardSeconds:
           (json['duaCardSeconds'] as num?)?.toInt() == 60 ? 60 : 30,
       snoozeMinutes: (json['snoozeMinutes'] as num?)?.toInt() ?? 10,
