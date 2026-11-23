@@ -1,3 +1,4 @@
+import 'package:seerah_app/core/app_log.dart';
 import 'package:seerah_app/l10n/salah_phrases.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -194,8 +195,17 @@ class LocalNotificationService implements NotificationScheduler {
   static const String voluntaryChannelDescription =
       'Optional gentle reminders for the Duha and Qiyam prayers';
 
-  static const String duaChannelId = 'salah_dua';
+  // Android freezes a channel's importance the first time it is created, and
+  // the original 'salah_dua' channel was created lazily at *default*
+  // importance (no heads-up banner, silent on many phones) — so the du'a
+  // reminder fired but was easy to miss entirely. These are fresh channel ids
+  // created explicitly at high/max importance in [initialize]; the legacy id
+  // is deleted there so it no longer shows up (muted) in system settings.
+  static const String legacyDuaChannelId = 'salah_dua';
+  static const String duaChannelId = 'salah_dua_v2';
+  static const String duaCallChannelId = 'salah_dua_call';
   static const String duaChannelName = 'Du\'a for loved ones';
+  static const String duaCallChannelName = 'Du\'a for loved ones (full screen)';
   static const String duaChannelDescription =
       'Optional reminders to make du\'a for the people you love';
 
@@ -338,6 +348,32 @@ class LocalNotificationService implements NotificationScheduler {
           enableVibration: true,
         ),
       );
+      // Du'a reminders: created up front (not lazily on first schedule) so
+      // the importance is guaranteed heads-up rather than whatever the first
+      // scheduled notification happened to request.
+      await _androidImpl?.createNotificationChannel(
+        const AndroidNotificationChannel(
+          duaChannelId,
+          duaChannelName,
+          description: duaChannelDescription,
+          importance: Importance.high,
+          playSound: true,
+          enableVibration: true,
+        ),
+      );
+      await _androidImpl?.createNotificationChannel(
+        const AndroidNotificationChannel(
+          duaCallChannelId,
+          duaCallChannelName,
+          description: duaChannelDescription,
+          importance: Importance.max,
+          playSound: true,
+          enableVibration: true,
+        ),
+      );
+      try {
+        await _androidImpl?.deleteNotificationChannel(legacyDuaChannelId);
+      } catch (_) {}
     }
   }
 
@@ -652,9 +688,9 @@ class LocalNotificationService implements NotificationScheduler {
   /// Presentation for du'a reminders: its own channel (so it can be
   /// silenced independently in system settings).
   ///
-  /// Default ([fullScreen] false): default importance, no full-screen
-  /// takeover — a plain top-of-screen notification the user taps to open
-  /// the card, ordinary iOS interruption level.
+  /// Default ([fullScreen] false): high importance (heads-up banner + sound),
+  /// no full-screen takeover — a top-of-screen notification the user taps to
+  /// open the card, ordinary iOS interruption level.
   ///
   /// [fullScreen] true: call-style presentation (same mechanism as the
   /// prayer call screen) — shows over the lock screen automatically where
@@ -663,11 +699,13 @@ class LocalNotificationService implements NotificationScheduler {
   NotificationDetails _duaDetails({required bool fullScreen}) {
     return NotificationDetails(
       android: AndroidNotificationDetails(
-        duaChannelId,
-        duaChannelName,
+        fullScreen ? duaCallChannelId : duaChannelId,
+        fullScreen ? duaCallChannelName : duaChannelName,
         channelDescription: duaChannelDescription,
-        importance: fullScreen ? Importance.max : Importance.defaultImportance,
-        priority: fullScreen ? Priority.high : Priority.defaultPriority,
+        importance: fullScreen ? Importance.max : Importance.high,
+        priority: Priority.high,
+        playSound: true,
+        enableVibration: true,
         category:
             fullScreen
                 ? AndroidNotificationCategory.call
@@ -791,6 +829,10 @@ class LocalNotificationService implements NotificationScheduler {
       // Exact alarm permission may have been revoked between the check and
       // the call; retry inexact so the reminder is never silently dropped.
       debugPrint('Exact schedule failed ($e); retrying inexact.');
+      AppLog.warn('Exact alarm scheduling failed; fell back to inexact', {
+        'error_code': e.code,
+        'exact_permission_reported': exact,
+      });
       await _plugin.zonedSchedule(
         id,
         title,

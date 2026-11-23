@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart' hide Text;
-import 'package:provider/provider.dart';
 import 'package:seerah_app/core/widgets/localized_text.dart';
 
 import '../models/prayer_settings.dart';
@@ -11,7 +10,6 @@ import '../models/quran_models.dart';
 import '../services/quran_api_service.dart';
 import '../services/quran_progress_service.dart';
 import '../services/tafsir_service.dart';
-import '../state/app_controller.dart';
 import '../utils/quran_fonts.dart';
 import '../utils/quran_l10n.dart';
 import '../../../core/theme/app_colors.dart';
@@ -237,6 +235,10 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
   /// taps the verse number; in swipe mode it runs automatically for the
   /// verse currently shown (see [_onVerseSeen]).
   Future<void> _recordVerseRead(SurahContent content, QuranVerse verse) async {
+    // Called un-awaited from audio-sequence callbacks that can resolve after
+    // the reader was closed; setState on an unmounted State throws
+    // "Null check operator used on a null value" (Sentry SEERAH-MOBILE-4).
+    if (!mounted) return;
     if (_readThisSession.contains(verse.numberInSurah)) return;
     setState(() => _readThisSession.add(verse.numberInSurah));
 
@@ -286,6 +288,7 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
   }
 
   Future<void> _playVerseAudio(QuranVerse verse, {required bool continuous}) async {
+    if (!mounted) return;
     setState(() {
       _playingVerse = verse.numberInSurah;
       _continuousPlayback = continuous;
@@ -319,6 +322,7 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
     if (!mounted || !_continuousPlayback) return;
     final next = content.verses[idx + 1];
     await _playVerseAudio(next, continuous: true);
+    if (!mounted) return;
     unawaited(_recordVerseRead(content, next));
     if (_swipeMode && mounted) {
       final nextPage = content.verses.indexOf(next);
@@ -395,9 +399,7 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
     // since those run from ListView/PageView's lazy itemBuilder — calling
     // context.select from inside them directly trips Provider's "outside
     // of build" assertion.
-    final quranFont = context.select<AppController, QuranFontOption>(
-      (c) => c.settings.quranFont,
-    );
+    final quranFont = watchQuranFont(context);
     return FutureBuilder<SurahContent>(
       future: _future,
       builder: (context, snapshot) {

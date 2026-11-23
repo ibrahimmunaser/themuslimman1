@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:in_app_purchase_android/in_app_purchase_android.dart';
 
+import '../app_log.dart';
 import '../constants/app_constants.dart';
 import '../network/api_client.dart';
 import '../network/cookie_helper.dart' as cookies;
@@ -681,6 +682,12 @@ class IAPNotifier extends StateNotifier<IAPState> {
             _restoreReceivedEvents = true;
             _restoreTimer?.cancel();
           }
+          AppLog.warn('Store reported a purchase error', {
+            'product_id': purchase.productID,
+            'error_code': purchase.error?.code,
+            'error_message': purchase.error?.message,
+            'shown_to_user': affectsUiState,
+          });
           if (affectsUiState) {
             state = state.copyWith(
               status: IAPStatus.error,
@@ -769,6 +776,12 @@ class IAPNotifier extends StateNotifier<IAPState> {
       await _verifyWithBackend(purchase, affectsUiState: affectsUiState);
     } catch (e) {
       debugPrint('[IAP] backend verification error: $e');
+      AppLog.error('Purchase backend verification failed', {
+        'product_id': purchase.productID,
+        'error_type': e.runtimeType.toString(),
+        'status_code': e is DioException ? e.response?.statusCode : null,
+        'shown_to_user': affectsUiState,
+      });
       // iOS: finalize to clear from StoreKit queue (user can retry via Restore).
       // Android: do NOT finalize — auto-refund is the safer default.
       final isIOS = !kIsWeb && Platform.isIOS;
@@ -966,6 +979,10 @@ class IAPNotifier extends StateNotifier<IAPState> {
         // family slots right away.
         _ref.invalidate(profilesProvider);
 
+        AppLog.info('Purchase verified and access granted', {
+          'product_id': productId,
+          'shown_to_user': affectsUiState,
+        });
         if (affectsUiState) {
           state = state.copyWith(
             status: IAPStatus.success,

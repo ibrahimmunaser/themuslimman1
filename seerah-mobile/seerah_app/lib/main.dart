@@ -12,6 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:in_app_purchase_storekit/in_app_purchase_storekit.dart';
 import 'package:provider/provider.dart' as provider_pkg;
 import 'package:sentry_flutter/sentry_flutter.dart';
+import 'core/app_log.dart';
 import 'core/crash_guard.dart';
 import 'core/error_reporter.dart';
 import 'core/network/api_client.dart';
@@ -22,6 +23,7 @@ import 'core/providers/onboarding_provider.dart';
 import 'core/providers/part_provider.dart';
 import 'core/providers/welcome_provider.dart';
 import 'core/router/app_router.dart';
+import 'core/sentry_filter.dart';
 import 'core/theme/app_colors.dart';
 import 'core/theme/app_theme.dart';
 import 'features/salah/salah_section.dart';
@@ -68,6 +70,9 @@ Future<void> main() async {
     // Recommended default; lower this (e.g. 0.2) later if trace volume
     // becomes a cost concern once real users are on this build.
     options.tracesSampleRate = 1.0;
+    // Offline / flaky-network failures aren't app bugs — keep them out of
+    // the issue feed (see sentry_filter.dart for the rationale).
+    options.beforeSend = dropTransientNetworkNoise;
   }, appRunner: _runApp);
 }
 
@@ -260,11 +265,25 @@ class _SeerahAppState extends ConsumerState<SeerahApp>
     // this cold start was silently baked in with the 'en' default instead of
     // the user's actual selected language, and stayed wrong until the next
     // reschedule.
+    final bootStart = DateTime.now();
     unawaited(
       loadSalahLangFromPrefs().then((_) {
         return SalahBootstrap.ensure().then((controller) {
+          // How long the Salah controller (prayer times + reminder
+          // scheduling) took to come up. On slow phones this is the window
+          // in which Quran screens had no controller (SEERAH-MOBILE-8).
+          AppLog.info('Salah controller ready', {
+            'boot_ms': DateTime.now().difference(bootStart).inMilliseconds,
+          });
           if (mounted) setState(() => _salahController = controller);
         });
+      }).catchError((Object e, StackTrace st) {
+        AppLog.error('Salah controller failed to start', {
+          'error_type': e.runtimeType.toString(),
+          'error': e.toString(),
+          'boot_ms': DateTime.now().difference(bootStart).inMilliseconds,
+        });
+        ErrorReporter.report(e, st, source: 'salah_bootstrap');
       }),
     );
   }

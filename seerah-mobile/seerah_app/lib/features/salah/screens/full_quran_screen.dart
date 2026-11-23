@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:confetti/confetti.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart' hide Text;
-import 'package:provider/provider.dart';
 import 'package:seerah_app/core/widgets/localized_text.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
@@ -11,7 +10,6 @@ import '../models/prayer_settings.dart';
 import '../models/quran_models.dart';
 import '../services/quran_api_service.dart';
 import '../services/quran_progress_service.dart';
-import '../state/app_controller.dart';
 import '../utils/quran_fonts.dart';
 import '../utils/quran_l10n.dart';
 import '../../../core/theme/app_colors.dart';
@@ -361,9 +359,7 @@ class _FullQuranScreenState extends State<FullQuranScreen> {
     // _buildHeader/_buildChunk, since they run from ScrollablePositionedList's
     // lazy itemBuilder using this State's context — calling context.select
     // from inside them directly trips Provider's "outside of build" assertion.
-    final quranFont = context.select<AppController, QuranFontOption>(
-      (c) => c.settings.quranFont,
-    );
+    final quranFont = watchQuranFont(context);
     return Scaffold(
       appBar: AppBar(
         title: Column(
@@ -695,9 +691,7 @@ class _VersePopupState extends State<_VersePopup> {
   Widget build(BuildContext context) {
     final meta = _content.meta;
     final verse = _content.verses[_index];
-    final quranFont = context.select<AppController, QuranFontOption>(
-      (c) => c.settings.quranFont,
-    );
+    final quranFont = watchQuranFont(context);
     final isQuranStart = meta.number == 1 && _index == 0;
     final isQuranEnd =
         meta.number == _lastSurah && _index == _content.verses.length - 1;

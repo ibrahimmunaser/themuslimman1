@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../core/data/parts_data.dart';
+import '../../../core/router/safe_pop.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/part_provider.dart';
 import '../../../core/providers/profiles_provider.dart';
@@ -108,7 +109,7 @@ class _CertificateScreenState extends ConsumerState<CertificateScreen> {
         leading: IconButton(
           icon: const BackIcon(size: 20),
           tooltip: t(lang, 'back'),
-          onPressed: () => context.pop(),
+          onPressed: () => safePop(context),
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),

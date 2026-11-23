@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:vibration/vibration.dart';
 
 import '../models/salah_prayer.dart';
+import '../services/athan_player.dart';
 import '../state/app_controller.dart';
 import '../utils/app_strings.dart';
 import '../utils/app_theme.dart';
@@ -50,11 +51,19 @@ class IncomingSalahScreen extends StatefulWidget {
   /// Optional AlarmKit alarm identifier for diagnostics / cancel.
   final String? alarmId;
 
+  /// The app controller, when the caller has it in hand. Falls back to a
+  /// Provider lookup when null (Settings preview). Passing it matters for
+  /// auto-presented calls: they're pushed on the root navigator, possibly
+  /// before main.dart has mounted the AppController provider, and a lookup
+  /// there throws ProviderNotFoundException.
+  final AppController? controller;
+
   const IncomingSalahScreen({
     super.key,
     required this.prayer,
     this.scheduledAt,
     this.alarmId,
+    this.controller,
   });
 
   @override
@@ -75,6 +84,8 @@ class _IncomingSalahScreenState extends State<IncomingSalahScreen>
 
   bool _usingVibrator = false;
 
+  final _athan = AthanPlayer();
+
   @override
   void initState() {
     super.initState();
@@ -93,7 +104,15 @@ class _IncomingSalahScreenState extends State<IncomingSalahScreen>
     ]);
 
     _startRinging();
+    if (_controller?.settings.athanEnabled ?? false) {
+      unawaited(_athan.play());
+    }
   }
+
+  /// The explicit controller if given, else the nearest provider, else null
+  /// (never throws — see [IncomingSalahScreen.controller]).
+  AppController? get _controller =>
+      widget.controller ?? context.read<AppController?>();
 
   /// Prefers a true repeating ring-like vibration pattern (Android); falls
   /// back to the subtle heavyImpact pulses where patterns are unsupported.
@@ -150,6 +169,7 @@ class _IncomingSalahScreenState extends State<IncomingSalahScreen>
       _usingVibrator = false;
       Vibration.cancel();
     }
+    unawaited(_athan.stop());
     if (rebuild && mounted) setState(() {});
   }
 
@@ -170,6 +190,7 @@ class _IncomingSalahScreenState extends State<IncomingSalahScreen>
     // Covers every remaining exit: route popped, notification cancelled
     // externally while the route unwinds, widget tree teardown.
     _stopAlerting(rebuild: false);
+    unawaited(_athan.dispose());
     WidgetsBinding.instance.removeObserver(this);
     restoreAppSystemUi();
     super.dispose();
@@ -194,15 +215,17 @@ class _IncomingSalahScreenState extends State<IncomingSalahScreen>
     _actionChosen = true;
     _stopAlerting();
     restoreAppSystemUi();
-    final controller = context.read<AppController>();
+    final controller = _controller;
     final messenger = ScaffoldMessenger.of(context);
-    final minutes = controller.settings.snoozeMinutes;
-    await controller.snooze(widget.prayer);
+    final minutes = controller?.settings.snoozeMinutes;
+    await controller?.snooze(widget.prayer);
     if (!mounted) return;
     Navigator.of(context).pop(IncomingSalahResult.declined);
-    messenger.showSnackBar(
-      SnackBar(content: Text(AppStrings.snoozeConfirmation(minutes))),
-    );
+    if (minutes != null) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(AppStrings.snoozeConfirmation(minutes))),
+      );
+    }
   }
 
   @override

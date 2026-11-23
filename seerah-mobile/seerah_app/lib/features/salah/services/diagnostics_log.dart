@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/app_log.dart';
+
 /// Privacy-conscious diagnostics log for development troubleshooting.
 ///
 /// Stores only the most recent error events (source tag + exception text +
@@ -21,6 +23,10 @@ class DiagnosticsLog {
     String source,
     Object error,
   ) async {
+    AppLog.warn('Diagnostics error: $source', {
+      'source': source,
+      'error': error.toString(),
+    });
     try {
       final entries = load(prefs);
       entries.add({

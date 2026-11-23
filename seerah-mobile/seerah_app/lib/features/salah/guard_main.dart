@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter/material.dart' hide Text;
@@ -10,6 +11,8 @@ import '../../l10n/salah_phrases.dart';
 import 'package:flutter/services.dart';
 
 import 'models/salah_prayer.dart';
+import 'repositories/prayer_settings_repository.dart';
+import 'services/athan_player.dart';
 import 'utils/app_theme.dart';
 import 'widgets/prayer_call_scene.dart';
 
@@ -131,6 +134,8 @@ class _GuardShieldScreenState extends State<GuardShieldScreen> {
   String _blockedAppLabel = 'This app';
   bool _loading = true;
 
+  final _athan = AthanPlayer();
+
   @override
   void initState() {
     super.initState();
@@ -195,10 +200,36 @@ class _GuardShieldScreenState extends State<GuardShieldScreen> {
           'This app';
       _loading = false;
     });
+    unawaited(_maybeRingAthan());
+  }
+
+  /// Plays the Athan once per guard window, mirroring the in-app incoming
+  /// call screen (see AthanPlayer / IncomingSalahScreen). This engine has no
+  /// access to AppController (see the class doc), so the setting is read
+  /// directly from the same SharedPreferences key the main app writes to.
+  Future<bool> _athanEnabled() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.reload();
+      final raw = prefs.getString(PrayerSettingsRepository.settingsKey);
+      if (raw == null) return true; // default
+      final json = jsonDecode(raw) as Map<String, dynamic>;
+      return json['athanEnabled'] as bool? ?? true;
+    } catch (_) {
+      return true;
+    }
+  }
+
+  Future<void> _maybeRingAthan() async {
+    if (!mounted) return;
+    if (await _athanEnabled()) {
+      await _athan.play();
+    }
   }
 
   Future<void> _answer() async {
     HapticFeedback.selectionClick();
+    unawaited(_athan.stop());
     try {
       await _channel.invokeMethod('answer');
     } catch (_) {}
@@ -206,9 +237,16 @@ class _GuardShieldScreenState extends State<GuardShieldScreen> {
 
   Future<void> _decline() async {
     HapticFeedback.selectionClick();
+    unawaited(_athan.stop());
     try {
       await _channel.invokeMethod('decline');
     } catch (_) {}
+  }
+
+  @override
+  void dispose() {
+    unawaited(_athan.dispose());
+    super.dispose();
   }
 
   /// Palette for the known prayer, or the brand deep-green look when the

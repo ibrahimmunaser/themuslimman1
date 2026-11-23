@@ -116,7 +116,11 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
   }
 
   Future<void> _buyPlan(IAPState iap, _Plan plan) async {
-    final lang = ref.read(courseLangProvider);
+    // Captured before any await: `ref` throws once this State is disposed
+    // (user leaves the screen mid-purchase — Sentry SEERAH-MOBILE-P/E), but the
+    // container outlives the widget, so the purchase flow can finish safely.
+    final container = ProviderScope.containerOf(context, listen: false);
+    final lang = container.read(courseLangProvider);
     if (_buyTapInFlight ||
         iap.status == IAPStatus.purchasing ||
         iap.status == IAPStatus.verifying ||
@@ -124,7 +128,7 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
       return;
     }
     if (!iap.isAvailable) {
-      _snack(ref.read(iapProvider).unavailableProductMessage(lang));
+      _snack(container.read(iapProvider).unavailableProductMessage(lang));
       return;
     }
 
@@ -134,39 +138,39 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
     try {
       // Resolve the StoreKit product first so buy() can still run even if the
       // widget tree rebuilds after ensureSession().
-      final product = await ref
+      final product = await container
           .read(iapProvider.notifier)
           .resolveProductForPlan(plan.iapId);
       if (product == null) {
         if (mounted) setState(() => _purchasingPlanId = null);
-        _snack(ref.read(iapProvider).unavailableProductMessage(lang));
+        _snack(container.read(iapProvider).unavailableProductMessage(lang));
         return;
       }
 
       // Persist intent so IAPNotifier can resume after any navigation/login.
-      ref.read(iapProvider.notifier).setPurchaseIntent(product.id);
+      container.read(iapProvider.notifier).setPurchaseIntent(product.id);
 
       // No registration required to purchase (Apple Guideline 5.1.1(v)) — this
       // silently provisions a device-linked guest session with no personal
       // info collected, if one doesn't already exist. Signing in/up is only
       // ever an optional, later step (see the profile screen).
-      final ready = await ref.read(authProvider.notifier).ensureSession();
-      if (!ready || !ref.read(authProvider).isLoggedIn) {
-        ref.read(iapProvider.notifier).clearPurchaseIntent();
+      final ready = await container.read(authProvider.notifier).ensureSession();
+      if (!ready || !container.read(authProvider).isLoggedIn) {
+        container.read(iapProvider.notifier).clearPurchaseIntent();
         if (mounted) setState(() => _purchasingPlanId = null);
         _snack(
-          ref.read(authProvider).error ??
-              t(ref.read(courseLangProvider), 'couldNotStartCheckout'),
+          container.read(authProvider).error ??
+              t(container.read(courseLangProvider), 'couldNotStartCheckout'),
         );
         return;
       }
 
       // Call buy on the notifier (survives LandingScreen dispose). Do not
       // gate on mounted — that was aborting StoreKit for Apple review.
-      final started = await ref.read(iapProvider.notifier).buy(product);
+      final started = await container.read(iapProvider.notifier).buy(product);
       if (!started) {
         if (mounted) setState(() => _purchasingPlanId = null);
-        _snack(t(ref.read(courseLangProvider), 'purchaseAlreadyProcessing'));
+        _snack(t(container.read(courseLangProvider), 'purchaseAlreadyProcessing'));
       }
     } finally {
       _buyTapInFlight = false;

@@ -28,12 +28,31 @@ TextStyle quranTextStyle(QuranFontOption font, TextStyle base) {
   }
 }
 
+/// The user's chosen Quran font, subscribed for rebuilds — but safe to call
+/// before the app's [AppController] provider exists.
+///
+/// main.dart only mounts that provider once SalahBootstrap finishes loading
+/// (asynchronously, and slowly on low-end phones), while the Quran reader
+/// screens are reachable from the very first frame. A plain
+/// `context.select<AppController, …>` there threw ProviderNotFoundException
+/// (Sentry SEERAH-MOBILE-8/3). The nullable lookup returns null instead, and
+/// we fall back to the default font until the provider appears — at which
+/// point this rebuilds with the real preference.
+QuranFontOption watchQuranFont(BuildContext context) {
+  return context.select<AppController?, QuranFontOption?>(
+        (c) => c?.settings.quranFont,
+      ) ??
+      const PrayerSettings().quranFont;
+}
+
 /// Bottom sheet for picking the Quran font, with a live Arabic preview of
 /// each option. Reused by the quick font button on the Quran reader
 /// screens themselves (the main discoverable entry point) and by the
 /// Settings > Display > "Quran Font" row.
 Future<void> showQuranFontPicker(BuildContext context) async {
-  final controller = context.read<AppController>();
+  final controller = context.read<AppController?>();
+  // Preferences aren't loaded yet; nothing to pick against.
+  if (controller == null) return;
   final current = controller.settings.quranFont;
 
   final choice = await showModalBottomSheet<QuranFontOption>(

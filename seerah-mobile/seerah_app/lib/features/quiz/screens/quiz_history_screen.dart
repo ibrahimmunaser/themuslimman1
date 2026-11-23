@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/data/parts_data.dart';
+import '../../../core/router/safe_pop.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/progress_provider.dart';
 import '../../../core/providers/part_provider.dart';
@@ -34,7 +35,7 @@ class QuizHistoryScreen extends ConsumerWidget {
         leading: IconButton(
           icon: const BackIcon(size: 20),
           tooltip: t(lang, 'back'),
-          onPressed: () => context.pop(),
+          onPressed: () => safePop(context),
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),

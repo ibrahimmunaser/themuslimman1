@@ -3,6 +3,7 @@ import 'package:seerah_app/core/widgets/localized_text.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/data/parts_data.dart';
+import '../../../core/router/safe_pop.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/iap_provider.dart';
@@ -299,7 +300,7 @@ class _PartScreenState extends ConsumerState<PartScreen> {
               leading: IconButton(
                 icon: const BackIcon(size: 20),
                 tooltip: t(currentLang, 'back'),
-                onPressed: () => context.pop(),
+                onPressed: () => safePop(context),
               ),
               actions: const [ProfileAvatarButton()],
               flexibleSpace: FlexibleSpaceBar(
@@ -1016,7 +1017,7 @@ class _PaywallScreen extends StatelessWidget {
         leading: IconButton(
           icon: const BackIcon(size: 20),
           tooltip: t(lang, 'back'),
-          onPressed: () => context.pop(),
+          onPressed: () => safePop(context),
         ),
         title: Text(tv(lang, 'partN', {'n': partNumber})),
         actions: const [ProfileAvatarButton()],
@@ -1102,7 +1103,7 @@ class _PaywallScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 TextButton(
-                  onPressed: () => context.pop(),
+                  onPressed: () => safePop(context),
                   child: Text(
                     t(lang, 'goBack'),
                     style: TextStyle(color: AppColors.textSecondary),

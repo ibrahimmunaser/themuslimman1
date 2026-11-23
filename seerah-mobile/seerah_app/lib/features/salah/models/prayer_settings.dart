@@ -118,6 +118,14 @@ class PrayerSettings {
   /// available as actions on that notification.
   final bool callScreenEnabled;
 
+  /// Whether the Athan (call to prayer) audio plays on the full-screen
+  /// "incoming call" presentation. On by default; only effective while
+  /// [callScreenEnabled] is also on — there is no call screen to play it
+  /// over otherwise. Purely an in-app playback (via audioplayers), never a
+  /// system notification sound, so it only sounds while that screen is
+  /// actually on screen.
+  final bool athanEnabled;
+
   /// Opt-in gentle notifications when the Duha window opens / the last third
   /// of the night begins. Off by default; plain notifications only — never
   /// the call screen, snooze or follow-ups. Only effective while
@@ -167,6 +175,7 @@ class PrayerSettings {
     this.manualAdjustments = const {},
     this.notificationsEnabled = true,
     this.callScreenEnabled = true,
+    this.athanEnabled = true,
     this.duhaReminderEnabled = false,
     this.qiyamReminderEnabled = false,
     this.duaReminderEnabled = false,
@@ -196,6 +205,7 @@ class PrayerSettings {
     Map<SalahPrayer, int>? manualAdjustments,
     bool? notificationsEnabled,
     bool? callScreenEnabled,
+    bool? athanEnabled,
     bool? duhaReminderEnabled,
     bool? qiyamReminderEnabled,
     bool? duaReminderEnabled,
@@ -220,6 +230,7 @@ class PrayerSettings {
       manualAdjustments: manualAdjustments ?? this.manualAdjustments,
       notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
       callScreenEnabled: callScreenEnabled ?? this.callScreenEnabled,
+      athanEnabled: athanEnabled ?? this.athanEnabled,
       duhaReminderEnabled: duhaReminderEnabled ?? this.duhaReminderEnabled,
       qiyamReminderEnabled: qiyamReminderEnabled ?? this.qiyamReminderEnabled,
       duaReminderEnabled: duaReminderEnabled ?? this.duaReminderEnabled,
@@ -249,6 +260,7 @@ class PrayerSettings {
       ),
       'notificationsEnabled': notificationsEnabled,
       'callScreenEnabled': callScreenEnabled,
+      'athanEnabled': athanEnabled,
       'duhaReminderEnabled': duhaReminderEnabled,
       'qiyamReminderEnabled': qiyamReminderEnabled,
       'duaReminderEnabled': duaReminderEnabled,
@@ -312,6 +324,7 @@ class PrayerSettings {
       // Note: a legacy 'reminderStyle' key may exist in stored settings from
       // older builds; it is intentionally ignored.
       callScreenEnabled: json['callScreenEnabled'] as bool? ?? true,
+      athanEnabled: json['athanEnabled'] as bool? ?? true,
       duhaReminderEnabled: json['duhaReminderEnabled'] as bool? ?? false,
       qiyamReminderEnabled: json['qiyamReminderEnabled'] as bool? ?? false,
       duaReminderEnabled: json['duaReminderEnabled'] as bool? ?? false,

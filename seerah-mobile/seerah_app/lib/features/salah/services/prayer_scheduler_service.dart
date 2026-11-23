@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:timezone/timezone.dart' as tz;
 
+import 'package:seerah_app/core/app_log.dart';
 import 'package:seerah_app/l10n/salah_phrases.dart';
 
 import '../models/dua.dart';
@@ -313,15 +314,15 @@ class PrayerSchedulerService {
     }
 
     // ---- Priority 3: automatic follow-ups (short horizon, capped). ----
-    final followUpLimit =
-        policy.followUpHorizon == null
-            ? null
-            : current.add(policy.followUpHorizon!);
+    final followUpLimit = policy.followUpHorizon == null
+        ? null
+        : current.add(policy.followUpHorizon!);
     final followUps = <ScheduledReminder>[];
     for (var i = 0; i < allPrayers.length; i++) {
       final (prayer, prayerTime) = allPrayers[i];
-      final nextPrayerTime =
-          i + 1 < allPrayers.length ? allPrayers[i + 1].$2 : null;
+      final nextPrayerTime = i + 1 < allPrayers.length
+          ? allPrayers[i + 1].$2
+          : null;
       final followUpAt = prayerTime.add(followUpDelay);
       if (nextPrayerTime == null ||
           !followUpAt.isAfter(current) ||
@@ -386,10 +387,9 @@ class PrayerSchedulerService {
           voluntary.length -
           dua.length;
 
-      final baselineCutoffMillis =
-          current
-              .add(Duration(days: policy.baselineDays))
-              .millisecondsSinceEpoch;
+      final baselineCutoffMillis = current
+          .add(Duration(days: policy.baselineDays))
+          .millisecondsSinceEpoch;
       final extension = <ScheduledReminder>[];
       primaries.removeWhere((r) {
         if (r.scheduledAtMillis >= baselineCutoffMillis) {
@@ -402,8 +402,9 @@ class PrayerSchedulerService {
       // 1. Fit baseline primaries + follow-ups; follow-ups yield first.
       var overflow = primaries.length + followUps.length - slots;
       if (overflow > 0) {
-        final followUpCut =
-            overflow < followUps.length ? overflow : followUps.length;
+        final followUpCut = overflow < followUps.length
+            ? overflow
+            : followUps.length;
         followUps.removeRange(followUps.length - followUpCut, followUps.length);
         overflow -= followUpCut;
         if (overflow > 0) {
@@ -484,12 +485,11 @@ class PrayerSchedulerService {
     // Exclude failed primaries from persistence/stats — neither channel
     // actually carries an alert for them, so recording one would falsely
     // suggest the prayer has a pending reminder.
-    final persistedPrimaries =
-        failedIds.isEmpty
-            ? primaries
-            : primaries
-                .where((r) => !failedIds.contains(r.notificationId))
-                .toList();
+    final persistedPrimaries = failedIds.isEmpty
+        ? primaries
+        : primaries
+              .where((r) => !failedIds.contains(r.notificationId))
+              .toList();
     // Concurrent for the same reason as the primaries loop above.
     await Future.wait(
       followUps.map(
@@ -552,6 +552,11 @@ class PrayerSchedulerService {
           return true;
         } catch (e) {
           debugPrint('Dua reminder failed: $e');
+          AppLog.error('Du\'a reminder scheduling failed', {
+            'error_type': e.runtimeType.toString(),
+            'error': e.toString(),
+            'full_screen': settings.duaFullScreenEnabled,
+          });
           return false;
         }
       }),
@@ -601,6 +606,30 @@ class PrayerSchedulerService {
         '${primaries.isEmpty ? 0 : 1} refresh).',
       );
     }
+
+    // One wide log per reschedule: everything needed to answer "was a
+    // reminder actually queued, and for when?" without the user's phone.
+    // Counts and enums only — no people, names or coordinates.
+    final nextDua = persistedDua.isEmpty
+        ? null
+        : persistedDua
+            .map((r) => r.scheduledAt)
+            .reduce((a, b) => a.isBefore(b) ? a : b);
+    AppLog.info('Reminders rescheduled', {
+      'total_scheduled': scheduled.length,
+      'primary_count': persistedPrimaries.length,
+      'snooze_count': carriedSnoozes.length,
+      'follow_up_count': followUps.length,
+      'voluntary_requested': voluntary.length,
+      'voluntary_scheduled': persistedVoluntary.length,
+      'dua_enabled': settings.duaReminderEnabled,
+      'dua_requested': dua.length,
+      'dua_scheduled': persistedDua.length,
+      'dua_full_screen': settings.duaFullScreenEnabled,
+      'dua_windows': settings.duaWindows.map((w) => w.name).join(','),
+      'next_dua_minutes_from_now': nextDua?.difference(now()).inMinutes,
+      'pending_cap': policy.maxPending,
+    });
 
     await repository.saveScheduledReminders(scheduled);
     await repository.saveLastCalculationDate(now());
@@ -707,13 +736,15 @@ class PrayerSchedulerService {
       final id = LocalNotificationService.duaNotificationIdFor(time);
       if (!usedIds.add(id)) return;
       final epochDay =
-          DateTime.utc(dayDate.year, dayDate.month, dayDate.day)
-              .millisecondsSinceEpoch ~/
+          DateTime.utc(
+            dayDate.year,
+            dayDate.month,
+            dayDate.day,
+          ).millisecondsSinceEpoch ~/
           Duration.millisecondsPerDay;
-      final String? personId =
-          people.isEmpty
-              ? null
-              : people[(epochDay + windowIndex) % people.length].id;
+      final String? personId = people.isEmpty
+          ? null
+          : people[(epochDay + windowIndex) % people.length].id;
       out.add((
         reminder: ScheduledReminder(
           notificationId: id,
@@ -769,9 +800,8 @@ class PrayerSchedulerService {
     }
 
     out.sort(
-      (a, b) => a.reminder.scheduledAtMillis.compareTo(
-        b.reminder.scheduledAtMillis,
-      ),
+      (a, b) =>
+          a.reminder.scheduledAtMillis.compareTo(b.reminder.scheduledAtMillis),
     );
     final cap = policy.maxDuaReminders;
     if (cap != null && out.length > cap) {

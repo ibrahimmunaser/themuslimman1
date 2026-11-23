@@ -373,6 +373,21 @@ class _SettingsScreenState extends State<SettingsScreen> with RouteAware {
                 ),
                 const Divider(height: 1),
                 SwitchListTile(
+                  title: const Text('Athan'),
+                  subtitle: const Text(
+                    'Play the call to prayer audio on the full-screen call '
+                    'UI. Requires "Full-screen call UI" above.',
+                  ),
+                  value: settings.callScreenEnabled && settings.athanEnabled,
+                  onChanged:
+                      settings.callScreenEnabled
+                          ? (v) => controller.updateSettings(
+                            settings.copyWith(athanEnabled: v),
+                          )
+                          : null,
+                ),
+                const Divider(height: 1),
+                SwitchListTile(
                   title: const Text('Duha reminder'),
                   subtitle: const Text(
                     'A gentle notification when the Duha window opens. '

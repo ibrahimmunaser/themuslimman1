@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 
+import '../../../core/app_log.dart';
 import '../../../l10n/translit_indic.dart';
 import '../models/quran_models.dart';
 
@@ -72,8 +73,27 @@ class QuranApiService {
   }
 
   Future<Map<String, dynamic>> _getJson(String url) async {
-    final response = await http.get(Uri.parse(url)).timeout(_timeout);
+    final started = DateTime.now();
+    final http.Response response;
+    try {
+      response = await http.get(Uri.parse(url)).timeout(_timeout);
+    } catch (e) {
+      // Network failures are filtered out of Sentry *errors* (sentry_filter);
+      // the log keeps the context — which endpoint, how long, what kind —
+      // so a spike in "Quran won't load" reports is still diagnosable.
+      AppLog.warn('Quran API request failed', {
+        'path': Uri.parse(url).path,
+        'error_type': e.runtimeType.toString(),
+        'elapsed_ms': DateTime.now().difference(started).inMilliseconds,
+      });
+      rethrow;
+    }
     if (response.statusCode != 200) {
+      AppLog.warn('Quran API returned an error status', {
+        'path': Uri.parse(url).path,
+        'status_code': response.statusCode,
+        'elapsed_ms': DateTime.now().difference(started).inMilliseconds,
+      });
       throw HttpException('HTTP ${response.statusCode} for $url');
     }
     final decoded = jsonDecode(response.body) as Map<String, dynamic>;

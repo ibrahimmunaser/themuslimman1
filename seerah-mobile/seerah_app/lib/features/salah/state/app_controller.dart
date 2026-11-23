@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:seerah_app/core/app_log.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:timezone/timezone.dart' as tz;
@@ -220,6 +221,11 @@ class AppController extends ChangeNotifier with WidgetsBindingObserver {
 
     var handledNotificationOpen = false;
     notificationService.onNotificationTap = (payload, actionId) {
+      AppLog.info('Notification tapped', {
+        'notification_type': payload.type,
+        'action_id': actionId,
+        'prayer': payload.prayer?.name,
+      });
       // Defensive: "Decline" is normally handled in the background
       // isolate, but if the platform routes it here, snooze without any UI.
       if (actionId == LocalNotificationService.actionDecline ||
@@ -241,6 +247,16 @@ class AppController extends ChangeNotifier with WidgetsBindingObserver {
 
     _notificationsPermitted = await notificationService.requestPermissions();
     _exactAlarmsAvailable = await notificationService.canScheduleExactAlarms();
+    // The permissions that decide whether any reminder can reach the user —
+    // the first thing to check when someone says "I never got a notification".
+    AppLog.info('Notification environment', {
+      'notifications_permitted': _notificationsPermitted,
+      'exact_alarms_available': _exactAlarmsAvailable,
+      'notifications_enabled_setting': _settings.notificationsEnabled,
+      'call_screen_enabled': _settings.callScreenEnabled,
+      'dua_enabled': _settings.duaReminderEnabled,
+      'platform': Platform.operatingSystem,
+    });
 
     final alarmKit = alarmKitService;
     if (alarmKit != null) {
@@ -250,8 +266,8 @@ class AppController extends ChangeNotifier with WidgetsBindingObserver {
     }
 
     if (!kIsWeb && Platform.isAndroid) {
-      _reliableCallScreenPermission =
-          await notificationService.hasIncomingCallOverlayPermission();
+      _reliableCallScreenPermission = await notificationService
+          .hasIncomingCallOverlayPermission();
     }
 
     // Detect timezone (handles first run and timezone changes while closed).
@@ -555,10 +571,9 @@ class AppController extends ChangeNotifier with WidgetsBindingObserver {
     required bool silent,
     required bool mayPrompt,
   }) async {
-    final result =
-        mayPrompt
-            ? await locationService.getCurrentLocation()
-            : await locationService.getCurrentLocationIfPermitted();
+    final result = mayPrompt
+        ? await locationService.getCurrentLocation()
+        : await locationService.getCurrentLocationIfPermitted();
     _lastLocationStatus = result.status;
     if (result.isSuccess) {
       // GPS is the top priority source. The device timezone is authoritative
@@ -586,12 +601,9 @@ class AppController extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> setCityLocation(City city) async {
     final timezone =
         city.timezone.isNotEmpty &&
-                timezoneService.isValidTimezone(city.timezone)
-            ? city.timezone
-            : timezoneService.timezoneForCoordinates(
-              city.latitude,
-              city.longitude,
-            );
+            timezoneService.isValidTimezone(city.timezone)
+        ? city.timezone
+        : timezoneService.timezoneForCoordinates(city.latitude, city.longitude);
     _settings = _settings.copyWith(
       latitude: city.latitude,
       longitude: city.longitude,
@@ -887,10 +899,9 @@ class AppController extends ChangeNotifier with WidgetsBindingObserver {
           break;
       }
     }
-    final coverage =
-        lastPrimaryAt == null
-            ? 0.0
-            : lastPrimaryAt.difference(DateTime.now()).inMinutes / (60 * 24);
+    final coverage = lastPrimaryAt == null
+        ? 0.0
+        : lastPrimaryAt.difference(DateTime.now()).inMinutes / (60 * 24);
     return (
       primary: primary,
       followUps: followUps,

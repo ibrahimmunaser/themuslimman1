@@ -8,6 +8,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:seerah_app/core/app_log.dart';
 import 'package:flutter/material.dart' hide Text;
 import 'package:seerah_app/core/widgets/localized_text.dart';
 import 'package:provider/provider.dart';
@@ -140,18 +141,33 @@ class SalahBootstrap {
             'Incoming salah screen skipped: navigator not ready '
             '(prayer=${prayer.name})',
           );
+          AppLog.warn('Incoming call screen skipped: navigator not ready', {
+            'prayer': prayer.name,
+          });
           return;
         }
+        final shownAt = DateTime.now();
         final result = await nav.push<IncomingSalahResult>(
           MaterialPageRoute(
             builder: (_) => IncomingSalahScreen(
               prayer: prayer,
               scheduledAt: scheduledAt,
               alarmId: alarmId,
+              // Explicit: this route is pushed on the root navigator, which
+              // can be built before the AppController provider is mounted in
+              // main.dart (it only appears once SalahBootstrap finishes), so
+              // the screen must not depend on a Provider lookup here.
+              controller: controller,
             ),
             fullscreenDialog: true,
           ),
         );
+        AppLog.info('Incoming call screen closed', {
+          'prayer': prayer.name,
+          'result': result?.name ?? 'dismissed',
+          'seconds_on_screen': DateTime.now().difference(shownAt).inSeconds,
+          'from_alarmkit': alarmId != null,
+        });
         switch (result) {
           case IncomingSalahResult.prayNow:
             await controller.markPrayerAnswered(prayer);
@@ -183,12 +199,20 @@ class SalahBootstrap {
       duaCardOpen = true;
       try {
         final nav = await waitForNavigator();
-        if (nav == null || !nav.mounted) return;
+        if (nav == null || !nav.mounted) {
+          AppLog.warn('Du\'a card skipped: navigator not ready');
+          return;
+        }
         final id = payload.duaPersonId;
         final person =
             id == null
                 ? null
                 : controller.duaPeople.where((p) => p.id == id).firstOrNull;
+        AppLog.info('Du\'a card opened', {
+          'has_person': person != null,
+          'person_id_in_payload': id != null,
+          'full_screen_setting': controller.settings.duaFullScreenEnabled,
+        });
         await nav.push<void>(
           MaterialPageRoute(
             builder:
@@ -267,6 +291,10 @@ class SalahSection extends StatelessWidget {
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           debugPrint('Salah section failed to initialize: ${snapshot.error}');
+          AppLog.error('Salah section failed to initialize', {
+            'error_type': snapshot.error.runtimeType.toString(),
+            'error': snapshot.error.toString(),
+          });
           return const Scaffold(
             backgroundColor: Colors.black,
             body: Center(
