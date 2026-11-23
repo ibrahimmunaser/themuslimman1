@@ -204,21 +204,23 @@ class SalahBootstrap {
           return;
         }
         final id = payload.duaPersonId;
-        final person =
-            id == null
-                ? null
-                : controller.duaPeople.where((p) => p.id == id).firstOrNull;
+        final people = controller.duaPeople;
+        final matchedIndex =
+            id == null ? -1 : people.indexWhere((p) => p.id == id);
+        final startIndex = matchedIndex == -1 ? 0 : matchedIndex;
         AppLog.info('Du\'a card opened', {
-          'has_person': person != null,
+          'matched_notification_person': matchedIndex != -1,
           'person_id_in_payload': id != null,
+          'people_count': people.length,
           'full_screen_setting': controller.settings.duaFullScreenEnabled,
         });
         await nav.push<void>(
           MaterialPageRoute(
             builder:
                 (_) => DuaCardScreen(
-                  person: person,
+                  people: people,
                   seconds: controller.settings.duaCardSeconds,
+                  startIndex: startIndex,
                 ),
             fullscreenDialog: true,
           ),

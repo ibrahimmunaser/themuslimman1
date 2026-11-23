@@ -6,18 +6,34 @@ import 'package:seerah_app/core/widgets/localized_text.dart';
 import '../../../core/theme/app_colors.dart';
 import '../models/dua.dart';
 
-/// A calm, timed moment to make du'a for one person.
+/// A calm, timed moment to make du'a for everyone on the user's list, one
+/// person at a time.
 ///
 /// Deliberately NOT the "Allah is calling" call screen: no ringing, no
-/// Answer/Decline. It just holds the screen quietly for [seconds] (30 or 60,
-/// the user's choice) with the person's name and a du'a, then closes itself.
-/// The user can finish early with "Ameen" or skip with "Not now".
+/// Answer/Decline. It holds the screen quietly for [seconds] per person (30
+/// or 60, the user's choice) with that person's name and a du'a, then
+/// automatically rotates to the next person — doing this for every person in
+/// [people] before closing itself. The user can move on early with "Ameen"
+/// or end the whole session with "Not now".
 class DuaCardScreen extends StatefulWidget {
-  const DuaCardScreen({super.key, required this.person, required this.seconds});
+  const DuaCardScreen({
+    super.key,
+    required this.people,
+    required this.seconds,
+    this.startIndex = 0,
+  });
 
-  /// Who the du'a is for, or null for a general du'a for loved ones.
-  final DuaPerson? person;
+  /// Everyone to make du'a for, in list order. Empty shows a single general
+  /// du'a for "your loved ones" instead.
+  final List<DuaPerson> people;
+
+  /// How long to spend on each person before auto-advancing.
   final int seconds;
+
+  /// Which person to start on (e.g. the one named in the notification that
+  /// opened this screen). Rotation still wraps around to cover everyone
+  /// else on the list afterward.
+  final int startIndex;
 
   @override
   State<DuaCardScreen> createState() => _DuaCardScreenState();
@@ -26,30 +42,69 @@ class DuaCardScreen extends StatefulWidget {
 class _DuaCardScreenState extends State<DuaCardScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _progress;
+  late final List<DuaPerson?> _order;
   Timer? _closeTimer;
+  int _index = 0;
   bool _done = false;
 
   @override
   void initState() {
     super.initState();
+    _order = _buildOrder();
     _progress = AnimationController(
       vsync: this,
       duration: Duration(seconds: widget.seconds),
     )..addStatusListener((status) {
-      if (status == AnimationStatus.completed) _finish();
+      if (status == AnimationStatus.completed) _finishCurrent();
     });
     _progress.forward();
   }
 
-  /// The time is up (or the user said Ameen): show a short closing line, then
-  /// leave on our own.
-  void _finish() {
+  /// The people to show, starting at [DuaCardScreen.startIndex] and wrapping
+  /// around the full list so everyone gets their turn. An empty list is
+  /// represented as a single `null` entry (the general du'a).
+  List<DuaPerson?> _buildOrder() {
+    final people = widget.people;
+    if (people.isEmpty) return const [null];
+    final n = people.length;
+    final start = widget.startIndex % n;
+    return List.generate(n, (i) => people[(start + i) % n]);
+  }
+
+  bool get _isLastPerson => _index >= _order.length - 1;
+
+  /// The current person's time is up (or the user said Ameen for them):
+  /// show a short closing line, then either rotate to the next person or,
+  /// if this was the last one, leave on our own.
+  void _finishCurrent() {
     if (_done || !mounted) return;
     setState(() => _done = true);
     _progress.stop();
-    _closeTimer = Timer(const Duration(milliseconds: 1800), () {
-      if (mounted) Navigator.of(context).maybePop();
+    _closeTimer = Timer(const Duration(milliseconds: 1400), () {
+      if (!mounted) return;
+      if (_isLastPerson) {
+        Navigator.of(context).maybePop();
+      } else {
+        _advance();
+      }
     });
+  }
+
+  void _advance() {
+    if (!mounted) return;
+    setState(() {
+      _index++;
+      _done = false;
+    });
+    _progress
+      ..reset()
+      ..forward();
+  }
+
+  /// Ends the whole session (not just the current person).
+  void _stop() {
+    _closeTimer?.cancel();
+    if (mounted) Navigator.of(context).maybePop();
   }
 
   @override
@@ -61,7 +116,7 @@ class _DuaCardScreenState extends State<DuaCardScreen>
 
   @override
   Widget build(BuildContext context) {
-    final person = widget.person;
+    final person = _order[_index];
     final now = DateTime.now();
     final dayIndex =
         DateTime.utc(
@@ -72,6 +127,7 @@ class _DuaCardScreenState extends State<DuaCardScreen>
         Duration.millisecondsPerDay;
     final duas = duaTextsFor(person, dayIndex: dayIndex);
     final subtitle = person == null ? null : _subtitleFor(person);
+    final showsMultiple = _order.length > 1;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -100,6 +156,10 @@ class _DuaCardScreenState extends State<DuaCardScreen>
                     color: AppColors.gold,
                   ),
                 ),
+                if (showsMultiple) ...[
+                  const SizedBox(height: 8),
+                  _DotProgress(current: _index, total: _order.length),
+                ],
                 if (person != null) ...[
                   const SizedBox(height: 10),
                   Text(
@@ -214,9 +274,11 @@ class _DuaCardScreenState extends State<DuaCardScreen>
                                       vertical: 14,
                                     ),
                                   ),
-                                  onPressed: _finish,
-                                  child: const Text(
-                                    'Ameen',
+                                  onPressed: _finishCurrent,
+                                  child: Text(
+                                    showsMultiple && !_isLastPerson
+                                        ? 'Ameen — next'
+                                        : 'Ameen',
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w700,
@@ -225,7 +287,7 @@ class _DuaCardScreenState extends State<DuaCardScreen>
                                 ),
                               ),
                               TextButton(
-                                onPressed: () => Navigator.of(context).maybePop(),
+                                onPressed: _stop,
                                 child: Text(
                                   'Not now',
                                   style: TextStyle(color: AppColors.textMuted),
@@ -251,6 +313,39 @@ class _DuaCardScreenState extends State<DuaCardScreen>
     }
     if (person.deceased) parts.add('May Allah have mercy on them');
     return parts.isEmpty ? null : parts.join(' • ');
+  }
+}
+
+/// Small row of dots showing progress through the list of people (e.g.
+/// "person 2 of 5"), without spelling out the count in words.
+class _DotProgress extends StatelessWidget {
+  const _DotProgress({required this.current, required this.total});
+
+  final int current;
+  final int total;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (var i = 0; i < total; i++)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 3),
+            child: Container(
+              width: i == current ? 8 : 6,
+              height: i == current ? 8 : 6,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color:
+                    i == current
+                        ? AppColors.gold
+                        : AppColors.gold.withValues(alpha: 0.25),
+              ),
+            ),
+          ),
+      ],
+    );
   }
 }
 

@@ -267,7 +267,7 @@ class DuaRemindersScreen extends StatelessWidget {
                     fullscreenDialog: true,
                     builder:
                         (_) => DuaCardScreen(
-                          person: people.isEmpty ? null : people.first,
+                          people: people,
                           seconds: settings.duaCardSeconds,
                         ),
                   ),
