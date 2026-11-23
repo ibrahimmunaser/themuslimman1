@@ -129,8 +129,6 @@ class DuaRemindersScreen extends StatelessWidget {
                           if (checked == true) {
                             if (!next.contains(w)) next.add(w);
                           } else {
-                            // Always keep at least one window selected.
-                            if (next.length <= 1) return;
                             next.remove(w);
                           }
                           controller.updateSettings(
@@ -138,6 +136,17 @@ class DuaRemindersScreen extends StatelessWidget {
                           );
                         },
                       ),
+                    if (settings.duaWindows.isEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        'No reminder will be sent until you pick at least '
+                        'one time above.',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          color: AppColors.textMuted,
+                        ),
+                      ),
+                    ],
                     const Divider(height: 20),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,

@@ -12,11 +12,11 @@ library;
 /// When, relative to the day's prayers, a du'a reminder may fire. The user
 /// picks any combination; each selected window fires once per day.
 enum DuaWindow {
-  /// Midway between Fajr and Dhuhr.
-  morning('Morning', 'Between Fajr and Dhuhr'),
+  /// 40 minutes before Dhuhr.
+  morning('Before Dhuhr', '40 minutes before Dhuhr'),
 
-  /// Midway between Dhuhr and Asr.
-  afternoon('Afternoon', 'Between Dhuhr and Asr'),
+  /// 40 minutes before Asr.
+  afternoon('Before Asr', '40 minutes before Asr'),
 
   /// 40 minutes before Maghrib — the last hour of the day is a blessed time
   /// for du'a (especially on Friday).
@@ -25,8 +25,8 @@ enum DuaWindow {
     '40 minutes before Maghrib — a blessed time for du\'a',
   ),
 
-  /// Midway between Maghrib and Isha.
-  evening('Evening', 'Between Maghrib and Isha'),
+  /// 40 minutes before Isha.
+  evening('Before Isha', '40 minutes before Isha'),
 
   /// The start of the last third of the night.
   lastThird('Last third of the night', 'When du\'a is most likely answered');

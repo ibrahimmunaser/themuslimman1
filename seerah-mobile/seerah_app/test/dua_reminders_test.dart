@@ -149,7 +149,8 @@ void main() {
     final persisted =
         scheduled.where((r) => r.kind == ReminderKind.dua).toList();
 
-    // 2 windows x ~7 days (today's morning window may already be past).
+    // 2 windows x ~7 days (today's 40-min-before-Dhuhr window may already
+    // be past).
     expect(fake.dua.length, inInclusiveRange(12, 14));
     expect(persisted.length, fake.dua.length);
 

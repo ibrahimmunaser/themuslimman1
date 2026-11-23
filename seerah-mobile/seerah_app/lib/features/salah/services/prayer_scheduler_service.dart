@@ -726,54 +726,27 @@ class PrayerSchedulerService {
       ));
     }
 
-    DateTime midpoint(DateTime a, DateTime b) =>
-        a.add(Duration(milliseconds: b.difference(a).inMilliseconds ~/ 2));
+    DateTime before(PrayerDayTimes day, SalahPrayer prayer) =>
+        day.timeFor(prayer).subtract(const Duration(minutes: 40));
 
     for (var w = 0; w < windows.length; w++) {
       final window = windows[w];
       switch (window) {
         case DuaWindow.morning:
           for (final day in days) {
-            add(
-              midpoint(
-                day.timeFor(SalahPrayer.fajr),
-                day.timeFor(SalahPrayer.dhuhr),
-              ),
-              day.date,
-              w,
-            );
+            add(before(day, SalahPrayer.dhuhr), day.date, w);
           }
         case DuaWindow.afternoon:
           for (final day in days) {
-            add(
-              midpoint(
-                day.timeFor(SalahPrayer.dhuhr),
-                day.timeFor(SalahPrayer.asr),
-              ),
-              day.date,
-              w,
-            );
+            add(before(day, SalahPrayer.asr), day.date, w);
           }
         case DuaWindow.beforeMaghrib:
           for (final day in days) {
-            add(
-              day
-                  .timeFor(SalahPrayer.maghrib)
-                  .subtract(const Duration(minutes: 40)),
-              day.date,
-              w,
-            );
+            add(before(day, SalahPrayer.maghrib), day.date, w);
           }
         case DuaWindow.evening:
           for (final day in days) {
-            add(
-              midpoint(
-                day.timeFor(SalahPrayer.maghrib),
-                day.timeFor(SalahPrayer.isha),
-              ),
-              day.date,
-              w,
-            );
+            add(before(day, SalahPrayer.isha), day.date, w);
           }
         case DuaWindow.lastThird:
           // Start one night early: last night's final third may still be
