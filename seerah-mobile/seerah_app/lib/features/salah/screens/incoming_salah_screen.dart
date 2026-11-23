@@ -105,7 +105,7 @@ class _IncomingSalahScreenState extends State<IncomingSalahScreen>
 
     _startRinging();
     if (_controller?.settings.athanEnabled ?? false) {
-      unawaited(_athan.play());
+      unawaited(_athan.play(sound: _controller?.settings.athanSound));
     }
   }
 

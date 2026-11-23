@@ -10,6 +10,7 @@ import '../../core/providers/part_provider.dart';
 import '../../l10n/salah_phrases.dart';
 import 'package:flutter/services.dart';
 
+import 'models/prayer_settings.dart';
 import 'models/salah_prayer.dart';
 import 'repositories/prayer_settings_repository.dart';
 import 'services/athan_player.dart';
@@ -207,23 +208,29 @@ class _GuardShieldScreenState extends State<GuardShieldScreen> {
   /// call screen (see AthanPlayer / IncomingSalahScreen). This engine has no
   /// access to AppController (see the class doc), so the setting is read
   /// directly from the same SharedPreferences key the main app writes to.
-  Future<bool> _athanEnabled() async {
+  /// Returns (athanEnabled, athanSound) read directly from the same
+  /// SharedPreferences key the main app writes to.
+  Future<(bool, AthanSound)> _athanPrefs() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.reload();
       final raw = prefs.getString(PrayerSettingsRepository.settingsKey);
-      if (raw == null) return true; // default
+      if (raw == null) return (true, AthanSound.wikimediaCc0); // default
       final json = jsonDecode(raw) as Map<String, dynamic>;
-      return json['athanEnabled'] as bool? ?? true;
+      return (
+        json['athanEnabled'] as bool? ?? true,
+        AthanSound.fromName(json['athanSound'] as String?),
+      );
     } catch (_) {
-      return true;
+      return (true, AthanSound.wikimediaCc0);
     }
   }
 
   Future<void> _maybeRingAthan() async {
     if (!mounted) return;
-    if (await _athanEnabled()) {
-      await _athan.play();
+    final (enabled, sound) = await _athanPrefs();
+    if (enabled) {
+      await _athan.play(sound: sound);
     }
   }
 

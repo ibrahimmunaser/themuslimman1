@@ -1,7 +1,7 @@
 name: seerah_app
 description: "The Muslim Man — Seerah Course Mobile App"
 publish_to: 'none'
-version: 1.0.106+110
+version: 1.0.107+111
 
 environment:
   sdk: ^3.12.0
@@ -153,9 +153,15 @@ flutter:
     # directly from the Flutter asset bundle — see its loadHero()).
     - assets/incoming_call/
     # Athan audio played on the in-app prayer call screen (see
-    # prayer_call_scene.dart / PrayerSettings.athanEnabled). CC0 recording,
-    # https://commons.wikimedia.org/wiki/File:Beautiful_adhan.ogg
+    # prayer_call_scene.dart / PrayerSettings.athanEnabled). User picks
+    # between these in Settings > Athan sound (see AthanSound).
+    # - athan.mp3: CC0 recording,
+    #   https://commons.wikimedia.org/wiki/File:Beautiful_adhan.ogg
+    # - athan_aaqib_azeez.mp3: "The Adhan - Muslim Call to Prayer" by Aaqib
+    #   Azeez, CC BY-SA 4.0,
+    #   https://commons.wikimedia.org/wiki/File:The_Adhan_-_Muslim_Call_to_Prayer_-_Aaqib_Azeez.mp3
     - assets/audio/athan.mp3
+    - assets/audio/athan_aaqib_azeez.mp3
 
   fonts:
     # "Amiri Quran" re-themed: upstream (aliftype/amiri, also what

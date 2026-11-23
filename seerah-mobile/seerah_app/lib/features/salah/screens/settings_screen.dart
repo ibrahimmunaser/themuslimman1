@@ -12,6 +12,7 @@ import '../models/salah_prayer.dart';
 import '../models/scheduled_reminder.dart';
 import '../state/app_controller.dart';
 import '../utils/app_strings.dart';
+import '../utils/athan_sound_picker.dart';
 import '../utils/quran_fonts.dart';
 import '../../../core/theme/app_colors.dart';
 import '../utils/formatting.dart';
@@ -384,6 +385,17 @@ class _SettingsScreenState extends State<SettingsScreen> with RouteAware {
                           ? (v) => controller.updateSettings(
                             settings.copyWith(athanEnabled: v),
                           )
+                          : null,
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  title: const Text('Athan sound'),
+                  subtitle: Text(settings.athanSound.displayName),
+                  trailing: const Icon(Icons.chevron_right),
+                  enabled: settings.callScreenEnabled && settings.athanEnabled,
+                  onTap:
+                      (settings.callScreenEnabled && settings.athanEnabled)
+                          ? () => showAthanSoundPicker(context)
                           : null,
                 ),
                 const Divider(height: 1),

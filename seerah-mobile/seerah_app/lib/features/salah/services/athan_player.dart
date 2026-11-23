@@ -1,6 +1,8 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 
+import '../models/prayer_settings.dart';
+
 /// Plays the bundled Athan (call to prayer) recording over the full-screen
 /// "incoming call" presentation — [IncomingSalahScreen] and the Android App
 /// Guard block screen ([GuardShieldScreen] in `guard_main.dart`).
@@ -11,24 +13,31 @@ import 'package:flutter/foundation.dart';
 /// user answers/declines or the screen leaves the foreground — exactly like
 /// the vibration pattern it plays alongside.
 ///
-/// Asset: `assets/audio/athan.mp3` — a CC0 (public-domain) recording, see
-/// https://commons.wikimedia.org/wiki/File:Beautiful_adhan.ogg
+/// Which recording plays is the user's choice (see [AthanSound] /
+/// [PrayerSettings.athanSound]); defaults to the CC0 Wikimedia recording.
 class AthanPlayer {
-  static const _assetPath = 'audio/athan.mp3';
+  static const _defaultAssetPath = 'audio/athan.mp3';
 
   AudioPlayer? _player;
   bool _disposed = false;
 
-  /// Starts playback from the beginning. Safe to call even if a previous
-  /// play is still running (replaces it). Failures (e.g. unsupported codec
-  /// on an obscure device) are swallowed — a missing Athan sound must never
-  /// crash or block the call screen, which still rings via vibration.
-  Future<void> play() async {
+  /// Starts playback from the beginning of [sound] (defaults to the app's
+  /// original Athan). Safe to call even if a previous play is still running
+  /// (replaces it). Failures (e.g. unsupported codec on an obscure device)
+  /// are swallowed — a missing Athan sound must never crash or block the
+  /// call screen, which still rings via vibration.
+  Future<void> play({AthanSound? sound}) async {
     if (_disposed) return;
     try {
       final player = _player ??= AudioPlayer();
+      // AthanSound.assetPath is "assets/audio/…" (matches pubspec); the
+      // audioplayers AssetSource root is implicitly "assets/", so strip it.
+      final assetPath =
+          sound == null
+              ? _defaultAssetPath
+              : sound.assetPath.replaceFirst('assets/', '');
       await player.setReleaseMode(ReleaseMode.stop);
-      await player.play(AssetSource(_assetPath));
+      await player.play(AssetSource(assetPath));
     } catch (e) {
       debugPrint('AthanPlayer: play failed: $e');
     }

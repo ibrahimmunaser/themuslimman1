@@ -74,6 +74,39 @@ enum QuranFontOption {
   const QuranFontOption(this.displayName, this.description);
 }
 
+/// Athan (call to prayer) recording played on the full-screen prayer call
+/// UI — see [PrayerSettings.athanEnabled]. Each has a distinct reciter and
+/// license; both are bundled in the app, so switching is instant and works
+/// offline.
+enum AthanSound {
+  wikimediaCc0(
+    'Beautiful Adhan',
+    'assets/audio/athan.mp3',
+    'Public domain (CC0), via Wikimedia Commons',
+  ),
+  aaqibAzeez(
+    'Aaqib Azeez',
+    'assets/audio/athan_aaqib_azeez.mp3',
+    'Aaqib Azeez — CC BY-SA 4.0, via Wikimedia Commons',
+  );
+
+  final String displayName;
+  final String assetPath;
+
+  /// Shown under the option in the picker, to satisfy the CC BY-SA 4.0
+  /// attribution requirement for [aaqibAzeez].
+  final String attribution;
+
+  const AthanSound(this.displayName, this.assetPath, this.attribution);
+
+  static AthanSound fromName(String? name) {
+    for (final v in AthanSound.values) {
+      if (v.name == name) return v;
+    }
+    return AthanSound.wikimediaCc0;
+  }
+}
+
 /// How the location was chosen.
 enum LocationSource {
   device('Device location'),
@@ -126,6 +159,10 @@ class PrayerSettings {
   /// actually on screen.
   final bool athanEnabled;
 
+  /// Which bundled Athan recording to play. Only effective while
+  /// [athanEnabled] (and [callScreenEnabled]) are also on.
+  final AthanSound athanSound;
+
   /// Opt-in gentle notifications when the Duha window opens / the last third
   /// of the night begins. Off by default; plain notifications only — never
   /// the call screen, snooze or follow-ups. Only effective while
@@ -176,6 +213,7 @@ class PrayerSettings {
     this.notificationsEnabled = true,
     this.callScreenEnabled = true,
     this.athanEnabled = true,
+    this.athanSound = AthanSound.wikimediaCc0,
     this.duhaReminderEnabled = false,
     this.qiyamReminderEnabled = false,
     this.duaReminderEnabled = false,
@@ -206,6 +244,7 @@ class PrayerSettings {
     bool? notificationsEnabled,
     bool? callScreenEnabled,
     bool? athanEnabled,
+    AthanSound? athanSound,
     bool? duhaReminderEnabled,
     bool? qiyamReminderEnabled,
     bool? duaReminderEnabled,
@@ -231,6 +270,7 @@ class PrayerSettings {
       notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
       callScreenEnabled: callScreenEnabled ?? this.callScreenEnabled,
       athanEnabled: athanEnabled ?? this.athanEnabled,
+      athanSound: athanSound ?? this.athanSound,
       duhaReminderEnabled: duhaReminderEnabled ?? this.duhaReminderEnabled,
       qiyamReminderEnabled: qiyamReminderEnabled ?? this.qiyamReminderEnabled,
       duaReminderEnabled: duaReminderEnabled ?? this.duaReminderEnabled,
@@ -261,6 +301,7 @@ class PrayerSettings {
       'notificationsEnabled': notificationsEnabled,
       'callScreenEnabled': callScreenEnabled,
       'athanEnabled': athanEnabled,
+      'athanSound': athanSound.name,
       'duhaReminderEnabled': duhaReminderEnabled,
       'qiyamReminderEnabled': qiyamReminderEnabled,
       'duaReminderEnabled': duaReminderEnabled,
@@ -325,6 +366,7 @@ class PrayerSettings {
       // older builds; it is intentionally ignored.
       callScreenEnabled: json['callScreenEnabled'] as bool? ?? true,
       athanEnabled: json['athanEnabled'] as bool? ?? true,
+      athanSound: AthanSound.fromName(json['athanSound'] as String?),
       duhaReminderEnabled: json['duhaReminderEnabled'] as bool? ?? false,
       qiyamReminderEnabled: json['qiyamReminderEnabled'] as bool? ?? false,
       duaReminderEnabled: json['duaReminderEnabled'] as bool? ?? false,
