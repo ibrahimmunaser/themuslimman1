@@ -13,8 +13,7 @@ import '../models/dua.dart';
 /// Answer/Decline. It holds the screen quietly for [seconds] per person (30
 /// or 60, the user's choice) with that person's name and a du'a, then
 /// automatically rotates to the next person — doing this for every person in
-/// [people] before closing itself. The user can move on early with "Ameen"
-/// or end the whole session with "Not now".
+/// [people] before closing itself. The user can move on early with "Ameen".
 class DuaCardScreen extends StatefulWidget {
   const DuaCardScreen({
     super.key,
@@ -99,12 +98,6 @@ class _DuaCardScreenState extends State<DuaCardScreen>
     _progress
       ..reset()
       ..forward();
-  }
-
-  /// Ends the whole session (not just the current person).
-  void _stop() {
-    _closeTimer?.cancel();
-    if (mounted) Navigator.of(context).maybePop();
   }
 
   @override
@@ -284,13 +277,6 @@ class _DuaCardScreenState extends State<DuaCardScreen>
                                       fontWeight: FontWeight.w700,
                                     ),
                                   ),
-                                ),
-                              ),
-                              TextButton(
-                                onPressed: _stop,
-                                child: Text(
-                                  'Not now',
-                                  style: TextStyle(color: AppColors.textMuted),
                                 ),
                               ),
                             ],

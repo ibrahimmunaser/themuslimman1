@@ -1,7 +1,7 @@
 name: seerah_app
 description: "The Muslim Man — Seerah Course Mobile App"
 publish_to: 'none'
-version: 1.0.108+112
+version: 1.0.109+113
 
 environment:
   sdk: ^3.12.0
@@ -160,13 +160,10 @@ flutter:
     # - athan_aaqib_azeez.mp3: "The Adhan - Muslim Call to Prayer" by Aaqib
     #   Azeez, CC BY-SA 4.0,
     #   https://commons.wikimedia.org/wiki/File:The_Adhan_-_Muslim_Call_to_Prayer_-_Aaqib_Azeez.mp3
-    # - athan_mmanga_muharram.mp3: "Best Adhan - Ustadh Mmanga Muharram -
-    #   from Tanzania" by DARSA TV, Creative Commons Attribution (reuse
-    #   allowed) on YouTube,
-    #   https://www.youtube.com/watch?v=TuPIDIsDWl0
+    # - athan_3.mp3: third selectable Athan (user-supplied recording).
     - assets/audio/athan.mp3
     - assets/audio/athan_aaqib_azeez.mp3
-    - assets/audio/athan_mmanga_muharram.mp3
+    - assets/audio/athan_3.mp3
 
   fonts:
     # "Amiri Quran" re-themed: upstream (aliftype/amiri, also what

@@ -89,11 +89,10 @@ enum AthanSound {
     'assets/audio/athan_aaqib_azeez.mp3',
     'Aaqib Azeez — CC BY-SA 4.0, via Wikimedia Commons',
   ),
-  mmangaMuharram(
-    'Mmanga Muharram',
-    'assets/audio/athan_mmanga_muharram.mp3',
-    'Ustadh Mmanga Muharram (Tanzania) — DARSA TV, '
-        'CC BY (YouTube), youtube.com/watch?v=TuPIDIsDWl0',
+  adhan3(
+    'Adhan 3',
+    'assets/audio/athan_3.mp3',
+    'Bundled recording',
   );
 
   final String displayName;
@@ -106,6 +105,8 @@ enum AthanSound {
   const AthanSound(this.displayName, this.assetPath, this.attribution);
 
   static AthanSound fromName(String? name) {
+    // Legacy key from when this slot was the Mmanga Muharram YouTube track.
+    if (name == 'mmangaMuharram') return AthanSound.adhan3;
     for (final v in AthanSound.values) {
       if (v.name == name) return v;
     }
