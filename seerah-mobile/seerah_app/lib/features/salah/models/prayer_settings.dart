@@ -88,6 +88,12 @@ enum AthanSound {
     'Aaqib Azeez',
     'assets/audio/athan_aaqib_azeez.mp3',
     'Aaqib Azeez — CC BY-SA 4.0, via Wikimedia Commons',
+  ),
+  mmangaMuharram(
+    'Mmanga Muharram',
+    'assets/audio/athan_mmanga_muharram.mp3',
+    'Ustadh Mmanga Muharram (Tanzania) — DARSA TV, '
+        'CC BY (YouTube), youtube.com/watch?v=TuPIDIsDWl0',
   );
 
   final String displayName;
